@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<element xmlns="http://relaxng.org/ns/structure/1.0" name="foo">
+  <choice>
+    <value>x</value>
+    <mixed>
+      <element name="bar">
+        <empty/>
+      </element>
+    </mixed>
+  </choice>
+</element>
+

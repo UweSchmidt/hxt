@@ -1,0 +1,101 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% $Id: cover_page.tex,v 1.2 2002/09/01 20:32:01 hxml1 Exp $
+%
+% Erstellt am 2001/06/07 von Martin Schmidt
+%
+% Letzte Aenderung am $Date: 2002/09/01 20:32:01 $ von $Author: hxml1 $
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[a4paper,12pt]{scrreprt}
+ \usepackage{ae}
+% \usepackage[T1]{fontenc}
+% \usepackage{german}
+ \usepackage[german]{babel}
+ \usepackage{a4}
+ \usepackage[left=3.5cm,right=3cm,top=3cm,bottom=3cm]{geometry}
+ \usepackage{tocbibind}
+ \usepackage{fancyhdr}
+ \usepackage{afterpage}
+ \usepackage{verbatim}
+ \usepackage{tabularx}     % benoetigt zur Einstellung der Tabelle
+
+ \usepackage{ulem}         % Dieses Paket stellt Befehle bereit, mit
+                           % denen sich Texte auf verschiedene Weisen
+                           % unterstreichen lassen, wobei Textzeilen
+                           % auch umgebrochen werden können.  Der Befehl
+                           % \em wird so geändert, daß betonte Wörter
+                           % nicht kursiv gesetzt, sondern
+                           % unterstrichen werden.  Mit \normalem wird
+                           % wieder das normale Verhalten von \em erreicht.
+
+%\usepackage{times}
+
+
+ \parindent0pt
+
+  \newcommand{\backupttfamily}{} % sollte noch nicht definiert sein!
+  \let\backupttfamily=\ttfamily  % alte Definition von \ttfamily sichern
+  \renewcommand{\ttfamily}{\backupttfamily \hyphenchar\font=`\-}
+
+  \begin{document}
+
+% Header und Footer setzen
+  \pagestyle{fancy}
+   \renewcommand{\chaptermark}[1]{%
+    \markboth{\thechapter.\ #1}{}}
+   \lhead{}
+   \chead{}
+   \rhead{\nouppercase{\leftmark}}
+   \lfoot{}
+   \cfoot{\thepage}
+   \rfoot{}
+   % \renewcommand{\headrulewidth}{0pt}
+
+  \begin{titlepage}
+   \begin{center}
+
+    \Large
+    UNIVERSITY OF APPLIED SCIENCES WEDEL\\
+    MASTER'S THESIS\\
+
+    \bigskip
+    \normalsize
+    Computer Science Department\\[2.5cm]
+
+    Subject:\\
+    \Large
+    \textbf{Design and Implementation of a\\validating XML parser in Haskell}\\[5cm]
+
+    \normalsize
+    \begin{tabular}{ll}
+
+     By:&
+     \begin{minipage}[t]{0.52\textwidth}
+      Martin Schmidt\\
+      Bei der Friedenseiche 6\\
+      22767 Hamburg\\
+      Tel.: +49~(0)\,40~-~38\,61\,69\,03\\
+      E-Mail: martin.schmidt@web.de\\
+     \end{minipage}\\\\
+
+     Submitted:& September 2nd, 2002\\\\\\
+
+     Supervisor:&
+      \begin{minipage}[t]{0.52\textwidth}
+       Prof.~Dr.~Uwe Schmidt\\
+       Fachhochschule Wedel\\
+       Feldstra"se 143\\
+       22880 Wedel\\
+       Tel.: +49~(0)\,41\,03~-~80\,48\,-\,45\\
+       E-Mail: si@fh-wedel.de\\
+      \end{minipage}\\
+
+    \end{tabular}
+   \end{center}
+  \end{titlepage}
+
+ \end{document}
+
+% Master;
+
+

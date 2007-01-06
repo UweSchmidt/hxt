@@ -1,0 +1,22 @@
+<TEST ID="valid-sa-051">
+comment:
+
+unexpected illegal multibyte UTF-8 character: "\224\185\140" or &#3660; or &#x0E4C;
+expecting white space or "\t"
+
+this error message should be o.k.: 0x0E4C is not a legal XML letter, not a base char
+(according to XML 1.0 (2nd ed.)
+<TEST>
+
+<TEST ID="valid-sa-063">
+comment:
+
+unexpected illegal multibyte UTF-8 character: "\224\185\140" or &#3660; or &#x0E4C;
+expecting white space or "\t"
+
+this error message should be o.k.: 0x0E4C is not a legal XML letter, not a base char
+(according to XML 1.0 (2nd ed.)
+<TEST>
+
+<TEST ID="x">
+</TEST>

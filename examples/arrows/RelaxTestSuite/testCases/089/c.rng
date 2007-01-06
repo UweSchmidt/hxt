@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+
+<element xmlns="http://relaxng.org/ns/structure/1.0" name="foo">
+  <empty>
+    <ext xmlns="http://www.example.com">
+      <element/>
+    </ext>
+  </empty>
+</element>
+

@@ -1,0 +1,19 @@
+<grammar xmlns:html="http://www.w3.org/TR/REC-html40" 
+         xmlns="http://relaxng.org/ns/structure/1.0" >
+  <start>
+    <element name="foo">
+      <zeroOrMore>
+        <group>
+          <attribute name="bar"/>
+          <attribute name="baz"/>
+        </group>
+      </zeroOrMore>
+    </element>
+    <element name="bar">
+      <group>
+        <data type="token"/>
+        <data type="token"/>
+      </group>
+    </element>
+  </start>
+</grammar>

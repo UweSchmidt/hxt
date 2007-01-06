@@ -1,0 +1,41 @@
+:set -package lang
+:set -package net
+:set -package util
+:set -package posix
+:set -i../hdom
+:set -i../hparser
+:set -i../hvalidator
+:set -i../hxpath
+:set -i../hxslt
+:set -i../http
+:set -i../hunit
+:set -Wall
+
+:set args -v --trace=4 -o ISO-8859-1 -T example1.xml
+:set args -v --trace=4 -o ISO-8859-1 -T xhtml/xhtml.xml
+:def t1 (\ _ -> return ":set args -v --trace-tests=4 --test-id=ibm-not-wf-P52-ibm52n02.xml ../xml-test-suite/xmlconf/xmlconf.xml")
+:def w3c (\ _ -> return "load RunTestCases\n:t1\nmain")
+
+:def ex1 (\ _ -> return ":set args -v --trace=4 -n -o ISO-8859-1 -T http://localhost/~si/src/haskell/hxml/examples/example1.xml\nmain")
+:def ex2 (\ _ -> return ":set args -v --html --trace=4 -n -o ISO-8859-1 -T http://localhost/~si/src/haskell/hxml/examples/example1.xml\nmain")
+:def tx1 (\ _ -> return ":set args -v --trace=4 -n -o ISO-8859-1 -x http://localhost/~si/src/haskell/hxml/examples/example1.xml\nmain")
+:def parser (\ _ -> return ":load HXmlParser\n:ex1")
+
+:def ax1 (\ _ -> return ":set args -v --trace=3 --encoding=ISO-8859-1 --no-validation -n -o ISO-8859-1 -T http://localhost/~si/src/haskell/hxml/examples/newtoc2.xml\nmain")
+:def ax0 (\ _ -> return ":set args -v --trace=3 --encoding=ISO-8859-1 --no-validation -n -o ISO-8859-1 -T http://localhost/~si/src/haskell/hxml/examples/toc.xml\nmain")
+
+:def album (\ _ -> return ":load Album\n:ax1")
+
+:def xargs (\ _ -> return ":set args --trace=4 -o ISO-8859-1 -T /text() example1.xml")
+:def xpath (\ _ -> return ":xargs\n:load HXPath\nmain")
+
+:def filter (\ _ -> return ":load FilterExample")
+
+:def hunit (\ _ -> return ":load HUnitExample")
+
+:def svg (\ _ -> return ":load TreeVisualisation")
+
+:album
+
+:module + IO Main
+

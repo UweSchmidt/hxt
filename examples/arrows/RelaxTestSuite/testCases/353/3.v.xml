@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+
+<foo xmlns:eg="http://www.example.com/" eg:x="xx" baz="yy"/>
+

@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<choice xmlns="http://relaxng.org/ns/structure/1.0">
+  <element name="foo">
+    <empty/>
+  </element>
+  <group>
+    <notAllowed/>
+    <element name="bar">
+      <group>
+	<data type="token"/>
+	<data type="token"/>
+      </group>
+    </element>
+  </group>
+</choice>
+

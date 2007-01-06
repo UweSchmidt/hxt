@@ -1,0 +1,76 @@
+Examples:
+
+SELECT ?title 
+WHERE {<http://example.org/book> <http://example.org/title> ?title }
+
+SELECT ?mbox 
+WHERE { ?x <http://example.org/name> "Jonny Lee Outlaw" .
+	?x <http://example.org/mbox> ?mbox }
+
+
+Grammar:
+[1]  Query                          ::= SelectClause WhereClause
+[2]  SelectClause                   ::= 'SELECT' Var+ | 'SELECT' '*'
+[3]  WhereClause                    ::= 'WHERE' GraphPattern
+[4]  GraphPattern                   ::= '{' PatternElementsList '}'
+[5]  PatternElementsList            ::= PatternElement PatternElementsListTail ?
+[6]  PatternElementsListTail        ::= '.' PatternElementsList ?
+[7]  PatternElement                 ::= Triples
+                                        | GraphPattern
+[8]  Triples                        ::= VarOrTerm PropertyListNotEmpty
+[9]  PropertyList                   ::= PropertyListNotEmpty ?
+[10] PropertyListNotEmpty           ::= Verb ObjectList PropertyListTail ?
+[11] PropertyListTail               ::= ';' PropertyList ?
+[12] ObjectList                     ::= Object ObjectTail ?
+[13] ObjectTail                     ::= ',' ObjectList ?
+[14] Verb                           ::= VarOrURI | 'a'
+[15] Object                         ::= VarOrTerm
+[16] VarOrURI                       ::= Var | URI
+[17] VarOrTerm                      ::= Var | GraphTerm
+[18] Var                            ::= <VAR>
+[19] GraphTerm                      ::= RDFTerm
+[20] RDFTerm                        ::= URI 
+					                    | RDFLiteral 
+					                    | NumericLiteral 
+					                    | BooleanLiteral 
+					                    | BlankNode
+[21] NumericLiteral                 ::= Integer | FloatingPoint
+[22] RDFLiteral                     ::= String (<LANGTAG> | '^^' URI )?
+[23] BooleanLiteral                 ::= 'TRUE' | 'FALSE'
+[24] String                         ::= <STRING_LITERAL1> | <STRING_LITERAL2>
+[25] URI                            ::= QuotedURIref
+[26] BlankNode                      ::= <BNODE_LABEL>
+[27] QuotedURIref                   ::= <Q_URIref>
+[28] Integer                        ::= <INTEGER_10>
+[29] FloatingPoint                  ::= <FLOATING_POINT>
+[30] <Q_URIref>                     ::= '<' ([^> ])* '>'  /* RFC 3869 */
+[31] <BNODE_LABEL>                  ::= '_:' (<NCNAME2>|<NCNAME1>)
+[32] <VAR>                          ::= ('?'|'$') (<NCNAME2>|<NCNAME1>)
+[33] <LANGTAG>                      ::= <AT> <A2Z>+ ('-' (<A2ZN>)+)*
+[34] <AT>                           ::= '@'
+[35] <A2Z>                          ::= [a-zA-Z]
+[36] <A2ZN>                         ::= [a-zA-Z0-9]
+[37] <INTEGER_10>                   ::= <DIGITS>
+[38] <FLOATING_POINT>               ::= [0-9]+ '.' [0-9]* <EXPONENT>? 
+				                    	| '.' ([0-9])+ <EXPONENT>? 
+				                    	| ([0-9])+ <EXPONENT>
+[39] <EXPONENT>                     ::= [eE] [+-]? [0-9]+
+[40] <STRING_LITERAL1>              ::= "'" ( ([^'\\\n\r]) | ('\\' [^\n\r]) )* "'"
+[41] <STRING_LITERAL2|              ::= '"' ( ([^'\\\n\r]) | ('\\' [^\n\r]) )* '"'
+[42] <DIGITS>                       ::= [0-9]+
+[43] <NCCHAR1>                      ::= [A-Z]
+                                        | [a-z]
+                                        | [#x00C0-#x00D6]
+                                        | [#x00D8-#x00F6]
+                                        | [#x00F8-#x02FF]
+                                        | [#x0370-#x037D]
+                                        | [#x037F-#x1FFF]
+                                        | [#x200C-#x200D]
+                                        | [#x2070-#x218F]
+                                        | [#x2C00-#x2FEF]
+                                        | [#x3001-#xD7FF]
+                                        | [#xF900-#xFFFF]
+[44] <NCCHAR_END>                   ::= <NCCHAR1> | '_' | '-' | [0-9] | #x00B7
+[45] <NCCHAR_FULL>                  ::= <NCCHAR_END> | '.'
+[46] <NCNAME1>                      ::= <NCCHAR1> (<NCCHAR_FULL>* <NCCHAR_END>)?
+[47] <NCNAME2>                      ::= '_' (<NCCHAR_FULL>* <NCCHAR_END>)?

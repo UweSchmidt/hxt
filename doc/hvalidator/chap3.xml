@@ -1,0 +1,339 @@
+<![%workaround;[
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+       "file:///usr/share/sgml/docbook/dtd/xml/4.2/docbookx.dtd">
+]]>
+
+
+<chapter id="c3">
+  	<title>Package hparser</title>
+
+	<para>
+	The following chapter describes the package <filename>hparser</filename>. It contains all modules for parsing XML files and checking the well-formedness constraints of XML. Validation, normalizing attribute values and adding default values is done by the separate package <filename>hvalidator</filename>.
+	</para>
+
+	<para>
+	The parser works internally with filters for reading XML data and processing the constructed <literal>XmlTree</literal>. The whole parser works with filters of type <literal>XmlStateFilter</literal> from the module <classname>XmlState</classname> so that trace-output of the computations can be generated, errors can be reported and some state information can be saved where it is necessary.
+	</para>
+
+	<section>
+		<title>Overview</title>
+
+		<para>
+		The package <filename>hparser</filename> provides five public modules for implementing an XML parser, which builds the generic tree data structure <literal>XmlTree</literal> from XML documents.
+		</para>
+
+		<variablelist>
+			<title>Modules</title>
+			<varlistentry>
+				<term>
+					<function>HdomParser</function>
+				</term>
+				<listitem>
+					<para>
+					 Basic parser for building the generic tree data structure <literal>XmlTree</literal>. Bases on <classname>XmlParser</classname>, <classname>XmlInput</classname> and <classname>DTDProcessing</classname>.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>XmlParser</function>
+				</term>
+				<listitem>
+					<para>
+					Parses XML files. Bases on the free monadic parser combinator library Parsec <citation><xref linkend="bib_parsec"/></citation>.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>XmlInput</function>
+				</term>
+				<listitem>
+					<para>Reads XML files, handles different character encodings.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>DTDProcessing</function>
+				</term>
+				<listitem>
+					<para>Processes the DTD. Substitution of general and parameter entities, merging of the internal and external DTD subset.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>XmlOutput</function>
+				</term>
+				<listitem>
+					<para>Prints the parsed data by using the <literal>XmlStateFilter</literal> defined in module <classname>XmlState</classname>.</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</section>
+
+	<section>
+		<title>Module HdomParser</title>
+
+		<para>
+		The module <classname>HdomParser</classname> provides functions for parsing XML files and building the generic tree data structure <literal>XmlTree</literal> from these documents. The whole parsing process takes place in the State-I/O monad of the module <classname>XmlState</classname>, so that well-formedness errors can be reported and different computations can be traced by outputting their results.
+		</para>
+
+		<variablelist>
+			<title>Parse functions</title>
+			<varlistentry>
+				<term>
+					<function>parseDoc :: String -> IO [XmlTree]</function>
+				</term>
+				<listitem>
+					<para>
+					Parses the file specified by the first parameter.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>parseXmlFile :: IO [XmlTree]</function>
+				</term>
+				<listitem>
+					<para>Parses an XML file specified by a command line argument:
+					<itemizedlist>
+						<listitem>
+							<para>--source "source file" - XML file to parse</para>
+						</listitem>
+						<listitem>
+							<para>--encoding "encoding" - Encoding scheme used in the file (optional)</para>
+						</listitem>
+					</itemizedlist>
+					</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+
+		<para>
+		The following example shows how an XML parser is constructed in the module <classname>HdomParser</classname>. The whole parsing process takes place in the State-I/O monad defined in the module <classname>XmlState</classname>. All computations are of type <literal>XmlStateFilter</literal>.
+		</para>
+
+		<programlisting>
+processXmlN	:: Int -> XmlTree -> IO [XmlTree]
+processXmlN n t0
+    = run' $ do
+             setSysState (selXTagAttrl . getNode $ t0)
+             setTraceLevel n
+             t1 &lt;- getXmlContents $ t0
+             t2 &lt;- parseXmlDoc    $$&lt; t1
+             t3 &lt;- liftM transfAllCharRef $$&lt; t2
+             t4 &lt;- processDTD     $$&lt; t3
+             t5 &lt;- processGeneralEntities $$&lt; t4
+             el &lt;- getErrorLevel
+             return ( if el == 0
+                      then t5
+                      else [] )
+		</programlisting>
+
+		<variablelist>
+			<title>Actions during parsing</title>
+			<varlistentry>
+				<term>
+					<function>getXmlContents :: XmlStateFilter a</function>
+				</term>
+				<listitem>
+					<para>
+					 Returns a filter for reading the XML file. The filename is retrieved from the attribute with the name "<emphasis>source</emphasis>" which must be part of the initial node <emphasis>t0</emphasis>.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>parseXmlDoc :: XmlStateFilter a</function>
+				</term>
+				<listitem>
+					<para>
+					Parses the XML file and builds the <literal>XmlTree</literal>.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>transfAllCharRef :: XmlFilter</function>
+				</term>
+				<listitem>
+					<para>
+					The <literal>XmlFilter</literal> <function>transfAllCharRef</function> has to be lifted to an <literal>XmlStateFilter</literal>. The filter substitutes character references by their characters.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>processDTD :: XmlStateFilter a</function>
+				</term>
+				<listitem>
+					<para>
+					 Substitutes parameter entities, adds include sections and removes exclude sections of DTDs, merges internal and external DTD subsets.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>processGeneralEntities :: XmlStateFilter a</function>
+				</term>
+				<listitem>
+					<para>
+					 Substitutes general entities.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>getErrorLevel :: XState state Int</function>
+				</term>
+				<listitem>
+					<para>
+					 If an error occurred during applying the <literal>XmlStateFilter</literal>s, <function>
+					 processXmlN</function> returns an empty list, otherwise it returns the constructed <literal>XmlTree</literal>.
+					</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+
+	</section>
+
+
+	<section>
+		<title>Module XmlParser</title>
+
+		<para>
+		The module <classname>XmlParser</classname> provides the parse functions for parsing XML files and building an <literal>XmlTree</literal>. The parser bases on Parsec <citation><xref linkend="bib_parsec"/></citation>, a free monadic parser combinator library for Haskell and does not need any look-ahead. The lexer and the parser are not separated. A feature of this parser is that nearly all parse functions can be implemented as it is defined by the productions in the &xmlspec; <citation><xref linkend="bib_xml"/></citation>.
+		</para>
+
+		<para>
+		Like filters are composed with filter combinators in the &hxtl;, parsing is usually done with parser combinators in Haskell. Simple parser functions are combined with these higher-order functions to complex ones. The parser combinators are control structures that represent the operators used it the productions of syntax definitions.
+		</para>
+
+		<para>
+		An XML parser has to deal with different character sets. The parser of the &hxtl; works internally with Unicode (UTF-8) encoding. The module <classname>Unicode</classname> provides several conversion functions for different character sets.
+		</para>
+
+		<para>
+			<itemizedlist>
+				<title>Supported character sets by the XmlParser:</title>
+				<listitem>
+					<para>UTF-8</para>
+				</listitem>
+				<listitem>
+					<para>ISO-8859-1</para>
+				</listitem>
+				<listitem>
+					<para>US-ASCII</para>
+				</listitem>
+				<listitem>
+					<para>ISO-10646-UCS-2</para>
+				</listitem>
+				<listitem>
+					<para>UTF-16</para>
+				</listitem>
+				<listitem>
+					<para>UTF-16BE</para>
+				</listitem>
+				<listitem>
+					<para>UTF-16LE</para>
+				</listitem>
+			</itemizedlist>
+		</para>
+
+		<para>
+        	<figure id="modules_xmlparser" float="0">
+				<title>Modules of XmlParser</title>
+            	<mediaobject>
+            		<imageobject>
+	       				<imagedata fileref="images/modules_xmlparser.eps" format="EPS" />
+	      			</imageobject>
+       	      		<imageobject>
+ 	        			<imagedata fileref="images/modules_xmlparser.gif" format="JPG" />
+              		</imageobject>
+            	</mediaobject>
+          	</figure>
+        </para>
+
+	</section>
+
+
+	<section>
+		<title>Module XmlInput</title>
+
+		<para>
+		The module XmlInput provides input functions implemented as filters of type <literal>XmlStateFilter</literal>. The main function is <function>getXmlContents</function>, which returns an <literal>XmlStateFilter</literal> for reading the content. This filter expects as input a node of type <literal>NTree XTag</literal>  with several arguments stored in its attribute list. The child list of this node should be empty, because the parsed document will be stored there.
+		</para>
+
+		<para>
+		Protocols like the <emphasis>http</emphasis> or <emphasis>file</emphasis> protocol are not supported at the moment. Unfortunately there does not seem to exist any Haskell library supporting theses protocols. Perhaps later versions of the parser will use the <literal>curl</literal> command.
+		</para>
+
+		<variablelist>
+			<title>Arguments of getXmlContents</title>
+			<varlistentry>
+				<term>
+				Keyword a_source ("source") from module <classname>XmlKeywords</classname>
+				</term>
+				<listitem>
+					<para>
+					Specifies input file (or later URL)
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+				Keyword a_encoding ("encoding") from module <classname>XmlKeywords</classname>
+				</term>
+				<listitem>
+					<para>
+					Specifies encoding scheme (optional). If no encoding is specified, the parser tries to guess the encoding.
+					</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</section>
+
+
+	<section>
+		<title>Module DTDProcessing</title>
+
+		<para>
+		The module <classname>DTDProcessing</classname> provides functions for parameter entity substitution, general entity substitution and merging the internal and the external DTD subset into one internal part. Parameter entity substitution should be done before merging the subsets of a DTD. The function <function>processDTD</function> ensures this. Substitution of general entities is done by <function>processGeneralEntities</function>. The filters are monadic functions that use the State-I/O monad from the module <classname>XmlState</classname>.
+		</para>
+	</section>
+
+
+	<section>
+		<title>Module XmlOutput</title>
+
+		<para>
+		<classname>XmlOutput</classname> provides output functions implemented as <literal>XmlStateFilter</literal>s. These filters are very useful for printing out the <literal>XmlTree</literal> during  computations while parsing, e.g. printing out the tree before and after entity processing. The whole parsing process takes place in the State-I/O monad from <classname>XmlState</classname>. If a trace level different from zero is set in this monad, these functions are used to show the computation steps.
+		</para>
+
+		<variablelist>
+			<varlistentry>
+				<term>
+					<function>putXmlSource :: XmlStateFilter a</function>
+				</term>
+				<listitem>
+					<para>
+					Prints the <literal>XmlTree</literal> in XML representation.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>putXmlTree :: XmlStateFilter a</function>
+				</term>
+				<listitem>
+					<para>
+					Prints the <literal>XmlTree</literal> in tree representation.
+					</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</section>
+
+
+</chapter>

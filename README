@@ -1,0 +1,19 @@
+$Id: README,v 1.25 2006/11/15 18:29:08 hxml Exp $
+
+The Haskell XML Toolbox is a collection of tools for processing XML with
+Haskell.
+
+The Haskell XML Toolbox is available from:
+    http://www.fh-wedel.de/~si/HXmlToolbox/
+
+Detailed information about the features, changes, requirements, installation and documentation
+is available from that web page.
+
+A getting started tutorial for HXT is available
+under "http://www.haskell.org/haskellwiki/HXT"
+
+good luck
+
+Uwe Schmidt
+
+(uwe@fh-wedel.de)

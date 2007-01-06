@@ -1,0 +1,271 @@
+<![%workaround;[
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+       "file:///usr/share/sgml/docbook/dtd/xml/4.2/docbookx.dtd">
+	<!ENTITY hxt  "HXT">
+	<!ENTITY hxtl "Haskell XML Toolbox">
+]]>
+
+
+<chapter id="c5">
+  	<title>Conclusion</title>
+
+  	<section>
+    	<title>XML conformance of the parser</title>
+
+		<para>
+		The validating XML parser of the &hxtl; was elaborately tested with the XML Test Suites (XML TS) from the W3C <citation><xref linkend="bib_xmlts"/></citation>.
+		</para>
+
+		<para>
+		These XML TS consist of over 2000 test files for the &xmlspec; <citation><xref linkend="bib_xml"/></citation> and an associated test report. The test report contains background information on conformance testing for XML as well as test descriptions for each of the test files.
+		</para>
+
+		<para>
+		The test suite consists of two basic test types: Binary Tests and Output Tests. Binary conformance tests are documents that should be accepted or rejected by the parser. Output tests are tests for valid documents which are paired with a reference file as the canonical representation <citation><xref linkend="bib_canxml"/></citation> of the input file. By comparing the output of the XML parser with the reference file, it can be ensured that the parser provides the correct information.
+		</para>
+
+		<para>
+		<variablelist>
+			<title>There exist four different tests cases: </title>
+			<varlistentry>
+				<term>
+					Valid Documents
+				</term>
+				<listitem>
+					<para>
+					The XML parser is required to accept these documents. For most test cases a reference file exists.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					Invalid documents
+				</term>
+				<listitem>
+					<para>
+					A validating XML parser has to report a  violation of some validity constraint. The reported error must meet the test case description.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					Not well-formed documents
+				</term>
+				<listitem>
+					<para>
+					An XML parser has to report a fatal error. The reported error must meet the test case description.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					Optional errors
+				</term>
+				<listitem>
+					<para>
+					An XML parser is permitted to ignore these errors, or to report them. If an error is reported, the error message must meet the test case description.
+					</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+		</para>
+
+		<para>
+		By using these tests, it could be ensured that the validating XML parser of the &hxtl; covers most aspects of the &xmlspec; <citation><xref linkend="bib_xml"/></citation>. Because the XML TS is not complete, it is not possible to claim conformance with the specification itself, but only with the XML TS. At the moment the parser passes about 95% of these test cases, see <xref linkend="known_problems"/> for further details.
+		</para>
+
+	</section>
+
+
+  	<section id="comparison">
+    	<title>The &hxtl; in comparison to HaXml and HXML</title>
+
+		<para>
+		In this section the &hxtl; is compared with HaXml <citation><xref linkend="bib_haxml"/></citation> and HXML <citation><xref linkend="bib_hxml"/></citation>. Many valuable ideas of HaXml and HXML  have been adopted by the &hxtl;. It is not the intention of this section to run down these great projects. The intention is to show how their ideas have been extended and generalized.
+		</para>
+
+		<para>
+		The &hxtl;, HaXml and HXML differ in the way how XML documents are represented in Haskell. First the approaches of HXML and HaXml are introduced, after this the data model of the &hxtl; is compared with them.
+		</para>
+
+		<para>
+		In HXML, XML document subsets are represented as a <literal>Tree</literal> of <literal>XMLNode</literal>s. The hierarchical structure of XML documents is modeled by the generic tree data type <literal>Tree</literal>. This type does not distinguish between inner nodes and leafs. Leafs are just nodes with an empty list of children.
+		</para>
+
+		<example>
+			<title>Document subset in HXML</title>
+			<programlisting>
+data Tree a  = Tree a [Tree a]
+
+type XML	 = Tree XMLNode
+data XMLNode =
+      RTNode                 -- root node
+    | ELNode GI AttList      -- element node: GI, attributes
+    | TXNode String          -- text node
+    | PINode Name String     -- processing instruction (target,value)
+    | CXNode String          -- comment node
+    | ENNode Name            -- general entity reference
+      deriving Show
+			</programlisting>
+		</example>
+
+		<para>
+		DTDs are modeled totally different in HXML. They are represented by named fields and are not stored in the tree model where the document subset is stored.
+		</para>
+
+		<example>
+			<title>DTD subset in HXML</title>
+			<programlisting>
+data DTD = DTD {
+    elements :: FM.FM Name ELEMTYPE,    -- elemtps / element types
+    attlists :: FM.FM Name [ATTDEF],    -- elemtype.attdefs
+    genents  :: FM.FM Name EntityText,  -- general entities
+    parments :: FM.FM Name EntityText,  -- parameter entities
+    notations:: [DCN],                  -- nots/notations
+    dtdname  :: Name                    -- name (document type name)
+} 	deriving Show
+			</programlisting>
+		</example>
+
+		<para>
+		HaXml's representation of XML documents differs totally from the approach HXML and the &hxtl; use. Instead of modeling XML documents with a generic tree type, HaXml uses a more data centric approach. The whole structure of XML documents is modeled by different algebraic data types. There exist special types for almost each production of the &xmlspec; <citation><xref linkend="bib_xml"/></citation>. XML documents are modeled by the data type <literal>Document</literal>, which consists of a <literal>Prolog</literal> and the document subset, an <literal>Element</literal>. This data model distinguishes clearly between leafs and inner nodes. Leafs are types which constructors do not take any arguments.
+		</para>
+
+		<example>
+			<title>XML documents in HaXml</title>
+			<programlisting>
+data Document = Document Prolog (SymTab EntityDef) Element
+data Prolog   = Prolog (Maybe XMLDecl) (Maybe DocTypeDecl)
+data XMLDecl  = XMLDecl VersionInfo (Maybe EncodingDecl) (Maybe SDDecl)
+...
+			</programlisting>
+		</example>
+
+		<para>
+		The document subset is modeled in HaXml by the algebraic types <literal>Element</literal> and <literal>Content</literal>. An <literal>Element</literal> has an attribute list and a list of <literal>Content</literal> types. If the content list is empty, the element is a leaf. Together  these types define a mutually recursive, multi-branch tree.
+		</para>
+
+		<example>
+			<title>Document subset in HaXml</title>
+			<programlisting>
+data Element   = Elem Name [Attribute] [Content]
+
+type Attribute = (Name, AttValue)
+data Content   = CElem Element
+               | CString Bool CharData
+               | CRef Reference
+               | CMisc Misc
+			</programlisting>
+		</example>
+
+		<para>
+		HaXml introduced the idea of using filter functions and combinators for processing parts of the XML data model. The examples from the previous chapters show that this approach is very powerful and flexible. The whole XML parser of the &hxtl; bases on filters. The filters of HaXml work for nodes of the type <literal>Content</literal>.
+		</para>
+
+		<example>
+			<title>The filter type of HaXml</title>
+			<programlisting>
+type CFilter   = Content -> [Content]
+			</programlisting>
+		</example>
+
+
+		<para>
+		The &hxtl; uses the most generic data model in contrast to HaXml and HXML. Its data model is a generalization of the data models discusses above.
+		</para>
+
+		<para>
+		The generic tree data model <literal>NTree</literal> of the &hxtl; forms the basis for representing XML documents in Haskell. This type does not distinguish between inner nodes and leafs. Leafs are just nodes with an empty child list. The most important aspect is that this generic tree data model represents a whole XML document, including the DTD subset, the document subset and all other logical units of XML.	Two algebraic data types <literal>XNode</literal> and <literal>DTDElem</literal> are used to represent all logical units of XML.
+		</para>
+
+		<example>
+			<title>XML documents represented in the &hxtl;</title>
+			<programlisting>
+data NTree  node = NTree node (NTrees node)
+type NTrees node = [NTree node]
+
+type XmlTree  = NTree  XNode
+type XmlTrees = NTrees XNode
+
+data XNode =
+      XTag TagName TagAttrl
+    | XDTD DTDElem TagAttrl
+    | ...
+
+data DTDElem =
+      DOCTYPE
+    | ELEMENT
+    | ATTLIST
+    | ...
+			</programlisting>
+		</example>
+
+		<para>
+		HXML uses the same generic data model as the &hxtl; for representing the document subset, but DTDs are represented by a totally different model: named fields. HaXml uses special types for XML's logical units. This leads to the fact that the DTD subset is modeled totally different than the document subset.
+		</para>
+
+		<para>
+		The advantage of representing the whole XML document by one generic data type lies in the fact that one unique design for processing the whole document can be used. Because all logical parts of XML are modeled by one generic data model, filters (see <xref linkend="filter_functions"/>) can be used to process the whole XML document and not only parts as in HaXml and HXML.
+		</para>
+
+		<para>
+		HaXml's filters can only work on the type <literal>Content</literal> that just represents a small part of XML documents, the document subset. If one wants to process other parts of an XML document, one cannot use filters any more, but has to implement special functions. The same applies for HXML.
+		</para>
+
+		<para>
+		The generalization used in the &hxtl; makes the design of applications that process whole XML documents very uniform. In effect the design of the whole XML parser of the &hxtl; bases on filters. Merging of the internal DTD part and external DTD part is done by filters, checking the validity constraints of DTDs and document subsets is done by filters, or processings like transforming the whole <literal>XmlTree</literal> back to XML is done by filters.
+		</para>
+  	</section>
+
+
+  	<section>
+    	<title>Conclusions and future work</title>
+
+		<para>
+		The developed XML parser shows that the functional approach accomplishes the task of parsing and validating XML by using fewer lines of code and producing a very short and compact program in contrast to imperative languages. The packages <filename>hdom</filename>, <filename>hparser</filename> and <filename>hvalidator</filename> contain only about 9.000 lines of code including lots of HDoc <citation><xref linkend="bib_hdoc"/></citation> comments.
+		</para>
+
+		<para>
+		Although the program is compact, the code is understandable and maintainable, because the code is more succinct and it follows a clear  and simple design. The &hxtl; introduced the very general tree data type <literal>XmlTree</literal> for representing whole XML documents in Haskell. This general data model makes it possible to base all processings of XML documents on filters. The whole XML parser, presented in this thesis, bases on this uniform design.
+		</para>
+
+		<para>
+		Writing a validating XML parser is a quite complex task. It must cope with different encodings, correct processing of entities and of course validation. Functional programming helps master this complexity better than other methods.
+		</para>
+
+		<para>
+		In Haskell functions are just values and have no side effects. These qualities allow an easy use of higher-order functions that take functions as arguments, return functions as a result or do both. The filter combinators, which have been adopted from HaXml, form a powerful library for combining filter functions. Because all filters of the &hxtl; share the same type, it is possible to combine them freely with the use of filter combinators. All details of manipulating the <literal>XmlTree</literal> data structure are hidden in these higher-order functions. In effect these filter combinators define problem specific control structures that make it possible to program on a very high abstraction level. Errors can be reduced, because programmers can use the filter combinators as standard functions for processing the <literal>XmlTree</literal>.
+		</para>
+
+		<para>
+		Because functions are just values in Haskell, they can be constructed at runtime. The XML parser introduced in this thesis makes an extensive use of creating parameterized filter functions during runtime. The whole validation process bases on this design.
+		</para>
+
+		<para>
+		It can be quite useful to use functional programming paradigms when writing programs in imperative languages. Functional paradigms like higher-order functions for abstractions can be done in Java by defining an interface that has only one function. This interface can be passed to other functions or returned by a function. In C function pointers can be used for this task. But imperative languages are not designed to support functional programming styles, so they cannot actively support its paradigms. The main focus of these languages lies on the fact <emphasis>how</emphasis> a problem is solved, e.g. the order in which computations are performed.
+		</para>
+
+		<para>
+		Unfortunately functional programming and functional programming languages are not very popular. Two standard examples for functional programming are using a spreadsheet program like Excel and querying a database with SQL. Another field where functional programming dominates is transformation of SGML and XML documents. The Document Style Semantics and Specification Language (DSSSL) <citation><xref linkend="bib_dsssl"/></citation> bases on the functional programming language Scheme and is very popular in the world of SGML publishing. The Extensible Stylesheet Language (XSL) <citation><xref linkend="bib_xsl"/></citation> is its corresponding part for XML publishing. Functional programming languages are very well equipped for this task, because the transformation process is a functional mapping from a structural document as input to a formatted representation as output.
+		</para>
+
+		<para>
+		Sometimes it is said that functional programming languages lack of libraries. We do not know any validating XML Parser written in Haskell and hope that the framework of the &hxtl; will be a useful tool for XML processing applications written in Haskell. The parser supports almost fully the &xmlspec; with the exception of namespaces.
+		</para>
+
+		<para>
+		The &hxtl; introduces a powerful approach for processing XML in Haskell. It generalizes the ideas of HaXml and HXML. Whole XML documents are represented as a tree of different nodes. This tree can be processed in a uniform way by using filter functions and filter combinators.
+		</para>
+
+		<para>
+ 		Lots of great ideas of the projects HaXml and HXML have been taken into this project. We want to thank their members for their great work and emphasis that all three projects are enrichments for the Haskell community.
+		</para>
+
+		<para>
+		The &hxtl; project will be maintained and enlarged at the University of Applied Sciences Wedel. One student already wrote an XSLT processor on the basis of this project. Another student is writing a program using the &hxtl; for deriving Java classes from DTDs.
+		</para>
+
+  	</section>
+
+</chapter>

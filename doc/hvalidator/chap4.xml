@@ -1,0 +1,658 @@
+<![%workaround;[
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+       "file:///usr/share/sgml/docbook/dtd/xml/4.2/docbookx.dtd">
+	<!ENTITY hxt  "HXT">
+	<!ENTITY hxtl "Haskell XML Toolbox">
+]]>
+
+<chapter id="c4">
+  	<title>Package hvalidator</title>
+
+	<para>
+	This chapter describes the package <filename>hvalidator</filename> which provides all functions for validating XML documents represented as <literal>XmlTree</literal>. The validation process basically consists of three phases. First the DTD is validated, after this the document is validated. In the last step the document is transformed: missing default values are added and attribute values are normalized. Unlike other popular XML validation tools the validation functions return a list of errors instead of aborting after the first error was found.
+	</para>
+
+	<para>
+	While the modules from package <filename>hparser</filename> use a monadic approach, these modules are written purely functional. Validation is done by filter functions of type <literal>XmlFilter</literal>. These filters return a list of errors or an empty list if no errors are detected.
+	</para>
+
+	<section id="module_hierarchy">
+		<title>Module hierarchy</title>
+
+		<para>
+		The only public module for validating XML documents is the module <classname>Validation</classname>. It exports all functions for validating and transforming XML documents. <classname>Validation</classname> is basically a helper module, which combines the functionalities of the internal modules taking part at validation and transformation.
+		</para>
+
+		<variablelist>
+			<title>Internal modules</title>
+			<varlistentry>
+				<term>
+					<function>DTDValidation</function>
+				</term>
+				<listitem>
+					<para>
+					Provides functions for validating the DTD of XML documents.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>DocValidation</function>
+				</term>
+				<listitem>
+					<para>
+					Provides functions for validating the elements and attributes of XML documents.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>DocTransformation</function>
+				</term>
+				<listitem>
+					<para>
+					Provides functions for transforming XML documents after they have been validated. The transformation phase is part of the validation process.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>AttributeValueValidation</function>
+				</term>
+				<listitem>
+					<para>
+					Provides functions to normalize attribute values and to check if the attribute value matches the lexical constraints of its type.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>XmlRE</function> and <function>RE</function>
+				</term>
+				<listitem>
+					<para>
+					Support <function>DocValidation</function> by validating the content model of an element. The algorithm used is based on derivatives of regular expressions.
+					</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+
+		<para>
+        	<figure id="modules_hvalidator" float="0">
+				<title>Modules of package hvalidator</title>
+            	<mediaobject>
+            		<imageobject>
+	       				<imagedata fileref="images/modules_hvalidator.eps" format="EPS" />
+	      			</imageobject>
+       	      		<imageobject>
+ 	        			<imagedata fileref="images/modules_hvalidator.gif" format="JPG" />
+              		</imageobject>
+            	</mediaobject>
+          	</figure>
+        </para>
+	</section>
+
+
+ 	<section id="creating_a_validating_xml_parser">
+		<title>Creating a validating XML parser</title>
+
+		<para>
+		The only public module for validating XML documents is the module <classname>Validation</classname>. It exports several functions for validating XML documents, parts of XML documents and transforming them.
+		</para>
+
+		<variablelist>
+			<varlistentry>
+				<term>
+					<function>validateAndTransform :: XmlSFilter</function>
+				</term>
+				<listitem>
+					<para>
+					Combines validation and transformation of a document. If errors or fatal errors occurred during validation, a list of errors is returned. Otherwise the transformed document is returned.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>validate :: XmlSFilter</function>
+				</term>
+				<listitem>
+					<para>
+					Checks if the DTD and the document are valid.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>validateDTD :: XmlSFilter</function>
+				</term>
+				<listitem>
+					<para>
+					Checks if the DTD is valid.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>validateDoc :: XmlSFilter</function>
+				</term>
+				<listitem>
+					<para>
+					Checks if the document corresponds to the given DTD.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>transform :: XmlSFilter</function>
+				</term>
+				<listitem>
+					<para>
+					Transforms the document with respect to the given DTD. Validating parsers are expected to  normalize attribute values and add default values. This function should be called after a successful validation.
+					</para>
+				</listitem>
+			</varlistentry>
+			<!--varlistentry>
+				<term>
+					<function>hasErrors :: XmlTrees -> Bool</function>
+				</term>
+				<listitem>
+					<para>
+					Checks if there are errors or fatal errors in the error list. If the error list is empty or it contains warnings only, the document is valid.
+					</para>
+				</listitem>
+			</varlistentry-->
+		</variablelist>
+
+		<para>
+		The following example shows how the functions <function>validate</function> and <function>transform</function> can be used in an XML processing application. The document is valid, if <function>validate</function> returns an empty list or a list containing only errors of type <emphasis>warning</emphasis>. If the list contains errors of type <emphasis>error</emphasis> or <emphasis>fatal error</emphasis>, the document is not valid. If the document is valid the document is transformed and displayed to the user.
+		</para>
+
+		<programlisting>
+
+printMsg :: XmlTrees -> XmlTrees -> IO()
+printMsg errors doc
+    = if null ((isError +++ isFatalError) $$ errors)
+        then do
+             if null errors
+               then
+                  putStrLn "The document is valid."
+                  putStrLn (xmlTreesToString $ transform doc)
+             else do
+                  putStrLn "The document is valid, but there were warnings:"
+                  putStrLn (xmlTreesToString $ transform doc)
+                  putStrLn (showXErrors errors)
+        else do
+             putStrLn "The document is not valid. List of errors:"
+             putStrLn (showXErrors errors)
+
+
+
+main :: IO()
+main
+    = do
+      doc &lt;- parseDoc "invalid.xml"
+      printMsg (validate doc) doc
+      return ()
+
+		</programlisting>
+
+		<para></para>
+
+		<para>
+		Calling the module <classname>ValidateExample</classname> from the directory <emphasis>example</emphasis> of the &hxtl; with the invalid document <emphasis>invalid.xml</emphasis> produces the following error messages.
+		</para>
+
+		<example>
+			<title>Validating a document with errors</title>
+			<programlisting>
+&lt;?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+
+&lt;!DOCTYPE a [
+&lt;!ATTLIST a  att1  CDATA  #IMPLIED>
+&lt;!ELEMENT a  (z, c?)>
+&lt;!ELEMENT b  EMPTY>
+&lt;!ELEMENT c  (#PCDATA)>
+]>
+
+&lt;a att2="test">
+    &lt;y/>
+    &lt;c>hello world&lt;/c>
+&lt;/a>
+
+The document is not valid. List of errors:
+Warning: The element type "z", used in content model of element "a", is not declared.
+Error: The content of element "a" must match ( "z" , "c"? ). Element "z" expected,
+       but Element "y" found.
+Error: Attribute "att2" of element "a" is not declared in DTD.
+Error: Element "y" not declared in DTD.
+  			</programlisting>
+		</example>
+	</section>
+
+
+  	<section id="validation_of_the_dtd">
+   		<title>Validation of the Document Type Definition</title>
+
+		<para>
+		Validation of the DTD is done by the module <classname>DTDValidation</classname>. Notations, unparsed entities, element declarations and attribute declarations are checked if they correspond to the constraints of the &xmlspec; <citation><xref linkend="bib_xml"/></citation>.
+		</para>
+
+		<para>
+		The following checks are performed:
+		</para>
+
+		<itemizedlist>
+			<title>DTD</title>
+			<listitem>
+				<para>Error: There exists no DOCTYPE declaration in the document.</para>
+			</listitem>
+		</itemizedlist>
+
+		<itemizedlist>
+			<title>Notations</title>
+			<listitem>
+				<para>Error: A notation was already specified.</para>
+			</listitem>
+		</itemizedlist>
+
+		<itemizedlist>
+			<title>Unparsed entities:</title>
+			<listitem>
+				<para>Warning: Entity is declared multiple times. First declaration is used.</para>
+			</listitem>
+			<listitem>
+				<para>Error: A referenced notations must be declared</para>
+			</listitem>
+		</itemizedlist>
+
+		<itemizedlist>
+			<title>Element declarations:</title>
+			<listitem>
+				<para>Error: Element is declared more than once</para>
+			</listitem>
+			<listitem>
+				<para>Error: Element was specified multiple times in a content model of type mixed content.</para>
+			</listitem>
+			<listitem>
+				<para>Warning: Element used in a content model is not declared.</para>
+			</listitem>
+		</itemizedlist>
+
+		<itemizedlist>
+			<title>Attribute declarations:</title>
+			<listitem>
+				<para>Warning: There exists no element declaration for the attribute declaration.</para>
+			</listitem>
+			<listitem>
+				<para>Warning: Attribute is declared multiple times. First declaration will be used.</para>
+			</listitem>
+			<listitem>
+				<para>Warning: Same Nmtoken should not occur more than once in enumerate attribute types.</para>
+			</listitem>
+			<listitem>
+				<para>Error: Element already has an attribute of type ID. A second attribute of type ID is not permitted.</para>
+			</listitem>
+			<listitem>
+				<para>Error: ID attribute must have a declared default of #IMPLIED or #REQUIRED.</para>
+			</listitem>
+			<listitem>
+				<para>Error: Element already has an attribute of type NOTATION. A second attribute of type NOTATION is not permitted.</para>
+			</listitem>
+			<listitem>
+				<para>Error: Attribute of type NOTATION must not be declared on an element declared EMPTY.</para>
+			</listitem>
+			<listitem>
+				<para>Error: A notation must be declared when referenced in the notation type list for an attribute.</para>
+			</listitem>
+			<listitem>
+				<para>Error: The declared default value must meet the lexical constraints of the declared attribute type.</para>
+			</listitem>
+		</itemizedlist>
+
+		<para>
+		Each check is done by a separate function, which takes the child list of the <literal>XDTD DOCTYPE</literal> node as input and returns a list of errors. Some functions can optionally take some further arguments to have access to context information, e.g. when validating unparsed entities, a list of all defined notations is needed. The result of validating the DTD is a concatenated list of the results of all validation functions.
+		</para>
+
+		<para>
+		The following example shows a filter function for checking the validity constraint: "No Notation on Empty Element" (section 3.3.1 in &xmlspec; <citation><xref linkend="bib_xml"/></citation>). It means that an attribute of type NOTATION must not be declared for an element declared EMPTY. A notation attribute is a way to give an application a clue how the content of an element should be processed. The notation might refer to a program that can process the content, e.g. a base-64 encoded JPEG. Because empty elements cannot have contents, attributes of type notation are forbidden. The function <function>checkNoNotationForEmptyElement</function> is initialized with a list of all element names declared EMPTY. The constructed filter is then applied to all <literal>XDTD ATTLIST</literal> nodes of type NOTATION that have been selected from the DTD by another filter function.
+		</para>
+
+		<example>
+			<title>Validation that notations are not declared for EMPTY elements</title>
+			<programlisting>
+checkNoNotationForEmptyElement :: [String] -> XmlFilter
+checkNoNotationForEmptyElement emptyElems nd@(NTree (XDTD ATTLIST al) _)
+    = if elemName `elem` emptyElems
+      then err ("Attribute \""++ attName ++"\" of type NOTATION must not be "++
+                "declared on the element \""++ elemName ++"\" declared EMPTY.") nd
+      else []
+      where
+      elemName = getAttrValue1 a_name  al
+      attName  = getAttrValue1 a_value al
+
+checkNoNotationForEmptyElement _ nd
+    = error ("checkNoNotationForEmptyElement: illegal parameter:\n" ++ show nd)
+			</programlisting>
+		</example>
+
+		<para>
+		The validation functions cannot check if a content model is deterministic. This requirement is for compatibility with SGML, because some SGML tools can rely on unambiguous content models. XML processors may flag such content models as errors, but the &hxtl; does not. It does not need deterministic content models for checking if the children of an element are valid (see <xref linkend="derivates_of_regexp"/>).
+		</para>
+	</section>
+
+
+	<section id="validation_of_the_document">
+		<title>Validation of the document subset</title>
+
+		<para>
+		After validation of the DTD the document has to be validated. By validating the document, validation of the elements and their attributes is meant. This process is split into two phases: validation of the elements and their attributes and validation of attributes of types ID, IDREF and IDREFS.
+		</para>
+
+		<variablelist>
+			<title>Involved modules</title>
+			<varlistentry>
+				<term>
+					<classname>DocValidation</classname>
+				</term>
+				<listitem>
+					<para>
+					Validation of the elements and their attributes. Validation of content models is delegated to the module <classname>XmlRE</classname>.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<classname>IdValidation</classname>
+				</term>
+				<listitem>
+					<para>
+					Validation of attributes of types ID, IDREF and IDREFS.
+					</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+
+		<para>
+		Before the document is validated, a lookup-table is built on the basis of the DTD. This table maps element names to their validation functions. The validation function for an element is a set of <literal>XmlFilter</literal> functions, which take the current element as input and return a list of errors. If the element meets the validation constraints, an empty list is returned. Each validation constraint, listed in the following, is represented by a single filter. All these filters are combined by the combinator <function>+++</function>, which concatenates the results of filters, each filter uses copy of state. This approach for validation is very flexible. It is very easy to add new functions without affecting the other ones.
+		</para>
+
+		<para>
+        After the initialization phase of building the validation filters and the lookup table, the whole document is traversed in preorder and every element is validated by its validation filter.
+		</para>
+
+		<para>
+			<itemizedlist>
+				<title>Validation of elements:</title>
+				<listitem>
+					<para>Error: Element is not declared in DTD.</para>
+				</listitem>
+				<listitem>
+					<para>Error: Root element must match value declared in DOCTYPE.</para>
+				</listitem>
+				<listitem>
+					<para>Error: Children of element do not match its content model.</para>
+				</listitem>
+			</itemizedlist>
+
+			<itemizedlist>
+				<title>Validation of attributes:</title>
+				<listitem>
+					<para>Error: Attribute is not declared.</para>
+				</listitem>
+				<listitem>
+					<para>Error: Attribute is specified multiple times.</para>
+				</listitem>
+				<listitem>
+					<para>Error: Attribute is of type #REQUIRED, but was not specified.</para>
+				</listitem>
+				<listitem>
+					<para>Error: Attribute is of type #FIXED, but specified value differs from fixed value.</para>
+				</listitem>
+				<listitem>
+					<para>Error: Value of attribute does not match the lexical constraints of its type.</para>
+				</listitem>
+			</itemizedlist>
+		</para>
+
+		<para>
+		The module <classname>IdValidation</classname> provides functions for checking special ID/IDREF/IDREFS constraints. First it is checked if all ID values are unique. All nodes with ID attributes are collected from the document, then it is validated that values of ID attributes do not occur more than once. During a second iteration over the document it is validated that all IDREF/IDREFS values match the value of some ID attribute. For both checks a lookup-table, which maps element names to their validation functions, is built like it is done in the module <classname>DocValidation</classname>.
+		</para>
+
+		<para>
+			<itemizedlist>
+				<title>Validation of ID/IDREF/IDREFS:</title>
+				<listitem>
+					<para>Error: Value of type ID must be unique within the document.</para>
+				</listitem>
+				<listitem>
+					<para>Error: An attribute of type IDREF/IDREFS references an identifier that does not exist in the document.</para>
+				</listitem>
+			</itemizedlist>
+		</para>
+
+		<para>
+		The following example shows a filter for validating that all attributes of an element are unique (Unique AttSpec, section 3.1 &xmlspec; <citation><xref linkend="bib_xml"/></citation>). It is a filter, which takes an element - an <literal>NTree XTag</literal> node - checks if its attributes are unique, and returns a list of errors or an empty list.
+		</para>
+
+		<example>
+			<title>Validation that all attributes are unique</title>
+			<programlisting>
+noDoublicateAttributes :: XmlFilter
+noDoublicateAttributes n@(NTree (XTag name al) _)
+    = doubles $ reverse al
+      where
+      doubles :: TagAttrl -> XmlTrees
+      doubles ((attrName,_):xs)
+          = if (lookup attrName xs) == Nothing
+            then doubles xs
+            else (err ("Attribute \""++ attrName ++"\" was already specified "++
+                       "for element \"++ name ++"\".") n)
+                 ++
+                 doubles xs
+
+      doubles [] = []
+
+noDoublicateAttributes n
+    = error ("noDoublicateAttributes: illegal parameter:\n" ++ show n)
+			</programlisting>
+		</example>
+
+	</section>
+
+
+	<section id="transformation_of_document">
+		<title>Transformation of the document subset</title>
+		<para>
+		Transformation of the document is done by the module <classname>DocTransformation</classname>. The transformation should be started after validating the document.
+		</para>
+
+		<para>
+			<itemizedlist>
+				<title>Tasks:</title>
+				<listitem>
+					<para>Adding default values of attributes</para>
+				</listitem>
+				<listitem>
+					<para>Normalizing attribute values</para>
+				</listitem>
+				<listitem>
+					<para>Sorting all attributes in lexicographic order</para>
+				</listitem>
+			</itemizedlist>
+		</para>
+
+		<para>
+		Before the document can be transformed, a lookup-table is built on the basis of the DTD which maps element names to their transformation functions. The transformation functions are <literal>XmlFilter</literal> functions, which take a node and return the transformed node. After the initialization phase the whole document is traversed in preorder and every element is transformed by its transformation filter from the lookup-table. The result is a new, transformed <literal>XmlTree</literal>.
+		</para>
+	</section>
+
+
+	<section id="validation_of_attribute_values">
+		<title>Validation of attribute values</title>
+
+		<para>
+		The module <classname>AttributeValueValidation</classname> provides all functions for validating attribute values. It provides a function for checking if the attribute value meets the lexical constraints of its type and a function for normalizing attribute values. These functions have been moved into an own module, because they are needed when the DTD subset and the document subset are validated and when the document is transformed. The function for checking the attribute value is again an <literal>XmlFilter</literal> function.
+		</para>
+	</section>
+
+
+	<section id="derivates_of_regexp">
+		<title>Derivatives of regular expressions</title>
+
+		<para>
+		The following section describes how the algorithm for validating the  element content works. It is implemented in the modules <classname>XmlRE</classname> and <classname>RE</classname>. The most commonly-used technique to solve this problem is based on finite automaton.
+		</para>
+
+		<para>
+		Another algorithm, based on derivatives of regular expressions, is much better suited for implementation in a functional language. This technique does not need to backtrack, like some NFA-based algorithms do and when combined with lazy evaluation and memorization it can be very efficient.
+		</para>
+
+		<para>
+		The algorithm of derivating regular expressions was first described by Janusz A. Brzozowski <citation><xref linkend="brzozowski64"/></citation>. Joe English  suggested using this algorithm for validating element contents in XML. He gave a short description of his ideas combined with a small Haskell program fragment <citation><xref linkend="bib_derivates_je"/></citation>.
+		</para>
+
+		<para>
+		Mark Hopkins wrote some small C programs based on this algorithm. A description of the algorithm and working source code is available from the comp.compilers archive <citation><xref linkend="bib_derivates_mh"/></citation>. James Clark describes an algorithm for RELAX NG validation <citation><xref linkend="bib_derivates_jc"/></citation> that bases on derivatives, too.
+		</para>
+
+		<section>
+			<title>Description</title>
+			<para>
+			Validating the element content is an instance of regular expression matching problem. Basically the content model of an element describes a regular expression. If given the regular expression e and the content c it has to be checked if c is in L(e)? L(e) denotes the language accepted by the regular expression e.
+			</para>
+
+			<para>
+ 			Informal described, the algorithm works as follows. A regular expression is applied to a sentence. The remaining regular expression is checked if it can be derived to an empty sequence. If it can be derived to an empty sequence, the sentence matches the regular expression. Otherwise the sentence is not described by the regular expression.
+			</para>
+
+			<para>
+			The algorithm can be seen as working on an infinite DFA with states labeled by regular expressions instead of symbols as in the canonical construction. The final states are those states for which
+			the regular expression can be derived to an empty sequence. The transition function is a function, which derives the regular expression by a single symbol.
+			</para>
+		</section>
+
+
+		<section>
+			<title>Examples</title>
+
+			<para>
+			The regular expression <emphasis>foobar</emphasis> should be derived with respect to the string "foo". After applying the regular expression to this string, the remaining regular expression is <emphasis>bar</emphasis>. This regular expression cannot be derived to an empty string, because it expects the characters 'b', 'a' and 'r'. This means that the string <emphasis>bar</emphasis> is not described by the regular expression. (Short form: foo\foobar = bar)
+			</para>
+
+			<para>
+			The regular expression <emphasis>a*</emphasis> should be derived with respect to the string "aa". After applying the regular expression to the string, the regular expression <emphasis>a*</emphasis> remains. This expression can be derived to an empty string, because the *-operator indicates that none or more 'a' characters are expected. This means that the regular expression matches the string. (Short form: aa\a* = a*)
+			</para>
+		</section>
+
+		<section>
+			<title>Realization in Haskell</title>
+
+			<para>
+			The following code was adopted from Joe English <citation><xref linkend="bib_derivates_je"/></citation>, but has been extended to support  meaningful error messages, to accept any single symbol (dot operator) and to work with data types of <literal>XmlTree</literal>.
+			</para>
+
+			<para>
+			Regular expressions are defined by the algebraic data type <type>RE</type>.
+			</para>
+
+			<programlisting>
+data RE a =
+    RE_ZERO	String          --' L(0)   = {} (empty set, or failure with message)
+    | RE_UNIT               --' L(1)   = { [] } (empty sequence, or success)
+    | RE_SYM a              --' L(x)   = { [x] }
+    | RE_DOT                --' accept any single symbol
+    | RE_REP (RE a)         --' L(e*)  = { [] } `union` L(e+)
+    | RE_PLUS (RE a)        --' L(e+)  = { x ++ y | x &lt;- L(e), y &lt;- L(e*) }
+    | RE_OPT (RE a)         --' L(e?)  = L(e) `union` { [] }
+    | RE_SEQ (RE a) (RE a)  --' L(e,f) = { x ++ y | x &lt;- L(e), y &lt;- L(f) }
+    | RE_ALT (RE a) (RE a)  --' L(e|f) = L(e) `union` L(f)
+    deriving (Show, Eq)
+			</programlisting>
+
+			<para>
+			The core of the algorithm is the <function>delta</function> ("derivative") function. It takes a regular expression <literal>re</literal> and a symbol <literal>s</literal>. The function returns a new expression that matches all sentences that are a suffix of sentences in L(<literal>re</literal>) beginning with <literal>s</literal>. The function works by simple case wise analysis.
+			</para>
+
+			<programlisting>
+delta :: (Eq a, Show a) => RE a -> a -> RE a
+delta re s = case re of
+    RE_ZERO m        -> re_zero m
+    RE_UNIT          -> re_zero ("Symbol "++ show s ++" unexpected.")
+    RE_SYM sym
+        | s == sym   -> re_unit
+        | otherwise  -> re_zero ("Symbol "++ show sym ++" expected, but "++
+                                 "symbol "++ show s ++" found.")
+    RE_REP e         -> re_seq (delta e s) (re_rep e)
+    RE_PLUS e        -> re_seq (delta e s) (re_rep e)
+    RE_OPT e         -> delta e s
+    RE_SEQ e f
+        | nullable e -> re_alt (re_seq (delta e s) f) (delta f s)
+        | otherwise  -> re_seq (delta e s) f
+    RE_ALT e f       -> re_alt (delta e s) (delta f s)
+    RE_DOT           -> re_unit
+			</programlisting>
+
+			<para>
+			The function <function>matches</function> derives a regular expression with respect to a sentence by using the higher-order function <function>foldl</function> which folds a function into a list of values.
+			</para>
+
+			<programlisting>
+matches :: (Eq a, Show a) => RE a -> [a] -> RE a
+matches e = foldl delta e
+			</programlisting>
+
+			<para>
+			The auxiliary function <function>nullable</function> tests if a regular expression matches the empty sequence. If regular expressions are compound ones and the outer expression cannot be itself derived to an empty sequence, the sub-expressions have to be tested if they are nullable.
+			</para>
+
+			<programlisting>
+nullable ::  (Show a) => RE a -> Bool
+nullable (RE_ZERO _)  = False
+nullable RE_UNIT      = True
+nullable (RE_SYM _)   = False
+nullable (RE_REP _)   = True
+nullable (RE_PLUS e)  = nullable e
+nullable (RE_OPT _)   = True
+nullable (RE_SEQ e f) = nullable e &amp;&amp; nullable f
+nullable (RE_ALT e f) = nullable e || nullable f
+nullable RE_DOT       = True
+			</programlisting>
+
+			<para>
+			The function <function>checkRE</function> checks if an input matched a regular expression. The regular expression <literal>RE_ZERO</literal> indicates that an error occured during derivation and that the regular expression does not match the given sentence.
+			</para>
+
+			<programlisting>
+checkRE :: (Show a) => RE a -> String
+checkRE (RE_ZERO m) = m
+checkRE re
+    | nullable re = ""
+    | otherwise   = "Input must match " ++ printRE re
+			</programlisting>
+
+			<para>
+			The constructor functions <function>re_seq</function>, <function>re_opt</function> and so on, used in the <function>delta</function> function, are not shown. Without these constructor functions the intermediate regular expressions would grow very rapidly.  The constructors simplify them at each step, e.g. by replacing a sequence of epsilons (<literal>RE_UNIT</literal>) by a single epsilon.
+			</para>
+
+			<para>
+			The described <function>delta</function> function is not the one used for validating <literal>XmlTree</literal> types. There exists a special function for validating <literal>XmlTree</literal> nodes in the module <classname>XmlRE</classname>.
+			</para>
+		</section>
+
+		<section>
+			<title>Conclusions</title>
+
+			<para>
+			The algorithm of derivating regular expressions can be expressed in Haskell very naturally: regular expressions are represented by a special data type, sentences are just a list of symbols. Pattern-matching and Haskell's standard functions for list processing allow a very clear and short implementation.
+			</para>
+			<para>
+			The algorithm can handle ambiguous regular expressions very well. If a regular expression consists of sub-expressions, all sub-expressions are derived by a certain symbol. If for example the ambiguous regular expression <literal>(a , b) | (a , c)</literal> is derived with respect to the sentence "<literal>ab</literal>", the algorithm will construct the regular expression <literal>(b | c)</literal> after deriving the original expression by the symbol <literal>a</literal>. After deriving the remaining regular expression by the symbol <literal>b</literal>, the regular expression <literal>(RE_UNIT | RE_ZERO)</literal> remains. This expression can be derived to the empty sequence and therefore the regular expression matches the sentence.
+			</para>
+			<para>
+			Haskell's lazy evaluation avoids the evaluation of the whole regular expression. The expression has only to be evaluated as much that <function>nullable</function> can calculate an answer.
+			</para>
+		</section>
+	</section>
+
+</chapter>

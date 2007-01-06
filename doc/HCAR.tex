@@ -1,0 +1,68 @@
+\begin{hcarentry}[updated]{Haskell XML Toolbox}
+\label{hxt}
+\report{Uwe Schmidt}
+\status{fifth major release (current release: 6.1)}
+\entry{updated}% done, 7.11.2006
+\makeheader
+
+\subsubsection*{Description}
+
+The Haskell XML Toolbox is a collection of tools for processing XML with
+Haskell. It is itself purely written in Haskell 98. The core component of the
+Haskell XML Toolbox is a validating XML-Parser that supports
+almost fully the Extensible Markup Language (XML) 1.0 (Second Edition),
+There is validator based on DTDs and a new more powerful validator for
+Relax NG schemas.
+
+The Haskell XML Toolbox bases on the ideas of HaXml~\cref{haxml} and HXML,
+but introduces a more general approach for processing XML with Haskell.
+Since release 5.1 there is a new arrow interface similar to the approach
+taken by HXML. This interface is more flexible than the old filter approach.
+It is also safer, type checking of combinators becomes possible with the arrow
+interface.
+
+\subsubsection*{Features}
+
+\begin{compactitem}
+\item Validating XML parser
+\item Very liberal HTML parser
+\item XPath support
+\item Full Unicode support
+\item Support for XML namespaces
+\item Flexible arrow interface with type classes for XML filter
+\item Package support for ghc
+\item Native Haskell support of HTTP 1.1 and FILE protocol
+\item HTTP and access via other protocols via external program curl
+\item Tested with W3C XML validation suite
+\item Example programs for filter and arrow interface
+\item Relax NG schema validator based on the arrows interface
+\item A HXT Cookbook for using the toolbox and the arrow interface
+\item Basic XSLT support (next release)
+\end{compactitem}
+
+\subsubsection*{Current Work}
+
+A master thesis has been finished developing an XSLT
+system. The reuslt is a rather complete implementation of
+an XSLT transformer system. Only minor features are missing.
+The implementaion consists of about only 2000 lines of Haskell code.
+The XSLT module will be included in the next HXT release.
+
+A second master studends project will be finished until end of 2006.
+The title is {\em A Dynamic Webserver with Servlet Functionality in
+  Haskell Representing all Internal Data by Means of XML}
+HXT with the arrows interface has been used for all internal data processing.
+The results of this work will be available with the next HXT release.
+
+The next HXT release is planned for December 2006.
+
+\FurtherReading
+
+The Haskell XML Toolbox Web page
+(\url{http://www.fh-wedel.de/~si/HXmlToolbox/index.html})
+includes downloads, online API documentation, a cookbook with nontrivial examples
+of XML processing using arrows and RDF documents, and master thesises describing the
+design of the toolbox, the DTD validator and the arrow based Relax NG
+validator.
+A getting started tutorial about HXT is avaliable in the Haskell Wiki (\url{http://www.haskell.org/haskellwiki/HXT}).
+\end{hcarentry}

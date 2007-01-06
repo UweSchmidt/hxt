@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<element xmlns="http://relaxng.org/ns/structure/1.0" name="foo">
+  <data type="token">
+    <except>
+      <value>foo</value>
+    </except>
+    <except>
+      <value>bar</value>
+    </except>
+  </data>
+</element>
+

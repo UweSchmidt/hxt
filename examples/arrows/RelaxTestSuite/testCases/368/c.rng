@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+
+<element xmlns="http://relaxng.org/ns/structure/1.0" name="foo">
+  <interleave>
+    <element name="bar">
+      <empty/>
+    </element>
+    <element>
+      <anyName>
+        <except>
+          <name>bar</name>
+        </except>
+      </anyName>
+      <empty/>
+    </element>
+  </interleave>
+</element>
+

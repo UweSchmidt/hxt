@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<element xmlns="http://relaxng.org/ns/structure/1.0" name="foo">
+  <data type="string" datatypeLibrary="">
+    <param name="length">2</param>
+  </data>
+</element>
+

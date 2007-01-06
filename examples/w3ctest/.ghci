@@ -1,0 +1,20 @@
+:set -package lang
+:set -package net
+:set -package util
+:set -package posix
+:set -i../../hdom
+:set -i../../hparser
+:set -i../../hvalidator
+:set -i../../hxpath
+:set -i../../hxslt
+:set -i../../http
+:set -i../../hunit
+:set -Wall
+
+:def ex0 (\ _ -> return ":set args --trace-main=1 ./xml-test-suite/xmlconf/xmlconf.xml")
+
+:def x (\ _ -> return ":load RunTestCases")
+
+:x
+
+:module + IO Main

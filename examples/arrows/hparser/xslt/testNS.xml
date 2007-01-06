@@ -1,0 +1,11 @@
+<lonely xmlns:cheese = "http://cheese.org">
+
+  <cheese:brie/>
+
+  <bread:toast cheese:cheddar="" xmlns:bread="http://bread.org"/>
+
+  <canape:baguette xmlns:canape="http://bread.org">
+    <cheese:camembert/>
+  </canape:baguette>
+
+</lonely>

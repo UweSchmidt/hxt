@@ -1,0 +1,39 @@
+PROFILING_INPUT	= xhtml.xml
+GHOSTVIEW	= kghostview
+
+# --------------------------------------------------
+#
+# todo: change for new module structure
+#
+# Utility for GHC profiling of the XML parser
+
+Profiling	: hvalidator/Profiling.hs
+		$(GHC) --make $(GHCPACKAGES) -prof -ignore-scc -o $@ $<
+
+# Time and allocation profiling - Generate profiling information in XML format
+runprofiling1	:
+		./Profiling --source $(PROFILING_INPUT) +RTS -px
+		ghcprof Profiling.prof
+
+# Time and allocation profiling - Generate profiling information in text format
+runprofiling2	:
+		./Profiling --source  $(PROFILING_INPUT) +RTS -p
+		less Profiling.prof
+
+# Heap profiling - Break down the graph by the cost-centre stack which produced the data.
+runprofiling3	:
+		./Profiling --source  $(PROFILING_INPUT) +RTS -hc
+		hp2ps -c -m20 Profiling.hp
+		$(GHOSTVIEW) Profiling.ps
+
+# Heap profiling - Break down the graph by retainer set.
+runprofiling4	:
+		./Profiling --source  $(PROFILING_INPUT) +RTS -hr
+		hp2ps -c -m20 Profiling.hp
+		$(GHOSTVIEW) Profiling.ps
+
+cleanprofiling	:
+		rm -f Profiling.* \
+		      GHCbarchart.tcl \
+		      ghcprof.log
+

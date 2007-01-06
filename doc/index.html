@@ -1,0 +1,444 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>Haskell XML Toolbox %VERSION%</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  </head>
+
+  <body style="background-color: #ffffff;">
+    <h1>Haskell XML Toolbox %VERSION%</h1>
+
+    <h3>Contents</h3>
+    <ul>
+      <li><a href="#intro">Introduction</a></li>
+      <li><a href="#descr">Description</a></li>
+      <li><a href="#docu">Documentation</a></li>
+      <li><a href="#req">Requirements</a></li>
+      <li><a href="#down">Download</a></li>
+      <li><a href="#install">Installation</a></li>
+      <li><a href="#change">Change history</a></li>
+      <li><a href="#limit">Known problems and limitations</a></li>
+      <li><a href="#port">Portability</a></li>
+      <li><a href="#rel">Related Work</a></li>
+      <li><a href="#feed">Feedback</a></li>
+    </ul>
+
+    <hr>
+
+    <a name="intro"></a>
+    <h3>Introduction</h3>
+    <p>
+      The <i>Haskell XML Toolbox</i> is a collection of tools for
+      processing XML with
+      <a href="http://www.haskell.org">Haskell</a>.
+      It is itself purely written in Haskell.
+      The <i>Haskell XML Toolbox</i> is a project of the
+      <a href="http://www.fh-wedel.de">University of Applied Sciences Wedel</a>,
+      initiated by
+      <a href="http://www.fh-wedel.de/~si/">Uwe Schmidt</a>.
+	 </p>
+
+	 <p>
+	 The core component of the <i>Haskell XML Toolbox</i>
+	 is a validating XML-Parser that supports almost fully the
+	 <a href="http://www.w3.org/TR/REC-xml">Extensible Markup Language (XML) 1.0 (Second Edition)</a>.
+    </p>
+
+    <a name="descr"></a>
+    <h3>Description</h3>
+    <p>
+      The <i>Haskell XML Toolbox</i> bases on the ideas of
+      <a href="http://www.cs.york.ac.uk/fp/HaXml/">HaXml</a> and
+      <a href="http://www.flightlab.com/~joe/hxml/">HXML</a>,
+      but introduces a more general approach for processing XML with
+      Haskell.
+      The <i>Haskell XML Toolbox</i> uses a generic data model for
+      representing XML documents,
+      including the DTD subset and the document subset, in Haskell.
+      This data model makes it possible to use filter functions
+      as a uniform design of XML processing applications.
+      The whole XML parser including the validator parts
+      was implemented using this design.
+      Libraries with filters and combinators are provided for processing the generic data model.
+    </p>
+
+    <p>
+      An new more flexible and typesaver API based on arrows instead
+      of filters is included since version 5.2.
+      There is a <em>cookbook</em> for using this arrow interface
+      to build (nontrivial) applications. Manuel Ohlendorf
+      has developed examples for processing RDF and has documented the
+      development in his master thesis: <em>A Cookbook for the Haskell
+	XML Toolbox with Examples for Processing RDF Documents</em>
+      (the thesis as <a href="cookbook/doc/thesis.pdf">PDF</a>)
+    </p>
+
+    <p>Features:</p>
+    <ul>
+      <li>Unicode and UTF-8, US-ASCII and ISO-Laitin-1 support</li>
+      <li>http: and file: protocol support</li>
+      <li>http access via proxy</li>
+      <li>wellformed document parsing, validation</li>
+      <li>namespace support: namespace propagation and checking</li>
+      <li>XPath support for selection of document parts</li>
+      <li>liberal HTML parser for interpreting any text containing &lt;
+	... &gt; as HTML/XML</li>
+      <li><a href="http://www.relaxng.org/">Relax NG</a> schema
+	validator</li>
+      <li>integrated <a href="http://www.w3.org/TR/xslt">XSLT</a> transformer</li>
+    </ul>
+
+    <a name="docu"></a>
+    <h3>Documentation</h3>
+
+    <p>
+      A (somewhat) gentle introduction to HXT is avalable in the
+      <a href="http://www.haskell.org/haskellwiki/HXT">Haskell Wiki</a>.
+    </p>
+
+    <p>
+      The XSLT transformer has been developed by Tim Walkenhorst in
+      this master thesis: <em><a href="xslt/thesis.pdf">Implementing an XSLT
+	  processor for the Haskell XML Toolbox</a></em>. It's a
+      rather complete implementation, but it's of course not a
+      substitute for Xalan or other advanced XSLT systems. The XSLT
+      module consists of less than 2000 lines of code. Compared with
+      the more than 300,000 lines of Java for Xalan, this Haskell code
+      can be viewed as one of the first formal specifications for XSLT.
+    </p>
+
+    <p>
+      Manuel Ohlendorfs master thesis, describing the arrow interface
+      of the toolbox: <em>A Cookbook for the Haskell
+	XML Toolbox with Examples for Processing RDF Documents</em>
+      (the thesis as <a href="cookbook/doc/thesis.pdf">PDF</a>).
+      The source code of the example application is included in the
+      <tt>doc/cookbook</tt> directory of the distribution.
+    </p>
+
+    <p>
+      The master's thesis
+      <i>"Design and Implementation of a validating XML parser in
+	Haskell"</i>
+      by Martin Schmidt describes the design and motivation of the
+      <i>Haskell XML Toolbox</i>
+      (the thesis as <a href="thesis/index.html">HTML</a>,
+      <a href="thesis.ps">Postscript</a> or <a
+	href="thesis.pdf">PDF</a>) and the development of the DTD
+      validator module.
+      The documentation in the thesis is a bit out of date, the modules
+      and module names and some function names have been changed. For details the online
+      haddock documentation should be used.
+    </p>
+
+    <p>
+      The description of the development of the <a href="http://www.w3.org/TR/xpath">XPath</a> modules
+      is described (in german) in <em>Konzeption und Implementierung
+	eines XPath-Moduls für die Haskell XML Toolbox</em>
+      (<a href="./hxpath/diplomarbeit.pdf">PDF-document</a>).
+    </p>
+
+    <p>
+      The description of the internals of the <a href="http://www.relaxng.org/">Relax NG</a> validator
+      modules is described (in german) in <em>Design und Entwicklung
+	eines <a href="http://www.relaxng.org/">Relax NG</a> Schema Validators auf Basis der Haskell XML
+	Toolbox</em> (<a href="./relaxng/thesis.pdf">PDF-document</a>).
+    </p>
+
+    <p>
+      The <em><a href="./hdoc_filter/index.html">Filter API Documentation</a></em> generated
+      with <a href="http://www.haskell.org/haddock/">Haddock</a>.
+      For the new arrow interface there is a more user friendly <em><a href="./hdoc_arrow/index.html">Arrow API Documentation</a></em>
+      including only the basic types and the arrow descriptions.
+    </p>
+
+    <a name="req"></a>
+    <h3>Requirements</h3>
+    <ul>
+      <li>GHC >= 6.4.1 or GHC-6.6</li>
+      <li>GNU make (to build a compiled version) or Cabal</li>
+    </ul>
+
+    <a name="down"></a>
+    <h3>Downloads</h3>
+    <p>
+      <a href="%DISTFILE%.tar.gz">Haskell XML Toolbox %VERSION%</a>,
+      released %PUBDATE%:
+    </p>
+    <ul>
+      <li>This version works (at least) with ghc.6.4.2. and the
+	latest <a href="http://www.haskell.org/http/">Haskell HTTP
+	  module</a>.
+      </li>
+      <li>Includes sources for building a ghc package
+	<code>hxt</code> with Cabal or make.
+	This package contains a Haskell DOM, an XML parser, a
+	DTD validator,  namespace processing functions, a Relax
+	NG validator, an XPath expression evaluator and an XSLT transformer.
+      </li>
+      <li>HTTP access can be done with the 
+	<a href="http://www.haskell.org/http/">Haskell HTTP module</a>
+	or with an external program <code>curl</code>
+	The HTTP module must be installed before installing the
+	toolbox.
+	In the past the installation procedure for HTTP was a bit clumsy because of further
+	dependencies on <a href="http://www.haskell.org/crypto/">The Haskell Cryptographic Library</a>
+	and <a href="http://www.n-heptane.com/nhlab/">NewBinary package</a>. The latest <a href="http://www.haskell.org/http/">HTTP module</a>
+	from 2006-07-07 has removed these dependencies and consists only of one HTTP module (not HTTP and Browser).
+	So there has only one package HTTP to be installed before installing HXT.
+      </li>
+      <li>Includes various examples, e.g. in example dir
+	<tt>examples/arrows/hparser/</tt>
+	a validating parser, which can be used as a starting point for
+	a HXT command line application.
+      </li>
+      <li>Provides a HUnit test <code>HUnitTest</code> for testing
+	and demonstration of the available set of filters.
+      </li>
+      <li>Includes an <a href="http://www.haskell.org/arrows/">arrow interface</a> with type classes and
+	overloading for a more flexible use of the filter technique.
+      </li>
+    </ul>
+
+    <a name="install"></a>
+    <h3>Installation</h3>
+      
+    <p>
+      Before installing this version, install the <a href="http://www.haskell.org/">Haskell HTTP module</a>.
+      For a quick install with Cabal execute the following commands in
+      <tt>.../HXT-%VERSION%</tt>
+    </p>
+    <pre>
+    make setup
+    ./setup configure --ghc
+    ./setup build
+    ./setup install		# with root privileges
+    </pre>
+    <p>
+      A quick test of the example programs:
+    </p>
+    <pre>
+    cd examples
+    make all
+    make test
+    </pre>
+    <p>
+      Installation without Cabal with GNU make:
+    </p>
+    <pre>
+    make all
+    make install               # with root privileges
+    </pre>
+
+    <a name="change"></a>
+    <h3>Change history</h3>
+    <ul>
+      <li>In <a href="%SOFTWARE%-7.0.tar.gz">Version 7.0</a>
+	<ul>
+	  <li>New integrated XSLT transformer module. The example
+	    parser (<tt>examples/arrows/hparser</tt>) is extended to act as an XSLT transformer.
+	  </li>
+	  <li>Errors concerning HTML parsing and implict closing of
+	    elements have been fixed.
+	  </li>
+	  <li>Some minor changes of and additions to the arrow API.
+	  </li>
+	  <li>New functions <tt>readString</tt> and
+	    <tt>readFromString</tt> for reading documents from Haskell
+	    strings the same way as reading external documents with <tt>readDocument</tt>.
+	  </li>
+	</ul>
+      </li>
+      <li>In <a href="%SOFTWARE%-6.1.tar.gz">Version 6.1</a>
+	<ul>
+	  <li>HXT 6.1. contains only changes in the cabal installation process for
+	    working with the <a href="http://www.haskell.org/http/">Haskell HTTP module</a> in tar archive http-20060707.tgz.
+	    This module no longer depends on <a href="http://www.haskell.org/crypto/">The Haskell Cryptographic Library</a>,
+	    and <a href="http://www.n-heptane.com/nhlab/">NewBinary package</a>.
+	  </li>
+	</ul>
+      </li>
+      <li>In <a href="%SOFTWARE%-6.0.tar.gz">Version 6.0</a>
+	<ul>
+	  <li>The arrow interface has changed slightly, especially the handling of user defined states in the state and IO arrows has been simplified.
+	    This is the main reason for a 6.0 version.
+	  </li>
+	  <li>The XPath arrows have been extended.
+	    There are arrows not only for selecting nodes via an XPath expression, but also
+	    for processing and modifying all nodes selected
+	    by an XPath expressions (see module Text.XML.HXT.Arrow.XmlNodeSet).
+	  </li>
+	  <li>Separation of the API documentation into two documents, one for the
+	    old <a href="./hdoc_filter/index.html">Filter API</a>
+	    and a separate one for the <a href="./hdoc_arrow/index.html">Arrow API</a>.
+	    The <a href="./hdoc/index.htm">complete API documentation</a> is still available.
+	  </li>
+	  <li>DTD processing for the arrow part is done completely by arrow based routines.
+	  </li>
+	  <li>Cabal config file and dependencies change to work with ghc 6.4.2.
+	</ul>
+      </li>
+      <li>In <a href="%SOFTWARE%-5.5.tar.gz">Version 5.5</a>
+	<ul>
+	  <li>Changes in file path and default base URI handling.
+	    This release compiles and runs (at least) under Windows XP,
+	    Cygwin (DLL 1.5.19-4 release)
+	    and ghc 6.4.1.
+	  </li>
+	</ul>
+      </li>
+      <li>In <a href="%SOFTWARE%-5.4.tar.gz">Version 5.4</a>
+	<ul>
+	  <li>Bug fix in parameter entity substitution for external
+	    parameter entities.
+	  </li>
+	</ul>
+      </li>
+      <li>In <a href="%SOFTWARE%-5.3.tar.gz">Version 5.3</a>
+	<ul>
+	  <li>
+	    Documentation and usage examples for the new arrow interface
+	    of the toolbox: <em>A Cookbook for the Haskell
+	      XML Toolbox with Examples for Processing RDF Documents</em>
+	    (<a href="cookbook/doc/thesis.pdf">PDF-document</a>).
+	  </li>
+	  <li>Integration of <a href="http://www.relaxng.org/">Relax NG</a> schema validator into the
+	    toolbox.
+	    A usage example is included in the
+	    <tt>examples/arrows/hparser/HXmlParser.hs</tt> source.</li>
+	  <li>Some data structure changes made for runtime and space
+	    optimization.</li>
+	  <li>Parameter entity substitution reworked because of bugs in
+	    nested and recursive parameter entity substitution.</li>
+	</ul>
+      </li>
+      <li>In <a href="%SOFTWARE%-5.2.tar.gz">Version 5.2</a>
+	<ul>
+	  <li>Bug fix with entity substitution of nested
+	    external parameter entities in DTDs.</li>
+	  <li>Some minor changes in the arrow interface.</li>
+	</ul>
+      </li>
+      <li>In <a href="%SOFTWARE%-5.01.tar.gz">Version 5.01</a>
+	<ul>
+	  <li>Sources ported to work with ghc-6.4 and ghc-6.4 is required.
+	    Please use toolbox versions &lt;= 5.00 for older ghc's.</li>
+	  <li>Native HTTP-modules removed from the distribution.
+	    Install the latest version of the <a href="http://www.dtek.chalmers.se/~d00bring/haskell-xml-rpc/http.html">Haskell HTTP module</a>
+	    before installing Version 5.01</li>
+	  <li>Interface for the HTTP access via curl done with
+	    routines form System.Process, so the deprecated module POSIX
+	    is no longer needed.</li>
+	  <li>Build and install can be done with Cabal. See README file for installation.</li>
+	</ul>
+      </li>
+      <li>In <a href="%SOFTWARE%-5.00.tar.gz">Version 5.00</a>
+	<ul>
+	  <li>All compiled modules are packaged into
+            a single ghc package <code>hxt</code>.</li>
+          <li>A new interface for arrows is added.
+            Modules in this interface are found in
+	    <code>Control.Arrow</code>
+            and <code>Text.XML.HXT.Arrow</code> (see <a
+	      href="./hdoc/index.html">Haddock documentation</a>)</li>
+	  <li>Examples for the usage of the arrow interface are found
+	    in the examples/arrows subdirectory.</li>
+	</ul>
+      </li>
+    </ul>
+
+    
+    <a name="limit"></a>
+    <h3>Known problems and limitations</h3>
+    <p>
+      The parser has been tested with the XML Validation Suite form the
+      W3C. The following problems have been encountered:
+    </p>
+    <ul>
+      <li>Line numbers in XML parser do not always point to the
+	correct position of the syntax error.</li>
+      <li>Line numbers are not yet reported for validation constraint
+	errors.
+      </li>
+      <li>The standalone document check is not yet implemented.</li>
+      <li>The XSLT module does not support the complete XSLT standard.</li>
+    </ul>
+
+    <a name="port"></a>
+    <h3>Portability</h3>
+    <p>
+      Portability to Windows based systems has not been tested very
+      intensively, but did work on an XP system with the Cygwin tools installed.
+      Development was done under Linux with GHC 6.4 with the -Wall
+      flag. No warnings were issued, when compiling the toolbox sources.
+    </p>
+
+    <p>Haskell Modules and Libraries used in the toolbox</p>
+    <ul>
+      <li>Various <a href="http://www.haskell.org/ghc/">GHC</a>
+	libraries including the
+	<a href="http://www.cs.uu.nl/~daan/parsec.html">Parsec</a>
+	parser combinator library.
+      </li>
+      <li>The
+	<a href="http://www.haskell.org/http/">HTTP and Browser Modules</a>
+      </li>
+    </ul>
+
+    <a name="rel"></a>
+    <h3>Related work</h3>
+
+    <ul>
+      <li>Malcolm Wallace and Colin Runciman wrote
+	<a href="http://www.cs.york.ac.uk/fp/HaXml/">HaXml</a>,
+	a collection of utilities for using Haskell and XML together.
+	The <i>Haskell XML Toolbox</i> is based on their idea
+	of using filter combinators for processing XML with Haskell.
+      </li>
+      <li>Joe English wrote
+	<a href="http://www.flightlab.com/~joe/hxml/">HXML</a>
+	- a non-validating XML parser in Haskell.
+	His
+	<a href="http://www.flightlab.com/~joe/sgml/validate.html">idea</a>
+	of validating XML by using derivatives of regular expressions
+	was
+	implemented in the validation functions of this software.
+	Also his ideas and sources for navigateble trees are used
+	in the hxpath modules.
+      </li>
+    </ul>
+
+    <a name="feed"></a>
+    <h3>Feedback</h3>
+
+    <p>
+      We are interested in hearing your feedback
+      on our <i>Haskell XML Toolbox</i>, suggestions
+      for improvements, comments and criticisms.<br>
+    </p>
+    <p>
+      Mail address is
+      <a
+	 href="mailto:hxmltoolbox@fh-wedel.de?subject=Haskell%20XML%20Toolbox%20Feedback">hxmltoolbox@fh-wedel.de</a>
+    </p>
+
+    <hr>
+
+    <table width="100%">
+	<tr>
+	  <td>
+	    The <i>Haskell XML Toolbox</i>
+	    is distributed under the
+	    <a href="http://www.opensource.org/licenses/mit-license.php"><b>MIT License</b></a>.
+	  </td>
+	  <td align="right">
+	    <a href="http://validator.w3.org/check/referer">
+	      <img border="0" src="http://www.w3.org/Icons/valid-html401" alt="Valid HTML 4.01!" height="31" width="88">
+	    </a>
+	  </td>
+	</tr>
+	<tr><td><i>Last modified: %PUBDATE%</i></td><td>&nbsp;</td></tr>
+</table>
+
+  </body>
+</html>

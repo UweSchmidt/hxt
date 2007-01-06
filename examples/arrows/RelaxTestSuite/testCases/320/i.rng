@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+<start>
+  <group>
+    <element name="foo">
+      <empty/>
+    </element>
+    <element name="foo">
+      <empty/>
+    </element>
+  </group>
+</start>
+</grammar>
+

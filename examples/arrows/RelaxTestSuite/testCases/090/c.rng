@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" xmlns:eg="http://www.example.com">
+  <eg:comment/>
+  <eg:comment/>
+  <start>
+    <eg:comment/>
+    <element>
+      <eg:comment/>
+      <eg:comment/>
+      <name>foo</name>
+      <eg:comment/>
+      <data type="string"/>
+      <eg:comment/>
+      <empty>
+        <eg:comment/>
+        <eg:comment/>
+      </empty>
+      <eg:comment/>
+      <eg:comment/>
+    </element>
+    <eg:comment/>
+  </start>
+  <eg:comment/>
+</grammar>
+

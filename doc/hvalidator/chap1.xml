@@ -1,0 +1,710 @@
+<![%workaround;[
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+       "file:///usr/share/sgml/docbook/dtd/xml/4.2/docbookx.dtd">
+	   	<!ENTITY xmlspec "XML 1.0 specification">
+]]>
+
+
+<chapter id="c1">
+	<title>Basics</title>
+
+	<para>
+	The following chapter gives a short introduction to XML and Haskell.
+	Readers who are familiar with these techniques can skip this chapter.
+	</para>
+
+	<section id="xml">
+		<title>XML</title>
+
+		<section id="xml_introduction">
+			<title>Introduction</title>
+
+			<para>
+			The Extensible Markup Language (XML) was standardized by the World Wide Web Consortium (W3C) at the beginning of 1998. The current standard is described by the &xmlspecl; <citation><xref linkend="bib_xml"/></citation>. XML forms a subset of the Structured Generalized Markup Language (SGML), which is extremely complex. XML itself is a simplified form of SGML. Both languages are meta languages for defining markup languages.
+			</para>
+
+			<para>
+			XML documents are structured hierarchical. The documents base on a simple data model: trees with attributes as some extra structure.
+			</para>
+
+			<para>
+			A Document Type Definition (DTD) can be used to define formal requirements to the structure of an XML document. It specifies a grammar for a class of documents. These are rules for the elements, attributes and other data and how they are logically related in an XML document. Each document, which corresponds to a DTD, is called an instance of this DTD.
+			</para>
+
+			<para>
+			Today XML is often used to define and exchange data structures application-independent. A central role plays the validation of XML documents. Validation of XML documents describes the check if the document corresponds to the constraints of a DTD. The application that reads an XML document and performs validation is called XML processor. Not all XML processors are validating ones. Applications that do not need these checks can use non-validating XML processors for performance reasons.
+			</para>
+		</section>
+
+		<section id="processing_xml">
+			<title>Processing XML</title>
+
+			<para>
+			Every application that processes information from XML documents needs an XML processor, which reads an XML document and provides access to its content and structure to the processing application. Two parse methods exist: event based and tree based parse method. They define essential differences for the communication between the XML processor and applications.
+			</para>
+
+			<simplesect id="event_based">
+				<title>Event based parse method</title>
+
+				<para>
+				The document is processed sequentially; the most popular parse method is SAX - the Simple API for XML <citation><xref linkend="bib_sax"/></citation>. Each element is an event trigger, which can initiate an action on the processing application. In terms of processing speed and memory consumption this is the most performant technique for accessing an XML document in sequential order. The event based parsed method is also very efficient for processing only a few specific elements of a document. The main disadvantage is that it is more difficult to generate output with a different order of elements than the input, because some kind of memory is needed.
+				</para>
+			</simplesect>
+
+			<simplesect id="tree_based">
+				<title>Tree based parse method</title>
+
+				<para>
+				The document is transformed from a sequential into a hierarchical structure by the XML processor (e.g. <link linkend="bib_dom">DOM</link>/<link linkend="bib_jdom">JDOM</link>). This tree model of the document is stored in memory and can be accessed by the processing application. The main advantage of this parse method is that it supports random access to the document. Random access is needed for example for Extensible Stylesheet Language Transformations (XSLT) <citation><xref linkend="bib_xsl"/></citation>. XSLT implements a tree-oriented transformation language for transmuting XML documents.
+				</para>
+
+				<para>
+				The tree representation can be used for traversing the document several times or construct output in a different order from the input. The main disadvantage of this method is that the tree model is only accessible when parsing of the document is complete. For large documents this can be slow and memory intensive.
+				</para>
+			</simplesect>
+		</section>
+
+<!-- *********************************************************************** -->
+
+		<section id="correctness">
+			<title>Correctness of documents</title>
+			<simplesect id="well-formed">
+				<title>Well-formed documents</title>
+
+				<para>
+				There exist two classes of correctness for XML documents. The first class form the well-formed documents. These documents meet the syntax rules of the &xmlspec; <citation><xref linkend="bib_xml"/></citation>. If a document does not meet these syntax rules, it is not an XML document and is rejected by any XML processor.
+				</para>
+
+				<para>
+					<itemizedlist>
+						<title>Some XML syntax rules:</title>
+						<listitem>
+							<para>Every document must have a single unique root element that encloses all other elements.</para>
+						</listitem>
+						<listitem>
+							<para>All elements must be correctly nested.</para>
+						</listitem>
+						<listitem>
+							<para>All elements must have corresponding start and end tags.</para>
+						</listitem>
+						<listitem>
+							<para>Attribute values must be enclosed within single or double quotes.</para>
+						</listitem>
+					</itemizedlist>
+				</para>
+			</simplesect>
+
+			<simplesect id="valid">
+				<title>Valid documents</title>
+
+				<para>
+				The second class form the valid documents. These documents are well-formed and meet in addition the constraints of a DTD (described in <xref linkend="dtd"/>) or a Schema <citation><xref linkend="bib_schema"/></citation>. This class of correctness is required if XML documents must be exchanged between applications reliably. Only validating XML processors perform these checks, non-validating XML processors ignore the DTD.
+				</para>
+			</simplesect>
+		</section>
+
+<!-- *********************************************************************** -->
+
+		<section id="dtd">
+			<title>Document Type Definition (DTD)</title>
+
+			<para>
+			XML is a meta language for specifying markup languages, the DTD is a tool to create and describe this language. A DTD defines the elements, attributes, entities and notations used in an XML document. Further it defines a context free grammar that states which is the allowed content of an element.	The DTD can point to an external DTD subset containing declarations, it may contain the  declarations directly in an internal DTD subset, or even both. This section will describe the definitions of elements and their attributes. They form the basic concepts of XML documents. Entity declarations that are mainly used for replacing text and notation declarations that are used for specifying the format of special contents are not explained. For a complete overview see <citation><xref linkend="bib_xmlquickref"/></citation>.
+			</para>
+
+			<simplesect id="element-declaration">
+				<title>Element type declaration</title>
+
+				<para>
+				A DTD declares all allowed elements in an XML document. Elements are defined by &lt;!ELEMENT> declarations. This declaration specifies the name of the element and its content model. Only one declaration for each element is allowed, multiple declarations are forbidden. The order of the declarations is irrelevant.
+				</para>
+
+				<para>
+					<itemizedlist>
+						<title><literal>&lt;!ELEMENT name content model></literal></title>
+						<listitem>
+							<para><literal>ELEMENT</literal> - Keyword</para>
+						</listitem>
+						<listitem>
+							<para><literal>name</literal> - Element name, respectively its tag names</para>
+						</listitem>
+						<listitem>
+							<para><literal>content model</literal> - Definition of the allowed types of child elements (text data, other elements) and their order</para>
+						</listitem>
+					</itemizedlist>
+				</para>
+
+				<para>
+				For defining the content model of elements there exist some operators. These operators are described shortly in the following.
+				</para>
+
+				<table frame="all">
+					<title>Connectors</title>
+					<tgroup cols="2" align="left" colsep="1" rowsep="1">
+						<colspec colwidth="100pt"/>
+						<tbody>
+							<row>
+								<entry>,</entry>
+								<entry>Sequence of elements, "then"</entry>
+							</row>
+							<row>
+								<entry>|</entry>
+								<entry>Alternative of elements (exclusive), "xor"</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+
+				<table frame="all">
+					<title>Occurrence indicators</title>
+					<tgroup cols="2" align="left" colsep="1" rowsep="1">
+						<colspec colwidth="100pt"/>
+						<tbody>
+							<row>
+								<entry>(no indicator)</entry>
+								<entry>Element must appear exactly one time</entry>
+							</row>
+							<row>
+								<entry>?</entry>
+								<entry>Element is optional, 0 or 1</entry>
+							</row>
+							<row>
+								<entry>*</entry>
+								<entry>Element is optional and repeatable, 0 or more</entry>
+							</row>
+							<row>
+								<entry>+</entry>
+								<entry>Element must appear at least one time, 1 or more</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+
+				<table frame="all">
+					<title>Grouping</title>
+					<tgroup cols="2" align="left" colsep="1" rowsep="1">
+						<colspec colwidth="100pt"/>
+						<tbody>
+							<row>
+								<entry>(</entry>
+								<entry>Start of content model or group</entry>
+							</row>
+							<row>
+								<entry>)</entry>
+								<entry>End of content model or group</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+
+				<table frame="all">
+					<title>#PCDATA in content model</title>
+					<tgroup cols="2" align="left" colsep="1" rowsep="1">
+						<colspec colwidth="100pt"/>
+						<tbody>
+							<row>
+								<entry valign="top">(#PCDATA)</entry>
+								<entry valign="top">Element has only text data or nothing as content</entry>
+							</row>
+							<row>
+								<entry valign="top">(#PCDATA | el1 | el2)*</entry>
+								<entry valign="top">Mixed content. The element can contain text data and elements. #PCDATA must be listed in the declaration at first. It cannot be defined that allowed child elements have to appear in a certain order, or that they at least must appear.</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+
+				<para>
+				#PCDATA is the abbreviation for "parsed character data" and means that text data is inspected by the XML parser for eventual markup. If for example the text data contains entity references, the entities are expanded.
+				</para>
+
+				<table frame="all">
+					<title>Keywords</title>
+					<tgroup cols="2" align="left" colsep="1" rowsep="1">
+						<colspec colwidth="100pt"/>
+						<tbody>
+							<row>
+								<entry valign="top">EMPTY</entry>
+								<entry valign="top">Element has no content</entry>
+							</row>
+							<row>
+								<entry valign="top">ANY</entry>
+								<entry valign="top">Element has any declared elements and text data as content, or is empty.</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+			</simplesect>
+
+			<simplesect id="attribute_declaration">
+				<title>Attribute declarations</title>
+
+				<para>
+				Attributes define additional name-value pairs for elements. The attributes are defined by &lt;!ATTLIST> declarations. It defines the attribute type and default values.
+				</para>
+
+				<para>
+					<itemizedlist>
+						<title><literal>&lt;!ATTLIST target_element attr_name attr_type default></literal></title>
+						<listitem>
+							<para><literal>ATTLIST</literal> - Keyword</para>
+						</listitem>
+						<listitem>
+							<para><literal>target_element</literal> - Element name</para>
+						</listitem>
+						<listitem>
+							<para><literal>attr_name</literal> - Attribute name</para>
+						</listitem>
+						<listitem>
+							<para><literal>attr_type</literal> - Type of the attribute value, or list of values</para>
+						</listitem>
+						<listitem>
+							<para><literal>default</literal> - Keyword or default value</para>
+						</listitem>
+					</itemizedlist>
+				</para>
+
+				<table frame="all">
+					<title>Type of the attribute value</title>
+					<tgroup cols="2" align="left" colsep="1" rowsep="1">
+						<colspec colwidth="100pt"/>
+						<tbody>
+							<row>
+								<entry valign="top">CDATA</entry>
+								<entry valign="top">Text data</entry>
+							</row>
+							<row>
+								<entry valign="top">ID</entry>
+								<entry valign="top">Unique identifier, value of attribute must be unique within the XML document</entry>
+							</row>
+							<row>
+								<entry valign="top">IDREF</entry>
+								<entry valign="top">Reference to an ID, must match the value of some ID attribute</entry>
+							</row>
+							<row>
+								<entry valign="top">IDREFS</entry>
+								<entry valign="top">One or more references to IDs, separated by white space</entry>
+							</row>
+							<row>
+								<entry valign="top">NMTOKEN</entry>
+								<entry valign="top">Name token, attribute value must  only consist of letters, digits and some extra characters</entry>
+							</row>
+							<row>
+								<entry valign="top">NMTOKENS</entry>
+								<entry valign="top">One or more name tokens, separated by white space</entry>
+							</row>
+							<row>
+								<entry valign="top">ENTITY</entry>
+								<entry valign="top">Name of an unparsed entity, declared in the DTD</entry>
+							</row>
+							<row>
+								<entry valign="top">ENTITIES</entry>
+								<entry valign="top">One or more names of unparsed entities declared in the DTD, separated by white space</entry>
+							</row>
+							<row>
+								<entry valign="top">(a | b | c)</entry>
+								<entry valign="top">Enumeration, list of possible attribute values</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+
+				<table frame="all">
+					<title>Attribute defaults</title>
+					<tgroup cols="2" align="left" colsep="1" rowsep="1">
+						<colspec colwidth="100pt"/>
+						<tbody>
+							<row>
+								<entry valign="top">"value"</entry>
+								<entry valign="top">Default value of the attribute. If the attribute is not specified, this value is used by the XML processor</entry>
+							</row>
+							<row>
+								<entry valign="top">#REQUIRED</entry>
+								<entry valign="top">Attribute must be specified</entry>
+							</row>
+							<row>
+								<entry valign="top">#IMPLIED</entry>
+								<entry valign="top">Attribute is optional</entry>
+							</row>
+							<row>
+								<entry valign="top">#FIXED "value"</entry>
+								<entry valign="top">Attribute has a fixed value. No other value is allowed.</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+			</simplesect>
+		</section>
+
+		<section id="xml_examples">
+			<title>Example</title>
+
+			<para>
+			This simple example demonstrates an XML document with an internal DTD. The DTD defines the elements <literal>a</literal>, <literal>b</literal> and <literal>c</literal>. The element <literal>a</literal> has an additional attribute <literal>att1</literal>. The small document enclosed by the root element <literal>a</literal> is an instance of this DTD.
+			</para>
+
+			<example>
+				<title>Sample XML document</title>
+
+				<programlisting>
+&lt;?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+
+&lt;!DOCTYPE a [
+&lt;!ATTLIST a  att1  CDATA  #IMPLIED>
+&lt;!ELEMENT a  (b, c?)>
+&lt;!ELEMENT b  EMPTY>
+&lt;!ELEMENT c  (#PCDATA)>
+]>
+
+&lt;a att1="test">
+    &lt;b/>
+    &lt;c>hello world&lt;/c>
+&lt;/a>
+				</programlisting>
+			</example>
+		</section>
+
+	</section>
+
+<!-- *********************************************************************** -->
+
+   <section id="haskell">
+    <title>Haskell</title>
+
+	<para>
+	This introduction to Haskell can only cover a few aspects of Haskell. Its aim is to make the next chapters more easily understandable for persons who are not familiar with Haskell, but with programming languages. If you are new to Haskell, its homepage Haskell.org <citation><xref linkend="bib_haskellorg"/></citation> is a good place to start for gaining information and lots of free compilers and libraries. The tutorial "A Gentle Introduction to Haskell" <citation><xref linkend="bib_gentelinstruction"/></citation> gives a detailed overview about the language. A great learning book, full of examples is "The Craft of Functional Programming" by Simon Thompson <citation><xref linkend="thompson99"/></citation>. For advanced people Paul Hudak's "The Haskell School of Expression" <citation><xref linkend="hudak00"/></citation> gives a more complete overview about monads and higher-order functions by samples from multimedia. The language itself is defined in the Haskell 98 Report <citation><xref linkend="bib_98report"/></citation> and the Haskell 98 Library Report <citation><xref linkend="bib_98libraryreport"/></citation>.
+	</para>
+
+	<section id="haskell_introduction">
+		<title>Introduction</title>
+
+		<para>
+		Haskell is named after Haskell Brooks Curry <citation><xref linkend="bib_haskellbrooks"/></citation> who was one of the pioneers of the lambda calculus. Haskell bases on the lambda calculus, a mathematical theory of functions, and not on the Turing machine like imperative programming languages do. In functional programming the programmer defines <emphasis>what</emphasis> has to be calculated and not <emphasis>how</emphasis> it is calculated. A functional program is a single expression, which is executed by evaluating the expression.
+		</para>
+
+		<para>
+		Shortly described, Haskell is a strong typed, lazy, pure functional programming language.
+		</para>
+
+		<para>
+		Haskell has a static type system so that all type errors are detected at compile time. This makes Haskell programs very type safe. Its type class system is complex but powerful.
+		</para>
+
+		<para>
+		Haskell's evaluation model is called lazy or non-strict, because arguments of functions are only evaluated if they are needed for computations. This leads to a demand-driven evaluation. Expressions are evaluated just enough to get the result. Parts of them may not be evaluated at all. In contrast to imperative languages, program order is not needed.
+		</para>
+
+		<para>
+		The language is called pure, because it has no imperative extensions and it eschews all side effects. This leads to the fact that Haskell lacks any loop constructs, because mutable variables do not exist. All iterations have to be expressed by recursions. The lack of side effects allows easy reasoning about the programs.
+		</para>
+
+		<para>
+		The above-described qualities make Haskell a modern functional programming language with many strengths over actual object oriented languages like Java or C++.
+		</para>
+	</section>
+
+<!-- *********************************************************************** -->
+
+	<section id="functions">
+		<title>Functions</title>
+
+		<para>
+		Functions are essential for structuring a program. The following example shows a function declaration for adding two numbers.
+		</para>
+
+		<example>
+			<title>Adding two integers</title>
+			<programlisting>
+add :: Int -> Int -> Int
+add a b = a + b
+			</programlisting>
+		</example>
+
+		<para>
+		The first line is the type signature, it declares the name and type of the function. The function <function>add</function> takes two integers as input and returns an integer as a result. The type system of Haskell is so powerful that the type signature can be avoided. However there exist a few exceptions and defining the type signatures makes a program much more maintainable.
+		</para>
+
+		<para>
+		The second line gives the definition of the function as an equation. The part before the equal sign names the arguments, the part after the equal sign defines the computation. Using <emphasis>pattern matching</emphasis> (see <xref linkend="pattern_matching"/>) a function can be defined by a series of these equations.
+		</para>
+
+		<para>
+		By surrounding the function name of a two-argument function in back-quotes, it can be written between its arguments, called infix.
+		</para>
+
+		<example>
+			<title>Prefix and infix notation</title>
+			<programlisting>
+add 1 2
+1 'add' 2
+			</programlisting>
+		</example>
+
+		<para>
+		Operators, such as <function>++</function> for concatenating two lists, are just infix functions. Instead of writing the function in front of its arguments, it is written between them. Haskell allows the programmer to define his own operators. For defining infix functions, the function name has to be enclosed in parenthesis in the type signature.
+		</para>
+
+		<example>
+			<title>Type signature of an infix function</title>
+			<programlisting>
+(++) :: [a] -> [a] -> [a]
+			</programlisting>
+		</example>
+
+		<para>
+		It is also possible to define the associativity and binding power of the self-defined operators. The following example defines <function>++</function> as a right-associative operator with a precedence level of 5.
+		</para>
+
+		<example>
+			<title>Define associativity and binding power</title>
+			<programlisting>
+infixr 5  ++
+			</programlisting>
+		</example>
+	</section>
+
+<!-- *********************************************************************** -->
+
+	<section id="types">
+		<title>Types</title>
+
+		<para>
+		In general terms, a type is a collection of similar objects, such as numbers or characters. Haskell has a very powerful and complex type system. The following sections can just give a small overview. Type classes, abstract data types or infinite lists are not discussed.
+		</para>
+
+		<simplesect>
+			<title>Build-in types</title>
+
+			<para>
+			Like many other programming languages Haskell has the basic build-in types: Char, Int, Bool, Float and String, which is only a synonym for a list of Char.
+			</para>
+
+			<para>
+			Lists and tuples are often used data structures for compound data in Haskell and are therefore also build-in values.
+			</para>
+
+			<para>
+			Lists combine values of the same type into a single object. The list [1,2,3] is a shorthand for 1:(2:(3:[])). The infix operator : adds its first argument to the front of its second argument, a list. The empty list is expressed by []. The data type list is a <emphasis>polymorphic type</emphasis>, see <xref linkend="polymorphic_types"/> .
+			</para>
+
+			<para>
+			A tuple combines a predefined number of values of predefined, may be different, types into a single object. Tuples are called records or structures in other programming languages. A person might be represented by a personal id and a name. These two different types can be expressed by a tuple:
+			</para>
+
+			<example>
+				<title>A tuple for persons with ID and name</title>
+				<programlisting>
+(Int,String) => (42, "Schmidt")
+				</programlisting>
+			</example>
+		</simplesect>
+
+		<simplesect id="polymorphic_types">
+			<title>Polymorphic types</title>
+
+			<para>
+			Lists and tuples are the most common examples of generic polymorph data types. A list can contain any type, the only constraint is that all types in one list are the same.
+			</para>
+
+			<para>
+			The Prelude, Haskell's standard library, contains lots of polymorphic functions and operators for processing lists and tuples. The head function for example is a list function that returns the head element of any list.
+			</para>
+
+			<example>
+				<title>Get the head of a list</title>
+				<programlisting>
+head :: [a] -> a
+				</programlisting>
+			</example>
+
+			<para>
+			The function takes a list with elements of type <literal>a</literal> and returns one element of type <literal>a</literal>, the head. Haskell supports type variables, like the <literal>a</literal> above. They are uncapitalized in contrast to specific types like Char or Int and stand for any type.
+			</para>
+		</simplesect>
+
+		<simplesect>
+			<title>Type synonyms</title>
+
+			<para>
+			Type synonyms are names for commonly used types. They are created using a type declaration. A synonym does not define a new type, it just gives a new name for an existing type. Because synonyms are simply a shorthand, which can always be expanded out, type synonyms cannot be recursive.
+			</para>
+
+			<para>
+			As mentioned in the section about basic types, a String is a type synonym for a list of characters.
+			</para>
+
+			<example>
+				<title>Definition of String</title>
+				<programlisting>
+type String = [Char]
+				</programlisting>
+			</example>
+
+			<para>
+			Instead of writing ['H','e','l','l','o'] for a string, Haskell defines a shorthand syntax for strings: "Hello".
+			</para>
+		</simplesect>
+
+		<simplesect>
+			<title>Algebraic types</title>
+
+			<para>
+			Algebraic types are used to define more complex types than lists or tuples, e.g. enumerated types or trees. These types can be recursive. Their definition starts with the keyword <literal>data</literal>, followed by the name of the type and the constructors.
+			</para>
+
+			<para>
+			The following example demonstrates a recursive data structure for a polymorphic binary tree, which can store any data type in its leafs. The two kinds <literal>Leaf</literal> and <literal>Branch</literal> of the data type <literal>BinTree</literal> are called constructors. They can be used in the pattern matching of function definitions, described in the next section.
+			</para>
+
+			<example>
+				<title>A type for binary trees</title>
+				<programlisting>
+data BinTree a = Leaf a | Branch (BinTree a) (BinTree a)
+				</programlisting>
+			</example>
+		</simplesect>
+	</section>
+
+<!-- *********************************************************************** -->
+
+	<section id="pattern_matching">
+		<title>Pattern Matching</title>
+
+		<para>
+		Functions can get different types of input. A powerful way for describing different input types in Haskell is using pattern matching. A function can be multiple defined, each definition having a particular pattern for its input arguments. The first pattern that matches the argument is used for that function call. An underscore is a wildcard and is used where something should match, but where the matched value is not used.
+		</para>
+
+		<example>
+			<title>Calculate the length of a list</title>
+			<programlisting>
+length :: [a] -> Int
+length []     = 0
+length (_:xs) = 1 + length xs
+			</programlisting>
+		</example>
+
+		<para>
+		The function length uses recursion for calculating the length of lists. It calls itself on the right-hand of the second equation. There exist two definitions of the function: one for empty lists and one for lists with content. The pattern <literal>[]</literal> matches the empty list. The pattern <literal>x:xs</literal> matches any list with at least one element. The head element is described by the <literal>x</literal>, the tail of the list by <literal>xs</literal>. The <literal>x</literal> can be replaced by the wildcard, because the head element has not to be accessed directly.
+		</para>
+
+		<para>
+		The generic type <literal>[a]</literal> in the function declaration of <function>length</function> expresses that <function>length</function> is a polymorph function, which can be applied to a list containing elements of any type.
+		</para>
+
+		<para>
+		Constructors of algebraic types can also be used for pattern matching. The following function returns a list of all values stored in a binary tree. The infix function <function>++</function> concatenates two lists.
+		</para>
+
+		<example>
+			<title>Get all values from Bintree</title>
+			<programlisting>
+fringe :: Bintree a -> [a]
+fringe (Leaf x)       = [x]
+fringe (Branch t1 t2) = fringe t1 ++ fringe t2
+			</programlisting>
+		</example>
+
+		<para>
+		To name a pattern for the use on the right-hand side of an equation, there exists the operator <literal>@</literal>. These patterns are called <emphasis>as-patterns</emphasis>. The pattern in front of the <literal>@</literal> always results in a successful match, but the sub-pattern can fail. The following example shows a rewritten fringe function that returns not only the values of the leafs but the leafs itself.
+		</para>
+
+		<example>
+			<title>Get all leafs from Bintree</title>
+			<programlisting>
+fringe2 :: Bintree a -> [Bintree a]
+fringe2 l@(Leaf _)     = [l]
+fringe2 (Branch t1 t2) = fringe t1 ++ fringe t2
+			</programlisting>
+		</example>
+	</section>
+
+<!-- *********************************************************************** -->
+
+	<section id="guards">
+		<title>Guards</title>
+
+		<para>
+		Guards (<literal>|</literal>) allow boolean tests of arguments passed to a function. The function definition which conditional expression matches first is applied. The keyword <literal>otherwise</literal> matches always. The function <function>max</function> uses guards for calculating the maximum of two numbers.
+		</para>
+
+		<example>
+			<title>Calculate the maximum of two numbers</title>
+			<programlisting>
+max :: Int -> Int -> Int
+max x y
+    | x &lt;= y     = y
+    | otherwise  = x
+			</programlisting>
+		</example>
+	</section>
+
+<!-- *********************************************************************** -->
+
+	<section id="higher_order_functions">
+		<title>Higher-order Functions</title>
+
+		<para>
+		In Haskell functions are first-class citizens. This means that they are themselves simply values. They can be stored in data types or passed as arguments to other functions.
+		</para>
+
+		<para>
+		Higher-order functions are functions that take functions as input, return functions as a result or do both. This technique provides a very high abstraction, by embodying a pattern of computation into a function.
+		The following <function>map</function> function embodies transformations over lists.
+		</para>
+
+		<example>
+			<title>Apply a function to a list</title>
+			<programlisting>
+map :: (a -> b) -> [a] -> [b]
+map f []     = []
+map f (x:xs) = f x : map f xs
+			</programlisting>
+		</example>
+
+		<para>
+		<function>map</function> is a polymorphic function that takes a function and a list as arguments. The passed function takes any type <literal>a</literal> and returns any type <literal>b</literal>. By applying <function>map</function> to a list of <literal>a</literal>'s, it returns a new list of <literal>b</literal>'s. The generic types <literal>a</literal> and <literal>b</literal> might be different, but do not have to be like the following example demonstrates.
+		</para>
+
+		<example>
+			<title>Increase all numbers in a list</title>
+			<programlisting>
+map (+1) [1,2,3]  =>  [2,3,4]
+			</programlisting>
+		</example>
+
+		<para>
+		The infix function <function>+</function> in the example for increasing all numbers in a list is partially applied. Partial application can be done to any function taking two or more arguments. The operator <function>+</function> expects two arguments, one argument is predefined as "1". In this case the function increases every second argument by one.
+		</para>
+	</section>
+
+<!-- *********************************************************************** -->
+
+	<section id="modules_introduction">
+		<title>Modules</title>
+
+		<para>
+		Modules are the basis for structuring programs or building general libraries. A module has a name and contains a collection of Haskell definitions. A module may import definitions from other modules and export definitions for the use by other modules.
+		</para>
+
+		<example>
+			<title>Modules</title>
+			<programlisting>
+module Foo
+    ( inc
+    , dec)
+
+where import Bar
+
+... definitions of inc and dec
+			</programlisting>
+		</example>
+
+		<para>
+		The module <filename>Foo</filename> exports the functions <function>inc</function> and <function>dec</function>. It imports the module <filename>Bar</filename> so that <filename>Foo</filename> can use <filename>Bar</filename>'s exported definitions. Haskell's standard library, the <filename>Prelude</filename>, is implicitly imported.
+		</para>
+	</section>
+
+  </section>
+
+</chapter>

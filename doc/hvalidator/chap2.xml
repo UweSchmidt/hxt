@@ -1,0 +1,2065 @@
+<![%workaround;[
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+       "file:///usr/share/sgml/docbook/dtd/xml/4.2/docbookx.dtd">
+	<!ENTITY hxt  "HXT">
+	<!ENTITY hxtl "Haskell XML Toolbox">
+	<!ENTITY xmlspec "XML 1.0 specification">
+]]>
+
+
+<chapter id="c2">
+  	<title>Package hdom</title>
+
+	<para>
+	This chapter describes the package <filename>hdom</filename>, which defines a generic tree data type <literal>XmlTree</literal> for representing whole XML documents in Haskell. The package provides many functions for processing XML documents represented by this data model.
+	</para>
+
+	<section id="modules">
+		<title>Modules</title>
+
+		<para>
+		The core public module of the package <filename>hdom</filename> is the module <classname>XmlTree</classname>. It exports all elements from the basic libraries <classname>XmlTreeAccess</classname>, <classname>XmlTreePredicates</classname>, <classname>XmlTreeTypes</classname>, <classname>NTree</classname> and <classname>XmlKeywords</classname>.
+		</para>
+
+		<para>
+		The module <classname>XmlTreeTypes</classname> defines data types for representing any XML document in Haskell. The generic tree data type <literal>XmlTree</literal> models XML documents, including all logical units of XML like the DTD subset or document subset. This type is based on the general n-ary tree <literal>NTree</literal> defined in the module <classname>NTree</classname>. The type <literal>NTree</literal> defines trees as a node that has a list of child nodes. Leafs are just nodes with an empty child list. XML documents are composed of elements, comments, DTD declarations, character references or processing instructions. <literal>XmlTree</literal> provides for each logical unit an own node type.
+		</para>
+
+		<para>
+		The module <classname>NTree</classname> defines a general n-ary tree structure <literal>NTree</literal> as well as filter functions (see  <xref linkend="filter_functions"/>) and combinators (see  <xref linkend="combinators"/>) for processing this data type. The filters and combinators have been copied and modified from HaXml <citation><xref linkend="bib_haxml"/></citation>. In contrast to HaXml the filters have been modified using a more generic approach. The filter functions of HaXml work only for the document subset of XML documents. Because of the generic tree data model <literal>NTree</literal> these functions can be used to process whole XML documents in the &hxtl;.
+		</para>
+
+		<para>
+		The module <classname>XmlTreeAccess</classname> provides basic filter functions for constructing, editing or selecting parts of the data type <literal>XmlTree</literal>. Furthermore it provides functions for processing the attribute list of <literal>XmlTree</literal> nodes.
+		</para>
+
+		<para>
+		The module <classname>XmlTreePredicates</classname> provides basic predicate filter functions. The functions are similar to predicate logic. If the condition is true, they return a list with a node, otherwise they return an empty list.
+		</para>
+		<para>
+
+		The module <classname>XmlKeywords</classname> provides constants that are used for representing DTD keywords and attributes in the <literal>XmlTree</literal>.
+		</para>
+
+		<para>
+        	<figure id="modules_xmltree" float="0">
+				<title>Module hierarchy of XmlTree</title>
+            	<mediaobject>
+            		<imageobject>
+	       				<imagedata fileref="images/modules_xmltree.eps" format="EPS" />
+	      			</imageobject>
+       	      		<imageobject>
+ 	        			<imagedata fileref="images/modules_xmltree.gif" format="JPG" />
+              		</imageobject>
+            	</mediaobject>
+          	</figure>
+        </para>
+
+		<para>
+		Besides the module <classname>XmlTree</classname> and its sub-modules there exist some other public modules for processing the <literal>XmlTree</literal> data structure.
+		</para>
+
+		<para>
+		<classname>XmlTreeToString</classname> provides functions for transformation of an <literal>XmlTree</literal> back into a string. The string shows an XML document in XML syntax.
+		</para>
+
+		<para>
+		<classname>EditFilters</classname> provides some filters for transforming an <literal>XmlTree</literal>:
+		</para>
+
+		<itemizedlist>
+			<listitem>
+				<para>Remove text nodes which contain only white space from the tree.</para>
+			</listitem>
+			<listitem>
+				<para>Remove comment nodes from the tree.</para>
+			</listitem>
+			<listitem>
+				<para>Transform special characters like &lt;, >, ", ' and &amp; of text nodes into character references.</para>
+			</listitem>
+			<listitem>
+				<para>Manipulate text nodes with customized functions.</para>
+			</listitem>
+			<listitem>
+				<para>Convert CDATA nodes to text nodes by escaping all special characters.</para>
+			</listitem>
+			<listitem>
+				<para>Convert character references to normal text.</para>
+			</listitem>
+			<listitem>
+				<para>Create a canonicalized representation of XML documents <citation><xref linkend="bib_canxml"/></citation>.</para>
+			</listitem>
+		</itemizedlist>
+
+		<para>
+		<classname>FormatXmlTree</classname> creates a string with a tree representation of an <literal>XmlTree</literal>. This is useful to see how the data type <literal>XmlTree</literal> represents an XML document.
+		</para>
+
+		<para>
+		<classname>XmlFilterCombinators</classname> provides special filter combinators for processing an <literal>XmlTree</literal>. These filters can only operate on the data type <literal>XmlTree</literal> and not on the general n-ary tree data type <literal>NTree</literal>.
+		</para>
+
+		<para>
+        	<figure id="modules_hdom" float="0">
+				<title>General modules of package hdom</title>
+            	<mediaobject>
+            		<imageobject>
+	       				<imagedata fileref="images/modules_hdom.eps" format="EPS" />
+	      			</imageobject>
+       	      		<imageobject>
+ 	        			<imagedata fileref="images/modules_hdom.gif" format="JPG" />
+              		</imageobject>
+            	</mediaobject>
+          	</figure>
+        </para>
+
+	</section>
+
+<!-- *********************************************************************** -->
+
+  	<section id="data_structures">
+    	<title>Data structures</title>
+
+		<section>
+			<title>Core components</title>
+
+			<para>
+			XML documents are structured hierarchically and can be represented as trees. Trees can be modeled easily with lists, because trees can be seen as a generalization of lists: nested lists. As shown in the first chapter, Haskell has some nifty facilities for representing and manipulating lists.
+			</para>
+
+			<para>
+			XML documents consist of many different logical units, which can be represented by different types. Functional languages like Haskell are well-equipped to process typed tree-structured data by using pattern matching and recursion.
+			</para>
+
+			<para>
+			Basically there exist two different approaches for representing XML documents in Haskell. One approach is to use a generic tree structure by which all XML documents can be handled.
+			</para>
+
+			<para>
+			Another approach is to use problem specific types that are derived from a specific Document Type Definition. Both approaches have several advantages and disadvantages. They are discussed in depth in the paper "Haskell and XML: Generic Combinators or Type-Based Translation?" by Malcolm Wallace and Colin Runciman <citation><xref linkend="bib_haxmlpaper"/></citation>.
+			</para>
+
+			<para>
+			The &hxtl; uses a generic data structure for representing whole XML documents. Its data model is more general than the one used in HaXml. The differences are discussed in depth in <xref linkend="comparison"/>. A generic data model is the only practical approach for implementing a generic XML parser and a framework for processing any XML documents.
+			</para>
+
+			<para>
+			The data type that models a generic tree structure is the data type <literal>NTree</literal>, defined in the module <classname>NTree</classname>. It defines an n-ary tree: a node with a list of children that are also nodes. If a node is a leaf it has an empty child list. The data type <literal>NTrees</literal> is an abbreviation for the node list. Together both types are mutually recursive and form a multi-branch tree structure.
+ 			</para>
+
+			<programlisting>
+data NTree  node = NTree node (NTrees node)
+                   deriving (Eq, Ord, Show, Read)
+
+type NTrees node = [NTree node]
+			</programlisting>
+
+		</section>
+
+
+		<section>
+			<title>Data type XmlTree</title>
+
+			<para>
+			Building on the very general tree data type <literal>NTree</literal> are defined the types <literal>XmlTree</literal> and <literal>XmlTrees</literal> that are defined in the module <classname>XmlTreeTypes</classname>. They are used to specify a general recursive data type for XML documents. The data, which can be stored in the nodes, must be of type <literal>XNode</literal>.
+			</para>
+
+			<programlisting>
+type XmlTree  = NTree  XNode
+
+type XmlTrees = NTrees XNode
+			</programlisting>
+
+			<para>
+			The algebraic data type <literal>XNode</literal> is used for representing all kinds of XML's logical units. The type is described in detail in the next section.
+			</para>
+
+
+			<section>
+				<title>Data type XNode</title>
+
+				<para>
+				Before introducing the data type <literal>XNode</literal>, some type synonyms have to be presented which are used in the definitions of <literal>XNode</literal>. The type <literal>TagAttrl</literal> defines the attribute list of an element, it is a list of name-value pairs.
+				</para>
+
+				<programlisting>
+type TagAttrl  = [TagAttr]
+type TagAttr   = (AttrName, AttrValue)
+				</programlisting>
+
+				<para>
+				Several type synonyms exist to make the definitions more understandable:
+				</para>
+
+				<programlisting>
+type TagName   = String
+type AttrName  = String
+type AttrValue = String
+				</programlisting>
+
+				<para>
+				XML documents consist of several different logical units like elements, text data, comments, DTD definitions or entity references. Each kind can be represented by an own type in Haskell so that processing an <literal>XmlTree</literal> can be implemented very efficient by the use of pattern matching. The algebraic data type <literal>XNode</literal> defines the basic nodes and leafs for all kinds of XML's logical units.
+				</para>
+
+				<para>
+				Together with the algebraic type <literal>DTDElem</literal>, which defines constructors for the DTD declarations, this data model allows a uniform processing of the whole XML document by filter functions, described in <xref linkend="filter_functions"/>.
+				</para>
+
+				<programlisting>
+
+data XNode =
+      XText String
+    | XCharRef Int
+    | XEntityRef String
+    | XCmt String
+    | XCdata String
+    | XPi TagName TagAttrl
+    | XTag TagName TagAttrl
+    | XDTD DTDElem TagAttrl
+    | XError Int String
+    deriving (Eq, Ord, Show, Read)
+				</programlisting>
+
+				<variablelist>
+					<title>Description of the constructors:</title>
+
+					<varlistentry>
+						<term>
+							<function>XText String</function>
+						</term>
+						<listitem>
+							<para>
+							Ordinary text data (leaf)
+							</para>
+							<para>
+							Note that an <literal>XText</literal> node does not necessarily represent a maximal contiguous sequence of characters. The parser may split text data up into multiple <literal>XText</literal> nodes. The parser produces <literal>XText</literal> nodes from white space occurring before or after tags, too.
+							</para>
+							<para>
+							There exist special filter functions in the module <classname>EditFilters</classname> for summing up sequences of <literal>XText</literal> nodes into one node and removing <literal>XText</literal> nodes from the tree, which contain white space only.
+							</para>
+					  </listitem>
+					</varlistentry>
+
+					<varlistentry>
+						<term>
+							<function>XCharRef Int</function>
+						</term>
+						<listitem>
+							<para>
+							Character reference (leaf)
+							</para>
+							<para>
+							XML syntax: &amp;#nnn; (<emphasis>nnn</emphasis> is a hexadecimal or decimal representation of the characters code point in ISO/IEC 10646)
+							</para>
+					  </listitem>
+					</varlistentry>
+
+					<varlistentry>
+						<term>
+							<function>XEntityRef String</function>
+						</term>
+						<listitem>
+							<para>
+							Entity reference (leaf)
+							</para>
+							<para>
+							XML syntax: &amp;...;
+							</para>
+					  </listitem>
+					</varlistentry>
+
+					<varlistentry>
+						<term>
+							<function>XCmt String</function>
+						</term>
+						<listitem>
+							<para>
+							Comment (leaf)
+							</para>
+					  </listitem>
+					</varlistentry>
+
+					<varlistentry>
+						<term>
+							<function>XCdata String</function>
+						</term>
+						<listitem>
+							<para>
+							CDATA section (leaf)
+							</para>
+					  </listitem>
+					</varlistentry>
+
+					<varlistentry>
+						<term>
+							<function>XPi TagName TagAttrl</function>
+						</term>
+						<listitem>
+							<para>
+							Processing Instruction (leaf)
+							</para>
+							<para>
+							<literal>TagName</literal> stores the name of the processing instruction.	If name is <emphasis>xml</emphasis>, it has the attributes "version", "encoding" and "standalone". Otherwise there is only the attribute "value" which stores a list of the processing instruction attributes.
+							</para>
+					  </listitem>
+					</varlistentry>
+
+					<varlistentry>
+						<term>
+							<function>XTag TagName TagAttrl</function>
+						</term>
+						<listitem>
+							<para>
+							Element (node or leaf)
+							</para>
+							<para>
+							Inner node if the element has content, respectively children. Leaf if the element is empty. <literal>TagName</literal> stores the name of the element. The attribute list <literal>TagAttrl</literal> contains all attributes of the element.
+							</para>
+					  </listitem>
+					</varlistentry>
+
+					<varlistentry>
+						<term>
+							<function>XDTD DTDElem TagAttrl</function>
+						</term>
+						<listitem>
+							<para>
+							 DTD element (node or leaf)
+							</para>
+							<para>
+							 The algebraic data type <literal>DTDElem</literal> is used to specify the concrete kind of the element, e.g. element declaration, attribute declaration or entity declaration. The attribute list <literal>TagAttrl</literal> contains almost all information from the DTD declarations (see <xref linkend="dtdelem"/>).
+							</para>
+					  </listitem>
+					</varlistentry>
+
+					<varlistentry>
+						<term>
+							<function>XError Int String</function>
+						</term>
+						<listitem>
+							<para>
+							Error (node or leaf)
+							</para>
+							<para>
+							Not an XML component. Internal extension for representing errors with error level and error message. The error level can be of type: <emphasis>warning</emphasis>, <emphasis>error</emphasis> or <emphasis>fatal error</emphasis>. The error node can have a child list with the nodes where the error occurred.
+							</para>
+					  </listitem>
+					</varlistentry>
+
+				</variablelist>
+			</section>
+
+			<section id="dtdelem">
+				<title>Data type DTDElem</title>
+
+				<para>
+				Because a DTD is quite complex, there exists an extra algebraic data type <literal>DTDElem</literal> for representing DTD elements in the <literal>XmlTree</literal>. For each DTD declaration there exists an own type. The nodes store almost all information from DTD declarations in their attribute list. The library <classname>XmlKeywords</classname> provides constants for the names and values of these attributes. Variable contents like the definition of the content model or the names in the value-list of enumerated attribute types are modeled using the node's child list in combination with helper nodes.
+				</para>
+
+				<programlisting>
+data DTDElem =
+      DOCTYPE
+    | ELEMENT
+    | CONTENT
+    | ATTLIST
+    | ENTITY
+    | NOTATION
+    | NAME
+    | PENTITY
+    | PEREF
+    | CONDSECT
+    deriving (Eq, Ord, Show, Read)
+				</programlisting>
+
+				<variablelist>
+					<title>Description of the constructors:</title>
+
+					<varlistentry>
+						<term>
+							<function>DOCTYPE</function>
+						</term>
+						<listitem>
+							<para>
+							The root node of a DTD, has <literal>XDTD</literal> nodes as children.
+							</para>
+							<para>
+								<itemizedlist>
+									<title>Attributes:</title>
+									<listitem>
+										<para>name - Name of the root element</para>
+									</listitem>
+									<listitem>
+										<para>SYSTEM - Reference to external subset (optional)</para>
+									</listitem>
+									<listitem>
+										<para>PUBLIC - Reference to external subset (optional)</para>
+									</listitem>
+								</itemizedlist>
+							</para>
+					  </listitem>
+					</varlistentry>
+
+					<varlistentry>
+						<term>
+							<function>ELEMENT</function>
+						</term>
+						<listitem>
+							<para>
+							Element declaration. If the element is of type <emphasis>children</emphasis> or <emphasis>mixed</emphasis>, it has a list of <literal>XDTD CONTENT</literal> nodes as children. These children describe the content model of the element.
+							</para>
+							<para>
+								<itemizedlist>
+									<title>Attributes:</title>
+									<listitem>
+										<para>name - Element name</para>
+									</listitem>
+									<listitem>
+										<para>type - EMPTY | ANY | #PCDATA | children | mixed</para>
+									</listitem>
+								</itemizedlist>
+							</para>
+					  </listitem>
+					</varlistentry>
+
+					<varlistentry>
+						<term>
+							<function>CONTENT</function>
+						</term>
+						<listitem>
+							<para>
+							Not an XML component. Specifies the content model of an element if the element is of type <emphasis>children</emphasis> or <emphasis>mixed</emphasis>. An <literal>XDTD CONTENT</literal> node has a list of children, which can be of type <literal>XDTD CONTENT</literal> if there is some grouping in the content model, or of type <literal>XDTD NAME</literal> to specify the name of a child element.
+							</para>
+							<para>
+								<itemizedlist>
+									<title>Attributes:</title>
+									<listitem>
+										<para>kind - seq | choice</para>
+									</listitem>
+									<listitem>
+										<para>modifier -  "" | ? | * | +</para>
+									</listitem>
+								</itemizedlist>
+							</para>
+					  </listitem>
+					</varlistentry>
+
+					<varlistentry>
+						<term>
+							<function>ATTLIST</function>
+						</term>
+						<listitem>
+							<para>
+							Attribute declaration. If the attribute declaration is of type <emphasis>NOTATION</emphasis> or <emphasis>ENUMERATION</emphasis>, this node has a list of children of type <literal>XDTD NAME</literal> to specify the enumerated values.
+							</para>
+							<para>
+								<itemizedlist>
+									<title>Attributes:</title>
+									<listitem>
+										<para>name - Element name</para>
+									</listitem>
+									<listitem>
+										<para>value - Attribute name</para>
+									</listitem>
+									<listitem>
+										<para>kind - #REQUIRED | #IMPLIED | #DEFAULT | #FIXED</para>
+									</listitem>
+									<listitem>
+										<para>type - CDATA | ID | IDREF | IDREFS | ENTITY | ENTITIES | NMTOKEN | NMTOKENS | NOTATION | ENUMERATION</para>
+									</listitem>
+									<listitem>
+										<para>default - Default value (optional)</para>
+									</listitem>
+								</itemizedlist>
+							</para>
+					  </listitem>
+					</varlistentry>
+
+					<varlistentry>
+						<term>
+							<function>ENTITY</function>
+						</term>
+						<listitem>
+							<para>
+							General or unparsed entity declaration. If the entity is a general entity, it has a child list with nodes of type <literal>XDTD XCharRef</literal> and <literal>XDTD XText</literal> that specify the replacement text.
+							</para>
+							<para>
+								<itemizedlist>
+									<title>Attributes:</title>
+									<listitem>
+										<para>name - Entity name</para>
+									</listitem>
+									<listitem>
+										<para>SYSTEM - Reference to external file (optional and only for external or unparsed entities)</para>
+									</listitem>
+									<listitem>
+										<para>NDATA - reference to a notation (optional and only for unparsed entities)</para>
+									</listitem>
+								</itemizedlist>
+							</para>
+					  </listitem>
+					</varlistentry>
+
+					<varlistentry>
+						<term>
+							<function>NOTATION</function>
+						</term>
+						<listitem>
+							<para>
+							Notation declaration.
+							</para>
+							<para>
+								<itemizedlist>
+									<title>Attributes:</title>
+									<listitem>
+										<para>name - Notation name</para>
+									</listitem>
+									<listitem>
+										<para>SYSTEM - Reference to external application</para>
+									</listitem>
+								</itemizedlist>
+							</para>
+					  </listitem>
+					</varlistentry>
+
+					<varlistentry>
+						<term>
+							<function>NAME</function>
+						</term>
+						<listitem>
+							<para>
+							Not an XML component. Used by the attribute declaration <literal>XDTD ATTLIST</literal> to specify the list of values for attributes of type <emphasis>NOTATION</emphasis> and <emphasis>ENUMERATION</emphasis>.
+							</para>
+							<para>
+							 Used by the node <literal>XDTD CONTENT</literal> to specify element names in content models.
+							</para>
+							<para>
+								<itemizedlist>
+									<title>Attributes:</title>
+									<listitem>
+										<para>name - Value of the name</para>
+									</listitem>
+								</itemizedlist>
+							</para>
+					  </listitem>
+					</varlistentry>
+				</variablelist>
+
+				<para>
+				The following node types are not accessible by any application. They are for internal use of the XML parser and handled by it. However it is possible to turn of this processing of the parser, so they are shortly described.
+				</para>
+
+				<variablelist>
+					<varlistentry>
+						<term>
+							<function>PENTITY</function>
+						</term>
+						<listitem>
+							<para>
+							Parameter entity declaration.
+							</para>
+							<para>
+								<itemizedlist>
+									<title>Attributes:</title>
+									<listitem>
+										<para>name - Name of parameter entity</para>
+									</listitem>
+									<listitem>
+										<para>value - Value of parameter entity</para>
+									</listitem>
+									<listitem>
+										<para>SYSTEM - Reference to external file (optional)</para>
+									</listitem>
+									<listitem>
+										<para>PUBLIC - Reference to external file (optional)</para>
+									</listitem>
+								</itemizedlist>
+							</para>
+					  </listitem>
+					</varlistentry>
+
+					<varlistentry>
+						<term>
+							<function>PEREF</function>
+						</term>
+						<listitem>
+							<para>
+							Parameter entity reference.
+							</para>
+							<para>
+								<itemizedlist>
+									<title>Attributes:</title>
+									<listitem>
+										<para>PERef - Name of referenced parameter entity</para>
+									</listitem>
+								</itemizedlist>
+							</para>
+					  </listitem>
+					</varlistentry>
+
+					<varlistentry>
+						<term>
+							<function>CONDSECT</function>
+						</term>
+						<listitem>
+							<para>
+							Node for conditional sections. The child list contains the DTD declarations that are defined in the conditional section.
+							</para>
+							<para>
+								<itemizedlist>
+									<title>Attributes:</title>
+									<listitem>
+										<para>type - INCLUDE, IGNORE or parameter entity reference (%...;)</para>
+									</listitem>
+								</itemizedlist>
+							</para>
+					  </listitem>
+					</varlistentry>
+
+				</variablelist>
+			</section>
+		</section>
+
+		<section id="example_xmltree">
+			<title>Example</title>
+
+			<para>
+			The following example demonstrates how an XML document is transformed into the generic tree structure <literal>XmlTree</literal>.
+			</para>
+
+			<example>
+				<title>Input document</title>
+
+				<programlisting>
+&lt;?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+
+&lt;!DOCTYPE a [
+&lt;!ATTLIST a  att1  CDATA  #IMPLIED>
+&lt;!ELEMENT a  (b, c?)>
+&lt;!ELEMENT b  EMPTY>
+&lt;!ELEMENT c  (#PCDATA)>
+]>
+
+&lt;a att1="test">
+    &lt;b/>
+    &lt;c>hello world&lt;/c>
+&lt;/a>
+				</programlisting>
+			</example>
+
+			<para>
+			The following graph shows the <literal>XmlTree</literal> representation of the document after parsing. The predefined general entities <emphasis>amp, lt, gt, apos</emphasis> and <emphasis>quot</emphasis> are automatically added to the DTD by the XML parser. A dummy node with the name "/" forms the root node of the tree so that the DTD, the document subset, processing instructions and comments can be modeled by one tree.
+			</para>
+
+            <para>
+			White space before or after tags is represented by <literal>XText</literal> nodes. There exist filter functions in the module <classname>EditFilters</classname> for removing <literal>XText</literal> nodes containing white space only from the tree if these nodes are not necessary for further processing.
+			</para>
+
+			<example>
+				<title>Input document as XmlTree</title>
+				<programlisting>
+---XTag "/" [("standalone","yes"),("version","1.0"),("source","example.xml"),
+   |         ("encoding","UTF-8")]
+   |
+   +---XPi "xml" [("version","1.0"),("encoding","UTF-8"),("standalone","yes")]
+   |
+   +---XText "\n\n"
+   |
+   +---XDTD DOCTYPE [("name","a")]
+   |   |
+   |   +---XDTD ENTITY [("name","lt")]
+   |   |   |
+   |   |   +---XCharRef 38
+   |   |   |
+   |   |   +---XText "#60;"
+   |   |
+   |   +---XDTD ENTITY [("name","gt")]
+   |   |   |
+   |   |   +---XCharRef 62
+   .   .
+   .   .   (Definitions of the other predefined entities amp, apos and quot)
+   .   .
+   |   +---XDTD ATTLIST [("name","a"),("value","att1"),("default","42"),
+   |   |                 ("kind","#DEFAULT"),("type","CDATA")]
+   |   |
+   |   +---XDTD ELEMENT [("name","a"),("type","children")]
+   |   |   |
+   |   |   +---XDTD CONTENT [("modifier",""),("kind","seq")]
+   |   |       |
+   |   |       +---XDTD NAME [("name","b")]
+   |   |       |
+   |   |       +---XDTD CONTENT [("modifier","?"),("kind","seq")]
+   |   |           |
+   |   |           +---XDTD NAME [("name","c")]
+   |   |
+   |   +---XDTD ELEMENT [("name","b"),("type","EMPTY")]
+   |   |
+   |   +---XDTD ELEMENT [("name","c"),("type","#PCDATA")]
+   |
+   +---XText "\n\n"
+   |
+   +---XTag "a" [("att1","test")]
+   |   |
+   |   +---XText "\n    "
+   |   |
+   |   +---XTag "b" []
+   |   |
+   |   +---XText "\n    "
+   |   |
+   |   +---XTag "c" []
+   |   |   |
+   |   |   +---XText "hello world"
+   |   |
+   |   +---XText "\n"
+   |
+   +---XText "\n"
+				</programlisting>
+			</example>
+
+			<para>
+			The following listing shows the internal representation of the document subset. The root node with the name "a" has a list of attributes and a list of children.
+			</para>
+
+			<example>
+				<title>Internal representation of the document subset</title>
+				<programlisting>
+NTree (XTag "a" [("att1","test")]) [
+    NTree (XText "\n    ") [],
+    NTree (XTag "b" []) [],
+    NTree (XText "\n    ") [],
+    NTree (XTag "c" []) [
+        NTree (XText "hello world") []
+    ],NTree (XText "\n") []
+]
+				</programlisting>
+			</example>
+
+		</section>
+
+
+  	</section>
+
+<!-- *********************************************************************** -->
+
+	<section id="filter_functions">
+		<title>Filter functions</title>
+
+		<section id="filter_introduction">
+			<title>Introduction</title>
+			<para>
+			Filters are the basic functions for processing the <literal>XmlTree</literal> representation of XML documents. A filter takes a node or a list of nodes and returns some sequence of nodes. The result list might be empty, might contain a single item, or it could contain several items.
+			</para>
+
+			<para>
+			The idea of filters was adopted from HaXml <citation><xref linkend="bib_haxml"/></citation>, but has been modified. In HaXml filters work only on the document subset part of XML documents. The &hxtl; uses the generic tree data type <literal>NTree</literal> for modeling XML documents. This generic data model makes it possible to generalize HaXml's filter idea so that filters can process the whole XML document, including the DTD subset or document subset. This generalization allows implementing a very uniform design of XML processing applications by using filters. In fact the whole XML Parser of the &hxtl; works internally with filters. The differences between HaXml's approach and the approach of the &hxtl; are described in depth in <xref linkend="comparison"/>.
+			</para>
+
+			<para>
+			<literal>TFilter</literal> and <literal>TSFilter</literal> are filters for the general n-ary tree defined by the data type <literal>NTree</literal>. The function <literal>TFilter</literal> takes a node and returns a list of nodes. <literal>TSFilter</literal> takes a list of nodes and returns a list, too.
+			</para>
+
+			<programlisting>
+type TFilter  node	= NTree  node -> NTrees node
+type TSFilter node	= NTrees node -> NTrees node
+			</programlisting>
+
+			<para>
+			<literal>XmlFilter</literal> and <literal>XmlSFilter</literal> base on these types. They only work on <literal>XNode</literal> data types.
+			</para>
+
+			<programlisting>
+type XmlFilter  = TFilter  XNode
+type XmlSFilter = TSFilter XNode
+			</programlisting>
+
+			<para>
+			The filters can be used to select parts of a document, to construct new document parts or to change document parts. They can even be used for checking validity constraints as described in <xref linkend="c4"/>. In this case a filter returns an empty list if the document is valid or a list with errors.
+			</para>
+
+			<para>
+			Filters can sometimes be thought of as predicates. In this case they are used for deciding whether or not to keep its input. The functional approach differs from predicate logic. If the predicate is false, an empty list is returned. If the predicate is true, a list with the passed element is returned.
+			</para>
+
+			<para>
+			All filters share the same basic type so that combining them with the help of combinators, described in  <xref linkend="combinators"/>, is possible. With this approach defining complex filters on the basis of easier ones is possible.
+			</para>
+
+			<para>
+			The following list describes the basic filter functions for processing XML documents represented as an <literal>XmlTree</literal>. Some functions are higher-order functions and return a filter function as a result. The arguments of these functions are used to construct parameterized filters. This is useful for example for constructing filters that should be used to return nodes with a certain property.
+			</para>
+		</section>
+
+		<section id="filters_ntree">
+			<title>Filters from module NTree</title>
+
+			<variablelist>
+				<title>Simple filters</title>
+
+				<varlistentry>
+					<term>
+						<function>none :: TFilter node</function>
+					</term>
+					<listitem>
+						<para>
+						Takes any node, returns always an empty list. Algebraically zero.
+						</para>
+				  </listitem>
+				</varlistentry>
+
+				<varlistentry>
+					<term>
+						<function>this :: TFilter node</function>
+					</term>
+					<listitem>
+					 	<para>
+						Takes any node, returns always a list of the passed node. Algebraically unit.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+
+			<variablelist>
+				<title>Selection filters</title>
+				<varlistentry>
+					<term>
+						<function>isOfNode :: (node -> Bool) -> TFilter node</function>
+					</term>
+					<listitem>
+						<para>
+						Takes a predicate functions and returns a filter. The filter returns a list with passed node if the predicate function  is true for the node, otherwise it returns an empty list.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>isNode :: Eq node => node -> TFilter node</function>
+					</term>
+					<listitem>
+						<para>
+						The same as <function>isOfNode</function>. Instead of a predicate function a reference node is taken.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+
+			<variablelist>
+				<title>Filters for modifying nodes</title>
+				<varlistentry>
+					<term>
+						<function>mkNTree :: NTree node -> TFilter node</function>
+					</term>
+					<listitem>
+						<para>
+						Takes a node and returns a filter. The filter returns always a list with this node and ignores the passed one.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>replaceNode :: node -> TFilter node</function>
+					</term>
+					<listitem>
+						<para>
+						Takes a node and returns a filter. The filter replaces a passed node with the initialized one. The children of the passed node are added to the new node.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>replaceChildren :: NTrees node -> TFilter node</function>
+					</term>
+					<listitem>
+						<para>
+						Like <function>replaceNode</function> except that in this case the children are replaced by an initialized list. The passed node itself is not modified.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>modifyNode :: (node -> Maybe node) -> TFilter node</function>
+					</term>
+					<listitem>
+						<para>
+						Takes a function for modifying nodes and returns a filter.	The function <function>(node -> Maybe node)</function> is applied to the passed node, the children are not modified.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>modifyNode0 :: (node -> node) -> TFilter node</function>
+					</term>
+					<listitem>
+						<para>
+						Like <function>modifyNode0</function> except that the type of the modification function <function>(node -> node)</function> is different.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>modifyChildren :: TSFilter node -> TFilter node</function>
+					</term>
+					<listitem>
+						<para>
+						Takes a filter that processes lists of nodes and returns a new filter. The new filter applies the filter <function>TSFilter node</function> to the child list of a passed node. The node itself is not modified.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+		</section>
+
+		<section id="filters_xmltreeaccess">
+			<title>Filters from module XmlTreeAccess</title>
+
+			<variablelist>
+				<title>Predicate filters</title>
+				<varlistentry>
+					<term>
+						<function>isTag :: TagName -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						Takes a <literal>TagName</literal> and returns a filter. The filter returns a list with the passed node if its name equals <literal>TagName</literal>, otherwise an empty list is returned.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>isOfTag :: (TagName -> Bool) -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						Takes a predicate function <function>(TagName -> Bool)</function> and returns a filter. The filter applies the predicate function to the name of a passed node. If the  predicate function is true, the filter returns a list with the node. Otherwise an empty list is returned.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>attrHasValue :: AttrName -> (AttrValue -> Bool) -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						Constructs a predicate filter for attributes which value meets a predicate function. The constructed filter returns a list with the passed node if the node has an attribute with name <literal>AttrName</literal> and its value matches the predicate function <function>(AttrValue -> Bool)</function>. Otherwise an empty list is returned.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+
+			<para>
+			Lots of further predicate functions are provided by the module <classname>XmlTreePredicates</classname>: <function>isXCdata</function>, <function>isXCharRef</function>, <function>isXCmt</function>, <function>isXDTD</function>, <function>isXEntityRef</function>, <function>isXError</function>, <function>isXNoError</function>, <function>isXPi</function>, <function>isXTag</function>, <function>isXText</function>, etc. These filters are used for identifying special types of nodes.
+			</para>
+
+			<para></para>
+
+			<variablelist>
+				<title>Construction filters</title>
+				<varlistentry>
+					<term>
+						<function>mkXTag :: TagName -> TagAttrl -> XmlTrees -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						The created filter constructs an <literal>XTag</literal> node with the name <literal>TagName</literal>, an attribute list <literal>TagAttrl</literal> and a list of children. The passed node is ignored by the filter.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>mkXText :: String -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						The created filter constructs an <literal>XText</literal> node with text data. The passed node is ignored by the filter. There exists a shortcut function <function>txt</function> that does the same.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>mkXCharRef :: Int -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						The created filter constructs an <literal>XCharRef</literal> node with a reference number to a character. The passed node is ignored by the filter.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>mkXEntityRef :: String -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						The created filter constructs an <literal>XEntityRef</literal> node with an entity reference. The passed node is ignored by the filter.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>mkXCmt :: String -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						The created filter constructs an <literal>XCmt</literal> node with text data. The passed node is ignored by the filter. There exists a shortcut function <function>cmt</function> that does the same.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>mkXDTD :: DTDElem -> TagAttrl -> XmlTrees -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						The created filter constructs an <literal>XDTD</literal> node. The type of the node is specified by the algebraic data type <literal>DTDElem</literal>. The node has attributes and a list of children. The passed node is ignored by the filter.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>mkXPi	:: String  -> TagAttrl -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						The created filter constructs an <literal>XPi</literal> node with a name and attributes. The passed node is ignored by the filter.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>mkXCdata :: String -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						The created filter constructs an <literal>XCdata</literal> node with text data. The passed node is ignored by the filter.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>mkXError :: Int -> String -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						The created filter constructs an <literal>XError</literal> node with an error level and an error message. The passed node is stored in the child list of this error node, so that the location where the error occurred can be preserved. The shortcut functions <function>warn</function>, <function>err</function> and <function>fatal</function> of type <function>String -> XmlFilter</function> can be used to create specific error nodes.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>mkXElem :: TagName -> TagAttrl -> [XmlFilter] -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						The created filter constructs an <literal>XTag</literal> node with the name <literal>TagName</literal> and the attribute list <literal>TagAttrl</literal>. Its child list is constructed by applying the filter list <literal>[XmlFilter]</literal> to the passed node. There exists a shortcut function <function>tag</function> that does the same.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>mkXSElem :: TagName -> [XmlFilter] -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						The created filter constructs a simple <literal>XTag</literal> node. It works like <function>mkXElem</function> except that no attribute list is created. There exists a shortcut function <function>stag</function> that does the same.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>mkXEElem :: TagName -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						The created filter constructs an empty <literal>XTag</literal> node. It works like <function>mkXSElem</function> except that no child list is created. There exists a shortcut function <function>etag</function> that does the same.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+
+			<variablelist>
+				<title>Selection filters</title>
+				<varlistentry>
+					<term>
+						<function>getXTagName :: XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						If the passed node is of type <literal>XTag</literal>, a list with an <literal>XText</literal> node is returned. This node contains the name of the element. Otherwise an empty list is returned.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>getXTagAttr :: AttrName -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						If the passed node is of type <literal>XTag</literal> and there exists an attribute with the name <literal>AttrName</literal>, a list with an <literal>XText</literal> node is returned. This node contains  the value of the attribute. Otherwise an empty list is returned.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>getXDTDAttr :: AttrName -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						The same as <function>getXTagAttr</function> except that it works on <literal>XDTD</literal> nodes.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>getXText :: XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						If the passed node is of type <literal>XText</literal>, a list with an <literal>XText</literal> node is returned. This node contains text data. Otherwise an empty list is returned.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>getXCmt :: XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						If the passed node is of type <literal>XCmt</literal>, a list with an <literal>XText</literal> node is returned. This node contains the text data of the comment. Otherwise an empty list is returned.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>getXPiName :: XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						If the passed node is of type <literal>XPi</literal>, a list with an <literal>XText</literal> node is returned. This node contains the name of the processing instruction. Otherwise an empty list is returned.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>getXCdata :: XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						If the passed node is of type <literal>XCdata</literal>, a list with an <literal>XText</literal> node is returned. This node contains the text data of the element. Otherwise an empty list is returned.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>getXError :: XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						If the passed node is of type <literal>XError</literal>, a list with an <literal>XText</literal> node is returned. This node contains the error message. Otherwise an empty list is returned.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+
+			<variablelist>
+				<title>Substitution filters</title>
+				<varlistentry>
+					<term>
+						<function>replaceTagName :: TagName -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						Constructed filter replaces the name of an <literal>XTag</literal> or <literal>XPi</literal> node by the <literal>TagName</literal> and returns a list with the modified node.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>replaceAttrl :: TagAttrl -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						 Constructed filter replaces the attribute list of an <literal>XTag</literal>, <literal>XDTD</literal> or <literal>XPi</literal> node by the <literal>TagAttrl</literal> and returns a list with the modified node.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>modifyTagName :: (TagName -> TagName) -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						 Constructed filter modifies the name of an <literal>
+						 XTag</literal> or <literal>XPi</literal> node by applying the function <function>(TagName -> TagName)</function> to the name. The filter returns a list with the modified node.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>modifyAttrl	:: (TagAttrl -> TagAttrl) -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						Constructed filter modifies the attribute list of an <literal>XTag</literal>, <literal>XDTD</literal> or <literal>XPi</literal> node by applying the function <function>(TagAttrl -> TagAttrl)</function> to the attribute list. The filter returns a list with the modified node.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>modifyAttr :: AttrName -> AttrValue -> XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						Constructed filter changes the attribute value of the attribute which name equals <literal>AttrName</literal> to <literal>AttrValue</literal> and returns a list with the modified node.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+		</section>
+	</section>
+
+<!-- *********************************************************************** -->
+
+	<section id="combinators">
+		<title>Filter combinators</title>
+
+		<section id="combinators_introduction">
+			<title>Introduction</title>
+
+			<para>
+			Functional programming languages like Haskell allow the use of higher-order functions, which take some functions as input, return a function as a result, or both. Filter combinators are higher-order functions, or operators, for combining several filters (see  <xref linkend="filter_functions"/>). By combining simple filters, more complex functions can be created. Because all filters share the same type, it is possible that any filter can be composed with any other. All filters can be mixed and matched freely, because all functions in Haskell are side-effect free.
+			</para>
+
+			<para>
+			The idea of filter combinators was adapted and extended from HaXml <citation><xref linkend="bib_haxml"/></citation>. In their paper "Haskell and XML: Generic Combinators or Type-Based Translation?" <citation><xref linkend="bib_haxmlpaper"/></citation> Malcom Wallace and Colin Runciman describe various algebraic laws for their combinators.
+			</para>
+
+			<para>
+			The use of combinators makes it possible to hide details of programming over data structures. All details of data structure manipulation are hidden in combinator functions. In effect, the combinators define problem specific control structures. With this approach it is possible to reach a form of expression that is natural for the problem itself.
+			</para>
+
+			<para>
+			Conceptually, combinators are much like Unix pipes in that they allow building up more complex computational sequences by flexibly arranging highly specialized tools <citation><xref linkend="bib_haxml_parsia"/></citation>.
+			The equivalent to Unix pipes it the "Irish composition" combinator, represented by the infix operator "<function>o</function>". This combinator applies one filter to the results of another one. This is similar to a pipe, which passes the output of one program as the input to another one.
+			</para>
+
+			<para>
+			The combinator library provides all functions that are necessary for traversing and processing XML documents represented as an <literal>XmlTree</literal>. Haskell allows the definition of own infix operator symbols. Some combinators are defined as infix operators where it seemed more natural.
+			</para>
+		</section>
+
+		<section id="combinators_list">
+			<title>List of combinators</title>
+
+			<variablelist>
+				<title>Basic filter combinators</title>
+				<varlistentry>
+					<term>
+						<function>o :: (a -> [b]) -> (c -> [a]) -> c -> [b]</function>
+					</term>
+					<listitem>
+						<para>
+						Irish composition. Sequential composition of two filters. The left filter is applied to the result of the right filter. (conjunction)
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>(+++) :: (a -> [b]) -> (a -> [b]) -> (a -> [b])</function>
+					</term>
+					<listitem>
+						<para>
+						Binary parallel composition, the function unifies the results of two filters sequential. Each filter uses a copy of state. (union)
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>cat :: [a -> [b]] -> (a -> [b])</function>
+					</term>
+					<listitem>
+						<para>
+						Concatenates the results of all filters in a list, a list version of union <function>+++</function>. The combinator sticks lots of filters together.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>($$) :: (a -> [b]) -> [a] -> [b]</function>
+					</term>
+					<listitem>
+						<para>
+						Applies a filter to a list.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>processChildren :: TFilter node -> TFilter node</function>
+					</term>
+					<listitem>
+						<para>
+						Applies a filter to the child list of a node.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+
+			<variablelist>
+				<title>Choice combinators</title>
+				<varlistentry>
+					<term>
+						<function>orElse :: (a -> [b]) -> (a -> [b]) -> (a -> [b])</function>
+					</term>
+					<listitem>
+						<para>
+						Directional choice. Second filter is only applied if the first one produces an empty list.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>(?>) :: (a -> [b]) -> ThenElse (a -> [b]) -> (a -> [b])</function>
+					</term>
+					<listitem>
+						<para>
+						In combination with the type <function>ThenElse a = a :> a</function> this combinator models an expression that resembles the conditional expression "<function>p ? f : g</function>" of C: "<function>p ?> f :> g</function>". If the predicate filter <literal>p</literal> is true, the filter <literal>f</literal> is applied otherwise <literal>g</literal> is applied.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>when :: TFilter node -> TFilter node -> TFilter nod</function>
+					</term>
+					<listitem>
+						<para>
+						First filter is only applied to the passed node, if the second filter produces a list with contents, otherwise a list with the passed node is returned. The second filter is typically a predicate filter.
+						</para>
+						<para>
+							Definition: <function>f `when` g = g ?> f :> this</function>
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>whenNot :: TFilter node -> TFilter node -> TFilter node</function>
+					</term>
+					<listitem>
+						<para>
+						First filter is only applied to the passed node, if the second filter produces an empty list, otherwise a list of the passed node is returned. The second filter is typically a predicate filter.
+						</para>
+						<para>
+							Definition: <function>f `whenNot` g = g ?> this :> f</function>
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>guards :: TFilter node -> TFilter node -> TFilter node</function>
+					</term>
+					<listitem>
+						<para>
+						First filter is only applied to the passed node, if the second filter produces a list with contents, otherwise an empty list is returned. The second filter is typically a predicate filter.
+						</para>
+						<para>
+							Definition: <function>g `guards` f = g ?> f :> none</function>
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>containing :: (a -> [b]) -> (b -> [c]) -> a -> [b]</function>
+					</term>
+					<listitem>
+						<para>
+						Pruning: Keep only those nodes for which the second filter produces a list with contents and apply the first filter to these nodes.
+						</para>
+						<para>
+							Definition: <function>f `containing` g = filter (not . null . g) . f</function>
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>notContaining :: (a -> [b]) -> (b -> [c]) -> a -> [b]</function>
+					</term>
+					<listitem>
+						<para>
+						Pruning: Keep only those nodes for which the second filter produces an empty list and apply the first filter to these nodes.
+						</para>
+						<para>
+							Definition: <function>f `notContaining` g = filter (null . g) . f</function>
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>(/>) :: TFilter node -> TFilter node -> TFilter node</function>
+					</term>
+					<listitem>
+						<para>
+						Interior search, pronounced <emphasis>"slash"</emphasis>. First filter is applied to a node, the children of the result are taken and the second filter is applied to them, these children are returned. (meaning g inside f)
+						</para>
+						<para>
+							Definition: <function>f /> g = g `o` getChildren `o` f</function>
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>(&lt;/) :: TFilter node -> TFilter node -> TFilter node</function>
+					</term>
+					<listitem>
+						<para>
+						Exterior search, pronounced <emphasis>"outside"</emphasis>. First filter is applied to a node, the second to its children. If both filters return a result, the node is returned. (meaning f containing g)
+						</para>
+						<para>
+							Definition: <function>f &lt;/ g = f `containing` (g `o` getChildren)</function>
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+
+			<variablelist>
+				<title>Recursive search combinators</title>
+				<varlistentry>
+					<term>
+						<function>deep :: TFilter node -> TFilter node</function>
+					</term>
+					<listitem>
+						<para>
+						Filter is applied to each node of the tree. If the filter returns a result, processing is stopped. If not, the filter is applied to the next node of the tree. (top down traversal)
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>deepest :: TFilter node -> TFilter node</function>
+					</term>
+					<listitem>
+						<para>
+						See <function>deep</function>, but bottom up traversal.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>multi :: TFilter node -> TFilter node</function>
+					</term>
+					<listitem>
+						<para>
+						Returns all successful applications of the filter to the whole tree.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+
+			<variablelist>
+				<title>Recursive transformation combinators</title>
+				<varlistentry>
+					<term>
+						<function>applyBottomUp :: TFilter node -> TFilter node</function>
+					</term>
+					<listitem>
+						<para>
+						Constructs a new tree by applying the passed filter to each node of the tree. The tree is traversed bottom-up.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>applyTopDown :: TFilter node -> TFilter node</function>
+					</term>
+					<listitem>
+						<para>
+						Constructs a new tree by applying the passed filter to each node of the tree. The tree is traversed top-down.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>applyBottomUpIfNot :: TFilter node -> TFilter node -> TFilter node</function>
+					</term>
+					<listitem>
+						<para>
+						Constructs a new tree with a guarded top down transformation. The first filter is only applied to those nodes for which the second filter produces a result.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+
+			<variablelist>
+				<title>Monadic composition</title>
+				<varlistentry>
+					<term>
+						<function>liftM :: Monad m => (a -> [b]) -> a -> m [b]</function>
+					</term>
+					<listitem>
+						<para>
+						Lift a normal filter to a monadic filter so that it can be used in monads.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>(.&lt;) :: Monad m => (b -> m [c]) -> (a -> m[b]) -> (a -> m[c])</function>
+					</term>
+					<listitem>
+						<para>
+						Monadic Irish composition. Sequential composition of two filters. The first filter is applied to the result of the second filter (conjunction). Monadic version of the basic filter <function>o</function>.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>($$&lt;) :: Monad m => (a -> m [b]) -> [a] -> m [b]</function>
+					</term>
+					<listitem>
+						<para>
+						Apply a monadic filter to a list. Monadic version of the basic filter combinator <function>cat</function>.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+
+			<variablelist>
+				<title>Special Filter combinators for XmlTree</title>
+				<varlistentry>
+					<term>
+						<function>whenOk :: XmlFilter -> XmlFilter ->XmlFilter</function>
+					</term>
+					<listitem>
+						<para>
+						Applies the first filter to a node and checks the result for errors. In case of an error it stops processing and returns the list with the <literal>XError</literal> node. Otherwise processing is continued and the second filter is applied to the result.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<function>whenOkM :: Monad m => (a -> XmlTrees) -> (XmlTrees -> m XmlTrees) -> a -> m XmlTrees</function>
+					</term>
+					<listitem>
+						<para>
+						Monadic version of <function>whenOk</function>.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+		</section>
+
+		<section id="combinators_binding">
+			<title>Binding power and associativity</title>
+
+			<para>
+			Some combinators like the basic filter combinators and choice combinators can be expressed more naturally by operators. In Haskell completely new operators can be invented by using infix versions of functions and defining precedences and associativities for them.
+			</para>
+			<para>
+			The combinator operators are listed in following tables in decreasing order of their binding power. Combinators defined as prefix functions have to be written in back-quotes to be used as operators.
+			</para>
+
+			<table frame="all">
+				<title>Binding power and associativity of functional combinators</title>
+				<tgroup cols="3" align="left" colsep="1" rowsep="1">
+					<thead>
+						<row>
+							<entry>Precedence level</entry>
+							<entry>Operator</entry>
+							<entry>Associativity</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>6 (high)</entry>
+							<entry>
+								<function>`containing`</function>, <function>`notContaining`</function>
+							</entry>
+							<entry>left</entry>
+						</row>
+						<row>
+							<entry>5</entry>
+							<entry>
+								<function>`o`</function>, <function>+++</function>
+							</entry>
+							<entry>right</entry>
+						</row>
+						<row>
+							<entry>5</entry>
+							<entry>
+								<function>/></function>, <function>&lt;/</function>, <function>`orElse`</function>
+							</entry>
+							<entry>left</entry>
+						</row>
+						<row>
+							<entry>4</entry>
+							<entry>
+								<function>`when`</function>, <function>`whenNot`</function>, <function>`guards`</function>, <function>`whenOk`</function>
+							</entry>
+							<entry>right</entry>
+						</row>
+						<row>
+							<entry>3</entry>
+							<entry>
+								<function>?></function>, <function>:></function>
+							</entry>
+							<entry>right</entry>
+						</row>
+						<row>
+							<entry>0 (low)</entry>
+							<entry>
+								<function>$$</function>
+							</entry>
+							<entry>right</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+
+			<table frame="all">
+				<title>Binding power and associativity of monadic combinators</title>
+				<tgroup cols="3" align="left" colsep="1" rowsep="1">
+					<thead>
+						<row>
+							<entry>Precedence level</entry>
+							<entry>Operator</entry>
+							<entry>Associativity</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>5 (high)</entry>
+							<entry>
+								<function>.&lt;</function>
+							</entry>
+							<entry>right</entry>
+						</row>
+						<row>
+							<entry>4</entry>
+							<entry>
+								<function>`whenOkM`</function>
+							</entry>
+							<entry>right</entry>
+						</row>
+						<row>
+							<entry>0 (low)</entry>
+							<entry>
+								<function>$$&lt;</function>
+							</entry>
+							<entry>right</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+		</section>
+	</section>
+
+	<section id="examples">
+		<title>Examples for filters and filter combinators</title>
+
+		<para>
+		After discussing filters and filter combinators in depth, this section shows the use of these functions in real life examples. Because the filters work on the generic tree data type <literal>XmlTree</literal>, which represents whole XML documents, these functions form the basic uniform design of XML processing applications. The whole XML Parser of the &hxtl; works internally with filters.
+		</para>
+
+		<section>
+			<title>Removing comments</title>
+
+			<para>
+			This example describes in depth the use of filters and combinators for removing comments from an <literal>XmlTree</literal>. It illustrates, how a complex filter can be constructed by combining very simple ones.
+			</para>
+
+			<para>
+			Removing comments from an <literal>XmlTree</literal> is done by transforming the tree with a special filter. This filter returns an empty list for comment nodes, all other nodes are simply returned. The result is a new tree without comment nodes.
+			</para>
+
+			<para>
+			To implement this filter, a predicate function is needed first, which detects comment nodes. Building on this filter a more complex one will be constructed that returns an empty list for comment nodes, but returns all other nodes. The final filter will apply this filter to the whole tree and create a new tree from its results.
+			</para>
+
+			<para>
+			The function <function>isXCmt</function> is a predicate filter that detects comment nodes. It takes a node and checks if the node is of type <literal>XCmt</literal>. If the node is a comment, a list with this node is returned, otherwise the result is an empty list.
+			</para>
+
+			<programlisting>
+isXCmt              :: XmlFilter
+isXCmt              = isOfNode isXCmtNode
+			</programlisting>
+
+			<para>
+			The predicate filter <function>isXCmt</function> itself bases on the basic selection filter <function>isOfNode</function>, which is exported by the module <classname>XmlTree</classname>, and the predicate function <function>isXCmtNode</function>. The selection filter <function>isOfNode</function> takes the predicate function as a parameter and returns a list with the passed node if the predicate function returns true for this node. Otherwise an empty list is returned. The predicate function <function>isXCmtNode</function> uses pattern matching to figure out if a node is of type <literal>XCmt</literal>.
+			</para>
+
+			<programlisting>
+isOfNode            :: (node -> Bool) -> TFilter node
+isOfNode p t@(NTree n _)
+    | p n       = [t]
+    | otherwise	= []
+
+isXCmtNode          :: XNode -> Bool
+isXCmtNode (XCmt _) = True
+isXCmtNode _        = False
+			</programlisting>
+
+			<para>
+			The filter <function>removeComment</function> takes a node and returns an empty list if the node is a comment, otherwise a list with the passed node is returned. The filter <function>removeComment</function> combines the simple filter <function>none</function> and the above described filter <function>isXCmt</function> with the combinator <function>when</function>. If the predicate filter <function>isXCmt</function> is true, <function>none</function> returns an empty list. Otherwise a list with the node is returned.
+			</para>
+
+			<programlisting>
+removeComment		:: XmlFilter
+removeComment
+    = none `when` isXCmt
+			</programlisting>
+
+			<para>
+			The main filter <function>removeAllComment</function> is a filter for removing all comments from an <literal>XmlTree</literal>. It uses the recursive transformation filter <function>applyBottomUp</function>, which applies the filter <function>removeComment</function> to the whole tree. The result is a new tree where all comments have been removed.
+			</para>
+
+			<programlisting>
+removeAllComment	:: XmlFilter
+removeAllComment
+    = applyBottomUp removeComment
+			</programlisting>
+
+			<para>
+			This example shows very clearly how complex filters can be constructed out of simple ones. The functions <function>isOfNode</function>, <function>none</function>, <function>when</function> and <function>applyBottomUp</function> are already exported by the module <classname>XmlTree</classname>. They define own control structures and hide processing of the <literal>XmlTree</literal> from the programmer. The programmer does not have to worry about how to apply a filter to the whole tree and how to transform it. The use of predefined combinators and filters makes it possible to program on a very high abstraction level.
+			</para>
+		</section>
+
+		<section>
+			<title>Merging internal and external DTD subset</title>
+
+			<para>
+			After discussing the simple example for removing comments, this example will show a much more complex use of filters. Having defined combinators and basic filters already, it shows how they can usefully be combined into a complex function for merging the internal and external DTD subset. The XML parser of the &hxtl; uses this function internally. The filter is part of the module <classname>DTDProcessing</classname>.
+			</para>
+
+			<para>
+			A validating XML parser must merge the internal and external DTD subset. The document type declaration can point to an external subset containing declarations, it can contain the declarations directly in an internal subset, or can do both. If both the external and internal subsets are used, the internal subset must occur before the external subset. This has the effect that entity and attribute-list declarations in the internal subset take precedence over those in the external subset <citation><xref linkend="bib_xml"/></citation>.
+			</para>
+
+			<para>
+			The function <function>mergeDTDs</function> takes two lists with the declarations of the internal and external subset as input and returns both subsets merged. Because the internal subset dominates over the external one, its declarations can be prepended before the filtered result list of the external subset. The operator <function>++</function> is a standard Haskell function for concatenating two lists. The expression <function>mergeDTDentry dtdInt</function> creates a complex filter function that filters declarations from the external subset, which have been already declared in the internal subset. This complex filter is applied by the combinator <function>$$</function> to the whole declaration list of the external DTD subset.
+			</para>
+
+			<programlisting>
+mergeDTDs	:: XmlTrees -> XmlTrees -> XmlTrees
+mergeDTDs dtdInt dtdExt
+    = dtdInt ++ (mergeDTDentry dtdInt $$ dtdExt)
+			</programlisting>
+
+			<para>
+			The complex filter <function>mergeDTDentry</function> is initialized with the internal subset. By applying this filter to each node of the external subset, it filters all entries that are already declared in the internal subset. It uses the same semantic like the example for removing comments. If a declaration occurs in both subsets, the filter returns an empty list, otherwise it returns a list with the element from the external subset. This behavior is defined by the expression: <function>none `when` found</function>.
+			</para>
+
+			<para>
+			 Internally the filter <function>mergeDTDentry</function> bases on the filter <function>filterDTDNode</function>, which returns a node that occurs in both subsets. This filter is initialized with one node from the internal subset and checks if a node from the external subset equals this node. Because there usually exists more than one declaration in the internal subset, a list of this filter function is constructed, by applying <function>filterDTDNode</function> with the list transformation function <function>map</function> to all nodes of the internal subset. The result is a list of filter functions. This list of filters is later applied to a node of the external subset by the combinator <function>cat</function>.
+			</para>
+
+			<programlisting>
+mergeDTDentry	:: XmlTrees -> XmlFilter
+mergeDTDentry dtd
+    = none `when` found
+      where
+      filterList = map filterDTDNode dtd  -- construct the list of filters
+      found      = cat filterList         -- concatenate the filters (set union)
+			</programlisting>
+
+			<para>
+			The function <function>filterDTDNode</function> constructs a filter which returns a list with a node that occurs in both subsets. The filter is initialized with a node from the internal subset.
+			</para>
+
+			<programlisting>
+filterDTDNode	:: XmlTree -> XmlFilter
+			</programlisting>
+
+			<para>
+			If the nodes from the internal and external subsets are both of type <literal>ELEMENT</literal>, <literal>NOTATION</literal> or <literal>ENTITY</literal>, the filter checks if the values of their attributes "<emphasis>name</emphasis>" are equal. If this is the case, a list with the node is returned, otherwise an empty list is returned.
+			</para>
+
+			<programlisting>
+filterDTDNode (NTree (XDTD dtdElem al) _)
+    | dtdElem `elem` [ELEMENT, NOTATION, ENTITY]
+        = filterElement
+          where
+          filterElement n@(NTree (XDTD dtdElem' al') _cl')
+              | dtdElem == dtdElem' &amp;&amp;
+                getAttrValue a_name al' == getAttrValue a_name al
+                  = [n]
+              | otherwise  = []
+          filterElement _  = []
+			</programlisting>
+
+			<para>
+			If the nodes from the internal and external subset are of type <literal>ATTLIST</literal>, the filter has to check if the values of the attributes for the element name and attribute name are equal. If this is the case, the declarations are equal and a list with this node is returned, otherwise an empty list is returned.
+			</para>
+
+			<programlisting>
+filterDTDNode (NTree (XDTD ATTLIST al) _)
+    = filterAttlist
+      where
+      filterAttlist n@(NTree (XDTD ATTLIST al') _cl')
+          | getAttrValue a_name  al' == getAttrValue a_name  al &amp;&amp;
+            getAttrValue a_value al' == getAttrValue a_value al
+              = [n]
+      filterAttlist _ = []
+			</programlisting>
+
+	  		<para>
+			For all other types a filter is constructed that returns always an empty list.
+			</para>
+
+	  		<programlisting>
+filterDTDNode _ =  none
+			</programlisting>
+
+			<para>
+			This example might be a little bit confusing for people being not familiar with Haskell, but it demonstrates how even very complex tasks like merging the internal and external DTD subset can be implemented with filter functions and combinators. In this case a list of parameterized filter functions is constructed at runtime, which is applied to each node of the external DTD subset.
+			</para>
+		</section>
+	</section>
+
+
+<!-- *********************************************************************** -->
+
+	<section id="access_functions">
+		<title>Access functions</title>
+
+		<para>
+		Besides filters and combinators there exist some access functions for processing the attribute list <literal>TagAttrl</literal> of nodes.
+		</para>
+
+		<para></para>
+
+		<variablelist>
+			<title>Functions for processing the attribute list</title>
+			<varlistentry>
+				<term>
+					<function>getAttrValue :: Eq a => a -> [(a,b)] -> Maybe b</function>
+				</term>
+				<listitem>
+					<para>
+					Looks up the value for a certain attribute. If the attribute does not exist, the data type <literal>Nothing</literal> is returned.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>getAttrValue1 :: Eq a => a -> [(a, String)] -> String</function>
+				</term>
+				<listitem>
+					<para>
+					Looks up the value for a certain attribute. If the attribute does not exist, an empty string is returned.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>hasAttrValue :: Eq a => a -> [(a,b)] -> Bool</function>
+				</term>
+				<listitem>
+					<para>
+					Returns true if there is an attribute with the searched name in the attribute list.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>addAttrValue :: Eq a => a -> b -> [(a,b)] -> [(a,b)]</function>
+				</term>
+				<listitem>
+					<para>
+					Adds an attribute, the name and value, to the list.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>addAttrValues :: Eq a => [(a,b)] -> [(a,b)] -> [(a,b)]</function>
+				</term>
+				<listitem>
+					<para>
+					Adds a list of name-value pairs to the attribute list.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>changeAttrValue :: Eq a => a -> b -> [(a,b)] -> [(a,b)]</function>
+				</term>
+				<listitem>
+					<para>
+					Changes the value of a certain attribute.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>delAttrValue :: Eq a => a -> [(a,b)] -> [(a,b)]</function>
+				</term>
+				<listitem>
+					<para>
+					Deletes an attribute from the list.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>delAttrValues :: Eq a => [a] -> [(a,b)] -> [(a,b)]</function>
+				</term>
+				<listitem>
+					<para>
+					Deletes a list of attributes from the attribute list.
+					</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+
+		<para>
+		The following example shows the use of access functions for adding a new attribute with the name "<emphasis>att2</emphasis>" and the value "<emphasis>val2</emphasis>" to the attribute list of an <literal>XTag</literal> node. The type of the node is detected by pattern-matching. If the node is of another type, it is simply returned.
+		</para>
+
+		<example>
+			<title>Adding a new attribute to an XTag node.</title>
+
+			<programlisting>
+addAttribute :: XmlFilter
+addAttribute n@(NTree (XTag name al) cs)
+    = replaceAttrl newAttList n
+      where
+      newAttList = addAttrValue "att2" "val2" al
+
+addAttribute n = [n]
+			</programlisting>
+		</example>
+
+	</section>
+
+<!-- *********************************************************************** -->
+
+	<section id="XmlState">
+		<title>State-I/O monad from module XmlState</title>
+
+		<para>
+		The module <classname>XmlState</classname> provides a monad for an internal state and I/O commands. The concept of a monad comes from category theory. Monads are used for programming in a functional language using an imperative style. A monad can encapsulate computations such as I/O, manipulation of state or exceptions. For further information about monads, the section "Using Monads" of the Haskell Bookshelf <citation><xref linkend="bib_bookshelf"/></citation> is a good starting place.
+		</para>
+
+		<para>
+		<classname>XmlState</classname> is used for various parts of the XML parser, e.g. when building the parse tree or substituting entities.	The internal state of the monad from <classname>XmlState</classname> consists of two parts, the user state and the system state. The user state is a type parameter, the system state is a list of name-value pairs. If the user state is not needed, the type parameter can be instantiated with <literal>()</literal>.
+		</para>
+
+		<para>
+		The monad provides trace functions combined with trace levels to output marked computation steps. Error reporting functions are also located in this module. The error messages are printed to <emphasis>stderr</emphasis> and the maximum error level is stored in the system state.
+		</para>
+
+		<para>
+		Furthermore there are types for <function>XmlFilter</function> functions working on this monad, functions for manipulating the state components and for lifting I/O commands and <function>XmlFilter</function>s to monad filters.
+		</para>
+
+		<para>
+        	<figure id="modules_xmlstate" float="0">
+				<title>Modules of XmlState</title>
+            	<mediaobject>
+            		<imageobject>
+	       				<imagedata fileref="images/modules_xmlstate.eps" format="EPS" />
+	      			</imageobject>
+       	      		<imageobject>
+ 	        			<imagedata fileref="images/modules_xmlstate.gif" format="JPG" />
+              		</imageobject>
+            	</mediaobject>
+          	</figure>
+        </para>
+
+		<para>
+		The internal state consists of a system and a user state.
+		</para>
+
+		<programlisting>
+data XmlState state       = XmlState { sysState  :: SysState
+                                     , userState :: state
+                                     }
+		</programlisting>
+
+		<para>
+		The system state consists of a list of name-value pairs of type String.
+		</para>
+
+		<programlisting>
+type SysState             = TagAttrl
+		</programlisting>
+
+		<para>
+		The monad type for commands. It is an instance of <literal>StateIO</literal> from the general module <classname>MonadStateIO</classname>.
+		</para>
+
+		<programlisting>
+type XState state res     = MonadStateIO.StateIO (XmlState state) res
+		</programlisting>
+
+		<para>
+		The <function>XmlFilter</function> type for filters working on a state.
+		</para>
+
+		<programlisting>
+type XmlStateFilter state = XmlTree -> XState state XmlTrees
+		</programlisting>
+
+		<para></para>
+
+		<variablelist>
+			<title>Functions for executing XState commands</title>
+			<varlistentry>
+				<term>
+					<function>run0 :: XmlState state -> XState state res -> IO (res, XmlState state)</function>
+				</term>
+				<listitem>
+					<para>
+					Executes an XState command with an initial state.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>run :: state -> XState state res -> IO res</function>
+				</term>
+				<listitem>
+					<para>
+					Executes an XState command with an initial user state.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<function>run' :: XState () res -> IO res</function>
+				</term>
+				<listitem>
+					<para>
+                    Executes an XState command in the I/O monad.
+					</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+
+		<para>
+		The following example shows the use of the State-I/O monad. All computations of <function>processXmlN</function> take place in the State-I/O monad. The functions <function>getXmlContents</function>, <function>parseXmlDoc</function> and <function>putXmlTree</function> are <literal>XmlStateFilter</literal>s. The first two filters do some computations where errors might occur. These <literal>XmlStateFilter</literal>s can output the errors and set an error level in the State-I/O monad. The value of the error level is tested before the constructed parse tree is returned. The <literal>XmlStateFilter</literal>s <function>putXmlTree</function> just outputs the constructed parse tree.
+		</para>
+
+		<example>
+			<title>Using the monad from XmlState</title>
+			<programlisting>
+processXmlN	:: XmlTree -> IO [XmlTree]
+processXmlN t0
+    = run' $ do
+             setSysState (selXTagAttrl . getNode $ t0)
+             setTraceLevel 0
+             t1 &lt;- getXmlContents $ t0
+             t2 &lt;- parseXmlDoc    $$&lt; t1
+             putXmlTree t2
+             el &lt;- getErrorLevel
+             return ( if el == 0
+                      then t2
+                      else [] )
+			</programlisting>
+		</example>
+
+		<para>
+		The functions <function>setSysState</function>, <function>setTraceLevel</function> and <function>getErrorLevel</function> are functions for accessing and manipulating the state of the monad. The monad comes with lots of more access functions.
+		</para>
+	</section>
+
+
+
+</chapter>

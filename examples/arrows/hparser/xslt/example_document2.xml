@@ -1,0 +1,20 @@
+<document order="">  
+  some text
+  <element_type1 nr=""/>
+  <element_type2>
+    <nested_element nested_element_attrib="">
+       some more text<X/>
+    </nested_element>
+  </element_type2>
+  <ns:element_typeNS xmlns:ns="http://ns.org" />
+  <element_type1 nr="" />
+  <element_type1 nr="" />
+  <element_type1 nr="" />
+  <element_type1 nr="" />
+  <element_type3 brot=""/>
+  <element_type3 kaese=""/>
+  <!-- Milk is good for you! -->
+  <?Milk /opt1 /opt2 /opt3 ?>
+  <?Bread with cheese, or maybe not? ?>
+  <element_type3 milch="" nr=""/>
+</document>

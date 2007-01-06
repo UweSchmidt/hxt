@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+
+<element xmlns="http://relaxng.org/ns/structure/1.0" xmlns:eg="http://www.example.com" name="foo">
+  <attribute name="eg:bar"/>
+</element>
+

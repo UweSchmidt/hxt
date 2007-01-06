@@ -1,0 +1,39 @@
+<![%workaround;[
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE bibliography PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+       "file:///usr/share/sgml/docbook/dtd/xml/4.2/docbookx.dtd">
+]]>
+
+
+<bibliography>
+	<title>Affidavit</title>
+
+    <para>
+	I hereby declare that this master thesis has been written only by the undersigned and without any assistance from third parties.
+	</para>
+
+	<para>
+	Furthermore, I confirm that no sources have been used in the preparation of this thesis other than those indicated in the thesis itself.
+	</para>
+
+	<para></para>
+	<para></para>
+	<para></para>
+
+	<para>
+	Hamburg, 2002-09-02
+	</para>
+	<programlisting>
+------------------------------------------------------------------
+Place, Date Signature
+ 	</programlisting>
+
+	<biblioentry>
+		<author>
+			<othername></othername>
+		</author>
+	</biblioentry>
+
+</bibliography>
+
+

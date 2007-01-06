@@ -1,0 +1,7 @@
+module Text.XML.HXT.RelaxNG.SchemaGrammar
+where
+
+import Text.XML.HXT.DOM
+
+relaxSchema4RelaxGrammar :: XmlTree
+relaxSchema4RelaxGrammar = 

@@ -1,0 +1,64 @@
+<![%workaround;[
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE abstract PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+       "file:///usr/share/sgml/docbook/dtd/xml/4.2/docbookx.dtd">
+	<!ENTITY hxt  "HXT">
+	<!ENTITY hxtl "Haskell XML Toolbox">
+]]>
+
+<!--
+<citation><link linkend="bib_hxml">WWW13</link></citation>
+is a hack for
+<citation><xref linkend="bib_hxml"></citation>
+
+xref tags produce line breaks in abstract sections
+-->
+
+<abstract>
+	<title>Abstract</title>
+
+	<para>
+	This thesis introduces the core component of the Haskell XML Toolbox: a validating XML parser that supports almost fully the &xmlspecl; <citation><link linkend="bib_xml">WWW01</link></citation>. The thesis presents how a validating XML parser and XML processing applications can be implemented by using filter functions as a uniform design.
+	</para>
+
+	<para>
+	The &hxtl; is a collection of tools for processing XML with Haskell. It is itself purely written in Haskell. The Toolbox is a project of the University of Applied Sciences Wedel, initialized by Prof. Dr. Uwe Schmidt.
+	</para>
+
+	<para>
+	The &hxtl; bases on the ideas of HaXml <citation><link linkend="bib_haxml">WWW21</link></citation> and HXML <citation><link linkend="bib_hxml">WWW25</link></citation>, but introduces a more general approach for processing XML with Haskell. It uses a generic data model for representing XML documents, including the DTD subset and the document subset. This data model makes is possible to use filter functions as a uniform design of XML processing applications. Libraries with filters and combinators are provided for processing this data model.
+	</para>
+
+	<para>
+		<itemizedlist>
+			<title>The following components are included:</title>
+			<listitem>
+				<para><filename>hdom</filename> - Core data types and functions for processing XML with Haskell</para>
+			</listitem>
+			<listitem>
+				<para><filename>hparser</filename> - XML parser</para>
+			</listitem>
+			<listitem>
+				<para><filename>hvalidator</filename> - Modules for validating XML documents</para>
+			</listitem>
+			<listitem>
+				<para><filename>hxslt</filename> - Modules for XSL transformations</para>
+			</listitem>
+		</itemizedlist>
+	</para>
+
+	<para>
+	Prof. Dr. Uwe Schmidt wrote the basic parser and core functions. His master student Christine Nickel wrote the package <filename>hxslt</filename>, his master student Martin Schmidt wrote the package <filename>hvalidator</filename> and some parts of the parser.
+	</para>
+
+	<para></para>
+	<para><command>Related work</command></para>
+
+	<para>
+	Malcolm Wallace and Colin Runciman wrote HaXml <citation><link linkend="bib_haxml">WWW21</link></citation>, a collection of utilities for using Haskell and XML together. The &hxtl; is based on their idea of using filter combinators for processing XML with Haskell.
+	</para>
+
+	<para>
+	Joe English wrote HXML <citation><link linkend="bib_hxml">WWW25</link></citation>, a non-validating XML parser in Haskell. His idea of validating XML by using derivatives of regular expressions <citation><link linkend="bib_derivates_je">WWW26</link></citation> was implemented in the validation functions of this software.
+	</para>
+</abstract>

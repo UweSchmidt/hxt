@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+
+<foo xmlns:eg1="http://www.example.com/1" xmlns:eg2="http://www.example.com/2" eg1:x="xx" eg2:y="yy"/>
+

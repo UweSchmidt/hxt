@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<start xmlns="http://relaxng.org/ns/structure/1.0">
+  <element name="foo">
+    <empty/>
+  </element>
+</start>
+

@@ -1,0 +1,40 @@
+<![%workaround;[
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+       "file:///usr/share/sgml/docbook/dtd/xml/4.2/docbookx.dtd">
+	<!ENTITY hxt  "HXT">
+	<!ENTITY hxtl "Haskell XML Toolbox">
+]]>
+
+
+<preface>
+	<title>Preface</title>
+
+	<para>
+	The primary aim of this project is to gain some valuable experiences with the beautiful functional programming Haskell. Parsing and processing lists are strengths of functional programming languages. Both features are needed to handle XML. Combined with higher-order combinatorial functions, that a functional programming language like Haskell allows, processing XML can be very efficient and elegant.
+	</para>
+
+	<para>
+	Many of the techniques described in this master thesis are far more elegant, compact and powerful than the ones found in familiar techniques like DOM <citation><xref linkend="bib_dom"/></citation> or JDOM <citation><xref linkend="bib_jdom"/></citation>.
+	</para>
+
+	<para>
+	Because there did not exist any validating XML parser written in Haskell, we thought it might be a nice project implementing one and doing some further
+	XML processing with Haskell. The &hxtl; uses a general tree data model for representing XML documents. This generic data model makes it possible to implement an XML parser or XML processing applications with a uniform design by using filter functions and combinators for processing XML.
+	</para>
+
+	<para>
+	We have chosen Haskell because it is a popular modern functional programming language, and we were interested in learning more about the functional programming paradigm. There exist lots of free implementations, online tutorials and some good Haskell books. The Haskell homepage Haskell.org <citation><xref linkend="bib_haskellorg"/></citation> gives many further details.
+	</para>
+
+	<para>
+	Learning functional programming with Haskell by self-studies was very challenging. It required a change in perspective of programming. But once the paradigms are understood, writing Haskell programs is very straightforward and makes a lot of fun.
+	</para>
+
+	<para>
+	The first chapter gives an introduction to XML and Haskell. Readers who are familiar with these techniques can skip it. The next three chapters describe the packages <filename>hdom</filename>, <filename>hparser</filename> and <filename>hvalidator</filename> of the &hxtl;. The last chapter compares the design used in the &hxtl; with HaXml and HXML.
+	</para>
+
+
+
+</preface>

@@ -1,0 +1,338 @@
+<![%workaround;[
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+       "file:///usr/share/sgml/docbook/dtd/xml/4.2/docbookx.dtd">
+]]>
+
+
+<appendix id="a1">
+	<title>User handbook</title>
+
+	<section>
+    	<title>System requirements</title>
+
+    	<para>
+		The &hxtl; was developed with <emphasis>Hugs Version December 2001</emphasis> <citation><xref linkend="bib_hugs"/></citation> and the <emphasis>Glasgow Haskell Compiler (GHC) 5.04</emphasis> <citation><xref linkend="bib_ghc"/></citation> on Linux systems. Testing on Windows systems has not been done yet.
+		</para>
+
+		<para>
+		If you want to use the &hxtl; in your own applications, just add the modules from the directories <filename>hdom</filename>, <filename>hparser</filename>, <filename>hvalidator</filename> and <filename>parsec</filename> to the path of your compiler or interpreter. It is planned to provide special GHC packages of the &hxtl; in the near future.
+		</para>
+
+		<para>
+		To compile binary versions of the programs included in the &hxtl;, the <emphasis>Glasgow Haskell Compiler</emphasis> and <emphasis>GNU make</emphasis> are needed.
+		</para>
+
+		<para>
+		To build the API documentation you must have installed <emphasis>HDoc</emphasis> <citation><xref linkend="bib_hdoc"/></citation>. If you run <literal>make hdoc</literal> in the root directory of the &hxtl;, the documentation will be generated and placed in the directory <filename>doc/hdoc</filename>.
+		</para>
+	</section>
+
+	<section id="known_problems">
+    	<title>Missing features and known problems</title>
+
+		<para>
+		Unfortunately the XML parser of the &hxtl; does not support fully the &xmlspec; at the moment. We are working hard to implement the missing features in the near future.
+		</para>
+
+		<para>
+			<itemizedlist>
+				<title>Missing features:</title>
+				<listitem>
+					<para>Namespaces are not supported.</para>
+				</listitem>
+				<listitem>
+					<para>Protocols like "http" and "file" are not yet supported due to a lack of libraries. We think of using the <literal>curl</literal> command instead.</para>
+				</listitem>
+				<listitem>
+					<para>General external entities are not yet processed.</para>
+				</listitem>
+				<listitem>
+					<para>General entities in default values of attributes are not yet substituted.</para>
+				</listitem>
+			</itemizedlist>
+		</para>
+
+		<para>
+			<itemizedlist>
+				<title>Known problems:</title>
+				<listitem>
+					<para>Line numbers are not yet reported for validity constraint errors.</para>
+				</listitem>
+				<listitem>
+					<para>Under Hugs 98 only: The parser suffers a serious space fault when parsing large documents.</para>
+				</listitem>
+			</itemizedlist>
+		</para>
+	</section>
+
+
+	<section>
+    	<title>Directory structure</title>
+
+		<variablelist>
+			<varlistentry>
+				<term>
+					<filename>doc</filename>
+				</term>
+				<listitem>
+					<para>
+					Contains the documentation: this thesis and the generated HDoc documentation
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<filename>examples</filename>
+				</term>
+				<listitem>
+					<para>
+					Contains some example applications for using the parser, filter functions and filter combinators. Includes <literal>HXmlParser</literal>, a command line well-formedness checker and validator.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<filename>hdom</filename>
+				</term>
+				<listitem>
+					<para>
+					Sources of package <filename>hdom</filename>.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<filename>hparser</filename>
+				</term>
+				<listitem>
+					<para>
+					Sources of package <filename>hparser</filename>.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<filename>hvalidator</filename>
+				</term>
+				<listitem>
+					<para>
+					Sources of package <filename>hvalidator</filename>.
+					</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
+				<term>
+					<filename>parsec</filename>
+				</term>
+				<listitem>
+					<para>
+					Sources of the free monadic parser combinator library Parsec. Parsec is already distributed with Hugs and GHC, but we had some problems with different behaviors of these libraries.
+					</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</section>
+
+
+	<section>
+		<title>HXmlParser - Well-formedness checker and validator</title>
+
+		<para>
+		The &hxtl; comes with a command line tool for checking if XML documents are well-formed and valid. To build this tool with GHC, run <literal>make HXmlParser</literal> in the root directory of the &hxtl;. This will produce the binary file <literal>HXmlParser</literal> that will be stored in the root directory. The sources of this tool are located in the directory <literal>examples</literal>.
+		</para>
+
+		<para>
+		When checking an invalid XML file, <literal>HXmlParser</literal> will report errors to <emphasis>stderr</emphasis> and quit with an exit code of <emphasis>"-1"</emphasis>. If there are no errors in the document, the tool will just quit without any message.
+		</para>
+
+		<para>
+		If you run <literal>HXmlParser</literal> without any arguments, the usage information is displayed:
+		</para>
+
+		<programlisting>
+Usage:
+  --source "filename"  - source file (required)
+  --encoding "charset" - document encoding
+  --trace "level"      - trace level (0-4)
+
+  -h                   - this help
+  -v                   - display a message if document is well-formed or valid
+  -w                   - well-formed check only
+
+  -op                  - output parsed document
+  -opt                 - output XmlTree of parsed document
+  -oph                 - output Haskell type of parsed document
+
+Only for validity checks:
+  -ot                  - output transformed document
+  -ott                 - output XmlTree of transformed document
+  -oth                 - output Haskell type of transformed document
+
+  -oc                  - output canonicalized document
+  -oct                 - output XmlTree of canonicalized document
+  -och                 - output Haskell type of canonicalized document
+		</programlisting>
+
+	</section>
+
+
+	<section>
+		<title>Check the XML parser with the XML Test Suites</title>
+
+		<para>
+		The XML parser of the &hxtl; was elaborately tested with the XML Test Suites from the W3C <citation><xref linkend="bib_xmlts"/></citation>. If you want to run these checks on your own, you can use the tool <literal>RunTestCases</literal> that is distributed with the &hxtl;.
+		</para>
+
+		<para>
+		First you have to download the test cases from the W3C <citation><xref linkend="bib_xmlts"/></citation> and extract them in an own directory. To test the XML parser with these test cases, you have to build the program <literal>RunTestCases</literal>. Executing <literal>make RunTestCases</literal> in the root directory of the &hxtl; will compile this program.
+		</para>
+
+		<para>
+		The XML Test Suites contain test cases from different organizations and people. <literal>RunTestCases</literal> must be called with a test case description file as argument from the directories: <literal>ibm</literal>, <literal>oasis</literal>, <literal>sun</literal> or <literal>xmltest</literal>.
+		</para>
+
+		<para>
+		Perhaps a dummy root node must be added to these files to form a valid XML document. <literal>RunTestCases</literal> cannot process the root file that combines all theses description files.
+		</para>
+
+		<para>
+		When being executed, <literal>RunTestCases</literal> will ask what type of test shall be performed. The type entered must correspond to the tests listed in the test case description file. <function>RunTestCases</function> will only execute these test cases.
+		</para>
+
+		<para>
+		If the option "show detailed information" is set, <literal>RunTestCases</literal> will display the <literal>XmlTree</literal> in addition if a test fails.
+		</para>
+
+		<example>
+			<title>Executing RunTestCases</title>
+			<programlisting>
+RunTestCases ibm_oasis_valid.xml
+
+Which kind of test shall be performed?
+([1] - valid | 2 - invalid | 3 - not-wf | 4 - error):
+
+Show detailed information? (j/[n])
+			</programlisting>
+		</example>
+
+  	</section>
+
+
+	<section>
+		<title>Performance and profiling</title>
+
+		<para>
+		Time and space profiling is very useful to optimize programs and remove bottlenecks. We already added the ability of profiling to the XML parser, but did not use this information yet. The main focus of the parser lays on a clear and easy design at the moment.
+		</para>
+
+		<section>
+			<title>Usage information</title>
+
+			<para>
+			The validating XML parser can be analyzed with the time and space profiling system of the Glasgow Haskell Compiler (GHC). Cost centers have been added for all main computations, so that it could be measured which parts of the parser consume most time and memory.
+			</para>
+
+			<para>
+			The tool <literal>Profiling</literal> can be used to run these tests with the XML parser. It can be built by executing <literal>make Profiling</literal> in the root directory of the &hxtl;.
+			</para>
+
+			<para>
+			<literal>Profiling</literal> must be executed with an XML file as test input and several different parameters that influence GHC's profiling behavior. These parameters are described in depth in the documentation of GHC.
+			</para>
+
+			<para>
+			Four predefined profiling types have been added to the <literal>Makefile</literal> in the root directory of the &hxtl;. The input file of <literal>Profiling</literal> can be set by the variable <literal>PROFILING_INPUT</literal>.
+			</para>
+
+			<variablelist>
+				<title>Predefined profiling targets:</title>
+				<varlistentry>
+					<term>
+						<filename>make runprofiling1</filename>
+					</term>
+					<listitem>
+						<para>
+						Time and allocation profiling - Generate profiling information in XML format and display them with the tool <emphasis>ghcprof</emphasis> of GHC.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<filename>make runprofiling2</filename>
+					</term>
+					<listitem>
+						<para>
+						Time and allocation profiling - Generate profiling information in text format and display them with <emphasis>less</emphasis>.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<filename>make runprofiling4</filename>
+					</term>
+					<listitem>
+						<para>
+						Heap profiling - Break down the graph by the cost-center stack which produced the data.
+						</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>
+						<filename>make runprofiling4</filename>
+					</term>
+					<listitem>
+						<para>
+						Heap profiling - Break down the graph by the retainer set.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+		</section>
+
+		<section>
+			<title>How to interpret the results</title>
+
+			<para>
+			This section will show how to interpret the results from the profiling tests. The W3C Recommendation of the Extensible Hypertext Markup Language (XHTML) and its Strict DTD was chosen as test input. The test machine was a Pentium 4 with 1.6 GHz and 256 MB memory, running Debian 3.0.
+			</para>
+
+			<para>
+			The results from time and space profiling show that most time and memory is consumed by the function <function>procesDTD</function>. This function provides substitution of parameter entities in the internal and external DTD part. The next resource intensive function is <function>parseXmlDoc</function> that does the parsing of an XML document and constructs an <literal>XmlTree</literal> representation from it.
+			</para>
+
+			<programlisting>
+total time  =        1.26 secs   (63 ticks @ 20 ms)
+total alloc = 102,664,004 bytes  (excludes profiling overheads)
+
+
+COST CENTER                    MODULE               %time %alloc
+
+processDTD                     HdomParser            27.0   45.6
+parseXmlDoc                    HdomParser            19.0   29.3
+buildAllValFcts                DocValidation         14.3    5.0
+validateAttributes             DTDValidation         12.7    0.5
+processGeneralEntities         HdomParser             7.9    9.6
+MAIN                           MAIN                   6.3    5.0
+buildAllTransFcts              DocTransformation      4.8    1.8
+IdVal.validateIds              Validation             4.8    1.1
+validateElements               DTDValidation          3.2    0.2
+getXmlContents                 HdomParser             0.0    1.1
+			</programlisting>
+
+			<para>
+			The ranking of the cost centers might have changed dramatically if the profiling tests are performed with other documents. In this case, parameter entities are exhaustively used in the Strict DTD of XHTML. It is not astonishing that the function that handles their substitution takes the most time and space. Another important aspect is the ratio of the DTD subset and the document subset. If for example the DTD subset is very large, its processing functions might take a large percentage of time and space consumption, too.
+			</para>
+
+			<para>
+			Heap profiling produces graphs that show the memory consumption of the cost centers during execution time. These graphs show very clearly how the program execution behavior of Haskell programs differs from programs written in imperative languages. Haskell uses lazy evaluation when evaluating expressions. Arguments to functions are evaluated only when they are needed. Functions only calculate their result as much as it is needed by other functions that called them.
+			</para>
+
+			<para>
+			Lazy evaluation leads to the fact that Haskell programs do not have a strict sequential evaluation order, but that they resemble a stream. The graphs show very clearly this execution behavior. First the parsing functions are started, after producing enough output, processing of the DTD starts. In the end the validation process starts calculations. The graphs show that almost all functions work in parallel after they have enough input.
+			</para>
+		</section>
+	</section>
+
+
+</appendix>

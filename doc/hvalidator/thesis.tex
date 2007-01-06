@@ -1,0 +1,725 @@
+\FOT{2}\Node%
+{}%
+\Node%
+{\def\Element%
+{0}}%
+
+	\Node%
+{\def\Element%
+{1}}%
+		\Node%
+{\def\Element%
+{2}}%
+Design and Implementation of a validating XML parser in Haskell\endNode{}
+		\Node%
+{\def\Element%
+{3}}%
+Master's thesis\endNode{}
+
+		\Node%
+{\def\Element%
+{4}}%
+University of Applied Sciences Wedel, Computer Science Department\endNode{}
+
+		\Node%
+{\def\Element%
+{5}}%
+			\Node%
+{\def\Element%
+{6}}%
+				\Node%
+{\def\Element%
+{7}}%
+University of Applied Sciences Wedel\endNode{}
+				\Node%
+{\def\Element%
+{8}}%
+Computer Science Department\endNode{}
+			\endNode{}
+		\endNode{}
+
+		\Node%
+{\def\Element%
+{9}}%
+			\Node%
+{\def\Element%
+{10}}%
+Martin\endNode{}
+			\Node%
+{\def\Element%
+{11}}%
+Schmidt\endNode{}
+			\Node%
+{\def\Element%
+{12}}%
+				\Node%
+{\def\Element%
+{13}}%
+Hamburg\endNode{}
+				\Node%
+{\def\Element%
+{14}}%
+Germany\endNode{}
+			\endNode{}
+			\Node%
+{\def\Element%
+{15}}%
+xi5393@fh-\/wedel.de\endNode{}
+		\endNode{}
+
+		\Node%
+{\def\Element%
+{16}}%
+2002-\/09-\/02\endNode{}
+
+		
+
+\Node%
+{\def\Element%
+{17}}%
+	\Node%
+{\def\Element%
+{18}}%
+Abstract\endNode{}
+
+	\Node%
+{\def\Element%
+{19}}%
+	This thesis introduces the core component of the Haskell XML Toolbox: a validating XML parser that supports almost fully the Extensible Markup Language (XML) 1.0 (Second Edition) W3C Recommendation \Node%
+{\def\Element%
+{20}}%
+\Node%
+{\def\Element%
+{21}}%
+WWW01\endNode{}\endNode{}. The thesis presents how a validating XML parser and XML processing applications can be implemented by using filter functions as a uniform design.
+	\endNode{}
+
+	\Node%
+{\def\Element%
+{22}}%
+	The Haskell XML Toolbox is a collection of tools for processing XML with Haskell. It is itself purely written in Haskell. The Toolbox is a project of the University of Applied Sciences Wedel, initialized by Prof. Dr. Uwe Schmidt.
+	\endNode{}
+
+	\Node%
+{\def\Element%
+{23}}%
+	The Haskell XML Toolbox bases on the ideas of HaXml \Node%
+{\def\Element%
+{24}}%
+\Node%
+{\def\Element%
+{25}}%
+WWW21\endNode{}\endNode{} and HXML \Node%
+{\def\Element%
+{26}}%
+\Node%
+{\def\Element%
+{27}}%
+WWW25\endNode{}\endNode{}, but introduces a more general approach for processing XML with Haskell. It uses a generic data model for representing XML documents, including the DTD subset and the document subset. This data model makes is possible to use filter functions as a uniform design of XML processing applications. Libraries with filters and combinators are provided for processing this data model.
+	\endNode{}
+
+	\Node%
+{\def\Element%
+{28}}%
+		\Node%
+{\def\Element%
+{29}}%
+			\Node%
+{\def\Element%
+{30}}%
+The following components are included:\endNode{}
+			\Node%
+{\def\Element%
+{31}}%
+				\Node%
+{\def\Element%
+{32}}%
+\Node%
+{\def\Element%
+{33}}%
+hdom\endNode{} -\/ Core data types and functions for processing XML with Haskell\endNode{}
+			\endNode{}
+			\Node%
+{\def\Element%
+{34}}%
+				\Node%
+{\def\Element%
+{35}}%
+\Node%
+{\def\Element%
+{36}}%
+hparser\endNode{} -\/ XML parser\endNode{}
+			\endNode{}
+			\Node%
+{\def\Element%
+{37}}%
+				\Node%
+{\def\Element%
+{38}}%
+\Node%
+{\def\Element%
+{39}}%
+hvalidator\endNode{} -\/ Modules for validating XML documents\endNode{}
+			\endNode{}
+			\Node%
+{\def\Element%
+{40}}%
+				\Node%
+{\def\Element%
+{41}}%
+\Node%
+{\def\Element%
+{42}}%
+hxslt\endNode{} -\/ Modules for XSL transformations\endNode{}
+			\endNode{}
+		\endNode{}
+	\endNode{}
+
+	\Node%
+{\def\Element%
+{43}}%
+	Prof. Dr. Uwe Schmidt wrote the basic parser and core functions. His master student Christine Nickel wrote the package \Node%
+{\def\Element%
+{44}}%
+hxslt\endNode{}, his master student Martin Schmidt wrote the package \Node%
+{\def\Element%
+{45}}%
+hvalidator\endNode{} and some parts of the parser.
+	\endNode{}
+
+	\Node%
+{\def\Element%
+{46}}%
+\endNode{}
+	\Node%
+{\def\Element%
+{47}}%
+\Node%
+{\def\Element%
+{48}}%
+Related work\endNode{}\endNode{}
+
+	\Node%
+{\def\Element%
+{49}}%
+	Malcolm Wallace and Colin Runciman wrote HaXml \Node%
+{\def\Element%
+{50}}%
+\Node%
+{\def\Element%
+{51}}%
+WWW21\endNode{}\endNode{}, a collection of utilities for using Haskell and XML together. The Haskell XML Toolbox is based on their idea of using filter combinators for processing XML with Haskell.
+	\endNode{}
+
+	\Node%
+{\def\Element%
+{52}}%
+	Joe English wrote HXML \Node%
+{\def\Element%
+{53}}%
+\Node%
+{\def\Element%
+{54}}%
+WWW25\endNode{}\endNode{}, a non-\/validating XML parser in Haskell. His idea of validating XML by using derivatives of regular expressions \Node%
+{\def\Element%
+{55}}%
+\Node%
+{\def\Element%
+{56}}%
+WWW26\endNode{}\endNode{} was implemented in the validation functions of this software.
+	\endNode{}\endNode{}
+
+	\endNode{}
+
+
+	\Node%
+{\def\Element%
+{57}}%
+    	\Node%
+{\def\Element%
+{58}}%
+      		\Node%
+{\def\Element%
+{59}}%
+"Learn at least one new [programming] language every year.
+ Different languages solve the same problems in different ways.
+ By learning several different approaches, you can help broaden
+ your thinking and avoid getting stuck in a rut."
+    -\/-\/-\/ The Pragmatic Programmer
+			\endNode{}
+		\endNode{}
+	\endNode{}
+
+
+	
+
+\Node%
+{\def\Element%
+{60}}%
+	\Node%
+{\def\Element%
+{61}}%
+Preface\endNode{}
+
+	\Node%
+{\def\Element%
+{62}}%
+	The primary aim of this project is to gain some valuable experiences with the beautiful functional programming Haskell. Parsing and processing lists are strengths of functional programming languages. Both features are needed to handle XML. Combined with higher-\/order combinatorial functions, that a functional programming language like Haskell allows, processing XML can be very efficient and elegant.
+	\endNode{}
+
+	\Node%
+{\def\Element%
+{63}}%
+	Many of the techniques described in this master thesis are far more elegant, compact and powerful than the ones found in familiar techniques like DOM \Node%
+{\def\Element%
+{64}}%
+\Node%
+{\def\Element%
+{65}}%
+>\/\endNode{}\endNode{} or JDOM \Node%
+{\def\Element%
+{66}}%
+\Node%
+{\def\Element%
+{67}}%
+>\/\endNode{}\endNode{}.
+	\endNode{}
+
+	\Node%
+{\def\Element%
+{68}}%
+	Because there did not exist any validating XML parser written in Haskell, we thought it might be a nice project implementing one and doing some further
+	XML processing with Haskell. The Haskell XML Toolbox uses a general tree data model for representing XML documents. This generic data model makes it possible to implement an XML parser or XML processing applications with a uniform design by using filter functions and combinators for processing XML.
+	\endNode{}
+
+	\Node%
+{\def\Element%
+{69}}%
+	We have chosen Haskell because it is a popular modern functional programming language, and we were interested in learning more about the functional programming paradigm. There exist lots of free implementations, online tutorials and some good Haskell books. The Haskell homepage Haskell.org \Node%
+{\def\Element%
+{70}}%
+\Node%
+{\def\Element%
+{71}}%
+>\/\endNode{}\endNode{} gives many further details.
+	\endNode{}
+
+	\Node%
+{\def\Element%
+{72}}%
+	Learning functional programming with Haskell by self-\/studies was very challenging. It required a change in perspective of programming. But once the paradigms are understood, writing Haskell programs is very straightforward and makes a lot of fun.
+	\endNode{}
+
+	\Node%
+{\def\Element%
+{73}}%
+	The first chapter gives an introduction to XML and Haskell. Readers who are familiar with these techniques can skip it. The next three chapters describe the packages \Node%
+{\def\Element%
+{74}}%
+hdom\endNode{}, \Node%
+{\def\Element%
+{75}}%
+hparser\endNode{} and \Node%
+{\def\Element%
+{76}}%
+hvalidator\endNode{} of the Haskell XML Toolbox. The last chapter compares the design used in the Haskell XML Toolbox with HaXml and HXML.
+	\endNode{}
+
+
+\endNode{}
+
+	
+
+\Node%
+{\def\Element%
+{77}}%
+	\Node%
+{\def\Element%
+{78}}%
+Basics\endNode{}
+
+	\Node%
+{\def\Element%
+{79}}%
+	The following chapter gives a short introduction to XML and Haskell.
+	Readers who are familiar with these techniques can skip this chapter.
+	\endNode{}
+
+	\Node%
+{\def\Element%
+{80}}%
+		\Node%
+{\def\Element%
+{81}}%
+XML\endNode{}
+
+		\Node%
+{\def\Element%
+{82}}%
+			\Node%
+{\def\Element%
+{83}}%
+Introduction\endNode{}
+
+			\Node%
+{\def\Element%
+{84}}%
+			The Extensible Markup Language (XML) was standardized by the World Wide Web Consortium (W3C) at the beginning of 1998. The current standard is described by the Extensible Markup Language (XML) 1.0 (Second Edition) W3C Recommendation \Node%
+{\def\Element%
+{85}}%
+\Node%
+{\def\Element%
+{86}}%
+>\/\endNode{}\endNode{}. XML forms a subset of the Structured Generalized Markup Language (SGML), which is extremely complex. XML itself is a simplified form of SGML. Both languages are meta languages for defining markup languages.
+			\endNode{}
+
+			\Node%
+{\def\Element%
+{87}}%
+			XML documents are structured hierarchical. The documents base on a simple data model: trees with attributes as some extra structure.
+			\endNode{}
+
+			\Node%
+{\def\Element%
+{88}}%
+			A Document Type Definition (DTD) can be used to define formal requirements to the structure of an XML document. It specifies a grammar for a class of documents. These are rules for the elements, attributes and other data and how they are logically related in an XML document. Each document, which corresponds to a DTD, is called an instance of this DTD.
+			\endNode{}
+
+			\Node%
+{\def\Element%
+{89}}%
+			Today XML is often used to define and exchange data structures application-\/independent. A central role plays the validation of XML documents. Validation of XML documents describes the check if the document corresponds to the constraints of a DTD. The application that reads an XML document and performs validation is called XML processor. Not all XML processors are validating ones. Applications that do not need these checks can use non-\/validating XML processors for performance reasons.
+			\endNode{}
+		\endNode{}
+
+		\Node%
+{\def\Element%
+{90}}%
+			\Node%
+{\def\Element%
+{91}}%
+Processing XML\endNode{}
+
+			\Node%
+{\def\Element%
+{92}}%
+			Every application that processes information from XML documents needs an XML processor, which reads an XML document and provides access to its content and structure to the processing application. Two parse methods exist: event based and tree based parse method. They define essential differences for the communication between the XML processor and applications.
+			\endNode{}
+
+			\Node%
+{\def\Element%
+{93}}%
+				\Node%
+{\def\Element%
+{94}}%
+Event based parse method\endNode{}
+
+				\Node%
+{\def\Element%
+{95}}%
+				The document is processed sequentially; the most popular parse method is SAX -\/ the Simple API for XML \Node%
+{\def\Element%
+{96}}%
+\Node%
+{\def\Element%
+{97}}%
+>\/\endNode{}\endNode{}. Each element is an event trigger, which can initiate an action on the processing application. In terms of processing speed and memory consumption this is the most performant technique for accessing an XML document in sequential order. The event based parsed method is also very efficient for processing only a few specific elements of a document. The main disadvantage is that it is more difficult to generate output with a different order of elements than the input, because some kind of memory is needed.
+				\endNode{}
+			\endNode{}
+
+			\Node%
+{\def\Element%
+{98}}%
+				\Node%
+{\def\Element%
+{99}}%
+Tree based parse method\endNode{}
+
+				\Node%
+{\def\Element%
+{100}}%
+				The document is transformed from a sequential into a hierarchical structure by the XML processor (e.g. \Node%
+{\def\Element%
+{101}}%
+DOM\endNode{}/\Node%
+{\def\Element%
+{102}}%
+JDOM\endNode{}). This tree model of the document is stored in memory and can be accessed by the processing application. The main advantage of this parse method is that it supports random access to the document. Random access is needed for example for Extensible Stylesheet Language Transformations (XSLT) \Node%
+{\def\Element%
+{103}}%
+\Node%
+{\def\Element%
+{104}}%
+>\/\endNode{}\endNode{}. XSLT implements a tree-\/oriented transformation language for transmuting XML documents.
+				\endNode{}
+
+				\Node%
+{\def\Element%
+{105}}%
+				The tree representation can be used for traversing the document several times or construct output in a different order from the input. The main disadvantage of this method is that the tree model is only accessible when parsing of the document is complete. For large documents this can be slow and memory intensive.
+				\endNode{}
+			\endNode{}
+		\endNode{}
+
+
+		\Node%
+{\def\Element%
+{106}}%
+			\Node%
+{\def\Element%
+{107}}%
+Correctness of documents\endNode{}
+			\Node%
+{\def\Element%
+{108}}%
+				\Node%
+{\def\Element%
+{109}}%
+Well-\/formed documents\endNode{}
+
+				\Node%
+{\def\Element%
+{110}}%
+				There exist two classes of correctness for XML documents. The first class form the well-\/formed documents. These documents meet the syntax rules of the XML 1.0 specification \Node%
+{\def\Element%
+{111}}%
+\Node%
+{\def\Element%
+{112}}%
+>\/\endNode{}\endNode{}. If a document does not meet these syntax rules, it is not an XML document and is rejected by any XML processor.
+				\endNode{}
+
+				\Node%
+{\def\Element%
+{113}}%
+					\Node%
+{\def\Element%
+{114}}%
+						\Node%
+{\def\Element%
+{115}}%
+Some XML syntax rules:\endNode{}
+						\Node%
+{\def\Element%
+{116}}%
+							\Node%
+{\def\Element%
+{117}}%
+Every document must have a single unique root element that encloses all other elements.\endNode{}
+						\endNode{}
+						\Node%
+{\def\Element%
+{118}}%
+							\Node%
+{\def\Element%
+{119}}%
+All elements must be correctly nested.\endNode{}
+						\endNode{}
+						\Node%
+{\def\Element%
+{120}}%
+							\Node%
+{\def\Element%
+{121}}%
+All elements must have corresponding start and end tags.\endNode{}
+						\endNode{}
+						\Node%
+{\def\Element%
+{122}}%
+							\Node%
+{\def\Element%
+{123}}%
+Attribute values must be enclosed within single or double quotes.\endNode{}
+						\endNode{}
+					\endNode{}
+				\endNode{}
+			\endNode{}
+
+			\Node%
+{\def\Element%
+{124}}%
+				\Node%
+{\def\Element%
+{125}}%
+Valid documents\endNode{}
+
+				\Node%
+{\def\Element%
+{126}}%
+				The second class form the valid documents. These documents are well-\/formed and meet in addition the constraints of a DTD (described in \Node%
+{\def\Element%
+{127}}%
+>\/) or a Schema \Node%
+{\def\Element%
+{128}}%
+\Node%
+{\def\Element%
+{129}}%
+>\/\endNode{}\endNode{}. This class of correctness is required if XML documents must be exchanged between applications reliably. Only validating XML processors perform these checks, non-\/validating XML processors ignore the DTD.
+				\endNode{}\endNode{}
+			\endNode{}
+		\endNode{}
+
+
+		\Node%
+{\def\Element%
+{130}}%
+			\Node%
+{\def\Element%
+{131}}%
+Document Type Definition (DTD)\endNode{}
+
+			\Node%
+{\def\Element%
+{132}}%
+			XML is a meta language for specifying markup languages, the DTD is a tool to create and describe this language. A DTD defines the elements, attributes, entities and notations used in an XML document. Further it defines a context free grammar that states which is the allowed content of an element.	The DTD can point to an external DTD subset containing declarations, it may contain the  declarations directly in an internal DTD subset, or even both. This section will describe the definitions of elements and their attributes. They form the basic concepts of XML documents. Entity declarations that are mainly used for replacing text and notation declarations that are used for specifying the format of special contents are not explained. For a complete overview see \Node%
+{\def\Element%
+{133}}%
+\Node%
+{\def\Element%
+{134}}%
+>\/\endNode{}\endNode{}.
+			\endNode{}
+
+			\Node%
+{\def\Element%
+{135}}%
+				\Node%
+{\def\Element%
+{136}}%
+Element type declaration\endNode{}
+
+				\Node%
+{\def\Element%
+{137}}%
+				A DTD declares all allowed elements in an XML document. Elements are defined by !ELEMENT>\/ declarations. This declaration specifies the name of the element and its content model. Only one declaration for each element is allowed, multiple declarations are forbidden. The order of the declarations is irrelevant.
+				\endNode{}
+
+				\Node%
+{\def\Element%
+{138}}%
+					\Node%
+{\def\Element%
+{139}}%
+						\Node%
+{\def\Element%
+{140}}%
+\Node%
+{\def\Element%
+{141}}%
+!ELEMENT name content model>\/\endNode{}\endNode{}
+						\Node%
+{\def\Element%
+{142}}%
+							\Node%
+{\def\Element%
+{143}}%
+\Node%
+{\def\Element%
+{144}}%
+ELEMENT\endNode{} -\/ Keyword\endNode{}
+						\endNode{}
+						\Node%
+{\def\Element%
+{145}}%
+							\Node%
+{\def\Element%
+{146}}%
+\Node%
+{\def\Element%
+{147}}%
+name\endNode{} -\/ Element name, respectively its tag names\endNode{}
+						\endNode{}
+						\Node%
+{\def\Element%
+{148}}%
+							\Node%
+{\def\Element%
+{149}}%
+\Node%
+{\def\Element%
+{150}}%
+content model\endNode{} -\/ Definition of the allowed types of child elements (text data, other elements) and their order\endNode{}
+						\endNode{}
+					\endNode{}
+				\endNode{}
+
+				\Node%
+{\def\Element%
+{151}}%
+				For defining the content model of elements there exist some operators. These operators are described shortly in the following.
+				\endNode{}
+
+				\Node%
+{\def\Element%
+{152}}%
+					\Node%
+{\def\Element%
+{153}}%
+Connectors\endNode{}
+					\Node%
+{\def\Element%
+{154}}%
+						\Node%
+{\def\Element%
+{155}}%
+>\/
+						\Node%
+{\def\Element%
+{156}}%
+							\Node%
+{\def\Element%
+{157}}%
+								\Node%
+{\def\Element%
+{158}}%
+,\endNode{}
+								\Node%
+{\def\Element%
+{159}}%
+Sequence of elements, "then"\endNode{}
+							\endNode{}
+							\Node%
+{\def\Element%
+{160}}%
+								\Node%
+{\def\Element%
+{161}}%
+|\endNode{}
+								\Node%
+{\def\Element%
+{162}}%
+Alternative of elements (exclusive), "xor"\endNode{}
+							\endNode{}
+						\endNode{}
+					\endNode{}\endNode{}
+				\endNode{}
+
+				\Node%
+{\def\Element%
+{163}}%
+					\Node%
+{\def\Element%
+{164}}%
+Occurrence indicators\endNode{}
+					\Node%
+{\def\Element%
+{165}}%
+						\Node%
+{\def\Element%
+{166}}%
+>\/
+						\Node%
+{\def\Element%
+{167}}%
+							\Node%
+{\def\Element%
+{168}}%
+								\Node%
+{\def\Element%
+{169}}%
+(no indicator)\endNode{}
+								\Node%
+{\def\Element%
+{170}}%
+\endNode{}\endNode{}\endNode{}\endNode{}\endNode{}\endNode{}\endNode{}\endNode{}\endNode{}\endNode{}\endNode{}\endNode{}\endFOT{}

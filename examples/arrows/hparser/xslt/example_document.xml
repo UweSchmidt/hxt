@@ -1,0 +1,16 @@
+<document order="descending">  
+  some text
+  <element_type1 nr="1"/>
+  <element_type2>
+    <nested_element nested_element_attrib="nested_element_attrib_value">
+       some more text<X/>
+    </nested_element>
+  </element_type2>
+  <element_type1 nr="2" />
+  <element_type1 nr="3" />
+  <element_type1 nr="4" />
+  <element_type1 nr="-1" />
+  <element_type3 brot=""/>
+  <element_type3 kaese=""/>
+  <element_type3 milch=""/>
+</document>

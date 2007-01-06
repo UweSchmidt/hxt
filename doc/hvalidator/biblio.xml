@@ -1,0 +1,450 @@
+<![%workaround;[
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE bibliography PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+       "file:///usr/share/sgml/docbook/dtd/xml/4.2/docbookx.dtd">
+]]>
+
+<bibliography>
+	<bibliodiv>
+		<title>Print resources</title>
+
+		<biblioentry id="thompson99">
+			<abbrev>Thompson99</abbrev>
+			<biblioset>
+				<title>The craft of Functional Programming</title>
+				<subtitle>2nd Edition</subtitle>
+				<author>
+					<firstname>Simon</firstname>
+					<surname>Thompson</surname>
+				</author>
+				<publisher>
+					<publishername>Addison Wesley</publishername>
+				</publisher>
+				<pubdate>1999</pubdate>
+				<isbn>0-201-34275-8</isbn>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="hudak00">
+			<abbrev>Hudak00</abbrev>
+			<biblioset>
+				<title>The Haskell School of Expression</title>
+				<subtitle>Learning functional programming through multimedia</subtitle>
+				<author>
+					<firstname>Paul</firstname>
+					<surname>Hudak</surname>
+				</author>
+				<publisher>
+					<publishername>Cambridge University Press</publishername>
+				</publisher>
+				<pubdate>2000</pubdate>
+				<isbn>0-521-64408-9</isbn>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="brzozowski64">
+			<abbrev>Brzozowski64</abbrev>
+			<biblioset>
+				<title>Derivatives of Regular Expressions</title>
+				<author>
+					<othername>Janusz A. Brzozowski</othername>
+				</author>
+				<publisher>
+					<publishername>Journal of the ACM, Volume 11, Issue 4</publishername>
+				</publisher>
+				<pubdate>1964</pubdate>
+			</biblioset>
+		</biblioentry>
+
+	</bibliodiv>
+
+	<bibliodiv>
+		<title>Online resources</title>
+
+		<biblioentry id="bib_xml">
+			<abbrev>WWW01</abbrev>
+			<biblioset>
+				<title>Extensible Markup Language (XML) 1.0</title>
+				<author>
+					<othername>W3C</othername>
+				</author>
+				<pubdate>2000</pubdate>
+				<pagenums>
+					<ulink url="http://www.w3.org/TR/2000/REC-xml-20001006"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_xmlts">
+			<abbrev>WWW02</abbrev>
+			<biblioset>
+				<title>Extensible Markup Language (XML) Conformance Test Suites</title>
+				<pagenums>
+					<ulink url="http://www.w3.org/XML/Test/"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_canxml">
+			<abbrev>WWW03</abbrev>
+			<biblioset>
+				<title>Canonical XML, Version 1.0</title>
+				<author>
+					<othername>John Boyer</othername>
+				</author>
+				<pagenums>
+					<ulink url="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_xmlquickref">
+			<abbrev>WWW04</abbrev>
+			<biblioset>
+				<title>XML Syntax Quick Reference</title>
+				<author>
+					<othername>Mulberry Technologies, Inc.</othername>
+				</author>
+				<pagenums>
+					<ulink url="http://www.mulberrytech.com/quickref/XMLquickref.pdf"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_dom">
+			<abbrev>WWW05</abbrev>
+			<biblioset>
+				<title>Document Object Model (DOM)</title>
+				<author>
+					<othername>W3C DOM Working Group</othername>
+				</author>
+				<pagenums>
+					<ulink url="http://www.w3.org/DOM/"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_jdom">
+			<abbrev>WWW06</abbrev>
+			<biblioset>
+				<title>JDOM</title>
+				<pagenums>
+					<ulink url="http://www.jdom.org"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_xsl">
+			<abbrev>WWW07</abbrev>
+			<biblioset>
+				<title>The Extensible Stylesheet Language (XSL)</title>
+				<author>
+					<othername>XSL Working Group</othername>
+				</author>
+				<pagenums>
+					<ulink url="http://www.w3.org/Style/XSL/"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_schema">
+			<abbrev>WWW08</abbrev>
+			<biblioset>
+				<title>XML Schema</title>
+				<author>
+					<othername>C. M. Sperberg-McQueen, Henry Thompson</othername>
+				</author>
+				<pagenums>
+					<ulink url="http://www.w3.org/XML/Schema"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+
+		<biblioentry id="bib_dsssl">
+			<abbrev>WWW09</abbrev>
+			<biblioset>
+				<title>ISO/IEC 10179:1996 - Document Style Semantics and Specification Language</title>
+				<author>
+					<othername>James Clark</othername>
+				</author>
+				<pagenums>
+					<ulink url="http://www.jclark.com/dsssl/"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_sax">
+			<abbrev>WWW10</abbrev>
+			<biblioset>
+				<title>Simple API for XML (SAX)</title>
+				<author>
+					<othername>David Brownell</othername>
+				</author>
+				<pagenums>
+					<ulink url="http://www.saxproject.org/"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_haskellorg">
+			<abbrev>WWW11</abbrev>
+			<biblioset>
+				<title>Haskell.org</title>
+				<pagenums>
+					<ulink url="http://www.haskell.org"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_haskellbrooks">
+			<abbrev>WWW12</abbrev>
+			<biblioset>
+				<title>Haskell Brooks Curry</title>
+				<author>
+					<othername>J. O'Connor, E. F. Robertson</othername>
+				</author>
+				<pagenums>
+					<ulink url="http://www-gap.dcs.st-and.ac.uk/~history/Mathematicians/Curry.html"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_abouthaskell">
+			<abbrev>WWW13</abbrev>
+			<biblioset>
+				<title>About Haskell</title>
+				<author>
+					<othername>Based on a paper by Simon Peyton Jones.</othername>
+				</author>
+				<pubdate>December 2001</pubdate>
+				<pagenums>
+					<ulink url="http://www.haskell.org/aboutHaskell.html"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_gentelinstruction">
+			<abbrev>WWW14</abbrev>
+			<biblioset>
+				<title>A Gentle Introduction to Haskell, Version 98</title>
+				<author>
+					<othername>Paul Hudak, John Peterson, Joseph Fasel</othername>
+				</author>
+				<pubdate>June 2000</pubdate>
+				<pagenums>
+					<ulink url="http://www.haskell.org/tutorial/index.html"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_98report">
+			<abbrev>WWW15</abbrev>
+			<biblioset>
+				<title>The Haskell 98 Report</title>
+				<author>
+					<othername>Simon Peyton Jones, John Hughes et al.</othername>
+				</author>
+				<pagenums>
+					<ulink url="http://www.haskell.org/onlinereport/"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_98libraryreport">
+			<abbrev>WWW16</abbrev>
+			<biblioset>
+				<title>The Haskell 98 Library Report</title>
+				<author>
+					<othername>Simon Peyton Jones, John Hughes et al.</othername>
+				</author>
+				<pagenums>
+					<ulink url="http://www.haskell.org/onlinelibrary/"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_bookshelf">
+			<abbrev>WWW17</abbrev>
+			<biblioset>
+				<title>The Haskell Bookshelf</title>
+				<pagenums>
+					<ulink url="http://www.haskell.org/bookshelf/"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_matters">
+			<abbrev>WWW18</abbrev>
+			<biblioset>
+				<title>Why Functional Programming Matters</title>
+				<author>
+					<othername>John Hughes</othername>
+				</author>
+				<pagenums>
+					<ulink url="http://www.math.chalmers.se/~rjmh/Papers/whyfp.html"/>
+				</pagenums>
+				<pubdate>1984</pubdate>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_ghc">
+			<abbrev>WWW19</abbrev>
+			<biblioset>
+				<title>GHC</title>
+				<pagenums>
+					<ulink url="http://www.haskell.org/ghc"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_hugs">
+			<abbrev>WWW20</abbrev>
+			<biblioset>
+				<title>Hugs</title>
+				<pagenums>
+					<ulink url="http://www.haskell.org/hugs"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_haxml">
+			<abbrev>WWW21</abbrev>
+			<biblioset>
+				<title>HaXml: Haskell and XML</title>
+				<author>
+					<othername>Malcolm Wallace, Colin Runciman</othername>
+				</author>
+				<pagenums>
+					<ulink url="http://www.cs.york.ac.uk/fp/HaXml/"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_haxmlpaper">
+			<abbrev>WWW22</abbrev>
+			<biblioset>
+				<title>Haskell and XML: Generic Combinators or Type-Based Translation?</title>
+				<author>
+					<othername>Malcolm Wallace, Colin Runciman, John Boyer</othername>
+				</author>
+				<pagenums>
+					<ulink url="http://www.cs.york.ac.uk/fp/HaXml/icfp99.html"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_haxml_mertz">
+			<abbrev>WWW23</abbrev>
+			<biblioset>
+				<title>The HaXml functional programming model for XML</title>
+				<author>
+					<othername>David Mertz</othername>
+				</author>
+				<pubdate>October 2001</pubdate>
+				<pagenums>
+					<ulink url="http://www-106.ibm.com/developerworks/xml/library/x-matters14.html"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_haxml_parsia">
+			<abbrev>WWW24</abbrev>
+			<biblioset>
+				<title>Functional Programming and XML</title>
+				<author>
+					<othername>Bijan Parsia</othername>
+				</author>
+				<pubdate>2000</pubdate>
+				<pagenums>
+					<ulink url="http://www.xml.com/lpt/a/2001/02/14/functional.html"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_hxml">
+			<abbrev>WWW25</abbrev>
+			<biblioset>
+				<title>HXML</title>
+				<author>
+					<othername>Joe English</othername>
+				</author>
+				<pagenums>
+					<ulink url="http://www.flightlab.com/~joe/hxml/"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_derivates_je">
+			<abbrev>WWW26</abbrev>
+			<biblioset>
+				<title>How to validate XML</title>
+				<author>
+					<othername>Joe English</othername>
+				</author>
+				<pubdate>1999</pubdate>
+				<pagenums>
+					<ulink url="http://www.flightlab.com/~joe/sgml/validate.html"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_derivates_mh">
+			<abbrev>WWW27</abbrev>
+			<biblioset>
+				<title>Regular Expression Package. Posted to comp.compilers.</title>
+				<author>
+					<othername>Mark Hopkins</othername>
+				</author>
+				<pubdate>1994</pubdate>
+				<pagenums>
+					<ulink url="http://compilers.iecc.com/comparch/article/94-02-109"/>
+					<ulink url="ftp://iecc.com/pub/file/regex.tar.gz"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_derivates_jc">
+			<abbrev>WWW28</abbrev>
+			<biblioset>
+				<title>An algorithm for RELAX NG validation</title>
+				<author>
+					<othername>James Clark</othername>
+				</author>
+				<pubdate>February 2002</pubdate>
+				<pagenums>
+					<ulink url="http://www.thaiopensource.com/relaxng/derivative.html"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+		<biblioentry id="bib_parsec">
+			<abbrev>WWW29</abbrev>
+			<biblioset>
+				<title>Parsec</title>
+				<author>
+					<othername>Daan Leijen</othername>
+				</author>
+				<pagenums>
+					<ulink url="http://www.cs.uu.nl/~daan/parsec.html"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+
+		<biblioentry id="bib_hdoc">
+			<abbrev>WWW30</abbrev>
+			<biblioset>
+				<title>HDoc</title>
+				<author>
+					<othername>Armin Groesslinger</othername>
+				</author>
+				<pagenums>
+					<ulink url="http://www.fmi.uni-passau.de/~groessli/hdoc/"/>
+				</pagenums>
+			</biblioset>
+		</biblioentry>
+
+
+	</bibliodiv>
+</bibliography>

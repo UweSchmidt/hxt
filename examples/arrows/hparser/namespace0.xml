@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes" ?>
+
+<!DOCTYPE a [
+<!ATTLIST a  x:att1  NMTOKENS  #IMPLIED>
+<!ATTLIST a  x:att2  NMTOKENS  #IMPLIED>
+<!ATTLIST a  y:att3  CDATA  #FIXED "a fixed value">
+<!ATTLIST a  att4  CDATA  "&lt; default &gt;">
+<!ATTLIST a  att5  CDATA #IMPLIED>
+<!ATTLIST a  xmlns   CDATA #IMPLIED>
+<!ATTLIST a  xmlns:x CDATA #IMPLIED>
+<!ATTLIST a  xmlns:y CDATA #IMPLIED>
+<!ELEMENT a  (x:b, cü?)>
+<!ELEMENT x:b  EMPTY>
+<!ELEMENT cü  (#PCDATA)>
+]>
+
+<!-- some namespace declarations for testing namespace propagation -->
+<a xmlns="default namespace"
+   xmlns:x="namespace for x"
+   xmlns:y="namespace for y"
+   x:att2="xxx
+           yyy"
+   y:att3="a fixed value"
+   x:att1=" test
+            äöüß
+            test "
+   att5="&lt; &gt;"
+>
+    <x:b/>
+    <cü>hello world äöüß test</cü>
+</a>

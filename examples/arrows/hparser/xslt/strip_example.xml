@@ -1,0 +1,21 @@
+<stuff:document xmlns:text="http://text.org" xmlns:stuff="http://stuff.org">
+<stuff:something>
+<text:chapter>
+
+<text:paragraph>
+
+
+<stuff:reference>                                          </stuff:reference>
+</text:paragraph>
+
+
+
+</text:chapter>
+</stuff:something>
+
+<text:quotation>
+
+
+
+</text:quotation>
+</stuff:document>

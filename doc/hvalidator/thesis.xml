@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="no"?>
+
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+       "file:///usr/share/sgml/docbook/dtd/xml/4.2/docbookx.dtd" [
+       <!-- http://www.oasis-open.org/committees/docbook/sgml/4.2/docbookx.dtd -->
+
+	<!-- chapters -->
+	<!ENTITY abstract SYSTEM "abstract.xml">
+	<!ENTITY preface SYSTEM "preface.xml">
+	<!ENTITY chap1 SYSTEM "chap1.xml">
+	<!ENTITY chap2 SYSTEM "chap2.xml">
+	<!ENTITY chap3 SYSTEM "chap3.xml">
+	<!ENTITY chap4 SYSTEM "chap4.xml">
+	<!ENTITY chap5 SYSTEM "chap5.xml">
+	<!ENTITY app_a SYSTEM "app_a.xml">
+	<!ENTITY app_b SYSTEM "app_b.xml">
+	<!ENTITY biblio SYSTEM "biblio.xml">
+	<!ENTITY affidavit SYSTEM "affidavit.xml">
+
+	<!-- key words -->
+	<!ENTITY hxt  "HXT">
+	<!ENTITY hxtl "Haskell XML Toolbox">
+	<!ENTITY xmlspec "XML 1.0 specification">
+	<!ENTITY xmlspecl "Extensible Markup Language (XML) 1.0 (Second Edition) W3C Recommendation">
+
+	<!-- work around for jedit to use xml mode with external entity files -->
+	<!ENTITY % workaround "IGNORE">
+]>
+
+<book lang="en">
+
+	<bookinfo>
+		<title>Design and Implementation of a validating XML parser in Haskell</title>
+		<subtitle>Master's thesis</subtitle>
+
+		<orgname>University of Applied Sciences Wedel, Computer Science Department</orgname>
+
+		<subtitle>
+			<othercredit>
+				<othername>University of Applied Sciences Wedel</othername>
+				<othername>Computer Science Department</othername>
+			</othercredit>
+		</subtitle>
+
+		<author>
+			<firstname>Martin</firstname>
+			<surname>Schmidt</surname>
+			<address>
+				<city>Hamburg</city>
+				<country>Germany</country>
+			</address>
+			<email>xi5393@fh-wedel.de</email>
+		</author>
+
+		<pubdate>2002-09-02</pubdate>
+
+		&abstract;
+	</bookinfo>
+
+
+	<dedication>
+    	<para>
+      		<programlisting>
+"Learn at least one new [programming] language every year.
+ Different languages solve the same problems in different ways.
+ By learning several different approaches, you can help broaden
+ your thinking and avoid getting stuck in a rut."
+    --- The Pragmatic Programmer
+			</programlisting>
+		</para>
+	</dedication>
+
+
+	&preface;
+	&chap1;
+	&chap2;
+	&chap3;
+	&chap4;
+	&chap5;
+	&app_a;
+	&app_b;
+	&biblio;
+	&affidavit;
+</book>

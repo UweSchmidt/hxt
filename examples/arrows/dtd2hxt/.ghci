@@ -1,0 +1,4 @@
+:set -package-conf ../../lib/hxt/package.conf
+:set -package hxt
+:set -Wall
+:load DTDtoHXT
