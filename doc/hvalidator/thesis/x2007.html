@@ -1,0 +1,330 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Validation of the document subset</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Package hvalidator"
+HREF="c1850.html"><LINK
+REL="PREVIOUS"
+TITLE="Validation of the Document Type Definition"
+HREF="x1946.html"><LINK
+REL="NEXT"
+TITLE="Transformation of the document subset"
+HREF="x2065.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x1946.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 4. Package hvalidator</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x2065.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="validation_of_the_document"
+></A
+>4.4. Validation of the document subset</H1
+><P
+>&#13;		After validation of the DTD the document has to be validated. By validating the document, validation of the elements and their attributes is meant. This process is split into two phases: validation of the elements and their attributes and validation of attributes of types ID, IDREF and IDREFS.
+		</P
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Involved modules</B
+></P
+><DL
+><DT
+><TT
+CLASS="classname"
+>DocValidation</TT
+></DT
+><DD
+><P
+>&#13;					Validation of the elements and their attributes. Validation of content models is delegated to the module <TT
+CLASS="classname"
+>XmlRE</TT
+>.
+					</P
+></DD
+><DT
+><TT
+CLASS="classname"
+>IdValidation</TT
+></DT
+><DD
+><P
+>&#13;					Validation of attributes of types ID, IDREF and IDREFS.
+					</P
+></DD
+></DL
+></DIV
+><P
+>&#13;		Before the document is validated, a lookup-table is built on the basis of the DTD. This table maps element names to their validation functions. The validation function for an element is a set of <TT
+CLASS="literal"
+>XmlFilter</TT
+> functions, which take the current element as input and return a list of errors. If the element meets the validation constraints, an empty list is returned. Each validation constraint, listed in the following, is represented by a single filter. All these filters are combined by the combinator <TT
+CLASS="function"
+>+++</TT
+>, which concatenates the results of filters, each filter uses copy of state. This approach for validation is very flexible. It is very easy to add new functions without affecting the other ones.
+		</P
+><P
+>&#13;        After the initialization phase of building the validation filters and the lookup table, the whole document is traversed in preorder and every element is validated by its validation filter.
+		</P
+><P
+>&#13;			<P
+></P
+><P
+><B
+>Validation of elements:</B
+></P
+><UL
+><LI
+><P
+>Error: Element is not declared in DTD.</P
+></LI
+><LI
+><P
+>Error: Root element must match value declared in DOCTYPE.</P
+></LI
+><LI
+><P
+>Error: Children of element do not match its content model.</P
+></LI
+></UL
+>
+
+			<P
+></P
+><P
+><B
+>Validation of attributes:</B
+></P
+><UL
+><LI
+><P
+>Error: Attribute is not declared.</P
+></LI
+><LI
+><P
+>Error: Attribute is specified multiple times.</P
+></LI
+><LI
+><P
+>Error: Attribute is of type #REQUIRED, but was not specified.</P
+></LI
+><LI
+><P
+>Error: Attribute is of type #FIXED, but specified value differs from fixed value.</P
+></LI
+><LI
+><P
+>Error: Value of attribute does not match the lexical constraints of its type.</P
+></LI
+></UL
+>
+		</P
+><P
+>&#13;		The module <TT
+CLASS="classname"
+>IdValidation</TT
+> provides functions for checking special ID/IDREF/IDREFS constraints. First it is checked if all ID values are unique. All nodes with ID attributes are collected from the document, then it is validated that values of ID attributes do not occur more than once. During a second iteration over the document it is validated that all IDREF/IDREFS values match the value of some ID attribute. For both checks a lookup-table, which maps element names to their validation functions, is built like it is done in the module <TT
+CLASS="classname"
+>DocValidation</TT
+>.
+		</P
+><P
+>&#13;			<P
+></P
+><P
+><B
+>Validation of ID/IDREF/IDREFS:</B
+></P
+><UL
+><LI
+><P
+>Error: Value of type ID must be unique within the document.</P
+></LI
+><LI
+><P
+>Error: An attribute of type IDREF/IDREFS references an identifier that does not exist in the document.</P
+></LI
+></UL
+>
+		</P
+><P
+>&#13;		The following example shows a filter for validating that all attributes of an element are unique (Unique AttSpec, section 3.1 XML 1.0 specification [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_xml"
+><SPAN
+CLASS="abbrev"
+>WWW01</SPAN
+></A
+></SPAN
+>]). It is a filter, which takes an element - an <TT
+CLASS="literal"
+>NTree XTag</TT
+> node - checks if its attributes are unique, and returns a list of errors or an empty list.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN2062"
+></A
+><P
+><B
+>Example 4-3. Validation that all attributes are unique</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;noDoublicateAttributes :: XmlFilter
+noDoublicateAttributes n@(NTree (XTag name al) _)
+    = doubles $ reverse al
+      where
+      doubles :: TagAttrl -&#62; XmlTrees
+      doubles ((attrName,_):xs)
+          = if (lookup attrName xs) == Nothing
+            then doubles xs
+            else (err ("Attribute \""++ attrName ++"\" was already specified "++
+                       "for element \"++ name ++"\".") n)
+                 ++
+                 doubles xs
+
+      doubles [] = []
+
+noDoublicateAttributes n
+    = error ("noDoublicateAttributes: illegal parameter:\n" ++ show n)
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x1946.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x2065.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Validation of the Document Type Definition</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c1850.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Transformation of the document subset</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

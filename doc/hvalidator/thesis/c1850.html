@@ -1,0 +1,260 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Package hvalidator</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="PREVIOUS"
+TITLE="Module XmlOutput"
+HREF="x1830.html"><LINK
+REL="NEXT"
+TITLE="Creating a validating XML parser"
+HREF="x1900.html"></HEAD
+><BODY
+CLASS="chapter"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x1830.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x1900.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="chapter"
+><H1
+><A
+NAME="c4"
+></A
+>Chapter 4. Package hvalidator</H1
+><P
+>&#13;	This chapter describes the package <TT
+CLASS="filename"
+>hvalidator</TT
+> which provides all functions for validating XML documents represented as <TT
+CLASS="literal"
+>XmlTree</TT
+>. The validation process basically consists of three phases. First the DTD is validated, after this the document is validated. In the last step the document is transformed: missing default values are added and attribute values are normalized. Unlike other popular XML validation tools the validation functions return a list of errors instead of aborting after the first error was found.
+	</P
+><P
+>&#13;	While the modules from package <TT
+CLASS="filename"
+>hparser</TT
+> use a monadic approach, these modules are written purely functional. Validation is done by filter functions of type <TT
+CLASS="literal"
+>XmlFilter</TT
+>. These filters return a list of errors or an empty list if no errors are detected.
+	</P
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="module_hierarchy"
+></A
+>4.1. Module hierarchy</H1
+><P
+>&#13;		The only public module for validating XML documents is the module <TT
+CLASS="classname"
+>Validation</TT
+>. It exports all functions for validating and transforming XML documents. <TT
+CLASS="classname"
+>Validation</TT
+> is basically a helper module, which combines the functionalities of the internal modules taking part at validation and transformation.
+		</P
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Internal modules</B
+></P
+><DL
+><DT
+><TT
+CLASS="function"
+>DTDValidation</TT
+></DT
+><DD
+><P
+>&#13;					Provides functions for validating the DTD of XML documents.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>DocValidation</TT
+></DT
+><DD
+><P
+>&#13;					Provides functions for validating the elements and attributes of XML documents.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>DocTransformation</TT
+></DT
+><DD
+><P
+>&#13;					Provides functions for transforming XML documents after they have been validated. The transformation phase is part of the validation process.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>AttributeValueValidation</TT
+></DT
+><DD
+><P
+>&#13;					Provides functions to normalize attribute values and to check if the attribute value matches the lexical constraints of its type.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>XmlRE</TT
+> and <TT
+CLASS="function"
+>RE</TT
+></DT
+><DD
+><P
+>&#13;					Support <TT
+CLASS="function"
+>DocValidation</TT
+> by validating the content model of an element. The algorithm used is based on derivatives of regular expressions.
+					</P
+></DD
+></DL
+></DIV
+><P
+>&#13;        	<DIV
+CLASS="figure"
+><A
+NAME="modules_hvalidator"
+></A
+><P
+><B
+>Figure 4-1. Modules of package hvalidator</B
+></P
+><DIV
+CLASS="mediaobject"
+><P
+><IMG
+SRC="images/modules_hvalidator.gif"></P
+></DIV
+></DIV
+>
+        </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x1830.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x1900.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Module XmlOutput</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Creating a validating XML parser</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

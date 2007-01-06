@@ -1,0 +1,1187 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Data structures</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Package hdom"
+HREF="c468.html"><LINK
+REL="PREVIOUS"
+TITLE="Package hdom"
+HREF="c468.html"><LINK
+REL="NEXT"
+TITLE="Filter functions"
+HREF="x854.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="c468.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 2. Package hdom</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x854.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="data_structures"
+></A
+>2.2. Data structures</H1
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="AEN560"
+></A
+>2.2.1. Core components</H2
+><P
+>&#13;			XML documents are structured hierarchically and can be represented as trees. Trees can be modeled easily with lists, because trees can be seen as a generalization of lists: nested lists. As shown in the first chapter, Haskell has some nifty facilities for representing and manipulating lists.
+			</P
+><P
+>&#13;			XML documents consist of many different logical units, which can be represented by different types. Functional languages like Haskell are well-equipped to process typed tree-structured data by using pattern matching and recursion.
+			</P
+><P
+>&#13;			Basically there exist two different approaches for representing XML documents in Haskell. One approach is to use a generic tree structure by which all XML documents can be handled.
+			</P
+><P
+>&#13;			Another approach is to use problem specific types that are derived from a specific Document Type Definition. Both approaches have several advantages and disadvantages. They are discussed in depth in the paper "Haskell and XML: Generic Combinators or Type-Based Translation?" by Malcolm Wallace and Colin Runciman [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_haxmlpaper"
+><SPAN
+CLASS="abbrev"
+>WWW22</SPAN
+></A
+></SPAN
+>].
+			</P
+><P
+>&#13;			The Haskell XML Toolbox uses a generic data structure for representing whole XML documents. Its data model is more general than the one used in HaXml. The differences are discussed in depth in <A
+HREF="x2201.html"
+>Section 5.2</A
+>. A generic data model is the only practical approach for implementing a generic XML parser and a framework for processing any XML documents.
+			</P
+><P
+>&#13;			The data type that models a generic tree structure is the data type <TT
+CLASS="literal"
+>NTree</TT
+>, defined in the module <TT
+CLASS="classname"
+>NTree</TT
+>. It defines an n-ary tree: a node with a list of children that are also nodes. If a node is a leaf it has an empty child list. The data type <TT
+CLASS="literal"
+>NTrees</TT
+> is an abbreviation for the node list. Together both types are mutually recursive and form a multi-branch tree structure.
+ 			</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;data NTree  node = NTree node (NTrees node)
+                   deriving (Eq, Ord, Show, Read)
+
+type NTrees node = [NTree node]
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="AEN575"
+></A
+>2.2.2. Data type XmlTree</H2
+><P
+>&#13;			Building on the very general tree data type <TT
+CLASS="literal"
+>NTree</TT
+> are defined the types <TT
+CLASS="literal"
+>XmlTree</TT
+> and <TT
+CLASS="literal"
+>XmlTrees</TT
+> that are defined in the module <TT
+CLASS="classname"
+>XmlTreeTypes</TT
+>. They are used to specify a general recursive data type for XML documents. The data, which can be stored in the nodes, must be of type <TT
+CLASS="literal"
+>XNode</TT
+>.
+			</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;type XmlTree  = NTree  XNode
+
+type XmlTrees = NTrees XNode
+			</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;			The algebraic data type <TT
+CLASS="literal"
+>XNode</TT
+> is used for representing all kinds of XML's logical units. The type is described in detail in the next section.
+			</P
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="AEN586"
+></A
+>2.2.2.1. Data type XNode</H3
+><P
+>&#13;				Before introducing the data type <TT
+CLASS="literal"
+>XNode</TT
+>, some type synonyms have to be presented which are used in the definitions of <TT
+CLASS="literal"
+>XNode</TT
+>. The type <TT
+CLASS="literal"
+>TagAttrl</TT
+> defines the attribute list of an element, it is a list of name-value pairs.
+				</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;type TagAttrl  = [TagAttr]
+type TagAttr   = (AttrName, AttrValue)
+				</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;				Several type synonyms exist to make the definitions more understandable:
+				</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;type TagName   = String
+type AttrName  = String
+type AttrValue = String
+				</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;				XML documents consist of several different logical units like elements, text data, comments, DTD definitions or entity references. Each kind can be represented by an own type in Haskell so that processing an <TT
+CLASS="literal"
+>XmlTree</TT
+> can be implemented very efficient by the use of pattern matching. The algebraic data type <TT
+CLASS="literal"
+>XNode</TT
+> defines the basic nodes and leafs for all kinds of XML's logical units.
+				</P
+><P
+>&#13;				Together with the algebraic type <TT
+CLASS="literal"
+>DTDElem</TT
+>, which defines constructors for the DTD declarations, this data model allows a uniform processing of the whole XML document by filter functions, described in <A
+HREF="x854.html"
+>Section 2.3</A
+>.
+				</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;
+data XNode =
+      XText String
+    | XCharRef Int
+    | XEntityRef String
+    | XCmt String
+    | XCdata String
+    | XPi TagName TagAttrl
+    | XTag TagName TagAttrl
+    | XDTD DTDElem TagAttrl
+    | XError Int String
+    deriving (Eq, Ord, Show, Read)
+				</PRE
+></TD
+></TR
+></TABLE
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Description of the constructors:</B
+></P
+><DL
+><DT
+><TT
+CLASS="function"
+>XText String</TT
+></DT
+><DD
+><P
+>&#13;							Ordinary text data (leaf)
+							</P
+><P
+>&#13;							Note that an <TT
+CLASS="literal"
+>XText</TT
+> node does not necessarily represent a maximal contiguous sequence of characters. The parser may split text data up into multiple <TT
+CLASS="literal"
+>XText</TT
+> nodes. The parser produces <TT
+CLASS="literal"
+>XText</TT
+> nodes from white space occurring before or after tags, too.
+							</P
+><P
+>&#13;							There exist special filter functions in the module <TT
+CLASS="classname"
+>EditFilters</TT
+> for summing up sequences of <TT
+CLASS="literal"
+>XText</TT
+> nodes into one node and removing <TT
+CLASS="literal"
+>XText</TT
+> nodes from the tree, which contain white space only.
+							</P
+></DD
+><DT
+><TT
+CLASS="function"
+>XCharRef Int</TT
+></DT
+><DD
+><P
+>&#13;							Character reference (leaf)
+							</P
+><P
+>&#13;							XML syntax: &#38;#nnn; (<SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>nnn</I
+></SPAN
+> is a hexadecimal or decimal representation of the characters code point in ISO/IEC 10646)
+							</P
+></DD
+><DT
+><TT
+CLASS="function"
+>XEntityRef String</TT
+></DT
+><DD
+><P
+>&#13;							Entity reference (leaf)
+							</P
+><P
+>&#13;							XML syntax: &#38;...;
+							</P
+></DD
+><DT
+><TT
+CLASS="function"
+>XCmt String</TT
+></DT
+><DD
+><P
+>&#13;							Comment (leaf)
+							</P
+></DD
+><DT
+><TT
+CLASS="function"
+>XCdata String</TT
+></DT
+><DD
+><P
+>&#13;							CDATA section (leaf)
+							</P
+></DD
+><DT
+><TT
+CLASS="function"
+>XPi TagName TagAttrl</TT
+></DT
+><DD
+><P
+>&#13;							Processing Instruction (leaf)
+							</P
+><P
+>&#13;							<TT
+CLASS="literal"
+>TagName</TT
+> stores the name of the processing instruction.	If name is <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>xml</I
+></SPAN
+>, it has the attributes "version", "encoding" and "standalone". Otherwise there is only the attribute "value" which stores a list of the processing instruction attributes.
+							</P
+></DD
+><DT
+><TT
+CLASS="function"
+>XTag TagName TagAttrl</TT
+></DT
+><DD
+><P
+>&#13;							Element (node or leaf)
+							</P
+><P
+>&#13;							Inner node if the element has content, respectively children. Leaf if the element is empty. <TT
+CLASS="literal"
+>TagName</TT
+> stores the name of the element. The attribute list <TT
+CLASS="literal"
+>TagAttrl</TT
+> contains all attributes of the element.
+							</P
+></DD
+><DT
+><TT
+CLASS="function"
+>XDTD DTDElem TagAttrl</TT
+></DT
+><DD
+><P
+>&#13;							 DTD element (node or leaf)
+							</P
+><P
+>&#13;							 The algebraic data type <TT
+CLASS="literal"
+>DTDElem</TT
+> is used to specify the concrete kind of the element, e.g. element declaration, attribute declaration or entity declaration. The attribute list <TT
+CLASS="literal"
+>TagAttrl</TT
+> contains almost all information from the DTD declarations (see <A
+HREF="x558.html#dtdelem"
+>Section 2.2.2.2</A
+>).
+							</P
+></DD
+><DT
+><TT
+CLASS="function"
+>XError Int String</TT
+></DT
+><DD
+><P
+>&#13;							Error (node or leaf)
+							</P
+><P
+>&#13;							Not an XML component. Internal extension for representing errors with error level and error message. The error level can be of type: <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>warning</I
+></SPAN
+>, <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>error</I
+></SPAN
+> or <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>fatal error</I
+></SPAN
+>. The error node can have a child list with the nodes where the error occurred.
+							</P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="dtdelem"
+></A
+>2.2.2.2. Data type DTDElem</H3
+><P
+>&#13;				Because a DTD is quite complex, there exists an extra algebraic data type <TT
+CLASS="literal"
+>DTDElem</TT
+> for representing DTD elements in the <TT
+CLASS="literal"
+>XmlTree</TT
+>. For each DTD declaration there exists an own type. The nodes store almost all information from DTD declarations in their attribute list. The library <TT
+CLASS="classname"
+>XmlKeywords</TT
+> provides constants for the names and values of these attributes. Variable contents like the definition of the content model or the names in the value-list of enumerated attribute types are modeled using the node's child list in combination with helper nodes.
+				</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;data DTDElem =
+      DOCTYPE
+    | ELEMENT
+    | CONTENT
+    | ATTLIST
+    | ENTITY
+    | NOTATION
+    | NAME
+    | PENTITY
+    | PEREF
+    | CONDSECT
+    deriving (Eq, Ord, Show, Read)
+				</PRE
+></TD
+></TR
+></TABLE
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Description of the constructors:</B
+></P
+><DL
+><DT
+><TT
+CLASS="function"
+>DOCTYPE</TT
+></DT
+><DD
+><P
+>&#13;							The root node of a DTD, has <TT
+CLASS="literal"
+>XDTD</TT
+> nodes as children.
+							</P
+><P
+>&#13;								<P
+></P
+><P
+><B
+>Attributes:</B
+></P
+><UL
+><LI
+><P
+>name - Name of the root element</P
+></LI
+><LI
+><P
+>SYSTEM - Reference to external subset (optional)</P
+></LI
+><LI
+><P
+>PUBLIC - Reference to external subset (optional)</P
+></LI
+></UL
+>
+							</P
+></DD
+><DT
+><TT
+CLASS="function"
+>ELEMENT</TT
+></DT
+><DD
+><P
+>&#13;							Element declaration. If the element is of type <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>children</I
+></SPAN
+> or <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>mixed</I
+></SPAN
+>, it has a list of <TT
+CLASS="literal"
+>XDTD CONTENT</TT
+> nodes as children. These children describe the content model of the element.
+							</P
+><P
+>&#13;								<P
+></P
+><P
+><B
+>Attributes:</B
+></P
+><UL
+><LI
+><P
+>name - Element name</P
+></LI
+><LI
+><P
+>type - EMPTY | ANY | #PCDATA | children | mixed</P
+></LI
+></UL
+>
+							</P
+></DD
+><DT
+><TT
+CLASS="function"
+>CONTENT</TT
+></DT
+><DD
+><P
+>&#13;							Not an XML component. Specifies the content model of an element if the element is of type <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>children</I
+></SPAN
+> or <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>mixed</I
+></SPAN
+>. An <TT
+CLASS="literal"
+>XDTD CONTENT</TT
+> node has a list of children, which can be of type <TT
+CLASS="literal"
+>XDTD CONTENT</TT
+> if there is some grouping in the content model, or of type <TT
+CLASS="literal"
+>XDTD NAME</TT
+> to specify the name of a child element.
+							</P
+><P
+>&#13;								<P
+></P
+><P
+><B
+>Attributes:</B
+></P
+><UL
+><LI
+><P
+>kind - seq | choice</P
+></LI
+><LI
+><P
+>modifier -  "" | ? | * | +</P
+></LI
+></UL
+>
+							</P
+></DD
+><DT
+><TT
+CLASS="function"
+>ATTLIST</TT
+></DT
+><DD
+><P
+>&#13;							Attribute declaration. If the attribute declaration is of type <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>NOTATION</I
+></SPAN
+> or <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>ENUMERATION</I
+></SPAN
+>, this node has a list of children of type <TT
+CLASS="literal"
+>XDTD NAME</TT
+> to specify the enumerated values.
+							</P
+><P
+>&#13;								<P
+></P
+><P
+><B
+>Attributes:</B
+></P
+><UL
+><LI
+><P
+>name - Element name</P
+></LI
+><LI
+><P
+>value - Attribute name</P
+></LI
+><LI
+><P
+>kind - #REQUIRED | #IMPLIED | #DEFAULT | #FIXED</P
+></LI
+><LI
+><P
+>type - CDATA | ID | IDREF | IDREFS | ENTITY | ENTITIES | NMTOKEN | NMTOKENS | NOTATION | ENUMERATION</P
+></LI
+><LI
+><P
+>default - Default value (optional)</P
+></LI
+></UL
+>
+							</P
+></DD
+><DT
+><TT
+CLASS="function"
+>ENTITY</TT
+></DT
+><DD
+><P
+>&#13;							General or unparsed entity declaration. If the entity is a general entity, it has a child list with nodes of type <TT
+CLASS="literal"
+>XDTD XCharRef</TT
+> and <TT
+CLASS="literal"
+>XDTD XText</TT
+> that specify the replacement text.
+							</P
+><P
+>&#13;								<P
+></P
+><P
+><B
+>Attributes:</B
+></P
+><UL
+><LI
+><P
+>name - Entity name</P
+></LI
+><LI
+><P
+>SYSTEM - Reference to external file (optional and only for external or unparsed entities)</P
+></LI
+><LI
+><P
+>NDATA - reference to a notation (optional and only for unparsed entities)</P
+></LI
+></UL
+>
+							</P
+></DD
+><DT
+><TT
+CLASS="function"
+>NOTATION</TT
+></DT
+><DD
+><P
+>&#13;							Notation declaration.
+							</P
+><P
+>&#13;								<P
+></P
+><P
+><B
+>Attributes:</B
+></P
+><UL
+><LI
+><P
+>name - Notation name</P
+></LI
+><LI
+><P
+>SYSTEM - Reference to external application</P
+></LI
+></UL
+>
+							</P
+></DD
+><DT
+><TT
+CLASS="function"
+>NAME</TT
+></DT
+><DD
+><P
+>&#13;							Not an XML component. Used by the attribute declaration <TT
+CLASS="literal"
+>XDTD ATTLIST</TT
+> to specify the list of values for attributes of type <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>NOTATION</I
+></SPAN
+> and <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>ENUMERATION</I
+></SPAN
+>.
+							</P
+><P
+>&#13;							 Used by the node <TT
+CLASS="literal"
+>XDTD CONTENT</TT
+> to specify element names in content models.
+							</P
+><P
+>&#13;								<P
+></P
+><P
+><B
+>Attributes:</B
+></P
+><UL
+><LI
+><P
+>name - Value of the name</P
+></LI
+></UL
+>
+							</P
+></DD
+></DL
+></DIV
+><P
+>&#13;				The following node types are not accessible by any application. They are for internal use of the XML parser and handled by it. However it is possible to turn of this processing of the parser, so they are shortly described.
+				</P
+><P
+></P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><TT
+CLASS="function"
+>PENTITY</TT
+></DT
+><DD
+><P
+>&#13;							Parameter entity declaration.
+							</P
+><P
+>&#13;								<P
+></P
+><P
+><B
+>Attributes:</B
+></P
+><UL
+><LI
+><P
+>name - Name of parameter entity</P
+></LI
+><LI
+><P
+>value - Value of parameter entity</P
+></LI
+><LI
+><P
+>SYSTEM - Reference to external file (optional)</P
+></LI
+><LI
+><P
+>PUBLIC - Reference to external file (optional)</P
+></LI
+></UL
+>
+							</P
+></DD
+><DT
+><TT
+CLASS="function"
+>PEREF</TT
+></DT
+><DD
+><P
+>&#13;							Parameter entity reference.
+							</P
+><P
+>&#13;								<P
+></P
+><P
+><B
+>Attributes:</B
+></P
+><UL
+><LI
+><P
+>PERef - Name of referenced parameter entity</P
+></LI
+></UL
+>
+							</P
+></DD
+><DT
+><TT
+CLASS="function"
+>CONDSECT</TT
+></DT
+><DD
+><P
+>&#13;							Node for conditional sections. The child list contains the DTD declarations that are defined in the conditional section.
+							</P
+><P
+>&#13;								<P
+></P
+><P
+><B
+>Attributes:</B
+></P
+><UL
+><LI
+><P
+>type - INCLUDE, IGNORE or parameter entity reference (%...;)</P
+></LI
+></UL
+>
+							</P
+></DD
+></DL
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="example_xmltree"
+></A
+>2.2.3. Example</H2
+><P
+>&#13;			The following example demonstrates how an XML document is transformed into the generic tree structure <TT
+CLASS="literal"
+>XmlTree</TT
+>.
+			</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN836"
+></A
+><P
+><B
+>Example 2-1. Input document</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;&#60;?xml version="1.0" encoding="UTF-8" standalone="yes" ?&#62;
+
+&#60;!DOCTYPE a [
+&#60;!ATTLIST a  att1  CDATA  #IMPLIED&#62;
+&#60;!ELEMENT a  (b, c?)&#62;
+&#60;!ELEMENT b  EMPTY&#62;
+&#60;!ELEMENT c  (#PCDATA)&#62;
+]&#62;
+
+&#60;a att1="test"&#62;
+    &#60;b/&#62;
+    &#60;c&#62;hello world&#60;/c&#62;
+&#60;/a&#62;
+				</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;			The following graph shows the <TT
+CLASS="literal"
+>XmlTree</TT
+> representation of the document after parsing. The predefined general entities <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>amp, lt, gt, apos</I
+></SPAN
+> and <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>quot</I
+></SPAN
+> are automatically added to the DTD by the XML parser. A dummy node with the name "/" forms the root node of the tree so that the DTD, the document subset, processing instructions and comments can be modeled by one tree.
+			</P
+><P
+>&#13;			White space before or after tags is represented by <TT
+CLASS="literal"
+>XText</TT
+> nodes. There exist filter functions in the module <TT
+CLASS="classname"
+>EditFilters</TT
+> for removing <TT
+CLASS="literal"
+>XText</TT
+> nodes containing white space only from the tree if these nodes are not necessary for further processing.
+			</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN847"
+></A
+><P
+><B
+>Example 2-2. Input document as XmlTree</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;---XTag "/" [("standalone","yes"),("version","1.0"),("source","example.xml"),
+   |         ("encoding","UTF-8")]
+   |
+   +---XPi "xml" [("version","1.0"),("encoding","UTF-8"),("standalone","yes")]
+   |
+   +---XText "\n\n"
+   |
+   +---XDTD DOCTYPE [("name","a")]
+   |   |
+   |   +---XDTD ENTITY [("name","lt")]
+   |   |   |
+   |   |   +---XCharRef 38
+   |   |   |
+   |   |   +---XText "#60;"
+   |   |
+   |   +---XDTD ENTITY [("name","gt")]
+   |   |   |
+   |   |   +---XCharRef 62
+   .   .
+   .   .   (Definitions of the other predefined entities amp, apos and quot)
+   .   .
+   |   +---XDTD ATTLIST [("name","a"),("value","att1"),("default","42"),
+   |   |                 ("kind","#DEFAULT"),("type","CDATA")]
+   |   |
+   |   +---XDTD ELEMENT [("name","a"),("type","children")]
+   |   |   |
+   |   |   +---XDTD CONTENT [("modifier",""),("kind","seq")]
+   |   |       |
+   |   |       +---XDTD NAME [("name","b")]
+   |   |       |
+   |   |       +---XDTD CONTENT [("modifier","?"),("kind","seq")]
+   |   |           |
+   |   |           +---XDTD NAME [("name","c")]
+   |   |
+   |   +---XDTD ELEMENT [("name","b"),("type","EMPTY")]
+   |   |
+   |   +---XDTD ELEMENT [("name","c"),("type","#PCDATA")]
+   |
+   +---XText "\n\n"
+   |
+   +---XTag "a" [("att1","test")]
+   |   |
+   |   +---XText "\n    "
+   |   |
+   |   +---XTag "b" []
+   |   |
+   |   +---XText "\n    "
+   |   |
+   |   +---XTag "c" []
+   |   |   |
+   |   |   +---XText "hello world"
+   |   |
+   |   +---XText "\n"
+   |
+   +---XText "\n"
+				</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;			The following listing shows the internal representation of the document subset. The root node with the name "a" has a list of attributes and a list of children.
+			</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN851"
+></A
+><P
+><B
+>Example 2-3. Internal representation of the document subset</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;NTree (XTag "a" [("att1","test")]) [
+    NTree (XText "\n    ") [],
+    NTree (XTag "b" []) [],
+    NTree (XText "\n    ") [],
+    NTree (XTag "c" []) [
+        NTree (XText "hello world") []
+    ],NTree (XText "\n") []
+]
+				</PRE
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="c468.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x854.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Package hdom</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c468.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Filter functions</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

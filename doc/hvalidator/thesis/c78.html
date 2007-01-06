@@ -1,0 +1,912 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Basics</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="PREVIOUS"
+TITLE="Preface"
+HREF="f61.html"><LINK
+REL="NEXT"
+TITLE="Haskell"
+HREF="x298.html"></HEAD
+><BODY
+CLASS="chapter"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="f61.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x298.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="chapter"
+><H1
+><A
+NAME="c1"
+></A
+>Chapter 1. Basics</H1
+><P
+>&#13;	The following chapter gives a short introduction to XML and Haskell.
+	Readers who are familiar with these techniques can skip this chapter.
+	</P
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="xml"
+></A
+>1.1. XML</H1
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="xml_introduction"
+></A
+>1.1.1. Introduction</H2
+><P
+>&#13;			The Extensible Markup Language (XML) was standardized by the World Wide Web Consortium (W3C) at the beginning of 1998. The current standard is described by the Extensible Markup Language (XML) 1.0 (Second Edition) W3C Recommendation [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_xml"
+><SPAN
+CLASS="abbrev"
+>WWW01</SPAN
+></A
+></SPAN
+>]. XML forms a subset of the Structured Generalized Markup Language (SGML), which is extremely complex. XML itself is a simplified form of SGML. Both languages are meta languages for defining markup languages.
+			</P
+><P
+>&#13;			XML documents are structured hierarchical. The documents base on a simple data model: trees with attributes as some extra structure.
+			</P
+><P
+>&#13;			A Document Type Definition (DTD) can be used to define formal requirements to the structure of an XML document. It specifies a grammar for a class of documents. These are rules for the elements, attributes and other data and how they are logically related in an XML document. Each document, which corresponds to a DTD, is called an instance of this DTD.
+			</P
+><P
+>&#13;			Today XML is often used to define and exchange data structures application-independent. A central role plays the validation of XML documents. Validation of XML documents describes the check if the document corresponds to the constraints of a DTD. The application that reads an XML document and performs validation is called XML processor. Not all XML processors are validating ones. Applications that do not need these checks can use non-validating XML processors for performance reasons.
+			</P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="processing_xml"
+></A
+>1.1.2. Processing XML</H2
+><P
+>&#13;			Every application that processes information from XML documents needs an XML processor, which reads an XML document and provides access to its content and structure to the processing application. Two parse methods exist: event based and tree based parse method. They define essential differences for the communication between the XML processor and applications.
+			</P
+><DIV
+CLASS="simplesect"
+><H4
+CLASS="simplesect"
+><A
+NAME="event_based"
+></A
+>1.1.2.1. Event based parse method</H4
+><P
+>&#13;				The document is processed sequentially; the most popular parse method is SAX - the Simple API for XML [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_sax"
+><SPAN
+CLASS="abbrev"
+>WWW10</SPAN
+></A
+></SPAN
+>]. Each element is an event trigger, which can initiate an action on the processing application. In terms of processing speed and memory consumption this is the most performant technique for accessing an XML document in sequential order. The event based parsed method is also very efficient for processing only a few specific elements of a document. The main disadvantage is that it is more difficult to generate output with a different order of elements than the input, because some kind of memory is needed.
+				</P
+></DIV
+><DIV
+CLASS="simplesect"
+><H4
+CLASS="simplesect"
+><A
+NAME="tree_based"
+></A
+>1.1.2.2. Tree based parse method</H4
+><P
+>&#13;				The document is transformed from a sequential into a hierarchical structure by the XML processor (e.g. <A
+HREF="b2463.html#bib_dom"
+>DOM</A
+>/<A
+HREF="b2463.html#bib_jdom"
+>JDOM</A
+>). This tree model of the document is stored in memory and can be accessed by the processing application. The main advantage of this parse method is that it supports random access to the document. Random access is needed for example for Extensible Stylesheet Language Transformations (XSLT) [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_xsl"
+><SPAN
+CLASS="abbrev"
+>WWW07</SPAN
+></A
+></SPAN
+>]. XSLT implements a tree-oriented transformation language for transmuting XML documents.
+				</P
+><P
+>&#13;				The tree representation can be used for traversing the document several times or construct output in a different order from the input. The main disadvantage of this method is that the tree model is only accessible when parsing of the document is complete. For large documents this can be slow and memory intensive.
+				</P
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="correctness"
+></A
+>1.1.3. Correctness of documents</H2
+><DIV
+CLASS="simplesect"
+><H4
+CLASS="simplesect"
+><A
+NAME="well-formed"
+></A
+>1.1.3.1. Well-formed documents</H4
+><P
+>&#13;				There exist two classes of correctness for XML documents. The first class form the well-formed documents. These documents meet the syntax rules of the XML 1.0 specification [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_xml"
+><SPAN
+CLASS="abbrev"
+>WWW01</SPAN
+></A
+></SPAN
+>]. If a document does not meet these syntax rules, it is not an XML document and is rejected by any XML processor.
+				</P
+><P
+>&#13;					<P
+></P
+><P
+><B
+>Some XML syntax rules:</B
+></P
+><UL
+><LI
+><P
+>Every document must have a single unique root element that encloses all other elements.</P
+></LI
+><LI
+><P
+>All elements must be correctly nested.</P
+></LI
+><LI
+><P
+>All elements must have corresponding start and end tags.</P
+></LI
+><LI
+><P
+>Attribute values must be enclosed within single or double quotes.</P
+></LI
+></UL
+>
+				</P
+></DIV
+><DIV
+CLASS="simplesect"
+><H4
+CLASS="simplesect"
+><A
+NAME="valid"
+></A
+>1.1.3.2. Valid documents</H4
+><P
+>&#13;				The second class form the valid documents. These documents are well-formed and meet in addition the constraints of a DTD (described in <A
+HREF="c78.html#dtd"
+>Section 1.1.4</A
+>) or a Schema [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_schema"
+><SPAN
+CLASS="abbrev"
+>WWW08</SPAN
+></A
+></SPAN
+>]. This class of correctness is required if XML documents must be exchanged between applications reliably. Only validating XML processors perform these checks, non-validating XML processors ignore the DTD.
+				</P
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="dtd"
+></A
+>1.1.4. Document Type Definition (DTD)</H2
+><P
+>&#13;			XML is a meta language for specifying markup languages, the DTD is a tool to create and describe this language. A DTD defines the elements, attributes, entities and notations used in an XML document. Further it defines a context free grammar that states which is the allowed content of an element.	The DTD can point to an external DTD subset containing declarations, it may contain the  declarations directly in an internal DTD subset, or even both. This section will describe the definitions of elements and their attributes. They form the basic concepts of XML documents. Entity declarations that are mainly used for replacing text and notation declarations that are used for specifying the format of special contents are not explained. For a complete overview see [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_xmlquickref"
+><SPAN
+CLASS="abbrev"
+>WWW04</SPAN
+></A
+></SPAN
+>].
+			</P
+><DIV
+CLASS="simplesect"
+><H4
+CLASS="simplesect"
+><A
+NAME="element-declaration"
+></A
+>1.1.4.1. Element type declaration</H4
+><P
+>&#13;				A DTD declares all allowed elements in an XML document. Elements are defined by &#60;!ELEMENT&#62; declarations. This declaration specifies the name of the element and its content model. Only one declaration for each element is allowed, multiple declarations are forbidden. The order of the declarations is irrelevant.
+				</P
+><P
+>&#13;					<P
+></P
+><P
+><B
+><TT
+CLASS="literal"
+>&#60;!ELEMENT name content model&#62;</TT
+></B
+></P
+><UL
+><LI
+><P
+><TT
+CLASS="literal"
+>ELEMENT</TT
+> - Keyword</P
+></LI
+><LI
+><P
+><TT
+CLASS="literal"
+>name</TT
+> - Element name, respectively its tag names</P
+></LI
+><LI
+><P
+><TT
+CLASS="literal"
+>content model</TT
+> - Definition of the allowed types of child elements (text data, other elements) and their order</P
+></LI
+></UL
+>
+				</P
+><P
+>&#13;				For defining the content model of elements there exist some operators. These operators are described shortly in the following.
+				</P
+><DIV
+CLASS="table"
+><A
+NAME="AEN153"
+></A
+><P
+><B
+>Table 1-1. Connectors</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><TBODY
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>,</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>Sequence of elements, "then"</TD
+></TR
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>|</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>Alternative of elements (exclusive), "xor"</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><DIV
+CLASS="table"
+><A
+NAME="AEN164"
+></A
+><P
+><B
+>Table 1-2. Occurrence indicators</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><TBODY
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>(no indicator)</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>Element must appear exactly one time</TD
+></TR
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>?</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>Element is optional, 0 or 1</TD
+></TR
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>*</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>Element is optional and repeatable, 0 or more</TD
+></TR
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>+</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>Element must appear at least one time, 1 or more</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><DIV
+CLASS="table"
+><A
+NAME="AEN181"
+></A
+><P
+><B
+>Table 1-3. Grouping</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><TBODY
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>(</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>Start of content model or group</TD
+></TR
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>)</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>End of content model or group</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><DIV
+CLASS="table"
+><A
+NAME="AEN192"
+></A
+><P
+><B
+>Table 1-4. #PCDATA in content model</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><TBODY
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="TOP"
+>(#PCDATA)</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Element has only text data or nothing as content</TD
+></TR
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="TOP"
+>(#PCDATA | el1 | el2)*</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Mixed content. The element can contain text data and elements. #PCDATA must be listed in the declaration at first. It cannot be defined that allowed child elements have to appear in a certain order, or that they at least must appear.</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><P
+>&#13;				#PCDATA is the abbreviation for "parsed character data" and means that text data is inspected by the XML parser for eventual markup. If for example the text data contains entity references, the entities are expanded.
+				</P
+><DIV
+CLASS="table"
+><A
+NAME="AEN204"
+></A
+><P
+><B
+>Table 1-5. Keywords</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><TBODY
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="TOP"
+>EMPTY</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Element has no content</TD
+></TR
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="TOP"
+>ANY</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Element has any declared elements and text data as content, or is empty.</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="simplesect"
+><H4
+CLASS="simplesect"
+><A
+NAME="attribute_declaration"
+></A
+>1.1.4.2. Attribute declarations</H4
+><P
+>&#13;				Attributes define additional name-value pairs for elements. The attributes are defined by &#60;!ATTLIST&#62; declarations. It defines the attribute type and default values.
+				</P
+><P
+>&#13;					<P
+></P
+><P
+><B
+><TT
+CLASS="literal"
+>&#60;!ATTLIST target_element attr_name attr_type default&#62;</TT
+></B
+></P
+><UL
+><LI
+><P
+><TT
+CLASS="literal"
+>ATTLIST</TT
+> - Keyword</P
+></LI
+><LI
+><P
+><TT
+CLASS="literal"
+>target_element</TT
+> - Element name</P
+></LI
+><LI
+><P
+><TT
+CLASS="literal"
+>attr_name</TT
+> - Attribute name</P
+></LI
+><LI
+><P
+><TT
+CLASS="literal"
+>attr_type</TT
+> - Type of the attribute value, or list of values</P
+></LI
+><LI
+><P
+><TT
+CLASS="literal"
+>default</TT
+> - Keyword or default value</P
+></LI
+></UL
+>
+				</P
+><DIV
+CLASS="table"
+><A
+NAME="AEN237"
+></A
+><P
+><B
+>Table 1-6. Type of the attribute value</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><TBODY
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="TOP"
+>CDATA</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Text data</TD
+></TR
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="TOP"
+>ID</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Unique identifier, value of attribute must be unique within the XML document</TD
+></TR
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="TOP"
+>IDREF</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Reference to an ID, must match the value of some ID attribute</TD
+></TR
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="TOP"
+>IDREFS</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>One or more references to IDs, separated by white space</TD
+></TR
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="TOP"
+>NMTOKEN</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Name token, attribute value must  only consist of letters, digits and some extra characters</TD
+></TR
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="TOP"
+>NMTOKENS</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>One or more name tokens, separated by white space</TD
+></TR
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="TOP"
+>ENTITY</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Name of an unparsed entity, declared in the DTD</TD
+></TR
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="TOP"
+>ENTITIES</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>One or more names of unparsed entities declared in the DTD, separated by white space</TD
+></TR
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="TOP"
+>(a | b | c)</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Enumeration, list of possible attribute values</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><DIV
+CLASS="table"
+><A
+NAME="AEN269"
+></A
+><P
+><B
+>Table 1-7. Attribute defaults</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><TBODY
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="TOP"
+>"value"</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Default value of the attribute. If the attribute is not specified, this value is used by the XML processor</TD
+></TR
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="TOP"
+>#REQUIRED</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Attribute must be specified</TD
+></TR
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="TOP"
+>#IMPLIED</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Attribute is optional</TD
+></TR
+><TR
+><TD
+WIDTH="133"
+ALIGN="LEFT"
+VALIGN="TOP"
+>#FIXED "value"</TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+>Attribute has a fixed value. No other value is allowed.</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="xml_examples"
+></A
+>1.1.5. Example</H2
+><P
+>&#13;			This simple example demonstrates an XML document with an internal DTD. The DTD defines the elements <TT
+CLASS="literal"
+>a</TT
+>, <TT
+CLASS="literal"
+>b</TT
+> and <TT
+CLASS="literal"
+>c</TT
+>. The element <TT
+CLASS="literal"
+>a</TT
+> has an additional attribute <TT
+CLASS="literal"
+>att1</TT
+>. The small document enclosed by the root element <TT
+CLASS="literal"
+>a</TT
+> is an instance of this DTD.
+			</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN295"
+></A
+><P
+><B
+>Example 1-1. Sample XML document</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;&#60;?xml version="1.0" encoding="UTF-8" standalone="yes" ?&#62;
+
+&#60;!DOCTYPE a [
+&#60;!ATTLIST a  att1  CDATA  #IMPLIED&#62;
+&#60;!ELEMENT a  (b, c?)&#62;
+&#60;!ELEMENT b  EMPTY&#62;
+&#60;!ELEMENT c  (#PCDATA)&#62;
+]&#62;
+
+&#60;a att1="test"&#62;
+    &#60;b/&#62;
+    &#60;c&#62;hello world&#60;/c&#62;
+&#60;/a&#62;
+				</PRE
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="f61.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x298.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Preface</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Haskell</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

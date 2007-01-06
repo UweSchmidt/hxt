@@ -1,0 +1,919 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Design and Implementation of a validating XML parser in Haskell</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="NEXT"
+TITLE="Preface"
+HREF="f61.html"></HEAD
+><BODY
+CLASS="book"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="BOOK"
+><A
+NAME="AEN1"
+></A
+><DIV
+CLASS="TITLEPAGE"
+><H1
+CLASS="title"
+><A
+NAME="AEN2"
+></A
+>Design and Implementation of a validating XML parser in Haskell</H1
+><H2
+CLASS="subtitle"
+>Master's thesis</H2
+><H2
+CLASS="subtitle"
+><H3
+CLASS="othercredit"
+><A
+NAME="AEN7"
+></A
+>University of Applied Sciences Wedel</H3
+></H2
+><H3
+CLASS="author"
+><A
+NAME="AEN10"
+></A
+>Martin Schmidt</H3
+><DIV
+><DIV
+CLASS="abstract"
+><A
+NAME="AEN18"
+></A
+><P
+><B
+>Abstract</B
+></P
+><P
+>&#13;	This thesis introduces the core component of the Haskell XML Toolbox: a validating XML parser that supports almost fully the Extensible Markup Language (XML) 1.0 (Second Edition) W3C Recommendation [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_xml"
+>WWW01</A
+></SPAN
+>]. The thesis presents how a validating XML parser and XML processing applications can be implemented by using filter functions as a uniform design.
+	</P
+><P
+>&#13;	The Haskell XML Toolbox is a collection of tools for processing XML with Haskell. It is itself purely written in Haskell. The Toolbox is a project of the University of Applied Sciences Wedel, initialized by Prof. Dr. Uwe Schmidt.
+	</P
+><P
+>&#13;	The Haskell XML Toolbox bases on the ideas of HaXml [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_haxml"
+>WWW21</A
+></SPAN
+>] and HXML [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_hxml"
+>WWW25</A
+></SPAN
+>], but introduces a more general approach for processing XML with Haskell. It uses a generic data model for representing XML documents, including the DTD subset and the document subset. This data model makes is possible to use filter functions as a uniform design of XML processing applications. Libraries with filters and combinators are provided for processing this data model.
+	</P
+><P
+>&#13;		<P
+></P
+><H1
+CLASS="title"
+><A
+NAME="AEN30"
+></A
+>The following components are included:</H1
+><UL
+><LI
+><P
+><TT
+CLASS="filename"
+>hdom</TT
+> - Core data types and functions for processing XML with Haskell</P
+></LI
+><LI
+><P
+><TT
+CLASS="filename"
+>hparser</TT
+> - XML parser</P
+></LI
+><LI
+><P
+><TT
+CLASS="filename"
+>hvalidator</TT
+> - Modules for validating XML documents</P
+></LI
+><LI
+><P
+><TT
+CLASS="filename"
+>hxslt</TT
+> - Modules for XSL transformations</P
+></LI
+></UL
+>
+	</P
+><P
+>&#13;	Prof. Dr. Uwe Schmidt wrote the basic parser and core functions. His master student Christine Nickel wrote the package <TT
+CLASS="filename"
+>hxslt</TT
+>, his master student Martin Schmidt wrote the package <TT
+CLASS="filename"
+>hvalidator</TT
+> and some parts of the parser.
+	</P
+><P
+></P
+><P
+><B
+CLASS="command"
+>Related work</B
+></P
+><P
+>&#13;	Malcolm Wallace and Colin Runciman wrote HaXml [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_haxml"
+>WWW21</A
+></SPAN
+>], a collection of utilities for using Haskell and XML together. The Haskell XML Toolbox is based on their idea of using filter combinators for processing XML with Haskell.
+	</P
+><P
+>&#13;	Joe English wrote HXML [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_hxml"
+>WWW25</A
+></SPAN
+>], a non-validating XML parser in Haskell. His idea of validating XML by using derivatives of regular expressions [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_derivates_je"
+>WWW26</A
+></SPAN
+>] was implemented in the validation functions of this software.
+	</P
+></DIV
+></DIV
+><HR></DIV
+><H1
+><A
+NAME="AEN58"
+></A
+>Dedication</H1
+><P
+>&#13;      		<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;"Learn at least one new [programming] language every year.
+ Different languages solve the same problems in different ways.
+ By learning several different approaches, you can help broaden
+ your thinking and avoid getting stuck in a rut."
+    --- The Pragmatic Programmer
+			</PRE
+></TD
+></TR
+></TABLE
+>
+		</P
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+><A
+HREF="f61.html"
+>Preface</A
+></DT
+><DT
+>1. <A
+HREF="c78.html"
+>Basics</A
+></DT
+><DD
+><DL
+><DT
+>1.1. <A
+HREF="c78.html#xml"
+>XML</A
+></DT
+><DD
+><DL
+><DT
+>1.1.1. <A
+HREF="c78.html#xml_introduction"
+>Introduction</A
+></DT
+><DT
+>1.1.2. <A
+HREF="c78.html#processing_xml"
+>Processing XML</A
+></DT
+><DT
+>1.1.3. <A
+HREF="c78.html#correctness"
+>Correctness of documents</A
+></DT
+><DT
+>1.1.4. <A
+HREF="c78.html#dtd"
+>Document Type Definition (DTD)</A
+></DT
+><DT
+>1.1.5. <A
+HREF="c78.html#xml_examples"
+>Example</A
+></DT
+></DL
+></DD
+><DT
+>1.2. <A
+HREF="x298.html"
+>Haskell</A
+></DT
+><DD
+><DL
+><DT
+>1.2.1. <A
+HREF="x298.html#haskell_introduction"
+>Introduction</A
+></DT
+><DT
+>1.2.2. <A
+HREF="x298.html#functions"
+>Functions</A
+></DT
+><DT
+>1.2.3. <A
+HREF="x298.html#types"
+>Types</A
+></DT
+><DT
+>1.2.4. <A
+HREF="x298.html#pattern_matching"
+>Pattern Matching</A
+></DT
+><DT
+>1.2.5. <A
+HREF="x298.html#guards"
+>Guards</A
+></DT
+><DT
+>1.2.6. <A
+HREF="x298.html#higher_order_functions"
+>Higher-order Functions</A
+></DT
+><DT
+>1.2.7. <A
+HREF="x298.html#modules_introduction"
+>Modules</A
+></DT
+></DL
+></DD
+></DL
+></DD
+><DT
+>2. <A
+HREF="c468.html"
+>Package hdom</A
+></DT
+><DD
+><DL
+><DT
+>2.1. <A
+HREF="c468.html#modules"
+>Modules</A
+></DT
+><DT
+>2.2. <A
+HREF="x558.html"
+>Data structures</A
+></DT
+><DD
+><DL
+><DT
+>2.2.1. <A
+HREF="x558.html#AEN560"
+>Core components</A
+></DT
+><DT
+>2.2.2. <A
+HREF="x558.html#AEN575"
+>Data type XmlTree</A
+></DT
+><DT
+>2.2.3. <A
+HREF="x558.html#example_xmltree"
+>Example</A
+></DT
+></DL
+></DD
+><DT
+>2.3. <A
+HREF="x854.html"
+>Filter functions</A
+></DT
+><DD
+><DL
+><DT
+>2.3.1. <A
+HREF="x854.html#filter_introduction"
+>Introduction</A
+></DT
+><DT
+>2.3.2. <A
+HREF="x854.html#filters_ntree"
+>Filters from module NTree</A
+></DT
+><DT
+>2.3.3. <A
+HREF="x854.html#filters_xmltreeaccess"
+>Filters from module XmlTreeAccess</A
+></DT
+></DL
+></DD
+><DT
+>2.4. <A
+HREF="x1178.html"
+>Filter combinators</A
+></DT
+><DD
+><DL
+><DT
+>2.4.1. <A
+HREF="x1178.html#combinators_introduction"
+>Introduction</A
+></DT
+><DT
+>2.4.2. <A
+HREF="x1178.html#combinators_list"
+>List of combinators</A
+></DT
+><DT
+>2.4.3. <A
+HREF="x1178.html#combinators_binding"
+>Binding power and associativity</A
+></DT
+></DL
+></DD
+><DT
+>2.5. <A
+HREF="x1438.html"
+>Examples for filters and filter combinators</A
+></DT
+><DD
+><DL
+><DT
+>2.5.1. <A
+HREF="x1438.html#AEN1442"
+>Removing comments</A
+></DT
+><DT
+>2.5.2. <A
+HREF="x1438.html#AEN1484"
+>Merging internal and external DTD subset</A
+></DT
+></DL
+></DD
+><DT
+>2.6. <A
+HREF="x1522.html"
+>Access functions</A
+></DT
+><DT
+>2.7. <A
+HREF="x1577.html"
+>State-I/O monad from module XmlState</A
+></DT
+></DL
+></DD
+><DT
+>3. <A
+HREF="c1645.html"
+>Package hparser</A
+></DT
+><DD
+><DL
+><DT
+>3.1. <A
+HREF="c1645.html#AEN1654"
+>Overview</A
+></DT
+><DT
+>3.2. <A
+HREF="x1694.html"
+>Module HdomParser</A
+></DT
+><DT
+>3.3. <A
+HREF="x1763.html"
+>Module XmlParser</A
+></DT
+><DT
+>3.4. <A
+HREF="x1800.html"
+>Module XmlInput</A
+></DT
+><DT
+>3.5. <A
+HREF="x1823.html"
+>Module DTDProcessing</A
+></DT
+><DT
+>3.6. <A
+HREF="x1830.html"
+>Module XmlOutput</A
+></DT
+></DL
+></DD
+><DT
+>4. <A
+HREF="c1850.html"
+>Package hvalidator</A
+></DT
+><DD
+><DL
+><DT
+>4.1. <A
+HREF="c1850.html#module_hierarchy"
+>Module hierarchy</A
+></DT
+><DT
+>4.2. <A
+HREF="x1900.html"
+>Creating a validating XML parser</A
+></DT
+><DT
+>4.3. <A
+HREF="x1946.html"
+>Validation of the Document Type Definition</A
+></DT
+><DT
+>4.4. <A
+HREF="x2007.html"
+>Validation of the document subset</A
+></DT
+><DT
+>4.5. <A
+HREF="x2065.html"
+>Transformation of the document subset</A
+></DT
+><DT
+>4.6. <A
+HREF="x2081.html"
+>Validation of attribute values</A
+></DT
+><DT
+>4.7. <A
+HREF="x2086.html"
+>Derivatives of regular expressions</A
+></DT
+><DD
+><DL
+><DT
+>4.7.1. <A
+HREF="x2086.html#AEN2102"
+>Description</A
+></DT
+><DT
+>4.7.2. <A
+HREF="x2086.html#AEN2107"
+>Examples</A
+></DT
+><DT
+>4.7.3. <A
+HREF="x2086.html#AEN2116"
+>Realization in Haskell</A
+></DT
+><DT
+>4.7.4. <A
+HREF="x2086.html#AEN2153"
+>Conclusions</A
+></DT
+></DL
+></DD
+></DL
+></DD
+><DT
+>5. <A
+HREF="c2165.html"
+>Conclusion</A
+></DT
+><DD
+><DL
+><DT
+>5.1. <A
+HREF="c2165.html#AEN2167"
+>XML conformance of the parser</A
+></DT
+><DT
+>5.2. <A
+HREF="x2201.html"
+>The Haskell XML Toolbox in comparison to HaXml and HXML</A
+></DT
+><DT
+>5.3. <A
+HREF="x2257.html"
+>Conclusions and future work</A
+></DT
+></DL
+></DD
+><DT
+>A. <A
+HREF="a2283.html"
+>User handbook</A
+></DT
+><DD
+><DL
+><DT
+>A.1. <A
+HREF="a2283.html#AEN2285"
+>System requirements</A
+></DT
+><DT
+>A.2. <A
+HREF="x2308.html"
+>Missing features and known problems</A
+></DT
+><DT
+>A.3. <A
+HREF="x2330.html"
+>Directory structure</A
+></DT
+><DT
+>A.4. <A
+HREF="x2367.html"
+>HXmlParser - Well-formedness checker and validator</A
+></DT
+><DT
+>A.5. <A
+HREF="x2380.html"
+>Check the XML parser with the XML Test Suites</A
+></DT
+><DT
+>A.6. <A
+HREF="x2408.html"
+>Performance and profiling</A
+></DT
+><DD
+><DL
+><DT
+>A.6.1. <A
+HREF="x2408.html#AEN2411"
+>Usage information</A
+></DT
+><DT
+>A.6.2. <A
+HREF="x2408.html#AEN2447"
+>How to interpret the results</A
+></DT
+></DL
+></DD
+></DL
+></DD
+><DT
+>B. <A
+HREF="a2458.html"
+>MIT License</A
+></DT
+><DT
+><A
+HREF="b2463.html"
+>Bibliography</A
+></DT
+><DT
+><A
+HREF="b2739.html"
+>Affidavit</A
+></DT
+></DL
+></DIV
+><DIV
+CLASS="LOT"
+><DL
+CLASS="LOT"
+><DT
+><B
+>List of Tables</B
+></DT
+><DT
+>1-1. <A
+HREF="c78.html#AEN153"
+>Connectors</A
+></DT
+><DT
+>1-2. <A
+HREF="c78.html#AEN164"
+>Occurrence indicators</A
+></DT
+><DT
+>1-3. <A
+HREF="c78.html#AEN181"
+>Grouping</A
+></DT
+><DT
+>1-4. <A
+HREF="c78.html#AEN192"
+>#PCDATA in content model</A
+></DT
+><DT
+>1-5. <A
+HREF="c78.html#AEN204"
+>Keywords</A
+></DT
+><DT
+>1-6. <A
+HREF="c78.html#AEN237"
+>Type of the attribute value</A
+></DT
+><DT
+>1-7. <A
+HREF="c78.html#AEN269"
+>Attribute defaults</A
+></DT
+><DT
+>2-1. <A
+HREF="x1178.html#AEN1367"
+>Binding power and associativity of functional combinators</A
+></DT
+><DT
+>2-2. <A
+HREF="x1178.html#AEN1414"
+>Binding power and associativity of monadic combinators</A
+></DT
+></DL
+></DIV
+><DIV
+CLASS="LOT"
+><DL
+CLASS="LOT"
+><DT
+><B
+>List of Figures</B
+></DT
+><DT
+>2-1. <A
+HREF="c468.html#modules_xmltree"
+>Module hierarchy of XmlTree</A
+></DT
+><DT
+>2-2. <A
+HREF="c468.html#modules_hdom"
+>General modules of package hdom</A
+></DT
+><DT
+>2-3. <A
+HREF="x1577.html#modules_xmlstate"
+>Modules of XmlState</A
+></DT
+><DT
+>3-1. <A
+HREF="x1763.html#modules_xmlparser"
+>Modules of XmlParser</A
+></DT
+><DT
+>4-1. <A
+HREF="c1850.html#modules_hvalidator"
+>Modules of package hvalidator</A
+></DT
+></DL
+></DIV
+><DIV
+CLASS="LOT"
+><DL
+CLASS="LOT"
+><DT
+><B
+>List of Examples</B
+></DT
+><DT
+>1-1. <A
+HREF="c78.html#AEN295"
+>Sample XML document</A
+></DT
+><DT
+>1-2. <A
+HREF="x298.html#AEN328"
+>Adding two integers</A
+></DT
+><DT
+>1-3. <A
+HREF="x298.html#AEN337"
+>Prefix and infix notation</A
+></DT
+><DT
+>1-4. <A
+HREF="x298.html#AEN342"
+>Type signature of an infix function</A
+></DT
+><DT
+>1-5. <A
+HREF="x298.html#AEN347"
+>Define associativity and binding power</A
+></DT
+><DT
+>1-6. <A
+HREF="x298.html#AEN361"
+>A tuple for persons with ID and name</A
+></DT
+><DT
+>1-7. <A
+HREF="x298.html#AEN368"
+>Get the head of a list</A
+></DT
+><DT
+>1-8. <A
+HREF="x298.html#AEN379"
+>Definition of String</A
+></DT
+><DT
+>1-9. <A
+HREF="x298.html#AEN391"
+>A type for binary trees</A
+></DT
+><DT
+>1-10. <A
+HREF="x298.html#AEN397"
+>Calculate the length of a list</A
+></DT
+><DT
+>1-11. <A
+HREF="x298.html#AEN412"
+>Get all values from Bintree</A
+></DT
+><DT
+>1-12. <A
+HREF="x298.html#AEN419"
+>Get all leafs from Bintree</A
+></DT
+><DT
+>1-13. <A
+HREF="x298.html#AEN428"
+>Calculate the maximum of two numbers</A
+></DT
+><DT
+>1-14. <A
+HREF="x298.html#AEN436"
+>Apply a function to a list</A
+></DT
+><DT
+>1-15. <A
+HREF="x298.html#AEN448"
+>Increase all numbers in a list</A
+></DT
+><DT
+>1-16. <A
+HREF="x298.html#AEN457"
+>Modules</A
+></DT
+><DT
+>2-1. <A
+HREF="x558.html#AEN836"
+>Input document</A
+></DT
+><DT
+>2-2. <A
+HREF="x558.html#AEN847"
+>Input document as XmlTree</A
+></DT
+><DT
+>2-3. <A
+HREF="x558.html#AEN851"
+>Internal representation of the document subset</A
+></DT
+><DT
+>2-4. <A
+HREF="x1522.html#AEN1574"
+>Adding a new attribute to an XTag node.</A
+></DT
+><DT
+>2-5. <A
+HREF="x1577.html#AEN1638"
+>Using the monad from XmlState</A
+></DT
+><DT
+>4-1. <A
+HREF="x1900.html#AEN1943"
+>Validating a document with errors</A
+></DT
+><DT
+>4-2. <A
+HREF="x1946.html#AEN2002"
+>Validation that notations are not declared for EMPTY elements</A
+></DT
+><DT
+>4-3. <A
+HREF="x2007.html#AEN2062"
+>Validation that all attributes are unique</A
+></DT
+><DT
+>5-1. <A
+HREF="x2201.html#AEN2213"
+>Document subset in HXML</A
+></DT
+><DT
+>5-2. <A
+HREF="x2201.html#AEN2217"
+>DTD subset in HXML</A
+></DT
+><DT
+>5-3. <A
+HREF="x2201.html#AEN2226"
+>XML documents in HaXml</A
+></DT
+><DT
+>5-4. <A
+HREF="x2201.html#AEN2234"
+>Document subset in HaXml</A
+></DT
+><DT
+>5-5. <A
+HREF="x2201.html#AEN2239"
+>The filter type of HaXml</A
+></DT
+><DT
+>5-6. <A
+HREF="x2201.html#AEN2247"
+>XML documents represented in the Haskell XML Toolbox</A
+></DT
+><DT
+>A-1. <A
+HREF="x2380.html#AEN2405"
+>Executing RunTestCases</A
+></DT
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="f61.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Preface</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

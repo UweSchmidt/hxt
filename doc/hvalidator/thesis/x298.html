@@ -1,0 +1,949 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Haskell</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Basics"
+HREF="c78.html"><LINK
+REL="PREVIOUS"
+TITLE="Basics"
+HREF="c78.html"><LINK
+REL="NEXT"
+TITLE="Package hdom"
+HREF="c468.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="c78.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 1. Basics</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="c468.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="haskell"
+></A
+>1.2. Haskell</H1
+><P
+>&#13;	This introduction to Haskell can only cover a few aspects of Haskell. Its aim is to make the next chapters more easily understandable for persons who are not familiar with Haskell, but with programming languages. If you are new to Haskell, its homepage Haskell.org [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_haskellorg"
+><SPAN
+CLASS="abbrev"
+>WWW11</SPAN
+></A
+></SPAN
+>] is a good place to start for gaining information and lots of free compilers and libraries. The tutorial "A Gentle Introduction to Haskell" [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_gentelinstruction"
+><SPAN
+CLASS="abbrev"
+>WWW14</SPAN
+></A
+></SPAN
+>] gives a detailed overview about the language. A great learning book, full of examples is "The Craft of Functional Programming" by Simon Thompson [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#thompson99"
+><SPAN
+CLASS="abbrev"
+>Thompson99</SPAN
+></A
+></SPAN
+>]. For advanced people Paul Hudak's "The Haskell School of Expression" [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#hudak00"
+><SPAN
+CLASS="abbrev"
+>Hudak00</SPAN
+></A
+></SPAN
+>] gives a more complete overview about monads and higher-order functions by samples from multimedia. The language itself is defined in the Haskell 98 Report [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_98report"
+><SPAN
+CLASS="abbrev"
+>WWW15</SPAN
+></A
+></SPAN
+>] and the Haskell 98 Library Report [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_98libraryreport"
+><SPAN
+CLASS="abbrev"
+>WWW16</SPAN
+></A
+></SPAN
+>].
+	</P
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="haskell_introduction"
+></A
+>1.2.1. Introduction</H2
+><P
+>&#13;		Haskell is named after Haskell Brooks Curry [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_haskellbrooks"
+><SPAN
+CLASS="abbrev"
+>WWW12</SPAN
+></A
+></SPAN
+>] who was one of the pioneers of the lambda calculus. Haskell bases on the lambda calculus, a mathematical theory of functions, and not on the Turing machine like imperative programming languages do. In functional programming the programmer defines <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>what</I
+></SPAN
+> has to be calculated and not <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>how</I
+></SPAN
+> it is calculated. A functional program is a single expression, which is executed by evaluating the expression.
+		</P
+><P
+>&#13;		Shortly described, Haskell is a strong typed, lazy, pure functional programming language.
+		</P
+><P
+>&#13;		Haskell has a static type system so that all type errors are detected at compile time. This makes Haskell programs very type safe. Its type class system is complex but powerful.
+		</P
+><P
+>&#13;		Haskell's evaluation model is called lazy or non-strict, because arguments of functions are only evaluated if they are needed for computations. This leads to a demand-driven evaluation. Expressions are evaluated just enough to get the result. Parts of them may not be evaluated at all. In contrast to imperative languages, program order is not needed.
+		</P
+><P
+>&#13;		The language is called pure, because it has no imperative extensions and it eschews all side effects. This leads to the fact that Haskell lacks any loop constructs, because mutable variables do not exist. All iterations have to be expressed by recursions. The lack of side effects allows easy reasoning about the programs.
+		</P
+><P
+>&#13;		The above-described qualities make Haskell a modern functional programming language with many strengths over actual object oriented languages like Java or C++.
+		</P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="functions"
+></A
+>1.2.2. Functions</H2
+><P
+>&#13;		Functions are essential for structuring a program. The following example shows a function declaration for adding two numbers.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN328"
+></A
+><P
+><B
+>Example 1-2. Adding two integers</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;add :: Int -&#62; Int -&#62; Int
+add a b = a + b
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;		The first line is the type signature, it declares the name and type of the function. The function <TT
+CLASS="function"
+>add</TT
+> takes two integers as input and returns an integer as a result. The type system of Haskell is so powerful that the type signature can be avoided. However there exist a few exceptions and defining the type signatures makes a program much more maintainable.
+		</P
+><P
+>&#13;		The second line gives the definition of the function as an equation. The part before the equal sign names the arguments, the part after the equal sign defines the computation. Using <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>pattern matching</I
+></SPAN
+> (see <A
+HREF="x298.html#pattern_matching"
+>Section 1.2.4</A
+>) a function can be defined by a series of these equations.
+		</P
+><P
+>&#13;		By surrounding the function name of a two-argument function in back-quotes, it can be written between its arguments, called infix.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN337"
+></A
+><P
+><B
+>Example 1-3. Prefix and infix notation</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;add 1 2
+1 'add' 2
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;		Operators, such as <TT
+CLASS="function"
+>++</TT
+> for concatenating two lists, are just infix functions. Instead of writing the function in front of its arguments, it is written between them. Haskell allows the programmer to define his own operators. For defining infix functions, the function name has to be enclosed in parenthesis in the type signature.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN342"
+></A
+><P
+><B
+>Example 1-4. Type signature of an infix function</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;(++) :: [a] -&#62; [a] -&#62; [a]
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;		It is also possible to define the associativity and binding power of the self-defined operators. The following example defines <TT
+CLASS="function"
+>++</TT
+> as a right-associative operator with a precedence level of 5.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN347"
+></A
+><P
+><B
+>Example 1-5. Define associativity and binding power</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;infixr 5  ++
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="types"
+></A
+>1.2.3. Types</H2
+><P
+>&#13;		In general terms, a type is a collection of similar objects, such as numbers or characters. Haskell has a very powerful and complex type system. The following sections can just give a small overview. Type classes, abstract data types or infinite lists are not discussed.
+		</P
+><DIV
+CLASS="simplesect"
+><H4
+CLASS="simplesect"
+><A
+NAME="AEN353"
+></A
+>1.2.3.1. Build-in types</H4
+><P
+>&#13;			Like many other programming languages Haskell has the basic build-in types: Char, Int, Bool, Float and String, which is only a synonym for a list of Char.
+			</P
+><P
+>&#13;			Lists and tuples are often used data structures for compound data in Haskell and are therefore also build-in values.
+			</P
+><P
+>&#13;			Lists combine values of the same type into a single object. The list [1,2,3] is a shorthand for 1:(2:(3:[])). The infix operator : adds its first argument to the front of its second argument, a list. The empty list is expressed by []. The data type list is a <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>polymorphic type</I
+></SPAN
+>, see <A
+HREF="x298.html#polymorphic_types"
+>Section 1.2.3.2</A
+> .
+			</P
+><P
+>&#13;			A tuple combines a predefined number of values of predefined, may be different, types into a single object. Tuples are called records or structures in other programming languages. A person might be represented by a personal id and a name. These two different types can be expressed by a tuple:
+			</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN361"
+></A
+><P
+><B
+>Example 1-6. A tuple for persons with ID and name</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;(Int,String) =&#62; (42, "Schmidt")
+				</PRE
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="simplesect"
+><H4
+CLASS="simplesect"
+><A
+NAME="polymorphic_types"
+></A
+>1.2.3.2. Polymorphic types</H4
+><P
+>&#13;			Lists and tuples are the most common examples of generic polymorph data types. A list can contain any type, the only constraint is that all types in one list are the same.
+			</P
+><P
+>&#13;			The Prelude, Haskell's standard library, contains lots of polymorphic functions and operators for processing lists and tuples. The head function for example is a list function that returns the head element of any list.
+			</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN368"
+></A
+><P
+><B
+>Example 1-7. Get the head of a list</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;head :: [a] -&#62; a
+				</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;			The function takes a list with elements of type <TT
+CLASS="literal"
+>a</TT
+> and returns one element of type <TT
+CLASS="literal"
+>a</TT
+>, the head. Haskell supports type variables, like the <TT
+CLASS="literal"
+>a</TT
+> above. They are uncapitalized in contrast to specific types like Char or Int and stand for any type.
+			</P
+></DIV
+><DIV
+CLASS="simplesect"
+><H4
+CLASS="simplesect"
+><A
+NAME="AEN375"
+></A
+>1.2.3.3. Type synonyms</H4
+><P
+>&#13;			Type synonyms are names for commonly used types. They are created using a type declaration. A synonym does not define a new type, it just gives a new name for an existing type. Because synonyms are simply a shorthand, which can always be expanded out, type synonyms cannot be recursive.
+			</P
+><P
+>&#13;			As mentioned in the section about basic types, a String is a type synonym for a list of characters.
+			</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN379"
+></A
+><P
+><B
+>Example 1-8. Definition of String</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;type String = [Char]
+				</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;			Instead of writing ['H','e','l','l','o'] for a string, Haskell defines a shorthand syntax for strings: "Hello".
+			</P
+></DIV
+><DIV
+CLASS="simplesect"
+><H4
+CLASS="simplesect"
+><A
+NAME="AEN383"
+></A
+>1.2.3.4. Algebraic types</H4
+><P
+>&#13;			Algebraic types are used to define more complex types than lists or tuples, e.g. enumerated types or trees. These types can be recursive. Their definition starts with the keyword <TT
+CLASS="literal"
+>data</TT
+>, followed by the name of the type and the constructors.
+			</P
+><P
+>&#13;			The following example demonstrates a recursive data structure for a polymorphic binary tree, which can store any data type in its leafs. The two kinds <TT
+CLASS="literal"
+>Leaf</TT
+> and <TT
+CLASS="literal"
+>Branch</TT
+> of the data type <TT
+CLASS="literal"
+>BinTree</TT
+> are called constructors. They can be used in the pattern matching of function definitions, described in the next section.
+			</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN391"
+></A
+><P
+><B
+>Example 1-9. A type for binary trees</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;data BinTree a = Leaf a | Branch (BinTree a) (BinTree a)
+				</PRE
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="pattern_matching"
+></A
+>1.2.4. Pattern Matching</H2
+><P
+>&#13;		Functions can get different types of input. A powerful way for describing different input types in Haskell is using pattern matching. A function can be multiple defined, each definition having a particular pattern for its input arguments. The first pattern that matches the argument is used for that function call. An underscore is a wildcard and is used where something should match, but where the matched value is not used.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN397"
+></A
+><P
+><B
+>Example 1-10. Calculate the length of a list</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;length :: [a] -&#62; Int
+length []     = 0
+length (_:xs) = 1 + length xs
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;		The function length uses recursion for calculating the length of lists. It calls itself on the right-hand of the second equation. There exist two definitions of the function: one for empty lists and one for lists with content. The pattern <TT
+CLASS="literal"
+>[]</TT
+> matches the empty list. The pattern <TT
+CLASS="literal"
+>x:xs</TT
+> matches any list with at least one element. The head element is described by the <TT
+CLASS="literal"
+>x</TT
+>, the tail of the list by <TT
+CLASS="literal"
+>xs</TT
+>. The <TT
+CLASS="literal"
+>x</TT
+> can be replaced by the wildcard, because the head element has not to be accessed directly.
+		</P
+><P
+>&#13;		The generic type <TT
+CLASS="literal"
+>[a]</TT
+> in the function declaration of <TT
+CLASS="function"
+>length</TT
+> expresses that <TT
+CLASS="function"
+>length</TT
+> is a polymorph function, which can be applied to a list containing elements of any type.
+		</P
+><P
+>&#13;		Constructors of algebraic types can also be used for pattern matching. The following function returns a list of all values stored in a binary tree. The infix function <TT
+CLASS="function"
+>++</TT
+> concatenates two lists.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN412"
+></A
+><P
+><B
+>Example 1-11. Get all values from Bintree</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;fringe :: Bintree a -&#62; [a]
+fringe (Leaf x)       = [x]
+fringe (Branch t1 t2) = fringe t1 ++ fringe t2
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;		To name a pattern for the use on the right-hand side of an equation, there exists the operator <TT
+CLASS="literal"
+>@</TT
+>. These patterns are called <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>as-patterns</I
+></SPAN
+>. The pattern in front of the <TT
+CLASS="literal"
+>@</TT
+> always results in a successful match, but the sub-pattern can fail. The following example shows a rewritten fringe function that returns not only the values of the leafs but the leafs itself.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN419"
+></A
+><P
+><B
+>Example 1-12. Get all leafs from Bintree</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;fringe2 :: Bintree a -&#62; [Bintree a]
+fringe2 l@(Leaf _)     = [l]
+fringe2 (Branch t1 t2) = fringe t1 ++ fringe t2
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="guards"
+></A
+>1.2.5. Guards</H2
+><P
+>&#13;		Guards (<TT
+CLASS="literal"
+>|</TT
+>) allow boolean tests of arguments passed to a function. The function definition which conditional expression matches first is applied. The keyword <TT
+CLASS="literal"
+>otherwise</TT
+> matches always. The function <TT
+CLASS="function"
+>max</TT
+> uses guards for calculating the maximum of two numbers.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN428"
+></A
+><P
+><B
+>Example 1-13. Calculate the maximum of two numbers</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;max :: Int -&#62; Int -&#62; Int
+max x y
+    | x &#60;= y     = y
+    | otherwise  = x
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="higher_order_functions"
+></A
+>1.2.6. Higher-order Functions</H2
+><P
+>&#13;		In Haskell functions are first-class citizens. This means that they are themselves simply values. They can be stored in data types or passed as arguments to other functions.
+		</P
+><P
+>&#13;		Higher-order functions are functions that take functions as input, return functions as a result or do both. This technique provides a very high abstraction, by embodying a pattern of computation into a function.
+		The following <TT
+CLASS="function"
+>map</TT
+> function embodies transformations over lists.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN436"
+></A
+><P
+><B
+>Example 1-14. Apply a function to a list</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;map :: (a -&#62; b) -&#62; [a] -&#62; [b]
+map f []     = []
+map f (x:xs) = f x : map f xs
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;		<TT
+CLASS="function"
+>map</TT
+> is a polymorphic function that takes a function and a list as arguments. The passed function takes any type <TT
+CLASS="literal"
+>a</TT
+> and returns any type <TT
+CLASS="literal"
+>b</TT
+>. By applying <TT
+CLASS="function"
+>map</TT
+> to a list of <TT
+CLASS="literal"
+>a</TT
+>'s, it returns a new list of <TT
+CLASS="literal"
+>b</TT
+>'s. The generic types <TT
+CLASS="literal"
+>a</TT
+> and <TT
+CLASS="literal"
+>b</TT
+> might be different, but do not have to be like the following example demonstrates.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN448"
+></A
+><P
+><B
+>Example 1-15. Increase all numbers in a list</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;map (+1) [1,2,3]  =&#62;  [2,3,4]
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;		The infix function <TT
+CLASS="function"
+>+</TT
+> in the example for increasing all numbers in a list is partially applied. Partial application can be done to any function taking two or more arguments. The operator <TT
+CLASS="function"
+>+</TT
+> expects two arguments, one argument is predefined as "1". In this case the function increases every second argument by one.
+		</P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="modules_introduction"
+></A
+>1.2.7. Modules</H2
+><P
+>&#13;		Modules are the basis for structuring programs or building general libraries. A module has a name and contains a collection of Haskell definitions. A module may import definitions from other modules and export definitions for the use by other modules.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN457"
+></A
+><P
+><B
+>Example 1-16. Modules</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;module Foo
+    ( inc
+    , dec)
+
+where import Bar
+
+... definitions of inc and dec
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;		The module <TT
+CLASS="filename"
+>Foo</TT
+> exports the functions <TT
+CLASS="function"
+>inc</TT
+> and <TT
+CLASS="function"
+>dec</TT
+>. It imports the module <TT
+CLASS="filename"
+>Bar</TT
+> so that <TT
+CLASS="filename"
+>Foo</TT
+> can use <TT
+CLASS="filename"
+>Bar</TT
+>'s exported definitions. Haskell's standard library, the <TT
+CLASS="filename"
+>Prelude</TT
+>, is implicitly imported.
+		</P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="c78.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="c468.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Basics</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c78.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Package hdom</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

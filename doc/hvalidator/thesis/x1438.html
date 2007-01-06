@@ -1,0 +1,539 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Examples for filters and filter combinators</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Package hdom"
+HREF="c468.html"><LINK
+REL="PREVIOUS"
+TITLE="Filter combinators"
+HREF="x1178.html"><LINK
+REL="NEXT"
+TITLE="Access functions"
+HREF="x1522.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x1178.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 2. Package hdom</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x1522.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="examples"
+></A
+>2.5. Examples for filters and filter combinators</H1
+><P
+>&#13;		After discussing filters and filter combinators in depth, this section shows the use of these functions in real life examples. Because the filters work on the generic tree data type <TT
+CLASS="literal"
+>XmlTree</TT
+>, which represents whole XML documents, these functions form the basic uniform design of XML processing applications. The whole XML Parser of the Haskell XML Toolbox works internally with filters.
+		</P
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="AEN1442"
+></A
+>2.5.1. Removing comments</H2
+><P
+>&#13;			This example describes in depth the use of filters and combinators for removing comments from an <TT
+CLASS="literal"
+>XmlTree</TT
+>. It illustrates, how a complex filter can be constructed by combining very simple ones.
+			</P
+><P
+>&#13;			Removing comments from an <TT
+CLASS="literal"
+>XmlTree</TT
+> is done by transforming the tree with a special filter. This filter returns an empty list for comment nodes, all other nodes are simply returned. The result is a new tree without comment nodes.
+			</P
+><P
+>&#13;			To implement this filter, a predicate function is needed first, which detects comment nodes. Building on this filter a more complex one will be constructed that returns an empty list for comment nodes, but returns all other nodes. The final filter will apply this filter to the whole tree and create a new tree from its results.
+			</P
+><P
+>&#13;			The function <TT
+CLASS="function"
+>isXCmt</TT
+> is a predicate filter that detects comment nodes. It takes a node and checks if the node is of type <TT
+CLASS="literal"
+>XCmt</TT
+>. If the node is a comment, a list with this node is returned, otherwise the result is an empty list.
+			</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;isXCmt              :: XmlFilter
+isXCmt              = isOfNode isXCmtNode
+			</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;			The predicate filter <TT
+CLASS="function"
+>isXCmt</TT
+> itself bases on the basic selection filter <TT
+CLASS="function"
+>isOfNode</TT
+>, which is exported by the module <TT
+CLASS="classname"
+>XmlTree</TT
+>, and the predicate function <TT
+CLASS="function"
+>isXCmtNode</TT
+>. The selection filter <TT
+CLASS="function"
+>isOfNode</TT
+> takes the predicate function as a parameter and returns a list with the passed node if the predicate function returns true for this node. Otherwise an empty list is returned. The predicate function <TT
+CLASS="function"
+>isXCmtNode</TT
+> uses pattern matching to figure out if a node is of type <TT
+CLASS="literal"
+>XCmt</TT
+>.
+			</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;isOfNode            :: (node -&#62; Bool) -&#62; TFilter node
+isOfNode p t@(NTree n _)
+    | p n       = [t]
+    | otherwise	= []
+
+isXCmtNode          :: XNode -&#62; Bool
+isXCmtNode (XCmt _) = True
+isXCmtNode _        = False
+			</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;			The filter <TT
+CLASS="function"
+>removeComment</TT
+> takes a node and returns an empty list if the node is a comment, otherwise a list with the passed node is returned. The filter <TT
+CLASS="function"
+>removeComment</TT
+> combines the simple filter <TT
+CLASS="function"
+>none</TT
+> and the above described filter <TT
+CLASS="function"
+>isXCmt</TT
+> with the combinator <TT
+CLASS="function"
+>when</TT
+>. If the predicate filter <TT
+CLASS="function"
+>isXCmt</TT
+> is true, <TT
+CLASS="function"
+>none</TT
+> returns an empty list. Otherwise a list with the node is returned.
+			</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;removeComment		:: XmlFilter
+removeComment
+    = none `when` isXCmt
+			</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;			The main filter <TT
+CLASS="function"
+>removeAllComment</TT
+> is a filter for removing all comments from an <TT
+CLASS="literal"
+>XmlTree</TT
+>. It uses the recursive transformation filter <TT
+CLASS="function"
+>applyBottomUp</TT
+>, which applies the filter <TT
+CLASS="function"
+>removeComment</TT
+> to the whole tree. The result is a new tree where all comments have been removed.
+			</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;removeAllComment	:: XmlFilter
+removeAllComment
+    = applyBottomUp removeComment
+			</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;			This example shows very clearly how complex filters can be constructed out of simple ones. The functions <TT
+CLASS="function"
+>isOfNode</TT
+>, <TT
+CLASS="function"
+>none</TT
+>, <TT
+CLASS="function"
+>when</TT
+> and <TT
+CLASS="function"
+>applyBottomUp</TT
+> are already exported by the module <TT
+CLASS="classname"
+>XmlTree</TT
+>. They define own control structures and hide processing of the <TT
+CLASS="literal"
+>XmlTree</TT
+> from the programmer. The programmer does not have to worry about how to apply a filter to the whole tree and how to transform it. The use of predefined combinators and filters makes it possible to program on a very high abstraction level.
+			</P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="AEN1484"
+></A
+>2.5.2. Merging internal and external DTD subset</H2
+><P
+>&#13;			After discussing the simple example for removing comments, this example will show a much more complex use of filters. Having defined combinators and basic filters already, it shows how they can usefully be combined into a complex function for merging the internal and external DTD subset. The XML parser of the Haskell XML Toolbox uses this function internally. The filter is part of the module <TT
+CLASS="classname"
+>DTDProcessing</TT
+>.
+			</P
+><P
+>&#13;			A validating XML parser must merge the internal and external DTD subset. The document type declaration can point to an external subset containing declarations, it can contain the declarations directly in an internal subset, or can do both. If both the external and internal subsets are used, the internal subset must occur before the external subset. This has the effect that entity and attribute-list declarations in the internal subset take precedence over those in the external subset [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_xml"
+><SPAN
+CLASS="abbrev"
+>WWW01</SPAN
+></A
+></SPAN
+>].
+			</P
+><P
+>&#13;			The function <TT
+CLASS="function"
+>mergeDTDs</TT
+> takes two lists with the declarations of the internal and external subset as input and returns both subsets merged. Because the internal subset dominates over the external one, its declarations can be prepended before the filtered result list of the external subset. The operator <TT
+CLASS="function"
+>++</TT
+> is a standard Haskell function for concatenating two lists. The expression <TT
+CLASS="function"
+>mergeDTDentry dtdInt</TT
+> creates a complex filter function that filters declarations from the external subset, which have been already declared in the internal subset. This complex filter is applied by the combinator <TT
+CLASS="function"
+>$$</TT
+> to the whole declaration list of the external DTD subset.
+			</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;mergeDTDs	:: XmlTrees -&#62; XmlTrees -&#62; XmlTrees
+mergeDTDs dtdInt dtdExt
+    = dtdInt ++ (mergeDTDentry dtdInt $$ dtdExt)
+			</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;			The complex filter <TT
+CLASS="function"
+>mergeDTDentry</TT
+> is initialized with the internal subset. By applying this filter to each node of the external subset, it filters all entries that are already declared in the internal subset. It uses the same semantic like the example for removing comments. If a declaration occurs in both subsets, the filter returns an empty list, otherwise it returns a list with the element from the external subset. This behavior is defined by the expression: <TT
+CLASS="function"
+>none `when` found</TT
+>.
+			</P
+><P
+>&#13;			 Internally the filter <TT
+CLASS="function"
+>mergeDTDentry</TT
+> bases on the filter <TT
+CLASS="function"
+>filterDTDNode</TT
+>, which returns a node that occurs in both subsets. This filter is initialized with one node from the internal subset and checks if a node from the external subset equals this node. Because there usually exists more than one declaration in the internal subset, a list of this filter function is constructed, by applying <TT
+CLASS="function"
+>filterDTDNode</TT
+> with the list transformation function <TT
+CLASS="function"
+>map</TT
+> to all nodes of the internal subset. The result is a list of filter functions. This list of filters is later applied to a node of the external subset by the combinator <TT
+CLASS="function"
+>cat</TT
+>.
+			</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;mergeDTDentry	:: XmlTrees -&#62; XmlFilter
+mergeDTDentry dtd
+    = none `when` found
+      where
+      filterList = map filterDTDNode dtd  -- construct the list of filters
+      found      = cat filterList         -- concatenate the filters (set union)
+			</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;			The function <TT
+CLASS="function"
+>filterDTDNode</TT
+> constructs a filter which returns a list with a node that occurs in both subsets. The filter is initialized with a node from the internal subset.
+			</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;filterDTDNode	:: XmlTree -&#62; XmlFilter
+			</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;			If the nodes from the internal and external subsets are both of type <TT
+CLASS="literal"
+>ELEMENT</TT
+>, <TT
+CLASS="literal"
+>NOTATION</TT
+> or <TT
+CLASS="literal"
+>ENTITY</TT
+>, the filter checks if the values of their attributes "<SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>name</I
+></SPAN
+>" are equal. If this is the case, a list with the node is returned, otherwise an empty list is returned.
+			</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;filterDTDNode (NTree (XDTD dtdElem al) _)
+    | dtdElem `elem` [ELEMENT, NOTATION, ENTITY]
+        = filterElement
+          where
+          filterElement n@(NTree (XDTD dtdElem' al') _cl')
+              | dtdElem == dtdElem' &#38;&#38;
+                getAttrValue a_name al' == getAttrValue a_name al
+                  = [n]
+              | otherwise  = []
+          filterElement _  = []
+			</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;			If the nodes from the internal and external subset are of type <TT
+CLASS="literal"
+>ATTLIST</TT
+>, the filter has to check if the values of the attributes for the element name and attribute name are equal. If this is the case, the declarations are equal and a list with this node is returned, otherwise an empty list is returned.
+			</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;filterDTDNode (NTree (XDTD ATTLIST al) _)
+    = filterAttlist
+      where
+      filterAttlist n@(NTree (XDTD ATTLIST al') _cl')
+          | getAttrValue a_name  al' == getAttrValue a_name  al &#38;&#38;
+            getAttrValue a_value al' == getAttrValue a_value al
+              = [n]
+      filterAttlist _ = []
+			</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;			For all other types a filter is constructed that returns always an empty list.
+			</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;filterDTDNode _ =  none
+			</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;			This example might be a little bit confusing for people being not familiar with Haskell, but it demonstrates how even very complex tasks like merging the internal and external DTD subset can be implemented with filter functions and combinators. In this case a list of parameterized filter functions is constructed at runtime, which is applied to each node of the external DTD subset.
+			</P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x1178.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x1522.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Filter combinators</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c468.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Access functions</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,230 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Conclusions and future work</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Conclusion"
+HREF="c2165.html"><LINK
+REL="PREVIOUS"
+TITLE="The Haskell XML Toolbox in comparison to HaXml and HXML"
+HREF="x2201.html"><LINK
+REL="NEXT"
+TITLE="User handbook"
+HREF="a2283.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x2201.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 5. Conclusion</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="a2283.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="AEN2257"
+></A
+>5.3. Conclusions and future work</H1
+><P
+>&#13;		The developed XML parser shows that the functional approach accomplishes the task of parsing and validating XML by using fewer lines of code and producing a very short and compact program in contrast to imperative languages. The packages <TT
+CLASS="filename"
+>hdom</TT
+>, <TT
+CLASS="filename"
+>hparser</TT
+> and <TT
+CLASS="filename"
+>hvalidator</TT
+> contain only about 9.000 lines of code including lots of HDoc [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_hdoc"
+><SPAN
+CLASS="abbrev"
+>WWW30</SPAN
+></A
+></SPAN
+>] comments.
+		</P
+><P
+>&#13;		Although the program is compact, the code is understandable and maintainable, because the code is more succinct and it follows a clear  and simple design. The Haskell XML Toolbox introduced the very general tree data type <TT
+CLASS="literal"
+>XmlTree</TT
+> for representing whole XML documents in Haskell. This general data model makes it possible to base all processings of XML documents on filters. The whole XML parser, presented in this thesis, bases on this uniform design.
+		</P
+><P
+>&#13;		Writing a validating XML parser is a quite complex task. It must cope with different encodings, correct processing of entities and of course validation. Functional programming helps master this complexity better than other methods.
+		</P
+><P
+>&#13;		In Haskell functions are just values and have no side effects. These qualities allow an easy use of higher-order functions that take functions as arguments, return functions as a result or do both. The filter combinators, which have been adopted from HaXml, form a powerful library for combining filter functions. Because all filters of the Haskell XML Toolbox share the same type, it is possible to combine them freely with the use of filter combinators. All details of manipulating the <TT
+CLASS="literal"
+>XmlTree</TT
+> data structure are hidden in these higher-order functions. In effect these filter combinators define problem specific control structures that make it possible to program on a very high abstraction level. Errors can be reduced, because programmers can use the filter combinators as standard functions for processing the <TT
+CLASS="literal"
+>XmlTree</TT
+>.
+		</P
+><P
+>&#13;		Because functions are just values in Haskell, they can be constructed at runtime. The XML parser introduced in this thesis makes an extensive use of creating parameterized filter functions during runtime. The whole validation process bases on this design.
+		</P
+><P
+>&#13;		It can be quite useful to use functional programming paradigms when writing programs in imperative languages. Functional paradigms like higher-order functions for abstractions can be done in Java by defining an interface that has only one function. This interface can be passed to other functions or returned by a function. In C function pointers can be used for this task. But imperative languages are not designed to support functional programming styles, so they cannot actively support its paradigms. The main focus of these languages lies on the fact <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>how</I
+></SPAN
+> a problem is solved, e.g. the order in which computations are performed.
+		</P
+><P
+>&#13;		Unfortunately functional programming and functional programming languages are not very popular. Two standard examples for functional programming are using a spreadsheet program like Excel and querying a database with SQL. Another field where functional programming dominates is transformation of SGML and XML documents. The Document Style Semantics and Specification Language (DSSSL) [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_dsssl"
+><SPAN
+CLASS="abbrev"
+>WWW09</SPAN
+></A
+></SPAN
+>] bases on the functional programming language Scheme and is very popular in the world of SGML publishing. The Extensible Stylesheet Language (XSL) [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_xsl"
+><SPAN
+CLASS="abbrev"
+>WWW07</SPAN
+></A
+></SPAN
+>] is its corresponding part for XML publishing. Functional programming languages are very well equipped for this task, because the transformation process is a functional mapping from a structural document as input to a formatted representation as output.
+		</P
+><P
+>&#13;		Sometimes it is said that functional programming languages lack of libraries. We do not know any validating XML Parser written in Haskell and hope that the framework of the Haskell XML Toolbox will be a useful tool for XML processing applications written in Haskell. The parser supports almost fully the XML 1.0 specification with the exception of namespaces.
+		</P
+><P
+>&#13;		The Haskell XML Toolbox introduces a powerful approach for processing XML in Haskell. It generalizes the ideas of HaXml and HXML. Whole XML documents are represented as a tree of different nodes. This tree can be processed in a uniform way by using filter functions and filter combinators.
+		</P
+><P
+>&#13; 		Lots of great ideas of the projects HaXml and HXML have been taken into this project. We want to thank their members for their great work and emphasis that all three projects are enrichments for the Haskell community.
+		</P
+><P
+>&#13;		The Haskell XML Toolbox project will be maintained and enlarged at the University of Applied Sciences Wedel. One student already wrote an XSLT processor on the basis of this project. Another student is writing a program using the Haskell XML Toolbox for deriving Java classes from DTDs.
+		</P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x2201.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="a2283.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>The Haskell XML Toolbox in comparison to HaXml and HXML</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c2165.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>User handbook</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

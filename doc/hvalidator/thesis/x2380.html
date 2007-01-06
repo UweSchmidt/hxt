@@ -1,0 +1,249 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Check the XML parser with the XML Test Suites</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="User handbook"
+HREF="a2283.html"><LINK
+REL="PREVIOUS"
+TITLE="HXmlParser - Well-formedness checker and validator"
+HREF="x2367.html"><LINK
+REL="NEXT"
+TITLE="Performance and profiling"
+HREF="x2408.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x2367.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix A. User handbook</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x2408.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="AEN2380"
+></A
+>A.5. Check the XML parser with the XML Test Suites</H1
+><P
+>&#13;		The XML parser of the Haskell XML Toolbox was elaborately tested with the XML Test Suites from the W3C [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_xmlts"
+><SPAN
+CLASS="abbrev"
+>WWW02</SPAN
+></A
+></SPAN
+>]. If you want to run these checks on your own, you can use the tool <TT
+CLASS="literal"
+>RunTestCases</TT
+> that is distributed with the Haskell XML Toolbox.
+		</P
+><P
+>&#13;		First you have to download the test cases from the W3C [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_xmlts"
+><SPAN
+CLASS="abbrev"
+>WWW02</SPAN
+></A
+></SPAN
+>] and extract them in an own directory. To test the XML parser with these test cases, you have to build the program <TT
+CLASS="literal"
+>RunTestCases</TT
+>. Executing <TT
+CLASS="literal"
+>make RunTestCases</TT
+> in the root directory of the Haskell XML Toolbox will compile this program.
+		</P
+><P
+>&#13;		The XML Test Suites contain test cases from different organizations and people. <TT
+CLASS="literal"
+>RunTestCases</TT
+> must be called with a test case description file as argument from the directories: <TT
+CLASS="literal"
+>ibm</TT
+>, <TT
+CLASS="literal"
+>oasis</TT
+>, <TT
+CLASS="literal"
+>sun</TT
+> or <TT
+CLASS="literal"
+>xmltest</TT
+>.
+		</P
+><P
+>&#13;		Perhaps a dummy root node must be added to these files to form a valid XML document. <TT
+CLASS="literal"
+>RunTestCases</TT
+> cannot process the root file that combines all theses description files.
+		</P
+><P
+>&#13;		When being executed, <TT
+CLASS="literal"
+>RunTestCases</TT
+> will ask what type of test shall be performed. The type entered must correspond to the tests listed in the test case description file. <TT
+CLASS="function"
+>RunTestCases</TT
+> will only execute these test cases.
+		</P
+><P
+>&#13;		If the option "show detailed information" is set, <TT
+CLASS="literal"
+>RunTestCases</TT
+> will display the <TT
+CLASS="literal"
+>XmlTree</TT
+> in addition if a test fails.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN2405"
+></A
+><P
+><B
+>Example A-1. Executing RunTestCases</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;RunTestCases ibm_oasis_valid.xml
+
+Which kind of test shall be performed?
+([1] - valid | 2 - invalid | 3 - not-wf | 4 - error):
+
+Show detailed information? (j/[n])
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x2367.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x2408.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>HXmlParser - Well-formedness checker and validator</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="a2283.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Performance and profiling</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,339 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Creating a validating XML parser</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Package hvalidator"
+HREF="c1850.html"><LINK
+REL="PREVIOUS"
+TITLE="Package hvalidator"
+HREF="c1850.html"><LINK
+REL="NEXT"
+TITLE="Validation of the Document Type Definition"
+HREF="x1946.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="c1850.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 4. Package hvalidator</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x1946.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="creating_a_validating_xml_parser"
+></A
+>4.2. Creating a validating XML parser</H1
+><P
+>&#13;		The only public module for validating XML documents is the module <TT
+CLASS="classname"
+>Validation</TT
+>. It exports several functions for validating XML documents, parts of XML documents and transforming them.
+		</P
+><P
+></P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><TT
+CLASS="function"
+>validateAndTransform :: XmlSFilter</TT
+></DT
+><DD
+><P
+>&#13;					Combines validation and transformation of a document. If errors or fatal errors occurred during validation, a list of errors is returned. Otherwise the transformed document is returned.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>validate :: XmlSFilter</TT
+></DT
+><DD
+><P
+>&#13;					Checks if the DTD and the document are valid.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>validateDTD :: XmlSFilter</TT
+></DT
+><DD
+><P
+>&#13;					Checks if the DTD is valid.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>validateDoc :: XmlSFilter</TT
+></DT
+><DD
+><P
+>&#13;					Checks if the document corresponds to the given DTD.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>transform :: XmlSFilter</TT
+></DT
+><DD
+><P
+>&#13;					Transforms the document with respect to the given DTD. Validating parsers are expected to  normalize attribute values and add default values. This function should be called after a successful validation.
+					</P
+></DD
+></DL
+></DIV
+><P
+>&#13;		The following example shows how the functions <TT
+CLASS="function"
+>validate</TT
+> and <TT
+CLASS="function"
+>transform</TT
+> can be used in an XML processing application. The document is valid, if <TT
+CLASS="function"
+>validate</TT
+> returns an empty list or a list containing only errors of type <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>warning</I
+></SPAN
+>. If the list contains errors of type <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>error</I
+></SPAN
+> or <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>fatal error</I
+></SPAN
+>, the document is not valid. If the document is valid the document is transformed and displayed to the user.
+		</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;
+printMsg :: XmlTrees -&#62; XmlTrees -&#62; IO()
+printMsg errors doc
+    = if null ((isError +++ isFatalError) $$ errors)
+        then do
+             if null errors
+               then
+                  putStrLn "The document is valid."
+                  putStrLn (xmlTreesToString $ transform doc)
+             else do
+                  putStrLn "The document is valid, but there were warnings:"
+                  putStrLn (xmlTreesToString $ transform doc)
+                  putStrLn (showXErrors errors)
+        else do
+             putStrLn "The document is not valid. List of errors:"
+             putStrLn (showXErrors errors)
+
+
+
+main :: IO()
+main
+    = do
+      doc &#60;- parseDoc "invalid.xml"
+      printMsg (validate doc) doc
+      return ()
+
+		</PRE
+></TD
+></TR
+></TABLE
+><P
+></P
+><P
+>&#13;		Calling the module <TT
+CLASS="classname"
+>ValidateExample</TT
+> from the directory <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>example</I
+></SPAN
+> of the Haskell XML Toolbox with the invalid document <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>invalid.xml</I
+></SPAN
+> produces the following error messages.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN1943"
+></A
+><P
+><B
+>Example 4-1. Validating a document with errors</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;&#60;?xml version="1.0" encoding="UTF-8" standalone="yes" ?&#62;
+
+&#60;!DOCTYPE a [
+&#60;!ATTLIST a  att1  CDATA  #IMPLIED&#62;
+&#60;!ELEMENT a  (z, c?)&#62;
+&#60;!ELEMENT b  EMPTY&#62;
+&#60;!ELEMENT c  (#PCDATA)&#62;
+]&#62;
+
+&#60;a att2="test"&#62;
+    &#60;y/&#62;
+    &#60;c&#62;hello world&#60;/c&#62;
+&#60;/a&#62;
+
+The document is not valid. List of errors:
+Warning: The element type "z", used in content model of element "a", is not declared.
+Error: The content of element "a" must match ( "z" , "c"? ). Element "z" expected,
+       but Element "y" found.
+Error: Attribute "att2" of element "a" is not declared in DTD.
+Error: Element "y" not declared in DTD.
+  			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="c1850.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x1946.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Package hvalidator</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c1850.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Validation of the Document Type Definition</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

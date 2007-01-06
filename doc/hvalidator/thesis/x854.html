@@ -1,0 +1,990 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Filter functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Package hdom"
+HREF="c468.html"><LINK
+REL="PREVIOUS"
+TITLE="Data structures"
+HREF="x558.html"><LINK
+REL="NEXT"
+TITLE="Filter combinators"
+HREF="x1178.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x558.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 2. Package hdom</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x1178.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="filter_functions"
+></A
+>2.3. Filter functions</H1
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="filter_introduction"
+></A
+>2.3.1. Introduction</H2
+><P
+>&#13;			Filters are the basic functions for processing the <TT
+CLASS="literal"
+>XmlTree</TT
+> representation of XML documents. A filter takes a node or a list of nodes and returns some sequence of nodes. The result list might be empty, might contain a single item, or it could contain several items.
+			</P
+><P
+>&#13;			The idea of filters was adopted from HaXml [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_haxml"
+><SPAN
+CLASS="abbrev"
+>WWW21</SPAN
+></A
+></SPAN
+>], but has been modified. In HaXml filters work only on the document subset part of XML documents. The Haskell XML Toolbox uses the generic tree data type <TT
+CLASS="literal"
+>NTree</TT
+> for modeling XML documents. This generic data model makes it possible to generalize HaXml's filter idea so that filters can process the whole XML document, including the DTD subset or document subset. This generalization allows implementing a very uniform design of XML processing applications by using filters. In fact the whole XML Parser of the Haskell XML Toolbox works internally with filters. The differences between HaXml's approach and the approach of the Haskell XML Toolbox are described in depth in <A
+HREF="x2201.html"
+>Section 5.2</A
+>.
+			</P
+><P
+>&#13;			<TT
+CLASS="literal"
+>TFilter</TT
+> and <TT
+CLASS="literal"
+>TSFilter</TT
+> are filters for the general n-ary tree defined by the data type <TT
+CLASS="literal"
+>NTree</TT
+>. The function <TT
+CLASS="literal"
+>TFilter</TT
+> takes a node and returns a list of nodes. <TT
+CLASS="literal"
+>TSFilter</TT
+> takes a list of nodes and returns a list, too.
+			</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;type TFilter  node	= NTree  node -&#62; NTrees node
+type TSFilter node	= NTrees node -&#62; NTrees node
+			</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;			<TT
+CLASS="literal"
+>XmlFilter</TT
+> and <TT
+CLASS="literal"
+>XmlSFilter</TT
+> base on these types. They only work on <TT
+CLASS="literal"
+>XNode</TT
+> data types.
+			</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;type XmlFilter  = TFilter  XNode
+type XmlSFilter = TSFilter XNode
+			</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;			The filters can be used to select parts of a document, to construct new document parts or to change document parts. They can even be used for checking validity constraints as described in <A
+HREF="c1850.html"
+>Chapter 4</A
+>. In this case a filter returns an empty list if the document is valid or a list with errors.
+			</P
+><P
+>&#13;			Filters can sometimes be thought of as predicates. In this case they are used for deciding whether or not to keep its input. The functional approach differs from predicate logic. If the predicate is false, an empty list is returned. If the predicate is true, a list with the passed element is returned.
+			</P
+><P
+>&#13;			All filters share the same basic type so that combining them with the help of combinators, described in  <A
+HREF="x1178.html"
+>Section 2.4</A
+>, is possible. With this approach defining complex filters on the basis of easier ones is possible.
+			</P
+><P
+>&#13;			The following list describes the basic filter functions for processing XML documents represented as an <TT
+CLASS="literal"
+>XmlTree</TT
+>. Some functions are higher-order functions and return a filter function as a result. The arguments of these functions are used to construct parameterized filters. This is useful for example for constructing filters that should be used to return nodes with a certain property.
+			</P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="filters_ntree"
+></A
+>2.3.2. Filters from module NTree</H2
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Simple filters</B
+></P
+><DL
+><DT
+><TT
+CLASS="function"
+>none :: TFilter node</TT
+></DT
+><DD
+><P
+>&#13;						Takes any node, returns always an empty list. Algebraically zero.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>this :: TFilter node</TT
+></DT
+><DD
+><P
+>&#13;						Takes any node, returns always a list of the passed node. Algebraically unit.
+						</P
+></DD
+></DL
+></DIV
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Selection filters</B
+></P
+><DL
+><DT
+><TT
+CLASS="function"
+>isOfNode :: (node -&#62; Bool) -&#62; TFilter node</TT
+></DT
+><DD
+><P
+>&#13;						Takes a predicate functions and returns a filter. The filter returns a list with passed node if the predicate function  is true for the node, otherwise it returns an empty list.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>isNode :: Eq node =&#62; node -&#62; TFilter node</TT
+></DT
+><DD
+><P
+>&#13;						The same as <TT
+CLASS="function"
+>isOfNode</TT
+>. Instead of a predicate function a reference node is taken.
+						</P
+></DD
+></DL
+></DIV
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Filters for modifying nodes</B
+></P
+><DL
+><DT
+><TT
+CLASS="function"
+>mkNTree :: NTree node -&#62; TFilter node</TT
+></DT
+><DD
+><P
+>&#13;						Takes a node and returns a filter. The filter returns always a list with this node and ignores the passed one.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>replaceNode :: node -&#62; TFilter node</TT
+></DT
+><DD
+><P
+>&#13;						Takes a node and returns a filter. The filter replaces a passed node with the initialized one. The children of the passed node are added to the new node.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>replaceChildren :: NTrees node -&#62; TFilter node</TT
+></DT
+><DD
+><P
+>&#13;						Like <TT
+CLASS="function"
+>replaceNode</TT
+> except that in this case the children are replaced by an initialized list. The passed node itself is not modified.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>modifyNode :: (node -&#62; Maybe node) -&#62; TFilter node</TT
+></DT
+><DD
+><P
+>&#13;						Takes a function for modifying nodes and returns a filter.	The function <TT
+CLASS="function"
+>(node -&#62; Maybe node)</TT
+> is applied to the passed node, the children are not modified.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>modifyNode0 :: (node -&#62; node) -&#62; TFilter node</TT
+></DT
+><DD
+><P
+>&#13;						Like <TT
+CLASS="function"
+>modifyNode0</TT
+> except that the type of the modification function <TT
+CLASS="function"
+>(node -&#62; node)</TT
+> is different.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>modifyChildren :: TSFilter node -&#62; TFilter node</TT
+></DT
+><DD
+><P
+>&#13;						Takes a filter that processes lists of nodes and returns a new filter. The new filter applies the filter <TT
+CLASS="function"
+>TSFilter node</TT
+> to the child list of a passed node. The node itself is not modified.
+						</P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="filters_xmltreeaccess"
+></A
+>2.3.3. Filters from module XmlTreeAccess</H2
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Predicate filters</B
+></P
+><DL
+><DT
+><TT
+CLASS="function"
+>isTag :: TagName -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						Takes a <TT
+CLASS="literal"
+>TagName</TT
+> and returns a filter. The filter returns a list with the passed node if its name equals <TT
+CLASS="literal"
+>TagName</TT
+>, otherwise an empty list is returned.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>isOfTag :: (TagName -&#62; Bool) -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						Takes a predicate function <TT
+CLASS="function"
+>(TagName -&#62; Bool)</TT
+> and returns a filter. The filter applies the predicate function to the name of a passed node. If the  predicate function is true, the filter returns a list with the node. Otherwise an empty list is returned.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>attrHasValue :: AttrName -&#62; (AttrValue -&#62; Bool) -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						Constructs a predicate filter for attributes which value meets a predicate function. The constructed filter returns a list with the passed node if the node has an attribute with name <TT
+CLASS="literal"
+>AttrName</TT
+> and its value matches the predicate function <TT
+CLASS="function"
+>(AttrValue -&#62; Bool)</TT
+>. Otherwise an empty list is returned.
+						</P
+></DD
+></DL
+></DIV
+><P
+>&#13;			Lots of further predicate functions are provided by the module <TT
+CLASS="classname"
+>XmlTreePredicates</TT
+>: <TT
+CLASS="function"
+>isXCdata</TT
+>, <TT
+CLASS="function"
+>isXCharRef</TT
+>, <TT
+CLASS="function"
+>isXCmt</TT
+>, <TT
+CLASS="function"
+>isXDTD</TT
+>, <TT
+CLASS="function"
+>isXEntityRef</TT
+>, <TT
+CLASS="function"
+>isXError</TT
+>, <TT
+CLASS="function"
+>isXNoError</TT
+>, <TT
+CLASS="function"
+>isXPi</TT
+>, <TT
+CLASS="function"
+>isXTag</TT
+>, <TT
+CLASS="function"
+>isXText</TT
+>, etc. These filters are used for identifying special types of nodes.
+			</P
+><P
+></P
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Construction filters</B
+></P
+><DL
+><DT
+><TT
+CLASS="function"
+>mkXTag :: TagName -&#62; TagAttrl -&#62; XmlTrees -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						The created filter constructs an <TT
+CLASS="literal"
+>XTag</TT
+> node with the name <TT
+CLASS="literal"
+>TagName</TT
+>, an attribute list <TT
+CLASS="literal"
+>TagAttrl</TT
+> and a list of children. The passed node is ignored by the filter.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>mkXText :: String -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						The created filter constructs an <TT
+CLASS="literal"
+>XText</TT
+> node with text data. The passed node is ignored by the filter. There exists a shortcut function <TT
+CLASS="function"
+>txt</TT
+> that does the same.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>mkXCharRef :: Int -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						The created filter constructs an <TT
+CLASS="literal"
+>XCharRef</TT
+> node with a reference number to a character. The passed node is ignored by the filter.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>mkXEntityRef :: String -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						The created filter constructs an <TT
+CLASS="literal"
+>XEntityRef</TT
+> node with an entity reference. The passed node is ignored by the filter.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>mkXCmt :: String -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						The created filter constructs an <TT
+CLASS="literal"
+>XCmt</TT
+> node with text data. The passed node is ignored by the filter. There exists a shortcut function <TT
+CLASS="function"
+>cmt</TT
+> that does the same.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>mkXDTD :: DTDElem -&#62; TagAttrl -&#62; XmlTrees -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						The created filter constructs an <TT
+CLASS="literal"
+>XDTD</TT
+> node. The type of the node is specified by the algebraic data type <TT
+CLASS="literal"
+>DTDElem</TT
+>. The node has attributes and a list of children. The passed node is ignored by the filter.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>mkXPi	:: String  -&#62; TagAttrl -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						The created filter constructs an <TT
+CLASS="literal"
+>XPi</TT
+> node with a name and attributes. The passed node is ignored by the filter.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>mkXCdata :: String -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						The created filter constructs an <TT
+CLASS="literal"
+>XCdata</TT
+> node with text data. The passed node is ignored by the filter.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>mkXError :: Int -&#62; String -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						The created filter constructs an <TT
+CLASS="literal"
+>XError</TT
+> node with an error level and an error message. The passed node is stored in the child list of this error node, so that the location where the error occurred can be preserved. The shortcut functions <TT
+CLASS="function"
+>warn</TT
+>, <TT
+CLASS="function"
+>err</TT
+> and <TT
+CLASS="function"
+>fatal</TT
+> of type <TT
+CLASS="function"
+>String -&#62; XmlFilter</TT
+> can be used to create specific error nodes.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>mkXElem :: TagName -&#62; TagAttrl -&#62; [XmlFilter] -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						The created filter constructs an <TT
+CLASS="literal"
+>XTag</TT
+> node with the name <TT
+CLASS="literal"
+>TagName</TT
+> and the attribute list <TT
+CLASS="literal"
+>TagAttrl</TT
+>. Its child list is constructed by applying the filter list <TT
+CLASS="literal"
+>[XmlFilter]</TT
+> to the passed node. There exists a shortcut function <TT
+CLASS="function"
+>tag</TT
+> that does the same.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>mkXSElem :: TagName -&#62; [XmlFilter] -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						The created filter constructs a simple <TT
+CLASS="literal"
+>XTag</TT
+> node. It works like <TT
+CLASS="function"
+>mkXElem</TT
+> except that no attribute list is created. There exists a shortcut function <TT
+CLASS="function"
+>stag</TT
+> that does the same.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>mkXEElem :: TagName -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						The created filter constructs an empty <TT
+CLASS="literal"
+>XTag</TT
+> node. It works like <TT
+CLASS="function"
+>mkXSElem</TT
+> except that no child list is created. There exists a shortcut function <TT
+CLASS="function"
+>etag</TT
+> that does the same.
+						</P
+></DD
+></DL
+></DIV
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Selection filters</B
+></P
+><DL
+><DT
+><TT
+CLASS="function"
+>getXTagName :: XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						If the passed node is of type <TT
+CLASS="literal"
+>XTag</TT
+>, a list with an <TT
+CLASS="literal"
+>XText</TT
+> node is returned. This node contains the name of the element. Otherwise an empty list is returned.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>getXTagAttr :: AttrName -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						If the passed node is of type <TT
+CLASS="literal"
+>XTag</TT
+> and there exists an attribute with the name <TT
+CLASS="literal"
+>AttrName</TT
+>, a list with an <TT
+CLASS="literal"
+>XText</TT
+> node is returned. This node contains  the value of the attribute. Otherwise an empty list is returned.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>getXDTDAttr :: AttrName -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						The same as <TT
+CLASS="function"
+>getXTagAttr</TT
+> except that it works on <TT
+CLASS="literal"
+>XDTD</TT
+> nodes.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>getXText :: XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						If the passed node is of type <TT
+CLASS="literal"
+>XText</TT
+>, a list with an <TT
+CLASS="literal"
+>XText</TT
+> node is returned. This node contains text data. Otherwise an empty list is returned.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>getXCmt :: XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						If the passed node is of type <TT
+CLASS="literal"
+>XCmt</TT
+>, a list with an <TT
+CLASS="literal"
+>XText</TT
+> node is returned. This node contains the text data of the comment. Otherwise an empty list is returned.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>getXPiName :: XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						If the passed node is of type <TT
+CLASS="literal"
+>XPi</TT
+>, a list with an <TT
+CLASS="literal"
+>XText</TT
+> node is returned. This node contains the name of the processing instruction. Otherwise an empty list is returned.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>getXCdata :: XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						If the passed node is of type <TT
+CLASS="literal"
+>XCdata</TT
+>, a list with an <TT
+CLASS="literal"
+>XText</TT
+> node is returned. This node contains the text data of the element. Otherwise an empty list is returned.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>getXError :: XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						If the passed node is of type <TT
+CLASS="literal"
+>XError</TT
+>, a list with an <TT
+CLASS="literal"
+>XText</TT
+> node is returned. This node contains the error message. Otherwise an empty list is returned.
+						</P
+></DD
+></DL
+></DIV
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Substitution filters</B
+></P
+><DL
+><DT
+><TT
+CLASS="function"
+>replaceTagName :: TagName -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						Constructed filter replaces the name of an <TT
+CLASS="literal"
+>XTag</TT
+> or <TT
+CLASS="literal"
+>XPi</TT
+> node by the <TT
+CLASS="literal"
+>TagName</TT
+> and returns a list with the modified node.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>replaceAttrl :: TagAttrl -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						 Constructed filter replaces the attribute list of an <TT
+CLASS="literal"
+>XTag</TT
+>, <TT
+CLASS="literal"
+>XDTD</TT
+> or <TT
+CLASS="literal"
+>XPi</TT
+> node by the <TT
+CLASS="literal"
+>TagAttrl</TT
+> and returns a list with the modified node.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>modifyTagName :: (TagName -&#62; TagName) -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						 Constructed filter modifies the name of an <TT
+CLASS="literal"
+>&#13;						 XTag</TT
+> or <TT
+CLASS="literal"
+>XPi</TT
+> node by applying the function <TT
+CLASS="function"
+>(TagName -&#62; TagName)</TT
+> to the name. The filter returns a list with the modified node.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>modifyAttrl	:: (TagAttrl -&#62; TagAttrl) -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						Constructed filter modifies the attribute list of an <TT
+CLASS="literal"
+>XTag</TT
+>, <TT
+CLASS="literal"
+>XDTD</TT
+> or <TT
+CLASS="literal"
+>XPi</TT
+> node by applying the function <TT
+CLASS="function"
+>(TagAttrl -&#62; TagAttrl)</TT
+> to the attribute list. The filter returns a list with the modified node.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>modifyAttr :: AttrName -&#62; AttrValue -&#62; XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						Constructed filter changes the attribute value of the attribute which name equals <TT
+CLASS="literal"
+>AttrName</TT
+> to <TT
+CLASS="literal"
+>AttrValue</TT
+> and returns a list with the modified node.
+						</P
+></DD
+></DL
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x558.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x1178.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Data structures</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c468.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Filter combinators</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

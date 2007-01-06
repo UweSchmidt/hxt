@@ -1,0 +1,262 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Package hparser</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="PREVIOUS"
+TITLE="State-I/O monad from module XmlState"
+HREF="x1577.html"><LINK
+REL="NEXT"
+TITLE="Module HdomParser"
+HREF="x1694.html"></HEAD
+><BODY
+CLASS="chapter"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x1577.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x1694.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="chapter"
+><H1
+><A
+NAME="c3"
+></A
+>Chapter 3. Package hparser</H1
+><P
+>&#13;	The following chapter describes the package <TT
+CLASS="filename"
+>hparser</TT
+>. It contains all modules for parsing XML files and checking the well-formedness constraints of XML. Validation, normalizing attribute values and adding default values is done by the separate package <TT
+CLASS="filename"
+>hvalidator</TT
+>.
+	</P
+><P
+>&#13;	The parser works internally with filters for reading XML data and processing the constructed <TT
+CLASS="literal"
+>XmlTree</TT
+>. The whole parser works with filters of type <TT
+CLASS="literal"
+>XmlStateFilter</TT
+> from the module <TT
+CLASS="classname"
+>XmlState</TT
+> so that trace-output of the computations can be generated, errors can be reported and some state information can be saved where it is necessary.
+	</P
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="AEN1654"
+></A
+>3.1. Overview</H1
+><P
+>&#13;		The package <TT
+CLASS="filename"
+>hparser</TT
+> provides five public modules for implementing an XML parser, which builds the generic tree data structure <TT
+CLASS="literal"
+>XmlTree</TT
+> from XML documents.
+		</P
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Modules</B
+></P
+><DL
+><DT
+><TT
+CLASS="function"
+>HdomParser</TT
+></DT
+><DD
+><P
+>&#13;					 Basic parser for building the generic tree data structure <TT
+CLASS="literal"
+>XmlTree</TT
+>. Bases on <TT
+CLASS="classname"
+>XmlParser</TT
+>, <TT
+CLASS="classname"
+>XmlInput</TT
+> and <TT
+CLASS="classname"
+>DTDProcessing</TT
+>.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>XmlParser</TT
+></DT
+><DD
+><P
+>&#13;					Parses XML files. Bases on the free monadic parser combinator library Parsec [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_parsec"
+><SPAN
+CLASS="abbrev"
+>WWW29</SPAN
+></A
+></SPAN
+>].
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>XmlInput</TT
+></DT
+><DD
+><P
+>Reads XML files, handles different character encodings.</P
+></DD
+><DT
+><TT
+CLASS="function"
+>DTDProcessing</TT
+></DT
+><DD
+><P
+>Processes the DTD. Substitution of general and parameter entities, merging of the internal and external DTD subset.</P
+></DD
+><DT
+><TT
+CLASS="function"
+>XmlOutput</TT
+></DT
+><DD
+><P
+>Prints the parsed data by using the <TT
+CLASS="literal"
+>XmlStateFilter</TT
+> defined in module <TT
+CLASS="classname"
+>XmlState</TT
+>.</P
+></DD
+></DL
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x1577.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x1694.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>State-I/O monad from module XmlState</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Module HdomParser</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

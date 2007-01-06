@@ -1,0 +1,215 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>HXmlParser - Well-formedness checker and validator</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="User handbook"
+HREF="a2283.html"><LINK
+REL="PREVIOUS"
+TITLE="Directory structure"
+HREF="x2330.html"><LINK
+REL="NEXT"
+TITLE="Check the XML parser with the XML Test Suites"
+HREF="x2380.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x2330.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix A. User handbook</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x2380.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="AEN2367"
+></A
+>A.4. HXmlParser - Well-formedness checker and validator</H1
+><P
+>&#13;		The Haskell XML Toolbox comes with a command line tool for checking if XML documents are well-formed and valid. To build this tool with GHC, run <TT
+CLASS="literal"
+>make HXmlParser</TT
+> in the root directory of the Haskell XML Toolbox. This will produce the binary file <TT
+CLASS="literal"
+>HXmlParser</TT
+> that will be stored in the root directory. The sources of this tool are located in the directory <TT
+CLASS="literal"
+>examples</TT
+>.
+		</P
+><P
+>&#13;		When checking an invalid XML file, <TT
+CLASS="literal"
+>HXmlParser</TT
+> will report errors to <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>stderr</I
+></SPAN
+> and quit with an exit code of <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>"-1"</I
+></SPAN
+>. If there are no errors in the document, the tool will just quit without any message.
+		</P
+><P
+>&#13;		If you run <TT
+CLASS="literal"
+>HXmlParser</TT
+> without any arguments, the usage information is displayed:
+		</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;Usage:
+  --source "filename"  - source file (required)
+  --encoding "charset" - document encoding
+  --trace "level"      - trace level (0-4)
+
+  -h                   - this help
+  -v                   - display a message if document is well-formed or valid
+  -w                   - well-formed check only
+
+  -op                  - output parsed document
+  -opt                 - output XmlTree of parsed document
+  -oph                 - output Haskell type of parsed document
+
+Only for validity checks:
+  -ot                  - output transformed document
+  -ott                 - output XmlTree of transformed document
+  -oth                 - output Haskell type of transformed document
+
+  -oc                  - output canonicalized document
+  -oct                 - output XmlTree of canonicalized document
+  -och                 - output Haskell type of canonicalized document
+		</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x2330.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x2380.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Directory structure</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="a2283.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Check the XML parser with the XML Test Suites</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

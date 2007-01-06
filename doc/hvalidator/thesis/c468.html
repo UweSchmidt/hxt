@@ -1,0 +1,389 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Package hdom</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="PREVIOUS"
+TITLE="Haskell"
+HREF="x298.html"><LINK
+REL="NEXT"
+TITLE="Data structures"
+HREF="x558.html"></HEAD
+><BODY
+CLASS="chapter"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x298.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x558.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="chapter"
+><H1
+><A
+NAME="c2"
+></A
+>Chapter 2. Package hdom</H1
+><P
+>&#13;	This chapter describes the package <TT
+CLASS="filename"
+>hdom</TT
+>, which defines a generic tree data type <TT
+CLASS="literal"
+>XmlTree</TT
+> for representing whole XML documents in Haskell. The package provides many functions for processing XML documents represented by this data model.
+	</P
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="modules"
+></A
+>2.1. Modules</H1
+><P
+>&#13;		The core public module of the package <TT
+CLASS="filename"
+>hdom</TT
+> is the module <TT
+CLASS="classname"
+>XmlTree</TT
+>. It exports all elements from the basic libraries <TT
+CLASS="classname"
+>XmlTreeAccess</TT
+>, <TT
+CLASS="classname"
+>XmlTreePredicates</TT
+>, <TT
+CLASS="classname"
+>XmlTreeTypes</TT
+>, <TT
+CLASS="classname"
+>NTree</TT
+> and <TT
+CLASS="classname"
+>XmlKeywords</TT
+>.
+		</P
+><P
+>&#13;		The module <TT
+CLASS="classname"
+>XmlTreeTypes</TT
+> defines data types for representing any XML document in Haskell. The generic tree data type <TT
+CLASS="literal"
+>XmlTree</TT
+> models XML documents, including all logical units of XML like the DTD subset or document subset. This type is based on the general n-ary tree <TT
+CLASS="literal"
+>NTree</TT
+> defined in the module <TT
+CLASS="classname"
+>NTree</TT
+>. The type <TT
+CLASS="literal"
+>NTree</TT
+> defines trees as a node that has a list of child nodes. Leafs are just nodes with an empty child list. XML documents are composed of elements, comments, DTD declarations, character references or processing instructions. <TT
+CLASS="literal"
+>XmlTree</TT
+> provides for each logical unit an own node type.
+		</P
+><P
+>&#13;		The module <TT
+CLASS="classname"
+>NTree</TT
+> defines a general n-ary tree structure <TT
+CLASS="literal"
+>NTree</TT
+> as well as filter functions (see  <A
+HREF="x854.html"
+>Section 2.3</A
+>) and combinators (see  <A
+HREF="x1178.html"
+>Section 2.4</A
+>) for processing this data type. The filters and combinators have been copied and modified from HaXml [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_haxml"
+><SPAN
+CLASS="abbrev"
+>WWW21</SPAN
+></A
+></SPAN
+>]. In contrast to HaXml the filters have been modified using a more generic approach. The filter functions of HaXml work only for the document subset of XML documents. Because of the generic tree data model <TT
+CLASS="literal"
+>NTree</TT
+> these functions can be used to process whole XML documents in the Haskell XML Toolbox.
+		</P
+><P
+>&#13;		The module <TT
+CLASS="classname"
+>XmlTreeAccess</TT
+> provides basic filter functions for constructing, editing or selecting parts of the data type <TT
+CLASS="literal"
+>XmlTree</TT
+>. Furthermore it provides functions for processing the attribute list of <TT
+CLASS="literal"
+>XmlTree</TT
+> nodes.
+		</P
+><P
+>&#13;		The module <TT
+CLASS="classname"
+>XmlTreePredicates</TT
+> provides basic predicate filter functions. The functions are similar to predicate logic. If the condition is true, they return a list with a node, otherwise they return an empty list.
+		</P
+><P
+>&#13;
+		The module <TT
+CLASS="classname"
+>XmlKeywords</TT
+> provides constants that are used for representing DTD keywords and attributes in the <TT
+CLASS="literal"
+>XmlTree</TT
+>.
+		</P
+><P
+>&#13;        	<DIV
+CLASS="figure"
+><A
+NAME="modules_xmltree"
+></A
+><P
+><B
+>Figure 2-1. Module hierarchy of XmlTree</B
+></P
+><DIV
+CLASS="mediaobject"
+><P
+><IMG
+SRC="images/modules_xmltree.gif"></P
+></DIV
+></DIV
+>
+        </P
+><P
+>&#13;		Besides the module <TT
+CLASS="classname"
+>XmlTree</TT
+> and its sub-modules there exist some other public modules for processing the <TT
+CLASS="literal"
+>XmlTree</TT
+> data structure.
+		</P
+><P
+>&#13;		<TT
+CLASS="classname"
+>XmlTreeToString</TT
+> provides functions for transformation of an <TT
+CLASS="literal"
+>XmlTree</TT
+> back into a string. The string shows an XML document in XML syntax.
+		</P
+><P
+>&#13;		<TT
+CLASS="classname"
+>EditFilters</TT
+> provides some filters for transforming an <TT
+CLASS="literal"
+>XmlTree</TT
+>:
+		</P
+><P
+></P
+><UL
+><LI
+><P
+>Remove text nodes which contain only white space from the tree.</P
+></LI
+><LI
+><P
+>Remove comment nodes from the tree.</P
+></LI
+><LI
+><P
+>Transform special characters like &#60;, &#62;, ", ' and &#38; of text nodes into character references.</P
+></LI
+><LI
+><P
+>Manipulate text nodes with customized functions.</P
+></LI
+><LI
+><P
+>Convert CDATA nodes to text nodes by escaping all special characters.</P
+></LI
+><LI
+><P
+>Convert character references to normal text.</P
+></LI
+><LI
+><P
+>Create a canonicalized representation of XML documents [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_canxml"
+><SPAN
+CLASS="abbrev"
+>WWW03</SPAN
+></A
+></SPAN
+>].</P
+></LI
+></UL
+><P
+>&#13;		<TT
+CLASS="classname"
+>FormatXmlTree</TT
+> creates a string with a tree representation of an <TT
+CLASS="literal"
+>XmlTree</TT
+>. This is useful to see how the data type <TT
+CLASS="literal"
+>XmlTree</TT
+> represents an XML document.
+		</P
+><P
+>&#13;		<TT
+CLASS="classname"
+>XmlFilterCombinators</TT
+> provides special filter combinators for processing an <TT
+CLASS="literal"
+>XmlTree</TT
+>. These filters can only operate on the data type <TT
+CLASS="literal"
+>XmlTree</TT
+> and not on the general n-ary tree data type <TT
+CLASS="literal"
+>NTree</TT
+>.
+		</P
+><P
+>&#13;        	<DIV
+CLASS="figure"
+><A
+NAME="modules_hdom"
+></A
+><P
+><B
+>Figure 2-2. General modules of package hdom</B
+></P
+><DIV
+CLASS="mediaobject"
+><P
+><IMG
+SRC="images/modules_hdom.gif"></P
+></DIV
+></DIV
+>
+        </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x298.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x558.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Haskell</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Data structures</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

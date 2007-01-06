@@ -1,0 +1,401 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>State-I/O monad from module XmlState</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Package hdom"
+HREF="c468.html"><LINK
+REL="PREVIOUS"
+TITLE="Access functions"
+HREF="x1522.html"><LINK
+REL="NEXT"
+TITLE="Package hparser"
+HREF="c1645.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x1522.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 2. Package hdom</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="c1645.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="XmlState"
+></A
+>2.7. State-I/O monad from module XmlState</H1
+><P
+>&#13;		The module <TT
+CLASS="classname"
+>XmlState</TT
+> provides a monad for an internal state and I/O commands. The concept of a monad comes from category theory. Monads are used for programming in a functional language using an imperative style. A monad can encapsulate computations such as I/O, manipulation of state or exceptions. For further information about monads, the section "Using Monads" of the Haskell Bookshelf [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_bookshelf"
+><SPAN
+CLASS="abbrev"
+>WWW17</SPAN
+></A
+></SPAN
+>] is a good starting place.
+		</P
+><P
+>&#13;		<TT
+CLASS="classname"
+>XmlState</TT
+> is used for various parts of the XML parser, e.g. when building the parse tree or substituting entities.	The internal state of the monad from <TT
+CLASS="classname"
+>XmlState</TT
+> consists of two parts, the user state and the system state. The user state is a type parameter, the system state is a list of name-value pairs. If the user state is not needed, the type parameter can be instantiated with <TT
+CLASS="literal"
+>()</TT
+>.
+		</P
+><P
+>&#13;		The monad provides trace functions combined with trace levels to output marked computation steps. Error reporting functions are also located in this module. The error messages are printed to <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>stderr</I
+></SPAN
+> and the maximum error level is stored in the system state.
+		</P
+><P
+>&#13;		Furthermore there are types for <TT
+CLASS="function"
+>XmlFilter</TT
+> functions working on this monad, functions for manipulating the state components and for lifting I/O commands and <TT
+CLASS="function"
+>XmlFilter</TT
+>s to monad filters.
+		</P
+><P
+>&#13;        	<DIV
+CLASS="figure"
+><A
+NAME="modules_xmlstate"
+></A
+><P
+><B
+>Figure 2-3. Modules of XmlState</B
+></P
+><DIV
+CLASS="mediaobject"
+><P
+><IMG
+SRC="images/modules_xmlstate.gif"></P
+></DIV
+></DIV
+>
+        </P
+><P
+>&#13;		The internal state consists of a system and a user state.
+		</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;data XmlState state       = XmlState { sysState  :: SysState
+                                     , userState :: state
+                                     }
+		</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;		The system state consists of a list of name-value pairs of type String.
+		</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;type SysState             = TagAttrl
+		</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;		The monad type for commands. It is an instance of <TT
+CLASS="literal"
+>StateIO</TT
+> from the general module <TT
+CLASS="classname"
+>MonadStateIO</TT
+>.
+		</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;type XState state res     = MonadStateIO.StateIO (XmlState state) res
+		</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;		The <TT
+CLASS="function"
+>XmlFilter</TT
+> type for filters working on a state.
+		</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;type XmlStateFilter state = XmlTree -&#62; XState state XmlTrees
+		</PRE
+></TD
+></TR
+></TABLE
+><P
+></P
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Functions for executing XState commands</B
+></P
+><DL
+><DT
+><TT
+CLASS="function"
+>run0 :: XmlState state -&#62; XState state res -&#62; IO (res, XmlState state)</TT
+></DT
+><DD
+><P
+>&#13;					Executes an XState command with an initial state.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>run :: state -&#62; XState state res -&#62; IO res</TT
+></DT
+><DD
+><P
+>&#13;					Executes an XState command with an initial user state.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>run' :: XState () res -&#62; IO res</TT
+></DT
+><DD
+><P
+>&#13;                    Executes an XState command in the I/O monad.
+					</P
+></DD
+></DL
+></DIV
+><P
+>&#13;		The following example shows the use of the State-I/O monad. All computations of <TT
+CLASS="function"
+>processXmlN</TT
+> take place in the State-I/O monad. The functions <TT
+CLASS="function"
+>getXmlContents</TT
+>, <TT
+CLASS="function"
+>parseXmlDoc</TT
+> and <TT
+CLASS="function"
+>putXmlTree</TT
+> are <TT
+CLASS="literal"
+>XmlStateFilter</TT
+>s. The first two filters do some computations where errors might occur. These <TT
+CLASS="literal"
+>XmlStateFilter</TT
+>s can output the errors and set an error level in the State-I/O monad. The value of the error level is tested before the constructed parse tree is returned. The <TT
+CLASS="literal"
+>XmlStateFilter</TT
+>s <TT
+CLASS="function"
+>putXmlTree</TT
+> just outputs the constructed parse tree.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN1638"
+></A
+><P
+><B
+>Example 2-5. Using the monad from XmlState</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;processXmlN	:: XmlTree -&#62; IO [XmlTree]
+processXmlN t0
+    = run' $ do
+             setSysState (selXTagAttrl . getNode $ t0)
+             setTraceLevel 0
+             t1 &#60;- getXmlContents $ t0
+             t2 &#60;- parseXmlDoc    $$&#60; t1
+             putXmlTree t2
+             el &#60;- getErrorLevel
+             return ( if el == 0
+                      then t2
+                      else [] )
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;		The functions <TT
+CLASS="function"
+>setSysState</TT
+>, <TT
+CLASS="function"
+>setTraceLevel</TT
+> and <TT
+CLASS="function"
+>getErrorLevel</TT
+> are functions for accessing and manipulating the state of the monad. The monad comes with lots of more access functions.
+		</P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x1522.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="c1645.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Access functions</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c468.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Package hparser</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

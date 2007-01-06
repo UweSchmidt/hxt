@@ -1,0 +1,344 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Module HdomParser</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Package hparser"
+HREF="c1645.html"><LINK
+REL="PREVIOUS"
+TITLE="Package hparser"
+HREF="c1645.html"><LINK
+REL="NEXT"
+TITLE="Module XmlParser"
+HREF="x1763.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="c1645.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 3. Package hparser</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x1763.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="AEN1694"
+></A
+>3.2. Module HdomParser</H1
+><P
+>&#13;		The module <TT
+CLASS="classname"
+>HdomParser</TT
+> provides functions for parsing XML files and building the generic tree data structure <TT
+CLASS="literal"
+>XmlTree</TT
+> from these documents. The whole parsing process takes place in the State-I/O monad of the module <TT
+CLASS="classname"
+>XmlState</TT
+>, so that well-formedness errors can be reported and different computations can be traced by outputting their results.
+		</P
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Parse functions</B
+></P
+><DL
+><DT
+><TT
+CLASS="function"
+>parseDoc :: String -&#62; IO [XmlTree]</TT
+></DT
+><DD
+><P
+>&#13;					Parses the file specified by the first parameter.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>parseXmlFile :: IO [XmlTree]</TT
+></DT
+><DD
+><P
+>Parses an XML file specified by a command line argument:
+					<P
+></P
+><UL
+><LI
+><P
+>--source "source file" - XML file to parse</P
+></LI
+><LI
+><P
+>--encoding "encoding" - Encoding scheme used in the file (optional)</P
+></LI
+></UL
+>
+					</P
+></DD
+></DL
+></DIV
+><P
+>&#13;		The following example shows how an XML parser is constructed in the module <TT
+CLASS="classname"
+>HdomParser</TT
+>. The whole parsing process takes place in the State-I/O monad defined in the module <TT
+CLASS="classname"
+>XmlState</TT
+>. All computations are of type <TT
+CLASS="literal"
+>XmlStateFilter</TT
+>.
+		</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;processXmlN	:: Int -&#62; XmlTree -&#62; IO [XmlTree]
+processXmlN n t0
+    = run' $ do
+             setSysState (selXTagAttrl . getNode $ t0)
+             setTraceLevel n
+             t1 &#60;- getXmlContents $ t0
+             t2 &#60;- parseXmlDoc    $$&#60; t1
+             t3 &#60;- liftM transfAllCharRef $$&#60; t2
+             t4 &#60;- processDTD     $$&#60; t3
+             t5 &#60;- processGeneralEntities $$&#60; t4
+             el &#60;- getErrorLevel
+             return ( if el == 0
+                      then t5
+                      else [] )
+		</PRE
+></TD
+></TR
+></TABLE
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Actions during parsing</B
+></P
+><DL
+><DT
+><TT
+CLASS="function"
+>getXmlContents :: XmlStateFilter a</TT
+></DT
+><DD
+><P
+>&#13;					 Returns a filter for reading the XML file. The filename is retrieved from the attribute with the name "<SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>source</I
+></SPAN
+>" which must be part of the initial node <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>t0</I
+></SPAN
+>.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>parseXmlDoc :: XmlStateFilter a</TT
+></DT
+><DD
+><P
+>&#13;					Parses the XML file and builds the <TT
+CLASS="literal"
+>XmlTree</TT
+>.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>transfAllCharRef :: XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;					The <TT
+CLASS="literal"
+>XmlFilter</TT
+> <TT
+CLASS="function"
+>transfAllCharRef</TT
+> has to be lifted to an <TT
+CLASS="literal"
+>XmlStateFilter</TT
+>. The filter substitutes character references by their characters.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>processDTD :: XmlStateFilter a</TT
+></DT
+><DD
+><P
+>&#13;					 Substitutes parameter entities, adds include sections and removes exclude sections of DTDs, merges internal and external DTD subsets.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>processGeneralEntities :: XmlStateFilter a</TT
+></DT
+><DD
+><P
+>&#13;					 Substitutes general entities.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>getErrorLevel :: XState state Int</TT
+></DT
+><DD
+><P
+>&#13;					 If an error occurred during applying the <TT
+CLASS="literal"
+>XmlStateFilter</TT
+>s, <TT
+CLASS="function"
+>&#13;					 processXmlN</TT
+> returns an empty list, otherwise it returns the constructed <TT
+CLASS="literal"
+>XmlTree</TT
+>.
+					</P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="c1645.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x1763.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Package hparser</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c1645.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Module XmlParser</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

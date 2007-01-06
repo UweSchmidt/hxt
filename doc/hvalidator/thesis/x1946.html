@@ -1,0 +1,332 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Validation of the Document Type Definition</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Package hvalidator"
+HREF="c1850.html"><LINK
+REL="PREVIOUS"
+TITLE="Creating a validating XML parser"
+HREF="x1900.html"><LINK
+REL="NEXT"
+TITLE="Validation of the document subset"
+HREF="x2007.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x1900.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 4. Package hvalidator</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x2007.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="validation_of_the_dtd"
+></A
+>4.3. Validation of the Document Type Definition</H1
+><P
+>&#13;		Validation of the DTD is done by the module <TT
+CLASS="classname"
+>DTDValidation</TT
+>. Notations, unparsed entities, element declarations and attribute declarations are checked if they correspond to the constraints of the XML 1.0 specification [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_xml"
+><SPAN
+CLASS="abbrev"
+>WWW01</SPAN
+></A
+></SPAN
+>].
+		</P
+><P
+>&#13;		The following checks are performed:
+		</P
+><P
+></P
+><P
+><B
+>DTD</B
+></P
+><UL
+><LI
+><P
+>Error: There exists no DOCTYPE declaration in the document.</P
+></LI
+></UL
+><P
+></P
+><P
+><B
+>Notations</B
+></P
+><UL
+><LI
+><P
+>Error: A notation was already specified.</P
+></LI
+></UL
+><P
+></P
+><P
+><B
+>Unparsed entities:</B
+></P
+><UL
+><LI
+><P
+>Warning: Entity is declared multiple times. First declaration is used.</P
+></LI
+><LI
+><P
+>Error: A referenced notations must be declared</P
+></LI
+></UL
+><P
+></P
+><P
+><B
+>Element declarations:</B
+></P
+><UL
+><LI
+><P
+>Error: Element is declared more than once</P
+></LI
+><LI
+><P
+>Error: Element was specified multiple times in a content model of type mixed content.</P
+></LI
+><LI
+><P
+>Warning: Element used in a content model is not declared.</P
+></LI
+></UL
+><P
+></P
+><P
+><B
+>Attribute declarations:</B
+></P
+><UL
+><LI
+><P
+>Warning: There exists no element declaration for the attribute declaration.</P
+></LI
+><LI
+><P
+>Warning: Attribute is declared multiple times. First declaration will be used.</P
+></LI
+><LI
+><P
+>Warning: Same Nmtoken should not occur more than once in enumerate attribute types.</P
+></LI
+><LI
+><P
+>Error: Element already has an attribute of type ID. A second attribute of type ID is not permitted.</P
+></LI
+><LI
+><P
+>Error: ID attribute must have a declared default of #IMPLIED or #REQUIRED.</P
+></LI
+><LI
+><P
+>Error: Element already has an attribute of type NOTATION. A second attribute of type NOTATION is not permitted.</P
+></LI
+><LI
+><P
+>Error: Attribute of type NOTATION must not be declared on an element declared EMPTY.</P
+></LI
+><LI
+><P
+>Error: A notation must be declared when referenced in the notation type list for an attribute.</P
+></LI
+><LI
+><P
+>Error: The declared default value must meet the lexical constraints of the declared attribute type.</P
+></LI
+></UL
+><P
+>&#13;		Each check is done by a separate function, which takes the child list of the <TT
+CLASS="literal"
+>XDTD DOCTYPE</TT
+> node as input and returns a list of errors. Some functions can optionally take some further arguments to have access to context information, e.g. when validating unparsed entities, a list of all defined notations is needed. The result of validating the DTD is a concatenated list of the results of all validation functions.
+		</P
+><P
+>&#13;		The following example shows a filter function for checking the validity constraint: "No Notation on Empty Element" (section 3.3.1 in XML 1.0 specification [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_xml"
+><SPAN
+CLASS="abbrev"
+>WWW01</SPAN
+></A
+></SPAN
+>]). It means that an attribute of type NOTATION must not be declared for an element declared EMPTY. A notation attribute is a way to give an application a clue how the content of an element should be processed. The notation might refer to a program that can process the content, e.g. a base-64 encoded JPEG. Because empty elements cannot have contents, attributes of type notation are forbidden. The function <TT
+CLASS="function"
+>checkNoNotationForEmptyElement</TT
+> is initialized with a list of all element names declared EMPTY. The constructed filter is then applied to all <TT
+CLASS="literal"
+>XDTD ATTLIST</TT
+> nodes of type NOTATION that have been selected from the DTD by another filter function.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN2002"
+></A
+><P
+><B
+>Example 4-2. Validation that notations are not declared for EMPTY elements</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;checkNoNotationForEmptyElement :: [String] -&#62; XmlFilter
+checkNoNotationForEmptyElement emptyElems nd@(NTree (XDTD ATTLIST al) _)
+    = if elemName `elem` emptyElems
+      then err ("Attribute \""++ attName ++"\" of type NOTATION must not be "++
+                "declared on the element \""++ elemName ++"\" declared EMPTY.") nd
+      else []
+      where
+      elemName = getAttrValue1 a_name  al
+      attName  = getAttrValue1 a_value al
+
+checkNoNotationForEmptyElement _ nd
+    = error ("checkNoNotationForEmptyElement: illegal parameter:\n" ++ show nd)
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;		The validation functions cannot check if a content model is deterministic. This requirement is for compatibility with SGML, because some SGML tools can rely on unambiguous content models. XML processors may flag such content models as errors, but the Haskell XML Toolbox does not. It does not need deterministic content models for checking if the children of an element are valid (see <A
+HREF="x2086.html"
+>Section 4.7</A
+>).
+		</P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x1900.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x2007.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Creating a validating XML parser</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c1850.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Validation of the document subset</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,240 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Conclusion</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="PREVIOUS"
+TITLE="Derivatives of regular expressions"
+HREF="x2086.html"><LINK
+REL="NEXT"
+TITLE="The Haskell XML Toolbox in comparison to HaXml and HXML"
+HREF="x2201.html"></HEAD
+><BODY
+CLASS="chapter"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x2086.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x2201.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="chapter"
+><H1
+><A
+NAME="c5"
+></A
+>Chapter 5. Conclusion</H1
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="AEN2167"
+></A
+>5.1. XML conformance of the parser</H1
+><P
+>&#13;		The validating XML parser of the Haskell XML Toolbox was elaborately tested with the XML Test Suites (XML TS) from the W3C [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_xmlts"
+><SPAN
+CLASS="abbrev"
+>WWW02</SPAN
+></A
+></SPAN
+>].
+		</P
+><P
+>&#13;		These XML TS consist of over 2000 test files for the XML 1.0 specification [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_xml"
+><SPAN
+CLASS="abbrev"
+>WWW01</SPAN
+></A
+></SPAN
+>] and an associated test report. The test report contains background information on conformance testing for XML as well as test descriptions for each of the test files.
+		</P
+><P
+>&#13;		The test suite consists of two basic test types: Binary Tests and Output Tests. Binary conformance tests are documents that should be accepted or rejected by the parser. Output tests are tests for valid documents which are paired with a reference file as the canonical representation [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_canxml"
+><SPAN
+CLASS="abbrev"
+>WWW03</SPAN
+></A
+></SPAN
+>] of the input file. By comparing the output of the XML parser with the reference file, it can be ensured that the parser provides the correct information.
+		</P
+><P
+>&#13;		<P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>There exist four different tests cases:</B
+></P
+><DL
+><DT
+>Valid Documents</DT
+><DD
+><P
+>&#13;					The XML parser is required to accept these documents. For most test cases a reference file exists.
+					</P
+></DD
+><DT
+>Invalid documents</DT
+><DD
+><P
+>&#13;					A validating XML parser has to report a  violation of some validity constraint. The reported error must meet the test case description.
+					</P
+></DD
+><DT
+>Not well-formed documents</DT
+><DD
+><P
+>&#13;					An XML parser has to report a fatal error. The reported error must meet the test case description.
+					</P
+></DD
+><DT
+>Optional errors</DT
+><DD
+><P
+>&#13;					An XML parser is permitted to ignore these errors, or to report them. If an error is reported, the error message must meet the test case description.
+					</P
+></DD
+></DL
+></DIV
+>
+		</P
+><P
+>&#13;		By using these tests, it could be ensured that the validating XML parser of the Haskell XML Toolbox covers most aspects of the XML 1.0 specification [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_xml"
+><SPAN
+CLASS="abbrev"
+>WWW01</SPAN
+></A
+></SPAN
+>]. Because the XML TS is not complete, it is not possible to claim conformance with the specification itself, but only with the XML TS. At the moment the parser passes about 95% of these test cases, see <A
+HREF="x2308.html"
+>Section A.2</A
+> for further details.
+		</P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x2086.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x2201.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Derivatives of regular expressions</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>The Haskell XML Toolbox in comparison to HaXml and HXML</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

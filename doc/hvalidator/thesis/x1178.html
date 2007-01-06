@@ -1,0 +1,887 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Filter combinators</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Package hdom"
+HREF="c468.html"><LINK
+REL="PREVIOUS"
+TITLE="Filter functions"
+HREF="x854.html"><LINK
+REL="NEXT"
+TITLE="Examples for filters and filter combinators"
+HREF="x1438.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x854.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 2. Package hdom</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x1438.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="combinators"
+></A
+>2.4. Filter combinators</H1
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="combinators_introduction"
+></A
+>2.4.1. Introduction</H2
+><P
+>&#13;			Functional programming languages like Haskell allow the use of higher-order functions, which take some functions as input, return a function as a result, or both. Filter combinators are higher-order functions, or operators, for combining several filters (see  <A
+HREF="x854.html"
+>Section 2.3</A
+>). By combining simple filters, more complex functions can be created. Because all filters share the same type, it is possible that any filter can be composed with any other. All filters can be mixed and matched freely, because all functions in Haskell are side-effect free.
+			</P
+><P
+>&#13;			The idea of filter combinators was adapted and extended from HaXml [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_haxml"
+><SPAN
+CLASS="abbrev"
+>WWW21</SPAN
+></A
+></SPAN
+>]. In their paper "Haskell and XML: Generic Combinators or Type-Based Translation?" [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_haxmlpaper"
+><SPAN
+CLASS="abbrev"
+>WWW22</SPAN
+></A
+></SPAN
+>] Malcom Wallace and Colin Runciman describe various algebraic laws for their combinators.
+			</P
+><P
+>&#13;			The use of combinators makes it possible to hide details of programming over data structures. All details of data structure manipulation are hidden in combinator functions. In effect, the combinators define problem specific control structures. With this approach it is possible to reach a form of expression that is natural for the problem itself.
+			</P
+><P
+>&#13;			Conceptually, combinators are much like Unix pipes in that they allow building up more complex computational sequences by flexibly arranging highly specialized tools [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_haxml_parsia"
+><SPAN
+CLASS="abbrev"
+>WWW24</SPAN
+></A
+></SPAN
+>].
+			The equivalent to Unix pipes it the "Irish composition" combinator, represented by the infix operator "<TT
+CLASS="function"
+>o</TT
+>". This combinator applies one filter to the results of another one. This is similar to a pipe, which passes the output of one program as the input to another one.
+			</P
+><P
+>&#13;			The combinator library provides all functions that are necessary for traversing and processing XML documents represented as an <TT
+CLASS="literal"
+>XmlTree</TT
+>. Haskell allows the definition of own infix operator symbols. Some combinators are defined as infix operators where it seemed more natural.
+			</P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="combinators_list"
+></A
+>2.4.2. List of combinators</H2
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Basic filter combinators</B
+></P
+><DL
+><DT
+><TT
+CLASS="function"
+>o :: (a -&#62; [b]) -&#62; (c -&#62; [a]) -&#62; c -&#62; [b]</TT
+></DT
+><DD
+><P
+>&#13;						Irish composition. Sequential composition of two filters. The left filter is applied to the result of the right filter. (conjunction)
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>(+++) :: (a -&#62; [b]) -&#62; (a -&#62; [b]) -&#62; (a -&#62; [b])</TT
+></DT
+><DD
+><P
+>&#13;						Binary parallel composition, the function unifies the results of two filters sequential. Each filter uses a copy of state. (union)
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>cat :: [a -&#62; [b]] -&#62; (a -&#62; [b])</TT
+></DT
+><DD
+><P
+>&#13;						Concatenates the results of all filters in a list, a list version of union <TT
+CLASS="function"
+>+++</TT
+>. The combinator sticks lots of filters together.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>($$) :: (a -&#62; [b]) -&#62; [a] -&#62; [b]</TT
+></DT
+><DD
+><P
+>&#13;						Applies a filter to a list.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>processChildren :: TFilter node -&#62; TFilter node</TT
+></DT
+><DD
+><P
+>&#13;						Applies a filter to the child list of a node.
+						</P
+></DD
+></DL
+></DIV
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Choice combinators</B
+></P
+><DL
+><DT
+><TT
+CLASS="function"
+>orElse :: (a -&#62; [b]) -&#62; (a -&#62; [b]) -&#62; (a -&#62; [b])</TT
+></DT
+><DD
+><P
+>&#13;						Directional choice. Second filter is only applied if the first one produces an empty list.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>(?&#62;) :: (a -&#62; [b]) -&#62; ThenElse (a -&#62; [b]) -&#62; (a -&#62; [b])</TT
+></DT
+><DD
+><P
+>&#13;						In combination with the type <TT
+CLASS="function"
+>ThenElse a = a :&#62; a</TT
+> this combinator models an expression that resembles the conditional expression "<TT
+CLASS="function"
+>p ? f : g</TT
+>" of C: "<TT
+CLASS="function"
+>p ?&#62; f :&#62; g</TT
+>". If the predicate filter <TT
+CLASS="literal"
+>p</TT
+> is true, the filter <TT
+CLASS="literal"
+>f</TT
+> is applied otherwise <TT
+CLASS="literal"
+>g</TT
+> is applied.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>when :: TFilter node -&#62; TFilter node -&#62; TFilter nod</TT
+></DT
+><DD
+><P
+>&#13;						First filter is only applied to the passed node, if the second filter produces a list with contents, otherwise a list with the passed node is returned. The second filter is typically a predicate filter.
+						</P
+><P
+>&#13;							Definition: <TT
+CLASS="function"
+>f `when` g = g ?&#62; f :&#62; this</TT
+>
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>whenNot :: TFilter node -&#62; TFilter node -&#62; TFilter node</TT
+></DT
+><DD
+><P
+>&#13;						First filter is only applied to the passed node, if the second filter produces an empty list, otherwise a list of the passed node is returned. The second filter is typically a predicate filter.
+						</P
+><P
+>&#13;							Definition: <TT
+CLASS="function"
+>f `whenNot` g = g ?&#62; this :&#62; f</TT
+>
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>guards :: TFilter node -&#62; TFilter node -&#62; TFilter node</TT
+></DT
+><DD
+><P
+>&#13;						First filter is only applied to the passed node, if the second filter produces a list with contents, otherwise an empty list is returned. The second filter is typically a predicate filter.
+						</P
+><P
+>&#13;							Definition: <TT
+CLASS="function"
+>g `guards` f = g ?&#62; f :&#62; none</TT
+>
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>containing :: (a -&#62; [b]) -&#62; (b -&#62; [c]) -&#62; a -&#62; [b]</TT
+></DT
+><DD
+><P
+>&#13;						Pruning: Keep only those nodes for which the second filter produces a list with contents and apply the first filter to these nodes.
+						</P
+><P
+>&#13;							Definition: <TT
+CLASS="function"
+>f `containing` g = filter (not . null . g) . f</TT
+>
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>notContaining :: (a -&#62; [b]) -&#62; (b -&#62; [c]) -&#62; a -&#62; [b]</TT
+></DT
+><DD
+><P
+>&#13;						Pruning: Keep only those nodes for which the second filter produces an empty list and apply the first filter to these nodes.
+						</P
+><P
+>&#13;							Definition: <TT
+CLASS="function"
+>f `notContaining` g = filter (null . g) . f</TT
+>
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>(/&#62;) :: TFilter node -&#62; TFilter node -&#62; TFilter node</TT
+></DT
+><DD
+><P
+>&#13;						Interior search, pronounced <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>"slash"</I
+></SPAN
+>. First filter is applied to a node, the children of the result are taken and the second filter is applied to them, these children are returned. (meaning g inside f)
+						</P
+><P
+>&#13;							Definition: <TT
+CLASS="function"
+>f /&#62; g = g `o` getChildren `o` f</TT
+>
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>(&#60;/) :: TFilter node -&#62; TFilter node -&#62; TFilter node</TT
+></DT
+><DD
+><P
+>&#13;						Exterior search, pronounced <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>"outside"</I
+></SPAN
+>. First filter is applied to a node, the second to its children. If both filters return a result, the node is returned. (meaning f containing g)
+						</P
+><P
+>&#13;							Definition: <TT
+CLASS="function"
+>f &#60;/ g = f `containing` (g `o` getChildren)</TT
+>
+						</P
+></DD
+></DL
+></DIV
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Recursive search combinators</B
+></P
+><DL
+><DT
+><TT
+CLASS="function"
+>deep :: TFilter node -&#62; TFilter node</TT
+></DT
+><DD
+><P
+>&#13;						Filter is applied to each node of the tree. If the filter returns a result, processing is stopped. If not, the filter is applied to the next node of the tree. (top down traversal)
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>deepest :: TFilter node -&#62; TFilter node</TT
+></DT
+><DD
+><P
+>&#13;						See <TT
+CLASS="function"
+>deep</TT
+>, but bottom up traversal.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>multi :: TFilter node -&#62; TFilter node</TT
+></DT
+><DD
+><P
+>&#13;						Returns all successful applications of the filter to the whole tree.
+						</P
+></DD
+></DL
+></DIV
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Recursive transformation combinators</B
+></P
+><DL
+><DT
+><TT
+CLASS="function"
+>applyBottomUp :: TFilter node -&#62; TFilter node</TT
+></DT
+><DD
+><P
+>&#13;						Constructs a new tree by applying the passed filter to each node of the tree. The tree is traversed bottom-up.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>applyTopDown :: TFilter node -&#62; TFilter node</TT
+></DT
+><DD
+><P
+>&#13;						Constructs a new tree by applying the passed filter to each node of the tree. The tree is traversed top-down.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>applyBottomUpIfNot :: TFilter node -&#62; TFilter node -&#62; TFilter node</TT
+></DT
+><DD
+><P
+>&#13;						Constructs a new tree with a guarded top down transformation. The first filter is only applied to those nodes for which the second filter produces a result.
+						</P
+></DD
+></DL
+></DIV
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Monadic composition</B
+></P
+><DL
+><DT
+><TT
+CLASS="function"
+>liftM :: Monad m =&#62; (a -&#62; [b]) -&#62; a -&#62; m [b]</TT
+></DT
+><DD
+><P
+>&#13;						Lift a normal filter to a monadic filter so that it can be used in monads.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>(.&#60;) :: Monad m =&#62; (b -&#62; m [c]) -&#62; (a -&#62; m[b]) -&#62; (a -&#62; m[c])</TT
+></DT
+><DD
+><P
+>&#13;						Monadic Irish composition. Sequential composition of two filters. The first filter is applied to the result of the second filter (conjunction). Monadic version of the basic filter <TT
+CLASS="function"
+>o</TT
+>.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>($$&#60;) :: Monad m =&#62; (a -&#62; m [b]) -&#62; [a] -&#62; m [b]</TT
+></DT
+><DD
+><P
+>&#13;						Apply a monadic filter to a list. Monadic version of the basic filter combinator <TT
+CLASS="function"
+>cat</TT
+>.
+						</P
+></DD
+></DL
+></DIV
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Special Filter combinators for XmlTree</B
+></P
+><DL
+><DT
+><TT
+CLASS="function"
+>whenOk :: XmlFilter -&#62; XmlFilter -&#62;XmlFilter</TT
+></DT
+><DD
+><P
+>&#13;						Applies the first filter to a node and checks the result for errors. In case of an error it stops processing and returns the list with the <TT
+CLASS="literal"
+>XError</TT
+> node. Otherwise processing is continued and the second filter is applied to the result.
+						</P
+></DD
+><DT
+><TT
+CLASS="function"
+>whenOkM :: Monad m =&#62; (a -&#62; XmlTrees) -&#62; (XmlTrees -&#62; m XmlTrees) -&#62; a -&#62; m XmlTrees</TT
+></DT
+><DD
+><P
+>&#13;						Monadic version of <TT
+CLASS="function"
+>whenOk</TT
+>.
+						</P
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="combinators_binding"
+></A
+>2.4.3. Binding power and associativity</H2
+><P
+>&#13;			Some combinators like the basic filter combinators and choice combinators can be expressed more naturally by operators. In Haskell completely new operators can be invented by using infix versions of functions and defining precedences and associativities for them.
+			</P
+><P
+>&#13;			The combinator operators are listed in following tables in decreasing order of their binding power. Combinators defined as prefix functions have to be written in back-quotes to be used as operators.
+			</P
+><DIV
+CLASS="table"
+><A
+NAME="AEN1367"
+></A
+><P
+><B
+>Table 2-1. Binding power and associativity of functional combinators</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><THEAD
+><TR
+><TH
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>Precedence level</TH
+><TH
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>Operator</TH
+><TH
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>Associativity</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>6 (high)</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>&#13;								<TT
+CLASS="function"
+>`containing`</TT
+>, <TT
+CLASS="function"
+>`notContaining`</TT
+>
+							</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>left</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>5</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>&#13;								<TT
+CLASS="function"
+>`o`</TT
+>, <TT
+CLASS="function"
+>+++</TT
+>
+							</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>right</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>5</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>&#13;								<TT
+CLASS="function"
+>/&#62;</TT
+>, <TT
+CLASS="function"
+>&#60;/</TT
+>, <TT
+CLASS="function"
+>`orElse`</TT
+>
+							</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>left</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>4</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>&#13;								<TT
+CLASS="function"
+>`when`</TT
+>, <TT
+CLASS="function"
+>`whenNot`</TT
+>, <TT
+CLASS="function"
+>`guards`</TT
+>, <TT
+CLASS="function"
+>`whenOk`</TT
+>
+							</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>right</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>3</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>&#13;								<TT
+CLASS="function"
+>?&#62;</TT
+>, <TT
+CLASS="function"
+>:&#62;</TT
+>
+							</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>right</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>0 (low)</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>&#13;								<TT
+CLASS="function"
+>$$</TT
+>
+							</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>right</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><DIV
+CLASS="table"
+><A
+NAME="AEN1414"
+></A
+><P
+><B
+>Table 2-2. Binding power and associativity of monadic combinators</B
+></P
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><THEAD
+><TR
+><TH
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>Precedence level</TH
+><TH
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>Operator</TH
+><TH
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>Associativity</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>5 (high)</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>&#13;								<TT
+CLASS="function"
+>.&#60;</TT
+>
+							</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>right</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>4</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>&#13;								<TT
+CLASS="function"
+>`whenOkM`</TT
+>
+							</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>right</TD
+></TR
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>0 (low)</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>&#13;								<TT
+CLASS="function"
+>$$&#60;</TT
+>
+							</TD
+><TD
+ALIGN="LEFT"
+VALIGN="MIDDLE"
+>right</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x854.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x1438.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Filter functions</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c468.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Examples for filters and filter combinators</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

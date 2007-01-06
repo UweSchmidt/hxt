@@ -20,7 +20,7 @@ DIST_FILES	= Makefile \
 dist		:
 		[ -d $(DIST_DIR) ] || mkdir -p $(DIST_DIR)
 		tar cvf - $(DIST_FILES) | ( cd $(DIST_DIR) ; tar xf - )
-		cp hvalidator/thesis.ps	$(DIST_DIR)
+		cp hvalidator/thesis.pdf $(DIST_DIR)
 
 clean		:
 		rm -rf hdoc/* hdoc_arrow/* hdoc_filter/*

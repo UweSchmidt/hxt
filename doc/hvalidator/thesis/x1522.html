@@ -1,0 +1,295 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Access functions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Package hdom"
+HREF="c468.html"><LINK
+REL="PREVIOUS"
+TITLE="Examples for filters and filter combinators"
+HREF="x1438.html"><LINK
+REL="NEXT"
+TITLE="State-I/O monad from module XmlState"
+HREF="x1577.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x1438.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 2. Package hdom</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x1577.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="access_functions"
+></A
+>2.6. Access functions</H1
+><P
+>&#13;		Besides filters and combinators there exist some access functions for processing the attribute list <TT
+CLASS="literal"
+>TagAttrl</TT
+> of nodes.
+		</P
+><P
+></P
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Functions for processing the attribute list</B
+></P
+><DL
+><DT
+><TT
+CLASS="function"
+>getAttrValue :: Eq a =&#62; a -&#62; [(a,b)] -&#62; Maybe b</TT
+></DT
+><DD
+><P
+>&#13;					Looks up the value for a certain attribute. If the attribute does not exist, the data type <TT
+CLASS="literal"
+>Nothing</TT
+> is returned.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>getAttrValue1 :: Eq a =&#62; a -&#62; [(a, String)] -&#62; String</TT
+></DT
+><DD
+><P
+>&#13;					Looks up the value for a certain attribute. If the attribute does not exist, an empty string is returned.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>hasAttrValue :: Eq a =&#62; a -&#62; [(a,b)] -&#62; Bool</TT
+></DT
+><DD
+><P
+>&#13;					Returns true if there is an attribute with the searched name in the attribute list.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>addAttrValue :: Eq a =&#62; a -&#62; b -&#62; [(a,b)] -&#62; [(a,b)]</TT
+></DT
+><DD
+><P
+>&#13;					Adds an attribute, the name and value, to the list.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>addAttrValues :: Eq a =&#62; [(a,b)] -&#62; [(a,b)] -&#62; [(a,b)]</TT
+></DT
+><DD
+><P
+>&#13;					Adds a list of name-value pairs to the attribute list.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>changeAttrValue :: Eq a =&#62; a -&#62; b -&#62; [(a,b)] -&#62; [(a,b)]</TT
+></DT
+><DD
+><P
+>&#13;					Changes the value of a certain attribute.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>delAttrValue :: Eq a =&#62; a -&#62; [(a,b)] -&#62; [(a,b)]</TT
+></DT
+><DD
+><P
+>&#13;					Deletes an attribute from the list.
+					</P
+></DD
+><DT
+><TT
+CLASS="function"
+>delAttrValues :: Eq a =&#62; [a] -&#62; [(a,b)] -&#62; [(a,b)]</TT
+></DT
+><DD
+><P
+>&#13;					Deletes a list of attributes from the attribute list.
+					</P
+></DD
+></DL
+></DIV
+><P
+>&#13;		The following example shows the use of access functions for adding a new attribute with the name "<SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>att2</I
+></SPAN
+>" and the value "<SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>val2</I
+></SPAN
+>" to the attribute list of an <TT
+CLASS="literal"
+>XTag</TT
+> node. The type of the node is detected by pattern-matching. If the node is of another type, it is simply returned.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN1574"
+></A
+><P
+><B
+>Example 2-4. Adding a new attribute to an XTag node.</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;addAttribute :: XmlFilter
+addAttribute n@(NTree (XTag name al) cs)
+    = replaceAttrl newAttList n
+      where
+      newAttList = addAttrValue "att2" "val2" al
+
+addAttribute n = [n]
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x1438.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x1577.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Examples for filters and filter combinators</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c468.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>State-I/O monad from module XmlState</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

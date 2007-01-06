@@ -1,0 +1,240 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Module XmlParser</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Package hparser"
+HREF="c1645.html"><LINK
+REL="PREVIOUS"
+TITLE="Module HdomParser"
+HREF="x1694.html"><LINK
+REL="NEXT"
+TITLE="Module XmlInput"
+HREF="x1800.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x1694.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 3. Package hparser</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x1800.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="AEN1763"
+></A
+>3.3. Module XmlParser</H1
+><P
+>&#13;		The module <TT
+CLASS="classname"
+>XmlParser</TT
+> provides the parse functions for parsing XML files and building an <TT
+CLASS="literal"
+>XmlTree</TT
+>. The parser bases on Parsec [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_parsec"
+><SPAN
+CLASS="abbrev"
+>WWW29</SPAN
+></A
+></SPAN
+>], a free monadic parser combinator library for Haskell and does not need any look-ahead. The lexer and the parser are not separated. A feature of this parser is that nearly all parse functions can be implemented as it is defined by the productions in the XML 1.0 specification [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_xml"
+><SPAN
+CLASS="abbrev"
+>WWW01</SPAN
+></A
+></SPAN
+>].
+		</P
+><P
+>&#13;		Like filters are composed with filter combinators in the Haskell XML Toolbox, parsing is usually done with parser combinators in Haskell. Simple parser functions are combined with these higher-order functions to complex ones. The parser combinators are control structures that represent the operators used it the productions of syntax definitions.
+		</P
+><P
+>&#13;		An XML parser has to deal with different character sets. The parser of the Haskell XML Toolbox works internally with Unicode (UTF-8) encoding. The module <TT
+CLASS="classname"
+>Unicode</TT
+> provides several conversion functions for different character sets.
+		</P
+><P
+>&#13;			<P
+></P
+><P
+><B
+>Supported character sets by the XmlParser:</B
+></P
+><UL
+><LI
+><P
+>UTF-8</P
+></LI
+><LI
+><P
+>ISO-8859-1</P
+></LI
+><LI
+><P
+>US-ASCII</P
+></LI
+><LI
+><P
+>ISO-10646-UCS-2</P
+></LI
+><LI
+><P
+>UTF-16</P
+></LI
+><LI
+><P
+>UTF-16BE</P
+></LI
+><LI
+><P
+>UTF-16LE</P
+></LI
+></UL
+>
+		</P
+><P
+>&#13;        	<DIV
+CLASS="figure"
+><A
+NAME="modules_xmlparser"
+></A
+><P
+><B
+>Figure 3-1. Modules of XmlParser</B
+></P
+><DIV
+CLASS="mediaobject"
+><P
+><IMG
+SRC="images/modules_xmlparser.gif"></P
+></DIV
+></DIV
+>
+        </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x1694.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x1800.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Module HdomParser</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c1645.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Module XmlInput</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

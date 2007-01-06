@@ -1,0 +1,442 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>The Haskell XML Toolbox in comparison to HaXml and HXML</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Conclusion"
+HREF="c2165.html"><LINK
+REL="PREVIOUS"
+TITLE="Conclusion"
+HREF="c2165.html"><LINK
+REL="NEXT"
+TITLE="Conclusions and future work"
+HREF="x2257.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="c2165.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 5. Conclusion</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x2257.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="comparison"
+></A
+>5.2. The Haskell XML Toolbox in comparison to HaXml and HXML</H1
+><P
+>&#13;		In this section the Haskell XML Toolbox is compared with HaXml [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_haxml"
+><SPAN
+CLASS="abbrev"
+>WWW21</SPAN
+></A
+></SPAN
+>] and HXML [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_hxml"
+><SPAN
+CLASS="abbrev"
+>WWW25</SPAN
+></A
+></SPAN
+>]. Many valuable ideas of HaXml and HXML  have been adopted by the Haskell XML Toolbox. It is not the intention of this section to run down these great projects. The intention is to show how their ideas have been extended and generalized.
+		</P
+><P
+>&#13;		The Haskell XML Toolbox, HaXml and HXML differ in the way how XML documents are represented in Haskell. First the approaches of HXML and HaXml are introduced, after this the data model of the Haskell XML Toolbox is compared with them.
+		</P
+><P
+>&#13;		In HXML, XML document subsets are represented as a <TT
+CLASS="literal"
+>Tree</TT
+> of <TT
+CLASS="literal"
+>XMLNode</TT
+>s. The hierarchical structure of XML documents is modeled by the generic tree data type <TT
+CLASS="literal"
+>Tree</TT
+>. This type does not distinguish between inner nodes and leafs. Leafs are just nodes with an empty list of children.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN2213"
+></A
+><P
+><B
+>Example 5-1. Document subset in HXML</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;data Tree a  = Tree a [Tree a]
+
+type XML	 = Tree XMLNode
+data XMLNode =
+      RTNode                 -- root node
+    | ELNode GI AttList      -- element node: GI, attributes
+    | TXNode String          -- text node
+    | PINode Name String     -- processing instruction (target,value)
+    | CXNode String          -- comment node
+    | ENNode Name            -- general entity reference
+      deriving Show
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;		DTDs are modeled totally different in HXML. They are represented by named fields and are not stored in the tree model where the document subset is stored.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN2217"
+></A
+><P
+><B
+>Example 5-2. DTD subset in HXML</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;data DTD = DTD {
+    elements :: FM.FM Name ELEMTYPE,    -- elemtps / element types
+    attlists :: FM.FM Name [ATTDEF],    -- elemtype.attdefs
+    genents  :: FM.FM Name EntityText,  -- general entities
+    parments :: FM.FM Name EntityText,  -- parameter entities
+    notations:: [DCN],                  -- nots/notations
+    dtdname  :: Name                    -- name (document type name)
+} 	deriving Show
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;		HaXml's representation of XML documents differs totally from the approach HXML and the Haskell XML Toolbox use. Instead of modeling XML documents with a generic tree type, HaXml uses a more data centric approach. The whole structure of XML documents is modeled by different algebraic data types. There exist special types for almost each production of the XML 1.0 specification [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_xml"
+><SPAN
+CLASS="abbrev"
+>WWW01</SPAN
+></A
+></SPAN
+>]. XML documents are modeled by the data type <TT
+CLASS="literal"
+>Document</TT
+>, which consists of a <TT
+CLASS="literal"
+>Prolog</TT
+> and the document subset, an <TT
+CLASS="literal"
+>Element</TT
+>. This data model distinguishes clearly between leafs and inner nodes. Leafs are types which constructors do not take any arguments.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN2226"
+></A
+><P
+><B
+>Example 5-3. XML documents in HaXml</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;data Document = Document Prolog (SymTab EntityDef) Element
+data Prolog   = Prolog (Maybe XMLDecl) (Maybe DocTypeDecl)
+data XMLDecl  = XMLDecl VersionInfo (Maybe EncodingDecl) (Maybe SDDecl)
+...
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;		The document subset is modeled in HaXml by the algebraic types <TT
+CLASS="literal"
+>Element</TT
+> and <TT
+CLASS="literal"
+>Content</TT
+>. An <TT
+CLASS="literal"
+>Element</TT
+> has an attribute list and a list of <TT
+CLASS="literal"
+>Content</TT
+> types. If the content list is empty, the element is a leaf. Together  these types define a mutually recursive, multi-branch tree.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN2234"
+></A
+><P
+><B
+>Example 5-4. Document subset in HaXml</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;data Element   = Elem Name [Attribute] [Content]
+
+type Attribute = (Name, AttValue)
+data Content   = CElem Element
+               | CString Bool CharData
+               | CRef Reference
+               | CMisc Misc
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;		HaXml introduced the idea of using filter functions and combinators for processing parts of the XML data model. The examples from the previous chapters show that this approach is very powerful and flexible. The whole XML parser of the Haskell XML Toolbox bases on filters. The filters of HaXml work for nodes of the type <TT
+CLASS="literal"
+>Content</TT
+>.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN2239"
+></A
+><P
+><B
+>Example 5-5. The filter type of HaXml</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;type CFilter   = Content -&#62; [Content]
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;		The Haskell XML Toolbox uses the most generic data model in contrast to HaXml and HXML. Its data model is a generalization of the data models discusses above.
+		</P
+><P
+>&#13;		The generic tree data model <TT
+CLASS="literal"
+>NTree</TT
+> of the Haskell XML Toolbox forms the basis for representing XML documents in Haskell. This type does not distinguish between inner nodes and leafs. Leafs are just nodes with an empty child list. The most important aspect is that this generic tree data model represents a whole XML document, including the DTD subset, the document subset and all other logical units of XML.	Two algebraic data types <TT
+CLASS="literal"
+>XNode</TT
+> and <TT
+CLASS="literal"
+>DTDElem</TT
+> are used to represent all logical units of XML.
+		</P
+><DIV
+CLASS="example"
+><A
+NAME="AEN2247"
+></A
+><P
+><B
+>Example 5-6. XML documents represented in the Haskell XML Toolbox</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;data NTree  node = NTree node (NTrees node)
+type NTrees node = [NTree node]
+
+type XmlTree  = NTree  XNode
+type XmlTrees = NTrees XNode
+
+data XNode =
+      XTag TagName TagAttrl
+    | XDTD DTDElem TagAttrl
+    | ...
+
+data DTDElem =
+      DOCTYPE
+    | ELEMENT
+    | ATTLIST
+    | ...
+			</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>&#13;		HXML uses the same generic data model as the Haskell XML Toolbox for representing the document subset, but DTDs are represented by a totally different model: named fields. HaXml uses special types for XML's logical units. This leads to the fact that the DTD subset is modeled totally different than the document subset.
+		</P
+><P
+>&#13;		The advantage of representing the whole XML document by one generic data type lies in the fact that one unique design for processing the whole document can be used. Because all logical parts of XML are modeled by one generic data model, filters (see <A
+HREF="x854.html"
+>Section 2.3</A
+>) can be used to process the whole XML document and not only parts as in HaXml and HXML.
+		</P
+><P
+>&#13;		HaXml's filters can only work on the type <TT
+CLASS="literal"
+>Content</TT
+> that just represents a small part of XML documents, the document subset. If one wants to process other parts of an XML document, one cannot use filters any more, but has to implement special functions. The same applies for HXML.
+		</P
+><P
+>&#13;		The generalization used in the Haskell XML Toolbox makes the design of applications that process whole XML documents very uniform. In effect the design of the whole XML parser of the Haskell XML Toolbox bases on filters. Merging of the internal DTD part and external DTD part is done by filters, checking the validity constraints of DTDs and document subsets is done by filters, or processings like transforming the whole <TT
+CLASS="literal"
+>XmlTree</TT
+> back to XML is done by filters.
+		</P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="c2165.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x2257.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Conclusion</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c2165.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Conclusions and future work</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

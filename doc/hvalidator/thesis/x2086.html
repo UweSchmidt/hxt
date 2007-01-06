@@ -1,0 +1,509 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Derivatives of regular expressions</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Package hvalidator"
+HREF="c1850.html"><LINK
+REL="PREVIOUS"
+TITLE="Validation of attribute values"
+HREF="x2081.html"><LINK
+REL="NEXT"
+TITLE="Conclusion"
+HREF="c2165.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x2081.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 4. Package hvalidator</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="c2165.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="derivates_of_regexp"
+></A
+>4.7. Derivatives of regular expressions</H1
+><P
+>&#13;		The following section describes how the algorithm for validating the  element content works. It is implemented in the modules <TT
+CLASS="classname"
+>XmlRE</TT
+> and <TT
+CLASS="classname"
+>RE</TT
+>. The most commonly-used technique to solve this problem is based on finite automaton.
+		</P
+><P
+>&#13;		Another algorithm, based on derivatives of regular expressions, is much better suited for implementation in a functional language. This technique does not need to backtrack, like some NFA-based algorithms do and when combined with lazy evaluation and memorization it can be very efficient.
+		</P
+><P
+>&#13;		The algorithm of derivating regular expressions was first described by Janusz A. Brzozowski [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#brzozowski64"
+><SPAN
+CLASS="abbrev"
+>Brzozowski64</SPAN
+></A
+></SPAN
+>]. Joe English  suggested using this algorithm for validating element contents in XML. He gave a short description of his ideas combined with a small Haskell program fragment [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_derivates_je"
+><SPAN
+CLASS="abbrev"
+>WWW26</SPAN
+></A
+></SPAN
+>].
+		</P
+><P
+>&#13;		Mark Hopkins wrote some small C programs based on this algorithm. A description of the algorithm and working source code is available from the comp.compilers archive [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_derivates_mh"
+><SPAN
+CLASS="abbrev"
+>WWW27</SPAN
+></A
+></SPAN
+>]. James Clark describes an algorithm for RELAX NG validation [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_derivates_jc"
+><SPAN
+CLASS="abbrev"
+>WWW28</SPAN
+></A
+></SPAN
+>] that bases on derivatives, too.
+		</P
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="AEN2102"
+></A
+>4.7.1. Description</H2
+><P
+>&#13;			Validating the element content is an instance of regular expression matching problem. Basically the content model of an element describes a regular expression. If given the regular expression e and the content c it has to be checked if c is in L(e)? L(e) denotes the language accepted by the regular expression e.
+			</P
+><P
+>&#13; 			Informal described, the algorithm works as follows. A regular expression is applied to a sentence. The remaining regular expression is checked if it can be derived to an empty sequence. If it can be derived to an empty sequence, the sentence matches the regular expression. Otherwise the sentence is not described by the regular expression.
+			</P
+><P
+>&#13;			The algorithm can be seen as working on an infinite DFA with states labeled by regular expressions instead of symbols as in the canonical construction. The final states are those states for which
+			the regular expression can be derived to an empty sequence. The transition function is a function, which derives the regular expression by a single symbol.
+			</P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="AEN2107"
+></A
+>4.7.2. Examples</H2
+><P
+>&#13;			The regular expression <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>foobar</I
+></SPAN
+> should be derived with respect to the string "foo". After applying the regular expression to this string, the remaining regular expression is <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>bar</I
+></SPAN
+>. This regular expression cannot be derived to an empty string, because it expects the characters 'b', 'a' and 'r'. This means that the string <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>bar</I
+></SPAN
+> is not described by the regular expression. (Short form: foo\foobar = bar)
+			</P
+><P
+>&#13;			The regular expression <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>a*</I
+></SPAN
+> should be derived with respect to the string "aa". After applying the regular expression to the string, the regular expression <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>a*</I
+></SPAN
+> remains. This expression can be derived to an empty string, because the *-operator indicates that none or more 'a' characters are expected. This means that the regular expression matches the string. (Short form: aa\a* = a*)
+			</P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="AEN2116"
+></A
+>4.7.3. Realization in Haskell</H2
+><P
+>&#13;			The following code was adopted from Joe English [<SPAN
+CLASS="citation"
+><A
+HREF="b2463.html#bib_derivates_je"
+><SPAN
+CLASS="abbrev"
+>WWW26</SPAN
+></A
+></SPAN
+>], but has been extended to support  meaningful error messages, to accept any single symbol (dot operator) and to work with data types of <TT
+CLASS="literal"
+>XmlTree</TT
+>.
+			</P
+><P
+>&#13;			Regular expressions are defined by the algebraic data type <SPAN
+CLASS="type"
+>RE</SPAN
+>.
+			</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;data RE a =
+    RE_ZERO	String          --' L(0)   = {} (empty set, or failure with message)
+    | RE_UNIT               --' L(1)   = { [] } (empty sequence, or success)
+    | RE_SYM a              --' L(x)   = { [x] }
+    | RE_DOT                --' accept any single symbol
+    | RE_REP (RE a)         --' L(e*)  = { [] } `union` L(e+)
+    | RE_PLUS (RE a)        --' L(e+)  = { x ++ y | x &#60;- L(e), y &#60;- L(e*) }
+    | RE_OPT (RE a)         --' L(e?)  = L(e) `union` { [] }
+    | RE_SEQ (RE a) (RE a)  --' L(e,f) = { x ++ y | x &#60;- L(e), y &#60;- L(f) }
+    | RE_ALT (RE a) (RE a)  --' L(e|f) = L(e) `union` L(f)
+    deriving (Show, Eq)
+			</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;			The core of the algorithm is the <TT
+CLASS="function"
+>delta</TT
+> ("derivative") function. It takes a regular expression <TT
+CLASS="literal"
+>re</TT
+> and a symbol <TT
+CLASS="literal"
+>s</TT
+>. The function returns a new expression that matches all sentences that are a suffix of sentences in L(<TT
+CLASS="literal"
+>re</TT
+>) beginning with <TT
+CLASS="literal"
+>s</TT
+>. The function works by simple case wise analysis.
+			</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;delta :: (Eq a, Show a) =&#62; RE a -&#62; a -&#62; RE a
+delta re s = case re of
+    RE_ZERO m        -&#62; re_zero m
+    RE_UNIT          -&#62; re_zero ("Symbol "++ show s ++" unexpected.")
+    RE_SYM sym
+        | s == sym   -&#62; re_unit
+        | otherwise  -&#62; re_zero ("Symbol "++ show sym ++" expected, but "++
+                                 "symbol "++ show s ++" found.")
+    RE_REP e         -&#62; re_seq (delta e s) (re_rep e)
+    RE_PLUS e        -&#62; re_seq (delta e s) (re_rep e)
+    RE_OPT e         -&#62; delta e s
+    RE_SEQ e f
+        | nullable e -&#62; re_alt (re_seq (delta e s) f) (delta f s)
+        | otherwise  -&#62; re_seq (delta e s) f
+    RE_ALT e f       -&#62; re_alt (delta e s) (delta f s)
+    RE_DOT           -&#62; re_unit
+			</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;			The function <TT
+CLASS="function"
+>matches</TT
+> derives a regular expression with respect to a sentence by using the higher-order function <TT
+CLASS="function"
+>foldl</TT
+> which folds a function into a list of values.
+			</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;matches :: (Eq a, Show a) =&#62; RE a -&#62; [a] -&#62; RE a
+matches e = foldl delta e
+			</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;			The auxiliary function <TT
+CLASS="function"
+>nullable</TT
+> tests if a regular expression matches the empty sequence. If regular expressions are compound ones and the outer expression cannot be itself derived to an empty sequence, the sub-expressions have to be tested if they are nullable.
+			</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;nullable ::  (Show a) =&#62; RE a -&#62; Bool
+nullable (RE_ZERO _)  = False
+nullable RE_UNIT      = True
+nullable (RE_SYM _)   = False
+nullable (RE_REP _)   = True
+nullable (RE_PLUS e)  = nullable e
+nullable (RE_OPT _)   = True
+nullable (RE_SEQ e f) = nullable e &#38;&#38; nullable f
+nullable (RE_ALT e f) = nullable e || nullable f
+nullable RE_DOT       = True
+			</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;			The function <TT
+CLASS="function"
+>checkRE</TT
+> checks if an input matched a regular expression. The regular expression <TT
+CLASS="literal"
+>RE_ZERO</TT
+> indicates that an error occured during derivation and that the regular expression does not match the given sentence.
+			</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="programlisting"
+>&#13;checkRE :: (Show a) =&#62; RE a -&#62; String
+checkRE (RE_ZERO m) = m
+checkRE re
+    | nullable re = ""
+    | otherwise   = "Input must match " ++ printRE re
+			</PRE
+></TD
+></TR
+></TABLE
+><P
+>&#13;			The constructor functions <TT
+CLASS="function"
+>re_seq</TT
+>, <TT
+CLASS="function"
+>re_opt</TT
+> and so on, used in the <TT
+CLASS="function"
+>delta</TT
+> function, are not shown. Without these constructor functions the intermediate regular expressions would grow very rapidly.  The constructors simplify them at each step, e.g. by replacing a sequence of epsilons (<TT
+CLASS="literal"
+>RE_UNIT</TT
+>) by a single epsilon.
+			</P
+><P
+>&#13;			The described <TT
+CLASS="function"
+>delta</TT
+> function is not the one used for validating <TT
+CLASS="literal"
+>XmlTree</TT
+> types. There exists a special function for validating <TT
+CLASS="literal"
+>XmlTree</TT
+> nodes in the module <TT
+CLASS="classname"
+>XmlRE</TT
+>.
+			</P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="AEN2153"
+></A
+>4.7.4. Conclusions</H2
+><P
+>&#13;			The algorithm of derivating regular expressions can be expressed in Haskell very naturally: regular expressions are represented by a special data type, sentences are just a list of symbols. Pattern-matching and Haskell's standard functions for list processing allow a very clear and short implementation.
+			</P
+><P
+>&#13;			The algorithm can handle ambiguous regular expressions very well. If a regular expression consists of sub-expressions, all sub-expressions are derived by a certain symbol. If for example the ambiguous regular expression <TT
+CLASS="literal"
+>(a , b) | (a , c)</TT
+> is derived with respect to the sentence "<TT
+CLASS="literal"
+>ab</TT
+>", the algorithm will construct the regular expression <TT
+CLASS="literal"
+>(b | c)</TT
+> after deriving the original expression by the symbol <TT
+CLASS="literal"
+>a</TT
+>. After deriving the remaining regular expression by the symbol <TT
+CLASS="literal"
+>b</TT
+>, the regular expression <TT
+CLASS="literal"
+>(RE_UNIT | RE_ZERO)</TT
+> remains. This expression can be derived to the empty sequence and therefore the regular expression matches the sentence.
+			</P
+><P
+>&#13;			Haskell's lazy evaluation avoids the evaluation of the whole regular expression. The expression has only to be evaluated as much that <TT
+CLASS="function"
+>nullable</TT
+> can calculate an answer.
+			</P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x2081.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="c2165.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Validation of attribute values</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c1850.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Conclusion</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

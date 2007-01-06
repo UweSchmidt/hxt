@@ -1,0 +1,184 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Transformation of the document subset</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Package hvalidator"
+HREF="c1850.html"><LINK
+REL="PREVIOUS"
+TITLE="Validation of the document subset"
+HREF="x2007.html"><LINK
+REL="NEXT"
+TITLE="Validation of attribute values"
+HREF="x2081.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="x2007.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 4. Package hvalidator</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x2081.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="transformation_of_document"
+></A
+>4.5. Transformation of the document subset</H1
+><P
+>&#13;		Transformation of the document is done by the module <TT
+CLASS="classname"
+>DocTransformation</TT
+>. The transformation should be started after validating the document.
+		</P
+><P
+>&#13;			<P
+></P
+><P
+><B
+>Tasks:</B
+></P
+><UL
+><LI
+><P
+>Adding default values of attributes</P
+></LI
+><LI
+><P
+>Normalizing attribute values</P
+></LI
+><LI
+><P
+>Sorting all attributes in lexicographic order</P
+></LI
+></UL
+>
+		</P
+><P
+>&#13;		Before the document can be transformed, a lookup-table is built on the basis of the DTD which maps element names to their transformation functions. The transformation functions are <TT
+CLASS="literal"
+>XmlFilter</TT
+> functions, which take a node and return the transformed node. After the initialization phase the whole document is traversed in preorder and every element is transformed by its transformation filter from the lookup-table. The result is a new, transformed <TT
+CLASS="literal"
+>XmlTree</TT
+>.
+		</P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="x2007.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x2081.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Validation of the document subset</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="c1850.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Validation of attribute values</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,198 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Missing features and known problems</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.77"><LINK
+REL="HOME"
+TITLE="Design and Implementation of a validating XML parser in Haskell"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="User handbook"
+HREF="a2283.html"><LINK
+REL="PREVIOUS"
+TITLE="User handbook"
+HREF="a2283.html"><LINK
+REL="NEXT"
+TITLE="Directory structure"
+HREF="x2330.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Design and Implementation of a validating XML parser in Haskell: Master's thesis; 
+			University of Applied Sciences Wedel
+		</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="a2283.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Appendix A. User handbook</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="x2330.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="known_problems"
+></A
+>A.2. Missing features and known problems</H1
+><P
+>&#13;		Unfortunately the XML parser of the Haskell XML Toolbox does not support fully the XML 1.0 specification at the moment. We are working hard to implement the missing features in the near future.
+		</P
+><P
+>&#13;			<P
+></P
+><P
+><B
+>Missing features:</B
+></P
+><UL
+><LI
+><P
+>Namespaces are not supported.</P
+></LI
+><LI
+><P
+>Protocols like "http" and "file" are not yet supported due to a lack of libraries. We think of using the <TT
+CLASS="literal"
+>curl</TT
+> command instead.</P
+></LI
+><LI
+><P
+>General external entities are not yet processed.</P
+></LI
+><LI
+><P
+>General entities in default values of attributes are not yet substituted.</P
+></LI
+></UL
+>
+		</P
+><P
+>&#13;			<P
+></P
+><P
+><B
+>Known problems:</B
+></P
+><UL
+><LI
+><P
+>Line numbers are not yet reported for validity constraint errors.</P
+></LI
+><LI
+><P
+>Under Hugs 98 only: The parser suffers a serious space fault when parsing large documents.</P
+></LI
+></UL
+>
+		</P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="a2283.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="x2330.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>User handbook</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="a2283.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Directory structure</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>
