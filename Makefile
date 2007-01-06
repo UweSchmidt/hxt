@@ -5,7 +5,7 @@ HXT_HOME	= .
 SOFTWARE	= HXT
 VERSION		= 7.1
 VERSIONTAG	= hxt-7-01				# use: make tag for creating cvs tag
-LASTVERSION	= 6.1
+LASTVERSION	= 7.0
 DIST		= $(SOFTWARE)-$(VERSION)
 PUBDATE		:= $(shell date +%Y-%m-%d)
 
