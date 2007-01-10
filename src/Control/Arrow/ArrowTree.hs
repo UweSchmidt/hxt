@@ -120,10 +120,12 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
 
 
     -- | recursively searches a whole tree for subtrees, for which a predicate holds.
-    -- The search is performed top down and stops when a tree is found.
+    -- The search is performed top down. When a tree is found, this becomes an element of the result
+    -- list. The tree found is not further examined for any subtress, for which the predicate also could hold.
+    -- See 'multi' for this kind of search.
     --
     -- example: @ deep isHtmlTable @ selects all top level table elements in a document
-    -- (with an appropriate definition for isHtmlTable)
+    -- (with an appropriate definition for isHtmlTable) but no tables occuring within a table cell.
 
     deep		:: Tree t => a (t b) (t b) -> a (t b) (t b)
     deep f		= f					-- success when applying f
@@ -132,9 +134,10 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
 
 
     -- | recursively searches a whole tree for subrees, for which a predicate holds.
-    -- The search is performed bottom up and stops when a tree is found.
+    -- The search is performed bottom up.
     --
     -- example: @ deepest isHtmlTable @ selects all innermost table elements in a document
+    -- but no table elements containing tables. See 'deep' and 'multi' for other search strategies.
 
     deepest		:: Tree t => a (t b) (t b) -> a (t b) (t b)
     deepest f		= (getChildren >>> deepest f)		-- seach children
@@ -143,7 +146,8 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
 
 
     -- | recursively searches a whole tree for subtrees, for which a predicate holds.
-    -- The search is performed top down, but does not stop when a tree is found.
+    -- The search is performed top down. All nodes of the tree are searched, even within the
+    -- subtrees of trees for which the predicate holds.
     --
     -- example: @ multy isHtmlTable @ selects all table elements, even nested ones.
 
