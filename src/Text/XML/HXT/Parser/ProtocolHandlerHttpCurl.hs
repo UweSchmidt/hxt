@@ -120,11 +120,17 @@ parseResponse inp
 parseHttpResponse		:: Parser (Int, XmlTrees, String)
 parseHttpResponse
     = do
-      (rc, rh) <- parseResp
-      rhs      <- parseHeaders
+      allResponses <- many1
+		      ( do
+			(rc, rh) <- parseResp
+			rhs      <- parseHeaders
+			return (rc, rh, rhs)
+		      )
+      let (rc, rh, rhs) = last allResponses
       content  <- getInput
       return (rc, rh ++ rhs, content)
     where
+
     crlf		:: Parser ()
     crlf
 	= do
