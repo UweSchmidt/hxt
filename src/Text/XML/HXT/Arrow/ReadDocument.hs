@@ -240,7 +240,7 @@ readFromDocument userOptions
 -- |
 -- read a document that is stored in a normal Haskell String
 --
--- the same fünction as readDocument, but the parameter forms the input.
+-- the same function as readDocument, but the parameter forms the input.
 -- All options available for 'readDocument' are applicable for readString.
 --
 -- Default encoding: No encoding is done, the String argument is taken as Unicode string

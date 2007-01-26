@@ -13,31 +13,33 @@ where
 import Text.XML.HXT.DOM.XmlKeywords
 
 import Text.XML.HXT.Parser.ProtocolHandlerUtil
-			( parseContentType
-			)
+    ( parseContentType
+    )
 
 import Text.ParserCombinators.Parsec
-			( Parser
-			, parse
-			, anyChar
-			, char
-			, digit
-			, getInput
-			, many1
-			, manyTill
-			, spaces
-			, string
-			, (<|>)
-			)
+    ( Parser
+    , parse
+    , anyChar
+    , char
+    , digit
+    , getInput
+    , many1
+    , manyTill
+    , spaces
+    , string
+    , (<|>)
+    )
 import qualified Text.ParserCombinators.Parsec as Parsec (try)	-- try
 
-import System.PipeOpen	( popen
-			)
+import System.PipeOpen
+    ( popen
+    )
 
-import Data.Char	( toLower
-			)
+import Data.Char
+    ( toLower
+    )
 
-import IO
+import System.IO
 
 -- ------------------------------------------------------------
 --
@@ -90,22 +92,21 @@ parseResponse inp
       ) inp
 
 -- ------------------------------------------------------------
---
--- parsers for HTTP response
 
 parseHttpResponse		:: Parser (Int, [(String, String)], String)
 parseHttpResponse
-    = do
-      allResponses <- many1
-		      ( do
-			(rc, rh) <- parseResp
-			rhs      <- parseHeaders
-			return (rc, rh, rhs)
-		      )
-      let (rc, rh, rhs) = last allResponses
-      content  <- getInput
-      return (rc, rh ++ rhs, content)
+    = do
+      allResponses <- many1 parse1Response
+      let (rc, rh, rhs) = last allResponses
+      content <- getInput
+      return (rc, rh ++ rhs, content)
     where
+
+    parse1Response
+	= do
+	  (rc, rh) <- parseResp
+	  rhs      <- parseHeaders
+	  return (rc, rh, rhs)
 
     crlf		:: Parser ()
     crlf
