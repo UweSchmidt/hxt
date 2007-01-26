@@ -69,7 +69,10 @@ arrWithCatch f
     where
     -- applyf	:: a -> IO (Either String b)
     applyf x
-	= E.catch ( E.evaluate . Right . f $ x )
+	= E.catch ( do
+		    res <- E.evaluate ( f x )
+		    return . Right $ res
+		  )
 	  (\ e -> return . Left . ("XSLT: " ++) . show $ e)
 	  
 -- ------------------------------------------------------------
