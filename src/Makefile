@@ -9,7 +9,7 @@ PACKAGE_DIR	= $(HXT_HOME_PATH)/lib/hxt
 HDOC_DIR	= $(HXT_HOME)/doc/hdoc
 HDOC_DIR_ARROW	= $(HXT_HOME)/doc/hdoc_arrow
 HDOC_DIR_FILTER	= $(HXT_HOME)/doc/hdoc_filter
-HDOC_FLAGS	= 
+HDOC_FLAGS	= --source=http://darcs.fh-wedel.de/hxt/src/%F --package=hxt-$(VERSION)
 IMPORT_DIR	= imports
 HXT_PACKAGE	= hxt
 
