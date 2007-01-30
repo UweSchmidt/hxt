@@ -87,7 +87,7 @@ data DTDElem	= DOCTYPE	-- ^ attr: name, system, public,	XDTD elems as children
 		                --
 				--  for lists of names in notation types or nmtokens in enumeration types
 		| PEREF		-- ^ for Parameter Entity References in DTDs
-		  deriving (Eq, Ord, Show, Read)
+		  deriving (Eq, Ord, Show, Read, Typeable)
 
 -- -----------------------------------------------------------------------------
 
@@ -112,7 +112,7 @@ data QName = QN { namePrefix	:: String	-- ^ the name prefix part of a qualified 
 		, localPart	:: String	-- ^ the local part of a qualified name \"namePrefix:localPart\"
 		, namespaceUri	:: String	-- ^ the associated namespace uri
 		}
-	     deriving (Eq, Ord, Show, Read)
+	     deriving (Eq, Ord, Show, Read, Typeable)
 
 -- |
 -- builds the full name \"prefix:localPart\", if prefix is not null, else the local part is the result
@@ -293,7 +293,7 @@ data XmlNodeSet	= XNS { thisNode	:: Bool		-- ^ is this node part of the set ?
 		      , attrNodes	:: [QName]	-- ^ the set of attribute nodes
 		      , childNodes	:: ChildNodes	-- ^ the set of child nodes, a list of pairs of index and node set 
 		      }
-		  deriving (Show)
+		  deriving (Eq, Show, Typeable)
 
 type ChildNodes	= [(Int, XmlNodeSet)]
 
