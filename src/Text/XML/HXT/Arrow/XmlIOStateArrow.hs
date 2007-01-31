@@ -136,6 +136,7 @@ import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.Edit
     ( addHeadlineToXmlDoc
     , treeRepOfXmlDoc
+    , indentDoc
     )
 
 import Data.Maybe
@@ -761,10 +762,22 @@ traceString level f
     = perform (applyA (arr f >>> arr (traceMsg level)))
 
 -- | issue the source representation of a document if trace level >= 3
+--
+-- for better readability the source is formated with indentDoc
+
 traceSource	:: IOStateArrow s XmlTree XmlTree
 traceSource 
     = trace 3 $
-      xshow this
+      xshow
+      ( choiceA [ isRoot :-> indentDoc
+		, isElem :-> ( root [] [this]
+			       >>> indentDoc
+			       >>> getChildren
+			       >>> isElem
+			     )
+		, this   :-> this
+		]
+      )
 
 -- | issue the tree representation of a document if trace level >= 4
 traceTree	:: IOStateArrow s XmlTree XmlTree
