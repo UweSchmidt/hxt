@@ -18,6 +18,7 @@ Module for importing all list arrows
 
 module Control.Arrow.ListArrows
     ( module Control.Arrow			-- arrow classes
+    , module Control.Arrow.ArrowStrict
     , module Control.Arrow.ArrowList
     , module Control.Arrow.ArrowIf
     , module Control.Arrow.ArrowState
@@ -32,6 +33,7 @@ module Control.Arrow.ListArrows
 where
 
 import Control.Arrow				-- arrow classes
+import Control.Arrow.ArrowStrict
 import Control.Arrow.ArrowList
 import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowState

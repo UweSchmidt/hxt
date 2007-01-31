@@ -126,8 +126,9 @@ import Control.Arrow.ArrowList
 import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
 import Control.Arrow.ArrowIO
-
 import Control.Arrow.IOStateListArrow
+
+import Control.Strategies.DeepSeq
 
 import Text.XML.HXT.Arrow.DOMInterface
 import Text.XML.HXT.Arrow.XmlArrow
@@ -184,6 +185,10 @@ data XIOSysState	= XIOSys  { xio_trace			:: ! Int
 				  , xio_attrList		:: ! (AssocList String XmlTrees)
 				  }
 
+instance DeepSeq XIOSysState where
+    deepSeq (XIOSys tr es em emh emc eml bu du al) y
+	= deepSeq tr $ deepSeq es $ deepSeq em $ deepSeq emh $ deepSeq emc $ deepSeq eml $ deepSeq bu $ deepSeq du $ deepSeq al y
+
 -- |
 -- state datatype consists of a system state and a user state
 -- the user state is not fixed
@@ -191,6 +196,9 @@ data XIOSysState	= XIOSys  { xio_trace			:: ! Int
 data XIOState us	= XIOState { xio_sysState		:: ! XIOSysState
 				   , xio_userState		:: ! us
 				   }
+
+instance (DeepSeq us) => DeepSeq (XIOState us) where
+    deepSeq (XIOState sys usr) y	= deepSeq sys $ deepSeq usr y
 
 -- |
 -- The arrow type for stateful arrows

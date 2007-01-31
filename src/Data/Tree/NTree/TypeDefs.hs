@@ -24,6 +24,8 @@ module Data.Tree.NTree.TypeDefs
     )
 where
 
+import Control.Strategies.DeepSeq
+
 import Data.Tree.Class
 import Data.Typeable
 
@@ -44,6 +46,11 @@ data NTree  a	= NTree a (NTrees a)
 type NTrees   a	= [NTree a]
 
 -- ------------------------------------------------------------
+
+-- |
+
+instance (DeepSeq a) => DeepSeq (NTree a) where
+    deepSeq (NTree n cl) y		= deepSeq n $ deepSeq cl y
 
 -- | NTree implements class Functor
 

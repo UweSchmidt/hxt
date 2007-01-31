@@ -9,7 +9,7 @@ module Text.XML.HXT.DOM.TypeDefs
     )
 
 where
-
+import Control.Strategies.DeepSeq
 import Data.AssocList
 import Data.Char		(toLower)
 import Data.Tree.NTree.TypeDefs
@@ -47,6 +47,18 @@ data XNode	= XText		  String			-- ^ ordinary text				(leaf)
 		| XAttr		  QName				-- ^ attribute with qualified name, the attribute value is stored in children
 		| XError	  Int  String			-- ^ error message with level and text
 		  deriving (Eq, Ord, Show, Read, Typeable)
+
+instance DeepSeq XNode where
+    deepSeq (XText s) y		= deepSeq s y
+    deepSeq (XCharRef i) y	= deepSeq i y
+    deepSeq (XEntityRef n) y	= deepSeq n y
+    deepSeq (XCmt c) y		= deepSeq c y
+    deepSeq (XCdata s) y	= deepSeq s y
+    deepSeq (XPi qn ts) y	= deepSeq qn $ deepSeq ts y
+    deepSeq (XTag qn cs) y	= deepSeq qn $ deepSeq cs y
+    deepSeq (XDTD de al) y	= deepSeq de $ deepSeq al y
+    deepSeq (XAttr qn) y	= deepSeq qn y
+    deepSeq (XError n e) y	= deepSeq n  $ deepSeq e y
 
 -- -----------------------------------------------------------------------------
 --
@@ -89,6 +101,8 @@ data DTDElem	= DOCTYPE	-- ^ attr: name, system, public,	XDTD elems as children
 		| PEREF		-- ^ for Parameter Entity References in DTDs
 		  deriving (Eq, Ord, Show, Read, Typeable)
 
+instance DeepSeq DTDElem
+
 -- -----------------------------------------------------------------------------
 
 -- | Attribute list
@@ -113,6 +127,9 @@ data QName = QN { namePrefix	:: String	-- ^ the name prefix part of a qualified 
 		, namespaceUri	:: String	-- ^ the associated namespace uri
 		}
 	     deriving (Eq, Ord, Show, Read, Typeable)
+
+instance DeepSeq QName where
+    deepSeq (QN np lp ns) y	= deepSeq np $ deepSeq lp $ deepSeq ns y
 
 -- |
 -- builds the full name \"prefix:localPart\", if prefix is not null, else the local part is the result

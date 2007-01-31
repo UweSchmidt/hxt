@@ -52,8 +52,9 @@ packagename	:
 HXT_SRC		= $(wildcard ./Data/*.hs) \
 		  $(wildcard ./Data/Tree/*.hs) \
 		  $(wildcard ./Data/Tree/NTree/*.hs) \
-		  $(wildcard ./Control/Monad/*.hs) \
 		  $(wildcard ./Control/Arrow/*.hs) \
+		  $(wildcard ./Control/Monad/*.hs) \
+		  $(wildcard ./Control/Strategies/*.hs) \
 		  $(wildcard ./System/*.hs) \
 		  $(wildcard ./Text/XML/HXT/[DPX]*.hs) \
 		  $(wildcard ./Text/XML/HXT/DOM/*.hs) \
@@ -71,6 +72,7 @@ HXT_SRC_FILTER	= $(wildcard ./Data/*.hs) \
 		  $(wildcard ./Data/Tree/*.hs) \
 		  $(wildcard ./Data/Tree/NTree/*.hs) \
 		  $(wildcard ./Control/Monad/*.hs) \
+		  $(wildcard ./Control/Strategies/*.hs) \
 		  $(wildcard ./System/*.hs) \
 		  $(wildcard ./Text/XML/HXT/[DPX]*.hs) \
 		  $(wildcard ./Text/XML/HXT/DOM/*.hs) \
@@ -81,8 +83,9 @@ HXT_SRC_FILTER	= $(wildcard ./Data/*.hs) \
 HXT_SRC_ARROW	= $(wildcard ./Data/*.hs) \
 		  $(wildcard ./Data/Tree/*.hs) \
 		  $(wildcard ./Data/Tree/NTree/T*.hs) \
-		  $(wildcard ./Control/Monad/*.hs) \
 		  $(wildcard ./Control/Arrow/*.hs) \
+		  $(wildcard ./Control/Monad/*.hs) \
+		  $(wildcard ./Control/Strategies/*.hs) \
 		  $(wildcard ./Text/XML/HXT/[A]*.hs) \
 		  $(wildcard ./Text/XML/HXT/DOM/NamespacePredicates.hs) \
 		  $(wildcard ./Text/XML/HXT/DOM/[TU]*.hs) \
