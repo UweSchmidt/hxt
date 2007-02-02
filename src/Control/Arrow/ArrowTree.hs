@@ -105,6 +105,12 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
     -- pronounced \"slash\", meaning g inside f
     --
     -- defined as @ f \/> g = f >>> getChildren >>> g @
+    --
+    -- example: @ hasName \"html\" \/> hasName \"body\" \/> hasName \"h1\" @
+    --
+    -- This expression selects
+    -- all \"h1\" elements in the \"body\" element of an \"html\" element, an expression, that
+    -- corresponds 1-1 to the XPath selection path \"html\/body\/h1\" 
 
     (/>)		:: Tree t => a (t b) (t b) -> a (t b) (t b) -> a (t b) (t b)
     f /> g		= f >>> getChildren >>> g

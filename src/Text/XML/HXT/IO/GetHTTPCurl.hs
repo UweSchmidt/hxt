@@ -29,6 +29,7 @@ import Text.ParserCombinators.Parsec
     , string
     , (<|>)
     )
+
 import qualified Text.ParserCombinators.Parsec as Parsec (try)	-- try
 
 import System.PipeOpen
