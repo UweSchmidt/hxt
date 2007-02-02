@@ -165,9 +165,7 @@
       released %PUBDATE%:
     </p>
     <ul>
-      <li>This version works (at least) with ghc.6.4.2. and the
-	latest <a href="http://www.haskell.org/http/">Haskell HTTP
-	  module</a>.
+      <li>This version works (at least) with ghc.6.4.2. and ghc 6.6.
       </li>
       <li>Includes sources for building a ghc package
 	<code>hxt</code> with Cabal or make.
@@ -198,7 +196,9 @@
 	overloading for a more flexible use of the filter technique.
       </li>
     </ul>
-
+    <p>
+      A darcs repository is available under <a href="http://darcs.fh-wedel.de/hxt">http://darcs.fh-wedel.de/hxt</a>.
+    </p>
     <a name="install"></a>
     <h3>Installation</h3>
       
@@ -237,6 +237,11 @@
 	  <li>Version control changed from CVS to darcs.
 	    darcs repository is available under
 	    <tt><a href="http://darcs.fh-wedel.de/hxt/">http://darcs.fh-wedel.de/hxt/</a></tt>.
+	  </li>
+	  <li><tt>deepSeq</tt> and <tt>strict</tt> added for <tt>XmlTree</tt>
+	    and an arrow <tt>strictA</tt> for forcing the evaluation of a whole
+	    XML tree. This sometimes saves space when applied after document input,
+	    DTD processing and validation.
 	  </li>
 	  <li>Typeable instances added for all DOM data types.</li>
 	  <li>HTTP access via curl extended to handle automatic redirects</li>

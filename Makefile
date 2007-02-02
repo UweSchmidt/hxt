@@ -61,7 +61,7 @@ clean		:
 		rm -rf $(DIST) $(DIST_TAR) hxt.cabal setup .setup-config .installed-pkg-config dist
 
 tag		:
-		cvs tag $(VERSIONTAG) .
+		darcs tag $(VERSIONTAG) .
 
 install		:
 		$(MAKE) -C src install
@@ -77,7 +77,7 @@ uninstall		:
 
 # Create webpage directory for distribution
 
-WEBHOME		= ../../../HXmlToolbox
+WEBHOME		= ../../../fh/public_html/HXmlToolbox
 
 webpage		: tarball
 		[ ! -d $(WEBHOME) ] || echo "please clean $(WEBHOME) first: make cleanwebpage"
