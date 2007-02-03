@@ -769,7 +769,10 @@ traceSource	:: IOStateArrow s XmlTree XmlTree
 traceSource 
     = trace 3 $
       xshow
-      ( choiceA [ isRoot :-> indentDoc
+      ( choiceA [ isRoot :-> ( indentDoc
+			       >>>
+			       getChildren
+			     )
 		, isElem :-> ( root [] [this]
 			       >>> indentDoc
 			       >>> getChildren
