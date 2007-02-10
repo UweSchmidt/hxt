@@ -1,5 +1,5 @@
 -- |
--- Unicode (UCS-2) and UTF-8 Conversion Funtions
+-- Unicode (UCS-2) and UTF-8 Conversion Functions
 --
 
 
@@ -12,6 +12,7 @@ module Text.XML.HXT.DOM.Unicode
      UString,
      UTF8Char,
      UTF8String,
+     DecodingFct,
 
       -- * Unicode and UTF-8 predicates
       isLeadingMultiByteChar
@@ -61,7 +62,7 @@ module Text.XML.HXT.DOM.Unicode
     , intToCharRef
     , intToCharRefHex
 
-    , getEncodingFct
+    , getDecodingFct
     , getOutputEncodingFct
 
     , normalizeNL
@@ -69,27 +70,39 @@ module Text.XML.HXT.DOM.Unicode
     )
 where
 
-import Text.XML.HXT.DOM.XmlKeywords
-
 import Data.Char( toUpper )
 
-import Text.XML.HXT.DOM.Util( intToHexString )
+import Text.XML.HXT.DOM.UTF8Decoding
+    ( decodeUtf8 )
+
+import Text.XML.HXT.DOM.XmlKeywords
+
+import Text.XML.HXT.DOM.Util
+    ( intToHexString )
 
 -- ------------------------------------------------------------
 
 -- | Unicode is represented as the Char type
 --   Precondition for this is the support of Unicode character range
 --   in the compiler (e.g. ghc but not hugs)
+
 type Unicode	= Char
 
 -- | the type for Unicode strings
+
 type UString	= [Unicode]
 
 -- | UTF-8 charachters are represented by the Char type
+
 type UTF8Char	= Char
 
 -- | UTF-8 strings are implemented as Haskell strings
+
 type UTF8String	= String
+
+-- | Decoding function with a pair containing the result string and a list of decoding errors as result
+
+type DecodingFct = UString -> (UString, [String])
 
 -- ------------------------------------------------------------
 --
@@ -839,13 +852,13 @@ ucs2ToUnicode s
 -- |
 -- UTF-8 to Unicode conversion with deletion of leading byte order mark, as described in XML standard F.1
 
-utf8WithByteMarkToUnicode		:: UTF8String -> UString
+utf8WithByteMarkToUnicode		:: DecodingFct
 
 utf8WithByteMarkToUnicode ('\xEF':'\xBB':'\xBF':s)	-- remove byte order mark ( XML standard F.1 )
-    = utf8ToUnicode s
+    = decodeUtf8 s
 
 utf8WithByteMarkToUnicode s
-    = utf8ToUnicode s
+    = decodeUtf8 s
 
 -- ------------------------------------------------------------
 
@@ -983,27 +996,29 @@ normalizeNL []				= []
 
 -- |
 -- the table of supported character encoding schemes and the associated
--- conversion functions into Unicode
+-- conversion functions into Unicode:q
 
-encodingTable	:: [(String, (String -> UString))]
-encodingTable
-    = [ (utf8,		utf8WithByteMarkToUnicode)
-      , (isoLatin1,	latin1ToUnicode		)
-      , (usAscii,	latin1ToUnicode		)
-      , (ucs2,		ucs2ToUnicode		)
-      , (utf16,		ucs2ToUnicode		)
-      , (utf16be,	utf16beToUnicode	)
-      , (utf16le,	utf16leToUnicode	)
-      , (unicodeString,	id			)
-      , ("",		id			)	-- default
+decodingTable	:: [(String, DecodingFct)]
+decodingTable
+    = [ (utf8,		utf8WithByteMarkToUnicode	)
+      , (isoLatin1,	liftDecFct latin1ToUnicode	)
+      , (usAscii,	liftDecFct latin1ToUnicode	)
+      , (ucs2,		liftDecFct ucs2ToUnicode	)
+      , (utf16,		liftDecFct ucs2ToUnicode	)
+      , (utf16be,	liftDecFct utf16beToUnicode	)
+      , (utf16le,	liftDecFct utf16leToUnicode	)
+      , (unicodeString,	liftDecFct id			)
+      , ("",		liftDecFct id			)	-- default
       ]
+    where
+    liftDecFct df = \ s -> (df s, [])
 
 -- |
 -- the lookup function for selecting the encoding function
 
-getEncodingFct		:: String -> Maybe (UString -> String)
-getEncodingFct enc
-    = lookup (map toUpper enc) encodingTable
+getDecodingFct		:: String -> Maybe DecodingFct
+getDecodingFct enc
+    = lookup (map toUpper enc) decodingTable
 
 -- |
 -- the table of supported output encoding schemes and the associated

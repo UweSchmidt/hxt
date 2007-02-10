@@ -1,7 +1,19 @@
--- |
--- state arrows for document input
---
--- version $Id: DocumentInput.hs,v 1.12 2006/11/24 07:41:37 hxml Exp $
+-- ------------------------------------------------------------
+
+{- |
+   Module     : Text.XML.HXT.Arrow.DocumentInput
+   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
+   Stability  : experimental
+   Portability: portable
+   Version    : $Id$
+
+   State arrows for document input
+-}
+
+-- ------------------------------------------------------------
 
 module Text.XML.HXT.Arrow.DocumentInput
     ( getURIContents
@@ -19,7 +31,7 @@ import Control.Arrow.ArrowTree
 import Control.Arrow.ArrowIO
 
 import Text.XML.HXT.DOM.Unicode
-    ( getEncodingFct
+    ( getDecodingFct
     , guessEncoding
     , normalizeNL
     )
@@ -337,22 +349,40 @@ decodeDocument	:: IOStateArrow s XmlTree XmlTree
 decodeDocument
     = applyA ( getEncoding
 	       >>>
-	       arr encArr
+	       arr decodeArr
 	     )
       `when`
       isRoot
     where
-    encArr	:: String -> IOStateArrow s XmlTree XmlTree
-    encArr enc	= maybe notFound found . getEncodingFct $ enc
+    decodeArr	:: String -> IOStateArrow s XmlTree XmlTree
+    decodeArr enc
+	= maybe notFound found . getDecodingFct $ enc
 	where
-	found ef = traceMsg 2 ("decodeDocument: encoding is " ++ show enc)
-		   >>>
-		   processChildren (changeText (normalizeNL . ef))
-		   >>>
-		   addAttr transferEncoding enc
+	found df
+	    = traceMsg 2 ("decodeDocument: encoding is " ++ show enc)
+	      >>>
+	      processChildren (decodeText df)
+	      >>>
+	      addAttr transferEncoding enc
 
-	notFound = issueFatal ("encoding scheme not supported: " ++ show enc)
-		   >>>
-		   setDocumentStatusFromSystemState "decoding document"
+	notFound
+	    = issueFatal ("encoding scheme not supported: " ++ show enc)
+	      >>>
+	      setDocumentStatusFromSystemState "decoding document"
 
+	decodeText df
+	    = getText
+	      >>> arr df					-- result is (string, [errMsg])
+	      >>> ( ( (normalizeNL . fst) ^>> mkText )		-- take string, normalize newline and build text node
+		    <+>
+		    ( arrL snd					-- take the error messages
+		      >>>
+		      arr ((enc ++) . (" encoding error" ++))	-- prefix with enc error
+		      >>>
+		      applyA (arr issueErr)			-- build issueErr arrow and apply
+		      >>>
+		      none					-- neccessary for type match with <+>
+		    )
+		  )
+      
 -- ------------------------------------------------------------

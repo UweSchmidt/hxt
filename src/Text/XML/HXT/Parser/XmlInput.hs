@@ -36,7 +36,7 @@ import Text.XML.HXT.Parser.XmlParser
     )
 
 import Text.XML.HXT.DOM.Unicode
-    ( getEncodingFct
+    ( getDecodingFct
     , guessEncoding
     , normalizeNL
     )
@@ -193,7 +193,9 @@ guessDocEncoding
     addDocEncoding n'
 	= do
 	  trace 2 ( "guessDocEncoding: encoding is " ++ show guess)
-	  ( encFilter (getEncodingFct guess)
+	  ( encFilter (getDecodingFct guess)
+	    .>>
+	    issueError
 	    .>>
 	    liftMf (addAttr transferEncoding guess) ) n'
 	  where
@@ -205,9 +207,19 @@ guessDocEncoding
 		    , utf8
 		    ]
 	  encFilter (Just fct)
-	      = liftMf (processChildren (modifyText (normalizeNL . fct)))
+	      -- = liftMf (processChildren (modifyText (normalizeNL . fst . fct)))	-- TODO issue errors
+	      = liftMf (decodeDoc fct)
+
 	  encFilter Nothing
 	      = addFatal ("encoding scheme not supported: " ++ show guess)
+
+	  decodeDoc df n''
+	      | null errs	= replaceChildren (xtext (normalizeNL res)) n''
+	      | otherwise	= concatMap (xerr . (guess ++) . (" encoding error" ++)) errs
+	      where
+	      str = xshow . getChildren $ n''
+	      (res, errs) = df str
+	 
 
 -- ------------------------------------------------------------
 

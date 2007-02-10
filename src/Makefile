@@ -50,6 +50,7 @@ packagename	:
 # hxt package variables and rules
 
 HXT_SRC		= $(wildcard ./Data/*.hs) \
+		  $(wildcard ./Data/Char/*.hs) \
 		  $(wildcard ./Data/Tree/*.hs) \
 		  $(wildcard ./Data/Tree/NTree/*.hs) \
 		  $(wildcard ./Control/Arrow/*.hs) \
@@ -69,6 +70,7 @@ HXT_SRC		= $(wildcard ./Data/*.hs) \
 		  $(wildcard ./Text/XML/HXT/XSLT/[ACNX]*.hs)
 
 HXT_SRC_FILTER	= $(wildcard ./Data/*.hs) \
+		  $(wildcard ./Data/Char/*.hs) \
 		  $(wildcard ./Data/Tree/*.hs) \
 		  $(wildcard ./Data/Tree/NTree/*.hs) \
 		  $(wildcard ./Control/Monad/*.hs) \
@@ -81,6 +83,7 @@ HXT_SRC_FILTER	= $(wildcard ./Data/*.hs) \
 		  $(wildcard ./Text/XML/HXT/XPath/*.hs) \
 
 HXT_SRC_ARROW	= $(wildcard ./Data/*.hs) \
+		  $(wildcard ./Data/Char/*.hs) \
 		  $(wildcard ./Data/Tree/*.hs) \
 		  $(wildcard ./Data/Tree/NTree/T*.hs) \
 		  $(wildcard ./Control/Arrow/*.hs) \
@@ -97,8 +100,12 @@ HXT_SRC_ARROW	= $(wildcard ./Data/*.hs) \
 		  $(wildcard ./Text/XML/HXT/XSLT/[ACNX]*.hs)
 
 
+# HXT_OBJ		= $(patsubst %.lhs,%.o,$(patsubst %.hs,%.o,$(HXT_SRC)))		# no .lhs sources
+# HXT_HI		= $(patsubst %.lhs,%.hi,$(patsubst %.hs,%.hi,$(HXT_SRC)))
+
 HXT_OBJ		= $(HXT_SRC:.hs=.o)
 HXT_HI		= $(HXT_SRC:.hs=.hi)
+
 HXT_DRIVER	= HXT.o
 HXT_LIBA	= libHS$(HXT_PACKAGE).a
 HXT_LIBO	= HS$(HXT_PACKAGE).o
