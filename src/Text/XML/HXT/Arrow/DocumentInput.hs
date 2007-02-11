@@ -347,10 +347,7 @@ getEncoding
 
 decodeDocument	:: IOStateArrow s XmlTree XmlTree
 decodeDocument
-    = applyA ( getEncoding
-	       >>>
-	       arr decodeArr
-	     )
+    = ( decodeArr $< getEncoding )
       `when`
       isRoot
     where

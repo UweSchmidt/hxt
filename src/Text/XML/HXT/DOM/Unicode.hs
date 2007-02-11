@@ -1,9 +1,20 @@
--- |
--- Unicode (UCS-2) and UTF-8 Conversion Functions
---
+-- ------------------------------------------------------------
 
+{- |
+   Module     : Text.XML.HXT.DOM.Unicode
+   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   License    : MIT
 
--- Module: $Id: Unicode.hs,v 1.4 2006/08/17 15:33:53 hxml Exp $
+   Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
+   Stability  : experimental
+   Portability: portable
+   Version    : $Id$
+
+   Unicode and UTF-8 Conversion Functions
+
+-}
+
+-- ------------------------------------------------------------
 
 module Text.XML.HXT.DOM.Unicode
     (
@@ -14,16 +25,9 @@ module Text.XML.HXT.DOM.Unicode
      UTF8String,
      DecodingFct,
 
-      -- * Unicode and UTF-8 predicates
-      isLeadingMultiByteChar
-    , isFollowingMultiByteChar
-    , isMultiByteChar
-    , isNByteChar
+      -- * XML char predicates
 
-    , is1ByteXmlChar
-    , isMultiByteXmlChar
-
-    , isXmlChar
+      isXmlChar
     , isXmlLatin1Char
     , isXmlSpaceChar
     , isXml11SpaceChar
@@ -41,8 +45,6 @@ module Text.XML.HXT.DOM.Unicode
     , isXmlControlOrPermanentlyUndefined
 
       -- * UTF-8 and Unicode conversion functions
-    , utf8ToUnicodeChar
-    , utf8ToUnicode
     , utf8WithByteMarkToUnicode
     , latin1ToUnicode
     , ucs2ToUnicode
@@ -124,18 +126,6 @@ is1ByteXmlChar c
 	 )
 
 -- |
--- test for a legal multi byte XML char
-
-isMultiByteXmlChar	:: Unicode -> Bool
-isMultiByteXmlChar i
-    = ( i >= '\x00000080' && i <= '\x0000D7FF' )
-      ||
-      ( i >= '\x0000E000' && i <= '\x0000FFFD' )
-      ||
-      ( i >= '\x00010000' && i <= '\x0010FFFF' )
-
-
--- |
 -- test for a legal latin1 XML char
 
 isXmlLatin1Char		:: Unicode -> Bool
@@ -143,89 +133,6 @@ isXmlLatin1Char i
     = is1ByteXmlChar i
       ||
       (i >= '\x80' && i <= '\xff')
-
-
--- |
--- test for leading multibyte UTF-8 character
-
-isLeadingMultiByteChar	:: Char -> Bool
-isLeadingMultiByteChar	c
-    = c >= '\xC0' && c <= '\xFD'
-
--- |
--- test for following multibyte UTF-8 character
-
-isFollowingMultiByteChar	:: Char -> Bool
-isFollowingMultiByteChar	c
-    = c >= '\x80' && c < '\xC0'
-
--- |
--- test for following multibyte UTF-8 character
-
-isMultiByteChar	:: Char -> Bool
-isMultiByteChar	c
-    = c >= '\x80' && c <= '\xBF'
-
--- |
--- compute the number of following bytes and the mask bits of a leading UTF-8 multibyte char
-
-isNByteChar	:: Unicode -> (Int, Int, Int)
-isNByteChar c
-    | c >= '\xc0' && c <= '\xdf' = (1, 0xC0, 0x00000080)
-    | c >= '\xe0' && c <= '\xef' = (2, 0xE0, 0x00000800)
-    | c >= '\xf0' && c <= '\xf7' = (3, 0xF0, 0x00010000)
-    | c >= '\xf8' && c <= '\xfb' = (4, 0xF8, 0x00200000)
-    | c >= '\xfc' && c <= '\xfd' = (5, 0xFC, 0x04000000)
-    | otherwise	= error ("isNByteChar: illegal leading UTF-8 character " ++ show c)
-
--- ------------------------------------------------------------
-
--- |
--- conversion of a UTF-8 encoded single Unicode character into the corresponding Unicode value.
--- precondition: the character is a valid UTF-8 encoded character
-
-utf8ToUnicodeChar		:: UTF8String -> Unicode
-utf8ToUnicodeChar c
-    = case (utf8ToUnicode c)
-      of
-      [u] -> u
-      _   -> error ("utf8ToUnicodeChar: illegal UTF-8 charachter " ++ show c)
-
--- ------------------------------------------------------------
-
--- |
--- conversion of a UTF-8 encoded string into a sequence of unicode values.
--- precondition: the string is a valid UTF-8 encoded string
-
-utf8ToUnicode		:: UTF8String -> UString
-utf8ToUnicode (c : cs)
-    | c < '\x80' 
-	= c : utf8ToUnicode cs
-    | isLeadingMultiByteChar c
-      &&
-      resAsInt <= fromEnum (maxBound::Char)
-      &&
-      l1 == length cs0
-	= toEnum resAsInt			-- (utf8ToU (fromEnum c - mask) cs0)
-	  : utf8ToUnicode cs1
-    | otherwise
-	= error ("utf8ToUnicode: illegal UTF-8 charachter sequence " ++ show (c : cs) ++ " (try -" ++ "-encoding=" ++ isoLatin1 ++ ")")
-	  where
-	  (l1, mask, _min)	= isNByteChar c
-	  (cs0, cs1)		= splitAt l1 cs
-
-	  resAsInt		:: Int
-	  resAsInt		= utf8ToU (fromEnum c - mask) cs0
-
-	  utf8ToU i []	    = i
-	  utf8ToU i (c1:l)
-	      | isFollowingMultiByteChar c1
-		  = utf8ToU (i * 0x40 + (fromEnum c1 - 0x80)) l
-	      | otherwise
-		  = error ("utf8ToUnicode: illegal UTF-8 multibyte character " ++ show (c : cs0) ++ " (try -" ++ "-encoding=" ++ isoLatin1 ++ ")")
-
-utf8ToUnicode []
-    = []
 
 -- ------------------------------------------------------------
 
@@ -798,6 +705,27 @@ isInList _ []
 latin1ToUnicode	:: String -> UString
 latin1ToUnicode	= id
 
+-- | conversion from ASCII to unicode with check for legal ASCII char set
+--
+-- Structure of decoding function copied from 'Data.Char.UTF8.decode'.
+
+decodeAscii	:: DecodingFct
+decodeAscii str
+    = (res, map (uncurry toErrStr) errs)
+    where
+    (res, errs)
+	= decode str
+    toErrStr err pos
+	= " at input position " ++ show pos ++ ": none ASCII char " ++ show err
+    decode
+	= iter 0 [] []
+	where
+	iter :: Int -> [Char] -> [(Char, Int)] -> [Char] -> ([Char], [(Char, Int)])
+	iter _ix cs es []
+	    = (reverse cs, reverse es)
+	iter  ix cs es (x:xs)
+	    | x < '\x80' = iter (ix + 1) (x:cs)         es  xs
+	    | otherwise  = iter (ix + 1)    cs  ((x,ix):es) xs
 
 -- |
 -- UCS-2 big endian to Unicode conversion
@@ -1002,7 +930,7 @@ decodingTable	:: [(String, DecodingFct)]
 decodingTable
     = [ (utf8,		utf8WithByteMarkToUnicode	)
       , (isoLatin1,	liftDecFct latin1ToUnicode	)
-      , (usAscii,	liftDecFct latin1ToUnicode	)
+      , (usAscii,	decodeAscii			)
       , (ucs2,		liftDecFct ucs2ToUnicode	)
       , (utf16,		liftDecFct ucs2ToUnicode	)
       , (utf16be,	liftDecFct utf16beToUnicode	)
