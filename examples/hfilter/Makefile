@@ -5,7 +5,7 @@ PKGFLAGS	=
 GHCFLAGS	= -Wall -O2
 GHC		= ghc $(GHCFLAGS) $(PKGFLAGS)
 
-prog		= FilterExample
+prog		= ./FilterExample
 opts		= --parse-html --do-not-issue-warnings
 runprog		= $(prog) $(opts)
 

@@ -4,7 +4,7 @@ HXT_HOME	= ../..
 PACKAGE_DIR	= $(HXT_HOME)/lib/hxt
 GHC		= ghc -Wall -O -package-conf $(PACKAGE_DIR)/package.conf -package hxt
 
-prog		= RunTestCases
+prog		= ./RunTestCases
 
 all		: $(prog)
 

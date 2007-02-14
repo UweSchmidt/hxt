@@ -5,7 +5,7 @@ PKGFLAGS	=
 GHCFLAGS	= -Wall -O2
 GHC		= ghc $(GHCFLAGS) $(PKGFLAGS)
 
-prog	= HXmlParser
+prog		= ./HXmlParser
 
 all	: $(prog)
 

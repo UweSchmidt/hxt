@@ -45,7 +45,7 @@ module Text.XML.HXT.DOM.Unicode
     , isXmlControlOrPermanentlyUndefined
 
       -- * UTF-8 and Unicode conversion functions
-    , utf8WithByteMarkToUnicode
+    , utf8ToUnicode
     , latin1ToUnicode
     , ucs2ToUnicode
     , ucs2BigEndianToUnicode
@@ -780,12 +780,12 @@ ucs2ToUnicode s
 -- |
 -- UTF-8 to Unicode conversion with deletion of leading byte order mark, as described in XML standard F.1
 
-utf8WithByteMarkToUnicode		:: DecodingFct
+utf8ToUnicode		:: DecodingFct
 
-utf8WithByteMarkToUnicode ('\xEF':'\xBB':'\xBF':s)	-- remove byte order mark ( XML standard F.1 )
+utf8ToUnicode ('\xEF':'\xBB':'\xBF':s)	-- remove byte order mark ( XML standard F.1 )
     = decodeUtf8 s
 
-utf8WithByteMarkToUnicode s
+utf8ToUnicode s
     = decodeUtf8 s
 
 -- ------------------------------------------------------------
@@ -928,7 +928,7 @@ normalizeNL []				= []
 
 decodingTable	:: [(String, DecodingFct)]
 decodingTable
-    = [ (utf8,		utf8WithByteMarkToUnicode	)
+    = [ (utf8,		utf8ToUnicode			)
       , (isoLatin1,	liftDecFct latin1ToUnicode	)
       , (usAscii,	decodeAscii			)
       , (ucs2,		liftDecFct ucs2ToUnicode	)

@@ -10,7 +10,7 @@ else
 OPTS		= --trace=1 --use-curl
 endif
 
-prog		= Citations
+prog		= ./Citations
 
 all		: $(prog)
 

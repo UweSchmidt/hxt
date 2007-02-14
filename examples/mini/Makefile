@@ -5,7 +5,7 @@ PKGFLAGS	=
 GHCFLAGS	= -Wall -O2
 GHC		= ghc $(GHCFLAGS) $(PKGFLAGS)
 
-prog		= ParseExample
+prog		= ./ParseExample
 
 all		: $(prog)
 
@@ -20,7 +20,7 @@ test		:
 		@echo "===> a xml source"
 		@cat example1.xml
 		@sleep 2; echo "===> parse, validate and normalise the document"
-		./$(prog) example1.xml
+		$(prog) example1.xml
 
 DIST		= $(HXT_HOME)/dist/examples
 DIST_DIR	= $(DIST)/mini

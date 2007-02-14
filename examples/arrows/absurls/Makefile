@@ -8,7 +8,7 @@ GHC		= ghc $(GHCFLAGS) $(PKGFLAGS)
 DIST		= $(HXT_HOME)/dist/examples/arrows
 DIST_DIR	= $(DIST)/absurls
 
-prog	= AbsURIs
+prog	= ./AbsURIs
 
 all	: $(prog)
 

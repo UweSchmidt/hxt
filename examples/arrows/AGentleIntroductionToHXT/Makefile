@@ -11,7 +11,7 @@ DIST		= $(HXT_HOME)/dist/examples/arrows
 DIST_DIR	= $(DIST)/AGentleIntroductionToHXT
 
 src		= SimpleExamples.hs
-prog		= SimpleExamples
+prog		= ./SimpleExamples
 
 tests		= \
 		selectAllText \

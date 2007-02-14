@@ -5,7 +5,7 @@ PKGFLAGS	=
 GHCFLAGS	= -Wall -O2
 GHC		= ghc $(GHCFLAGS) $(PKGFLAGS)
 
-prog		= HXPath
+prog		= ./HXPath
 
 all		: $(prog)
 
@@ -23,22 +23,22 @@ test		: $(prog)
 
 test1		:
 		@echo "===> extract all text from the XHTML document" ; echo ; sleep 2
-		./$(prog) --do-not-validate "/html/body/descendant-or-self::text()" $(EX)
+		$(prog) --do-not-validate "/html/body/descendant-or-self::text()" $(EX)
 		@echo
 
 test2		:
 		@echo "===> extract the 42. paragraph from the XHTML document" ; echo ; sleep 2
-		./$(prog) --do-not-validate "/descendant::p[position()=42]" $(EX)
+		$(prog) --do-not-validate "/descendant::p[position()=42]" $(EX)
 		@echo
 
 test3		:
 		@echo "===> extract the text of all top level h1 tags from the XHTML document" ; echo ; sleep 2
-		./$(prog) --indent --do-not-validate "/child::html/child::body/child::h1/descendant-or-self::text()" $(EX)
+		$(prog) --indent --do-not-validate "/child::html/child::body/child::h1/descendant-or-self::text()" $(EX)
 		@echo
 
 test4		:
 		@echo "===> extract all href attributes from a tags from the XHTML document" ; echo ; sleep 2
-		./$(prog) --indent --do-not-validate "/descendant::a/attribute::href" $(EX)
+		$(prog) --indent --do-not-validate "/descendant::a/attribute::href" $(EX)
 		@echo
 
 DIST		= $(HXT_HOME)/dist/examples/arrows

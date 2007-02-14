@@ -8,7 +8,7 @@ GHC		= ghc $(GHCFLAGS) $(PKGFLAGS)
 DIST		= $(HXT_HOME)/dist/examples/arrows
 DIST_DIR	= $(DIST)/hrelaxng
 
-prog		= HRelaxNG
+prog		= ./HRelaxNG
 
 all		: $(prog)
 
@@ -30,27 +30,27 @@ test		: $(prog)
 
 example1	:
 		@echo "===> Validate a valid Relax NG schema with respect to a valid xml file" ; echo ; sleep 1
-		./$(prog) ./valid1.xml ./valid1.rng
+		$(prog) ./valid1.xml ./valid1.rng
 		@echo
 
 example2	:
 		@echo "===> Validate a valid Relax NG schema with respect to a invalid xml file" ; echo ; sleep 1
-		./$(prog) ./invalid1.xml ./valid1.rng || true
+		$(prog) ./invalid1.xml ./valid1.rng || true
 		@echo
 
 example3	:
 		@echo "===> Incorrect Relax NG schema" ; echo ; sleep 1
-		./$(prog) ./valid1.xml ./invalid2.rng || true
+		$(prog) ./valid1.xml ./invalid2.rng || true
 		@echo
 
 example4	:
 		@echo "===> Same example with \"--output-pattern-transformations\" option " ; echo ; sleep 1
-		./$(prog) --output-pattern-transformations  ./valid1.xml ./invalid2.rng || true
+		$(prog) --output-pattern-transformations  ./valid1.xml ./invalid2.rng || true
 		@echo
 
 example5	:
 		@echo "===> Incorrect Relax NG schema with two errors" ; echo ; sleep 1
-		./$(prog) ./valid1.xml ./invalid3.rng || true
+		$(prog) ./valid1.xml ./invalid3.rng || true
 		@echo
 
 EX		= $(wildcard *valid*.xml *valid*.rng)

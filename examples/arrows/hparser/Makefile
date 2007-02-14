@@ -115,18 +115,18 @@ test5		:
 		@echo "the Relax NG schema ./valid1.rng"
 		@cat  ./valid1.rng
 		@echo
-		./$(prog) --relax-schema ./valid1.rng ./valid1.xml
+		$(prog) --relax-schema ./valid1.rng ./valid1.xml
 		@echo
 		@echo "===> Validate an  invalid xml file with respect to a valid Relax NG schema" ; echo ; sleep 1
 		@echo "the invalid XML document ./invalid1.xml"
 		@cat ./valid1.xml
-		./$(prog) --relax-schema ./valid1.rng ./invalid1.xml || true
+		$(prog) --relax-schema ./valid1.rng ./invalid1.xml || true
 		@echo
 		@echo "===> Incorrect Relax NG schema" ; echo ; sleep 1
-		./$(prog) --relax-schema ./invalid2.rng ./valid1.xml || true
+		$(prog) --relax-schema ./invalid2.rng ./valid1.xml || true
 		@echo
 		@echo "===> Incorrect Relax NG schema with two errors" ; echo ; sleep 1
-		./$(prog) --relax-schema ./invalid3.rng ./valid1.xml || true
+		$(prog) --relax-schema ./invalid3.rng ./valid1.xml || true
 		@echo
 
 

@@ -8,7 +8,7 @@ GHC		= ghc $(GHCFLAGS) $(PKGFLAGS)
 DIST		= $(HXT_HOME)/dist/examples/arrows
 DIST_DIR	= $(DIST)/RelaxTestSuite
 
-prog		= RunTestCases
+prog		= ./RunTestCases
 modules		= RunTestCases.hs ReadDir.hs TestCases.hs
 
 all		: $(prog)
