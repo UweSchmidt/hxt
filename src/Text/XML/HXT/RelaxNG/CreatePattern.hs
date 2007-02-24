@@ -264,55 +264,70 @@ mkRelaxElement env
 -- | Creates a 'NameClass' from an \"anyName\"-, \"nsName\"- or  \"name\"-Pattern, 
 createNameClass :: LA XmlTree NameClass
 createNameClass
- = choiceA [   
-     (isElem >>> hasName "anyName") :-> processAnyName,
-     (isElem >>> hasName "nsName")  :-> processNsName,
-     (isElem >>> hasName "name")    :-> processName,
-     (isElem >>> hasName "choice")  :-> processChoice,
-     this                           :-> mkNameClassError
-   ]
- where
- processAnyName :: LA XmlTree NameClass
- processAnyName = ifA (getChildren >>> hasName "except")
-                    ( getChildren >>> getChildren >>>
-                      createNameClass >>> arr AnyNameExcept
-                    )
-                    (constA AnyName)
- processNsName :: LA XmlTree NameClass
- processNsName = ifA (getChildren >>> hasName "except")
-                   ( ( getAttrValue "ns" 
-                       &&&
-                       (getChildren >>> getChildren >>> createNameClass)
-                     )
-                     >>> 
-                     arr2 NsNameExcept
-                   )
-                   (getAttrValue "ns" >>> arr NsName) 
- processName :: LA XmlTree NameClass
- processName = (getAttrValue "ns" &&& (getChildren >>> getText)) >>> arr2 Name
- processChoice :: LA XmlTree NameClass
- processChoice = listA getChildren
-                 >>>
-                 (arr head >>> createNameClass) &&& (arr last >>> createNameClass)
-                 >>>
-                 arr2 NameClassChoice
+    = choiceA
+      [ (isElem >>> hasName "anyName") :-> processAnyName
+      , (isElem >>> hasName "nsName")  :-> processNsName
+      , (isElem >>> hasName "name")    :-> processName
+      , (isElem >>> hasName "choice")  :-> processChoice
+      , this                           :-> mkNameClassError
+      ]
+    where
+    processAnyName :: LA XmlTree NameClass
+    processAnyName
+	= ifA (getChildren >>> hasName "except")
+          ( getChildren
+	    >>> getChildren
+	    >>> createNameClass
+	    >>> arr AnyNameExcept
+          )
+         ( constA AnyName )
+
+    processNsName :: LA XmlTree NameClass
+    processNsName
+	= ifA (getChildren >>> hasName "except")
+          ( ( getAttrValue "ns" 
+              &&&
+              ( getChildren >>> getChildren >>> createNameClass )
+            )
+            >>> 
+            arr2 NsNameExcept
+          )
+          ( getAttrValue "ns" >>> arr NsName ) 
+
+    processName :: LA XmlTree NameClass
+    processName
+	= (getAttrValue "ns" &&& (getChildren >>> getText)) >>> arr2 Name
+
+    processChoice :: LA XmlTree NameClass
+    processChoice
+	= listA getChildren
+	  >>>
+	  (arr head >>> createNameClass) &&& (arr last >>> createNameClass)
+          >>>
+	  arr2 NameClassChoice
                         
 
 mkNameClassError :: LA XmlTree NameClass
 mkNameClassError 
- = choiceA [
-     (isElem >>> hasName "relaxError") :-> (getAttrValue "desc" >>> arr NCError), 
-     isElem  :-> ( getName
-                   >>>
-                   arr (\n -> NCError ("Can't create name class from element " ++ n))
-                 ),
-     isAttr  :-> ( getName
-                   >>>
-                   arr (\n -> NCError ("Can't create name class from attribute: " ++ n))
-                 ),
-     isError :-> (getErrorMsg >>> arr NCError),                          
-     this    :-> (arr (\e ->  NCError $ "Can't create name class from " ++ show e))      
-   ]
+    = choiceA [ ( isElem >>> hasName "relaxError" )
+                        :-> ( getAttrValue "desc"
+			      >>>
+			      arr NCError
+			 )
+	      , isElem  :-> ( getName
+			      >>>
+			      arr (\n -> NCError ("Can't create name class from element " ++ n))
+			    )
+	      , isAttr  :-> ( getName
+			      >>>
+			      arr (\n -> NCError ("Can't create name class from attribute: " ++ n))
+			    )
+	      , isError :-> ( getErrorMsg
+			      >>>
+			      arr NCError
+			    )
+	      , this    :-> ( arr (\e ->  NCError $ "Can't create name class from " ++ show e) )      
+	      ]
 
 
 getOneChildPattern :: Env -> LA XmlTree Pattern

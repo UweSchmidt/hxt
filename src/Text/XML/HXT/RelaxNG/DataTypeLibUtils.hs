@@ -5,6 +5,10 @@ module Text.XML.HXT.RelaxNG.DataTypeLibUtils
   ( checkString
   , checkNumeric
   , errorMsgEqual
+  , errorMsgDataTypeNotAllowed
+  , errorMsgDataTypeNotAllowed0
+  , errorMsgDataTypeNotAllowed2
+  , errorMsgDataLibQName
   , module Text.XML.HXT.DOM.Util
   , module Text.XML.HXT.RelaxNG.Utils
   , module Text.XML.HXT.RelaxNG.DataTypes  
@@ -168,5 +172,33 @@ example:
 > errorMsgEqual "Int" "21" "42" -> "Datatype Int with value = 21 expected, but value = 42 found"
 
 -}
+
 errorMsgEqual :: DatatypeName -> String -> String -> String
-errorMsgEqual d s1 s2 = "Datatype" ++ d ++ " with value = " ++ s1 ++ " expected, but value = " ++ s2 ++ " found"        
+errorMsgEqual d s1 s2
+    = ( "Datatype" ++ show d ++
+	" with value = " ++ show s1 ++
+	" expected, but value = " ++ show s2 ++ " found" 
+      )
+errorMsgDataTypeNotAllowed :: String -> [(String, String)] -> String -> String -> String
+errorMsgDataTypeNotAllowed t p v l
+    = ( "Datatype " ++ show t ++ " with parameter(s) " ++
+        formatStringListPairs p ++ " and value = " ++ show v ++
+        " not allowed for DatatypeLibrary " ++ show l
+      )
+
+errorMsgDataTypeNotAllowed0 :: String -> String -> String
+errorMsgDataTypeNotAllowed0 t l
+    = ( "Datatype " ++ show t ++
+        " not allowed for DatatypeLibrary " ++ show l
+      )
+errorMsgDataTypeNotAllowed2 :: String -> String -> String -> String -> String
+errorMsgDataTypeNotAllowed2 t v1 v2 l
+    = ( "Datatype " ++ show t ++
+	" with values = " ++ show v1 ++
+	" and " ++ show v2 ++ 
+        " not allowed for DatatypeLibrary " ++ show l
+      )
+
+errorMsgDataLibQName :: String -> String -> String -> String
+errorMsgDataLibQName v n l
+    = show v ++ " is not a valid " ++ n ++ " for DatatypeLibrary " ++ l

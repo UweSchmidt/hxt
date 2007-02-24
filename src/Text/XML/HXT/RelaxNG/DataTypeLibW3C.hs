@@ -55,28 +55,26 @@ datatypeAllowsW3C d@"NCName" params value _
   = let v = normalizeWhitespace value
     in ( if isNCName v && v /= ""
          then checkString d value 0 (-1) params 
-         else Just $ value ++ " is not a valid NCName for DatatypeLibrary " ++ w3cNS
+         else Just $ errorMsgDataLibQName value "NCName" w3cNS
        )
 datatypeAllowsW3C d@"anyURI" params value _
   = let v = escapeURI $ normalizeWhitespace value
     in ( if isURIReference v 
          then checkString d value 0 (-1) params
-         else Just $ value ++ " is not a valid anyURI for DatatypeLibrary " ++ w3cNS
+         else Just $ errorMsgDataLibQName value "anyURI" w3cNS
        )
 datatypeAllowsW3C d@"QName" params value _
   = let v = normalizeWhitespace value
     in ( if isWellformedQualifiedName v && v /= "" 
          then checkString d value 0 (-1) params
-         else Just $ value ++ " is not a valid QName for DatatypeLibrary " ++ w3cNS
+         else Just $ errorMsgDataLibQName value "QName" w3cNS
        )
 
 datatypeAllowsW3C d@"string" params value _
   = checkString d value 0 (-1) params
 
-datatypeAllowsW3C d p v _ 
-  = Just $ "Datatype " ++ d ++ " with parameter(s) " ++
-           formatStringList ", "(map (\(a, b) -> a ++ " = " ++ b) p) ++ " and value = " ++ v ++
-           " not allowed for DatatypeLibrary " ++ w3cNS
+datatypeAllowsW3C d params value _ 
+  = Just $ errorMsgDataTypeNotAllowed d params value w3cNS
 
 -- | Tests whether a XML instance value matches a value-pattern.
 datatypeEqualW3C :: DatatypeEqual
@@ -89,4 +87,4 @@ datatypeEqualW3C d@"QName" s1 _ s2 _
 datatypeEqualW3C d@"string" s1 _ s2 _ 
   = if s1 == s2 then Nothing else Just $ errorMsgEqual d s1 s2 
 datatypeEqualW3C d _ _ _ _
-  = Just $ "Datatype " ++ d ++ " not allowed for DatatypeLibrary " ++ w3cNS
+  = Just $ errorMsgDataTypeNotAllowed0 d w3cNS

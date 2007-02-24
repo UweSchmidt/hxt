@@ -183,10 +183,7 @@ datatypeAllowsMysql d@"LONGBLOB" params value _
 
 
 datatypeAllowsMysql t p v _
-    = Just $ "Datatype " ++ t ++ " with parameter(s) " ++
-             formatStringList ", " (map (\(a, b) -> a ++ " = " ++ b) p) ++ " and value = " ++ v ++
-             " not allowed for DatatypeLibrary " ++ mysqlNS
-
+    = Just $ errorMsgDataTypeNotAllowed t p v mysqlNS
 
 -- | Tests whether a XML instance value matches a value-pattern.
 datatypeEqualMysql :: DatatypeEqual
@@ -199,5 +196,5 @@ datatypeEqualMysql d s1 _ s2 _
                             then Nothing
 			    else Just $ errorMsgEqual d s1 s2
 
-    | otherwise           = Just $ "Datatype " ++ d ++ " with values = " ++ s1 ++ " and " ++ s2 ++ 
-                                   " not allowed for DatatypeLibrary " ++ mysqlNS
+    | otherwise           = Just $ errorMsgDataTypeNotAllowed2 d s1 s2 mysqlNS
+

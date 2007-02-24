@@ -344,22 +344,28 @@ simplificationStep2 readOptions validateExternalRef validateInclude extHRefs inc
     = ifA ( -- test whether the referenced schema exists
             neg $ constA href >>> getPathFromURI >>> isIOA doesFileExist
           )
-        ( mkRelaxError "" ( "Can't read " ++ href ++
-			    ", referenced in externalRef-Pattern" )
+        ( mkRelaxError ""
+	  ( "Can't read " ++ show href ++
+	    ", referenced in externalRef-Pattern"
+	  )
 	)
         ( ifP (const $ elem href extHRefs)
            -- if the referenced name already exists in the list of processed ref attributes
            -- we have found a loop
-            (mkRelaxError "" $ "loop in externalRef-Pattern, " ++ 
-                               formatStringList " -> " (reverse $ href:extHRefs)
+            ( mkRelaxError ""
+	      (  "loop in externalRef-Pattern, " ++ 
+                 formatStringListArr (reverse $ href:extHRefs)
+	      )
             )
             ( ifA ( if validateExternalRef 					-- if validation parameters are set
 		    then validateDocWithRelax S.relaxSchemaArrow [] href	-- the referenced schema is validated with respect to
 		    else none							-- the Relax NG spezification
                   )
-                ( mkRelaxError "" ( "The content of the schema " ++ href ++ 
-				    ", referenced in externalRef does not " ++
-				    "match the syntax for pattern" )
+                ( mkRelaxError ""
+		  ( "The content of the schema " ++ show href ++ 
+		    ", referenced in externalRef does not " ++
+		    "match the syntax for pattern"
+		  )
                 )
                 ( readForRelax readOptions href
                   >>>
@@ -384,22 +390,28 @@ simplificationStep2 readOptions validateExternalRef validateInclude extHRefs inc
     = ifA ( -- test whether the referenced schema exists
             neg $ constA href >>> getPathFromURI >>> isIOA doesFileExist
           )
-        ( mkRelaxError "" ( "Can't read " ++ href ++
-                            ", referenced in include-Pattern" )
+        ( mkRelaxError ""
+	  ( "Can't read " ++ show href ++
+            ", referenced in include-Pattern"
+	  )
         )
         ( ifP (const $ elem href includeHRefs)
            -- if the referenced name still exists in the list of processed
            -- ref attributes we have found a loop
-            (mkRelaxError "" $ "loop in include-Pattern, " ++ 
-                               formatStringList " -> " (reverse $ href:includeHRefs)
+            ( mkRelaxError ""
+	      ( "loop in include-Pattern, " ++ 
+                formatStringListArr (reverse $ href:includeHRefs)
+	      )
             )
             ( ifA ( if validateInclude						-- if the parameter is set
 		    then validateDocWithRelax SG.relaxSchemaArrow [] href	-- the referenced schema is validated with respect to
                     else none							-- the Relax NG grammar element
                   )
-                ( mkRelaxError "" ( "The content of the schema " ++ href ++ 
-                                    ", referenced in include does not match " ++
-                                    "the syntax for grammar" )
+                ( mkRelaxError ""
+		  ( "The content of the schema " ++ show href ++ 
+                    ", referenced in include does not match " ++
+                    "the syntax for grammar"
+		  )
                 )
                 ( processInclude href $< ( readForRelax readOptions href
                                            >>>
@@ -448,20 +460,25 @@ simplificationStep2 readOptions validateExternalRef validateInclude extHRefs inc
             -- must have a start component.
             hasStartComponent &&& (constA newDoc >>> hasStartComponent)
             >>> 
-            isA (\(a, b) -> if a then b else True)
+            isA (\ (a, b) -> if a then b else True)
           )
         ( ifA ( -- If the include element has a define component, then the grammar element
                 -- must have a define component with the same name.
                 getDefineComponents &&& (constA newDoc >>> getDefineComponents)
                 >>> 
-                isA (\(a, b) -> (diff a b) == [])
+                isA (\ (a, b) -> (diff a b) == [])
               )
             (insertNewDoc newDoc $<< hasStartComponent &&& getDefineComponents)
-            (mkRelaxError "" $ "Define-pattern missing in schema " ++ href ++ 
-                               ", referenced in include-pattern")
-        )
-        ( mkRelaxError "" $ "Grammar-element without a start-pattern in schema " ++
-                            href ++ ", referenced in include-pattern"
+            ( mkRelaxError ""
+	      ( "Define-pattern missing in schema " ++ show href ++ 
+                ", referenced in include-pattern"
+	      )
+            )
+	)
+        ( mkRelaxError ""
+	  ( "Grammar-element without a start-pattern in schema " ++
+            show href ++ ", referenced in include-pattern"
+	  )
         )
     where
     diff a b = (noDoubles a) \\ (noDoubles b)
@@ -766,8 +783,11 @@ simplificationStep4 =
 restrictionsStep1 :: IOSArrow XmlTree XmlTree
 restrictionsStep1 =
   ( processTopDown (
-      ( (mkRelaxError "" $ "An except element that is a child of an anyName " ++
-                           "element must not have any anyName descendant elements")
+      ( ( mkRelaxError ""
+	  ( "An except element that is a child of an anyName " ++
+            "element must not have any anyName descendant elements"
+	  )
+	)
         `when` 
         ( isElem >>> hasName "anyName"
           >>> getChildren
@@ -778,8 +798,10 @@ restrictionsStep1 =
         )
       )
       >>>
-      ( (mkRelaxError "" $ "An except element that is a child of an nsName element " ++
-                           "must not have any nsName or anyName descendant elements."
+      ( ( mkRelaxError ""
+	  ( "An except element that is a child of an nsName element " ++
+            "must not have any nsName or anyName descendant elements."
+	  )
         )
         `when` 
         ( isElem >>> hasName "nsName"
@@ -792,9 +814,11 @@ restrictionsStep1 =
         )
       )
       >>>
-      ( (mkRelaxError "" $ "A name element that occurs as the first child or descendant of " ++
-                           "an attribute and has an ns attribute with an empty value must " ++
-                           "not have content equal to xmlns"
+      ( ( mkRelaxError ""
+	  ( "A name element that occurs as the first child or descendant of " ++
+            "an attribute and has an ns attribute with an empty value must " ++
+            "not have content equal to xmlns"
+	  )
         )
         `when` 
         ( isElem >>> hasName "attribute"
@@ -812,9 +836,11 @@ restrictionsStep1 =
         )
       ) 
       >>>
-      ( (mkRelaxError "" $ "A name or nsName element that occurs as the first child or " ++
-                           "descendant of an attribute must not have an ns attribute " ++
-                           "with value http://www.w3.org/2000/xmlns"
+      ( ( mkRelaxError ""
+	  ( "A name or nsName element that occurs as the first child or " ++
+            "descendant of an attribute must not have an ns attribute " ++
+            "with value http://www.w3.org/2000/xmlns"
+	  )
         )
         `when` 
         ( isElem >>> hasName "attribute"
@@ -831,47 +857,61 @@ restrictionsStep1 =
         )
       ) 
       >>> -- A data or value element must be correct in its use of datatypes.
-      ( (checkDatatype $<< getAttrValue "datatypeLibrary" &&& getAttrValue "type")
+      ( ( checkDatatype $<< getAttrValue "datatypeLibrary" &&& getAttrValue "type" )
         `when`
-        (isElem >>> (hasName "data" `orElse` hasName "value"))
+        ( isElem >>> (hasName "data" `orElse` hasName "value") )
       )
     )
   ) `when` collectErrors
   where 
+
   -- the datatypeLibrary attribute must identify a valid datatype library
+
   checkDatatype :: Uri -> DatatypeName -> IOSArrow XmlTree XmlTree
   checkDatatype libName typeName 
-    = ifP (const $ elem libName $ map fst datatypeLibraries)    
-        (checkType libName typeName allowedDataTypes)
-        (mkRelaxError "" $ "DatatypeLibrary " ++ libName ++ " not found")
+      = ifP (const $ elem libName $ map fst datatypeLibraries)    
+        ( checkType libName typeName allowedDataTypes )
+        ( mkRelaxError ""
+	  ( "DatatypeLibrary " ++ show libName ++ " not found" )
+	)
     where
     DTC _ _ allowedDataTypes = fromJust $ lookup libName datatypeLibraries
             
   -- the type attribute must identify a datatype within the datatype library identified
-  -- by the value of the datatypeLibrary attribute. 
+  -- by the value of the datatypeLibrary attribute.
+
   checkType :: Uri -> DatatypeName -> AllowedDatatypes -> IOSArrow XmlTree XmlTree
   checkType libName typeName allowedTypes
-    = ifP (const $ elem typeName $ map fst allowedTypes)
-        (checkParams typeName libName getParams $< 
-             (listA (getChildren >>> hasName "param" >>> getAttrValue "name"))
+      = ifP (const $ elem typeName $ map fst allowedTypes)
+        ( checkParams typeName libName getParams $< 
+          ( listA (getChildren >>> hasName "param" >>> getAttrValue "name") )
         )
-        ( mkRelaxError "" $ "Datatype " ++ typeName ++ 
-                            " not declared for DatatypeLibrary " ++ libName
-        )
+       ( mkRelaxError ""
+	 ( "Datatype " ++ show typeName ++ 
+           " not declared for DatatypeLibrary " ++ show libName
+	 )
+       )
     where
     getParams = fromJust $ lookup typeName allowedTypes
             
-  -- For a data element, the parameter list must be one that is allowed by the datatype               
+  -- For a data element, the parameter list must be one that is allowed by the datatype
+
   checkParams :: DatatypeName -> Uri -> AllowedParams -> [ParamName] -> IOSArrow XmlTree XmlTree
   checkParams typeName libName allowedParams paramNames
-    = (mkRelaxError "" $ "Param(s): " ++ formatStringList ", " diff ++ 
-                         " not allowed for Datatype " ++ typeName ++ 
-                         " in Library " ++ (if libName == "" then relaxNamespace else libName)
-      )
-      `when`
-      (isElem >>> hasName "data" >>> isA (const $ diff /= [])) 
-    where
-    diff = filter (\param -> not $ elem param allowedParams) paramNames
+      = ( mkRelaxError ""
+	  ( "Param(s): " ++ formatStringListQuot diff ++ 
+            " not allowed for Datatype " ++ show typeName ++ 
+            " in Library " ++
+	    show ( if null libName
+		   then relaxNamespace
+		   else libName
+		 )
+	  )
+	)
+        `when`
+	( isElem >>> hasName "data" >>> isA (const $ diff /= [])) 
+      where
+      diff = filter (\param -> not $ elem param allowedParams) paramNames
 
           
 -- ------------------------------------------------------------
@@ -897,7 +937,7 @@ simplificationStep5 =
   ( processTopDown ( 
       ( ( ( (deep (isElem >>> hasName "relaxError"))               
             <+>
-            (mkRelaxError "" "A grammar must have a start child element")
+            ( mkRelaxError "" "A grammar must have a start child element" )
           )
           `when`
           (neg (getChildren >>> hasName "start"))
@@ -1031,9 +1071,10 @@ simplificationStep5 =
                    ( -- the referenced pattern does not exist in the schema
                      mkRelaxError "" $< ( getAttrValue "name"
                                          >>>
-                                         arr (\n -> "Define-Pattern with name " ++ n ++ 
-                                                    " referenced in ref-Pattern not " ++
-                                                    "found in schema"
+                                         arr (\ n -> ( "Define-Pattern with name " ++ show n ++ 
+                                                       " referenced in ref-Pattern not " ++
+                                                       "found in schema"
+						     )
                                              )
                                        )
                    )
@@ -1050,12 +1091,14 @@ simplificationStep5 =
                                          arr (\n -> fromJust $ lookup n parentRef)
                                        )
                    )
-                   (mkRelaxError "" $< ( getAttrValue "name" >>> 
-                                         arr (\n -> "Define-Pattern with name " ++ n ++ 
-                                                    " referenced in parentRef-Pattern " ++
-                                                    "not found in schema"
-                                             )
-                                       )
+                   ( mkRelaxError "" $<
+		     ( getAttrValue "name" >>> 
+                       arr (\ n -> ( "Define-Pattern with name " ++ show n ++ 
+                                     " referenced in parentRef-Pattern " ++
+                                     "not found in schema"
+                                   )
+			   )
+                     )
                    )
                 ),
           this :-> (renameDefines ref parentRef)
@@ -1096,16 +1139,18 @@ simplificationStep5 =
         (listA (getElems pattern name >>> removeAttr "combine")))                      
         >>> -- ((errorCode::Int,errorMessage::String), result::XmlTrees)
         choiceA [
-          isA (\((code,_) , _)   -> code == 0)
+          isA (\ ((code,_) , _)   -> code == 0)
                  :-> (mkRelaxError "" $< arr (snd . fst)),
-          isA (\((code,str) , _) -> code == 1 && str == "")
+          isA (\ ((code,str) , _) -> code == 1 && str == "")
                  :-> (arrL snd),
-          isA (\((code,str) , _) -> code == 1 && str /= "")
+          isA (\ ((code,str) , _) -> code == 1 && str /= "")
                  :-> (createPatternElem pattern name $<< 
                        ( arr (snd . fst) &&& (arr snd) )
                      ),                 
-          this   :-> (mkRelaxError "" $ "Can't create Pattern: " ++ pattern ++ 
-                                        " with name " ++ name ++ " in createPatternElems"
+          this   :-> ( mkRelaxError ""
+		       ( "Can't create Pattern: " ++ show pattern ++ 
+                         " with name " ++ show name ++ " in createPatternElems"
+		       )
                      )
         ]
 
@@ -1126,13 +1171,13 @@ simplificationStep5 =
          -- just one pattern with that name -> ok, no combine is needed
         (isA (\cl -> length cl == 1)) :-> constA (1, ""),
         (isA (\cl -> (length $ elemIndices "" cl) > 1)) 
-             :-> constA (0, "More than one " ++ pattern ++ "-Pattern: " ++ name ++ 
+             :-> constA (0, "More than one " ++ pattern ++ "-Pattern: " ++ show name ++ 
                             " without an combine-attribute in the same grammar"),
         (isA (\cl -> (length $ nub $ deleteBy (==) "" cl) > 1)) 
              :-> arr (\cl -> (0, "Different combine-Attributes: " ++ 
-                                 (formatStringList ", " $ noDoubles cl) ++
+                                 (formatStringListQuot $ noDoubles cl) ++
                                  " for the " ++ pattern ++ "-Pattern " ++
-                                 name ++ " in the same grammar")
+                                 show name ++ " in the same grammar")
                      ),
         -- ok -> combine value is returned
         this :-> arr (\cl -> (1, fromJust $ find (/= "") cl))
@@ -1214,9 +1259,9 @@ simplificationStep6 =
                     -- we have found a loop if the name is in the list
                     (mkRelaxError "" $< ( getAttrValue defineOrigName
                                           >>>
-                                          arr (\n -> "Recursion in ref-Pattern: " ++ 
-                                                     formatStringList " -> " 
-                                                     (reverse $ (n:) $ map snd foundNames)
+                                          arr (\ n -> ( "Recursion in ref-Pattern: " ++ 
+							formatStringListArr (reverse $ (n:) $ map snd foundNames)
+						      )
                                               )
                                         )
                     )
@@ -1494,8 +1539,8 @@ restrictionsStep2 =
                                           (getName &&& getChangesAttr >>> arr2 (++))
                                         )
                                   >>>
-                                  arr (\n -> formatStringList "-, " n ++ 
-                                             "-Pattern not allowed as descendent(s)" ++
+                                  arr (\n -> formatStringListPatt n ++ 
+                                             "Pattern not allowed as descendent(s)" ++
                                              " of a attribute-Pattern"
                                       )
                                 )
@@ -1522,9 +1567,9 @@ restrictionsStep2 =
                                   &&&
                                   getChangesAttr
                                   >>>
-                                  arr2 (\n c -> formatStringList "-, " n ++ 
-                                                "-Pattern not allowed as descendent(s) " ++
-                                                "of a oneOrMore-Pattern" ++ c ++ 
+                                  arr2 (\n c -> formatStringListPatt n ++ 
+                                                "Pattern not allowed as descendent(s) " ++
+                                                "of a oneOrMore-Pattern" ++ show c ++ 
                                                 " followed by an attribute descendent"
                                        )
                                 )
@@ -1553,8 +1598,8 @@ restrictionsStep2 =
                                           (getName &&& getChangesAttr >>> arr2 (++))
                                         )
                                   >>> 
-                                  arr (\n -> formatStringList "-, " n ++ 
-                                             "-Pattern not allowed as descendent(s) of a list-Pattern")
+                                  arr (\n -> formatStringListPatt n ++ 
+                                             "Pattern not allowed as descendent(s) of a list-Pattern")
                                 )
                                )
             ) 
@@ -1581,8 +1626,8 @@ restrictionsStep2 =
                                          (getName &&& getChangesAttr >>> arr2 (++))
                                         )
                                   >>>
-                                  arr (\n -> formatStringList "-, " n ++ 
-                                             "-Pattern not allowed as descendent(s) of a data/except-Pattern")
+                                  arr (\n -> formatStringListPatt n ++ 
+                                             "Pattern not allowed as descendent(s) of a data/except-Pattern")
                                 )
                                )
             ) 
@@ -1609,8 +1654,8 @@ restrictionsStep2 =
                                          (getName &&& getChangesAttr >>> arr2 (++))
                                         )
                                   >>> 
-                                  arr (\n -> formatStringList "-, " n ++ 
-                                             "-Pattern not allowed as descendent(s) of a start-Pattern")
+                                  arr (\n -> formatStringListPatt n ++ 
+                                             "Pattern not allowed as descendent(s) of a start-Pattern")
                                 )
                                )
             ) 
@@ -1640,8 +1685,10 @@ restrictionsStep3 =
            ( -- getAttrValue "name"
              (getChildren >>> hasName "name" >>> getChildren >>> getText)
              >>> 
-             arr (\n -> "Content of element " ++ n ++ " contains a pattern that can match " ++
-                        "a child and a pattern that matches a single string")
+             arr (\ n -> ( "Content of element " ++ show n ++ " contains a pattern that can match " ++
+                           "a child and a pattern that matches a single string"
+			 )
+		 )
            )
         )
       )
@@ -1765,24 +1812,28 @@ occur name fct
 -- Duplicate attributes are not allowed. -> fertig
 -- Attributes using infinite name classes must be repeated; an attribute element that 
 -- has an anyName or nsName descendant element must have a oneOrMore ancestor element. -> fertig
+
+-- berechnet alle define-Namen (fuer ref-Pattern) und Nameclasses der element-Pattern
+
 restrictionsStep4 :: IOSArrow XmlTree XmlTree          
-restrictionsStep4 =
-  ( -- berechnet alle define-Namen (fuer ref-Pattern) und Nameclasses der element-Pattern
-    restrictionsStep4' $< listA ( deep (isElem >>> hasName "define")
-                                  >>>
-                                  ( getAttrValue "name" 
-                                    &&& 
-                                    ( getChildren
-                                      >>>
-                                      listA getChildren
-                                      >>>
-                                      arr head
-                                      >>> 
-                                      fromLA createNameClass
-                                    )
-                                  )
-                                )
-  ) `when` collectErrors
+restrictionsStep4
+    = ( restrictionsStep4' $<
+	listA ( deep ( isElem >>> hasName "define" )		-- get all defines
+		>>>
+		( getAttrValue "name"				-- get define name
+		  &&& 
+		  ( single ( getChildren
+			     >>>
+			     getChildren
+			     >>> 
+			     fromLA createNameClass		-- compute the name class from 1. grandchild
+			   )
+		    `orElse`
+		    (constA AnyName)
+		  )
+		)
+              )
+      ) `when` collectErrors
 
 restrictionsStep4' :: [(String, NameClass)] -> IOSArrow XmlTree XmlTree          
 restrictionsStep4' nc =
@@ -1793,8 +1844,10 @@ restrictionsStep4' nc =
         ( mkRelaxError "" $< 
           ( getAttrValue "name"
             >>>
-            arr (\n -> "Both attribute-pattern occuring in an " ++ 
-                       n ++ " belong to the same name-class")
+            arr (\ n -> ( "Both attribute-pattern occuring in an " ++ 
+			  show n ++ " belong to the same name-class"
+			)
+		)
           )
         )
       )    
@@ -1807,7 +1860,7 @@ restrictionsStep4' nc =
           &&& 
           ( arr head
             >>> 
-            listA ( occur "attribute" (listA getChildren >>> arr head)
+            listA ( occur "attribute" (single getChildren)
                     >>> 
                     fromLA createNameClass
                   )
@@ -1815,7 +1868,7 @@ restrictionsStep4' nc =
           &&&
           ( arr last
             >>> 
-            listA ( occur "attribute" (listA getChildren >>> arr head)
+            listA ( occur "attribute" (single getChildren)
                     >>> 
                     fromLA createNameClass
                   )
@@ -1828,8 +1881,11 @@ restrictionsStep4' nc =
     (  
       ( (deep (isElem >>> hasName "relaxError"))               
         <+>
-        (mkRelaxError "" $ "An attribute that has an anyName or nsName descendant element " ++
-                           "must have a oneOrMore ancestor element")
+        ( mkRelaxError ""
+	  ( "An attribute that has an anyName or nsName descendant element " ++
+            "must have a oneOrMore ancestor element"
+	  )
+	)
       )
       `when`
       (isElem >>> hasName "element" >>> checkInfiniteAttribute)
@@ -1837,8 +1893,10 @@ restrictionsStep4' nc =
     >>>
     ( ( (deep (isElem >>> hasName "relaxError"))               
         <+>
-        ( mkRelaxError "" $ "Both element-pattern occuring in an interleave " ++
-                            "belong to the same name-class"
+        ( mkRelaxError ""
+	  ( "Both element-pattern occuring in an interleave " ++
+            "belong to the same name-class"
+	  )
         )
       )
       `when` 
@@ -1857,7 +1915,7 @@ restrictionsStep4' nc =
     >>>     
     ( ( (deep (isElem >>> hasName "relaxError"))               
         <+> 
-        (mkRelaxError "" "A text pattern must not occur in both children of an interleave")
+        ( mkRelaxError "" "A text pattern must not occur in both children of an interleave" )
       )
       `when` 
       (isElem >>> hasName "interleave" >>> checkText)
@@ -2091,18 +2149,26 @@ getAndSetCounter name
 
 createSimpleForm :: Attributes -> Bool -> Bool -> Bool -> IOSArrow XmlTree XmlTree
 createSimpleForm remainingOptions checkRestrictions validateExternalRef validateInclude
-    = if checkRestrictions
-      then createSimpleWithRest
-      else createSimpleWithoutRest
+    = traceMsg 2 ("createSimpleForm: " ++ show (remainingOptions, checkRestrictions,validateExternalRef, validateInclude))
+      >>>
+      ( if checkRestrictions
+	then createSimpleWithRest
+	else createSimpleWithoutRest
+      )
     where
 
     createSimpleWithRest :: IOSArrow XmlTree XmlTree
     createSimpleWithRest
 	= seqA $ concat [ simplificationPart1
+			, return $ traceDoc "Relax: after simplificationPart1"
 			, restrictionsPart1
+			, return $ traceDoc "Relax: after restrictionsPart1"
 			, simplificationPart2
+			, return $ traceDoc "Relax: after simplificationPart2"
 			, restrictionsPart2
+			, return $ traceDoc "Relax: after restrictionsPart2"
 			, finalCleanUp
+			, return $ traceDoc "Relax: after finalCleanUp"
 			]
 
     createSimpleWithoutRest :: IOSArrow XmlTree XmlTree
@@ -2114,18 +2180,27 @@ createSimpleForm remainingOptions checkRestrictions validateExternalRef validate
     simplificationPart1 :: [IOSArrow XmlTree XmlTree]
     simplificationPart1
 	= [ propagateNamespaces
+	  , traceDoc "Relax: after propagateNamespaces"
 	  , simplificationStep1
+	  , traceDoc "Relax: after simplificationStep1"
 	  , simplificationStep2 remainingOptions validateExternalRef validateInclude [] []
+	  , traceDoc "Relax: after simplificationStep2"
 	  , simplificationStep3
+	  , traceDoc "Relax: after simplificationStep3"
 	  , simplificationStep4
+	  , traceDoc "Relax: after simplificationStep4"
 	  ]
 
     simplificationPart2 :: [IOSArrow XmlTree XmlTree]
     simplificationPart2
 	= [ simplificationStep5
+	  , traceDoc "Relax: after simplificationStep5"
 	  , simplificationStep6
+	  , traceDoc "Relax: after simplificationStep6"
 	  , simplificationStep7
+	  , traceDoc "Relax: after simplificationStep7"
 	  , simplificationStep8
+	  , traceDoc "Relax: after simplificationStep8"
 	  ]
 
     restrictionsPart1 :: [IOSArrow XmlTree XmlTree]
@@ -2135,14 +2210,19 @@ createSimpleForm remainingOptions checkRestrictions validateExternalRef validate
     restrictionsPart2 :: [IOSArrow XmlTree XmlTree]
     restrictionsPart2
 	= [ restrictionsStep2
+	  , traceDoc "Relax: after restrictionsStep2"
 	  , restrictionsStep3
+	  , traceDoc "Relax: after restrictionsStep3"
 	  , restrictionsStep4                    
+	  , traceDoc "Relax: after restrictionsStep4"
 	  ]
 
     finalCleanUp :: [IOSArrow XmlTree XmlTree]                    
     finalCleanUp
 	= [ cleanUp
+	  , traceDoc "Relax: after cleanUp"
 	  , resetStates
+	  , traceDoc "Relax: after resetStates"
 	  ]
 
     cleanUp :: IOSArrow XmlTree XmlTree
@@ -2150,3 +2230,5 @@ createSimpleForm remainingOptions checkRestrictions validateExternalRef validate
               removeAttr a_relaxSimplificationChanges
 	      >>>
               removeAttr defineOrigName
+
+-- -------------------------------------------------------------------------------------------------------            

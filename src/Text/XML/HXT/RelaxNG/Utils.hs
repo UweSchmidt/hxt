@@ -7,6 +7,11 @@ module Text.XML.HXT.RelaxNG.Utils
     , normalizeURI
     , parseNumber
     , formatStringList
+    , formatStringListPatt
+    , formatStringListId
+    , formatStringListQuot
+    , formatStringListPairs
+    , formatStringListArr
     , qn2String
     )
 where
@@ -81,23 +86,49 @@ parseNumber s
 
 {- | 
 
-Formats a list of strings into a single string. The first parameter is inserted
+Formats a list of strings into a single string.
+The first parameter formats the elements, the 2. is inserted
 between two elements.
 
 example:
 
-> formatStringList ", " ["foo", "bar", "baz"] -> "foo, bar, baz"
+> formatStringList show ", " ["foo", "bar", "baz"] -> "foo", "bar", "baz"
 
 -}
 
-formatStringList :: String -> [String] -> String
-formatStringList _ []
+formatStringListPatt :: [String] -> String
+formatStringListPatt
+    = formatStringList (++ "-") ", "
+
+formatStringListPairs :: [(String,String)] -> String
+formatStringListPairs
+    = formatStringList id ", "
+      . map (\ (a, b) -> a ++ " = " ++ show b)
+
+formatStringListQuot :: [String] -> String
+formatStringListQuot
+    = formatStringList show ", "
+
+formatStringListId :: [String] -> String
+formatStringListId
+    = formatStringList id ", "
+
+formatStringListArr :: [String] -> String
+formatStringListArr
+    = formatStringList show " -> "
+
+formatStringList :: (String -> String) -> String -> [String] -> String
+formatStringList _sf _sp []
     = ""
-formatStringList spacer l
+formatStringList sf spacer l
     = reverse $ drop (length spacer) $ reverse $ 
-      foldr (\e -> ((if e /= "" then e ++ spacer else "") ++)) "" l
+      foldr (\e -> ((if e /= "" then sf e ++ spacer else "") ++)) "" l
 
 
 -- | Formats a qualified name, e.g. \"{namespace}localName\"
+
 qn2String :: QName -> String
-qn2String (QN _ lp ns) = "{" ++ ns ++ "}" ++ lp
+qn2String (QN _ lp ns)
+    = if null ns
+      then lp
+      else "{" ++ ns ++ "}" ++ lp

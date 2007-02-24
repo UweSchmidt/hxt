@@ -37,7 +37,7 @@ import Text.XML.HXT.RelaxNG.PatternToString
 import Text.XML.HXT.RelaxNG.DataTypeLibraries
 import Text.XML.HXT.RelaxNG.Utils
     ( qn2String
-    , formatStringList
+    , formatStringListQuot
     , compareURI
     )
 
@@ -93,7 +93,7 @@ handleErrors
 
 
 {- |
-   normalize a document for validation with Relax NG: remove all namespace declaraion attributes,
+   normalize a document for validation with Relax NG: remove all namespace declaration attributes,
    remove all processing instructions and merge all sequences of text nodes into a single text node
 -}
 
@@ -291,31 +291,34 @@ textDeriv cx (DataExcept (uri, s) params p) s1
       of
       Nothing     -> if not $ nullable $ textDeriv cx p s1 
                      then Empty 
-		     else NotAllowed ( "Any value except '" ++
-				       show p ++ 
-				       "' expected, but value '" ++
-				       s1 ++
-				       "' found"
-				     )
+		     else NotAllowed
+			      ( "Any value except " ++
+				show (show p) ++ 
+				" expected, but value " ++
+				show (show s1) ++
+				" found"
+			      )
       Just errStr -> NotAllowed errStr
 
 textDeriv cx (List p) s
     = if nullable (listDeriv cx p (words s)) 
       then Empty
-      else NotAllowed ( "List with value(s) " ++
-			show p ++ 
-			" expected, but value(s) " ++ 
-			formatStringList ", " (words s) ++
-			" found"
-		      )
+      else NotAllowed
+	       ( "List with value(s) " ++
+		 show p ++ 
+		 " expected, but value(s) " ++ 
+		 formatStringListQuot (words s) ++
+		 " found"
+	       )
 
 textDeriv _ n@(NotAllowed _) _
     = n
 
 textDeriv _ p s
-    = NotAllowed ( "Pattern " ++ getPatternName p ++
-		   " expected, but text " ++ s ++ " found"
-		 )
+    = NotAllowed
+      ( "Pattern " ++ show (getPatternName p) ++
+	" expected, but text " ++ show s ++ " found"
+      )
 
 
 -- | To compute the derivative of a pattern with respect to a list of strings, 

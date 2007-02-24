@@ -282,7 +282,7 @@ children2FormatedString :: String -> SLA [NameClass] Pattern String
 children2FormatedString name
     = listA (arrL getChildrenPattern >>> patternToFormatedString) 
       >>^
-      (\ l -> name ++ " (" ++ formatStringList ", " l ++ ") " )
+      (\ l -> name ++ " (" ++ formatStringListPatt l ++ ") " )
 
 data2FormatedString :: SLA [NameClass] Pattern String
 data2FormatedString
@@ -332,7 +332,7 @@ createFormatedStringFromElement name
 	&&&
 	( listA (arrL getChildrenPattern >>> patternToFormatedString)
 	  >>^
-	  formatStringList ", "
+	  formatStringListId
 	)
       )
       >>>
@@ -344,7 +344,7 @@ createFormatedStringFromElement name
 mapping2String :: String -> [(Prefix, Uri)] -> String
 mapping2String name mapping
     = name ++ ": " ++ 
-      formatStringList ", " (map (\(a, b) -> a ++ " = " ++ b) mapping)
+      formatStringList id ", " (map (\(a, b) -> a ++ " = " ++ b) mapping)
 
 datatype2String :: Datatype -> String
 datatype2String (lib, localName)
