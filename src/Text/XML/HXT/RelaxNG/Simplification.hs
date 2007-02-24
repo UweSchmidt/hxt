@@ -823,9 +823,7 @@ restrictionsStep1 =
         `when` 
         ( isElem >>> hasName "attribute"
           >>>
-          listA getChildren
-          >>>
-          arr head
+          firstChild
           >>>
           ( multi (isElem >>> hasName "name" >>> hasAttr "ns") )
           >>>
@@ -845,9 +843,7 @@ restrictionsStep1 =
         `when` 
         ( isElem >>> hasName "attribute"
           >>>
-          listA getChildren
-          >>>
-          arr head
+          firstChild
           >>>
           ( multi (checkElemName ["name", "nsName"] >>> hasAttr "ns") )
           >>>
@@ -1299,13 +1295,12 @@ simplificationStep6 =
         ])
     where
     getDefineName :: IOSArrow XmlTree String
-    getDefineName = listA getChildren 
-                    >>>
-                    arr head
-                    >>>
-                    fromLA createNameClass
-                    >>>
-                    arr show
+    getDefineName
+	= firstChild
+          >>>
+          fromLA createNameClass
+          >>>
+          arr show
     
     processElements' :: NewName -> OldName -> IOSArrow XmlTree XmlTree
     processElements' name oldname
@@ -1737,26 +1732,24 @@ getContentType =
         )
   processAttribute :: IOSArrow XmlTree ContentType
   processAttribute
-    = ifA ( listA getChildren >>> arr last
-            >>>
-            getContentType >>> isA (/= CTNone)
-          )
+      = ifA ( lastChild
+              >>>
+              getContentType
+	      >>>
+	      isA (/= CTNone)
+            )
         (constA CTEmpty)
         (constA CTNone)
   
   processGroup :: IOSArrow XmlTree ContentType
   processGroup
-    = listA getChildren
-      >>>
-      ((arr head >>> getContentType) &&& (arr last >>> getContentType))
+    = get2ContentTypes
       >>>
       arr2 (\a b -> if isGroupable a b then max a b else CTNone)
   
   processInterleave :: IOSArrow XmlTree ContentType
   processInterleave
-     = listA getChildren
-       >>> 
-       ((arr head >>> getContentType) &&& (arr last >>> getContentType))
+     = get2ContentTypes
        >>>
        arr2 (\a b -> if isGroupable a b then max a b else CTNone)
   
@@ -1773,9 +1766,7 @@ getContentType =
   
   processChoice :: IOSArrow XmlTree ContentType
   processChoice
-    = listA getChildren
-      >>> 
-      ((arr head >>> getContentType) &&& (arr last >>> getContentType))
+    = get2ContentTypes
       >>> 
       arr2 max
 
@@ -1783,29 +1774,37 @@ getContentType =
   isGroupable CTEmpty   _         = True
   isGroupable _         CTEmpty   = True
   isGroupable CTComplex CTComplex = True
-  isGroupable _         _         = False
-    
-    
-    
-    
+  isGroupable _         _         = False   
+
+
 checkPattern :: IOSArrow (XmlTree, ([NameClass], [NameClass])) XmlTree
-checkPattern = (\ (_, (a, b)) -> isIn a b) `guardsP` (arr fst)
-  where
-  isIn :: [NameClass] -> [NameClass] -> Bool
-  isIn _ []      = False
-  isIn [] _      = False
-  isIn (x:xs) ys = (any (overlap x) ys) || isIn xs ys
+checkPattern
+    = (\ (_, (a, b)) -> isIn a b) `guardsP` (arr fst)
+    where
+    isIn :: [NameClass] -> [NameClass] -> Bool
+    isIn _ []      = False
+    isIn [] _      = False
+    isIn (x:xs) ys = (any (overlap x) ys) || isIn xs ys
 
 
 occur :: String -> IOSArrow XmlTree XmlTree -> IOSArrow XmlTree XmlTree
 occur name fct
-  = choiceA [ 
-      (isElem >>> hasName name) :-> fct,
-      (checkElemName ["choice", "interleave", "group", "oneOrMore"])
-                                :-> (getChildren >>> occur name fct)
-    ]
+    = choiceA
+      [ ( isElem >>> hasName name )
+	:->
+	fct
+      , ( checkElemName ["choice", "interleave", "group", "oneOrMore"])
+	:->
+	(getChildren >>> occur name fct)
+      ]
 
-            
+get2ContentTypes :: IOSArrow XmlTree (ContentType, ContentType)
+get2ContentTypes
+    = ( ( firstChild >>> getContentType )
+	&&&
+	( lastChild  >>> getContentType )
+      )
+
 -- ------------------------------------------------------------            
 
 
@@ -1854,11 +1853,9 @@ restrictionsStep4' nc =
       `when` 
       ( isElem >>> (hasName "group" `orElse` hasName "interleave")
         >>>
-        listA getChildren
-        >>> 
-        ( (arrL id)
+        ( getChildren
           &&& 
-          ( arr head
+          ( firstChild
             >>> 
             listA ( occur "attribute" (single getChildren)
                     >>> 
@@ -1866,7 +1863,7 @@ restrictionsStep4' nc =
                   )
           ) 
           &&&
-          ( arr last
+          ( lastChild
             >>> 
             listA ( occur "attribute" (single getChildren)
                     >>> 
@@ -1900,13 +1897,13 @@ restrictionsStep4' nc =
         )
       )
       `when` 
-      ( isElem >>> hasName "interleave" >>> listA getChildren
+      ( isElem >>> hasName "interleave"
         >>> 
-        ( (arrL id)
+        ( getChildren
           &&&
-          (arr head >>> listA (occur "ref" this >>> getAttrValue "name")) 
+          (firstChild >>> listA (occur "ref" this >>> getAttrValue "name")) 
           &&&
-          (arr last >>> listA (occur "ref" this >>> getAttrValue "name"))
+          (lastChild  >>> listA (occur "ref" this >>> getAttrValue "name"))
         )
         >>>
         checkNames
@@ -1948,13 +1945,10 @@ restrictionsStep4' nc =
     getNameClasses nc' l = map (\x -> fromJust $ lookup x nc') l
     
   checkText :: IOSArrow XmlTree XmlTree
-  checkText = listA getChildren
-              >>> 
-              ( (arr head >>> occur "text" this)
-                `guards` 
-                (arr last >>> occur "text" this)
-              )
-
+  checkText
+      = ( firstChild >>> occur "text" this )
+        `guards` 
+        ( lastChild  >>> occur "text" this )
        
 -- ------------------------------------------------------------
 
@@ -2160,15 +2154,15 @@ createSimpleForm remainingOptions checkRestrictions validateExternalRef validate
     createSimpleWithRest :: IOSArrow XmlTree XmlTree
     createSimpleWithRest
 	= seqA $ concat [ simplificationPart1
-			, return $ traceDoc "Relax: after simplificationPart1"
+			, return $ traceDoc "relax NG: simplificationPart1 done"
 			, restrictionsPart1
-			, return $ traceDoc "Relax: after restrictionsPart1"
+			, return $ traceDoc "relax NG: restrictionsPart1 done"
 			, simplificationPart2
-			, return $ traceDoc "Relax: after simplificationPart2"
+			, return $ traceDoc "relax NG simplificationPart2 done"
 			, restrictionsPart2
-			, return $ traceDoc "Relax: after restrictionsPart2"
+			, return $ traceDoc "relax NG: restrictionsPart2 done"
 			, finalCleanUp
-			, return $ traceDoc "Relax: after finalCleanUp"
+			, return $ traceDoc "relax NG: finalCleanUp done"
 			]
 
     createSimpleWithoutRest :: IOSArrow XmlTree XmlTree
@@ -2180,27 +2174,18 @@ createSimpleForm remainingOptions checkRestrictions validateExternalRef validate
     simplificationPart1 :: [IOSArrow XmlTree XmlTree]
     simplificationPart1
 	= [ propagateNamespaces
-	  , traceDoc "Relax: after propagateNamespaces"
 	  , simplificationStep1
-	  , traceDoc "Relax: after simplificationStep1"
 	  , simplificationStep2 remainingOptions validateExternalRef validateInclude [] []
-	  , traceDoc "Relax: after simplificationStep2"
 	  , simplificationStep3
-	  , traceDoc "Relax: after simplificationStep3"
 	  , simplificationStep4
-	  , traceDoc "Relax: after simplificationStep4"
 	  ]
 
     simplificationPart2 :: [IOSArrow XmlTree XmlTree]
     simplificationPart2
 	= [ simplificationStep5
-	  , traceDoc "Relax: after simplificationStep5"
 	  , simplificationStep6
-	  , traceDoc "Relax: after simplificationStep6"
 	  , simplificationStep7
-	  , traceDoc "Relax: after simplificationStep7"
 	  , simplificationStep8
-	  , traceDoc "Relax: after simplificationStep8"
 	  ]
 
     restrictionsPart1 :: [IOSArrow XmlTree XmlTree]
@@ -2210,19 +2195,14 @@ createSimpleForm remainingOptions checkRestrictions validateExternalRef validate
     restrictionsPart2 :: [IOSArrow XmlTree XmlTree]
     restrictionsPart2
 	= [ restrictionsStep2
-	  , traceDoc "Relax: after restrictionsStep2"
 	  , restrictionsStep3
-	  , traceDoc "Relax: after restrictionsStep3"
 	  , restrictionsStep4                    
-	  , traceDoc "Relax: after restrictionsStep4"
 	  ]
 
     finalCleanUp :: [IOSArrow XmlTree XmlTree]                    
     finalCleanUp
 	= [ cleanUp
-	  , traceDoc "Relax: after cleanUp"
 	  , resetStates
-	  , traceDoc "Relax: after resetStates"
 	  ]
 
     cleanUp :: IOSArrow XmlTree XmlTree

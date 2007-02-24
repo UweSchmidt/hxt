@@ -7,6 +7,8 @@
 module Text.XML.HXT.RelaxNG.CreatePattern
   ( createPatternFromXmlTree
   , createNameClass
+  , firstChild
+  , lastChild
   , module Text.XML.HXT.RelaxNG.PatternFunctions
   )
 where
@@ -148,41 +150,43 @@ mkRelaxError errStr
 
 -- | Transforms a choice-element.
 mkRelaxChoice :: Env -> LA XmlTree Pattern
-mkRelaxChoice env = listA getChildren
-                    >>> 
-                    ifP (\l -> length l == 1)
-                      (arrL id >>> createPatternFromXml env)
-                      (getTwoChildrenPattern env >>> arr2 Choice)
+mkRelaxChoice env
+    = ifA ( getChildren >>.
+	    ( \ l -> if length l == 1 then l else [] )
+	  )
+      ( createPatternFromXml env )
+      ( getTwoChildrenPattern env >>> arr2 Choice )
 
-               
 -- | Transforms a interleave-element.
 mkRelaxInterleave :: Env -> LA XmlTree Pattern
-mkRelaxInterleave env = listA getChildren
-                        >>> 
-                        getTwoChildrenPattern env
-                        >>> 
-                        arr2 Interleave
+mkRelaxInterleave env
+    = getTwoChildrenPattern env
+      >>> 
+      arr2 Interleave
 
 
 -- | Transforms a group-element.
 mkRelaxGroup :: Env -> LA XmlTree Pattern
-mkRelaxGroup env = listA getChildren
-                   >>> 
-                   getTwoChildrenPattern env
-                   >>>
-                   arr2 Group
+mkRelaxGroup env
+    = getTwoChildrenPattern env
+      >>>
+      arr2 Group
 
 
 -- | Transforms a oneOrMore-element.
 mkRelaxOneOrMore :: Env -> LA XmlTree Pattern
-mkRelaxOneOrMore env = getOneChildPattern env
-                       >>> 
-                       arr OneOrMore
+mkRelaxOneOrMore env
+    = getOneChildPattern env
+      >>> 
+      arr OneOrMore
 
 
 -- | Transforms a list-element.
 mkRelaxList :: Env -> LA XmlTree Pattern
-mkRelaxList env = getOneChildPattern env >>> arr List
+mkRelaxList env
+    = getOneChildPattern env
+      >>>
+      arr List
 
 
 -- | Transforms a data- or dataExcept-element.
@@ -240,25 +244,27 @@ getDatatype = getAttrValue "datatypeLibrary"
 
 
 -- | Transforms a attribute-element.
--- The first child is a 'NameClass', the second one a pattern.
+-- The first child is a 'NameClass', the second (the last) one a pattern.
+
 mkRelaxAttribute :: Env -> LA XmlTree Pattern
 mkRelaxAttribute env
- = listA getChildren
-   >>> 
-   ((arr head >>> createNameClass) &&& secondPattern env)
-   >>>
-   arr2 Attribute
-
+    = ( ( firstChild >>> createNameClass )
+	&&&
+	( lastChild >>> createPatternFromXml env )
+      )
+      >>>
+      arr2 Attribute
 
 -- | Transforms a element-element.
--- The first child is a 'NameClass', the second one a pattern.
+-- The first child is a 'NameClass', the second (the last) one a pattern.
 mkRelaxElement :: Env -> LA XmlTree Pattern
 mkRelaxElement env
- = listA getChildren
-   >>> 
-   ((arr head >>> createNameClass) &&& secondPattern env)
-   >>>
-   arr2 Element
+    = ( ( firstChild >>> createNameClass )
+	&&&
+	( lastChild >>> createPatternFromXml env )
+      )
+      >>>
+      arr2 Element
 
 
 -- | Creates a 'NameClass' from an \"anyName\"-, \"nsName\"- or  \"name\"-Pattern, 
@@ -300,13 +306,13 @@ createNameClass
 
     processChoice :: LA XmlTree NameClass
     processChoice
-	= listA getChildren
-	  >>>
-	  (arr head >>> createNameClass) &&& (arr last >>> createNameClass)
+	= ( ( firstChild >>> createNameClass )
+	    &&&
+	    ( lastChild  >>> createNameClass )
+	  )
           >>>
 	  arr2 NameClassChoice
                         
-
 mkNameClassError :: LA XmlTree NameClass
 mkNameClassError 
     = choiceA [ ( isElem >>> hasName "relaxError" )
@@ -331,18 +337,20 @@ mkNameClassError
 
 
 getOneChildPattern :: Env -> LA XmlTree Pattern
-getOneChildPattern env = getChildren >>> createPatternFromXml env
+getOneChildPattern env
+    = firstChild >>> createPatternFromXml env
 
 
-getTwoChildrenPattern :: Env -> LA XmlTrees (Pattern, Pattern)
-getTwoChildrenPattern env = firstPattern env &&& secondPattern env
+getTwoChildrenPattern :: Env -> LA XmlTree (Pattern, Pattern)
+getTwoChildrenPattern env
+    = ( getOneChildPattern env )
+	&&&
+	( lastChild  >>> createPatternFromXml env )
 
+-- | Simple access arrows
 
-firstPattern :: Env -> LA XmlTrees Pattern
-firstPattern env = arr head >>> createPatternFromXml env
+firstChild	:: (ArrowTree a, Tree t) => a (t b) (t b)
+firstChild	= single getChildren
 
-
--- | After simplification, each choice, group, etc. pattern has exactly two children,
--- so @last@ selects the second one
-secondPattern :: Env -> LA XmlTrees Pattern
-secondPattern env = arr last >>> createPatternFromXml env
+lastChild	:: (ArrowTree a, Tree t) => a (t b) (t b)
+lastChild	= getChildren >>. (take 1 . reverse)
