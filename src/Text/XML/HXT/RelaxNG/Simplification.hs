@@ -249,8 +249,8 @@ simplificationStep1
 	replaceQNames :: [(String, String)] -> String -> IOSArrow XmlTree XmlTree                        
 	replaceQNames e name
 	    | isNothing uri
-		= mkRelaxError "" ( "No Namespace-Mapping for the prefix " ++ pre ++ 
-				    " in the Context of Element: " ++ name
+		= mkRelaxError "" ( "No Namespace-Mapping for the prefix " ++ show pre ++ 
+				    " in the Context of Element: " ++ show name
 				  )
 	    | otherwise
 		= addAttr "name" ( "{" ++ (fromJust uri) ++ "}" ++ local )
@@ -813,7 +813,7 @@ restrictionsStep1 =
       ( ( mkRelaxError ""
 	  ( "A name element that occurs as the first child or descendant of " ++
             "an attribute and has an ns attribute with an empty value must " ++
-            "not have content equal to xmlns"
+            "not have content equal to \"xmlns\""
 	  )
         )
         `when` 
@@ -1618,10 +1618,12 @@ restrictionsStep2 =
                                   &&&
                                   getChangesAttr
                                   >>>
-                                  arr2 (\n c -> formatStringListPatt n ++ 
-                                                "Pattern not allowed as descendent(s) " ++
-                                                "of a oneOrMore-Pattern" ++ show c ++ 
-                                                " followed by an attribute descendent"
+                                  arr2 (\ n c -> ( formatStringListPatt n ++ 
+                                                   "Pattern not allowed as descendent(s) " ++
+                                                   "of a oneOrMore-Pattern" ++
+						   (if null c then "" else " " ++ show c) ++ 
+                                                   " followed by an attribute descendent"
+						 )
                                        )
                                 )
                                )
