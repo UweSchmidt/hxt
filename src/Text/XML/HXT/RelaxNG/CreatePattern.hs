@@ -17,13 +17,10 @@ import Control.Arrow.ListArrows
 
 import Text.XML.HXT.Arrow.DOMInterface
 
-import Text.XML.HXT.Arrow.XmlArrow hiding
-    ( hasName )
-
-import qualified Text.XML.HXT.Arrow.XmlArrow as A
-    ( hasName )
+import Text.XML.HXT.Arrow.XmlArrow
 
 import Text.XML.HXT.RelaxNG.DataTypes
+import Text.XML.HXT.RelaxNG.BasicArrows
 import Text.XML.HXT.RelaxNG.PatternFunctions
 
 import Data.Maybe
@@ -34,13 +31,8 @@ import Data.List
 
 -- ------------------------------------------------------------
 
-hasName :: String -> LA XmlTree XmlTree
-hasName s = A.hasName s 
-            `orElse`
-            (hasLocalPart s >>> hasNamespaceUri relaxNamespace)
-
-
 -- | Creates the 'Pattern' datastructure from a simplified Relax NG schema.
+
 createPatternFromXmlTree :: LA XmlTree Pattern
 createPatternFromXmlTree = createPatternFromXml $< createEnv
  where
@@ -48,29 +40,30 @@ createPatternFromXmlTree = createPatternFromXml $< createEnv
  -- Each list entry maps the define name to the children of the define-pattern.
  -- The map is used to replace a ref-pattern with the referenced define-pattern.
  createEnv :: LA XmlTree Env
- createEnv = listA $ deep (isElem >>> hasName "define") 
+ createEnv = listA $ deep isRngDefine 
                      >>> 
-                     (getAttrValue "name" &&& getChildren)
+                     (getRngAttrName &&& getChildren)
 
 
 -- | Transforms each XML-element to the corresponding pattern
+
 createPatternFromXml :: Env -> LA XmlTree Pattern
 createPatternFromXml env
  = choiceA [
      isRoot                            :-> processRoot env,
-     (isElem >>> hasName "empty")      :-> constA Empty,
-     (isElem >>> hasName "notAllowed") :-> mkNotAllowed,
-     (isElem >>> hasName "text")       :-> constA Text,
-     (isElem >>> hasName "choice")     :-> mkRelaxChoice env,
-     (isElem >>> hasName "interleave") :-> mkRelaxInterleave env,
-     (isElem >>> hasName "group")      :-> mkRelaxGroup env,
-     (isElem >>> hasName "oneOrMore")  :-> mkRelaxOneOrMore env,
-     (isElem >>> hasName "list")       :-> mkRelaxList env,
-     (isElem >>> hasName "data")       :-> mkRelaxData env,
-     (isElem >>> hasName "value")      :-> mkRelaxValue,
-     (isElem >>> hasName "attribute")  :-> mkRelaxAttribute env,
-     (isElem >>> hasName "element")    :-> mkRelaxElement env,
-     (isElem >>> hasName "ref")        :-> mkRelaxRef env,
+     isRngEmpty      :-> constA Empty,
+     isRngNotAllowed :-> mkNotAllowed,
+     isRngText       :-> constA Text,
+     isRngChoice     :-> mkRelaxChoice env,
+     isRngInterleave :-> mkRelaxInterleave env,
+     isRngGroup      :-> mkRelaxGroup env,
+     isRngOneOrMore  :-> mkRelaxOneOrMore env,
+     isRngList       :-> mkRelaxList env,
+     isRngData       :-> mkRelaxData env,
+     isRngValue      :-> mkRelaxValue,
+     isRngAttribute  :-> mkRelaxAttribute env,
+     isRngElement    :-> mkRelaxElement env,
+     isRngRef        :-> mkRelaxRef env,
      this                              :-> mkRelaxError ""
    ]
 
@@ -80,8 +73,8 @@ processRoot env
   = getChildren
     >>> 
     choiceA [
-      (isElem >>> hasName "relaxError") :-> (mkRelaxError $< getAttrValue "desc"),
-      (isElem >>> hasName "grammar")    :-> (processGrammar env),
+      isRngRelaxError :-> (mkRelaxError $< getRngAttrDescr),
+      isRngGrammar    :-> (processGrammar env),
       this                              :-> (mkRelaxError "no grammar-pattern in schema")
     ]
 
@@ -91,10 +84,10 @@ processGrammar env
   = getChildren
     >>> 
     choiceA [
-      (isElem >>> hasName "define")     :-> none,
-      (isElem >>> hasName "relaxError") :-> (mkRelaxError $< getAttrValue "desc"),
-      (isElem >>> hasName "start")      :-> (getChildren >>> createPatternFromXml env),
-      this                              :-> (mkRelaxError "no start-pattern in schema")
+      isRngDefine     :-> none,
+      isRngRelaxError :-> (mkRelaxError $< getAttrValue "desc"),
+      isRngStart      :-> (getChildren >>> createPatternFromXml env),
+      this            :-> (mkRelaxError "no start-pattern in schema")
     ]
 
 
@@ -106,7 +99,7 @@ processGrammar env
 -}
 mkRelaxRef :: Env -> LA XmlTree Pattern
 mkRelaxRef e
- = getAttrValue "name"
+ = getRngAttrName
    >>>
    arr (\n -> fromMaybe (NotAllowed $ "define-pattern with name " ++ n ++ " not found")
               . lookup n $ transformEnv e
@@ -127,7 +120,7 @@ mkNotAllowed = constA $ NotAllowed "notAllowed-pattern in Relax NG schema defini
 mkRelaxError :: String -> LA XmlTree Pattern
 mkRelaxError errStr
  = choiceA [
-     (isElem >>> hasName "relaxError") :-> (getAttrValue "desc" >>> arr NotAllowed),
+     isRngRelaxError :-> (getRngAttrDescr >>> arr NotAllowed),
      isElem  :-> ( getName
                    >>>
                    arr (\n -> NotAllowed $ "Pattern " ++ n ++ 
@@ -192,7 +185,7 @@ mkRelaxList env
 -- | Transforms a data- or dataExcept-element.
 mkRelaxData :: Env -> LA XmlTree Pattern
 mkRelaxData env 
-  = ifA (getChildren >>> hasName "except")
+  = ifA (getChildren >>> isRngExcept)
      (processDataExcept >>> arr3 DataExcept)
      (processData >>> arr2 Data)
   where
@@ -200,7 +193,7 @@ mkRelaxData env
   processDataExcept = getDatatype &&& getParamList &&& 
                       ( getChildren
                         >>> 
-                        isElem >>> hasName "except"
+                        isRngExcept
                         >>> 
                         getChildren
                         >>>
@@ -211,9 +204,9 @@ mkRelaxData env
   getParamList :: LA XmlTree ParamList
   getParamList = listA $ getChildren
                          >>>
-                         isElem >>> hasName "param"
+                         isRngParam
                          >>> 
-                         (getAttrValue "name" &&& (getChildren >>> getText))
+                         (getRngAttrName &&& (getChildren >>> getText))
          
 
 -- | Transforms a value-element.
@@ -238,9 +231,9 @@ mkRelaxValue = getDatatype &&& getValue &&& getContext
 
 
 getDatatype :: LA XmlTree Datatype
-getDatatype = getAttrValue "datatypeLibrary"
+getDatatype = getRngAttrDatatypeLibrary
               &&&
-              getAttrValue "type"
+              getRngAttrType
 
 
 -- | Transforms a attribute-element.
@@ -271,16 +264,16 @@ mkRelaxElement env
 createNameClass :: LA XmlTree NameClass
 createNameClass
     = choiceA
-      [ (isElem >>> hasName "anyName") :-> processAnyName
-      , (isElem >>> hasName "nsName")  :-> processNsName
-      , (isElem >>> hasName "name")    :-> processName
-      , (isElem >>> hasName "choice")  :-> processChoice
-      , this                           :-> mkNameClassError
+      [ isRngAnyName :-> processAnyName
+      , isRngNsName  :-> processNsName
+      , isRngName    :-> processName
+      , isRngChoice  :-> processChoice
+      , this         :-> mkNameClassError
       ]
     where
     processAnyName :: LA XmlTree NameClass
     processAnyName
-	= ifA (getChildren >>> hasName "except")
+	= ifA (getChildren >>> isRngExcept)
           ( getChildren
 	    >>> getChildren
 	    >>> createNameClass
@@ -290,19 +283,19 @@ createNameClass
 
     processNsName :: LA XmlTree NameClass
     processNsName
-	= ifA (getChildren >>> hasName "except")
-          ( ( getAttrValue "ns" 
+	= ifA (getChildren >>> isRngExcept)
+          ( ( getRngAttrNs 
               &&&
               ( getChildren >>> getChildren >>> createNameClass )
             )
             >>> 
             arr2 NsNameExcept
           )
-          ( getAttrValue "ns" >>> arr NsName ) 
+          ( getRngAttrNs >>> arr NsName ) 
 
     processName :: LA XmlTree NameClass
     processName
-	= (getAttrValue "ns" &&& (getChildren >>> getText)) >>> arr2 Name
+	= (getRngAttrNs &&& (getChildren >>> getText)) >>> arr2 Name
 
     processChoice :: LA XmlTree NameClass
     processChoice
@@ -315,8 +308,8 @@ createNameClass
                         
 mkNameClassError :: LA XmlTree NameClass
 mkNameClassError 
-    = choiceA [ ( isElem >>> hasName "relaxError" )
-                        :-> ( getAttrValue "desc"
+    = choiceA [ isRngRelaxError
+                        :-> ( getRngAttrDescr
 			      >>>
 			      arr NCError
 			 )
