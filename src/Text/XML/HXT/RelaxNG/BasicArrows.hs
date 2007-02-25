@@ -6,12 +6,12 @@
    License    : MIT
 
    Maintainer : Uwe Schmidt
-   Maintainer : uwe@fh-wedel.de
+   Maintainer : uwe\@fh-wedel.de
    Stability  : experimental
    Portability: portable
    Version    : $Id$
 
-Constants and basic arrows for Relax NG
+   Constants and basic arrows for Relax NG
 
 -}
 
