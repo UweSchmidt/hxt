@@ -90,7 +90,7 @@ available options:
 
 - 'a_options_curl' : more options for external program curl
 
-- 'a_encoding' : default document encoding ('utf8', 'isoLatin1', 'usAscii', ...)
+- 'a_encoding' : default document encoding ('utf8', 'isoLatin1', 'usAscii', 'iso8859_2', ... , 'iso8859_16', ...)
 
 All attributes not evaluated by readDocument are stored in the created document root node for easy access of the various
 options in e.g. the input\/output modules

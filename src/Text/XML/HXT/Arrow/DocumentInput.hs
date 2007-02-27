@@ -90,7 +90,7 @@ getStringContents
     setCont contents
 	= replaceChildren (txt contents')
 	  >>>
-	  addAttr transferURI contents				-- the whole string inclusive "string:" prefix is stored, at least the "string:" prefix is required by setBaseURIFromDoc
+	  addAttr transferURI (take 7 contents)			-- the "string:" prefix is stored, this is required by setBaseURIFromDoc
 	  >>>
 	  addAttr a_source (show . prefix 48 $ contents')	-- a quoted prefix of the content, max 48 chars is taken as source name
 	where
@@ -267,10 +267,11 @@ setBaseURIFromDoc	:: IOStateArrow s XmlTree XmlTree
 setBaseURIFromDoc
     = perform ( getAttrValue transferURI
 		>>>
-		isA ( isPrefixOf stringProtocol)	-- do not change base URI when reading from a string
+		isA (isPrefixOf stringProtocol)		-- do not change base URI when reading from a string
 		>>>
 		setBaseURI
 	      )
+
 {- |
    Read the content of a document.
 
