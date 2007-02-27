@@ -284,7 +284,7 @@ setBaseURIFromDoc
    it is expanded into an absolut URI with respect to the current base URI.
    The default base URI is of protocol \"file\" and points to the current working directory.
 
-   The currently supported protocols are \"http\", \"file\", \"stdin:\" and \"string\".
+   The currently supported protocols are \"http\", \"file\", \"stdin\" and \"string\".
 
    The latter two are internal protocols. An uri of the form \"stdin:\" stands for the content of
    the standard input stream.

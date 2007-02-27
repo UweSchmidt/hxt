@@ -76,7 +76,7 @@ HXT_SRC_FILTER	= $(wildcard ./Data/*.hs) \
 		  $(wildcard ./Control/Monad/*.hs) \
 		  $(wildcard ./Control/Strategies/*.hs) \
 		  $(wildcard ./System/*.hs) \
-		  $(wildcard ./Text/XML/HXT/[DPX]*.hs) \
+		  $(wildcard ./Text/XML/HXT/[DIPX]*.hs) \
 		  $(wildcard ./Text/XML/HXT/DOM/*.hs) \
 		  $(wildcard ./Text/XML/HXT/Parser/*.hs) \
 		  $(wildcard ./Text/XML/HXT/Validator/*.hs) \
@@ -91,7 +91,7 @@ HXT_SRC_ARROW	= $(wildcard ./Data/*.hs) \
 		  $(wildcard ./Control/Strategies/*.hs) \
 		  $(wildcard ./Text/XML/HXT/[A]*.hs) \
 		  $(wildcard ./Text/XML/HXT/DOM/NamespacePredicates.hs) \
-		  $(wildcard ./Text/XML/HXT/DOM/[TU]*.hs) \
+		  $(wildcard ./Text/XML/HXT/DOM/[ITU]*.hs) \
 		  $(wildcard ./Text/XML/HXT/DOM/XmlKeywords.hs) \
 		  $(wildcard ./Text/XML/HXT/Parser/XmlOptions.hs) \
 		  $(wildcard ./Text/XML/HXT/Arrow.hs) \

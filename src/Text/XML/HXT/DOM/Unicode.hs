@@ -74,13 +74,11 @@ where
 
 import Data.Char( toUpper )
 
-import Text.XML.HXT.DOM.UTF8Decoding
-    ( decodeUtf8 )
 
+import Text.XML.HXT.DOM.IsoLatinTables
+import Text.XML.HXT.DOM.UTF8Decoding	( decodeUtf8 )
+import Text.XML.HXT.DOM.Util		( intToHexString )
 import Text.XML.HXT.DOM.XmlKeywords
-
-import Text.XML.HXT.DOM.Util
-    ( intToHexString )
 
 -- ------------------------------------------------------------
 
@@ -705,6 +703,17 @@ isInList _ []
 latin1ToUnicode	:: String -> UString
 latin1ToUnicode	= id
 
+latinToUnicode	:: [(Char, Char)] -> String -> UString
+latinToUnicode tt
+    = map charToUni
+    where
+    charToUni c
+        = found . dropWhile ((< c) . fst) $ tt
+        where
+        found ((c1, r1) :_)
+            | c == c1   = r1
+	found _         = c
+
 -- | conversion from ASCII to unicode with check for legal ASCII char set
 --
 -- Structure of decoding function copied from 'Data.Char.UTF8.decode'.
@@ -928,15 +937,29 @@ normalizeNL []				= []
 
 decodingTable	:: [(String, DecodingFct)]
 decodingTable
-    = [ (utf8,		utf8ToUnicode			)
-      , (isoLatin1,	liftDecFct latin1ToUnicode	)
-      , (usAscii,	decodeAscii			)
-      , (ucs2,		liftDecFct ucs2ToUnicode	)
-      , (utf16,		liftDecFct ucs2ToUnicode	)
-      , (utf16be,	liftDecFct utf16beToUnicode	)
-      , (utf16le,	liftDecFct utf16leToUnicode	)
-      , (unicodeString,	liftDecFct id			)
-      , ("",		liftDecFct id			)	-- default
+    = [ (utf8,		utf8ToUnicode				)
+      , (isoLatin1,	liftDecFct latin1ToUnicode		)
+      , (usAscii,	decodeAscii				)
+      , (ucs2,		liftDecFct ucs2ToUnicode		)
+      , (utf16,		liftDecFct ucs2ToUnicode		)
+      , (utf16be,	liftDecFct utf16beToUnicode		)
+      , (utf16le,	liftDecFct utf16leToUnicode		)
+      , (iso8859_2,	liftDecFct (latinToUnicode iso_8859_2)	)
+      , (iso8859_3,	liftDecFct (latinToUnicode iso_8859_3)	)
+      , (iso8859_4,	liftDecFct (latinToUnicode iso_8859_4)	)
+      , (iso8859_5,	liftDecFct (latinToUnicode iso_8859_5)	)
+      , (iso8859_6,	liftDecFct (latinToUnicode iso_8859_6)	)
+      , (iso8859_7,	liftDecFct (latinToUnicode iso_8859_7)	)
+      , (iso8859_8,	liftDecFct (latinToUnicode iso_8859_8)	)
+      , (iso8859_9,	liftDecFct (latinToUnicode iso_8859_9)	)
+      , (iso8859_10,	liftDecFct (latinToUnicode iso_8859_10)	)
+      , (iso8859_11,	liftDecFct (latinToUnicode iso_8859_11)	)
+      , (iso8859_13,	liftDecFct (latinToUnicode iso_8859_13)	)
+      , (iso8859_14,	liftDecFct (latinToUnicode iso_8859_14)	)
+      , (iso8859_15,	liftDecFct (latinToUnicode iso_8859_15)	)
+      , (iso8859_16,	liftDecFct (latinToUnicode iso_8859_16)	)
+      , (unicodeString,	liftDecFct id				)
+      , ("",		liftDecFct id				)	-- default
       ]
     where
     liftDecFct df = \ s -> (df s, [])
