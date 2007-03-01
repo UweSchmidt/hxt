@@ -17,6 +17,9 @@ module Text.XML.HXT.Parser.HtmlParsec
     , parseHtmlDocument
     , parseHtmlContent
     , xhtmlEntities
+    , isEmptyHtmlTag
+    , isInnerHtmlTagOf
+    , emptyHtmlTags
     )
 
 where
@@ -269,7 +272,7 @@ hOpenTagRest pos (tn, al) context
 	context1 <- checkSymbol gt ("closing > in tag \"<" ++ tn ++ "...\" expected") context
 	return ( let context2 = closePrevTag pos tn context1
 		 in
-		 ( if isEmptyTag tn
+		 ( if isEmptyHtmlTag tn
 		   then addHtmlTag tn al []
 		   else openTag tn al
 		 ) context2
@@ -394,7 +397,7 @@ closeTag pos n context
 	  close
 	      | n' == n1
 		= id
-	      | n1 `isInnerTagOf` n'
+	      | n1 `isInnerHtmlTagOf` n'
 		  = closeTag pos n'
 	      | otherwise
 		= addHtmlWarn (show pos ++ " no closing tag found for \"<" ++ n1 ++ " ...>\"")
@@ -422,23 +425,28 @@ closePrevTag pos n context@(body, (n1, al1, body1) : restOpen)
 --
 -- taken from HaXml and extended
 
-isEmptyTag	:: String -> Bool
-isEmptyTag n	= n `elem`
-		  [ "area"
-		  , "base"
-		  , "br"
-		  , "col"
-		  , "frame"
-		  , "hr"
-		  , "img"
-		  , "input"
-		  , "link"
-		  , "meta"
-		  , "param"
-		  ]
+isEmptyHtmlTag	:: String -> Bool
+isEmptyHtmlTag n
+    = n `elem`
+      emptyHtmlTags
 
-isInnerTagOf	:: String -> String -> Bool
-n `isInnerTagOf` tn
+emptyHtmlTags	:: [String]
+emptyHtmlTags
+    = [ "area"
+      , "base"
+      , "br"
+      , "col"
+      , "frame"
+      , "hr"
+      , "img"
+      , "input"
+      , "link"
+      , "meta"
+      , "param"
+      ]
+
+isInnerHtmlTagOf	:: String -> String -> Bool
+n `isInnerHtmlTagOf` tn
     = n `elem`
       ( fromMaybe [] . lookup tn
       $ [ ("body",    ["p"])
