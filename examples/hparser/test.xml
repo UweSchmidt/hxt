@@ -1,5 +1,1 @@
-<!DOCTYPE doc [
-<!ENTITY e "&#61;">
-<!ELEMENT doc (#PCDATA)>
-]>
-<doc></doc>
+<doc>Äabc</doc>

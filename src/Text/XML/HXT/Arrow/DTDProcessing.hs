@@ -5,7 +5,7 @@
    Copyright  : Copyright (C) 2005 Uwe Schmidt
    License    : MIT
 
-   Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
    Version    : $Id: DTDProcessing.hs,v 1.9 2006/05/11 14:47:19 hxml Exp $

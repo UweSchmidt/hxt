@@ -5,7 +5,7 @@
    Copyright  : Copyright (C) 2005 Uwe Schmidt
    License    : MIT
 
-   Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
    Version    : $Id: XmlDTDTokenParser.hs,v 1.4 2005/09/02 17:09:39 hxml Exp $

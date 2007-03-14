@@ -5,7 +5,7 @@
    Copyright  : Copyright (C) 2006 Uwe Schmidt
    License    : MIT
 
-   Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
    Version    : $Id: XPathEval.hs,v 1.8 2006/10/12 11:51:29 hxml Exp $

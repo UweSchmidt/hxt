@@ -6,7 +6,7 @@
    License    : MIT
 
 
-   Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
    Version    : $Id: XmlNode.hs,v 1.14 2006/08/28 19:14:15 hxml Exp $

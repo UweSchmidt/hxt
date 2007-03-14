@@ -5,7 +5,7 @@
    Copyright  : Copyright (C) 2006 Uwe Schmidt
    License    : MIT
 
-   Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
    Version    : $Id: XmlNodeSet.hs,v 1.5 2006/11/12 14:52:59 hxml Exp $

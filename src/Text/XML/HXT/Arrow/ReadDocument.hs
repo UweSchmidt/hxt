@@ -5,7 +5,7 @@
    Copyright  : Copyright (C) 2005 Uwe Schmidt
    License    : MIT
 
-   Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
    Version    : $Id: ReadDocument.hs,v 1.10 2006/11/24 07:41:37 hxml Exp $

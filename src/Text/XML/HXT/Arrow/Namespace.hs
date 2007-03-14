@@ -5,7 +5,7 @@
    Copyright  : Copyright (C) 2005 Uwe Schmidt
    License    : MIT
 
-   Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
    Version    : $Id: Namespace.hs,v 1.13 2006/11/12 14:52:59 hxml Exp $

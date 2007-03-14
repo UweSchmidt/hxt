@@ -5,7 +5,7 @@
    Copyright  : Copyright (C) 2006 Uwe Schmidt
    License    : MIT
 
-   Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
    Version    : $Id: Arrow.hs,v 1.12 2006/11/11 15:36:04 hxml Exp $

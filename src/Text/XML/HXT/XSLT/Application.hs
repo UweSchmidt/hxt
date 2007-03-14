@@ -5,7 +5,7 @@
    Copyright  : Copyright (C) 2006 Tim Walkenhorst, Uwe Schmidt
    License    : MIT
 
-   Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
    Version    : $Id: Application.hs,v 1.6 2006/11/17 17:16:24 hxml Exp $

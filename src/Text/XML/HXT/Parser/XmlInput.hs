@@ -207,19 +207,24 @@ guessDocEncoding
 		    , utf8
 		    ]
 	  encFilter (Just fct)
-	      -- = liftMf (processChildren (modifyText (normalizeNL . fst . fct)))	-- TODO issue errors
-	      = liftMf (decodeDoc fct)
+	      = decodeDoc fct
 
 	  encFilter Nothing
 	      = addFatal ("encoding scheme not supported: " ++ show guess)
 
 	  decodeDoc df n''
-	      | null errs	= replaceChildren (xtext (normalizeNL res)) n''
-	      | otherwise	= concatMap (xerr . (guess ++) . (" encoding error" ++)) errs
+	      | null errs	= liftMf (replaceChildren (xtext (normalizeNL res))) $ n''
+	      | otherwise	= ( liftMf (replaceChildren (xtext ""))
+				    .>>
+				    ( issueDecodingErrs
+				      +++>>
+				      addFatal "decoding errors detected"
+				    )
+				  ) n''
 	      where
 	      str = xshow . getChildren $ n''
 	      (res, errs) = df str
-	 
+	      issueDecodingErrs = seqM . map (issueErr . (guess ++) . (" encoding error" ++)) $ errs
 
 -- ------------------------------------------------------------
 
