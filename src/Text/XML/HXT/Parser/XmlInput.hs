@@ -224,7 +224,7 @@ guessDocEncoding
 	      where
 	      str = xshow . getChildren $ n''
 	      (res, errs) = df str
-	      issueDecodingErrs = seqM . map (issueErr . (guess ++) . (" encoding error" ++)) $ errs
+	      issueDecodingErrs = catM . map (issueErr . (guess ++) . (" encoding error" ++)) $ errs
 
 -- ------------------------------------------------------------
 
