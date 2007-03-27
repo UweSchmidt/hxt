@@ -73,7 +73,7 @@ getCont uri proxy
 
 	| otherwise
 	    = return $ Left ( "http error when accessing URI "
-			      ++ show (show uri)
+			      ++ show uri
 			      ++ ": "
 			      ++ show st
 			      ++ " "
