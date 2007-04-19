@@ -593,7 +593,7 @@ setDocumentStatusFromSystemState msg
 -- |
 -- check whether tree is a document root and the status attribute has a value less than 'c_err'
 
-documentStatusOk	:: IOStateArrow s XmlTree XmlTree
+documentStatusOk	:: ArrowXml a => a XmlTree XmlTree
 documentStatusOk
     = isRoot
       >>>
