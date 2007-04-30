@@ -837,11 +837,7 @@ utf16leToUnicode s
 
 unicodeToXmlEntity	:: UString -> String
 unicodeToXmlEntity
-    = concatMap toCharRef
-      where
-      toCharRef uc
-	  | is1ByteXmlChar uc	= [uc]
-	  | otherwise		= intToCharRef (fromEnum uc)
+    = escape is1ByteXmlChar (intToCharRef . fromEnum)
 
 -- |
 -- substitute all Unicode characters, that are not legal latin1
@@ -854,11 +850,16 @@ unicodeToXmlEntity
 
 unicodeToLatin1	:: UString -> String
 unicodeToLatin1
-    = concatMap toLatin1
-      where
-      toLatin1 uc
-	  | isXmlLatin1Char uc	= [uc]
-	  | otherwise		= intToCharRef (fromEnum uc)
+    = escape isXmlLatin1Char (intToCharRef . fromEnum)
+
+
+-- |
+-- substitute selected characters
+-- The @check@ function returns 'True' whenever a character needs to substitution
+-- The function @esc@ computes a substitute.
+escape :: (Unicode -> Bool) -> (Unicode -> String) -> UString -> String
+escape check esc =
+    concatMap (\uc -> if check uc then [uc] else esc uc)
 
 -- |
 -- removes all non ascii chars, may be used to transform
@@ -869,11 +870,7 @@ unicodeToLatin1
 
 unicodeRemoveNoneAscii	:: UString -> String
 unicodeRemoveNoneAscii
-    = concatMap removeNA
-      where
-      removeNA uc
-	  | is1ByteXmlChar uc	= [uc]
-	  | otherwise		= []
+    = filter is1ByteXmlChar
 
 -- |
 -- removes all non latin1 chars, may be used to transform
@@ -884,11 +881,7 @@ unicodeRemoveNoneAscii
 
 unicodeRemoveNoneLatin1	:: UString -> String
 unicodeRemoveNoneLatin1
-    = concatMap removeNL1
-      where
-      removeNL1 uc
-	  | isXmlLatin1Char uc	= [uc]
-	  | otherwise		= []
+    = filter isXmlLatin1Char
 
 -- ------------------------------------------------------------
 

@@ -34,14 +34,25 @@ the Unicode Transformation Format with 8-bit words.
 
 -}
 
+{-
+
+Slight changes in decode developped by H. Thielemann
+to make decode lasy. The calls of reverse in the original
+version have made problems due to lasyness
+
+-}
+
 module Data.Char.UTF8
   ( encode, decode,
+    decodeToEither,
     encodeOne, decodeOne,
   ) where
 
 import Char (ord, chr)
 import Data.Word (Word8, Word16, Word32)
 import Data.Bits (Bits, shiftL, shiftR, (.&.), (.|.))
+
+import Data.List (unfoldr)
 
 
 
@@ -334,13 +345,30 @@ fourbyte_truncated n = (Left (Truncated n 4), n, [])
 -- error-index pairs along the way.
 
 decode :: [Word8] -> ([Char], [(Error,Int)])
-decode bytes = iter 0 [] [] bytes
-    where
-    iter :: Int -> [Char] -> [(Error,Int)] -> [Word8]
-         -> ([Char], [(Error,Int)])
-    iter _ cs es [] = (reverse cs, reverse es)
-    iter idx cs es bs
-        = case decodeOne bs of
-          (Left e, n, rest)  -> iter (idx+n) cs     ((e,idx):es) rest
-          (Right c, n, rest) -> iter (idx+n) (c:cs) es           rest
+decode = swap . partitionEither . decodeToEither
 
+decodeToEither :: [Word8] -> [Either (Error,Int) Char]
+decodeToEither =
+   unfoldr (\(pos,xs) ->
+       toMaybe
+          (not $ null xs)
+          (let (c,n,rest) = decodeOne xs
+           in  (either (\err -> Left (err,pos)) Right c,
+                (pos+n,rest)))) .
+   (,) 0
+
+-- move to Text.XML.HXT.DOM.Util ?
+swap :: (a,b) -> (b,a)
+swap (x,y) = (y,x)
+
+-- move to Text.XML.HXT.DOM.Util ?
+partitionEither :: [Either a b] -> ([a], [b])
+partitionEither [] = ([],[])
+partitionEither (x:xs) =
+   let (ls,rs) = partitionEither xs
+   in  either (\l -> (l:ls,rs)) (\r -> (ls,r:rs)) x
+
+-- move to Text.XML.HXT.DOM.Util ?
+toMaybe :: Bool -> a -> Maybe a
+toMaybe False _ = Nothing
+toMaybe True  x = Just x
