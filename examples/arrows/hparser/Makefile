@@ -136,7 +136,7 @@ xslttest	:
 dist		:
 		[ -d $(DIST_DIR) ] || mkdir -p $(DIST_DIR)
 		cp $(EX) Makefile $(prog).hs $(DIST_DIR)
-		for i in xslt ; do $(MAKE) -C $$i dist DIST=../$(DIST_DIR) ; done
+		$(foreach i,xslt,$(MAKE) -C $i dist DIST=../$(DIST_DIR) ;)
 
 
 clean		:

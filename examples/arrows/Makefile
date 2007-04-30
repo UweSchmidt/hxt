@@ -15,18 +15,18 @@ DIST		= $(HXT_HOME)/dist/examples
 DIST_DIR	= $(DIST)/arrows
 
 all		:
-		for i in $(EXAMPLES) ; do $(MAKE) -C $$i PKGFLAGS="$(PKGFLAGS)" $@ ; done
+		$(foreach i,$(EXAMPLES),$(MAKE) -C $i PKGFLAGS="$(PKGFLAGS)" $@ ;)
 
 test		:
-		for i in $(EXAMPLES) ; do $(MAKE) -C $$i $@ ; done
+		$(foreach i,$(EXAMPLES),$(MAKE) -C $i $@ ;)
 
 dist		:
 		[ -d $(DIST_DIR) ] || mkdir -p $(DIST_DIR)
-		for i in $(EXAMPLES) ; do $(MAKE) -C $$i dist DIST=../$(DIST_DIR) ; done
+		$(foreach i,$(EXAMPLES),$(MAKE) -C $i dist DIST=../$(DIST_DIR) ;)
 		cp Makefile $(DIST_DIR)
 
 clean		:
-		for i in $(EXAMPLES) ; do $(MAKE) -C $$i $@ ; done
+		$(foreach i,$(EXAMPLES),$(MAKE) -C $$i $@ ;)
 
 .PHONY		: all clean test dist
 

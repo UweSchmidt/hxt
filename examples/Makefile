@@ -19,16 +19,12 @@ all		:
 		fi 
 
 alllocal		:
-		for i in $(EXAMPLES) ; \
-			do $(MAKE) -C $$i PKGFLAGS="-ignore-package hxt-$(LASTVERSION) -package-conf `pwd`/$(HXT_HOME)/lib/hxt/package.conf -package hxt" all ; \
-			done
+		$(foreach i,$(EXAMPLES),$(MAKE) -C $i PKGFLAGS="-ignore-package hxt-$(LASTVERSION) -package-conf `pwd`/$(HXT_HOME)/lib/hxt/package.conf -package hxt" all ;)
 alldist		:
-		for i in $(EXAMPLES) ; \
-			do $(MAKE) -C $$i all ; \
-			done
+		$(foreach i,$(EXAMPLES),$(MAKE) -C $i all ;)
 
 test		:
-		for i in $(EXAMPLES) ; do $(MAKE) -C $$i $@ ; done
+		$(foreach i,$(EXAMPLES),$(MAKE) -C $i $@ ;)
 
 dist		:
 		[ -d $(DIST_DIR) ] || mkdir -p $(DIST_DIR)
@@ -38,7 +34,7 @@ dist		:
 		cp Makefile $(DIST_DIR)
 
 clean		:
-		for i in $(EXAMPLES) ; do $(MAKE) -C $$i $@ ; done
+		$(foreach i,$(EXAMPLES),$(MAKE) -C $i $@ ;)
 
 RunTestCases	:
 		$(MAKE) -C w3ctest $@
