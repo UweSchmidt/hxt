@@ -439,4 +439,4 @@ resolveSelect =
         node6       <- insertChildrenAt 0 (constA valuenode')                               -<< node5
         insertChildrenAt 0 (constA defaultnode')                                            -<< node6
         ) 
-        "/janus//select[not(ancestor::config)]"        
+        "/janus//select[not(ancestor::config)]"

@@ -76,7 +76,7 @@
       <loadshader reference="ttyVersion" object="ttyVersionShader" module="Network.Server.Janus.Shader.ConsoleShader"/>
 
       <loadshader reference="test" object="testShader2" module="Network.Server.Janus.Shader.TestShader"/>
-      <loadshader reference="test3" object="testShader3" module="Network.Server.Janus.Shader.TestShader"/>
+      <loadshader reference="counterPage" object="counterPageShader" module="Network.Server.Janus.Shader.TestShader"/>
 
       <shader type="init_mime" typefile="./conf/mime.types"/>
       <shader type="loadXml" file="./server.xml" node="/local/hummelbummel"/>
@@ -125,7 +125,7 @@
           <value><shader type="taExpr" path="/transaction/http/request/@uri_path"/></value>
           <case match="/count"><shader type="test"/></case>
           <case match="/duseltier"><shader type="test"/></case>
-	  <case match="/JanusCounter.html"><shader type="test3"/></case>
+	  <case match="/JanusCounter.html"><shader type="counterPage"/></case>
           <default>
             <shader id="file_shader" type="file_shader">
               <config base_url="/" maps_to="./wwwpages"/>
