@@ -293,10 +293,10 @@ An Arrow reading the file denoted by the argument, parsing the content by means 
 fileSource :: String -> XmlSource s a
 fileSource filename
     = runInLocalURIContext $
-      readDocument [ ("a_remove_whitespace", "1")
-		   , (a_canonicalize, "1")
-		   , (a_indent, "1")
-		   , (a_validate, "0")] filename
+      readDocument [ (a_remove_whitespace, v_1)
+		   , (a_canonicalize, v_1)
+		   , (a_indent, v_0)
+		   , (a_validate, v_0)] filename
 
 {- |
 An Arrow returning an XmlTree value independently of the Arrow's input.

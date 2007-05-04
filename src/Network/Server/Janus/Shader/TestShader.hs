@@ -26,6 +26,7 @@ module Network.Server.Janus.Shader.TestShader
     -- expression shaders
       testShader
     , testShader2
+    , transactionStatusShader
     , counterPageShader
     )
 where
@@ -61,6 +62,35 @@ testShader2 =
 
 -- ------------------------------------------------------------
 
+transactionStatusShader	:: ShaderCreator
+transactionStatusShader
+    = mkStaticCreator
+      ( setVal "/transaction/http/response/body" $< statusPage )
+
+statusPage	:: XmlAccess s String
+statusPage
+    = insertTreeTemplate statusPageTemplate
+      [ hasAttrValue "id" (== "status")
+	:-> ( xshow prepareStatus
+	      >>> mkText
+	    )
+      ]
+      >>> addXHtmlDoctypeTransitional	    -- add a DTD decl and convert to text
+      >>> writeDocumentToString [ (a_output_html, v_1)
+				, (a_no_xml_pi,v_1)
+				]
+    where
+    prepareStatus
+	= root [] [this]
+	  >>> indentDoc
+	  >>> getChildren
+
+    statusPageTemplate
+	= constA "wwwpages/JanusStatus.html"
+	  >>> readTemplate
+
+-- ------------------------------------------------------------
+
 -- | example shader for demonstrating the use of a local state for
 -- a shader.
 --
@@ -78,15 +108,6 @@ counterPageShader =
 	pg  <- readTemplate     -< "wwwpages/JanusCounter.html"
 	returnA                 -< counterPage x pg
 
-
-readTemplate	:: XmlSource s String
-readTemplate
-    = runInLocalURIContext $
-      readFromDocument [ (a_parse_html,v_1)
-		       , (a_indent,v_1)
-		       , (a_trace,v_0)
-		       ]
-      >>> strictA				-- evaluate the template page for space saving
 
 counterPage	:: MVar Int -> XmlTree -> Shader
 counterPage cnt pg
@@ -123,3 +144,18 @@ counterPage cnt pg
     showRes res
 	| res == 1  = "the first time"
 	| otherwise = show res ++ " times"
+
+-- ------------------------------------------------------------
+
+-- | read a HTML template page
+
+readTemplate	:: XmlSource s String
+readTemplate
+    = runInLocalURIContext $
+      readFromDocument [ (a_parse_html,v_1)
+		       , (a_indent,v_1)
+		       , (a_trace,v_1)
+		       ]
+      >>> strictA				-- evaluate the template page for space saving
+
+-- ------------------------------------------------------------
