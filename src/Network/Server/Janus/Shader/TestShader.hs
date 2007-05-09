@@ -28,6 +28,7 @@ module Network.Server.Janus.Shader.TestShader
     , testShader2
     , transactionStatusShader
     , counterPageShader
+    , sessionDemo
     )
 where
 
@@ -37,6 +38,7 @@ import Network.Server.Janus.Core as Shader
 import Network.Server.Janus.XmlHelper
 
 import Control.Concurrent
+import Data.List
 
 -- ------------------------------------------------------------
 
@@ -71,20 +73,12 @@ statusPage	:: XmlAccess s String
 statusPage
     = insertTreeTemplate statusPageTemplate
       [ hasAttrValue "id" (== "status")
-	:-> ( xshow prepareStatus
+	:-> ( xshow indentDoc
 	      >>> mkText
 	    )
       ]
-      >>> addXHtmlDoctypeTransitional	    -- add a DTD decl and convert to text
-      >>> writeDocumentToString [ (a_output_html, v_1)
-				, (a_no_xml_pi,v_1)
-				]
+      >>> showPage
     where
-    prepareStatus
-	= root [] [this]
-	  >>> indentDoc
-	  >>> getChildren
-
     statusPageTemplate
 	= constA "wwwpages/JanusStatus.html"
 	  >>> readTemplate
@@ -105,7 +99,8 @@ counterPageShader :: ShaderCreator
 counterPageShader =
     mkDynamicCreator $ proc (_, _) -> do
         x   <- arrIO $ newMVar  -< (0 :: Int)
-	pg  <- readTemplate     -< "wwwpages/JanusCounter.html"
+	pg  <- ( readTemplate
+		 >>> strictA )  -< "wwwpages/JanusCounter.html"
 	returnA                 -< counterPage x pg
 
 
@@ -113,7 +108,7 @@ counterPage	:: MVar Int -> XmlTree -> Shader
 counterPage cnt pg
     = setVal "/transaction/http/response/body"	-- insert result into transaction body
       $< ( processState
-	   >>> genPage
+	   >>> genOutPage
 	 )
     where
     -- manipulate the state for this request and deliver result
@@ -128,7 +123,7 @@ counterPage cnt pg
 	      return res
 
     -- insert result into template page
-    genPage
+    genOutPage
 	= arr showRes
 	  >>> mkText
 	  >>> insertTreeTemplate (constA pg)
@@ -136,10 +131,7 @@ counterPage cnt pg
 		    :-> this
 						    -- insert other substitutions here
 		  ]
-	  >>> addXHtmlDoctypeTransitional	    -- add a DTD decl and convert to text
-          >>> writeDocumentToString [(a_output_html, v_1)
-				    ,(a_no_xml_pi,v_1)
-				    ]
+	  >>> showPage
     showRes	:: Int -> String
     showRes res
 	| res == 1  = "the first time"
@@ -156,6 +148,74 @@ readTemplate
 		       , (a_indent,v_1)
 		       , (a_trace,v_1)
 		       ]
-      >>> strictA				-- evaluate the template page for space saving
+
+showPage	:: IOStateArrow s XmlTree String
+showPage
+    = addXHtmlDoctypeTransitional	    -- add a DTD decl and convert to text
+      >>> writeDocumentToString [ (a_output_html, v_1)
+				, (a_no_xml_pi,v_1)
+				]
+
+genPage		:: String -> IOStateArrow a XmlTree XmlTree -> IOStateArrow a XmlTree String
+genPage path processPage
+    = constA path
+      >>> readTemplate						-- read the template page
+      >>> processPage						-- insert the data
+      >>> showPage
+
+-- ------------------------------------------------------------
+
+sessionDemo :: ShaderCreator
+sessionDemo =
+    mkStaticCreator $ proc in_ta -> do
+        sid     <- getVal "/transaction/session/@sessionid"         -<  in_ta
+        myname  <- getVal "/transaction/http/request/@uri_path"     -<  in_ta
+        (count :: Int) 
+                <- getValDef "/transaction/session/state/@count" "0" 
+                    >>> parseA                                      -<  in_ta
+        in_ta'  <- setVal "/transaction/session/state/@count" (show $ count + 1)      
+                                                                    -<< in_ta
+        sessionPage myname sid (count + 1)                          -<< in_ta'
+
+sessionPage	:: String -> String -> Int -> Shader
+sessionPage path sid count
+    = setVal "/transaction/http/response/body"
+      $< genPage
+	     ("wwwpages" ++ path)
+	     ( editRefs
+	       >>> insertCount )
+    where
+    editRefs				-- append session id to all pages of session demo
+	= processTopDown $
+	  appendSessionId `when` (hasName "a" >>> hasAttr "href")
+	where
+	appendSessionId
+	    = (addAttr "href" $< editUrl)
+	      `orElse`
+	      this
+	editUrl
+	    = ( getAttrValue0 "href"
+		&&&
+		constA ("http://localhost" ++ path)
+	      )
+              >>> expandURI
+	      >>> ( isA isLocalRef
+		    `guards`
+		    ( getPathFromURI
+		      >>> arr (++ ("?sessionid=" ++ sid))
+		    )
+		  )
+	isLocalRef = ("http://localhost/JanusSession/" `isPrefixOf`)
+
+    insertCount				-- insert the session local counter
+	=  processTopDown $
+	   choiceA
+	   [ hasAttrValue "id" (== "counter")
+	     :-> txt (show count)
+	   , hasAttrValue "id" (== "sessionid")
+	     :-> txt sid
+	   , this
+	     :-> this
+	   ]
 
 -- ------------------------------------------------------------

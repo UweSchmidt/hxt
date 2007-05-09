@@ -78,6 +78,7 @@
       <loadshader reference="test" object="testShader2" module="Network.Server.Janus.Shader.TestShader"/>
       <loadshader reference="counterPage" object="counterPageShader"       module="Network.Server.Janus.Shader.TestShader"/>
       <loadshader reference="statusPage"  object="transactionStatusShader" module="Network.Server.Janus.Shader.TestShader"/>
+      <loadshader reference="sessionPage"  object="sessionDemo" module="Network.Server.Janus.Shader.TestShader"/>
 
       <shader type="init_mime" typefile="./conf/mime.types"/>
       <shader type="loadXml" file="./conf/server.xml" node="/local/hummelbummel"/>
@@ -126,8 +127,19 @@
           <value><shader type="taExpr" path="/transaction/http/request/@uri_path"/></value>
           <case match="/count"><shader type="test"/></case>
           <case match="/duseltier"><shader type="test"/></case>
-	  <case match="/JanusCounter.html"><shader type="counterPage"            /></case>
-	  <case match="/JanusStatus.html(\?.*)?" ><shader type="statusPage"/></case>
+	  <case match="^/JanusCounter.html$">
+            <shader type="counterPage"            />
+          </case>
+	  <case match="^/JanusStatus.html$" >
+            <shader type="statusPage"/>
+          </case>
+	  <case match="^/JanusSession/.*[.]html$">
+            <shader type="trace_ta_shader"/>
+            <shader type="session_reader"/>
+            <shader type="sessionPage"/>
+            <shader type="trace_ta_shader"/>
+            <shader type="session_writer"/>
+          </case>
           <default>
             <shader id="file_shader" type="file_shader">
               <config base_url="/" maps_to="./wwwpages"/>

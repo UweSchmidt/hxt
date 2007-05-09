@@ -372,12 +372,3 @@ state pass.
 getMsgStateFilter :: String -> String -> MessageFilter s
 getMsgStateFilter key val = 
 	getMsgFilter (getMsgState key) (==) val
-
-			
-
-
-	
-
-
-
-

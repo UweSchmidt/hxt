@@ -79,15 +79,20 @@ module Network.Server.Janus.XmlHelper
     , addTree
     , delTree
 
+    -- , get1Line
     )
 where
 
 import Control.Concurrent
 import Control.Exception
+
 import Data.Dynamic
 import Data.Maybe
+
 import System.Time
+
 import Text.ParserCombinators.Parsec
+
 import Text.XML.HXT.Arrow
 import Text.XML.HXT.DOM.XmlTree (XmlTree)
 import Text.XML.HXT.XPath
@@ -101,12 +106,29 @@ import Text.XML.HXT.XPath.XPathDataTypes
     AxisSpec (..)
     )
 
+-- ------------------------------------------------------------
+
+-- just for read1Line
+
+-- import Data.Maybe
+{-
+import System.Console.Readline
+    ( readline
+    , addHistory
+    )
+import Text.XML.HXT.DOM.Util(stringTrim)
+-}
+
+-- ------------------------------------------------------------
+
 type JanusArrow s a b   = IOStateArrow s a b
 type XmlTransform s     = JanusArrow s XmlTree XmlTree
 type XmlAccess s a      = JanusArrow s XmlTree a
 type XmlSource s a      = JanusArrow s a XmlTree
 type XmlConstSource s   = XmlSource s ()
 type JanusTimestamp     = Integer
+
+-- ------------------------------------------------------------
 
 
 {- |
@@ -592,8 +614,25 @@ delTree :: String -> XmlTransform s
 delTree xpath =
     processXPathTrees none xpath
 
+-- ------------------------------------------------------------
+{-
+-- this is a hack
+--
+-- readline is used in console shader, which is loaded dynamically
+-- and can not handle to load readline.so
+-- so the function is put here to be loaded into the janus core
 
-
-
-
-
+get1Line :: String -> IO String
+get1Line prompt
+    = do
+      line' <- readline prompt
+      let line = stringTrim . fromMaybe "" $ line'
+      if null line
+	 then get1Line prompt
+	 else do
+	      if length line > 1
+		 then addHistory line
+		 else return ()
+	      return line
+-}
+-- ------------------------------------------------------------

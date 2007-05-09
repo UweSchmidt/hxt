@@ -1,6 +1,11 @@
 HADDOCK		= haddock
 HC      	= ghc
-HC_OPTS 	= -Wall -fglasgow-exts -fno-warn-duplicate-exports -fno-warn-deprecations -fno-warn-overlapping-patterns -farrows -ibuild:src -odir build -hidir build
+HC_OPTS 	= -Wall -fglasgow-exts \
+			-fno-warn-duplicate-exports \
+			-fno-warn-deprecations \
+			-fno-warn-overlapping-patterns \
+			-farrows \
+			-ibuild:src -odir build -hidir build
 
 SRCBASE		= src/Network/Server/Janus
 BUILDBASE	= build/Network/Server/Janus
@@ -12,7 +17,7 @@ SRCS_HANDLER 	= $(SRCBASE)/Handler/TCPHandler.hs $(SRCBASE)/Handler/ConsoleHandl
 SRCS_SHADER 	= $(SRCBASE)/Shader/ControlShader.hs $(SRCBASE)/Shader/DaemonShader.hs $(SRCBASE)/Shader/ExprShader.hs $(SRCBASE)/Shader/HTTPShader.hs $(SRCBASE)/Shader/PredicateShader.hs $(SRCBASE)/Shader/ServletShader.hs $(SRCBASE)/Shader/ShaderLib.hs $(SRCBASE)/Shader/SOAPShader.hs $(SRCBASE)/Shader/ConsoleShader.hs
 
 OBJS 		= $(OBJS_BASE) $(OBJS_HANDLER) $(OBJS_SHADER)
-OBJS_BASE	= $(BUILDBASE)/Core.o $(BUILDBASE)/XmlHelper.o $(BUILDBASE)/Transaction.o $(BUILDBASE)/Messaging.o $(BUILDBASE)/DynamicLoader.o $(BUILDBASE)/HTMLBuilder.o 
+OBJS_BASE	= $(BUILDBASE)/Core.o $(BUILDBASE)/XmlHelper.o $(BUILDBASE)/Transaction.o $(BUILDBASE)/Messaging.o $(BUILDBASE)/DynamicLoader.o $(BUILDBASE)/HTMLBuilder.o
 OBJS_HANDLER 	= $(BUILDBASE)/Handler/TCPHandler.o $(BUILDBASE)/Handler/ConsoleHandler.o
 OBJS_SHADER 	= $(BUILDBASE)/Shader/SystemShader.o $(BUILDBASE)/Shader/ControlShader.o $(BUILDBASE)/Shader/DaemonShader.o $(BUILDBASE)/Shader/ExprShader.o $(BUILDBASE)/Shader/HTTPShader.o $(BUILDBASE)/Shader/PredicateShader.o $(BUILDBASE)/Shader/ServletShader.o $(BUILDBASE)/Shader/ShaderLib.o $(BUILDBASE)/Shader/ConsoleShader.o $(BUILDBASE)/Shader/TestShader.o
 OBJS_EXAMPLES	= $(BUILDBASE)/ContextBrowser.o  $(BUILDBASE)/ShopExample.o
