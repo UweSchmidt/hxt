@@ -74,6 +74,7 @@ where
 
 import Data.Char( toUpper )
 
+import Data.Char.UTF8 ( swap, partitionEither )
 
 import Text.XML.HXT.DOM.IsoLatinTables
 import Text.XML.HXT.DOM.UTF8Decoding	( decodeUtf8 )
@@ -720,21 +721,18 @@ latinToUnicode tt
 
 decodeAscii	:: DecodingFct
 decodeAscii str
-    = (res, map (uncurry toErrStr) errs)
+    = swap (partitionEither (decodeAsciiToEither str))
+
+decodeAsciiToEither	:: String -> [Either String Char]
+decodeAsciiToEither str
+    = map (\(c,pos) -> if isValid c
+                         then Right c
+                         else Left (toErrStr c pos)) posStr
     where
-    (res, errs)
-	= decode str
-    toErrStr err pos
-	= " at input position " ++ show pos ++ ": none ASCII char " ++ show err
-    decode
-	= iter 0 [] []
-	where
-	iter :: Int -> [Char] -> [(Char, Int)] -> [Char] -> ([Char], [(Char, Int)])
-	iter _ix cs es []
-	    = (reverse cs, reverse es)
-	iter  ix cs es (x:xs)
-	    | x < '\x80' = iter (ix + 1) (x:cs)         es  xs
-	    | otherwise  = iter (ix + 1)    cs  ((x,ix):es) xs
+    posStr = zip str [(0::Int)..]
+    toErrStr errChr pos
+	= " at input position " ++ show pos ++ ": none ASCII char " ++ show errChr
+    isValid x = x < '\x80'
 
 -- |
 -- UCS-2 big endian to Unicode conversion
