@@ -688,13 +688,37 @@ isXmlControlOrPermanentlyUndefined c
 -- ------------------------------------------------------------
 
 isInList	:: Unicode -> [(Unicode, Unicode)] -> Bool
-isInList i ((lb, ub) : l)
+isInList i =
+   foldr (\(lb,ub) b -> i>=lb && (i<=ub || b)) False
+   {- The expression (i>=lb && i<=ub) || b would work more generally,
+      but in a sorted list, the above one aborts the computation as early as possible. -}
+
+isInList'	:: Unicode -> [(Unicode, Unicode)] -> Bool
+isInList' i ((lb, ub) : l)
     | i <  lb	= False
     | i <= ub	= True
     | otherwise = isInList i l
 
-isInList _ []
+isInList' _ []
     = False
+
+{- works, but is not so fast -}
+isInList''	:: Unicode -> [(Unicode, Unicode)] -> Bool
+isInList'' i = any (flip isInRange i)
+
+-- move to an Utility module?
+isInRange	:: Ord a => (a,a) -> a -> Bool
+isInRange (l,r) x = l<=x && x<=r
+
+propIsInList :: Bool
+propIsInList =
+   all
+     (\c -> let dict = [ ('\x0041', '\x005A'), ('\x0061', '\x007A') ]
+                b0 = isInList c dict
+                b1 = isInList' c dict
+                b2 = isInList'' c dict
+            in  b0 == b1 && b0 == b2)
+     ['\x00'..'\x100']
 
 -- ------------------------------------------------------------
 
