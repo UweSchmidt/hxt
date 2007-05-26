@@ -732,12 +732,12 @@ latinToUnicode	:: [(Char, Char)] -> String -> UString
 latinToUnicode tt
     = map charToUni
     where
-    charToUni c
-        = found . dropWhile ((< c) . fst) $ tt
-        where
-        found ((c1, r1) :_)
-            | c == c1   = r1
-	found _         = c
+    charToUni c =
+       foldr (\(src,dst) r ->
+          case compare c src of
+             EQ -> dst
+             LT -> c {- not found in table -}
+             GT -> r) c tt
 
 -- | conversion from ASCII to unicode with check for legal ASCII char set
 --
