@@ -363,10 +363,8 @@ swap (x,y) = (y,x)
 
 -- move to Text.XML.HXT.DOM.Util ?
 partitionEither :: [Either a b] -> ([a], [b])
-partitionEither [] = ([],[])
-partitionEither (x:xs) =
-   let (ls,rs) = partitionEither xs
-   in  either (\l -> (l:ls,rs)) (\r -> (ls,r:rs)) x
+partitionEither =
+   foldr (\x ~(ls,rs) -> either (\l -> (l:ls,rs)) (\r -> (ls,r:rs)) x) ([],[])
 
 -- move to Text.XML.HXT.DOM.Util ?
 toMaybe :: Bool -> a -> Maybe a
