@@ -96,9 +96,7 @@ isDTDElemNode e	(XDTD n _)	= n == e
 isDTDElemNode _ _		= False
 
 isErrorNode 			:: Int -> XNode -> Bool
-isErrorNode l (XError l'  _)
-    | l == l'    = True
-    | otherwise  = False
+isErrorNode l (XError l'  _)    = l == l'
 isErrorNode _ _  = False
 
 -- -----------------------------------------------------------------------------
@@ -459,7 +457,7 @@ showXmlTree (NTree (XAttr an) cs)
     = showBlank . showQName an . showEq . showQuoteString (xshow cs)
 
 showXmlTree (NTree (XError l e) _)
-    = showString "<!-- ERROR (" . showString (show l) . showString "):\n" . showString e . showString "\n-->"
+    = showString "<!-- ERROR (" . shows l . showString "):\n" . showString e . showString "\n-->"
 
 -- ------------------------------------------------------------
 
