@@ -23,6 +23,7 @@ module Text.XML.HXT.DOM.Unicode
      UString,
      UTF8Char,
      UTF8String,
+     UStringWithErrors,
      DecodingFct,
      DecodingFctEmbedErrors,
 
@@ -108,9 +109,11 @@ type UTF8String	= String
 
 type DecodingFct = String -> (UString, [String])
 
+type UStringWithErrors = [Either String Char]
+
 -- | Decoding function where decoding errors are interleaved with decoded characters
 
-type DecodingFctEmbedErrors = String -> [Either String Char]
+type DecodingFctEmbedErrors = String -> UStringWithErrors
 
 -- ------------------------------------------------------------
 --
@@ -754,7 +757,7 @@ decodeAscii	:: DecodingFct
 decodeAscii
     = swap . partitionEither . decodeAsciiEmbedErrors
 
-decodeAsciiEmbedErrors	:: String -> [Either String Char]
+decodeAsciiEmbedErrors	:: String -> UStringWithErrors
 decodeAsciiEmbedErrors str
     = map (\(c,pos) -> if isValid c
                          then Right c
