@@ -36,16 +36,20 @@ the Unicode Transformation Format with 8-bit words.
 
 {-
 
-Slight changes in decode developped by H. Thielemann
-to make decode lasy. The calls of reverse in the original
-version have made problems due to lasyness
+2007-04-30 Henning Thielemann:
+Slight changes to make decode lazy.
+The calls of 'reverse' in the original version have broken laziness
+and thus had memory leaks.
 
 -}
 
 module Data.Char.UTF8
   ( encode, decode,
-    decodeToEither,
+    decodeEmbedErrors,
     encodeOne, decodeOne,
+    Error, -- Haddock does not want to document signatures with private types
+    -- these functions should be moved to a utility module
+    swap, partitionEither,
   ) where
 
 import Char (ord, chr)
@@ -345,10 +349,10 @@ fourbyte_truncated n = (Left (Truncated n 4), n, [])
 -- error-index pairs along the way.
 
 decode :: [Word8] -> ([Char], [(Error,Int)])
-decode = swap . partitionEither . decodeToEither
+decode = swap . partitionEither . decodeEmbedErrors
 
-decodeToEither :: [Word8] -> [Either (Error,Int) Char]
-decodeToEither =
+decodeEmbedErrors :: [Word8] -> [Either (Error,Int) Char]
+decodeEmbedErrors =
    unfoldr (\(pos,xs) ->
        toMaybe
           (not $ null xs)

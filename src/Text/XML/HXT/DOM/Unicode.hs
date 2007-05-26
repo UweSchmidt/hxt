@@ -24,6 +24,7 @@ module Text.XML.HXT.DOM.Unicode
      UTF8Char,
      UTF8String,
      DecodingFct,
+     DecodingFctEmbedErrors,
 
       -- * XML char predicates
 
@@ -46,6 +47,7 @@ module Text.XML.HXT.DOM.Unicode
 
       -- * UTF-8 and Unicode conversion functions
     , utf8ToUnicode
+    , utf8ToUnicodeEmbedErrors
     , latin1ToUnicode
     , ucs2ToUnicode
     , ucs2BigEndianToUnicode
@@ -53,9 +55,9 @@ module Text.XML.HXT.DOM.Unicode
     , utf16beToUnicode
     , utf16leToUnicode
 
-    , unicodeCharToUtf8 
+    , unicodeCharToUtf8
 
-    , unicodeToUtf8 
+    , unicodeToUtf8
     , unicodeToXmlEntity
     , unicodeToLatin1
     , unicodeRemoveNoneAscii
@@ -65,6 +67,7 @@ module Text.XML.HXT.DOM.Unicode
     , intToCharRefHex
 
     , getDecodingFct
+    , getDecodingFctEmbedErrors
     , getOutputEncodingFct
 
     , normalizeNL
@@ -77,7 +80,7 @@ import Data.Char( toUpper )
 import Data.Char.UTF8 ( swap, partitionEither )
 
 import Text.XML.HXT.DOM.IsoLatinTables
-import Text.XML.HXT.DOM.UTF8Decoding	( decodeUtf8 )
+import Text.XML.HXT.DOM.UTF8Decoding	( decodeUtf8, decodeUtf8EmbedErrors )
 import Text.XML.HXT.DOM.Util		( intToHexString )
 import Text.XML.HXT.DOM.XmlKeywords
 
@@ -103,7 +106,11 @@ type UTF8String	= String
 
 -- | Decoding function with a pair containing the result string and a list of decoding errors as result
 
-type DecodingFct = UString -> (UString, [String])
+type DecodingFct = String -> (UString, [String])
+
+-- | Decoding function where decoding errors are interleaved with decoded characters
+
+type DecodingFctEmbedErrors = String -> [Either String Char]
 
 -- ------------------------------------------------------------
 --
@@ -684,7 +691,7 @@ isXmlControlOrPermanentlyUndefined c
       , ('\xFFFFE', '\xFFFFF')
       , ('\x10FFFE', '\x10FFFF')
       ]
- 
+
 -- ------------------------------------------------------------
 
 isInList	:: Unicode -> [(Unicode, Unicode)] -> Bool
@@ -744,11 +751,11 @@ latinToUnicode tt
 -- Structure of decoding function copied from 'Data.Char.UTF8.decode'.
 
 decodeAscii	:: DecodingFct
-decodeAscii str
-    = swap (partitionEither (decodeAsciiToEither str))
+decodeAscii
+    = swap . partitionEither . decodeAsciiEmbedErrors
 
-decodeAsciiToEither	:: String -> [Either String Char]
-decodeAsciiToEither str
+decodeAsciiEmbedErrors	:: String -> [Either String Char]
+decodeAsciiEmbedErrors str
     = map (\(c,pos) -> if isValid c
                          then Right c
                          else Left (toErrStr c pos)) posStr
@@ -818,6 +825,14 @@ utf8ToUnicode ('\xEF':'\xBB':'\xBF':s)	-- remove byte order mark ( XML standard 
 
 utf8ToUnicode s
     = decodeUtf8 s
+
+utf8ToUnicodeEmbedErrors	:: DecodingFctEmbedErrors
+
+utf8ToUnicodeEmbedErrors ('\xEF':'\xBB':'\xBF':s)	-- remove byte order mark ( XML standard F.1 )
+    = decodeUtf8EmbedErrors s
+
+utf8ToUnicodeEmbedErrors s
+    = decodeUtf8EmbedErrors s
 
 -- ------------------------------------------------------------
 
@@ -932,7 +947,7 @@ intToCharRefHex i
 
 -- ------------------------------------------------------------
 --
--- | White Space (XML Standard 2.3) and 
+-- | White Space (XML Standard 2.3) and
 -- end of line handling (2.11)
 --
 -- \#x0D and \#x0D\#x0A are mapped to \#x0A
@@ -949,6 +964,11 @@ normalizeNL []				= []
 -- |
 -- the table of supported character encoding schemes and the associated
 -- conversion functions into Unicode:q
+
+{-
+This table could be derived from decodingTableEither,
+but this way it is certainly more efficient.
+-}
 
 decodingTable	:: [(String, DecodingFct)]
 decodingTable
@@ -980,11 +1000,54 @@ decodingTable
     liftDecFct df = \ s -> (df s, [])
 
 -- |
--- the lookup function for selecting the encoding function
+-- the lookup function for selecting the decoding function
 
 getDecodingFct		:: String -> Maybe DecodingFct
 getDecodingFct enc
     = lookup (map toUpper enc) decodingTable
+
+
+-- |
+-- Similar to 'decodingTable' but it embeds errors
+-- in the string of decoded characters.
+
+decodingTableEmbedErrors	:: [(String, DecodingFctEmbedErrors)]
+decodingTableEmbedErrors
+    = [ (utf8,		utf8ToUnicodeEmbedErrors		)
+      , (isoLatin1,	liftDecFct latin1ToUnicode		)
+      , (usAscii,	decodeAsciiEmbedErrors			)
+      , (ucs2,		liftDecFct ucs2ToUnicode		)
+      , (utf16,		liftDecFct ucs2ToUnicode		)
+      , (utf16be,	liftDecFct utf16beToUnicode		)
+      , (utf16le,	liftDecFct utf16leToUnicode		)
+      , (iso8859_2,	liftDecFct (latinToUnicode iso_8859_2)	)
+      , (iso8859_3,	liftDecFct (latinToUnicode iso_8859_3)	)
+      , (iso8859_4,	liftDecFct (latinToUnicode iso_8859_4)	)
+      , (iso8859_5,	liftDecFct (latinToUnicode iso_8859_5)	)
+      , (iso8859_6,	liftDecFct (latinToUnicode iso_8859_6)	)
+      , (iso8859_7,	liftDecFct (latinToUnicode iso_8859_7)	)
+      , (iso8859_8,	liftDecFct (latinToUnicode iso_8859_8)	)
+      , (iso8859_9,	liftDecFct (latinToUnicode iso_8859_9)	)
+      , (iso8859_10,	liftDecFct (latinToUnicode iso_8859_10)	)
+      , (iso8859_11,	liftDecFct (latinToUnicode iso_8859_11)	)
+      , (iso8859_13,	liftDecFct (latinToUnicode iso_8859_13)	)
+      , (iso8859_14,	liftDecFct (latinToUnicode iso_8859_14)	)
+      , (iso8859_15,	liftDecFct (latinToUnicode iso_8859_15)	)
+      , (iso8859_16,	liftDecFct (latinToUnicode iso_8859_16)	)
+      , (unicodeString,	liftDecFct id				)
+      , ("",		liftDecFct id				)	-- default
+      ]
+    where
+    liftDecFct df = map Right . df
+
+-- |
+-- the lookup function for selecting the decoding function
+
+getDecodingFctEmbedErrors	:: String -> Maybe DecodingFctEmbedErrors
+getDecodingFctEmbedErrors enc
+    = lookup (map toUpper enc) decodingTableEmbedErrors
+
+
 
 -- |
 -- the table of supported output encoding schemes and the associated
