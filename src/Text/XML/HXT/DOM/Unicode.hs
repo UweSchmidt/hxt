@@ -699,15 +699,16 @@ isXmlControlOrPermanentlyUndefined c
 
 isInList	:: Unicode -> [(Unicode, Unicode)] -> Bool
 isInList i =
-   foldr (\(lb,ub) b -> i>=lb && (i<=ub || b)) False
+   foldr (\(lb, ub) b -> i >= lb && (i <= ub || b)) False
    {- The expression (i>=lb && i<=ub) || b would work more generally,
       but in a sorted list, the above one aborts the computation as early as possible. -}
 
+{-
 isInList'	:: Unicode -> [(Unicode, Unicode)] -> Bool
 isInList' i ((lb, ub) : l)
     | i <  lb	= False
     | i <= ub	= True
-    | otherwise = isInList i l
+    | otherwise = isInList' i l
 
 isInList' _ []
     = False
@@ -729,6 +730,7 @@ propIsInList =
                 b2 = isInList'' c dict
             in  b0 == b1 && b0 == b2)
      ['\x00'..'\x100']
+-}
 
 -- ------------------------------------------------------------
 
