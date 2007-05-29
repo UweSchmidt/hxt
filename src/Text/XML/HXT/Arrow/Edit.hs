@@ -475,14 +475,16 @@ removeDocWhiteSpace	= arrL EF.removeDocWhiteSpace
 --
 -- allowed values for this attribute are @default | preserve@.
 --
--- input is a complete document tree.
--- result the semantically equivalent formatted tree.
+-- input is a complete document tree or a document fragment
+-- result is the semantically equivalent formatted tree.
 --
 --
 -- see also : 'removeDocWhiteSpace'
 
-indentDoc		:: ArrowList a => a XmlTree XmlTree
-indentDoc		= arrL EF.indentDoc
+indentDoc		:: ArrowXml a => a XmlTree XmlTree
+indentDoc		= ( isRoot `guards` arrL EF.indentDoc )
+			  `orElse`
+			  (root [] [this] >>> indentDoc >>> getChildren)
 
 -- ------------------------------------------------------------
 
@@ -596,6 +598,8 @@ addDoctypeDecl rootElem public system
 		     , (k_public, public)
 		     , (k_system, system)
 		     ] none
+	<+>
+	txt "\n"
 	<+>
 	getChildren
       )
