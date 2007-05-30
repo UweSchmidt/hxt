@@ -34,7 +34,7 @@ all		: $(prog)
 force		:
 		$(MAKE) distclean all
 
-test		:
+test		: $(prog)
 		for op in $(tests) ; \
 		do \
 			$(prog) $$op "http://www.haskell.org/" "-" ; \
