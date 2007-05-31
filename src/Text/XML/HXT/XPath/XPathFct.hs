@@ -31,13 +31,17 @@ import Text.XML.HXT.XPath.XPathParser
 import Text.XML.HXT.XPath.XPathArithmetic
       ( xPathAdd )
 
+import Text.XML.HXT.Arrow.ReadDocument (readDocument)
+import Text.XML.HXT.Arrow.XmlIOStateArrow (runX)
 
 import Text.XML.HXT.DOM.XmlTree
       hiding (mkNode)
 
+import System.IO.Unsafe (unsafePerformIO)
 import Data.Maybe
-      ( fromJust )
+      ( fromJust )      
 
+import Data.Char
 import Data.List
     ( sortBy )
 
@@ -110,7 +114,11 @@ fctTable = [
             ("ceiling",(xceiling, one)),
             ("round",(xround, one)),
             ("key",(xkey, two)),
-            ("format-number",(xformatNumber, twoOrThree))
+            ("format-number",(xformatNumber, twoOrThree)),
+            
+            ("document", (xdocument, one)),-- extension functions for xslt 1.0
+            ("generate-id", (xgenerateId, zeroOrOne))
+            
            ]
 
 -- -----------------------------------------------------------------------------
@@ -181,11 +189,11 @@ remDups _ = XPVError "Call to remDups without a nodeset"
 -- |
 -- Check whether a node is not a part of a node list. Needed to implement matching & testing in xslt.
 isNotInNodeList :: NavXmlTree -> [NavXmlTree] -> Bool
-isNotInNodeList n xs' = getRelPosL (Just n) `notElem` map (getRelPosL . Just) xs'
+isNotInNodeList n xs' = nodeID (Just n) `notElem` map (nodeID . Just) xs'
 
 
 -- |
--- calculates the number of previous siblings of an navigable tree
+-- calculate an ID for a NODE
 --
 --    - returns : a list of numbers, one number for each level of the tree
 
@@ -193,16 +201,23 @@ isNotInNodeList n xs' = getRelPosL (Just n) `notElem` map (getRelPosL . Just) xs
 --   - Attributes are identified by their QName (they do not have previous siblings)
 --   - Elemts are identified by their relative position (# of previous siblings)
 
-getRelPosL :: Maybe (NavXmlTree) -> [Either QName Int]
-getRelPosL Nothing = []
-getRelPosL (Just t@(NT (NTree (XAttr qn) _)  _ _ _)) = Left  qn            : getRelPosL (upNT t)
-getRelPosL (Just t@(NT _ _ prev _))                  = Right (length prev) : getRelPosL (upNT t)
+data IdPathStep = IdRoot String | IdPos Int | IdAttr QName deriving (Show, Eq, Ord)
+
+nodeID :: Maybe (NavXmlTree) -> [IdPathStep]
+nodeID Nothing = []
+nodeID (Just t@(NT (NTree (XAttr qn) _)  _ _ _)) = IdAttr qn : nodeID (upNT t)
+nodeID (Just t@(NT node _ prev _))               
+   | isRootNode $ getNode node = return $ IdRoot (getText $ getValue "rootId" node) 
+   | otherwise       = IdPos (length prev) : nodeID (upNT t)
+   where getText ((NTree (XText t) _):_) = t
+         getText _         = ""
+   
 
 
 -- |
 -- Calculates the position of a node in a tree (in document order)
-documentPos :: NavXmlTree -> [Either QName Int ]
-documentPos tree = reverse $ getRelPosL (Just tree)
+documentPos :: NavXmlTree -> [IdPathStep]
+documentPos tree = reverse $ nodeID (Just tree)
 
 
 -- |
@@ -752,3 +767,28 @@ xformatNumber c env (x:xs)
     = xsubstring' c env ((toXValue xstring c env [x])++(toXValue xnumber c env xs))
 xformatNumber _ _ _
     = XPVError "Call to xformatNumber with a wrong argument"
+
+
+-- Poor man's document(...) function. Opens exactly one document. 
+-- Does not support "fragment identifiers". "Base-URI" is always current directory.
+-- Should still be good enough for home use.
+xdocument :: XFct
+xdocument c e val = XPVNode $ (\(XPVString s) -> xdocument' s) $ xstring c e val
+
+xdocument' :: String -> [NavXmlTree]
+xdocument' uri = map ntree $ concatMap (addAttr "rootId" ("doc " ++ uri)) $ unsafePerformIO $ runX $ readDocument [(a_validate, v_0)] uri
+
+-- generate-id, should be fully compliant with XSLT specification.
+xgenerateId :: XFct
+xgenerateId _ _ [XPVNode (node:_)] = xgenerateId' node
+xgenerateId c@(_, _, node) _ [] = xgenerateId' node
+
+xgenerateId' :: NavXmlTree -> XPathValue
+xgenerateId' = XPVString . ("id_"++) . str2XmlId . show . nodeID . Just
+
+str2XmlId :: String -> String
+str2XmlId = concatMap convert
+    where convert c = if isAscii c && (isUpper c || isLower c || isDigit c)
+                      then [c]
+                      else "_" ++ (show $ ord c) ++ "_"
+    

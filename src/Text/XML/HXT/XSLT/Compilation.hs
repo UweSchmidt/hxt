@@ -5,10 +5,10 @@
    Copyright  : Copyright (C) 2006 Tim Walkenhorst, Uwe Schmidt
    License    : MIT
 
-   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: Compilation.hs,v 1.6 2006/11/11 15:36:05 hxml Exp $
+   Version    : $Id: Compilation.hs,v 1.7 2007/05/02 06:41:05 hxml Exp $
 
    The compilation functions for XSLT stylesheets
 
@@ -35,7 +35,6 @@ import Text.ParserCombinators.Parsec.Prim(runParser)
 import Text.XML.HXT.XSLT.Common
 import Text.XML.HXT.XSLT.Names
 import Text.XML.HXT.XSLT.CompiledStylesheet
-
 
 -- No deep meaning just a shortcut notation for a *very* common expression...
 
@@ -360,99 +359,6 @@ assembleAliases nsAliasElems =
     addAlias' node        = uncurry (addAlias><node) $ compileAlias node
 
 -- -----------------------------------
---
-
-{- not longer in use, all functionality within the IO monad moved to XsltArrows:
-
-isStylesheetElem :: XmlTree -> Bool
-isStylesheetElem node = 
-  (isElemType xsltTransform node || isElemType xsltStylesheet node) && hasAttribute node xsltVersion
-
-isLREstylesheet :: XmlTree -> Bool
-isLREstylesheet node  = hasAttribute node xsltVersionLRE
-
-lre2template :: XmlTree -> XmlTree
-lre2template = mkElement xsltTemplate [mkAttr xsltMatch [mkText "/"]] . return
-
-lre2stylesheet :: XmlTree -> XmlTree
-lre2stylesheet = mkElement xsltTransform [] . return . lre2template
-
--- -----------------------------------
--- Stylesheet compilation in the IO Monad:
-
-compileStylesheetFromUri :: String -> IO CompiledStylesheet
-compileStylesheetFromUri = compileStylesheetFromUriWIncStk []
-
-compileStylesheetFromUriWIncStk :: [String] -> String -> IO CompiledStylesheet
-compileStylesheetFromUriWIncStk incstack uri = readStylesheetWIncStk incstack uri >>= compileStylesheetWIncStk (uri:incstack)
-
-readStylesheetWIncStk :: [String] -> String -> IO XmlTree
-readStylesheetWIncStk incstack uri = 
-  if uri `elem` incstack
-  then error $ "Error: " ++ uri ++ " is recursively imported/included." 
-            ++ concatMap ("\n  imported/included from: " ++) incstack
-  else readDocumentIO [(a_preserve_comment, "0")] uri >>= return . prepareXSLTDocument
-
-compileStylesheet ::  XmlTree -> IO CompiledStylesheet
-compileStylesheet = compileStylesheetWIncStk [] . prepareXSLTDocument
-
-compileStylesheetWIncStk :: [String] -> XmlTree -> IO CompiledStylesheet
-compileStylesheetWIncStk incstack node = 
-  
-  -- ======= 1: simplified syntax
-  if isLREstylesheet xslNode then
-    return $ assembleStylesheet (lre2stylesheet xslNode) []
-
-  -- ======= 2: regular syntax
-  else if isStylesheetElem xslNode then 
-    do
-      -- ======= 2.1: gather included stylesheets
-      expandedContent <- expandIncludes incstack content
-
-      -- ======= 2.2: compile imported stylesheets
-      (imps, rest) <- return $ partition (isElemType xsltImport) expandedContent
-      imports      <- mapM (compileStylesheetFromUriWIncStk incstack . getHRef) $ imps
-
-      -- ======= 2.3: compile content
-      expandedStylesheet <- return $ setChildren rest xslNode
-      return $ assembleStylesheet expandedStylesheet imports
-     
-  -- ======= 3: unknown document type: 
-  else error "Expected: Either xsl:stylesheet/xsl:transform or simplified syntax"
-
-  where 
-    content     = getChildren xslNode
-    (xslNode:_) = filter isElem $ getChildren $ node
-    getHRef     = flip fetchAttribute xsltHRef
-
-
-expandIncludes :: [String] -> [XmlTree] -> IO [XmlTree]
-expandIncludes incstack = liftM concat . mapM (expandInclude incstack) . filter isElem
-
-expandInclude :: [String] -> XmlTree -> IO [XmlTree]
-expandInclude incstack node = 
-  if isElemType xsltInclude node
-    then 
-    do
-       -- ======= read include-stylesheet and extract stylesheet node
-       href        <- return $ fetchAttribute node xsltHRef
-       docNode     <- readStylesheetWIncStk incstack href
-       (xslNode:_) <- return $ filter isElem $ getChildren docNode
-
-       -- ======= check for simplified syntax
-       if isLREstylesheet xslNode
-         then return [lre2template xslNode]
-
-       -- ======= check for xsl:stylesheet or xsl:transform
-         else if isStylesheetElem xslNode 
-                 then expandIncludes (href:incstack) $ getChildren xslNode
-
-       -- ======= include file has unknown type
-                 else error $ "Error: Included file " ++ href ++ " is not a stylesheet"
-    else return [node]
-xxx -}
-
--- -----------------------------------
 
 -- compile a rule from an xsl:template element.
 -- The resulting rule can either be a one or more match rule or a named rule, or both.
@@ -506,12 +412,13 @@ compileVariables nodes =
 
 compileVariable :: XmlTree -> Variable
 compileVariable node =
-    MkVar modus name expr
+    MkVar modus name exprOrRtf
   where 
-    modus   = isElemType xsltParam node
-    name    = parseExName><node $ fetchAttribute node xsltName
-    expr    = parseExpr><node   $ fetchAttributeWDefault node xsltSelect "''"
-
+    modus     = isElemType xsltParam node
+    name      = parseExName><node $ fetchAttribute node xsltName
+    exprOrRtf = if hasAttribute node xsltSelect || null (getChildren node)
+                then Left $ parseExpr><node $ fetchAttributeWDefault node xsltSelect "''"
+                else Right $ compileTemplate $ getChildren node
 
 -- -----------------------------------
 

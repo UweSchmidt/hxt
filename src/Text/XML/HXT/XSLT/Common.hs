@@ -5,10 +5,10 @@
    Copyright  : Copyright (C) 2006 Tim Walkenhorst, Uwe Schmidt
    License    : MIT
 
-   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: Common.hs,v 1.4 2006/11/11 15:36:05 hxml Exp $
+   Version    : $Id: Common.hs,v 1.5 2007/05/02 06:41:05 hxml Exp $
 
    Common imports and functions for HXSLT
 
@@ -102,7 +102,7 @@ import Text.XML.HXT.DOM.XmlTreeTypes
     , equivQName
     )
 import Text.XML.HXT.DOM.XmlTreeFunctions
-    ( newRoot
+    ( mkRootTree
     , xshow
     , isRootNode
     , mkXPiTree

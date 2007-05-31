@@ -13,7 +13,7 @@ where
 import Data.NavTree
 
 import Text.XML.HXT.DOM.XmlTreeTypes
-    ( XNode(..) ) --  QName(..) not yet used
+    ( XNode(..) )
 
 import Text.XML.HXT.DOM.XmlTreeFunctions
     ( isRootNode, namespaceOf )

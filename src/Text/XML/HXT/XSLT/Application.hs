@@ -5,10 +5,10 @@
    Copyright  : Copyright (C) 2006 Tim Walkenhorst, Uwe Schmidt
    License    : MIT
 
-   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: Application.hs,v 1.6 2006/11/17 17:16:24 hxml Exp $
+   Version    : $Id: Application.hs,v 1.7 2007/05/02 06:41:05 hxml Exp $
 
    The transformation functions for XSLT transformation of XML documents
 
@@ -37,8 +37,6 @@ import qualified Data.Map as Map hiding (Map)
 
 import Data.Char
 
--- import Debug.Trace(trace)
-
 -- ------------------------------------------------------------
 
 type XPathParams = Map ExName Expr
@@ -55,40 +53,35 @@ data Context = Ctx NavXmlTree               -- current node
                    VariableSet              -- loc. Var
                    CompiledStylesheet       -- The stylesheet which is being applied
                    (Maybe MatchRule)        -- Just the last applied match rule, Nothing within xsl:for-each
+                   Int                      -- recursion depth, needed for the creation of rtf-ids
                | CtxEmpty        -- The empty-context, indicates that a branch of a transformation has been finished
 
 ctxGetNode :: Context -> NavXmlTree
 ctxGetNode CtxEmpty = error "ctxGetNode: Internal error attempt to access the empty context"
-ctxGetNode (Ctx node _ _ _ _ _ _ _) = node
-
-{- not used 
-ctxGetNodes :: Context -> [NavXmlTree]
-ctxGetNodes CtxEmpty = []
-ctxGetNodes (Ctx _ nodes _ _ _ _ _ _) = nodes
--}
+ctxGetNode (Ctx node _ _ _ _ _ _ _ _) = node
 
 ctxGetStylesheet :: Context -> CompiledStylesheet
 ctxGetStylesheet CtxEmpty = error "ctxGetStylesheet: Internal error attempt to access the empty context"
-ctxGetStylesheet (Ctx _ _ _ _ _ _ stylesheet _) = stylesheet
+ctxGetStylesheet (Ctx _ _ _ _ _ _ stylesheet _ _) = stylesheet
 
 ctxGetRule :: Context -> Maybe MatchRule
 ctxGetRule CtxEmpty = Nothing
-ctxGetRule (Ctx _ _ _ _ _ _ _ rule) = rule
+ctxGetRule (Ctx _ _ _ _ _ _ _ rule _) = rule
 
 ctxSetNodes :: [NavXmlTree] -> Context -> Context
 ctxSetNodes _ CtxEmpty = error "ctxSetNodes: Internal error attempt to access the empty context"
 ctxSetNodes [] _       = CtxEmpty
-ctxSetNodes nodes (Ctx _ _ _ _ globVars locVars cs rl) =
-  Ctx (head nodes) nodes 1 (length nodes) globVars locVars cs rl
+ctxSetNodes nodes (Ctx _ _ _ _ globVars locVars cs rl rd) =
+  Ctx (head nodes) nodes 1 (length nodes) globVars locVars cs rl rd
 
 ctxSetRule :: Maybe MatchRule -> Context -> Context
 ctxSetRule _ CtxEmpty = error "ctxSetRule: Internal error attempt to access the empty context"
-ctxSetRule rule (Ctx node nodes pos len globVars locVars cs _) =
-  Ctx node nodes pos len globVars locVars cs rule
+ctxSetRule rule (Ctx node nodes pos len globVars locVars cs _ rd) =
+  Ctx node nodes pos len globVars locVars cs rule rd
 
 addVariableBinding :: ExName -> XPathValue -> Context -> Context
-addVariableBinding name val (Ctx node nodes pos len globVars locVars cs rl)
-    = Ctx node nodes pos len globVars locVarsNew cs rl
+addVariableBinding name val (Ctx node nodes pos len globVars locVars cs rl rd)
+    = Ctx node nodes pos len globVars locVarsNew cs rl rd
     where
     locVarsNew = Map.insertWith (errF) name val locVars
     errF       = error $ "Local variable or parameter " ++ show name ++ " is already bound in this context"
@@ -97,21 +90,29 @@ addVariableBinding _ _ CtxEmpty = CtxEmpty
 
 clearLocalVariables :: Context -> Context
 clearLocalVariables CtxEmpty = CtxEmpty
-clearLocalVariables (Ctx node nodes pos len globVars _ cs rl)
-    = (Ctx node nodes pos len globVars Map.empty cs rl)
+clearLocalVariables (Ctx node nodes pos len globVars _ cs rl rd)
+    = (Ctx node nodes pos len globVars Map.empty cs rl rd)
 
 processContext :: Context -> (Context->[XmlTree]) -> [XmlTree]
 processContext CtxEmpty _f = []
-processContext ctx@(Ctx _node nodeList pos len globVar locVar cs rl) f
+processContext ctx@(Ctx _node nodeList pos len globVar locVar cs rl rd) f
     | pos > len
 	= []
     | otherwise
-	= f ctx ++ processContext (Ctx (nodeList!!pos) nodeList (pos+1) len globVar locVar cs rl) f
+	= f ctx ++ processContext (Ctx (nodeList!!pos) nodeList (pos+1) len globVar locVar cs rl rd) f
+                 
+incRecDepth :: Context -> Context
+incRecDepth CtxEmpty = CtxEmpty
+incRecDepth (Ctx n nl p l gl lc cs rl rd) = Ctx n nl p l gl lc cs rl (rd+1)
+
+recDepth :: Context -> Int
+recDepth (Ctx _ _ _ _ _ _ _ _ rd) = rd
+recDepth CtxEmpty = 0
                  
 -- ----------------
 
 evalXPathExpr :: Expr -> Context -> XPathValue
-evalXPathExpr expr (Ctx node _ pos len globVars locVars _ _)
+evalXPathExpr expr (Ctx node _ pos len globVars locVars _ _ _)
     = filterXPath $ evalExpr (vars,[]) (pos, len, node) expr (XPVNode [node])
     where 
     filterXPath (XPVError err)    = error err
@@ -124,6 +125,12 @@ evalXPathExpr expr (Ctx node _ pos len globVars locVars _ _)
 
 evalXPathExpr _ CtxEmpty
     = error "internal error in evalXPathExpr in XSLT module"
+
+evalRtf :: Template -> String -> Context -> XPathValue
+evalRtf template rtfId ctx = XPVNode [ntree rtfRoot]
+  where
+    rtfRoot = setAttribute rootIdName ("rtf " ++ rtfId) $ mkRootTree [] $ applyTemplate template ctx
+    rootIdName = mkQName "" "rootId" ""
 
 applySelect :: SelectExpr -> Context -> [NavXmlTree]
 applySelect (SelectExpr expr) ctx = 
@@ -322,7 +329,7 @@ applyImports _ _ = []
 
 applyCallTempl  :: Template -> Context -> [XmlTree]
 applyCallTempl (TemplCall name args) ctx =
-    instantiateRule applyTemplate params rule ctx
+    instantiateNamedRule params rule ctx
   where
     params      = createParamSet args ctx
     rule        = maybe errNoRule id $ Map.lookup name rules
@@ -350,7 +357,7 @@ applyCopy _ _ = []
 
 applyCopyOf :: Template -> Context -> [XmlTree]
 applyCopyOf (TemplCopyOf expr)
-    = concatMap (expandRoot) . xPValue2XmlTrees . evalXPathExpr expr
+    = concatMap expandRoot . xPValue2XmlTrees . evalXPathExpr expr
     where
     expandRoot node
 	| isRoot node	= getChildren node
@@ -385,7 +392,7 @@ applyStylesheetWParams :: XPathParams -> CompiledStylesheet -> XmlTree -> [XmlTr
 applyStylesheetWParams inputParams cs@(CompStylesheet matchRules _ vars _ strips _) rawDoc = 
     map fixupNS $ applyMatchRules Map.empty matchRules Nothing ctxRoot
   where
-    ctxRoot   = Ctx docNode [docNode] 1 1 gloVars Map.empty cs Nothing
+    ctxRoot   = Ctx docNode [docNode] 1 1 gloVars Map.empty cs Nothing 0
     gloVars   = Map.map (evalVariableWParamSet extParams ctxRoot) vars
     extParams = Map.map (flip evalXPathExpr ctxRoot) inputParams
     docNode   = ntree $ expandNSDecls $ stripDocument strips rawDoc
@@ -415,22 +422,26 @@ applyMatchRules args (rule:rules) mode ctx =
 applyMatchRule :: ParamSet -> MatchRule -> Maybe ExName -> Context -> Maybe [XmlTree]
 applyMatchRule args rule@(MatRule expr _ ruleMode _ _ _) mode ctx =
   if mode==ruleMode && applyMatch expr ctx
-    then Just $ instantiateRule applyTemplate args rule $ ctxSetRule (Just rule) ctx
+    then Just $ instantiateMatchRule args rule $ ctxSetRule (Just rule) ctx
     else Nothing
 
--- instantiateRule can either be used on match- or on named-rules.
--- It receives and processes the parameters and instantiate the rule-body.
--- The first argument will always be applyTemplate.
--- However, calling applyTemplate dircetly brakes Haskell's type system.
 
-instantiateRule :: Rule a => (Template -> Context -> [XmlTree]) -> ParamSet -> a -> Context -> [XmlTree]
-instantiateRule applyTemplat args rule ctx = 
-    applyTemplat (getRuleContent rule) ctxNew
+instantiateMatchRule :: ParamSet -> MatchRule -> Context -> [XmlTree]
+instantiateMatchRule args (MatRule _ _ _ _ params content) ctx =
+    applyTemplate content ctxNew
   where 
-    ctxNew = processParameters (getRuleParams rule) args $ clearLocalVariables ctx
+    ctxNew = incRecDepth $ processParameters params args $ clearLocalVariables ctx
 
+instantiateNamedRule :: ParamSet -> NamedRule -> Context -> [XmlTree]
+instantiateNamedRule args (NamRule _ params content) ctx =
+    applyTemplate content ctxNew
+  where 
+    ctxNew = incRecDepth $ processParameters params args $ clearLocalVariables ctx
+
+-- ------------------------------------
+    
 matchDefaultRules :: (Maybe ExName) -> Context -> [XmlTree]
-matchDefaultRules mode ctx@(Ctx ctxNavNode _ _ _ _ _ stylesheet _)
+matchDefaultRules mode ctx@(Ctx ctxNavNode _ _ _ _ _ stylesheet _ _)
     | isElem ctxNode				-- rules for match="*|/"
 	= applyMatchRulesToChildren Map.empty rules mode ctx 
     | isText ctxNode				-- rule for match="text()"
@@ -463,13 +474,14 @@ processParameters params arguments ctx
     = foldl (\c v -> processLocalVariable v arguments c) ctx params
 
 evalVariableWParamSet :: ParamSet -> Context -> Variable -> XPathValue
-evalVariableWParamSet ps ctx (MkVar isPar name exprVar)
+evalVariableWParamSet ps ctx (MkVar isPar name exprOrRtf)
     | isPar
-	= maybe resultFromVar id $ Map.lookup name ps 
+	= maybe (resultFromVar exprOrRtf) id $ Map.lookup name ps 
     | otherwise
-	= resultFromVar
+	= resultFromVar exprOrRtf
   where
-    resultFromVar = evalXPathExpr exprVar ctx
+    resultFromVar (Left expr) = evalXPathExpr expr ctx
+    resultFromVar (Right rtf) = evalRtf rtf (show (recDepth ctx) ++ " " ++ show name) ctx
 
 -- create a set of parameters (Names refering to XPath-values) from a set of Variable-placeholders (unevaluated expressions)
 createParamSet :: Map ExName Variable -> Context -> ParamSet

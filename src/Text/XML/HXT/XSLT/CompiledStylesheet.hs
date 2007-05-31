@@ -5,10 +5,10 @@
    Copyright  : Copyright (C) 2006 Tim Walkenhorst, Uwe Schmidt
    License    : MIT
 
-   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: CompiledStylesheet.hs,v 1.2 2006/11/11 15:36:05 hxml Exp $
+   Version    : $Id: CompiledStylesheet.hs,v 1.3 2007/05/02 06:41:05 hxml Exp $
 
    Types for compiled stylesheets
 
@@ -61,14 +61,6 @@ getAliases :: CompiledStylesheet -> NSAliasing
 getAliases (CompStylesheet _ _ _ _ _ aliases) = aliases
 
 -- -------------------
-
--- common properties of match- and named- rules:
-
-class Rule a where
-  getRuleContent :: a -> Template
-  getRuleParams  :: a -> [Variable]
-
--- -------------------
 -- Match-Rules:
 
 data MatchRule = 
@@ -86,10 +78,6 @@ instance Show MatchRule where
 	  ++ "\n  no. imported rules: " ++ show (length imprules) ++ "\n  xsl-params: " ++ show params 
           ++ "\n  content: " ++ show content ++"\n"
 
-instance Rule MatchRule where
-    getRuleContent (MatRule _ _ _ _ _ c) = c
-    getRuleParams  (MatRule _ _ _ _ p _) = p
-
 getRulePrio :: MatchRule -> Float
 getRulePrio (MatRule _ prio _ _ _ _) = prio
 
@@ -105,10 +93,6 @@ getRuleImports (MatRule _ _ _ imports _ _) = imports
 data NamedRule = NamRule ExName [Variable] Template
   deriving Show
 
-instance Rule NamedRule where
-    getRuleContent (NamRule _ _ c) = c
-    getRuleParams  (NamRule _ p _) = p
-
 getRuleName :: NamedRule -> ExName
 getRuleName (NamRule name _ _)  = name
 
@@ -116,16 +100,13 @@ getRuleName (NamRule name _ _)  = name
 -- Variables 
 
 data Variable = MkVar 
-                  Bool        -- modus: False => xsl:variable, True => xsl:param
-                  ExName      -- name
-                  Expr        -- select
+                  Bool                   -- modus: False => xsl:variable, True => xsl:param
+                  ExName                 -- name
+                  (Either Expr Template) -- select-expression or result tree fragment
 		deriving Show
 
 getVarName :: Variable -> ExName
 getVarName (MkVar _ name _) = name
-
-getVarExpr :: Variable -> Expr
-getVarExpr (MkVar _ _ expr) = expr
 
 isParam :: Variable -> Bool
 isParam (MkVar isP _ _) = isP
