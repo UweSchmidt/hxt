@@ -49,7 +49,6 @@ module Data.Char.UTF8
     encodeOne, decodeOne,
     Error, -- Haddock does not want to document signatures with private types
     -- these functions should be moved to a utility module
-    swap, partitionEither,
   ) where
 
 import Char (ord, chr)
@@ -57,6 +56,8 @@ import Data.Word (Word8, Word16, Word32)
 import Data.Bits (Bits, shiftL, shiftR, (.&.), (.|.))
 
 import Data.List (unfoldr)
+
+import Text.XML.HXT.Util (partitionEither, swap, toMaybe)
 
 
 
@@ -360,17 +361,3 @@ decodeEmbedErrors =
            in  (either (\err -> Left (err,pos)) Right c,
                 (pos+n,rest)))) .
    (,) 0
-
--- move to Text.XML.HXT.DOM.Util ?
-swap :: (a,b) -> (b,a)
-swap (x,y) = (y,x)
-
--- move to Text.XML.HXT.DOM.Util ?
-partitionEither :: [Either a b] -> ([a], [b])
-partitionEither =
-   foldr (\x ~(ls,rs) -> either (\l -> (l:ls,rs)) (\r -> (ls,r:rs)) x) ([],[])
-
--- move to Text.XML.HXT.DOM.Util ?
-toMaybe :: Bool -> a -> Maybe a
-toMaybe False _ = Nothing
-toMaybe True  x = Just x

@@ -128,6 +128,8 @@ exposed-modules:
   Text.XML.HXT.RelaxNG.Utils,
   Text.XML.HXT.RelaxNG.Validation,
   Text.XML.HXT.RelaxNG.Validator
+other-modules:
+  Text.XML.HXT.Util
 hs-source-dirs: src
 ghc-options: -Wall -O2 -fglasgow-exts
 -- import-dirs: /usr/lib/ghc-6.6/hxt/imports
