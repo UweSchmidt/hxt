@@ -78,7 +78,7 @@ where
 
 import Data.Char( toUpper )
 
-import Text.XML.HXT.Util ( swap, partitionEither )
+import Text.XML.HXT.DOM.Util ( swap, partitionEither )
 
 import Text.XML.HXT.DOM.IsoLatinTables
 import Text.XML.HXT.DOM.UTF8Decoding	( decodeUtf8, decodeUtf8EmbedErrors )

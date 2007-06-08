@@ -57,7 +57,7 @@ import Data.Bits (Bits, shiftL, shiftR, (.&.), (.|.))
 
 import Data.List (unfoldr)
 
-import Text.XML.HXT.Util (partitionEither, swap, toMaybe)
+import Text.XML.HXT.DOM.Util (partitionEither, swap, toMaybe)
 
 
 

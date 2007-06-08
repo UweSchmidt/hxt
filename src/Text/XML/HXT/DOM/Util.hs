@@ -1,7 +1,6 @@
 -- |
 -- utility functions
---
--- Version : $Id: Util.hs,v 1.3 2006/05/01 18:56:24 hxml Exp $
+---- Version : $Id: Util.hs,v 1.3 2006/05/01 18:56:24 hxml Exp $
 
 module Text.XML.HXT.DOM.Util
     ( stringTrim
@@ -24,6 +23,10 @@ module Text.XML.HXT.DOM.Util
     , doubles
     , singles
     , noDoubles
+
+    , swap
+    , partitionEither
+    , toMaybe
     )
 where
 
@@ -240,4 +243,15 @@ noDoubles (e : s)
 
 -- ------------------------------------------------------------
 
+swap :: (a,b) -> (b,a)
+swap (x,y) = (y,x)
 
+partitionEither :: [Either a b] -> ([a], [b])
+partitionEither =
+   foldr (\x ~(ls,rs) -> either (\l -> (l:ls,rs)) (\r -> (ls,r:rs)) x) ([],[])
+
+toMaybe :: Bool -> a -> Maybe a
+toMaybe False _ = Nothing
+toMaybe True  x = Just x
+
+-- ------------------------------------------------------------
