@@ -34,7 +34,9 @@ import Control.Arrow.IOListArrow
 import Control.Arrow.IOStateListArrow
 
 import           Text.XML.HXT.DOM.TypeDefs
-import qualified Text.XML.HXT.DOM           as XD (t_root, xshow)
+import qualified Text.XML.HXT.DOM           as XD ( t_root, xshow )
+import           Text.XML.HXT.DOM.Unicode         ( isXmlSpaceChar )
+
 import qualified Text.XML.HXT.Arrow.XmlNode as XN
 
 {- | Arrows for processing 'Text.XML.HXT.DOM.TypeDefs.XmlTree's
@@ -111,6 +113,13 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     
     hasText		:: (String -> Bool) -> a XmlTree XmlTree
     hasText p		= (isText >>> getText >>> isA p) `guards` this
+
+    -- | test for text nodes with only white space
+    --
+    -- implemented with 'hasTest'
+
+    isWhiteSpace	:: a XmlTree XmlTree
+    isWhiteSpace        = hasText (all isXmlSpaceChar)
 
     -- |
     -- test whether a node (element, attribute, pi) has a name with a special property

@@ -67,13 +67,11 @@ import Text.XML.HXT.Arrow.XmlArrow
 
 import qualified Text.XML.HXT.Arrow.XmlNode as XN
 
+import Text.XML.HXT.DOM.Unicode
+    ( isXmlSpaceChar )
+
 import Text.XML.HXT.DOM.FormatXmlTree
     ( formatXmlTree )
-
-import qualified Text.XML.HXT.DOM.EditFilters as EF
-    ( indentDoc
-    , removeDocWhiteSpace
-    )
 
 import Text.XML.HXT.Parser.XmlParsec
     ( xmlEntities )
@@ -417,7 +415,7 @@ removeAllComment	= fromLA $ processBottomUp removeComment'
 -- ----------
 
 removeWhiteSpace'	:: LA XmlTree XmlTree
-removeWhiteSpace'	= none `when` hasText (all (`elem` " \t\n"))
+removeWhiteSpace'	= none `when` isWhiteSpace
 
 -- |
 -- simple filter for removing whitespace.
@@ -459,7 +457,29 @@ removeAllWhiteSpace	= fromLA $ processBottomUp removeWhiteSpace'
 -- see also : 'indentDoc', 'removeAllWhiteSpace'
 
 removeDocWhiteSpace	:: ArrowXml a => a XmlTree XmlTree
-removeDocWhiteSpace	= arrL EF.removeDocWhiteSpace
+removeDocWhiteSpace	= fromLA $ removeRootWhiteSpace
+
+
+removeRootWhiteSpace	:: LA XmlTree XmlTree
+removeRootWhiteSpace
+    =  processChildren processRootElement
+       `when`
+       isRoot
+    where
+    processRootElement	:: LA XmlTree XmlTree
+    processRootElement
+	= removeWhiteSpace >>> processChild
+	where
+	processChild
+	    = choiceA [ isDTD
+			:-> removeAllWhiteSpace			-- whitespace in DTD is redundant
+		      , this
+			:-> replaceChildren ( getChildren
+					      >>. indentTrees insertNothing False 1
+					    )
+		      ]
+
+-- ------------------------------------------------------------
 
 -- |
 -- filter for indenting a document tree for pretty printing.
@@ -482,9 +502,130 @@ removeDocWhiteSpace	= arrL EF.removeDocWhiteSpace
 -- see also : 'removeDocWhiteSpace'
 
 indentDoc		:: ArrowXml a => a XmlTree XmlTree
-indentDoc		= ( isRoot `guards` arrL EF.indentDoc )
-			  `orElse`
-			  (root [] [this] >>> indentDoc >>> getChildren)
+indentDoc		= fromLA $
+			  ( ( isRoot `guards` indentRoot )
+			    `orElse`
+			    (root [] [this] >>> indentRoot >>> getChildren)
+			  )
+
+-- ------------------------------------------------------------
+
+indentRoot		:: LA XmlTree XmlTree
+indentRoot		= processChildren indentRootChildren
+    where
+    indentRootChildren
+	= removeText >>> indentChild >>> insertNL
+	where
+	removeText	= none `when` isText
+	insertNL	= this <+> txt "\n"
+	indentChild	= ( replaceChildren
+			    ( getChildren
+			      >>.
+			      indentTrees (insertIndentation 2) False 1
+			    )
+			    `whenNot` isDTD
+			  )
+
+-- ------------------------------------------------------------
+--
+-- copied from EditFilter and rewritten for arrows
+-- to remove dependency to the filter module
+
+indentTrees	:: (Int -> LA XmlTree XmlTree) -> Bool -> Int -> XmlTrees -> XmlTrees
+indentTrees _ _ _ []
+    = []
+indentTrees indentFilter preserveSpace level ts
+    = runLAs lsf ls
+      ++
+      indentRest rs
+      where
+      runLAs f l
+	  = runLA (constL l >>> f) undefined
+
+      (ls, rs)
+	  = break XN.isElem ts
+
+      isSignificant	:: Bool
+      isSignificant
+	  = preserveSpace
+	    ||
+	    (not . null . runLAs isSignificantPart) ls
+
+      isSignificantPart	:: LA XmlTree XmlTree
+      isSignificantPart
+	  = catA
+	    [ isText `guards` neg isWhiteSpace
+	    , isCdata
+	    , isCharRef
+	    , isEntityRef
+	    ]
+
+      lsf	:: LA XmlTree XmlTree
+      lsf
+	  | isSignificant
+	      = this
+	  | otherwise
+	      = (none `when` isWhiteSpace)
+                >>>
+                (indentFilter level <+> this)
+
+      indentRest	:: XmlTrees -> XmlTrees
+      indentRest []
+	  | isSignificant
+	      = []
+	  | otherwise
+	      = runLA (indentFilter (level - 1)) undefined
+
+      indentRest (t':ts')
+	  = runLA ( ( indentElem
+		      >>>
+		      lsf
+		    )
+		    `when` isElem
+		  ) t'
+            ++
+	    ( if null ts'
+	      then indentRest
+	      else indentTrees indentFilter preserveSpace level
+	    ) ts'
+	  where
+	  indentElem
+	      = replaceChildren	( getChildren
+				  >>.
+				  indentChildren
+				)
+
+	  xmlSpaceAttrValue	:: String
+	  xmlSpaceAttrValue
+	      = concat . runLA (getAttrValue "xml:space") $ t'
+
+	  preserveSpace'	:: Bool
+	  preserveSpace'
+	      = ( fromMaybe preserveSpace
+		  .
+		  lookup xmlSpaceAttrValue
+	        ) [ ("preserve", True)
+		  , ("default",  False)
+		  ]
+
+	  indentChildren	:: XmlTrees -> XmlTrees
+	  indentChildren cs'
+	      | all (maybe False (all isXmlSpaceChar) . XN.getText) cs'
+		  = []
+	      | otherwise
+		  = indentTrees indentFilter preserveSpace' (level + 1) cs'
+
+	
+-- filter for indenting elements
+
+insertIndentation	:: Int -> Int -> LA a XmlTree
+insertIndentation indentWidth level
+    = txt ('\n' : replicate (level * indentWidth) ' ')
+
+-- filter for removing all whitespace
+
+insertNothing		:: Int -> LA a XmlTree
+insertNothing _		= none
 
 -- ------------------------------------------------------------
 

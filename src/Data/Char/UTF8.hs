@@ -51,7 +51,7 @@ module Data.Char.UTF8
     -- these functions should be moved to a utility module
   ) where
 
-import Char (ord, chr)
+import Data.Char (ord, chr)
 import Data.Word (Word8, Word16, Word32)
 import Data.Bits (Bits, shiftL, shiftR, (.&.), (.|.))
 
