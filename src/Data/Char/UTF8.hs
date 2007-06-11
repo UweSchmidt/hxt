@@ -245,7 +245,7 @@ decodeOne bs@(b1:rest)
     | b1 < 0x80   = decodeOne_onebyte bs
     | b1 < 0xC0   = (Left InvalidFirstByte, 1, rest)
     | b1 < 0xE0   = decodeOne_twobyte bs
-    | b1 < 0xEE   = decodeOne_threebyte bs
+    | b1 < 0xF0   = decodeOne_threebyte bs
     | b1 < 0xF5   = decodeOne_fourbyte bs
     | otherwise   = (Left ValueOutOfBounds, 1, rest)
 decodeOne [] = error "UTF8.decodeOne: No input"
