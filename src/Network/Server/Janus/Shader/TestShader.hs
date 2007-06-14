@@ -1,7 +1,7 @@
 -- ------------------------------------------------------------
 
 {- |
-   Module     : Network.Server.Janus.Shader.ExprShader
+   Module     : Network.Server.Janus.Shader.TestShader
    Copyright  : Copyright (C) 2006 Christian Uhlig
    License    : MIT
 
@@ -10,11 +10,10 @@
    Portability: portable
    Version    : $Id: ExprShader.hs, v1.1 2007/03/26 00:00:00 janus Exp $
 
-   Janus Expression Shaders
+   Janus Test Shaders
 
-   These Shaders represent expressions, delivering string values. They are especially useful to compute values to be used
-   by Control Shaders. The string value denoted by an Expression Shader is delivered by means of an XML tree with a root node
-   \"value\" and a text node child containing the value.
+   These Shaders represent simple servlets for demonstrating the janus functionality
+
 -}
 
 -- ------------------------------------------------------------
@@ -22,9 +21,7 @@
 {-# OPTIONS -fglasgow-exts -farrows #-}
 
 module Network.Server.Janus.Shader.TestShader
-    (
-    -- expression shaders
-      testShader
+    ( testShader
     , testShader2
     , transactionStatusShader
     , counterPageShader
@@ -57,7 +54,7 @@ testShader2 =
     mkDynamicCreator $ proc (_, _) -> do
         "test" <*! (0 :: Int)  -< ()
         let shader = proc in_ta -> do
-            val :: Int <- getSVP "test" -< ()
+            (val :: Int) <- getSVP "test" -< ()
             "test" <*! (val + 1) -<< ()
             setVal "/transaction/http/response/body" (show $ val + 1) -<< in_ta
         returnA -< shader
@@ -73,7 +70,8 @@ statusPage	:: XmlAccess s String
 statusPage
     = insertTreeTemplate statusPageTemplate
       [ hasAttrValue "id" (== "status")
-	:-> ( xshow indentDoc
+	:-> ( formatRequestFragment
+	      >>> xshow indentDoc
 	      >>> mkText
 	    )
       ]
@@ -82,6 +80,19 @@ statusPage
     statusPageTemplate
 	= constA "wwwpages/JanusStatus.html"
 	  >>> readTemplate
+
+    formatRequestFragment
+	= processTopDown
+	  ( replaceChildren
+	    ( xshow getChildren
+	      >>> arr formatRequest
+	      >>> mkText
+	    )
+	    `when` hasName "request_fragment"
+	  )
+	where
+	formatRequest
+	    = ("\n" ++) . (++ "\n") . stringTrim
 
 -- ------------------------------------------------------------
 

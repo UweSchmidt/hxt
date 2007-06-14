@@ -24,11 +24,12 @@ module Network.Server.Janus.XmlHelper
     (
     -- data types
       JanusArrow
+    , JanusPath
+    , JanusTimestamp
     , XmlTransform
     , XmlAccess
     , XmlSource
     , XmlConstSource
-    , JanusTimestamp
 
     -- utilities
     , getTS
@@ -79,6 +80,9 @@ module Network.Server.Janus.XmlHelper
     , addTree
     , delTree
 
+    -- Janus Path creation
+    , jp
+
     -- , get1Line
     )
 where
@@ -127,6 +131,11 @@ type XmlAccess s a      = JanusArrow s XmlTree a
 type XmlSource s a      = JanusArrow s a XmlTree
 type XmlConstSource s   = XmlSource s ()
 type JanusTimestamp     = Integer
+
+-- simple variant of an XPath expression to address the Janus XML store
+data JanusPath          = NoPath
+			| ChildPath String String
+			| AttrPath  String String
 
 -- ------------------------------------------------------------
 
@@ -387,8 +396,11 @@ Helper function to apply Arrows to an input XmlTree with regard to the last elem
 to get applied to Attribute axis final elements, the second argument defines an Arrow to get applied to Child axis final elements.
 The third argument represents the XPath expression in question.
 -}
+
+{-
 xpOp :: (String -> String -> XmlAccess s a) -> (String -> String -> XmlAccess s a) -> String -> XmlAccess s a
 xpOp attr_op child_op xpath =
+    xpOp' attr_op child_op (jp xpath)
     proc in_xml -> do
         let parts = case (runParser parseXPath [] "" xpath) of
                 Left _          -> Nothing
@@ -414,7 +426,49 @@ xpOp attr_op child_op xpath =
                                         ('/':[]) -> "/"
                                         (_:xs)   -> reverse xs
         removeLastSlash xpath'  = dropWhile (\c -> c /= '/') (reverse xpath')
+-}
 
+xpOp :: (String -> String -> XmlAccess s a) -> (String -> String -> XmlAccess s a) -> JanusPath -> XmlAccess s a
+xpOp _       child_op (ChildPath loc path) = child_op loc path
+xpOp attr_op _        (AttrPath  loc path) = attr_op  loc path
+xpOp _       _         NoPath              = zeroArrow
+
+{- |
+Transforms an XPath string into a JanusPath
+-}
+
+jp	:: String -> JanusPath
+jp xpath
+    = let
+      path  = base xpath
+      parts = case runParser parseXPath [] "" xpath
+	      of
+	      Right xpExpr -> local_xpath xpExpr
+	      Left _       -> Nothing
+      in
+      case parts of
+      Just (axis, loc) -> case axis of
+			  Attribute -> AttrPath  loc path
+			  Child     -> ChildPath loc path
+			  _         -> NoPath
+      Nothing          -> NoPath
+    where
+    local_xpath (PathExpr _ (Just (LocPath Abs path)))  = select_parts (reverse $ path)
+    local_xpath _                                       = Nothing
+
+    select_parts ((Step axis (NameTest name) []):_)     = Just (axis, qualifiedName name)
+    select_parts _                                      = Just (Child, ".")
+
+    base xpath'
+        = let xpath'' = removeLastSlash xpath' in
+          case xpath'' of
+	  []   -> "/"
+          ('/':[]) -> "/"
+          (_:xs)   -> reverse xs
+
+    removeLastSlash xpath'  = dropWhile (\c -> c /= '/') (reverse xpath')
+
+    
 {- |
 Returns an XPath denoted element of an XmlTree value. For a child element, all subsequent text nodes are delivered. For an
 attribute, the attribute value is delivered. For a local part * in case of the Attribute axis (e.g. \/test\/\@*), all attribute
@@ -431,7 +485,7 @@ getVal xpath =
                 ) -- ifA (getXPathTrees xpath) (getXPathTrees path >>> getAttrValue loc) (none) ))
             )
         (\_ _       -> getXPathTrees xpath >>> getChildren >>> getText)
-        xpath
+        (jp xpath)
 
 {- |
 Returns an XPath denoted element of an XmlTree value. For a child element, all subsequent text nodes are delivered. For an
@@ -467,7 +521,7 @@ listVals xpath =
         (\loc path  -> (if loc == "*"
                             then getXPathTrees path >>> processChildren (none `when` (neg isElem)) >>> getChildren >>> getName
                             else zeroArrow))
-        xpath
+        (jp xpath)
 
 {- |
 Pairwise returns the names and values of all children respectively attributes of a given node. Hence, this Arrow is a non-deterministic one.
@@ -489,7 +543,7 @@ listValPairs xpath =
                                     getChildren)                -< tree
                     getLocalPart &&& (getChildren >>> getText)  -< children
                 else zeroArrow))
-        xpath
+        (jp xpath)
 
 {- |
 Sets an XPath denoted XmlTree value by inserting a text node into an existing element or by inserting an attribute. Existing values are
@@ -514,7 +568,7 @@ setVal xpath val =
                         >>>
                         insTree xpath (txt val)
                 )
-        xpath
+        (jp xpath)
         where
             addAttr' (x:xs) val'    = addAttr x val' >>> addAttr' xs val'
             addAttr' [] _           = this
@@ -544,7 +598,7 @@ delVal xpath =
                         `when`
                         (neg $ getTree xpath >>> getChildren)
                     )
-        xpath
+        (jp xpath)
 
 {- |
 Like setVal, but returns the previous value.
@@ -591,7 +645,7 @@ insEmptyTree xpath =
                     else insTree path (eelem loc)
                     )
             )
-        xpath
+        (jp xpath)
 
 {- |
 Like insTree, but the new subtree is inserted as the last child of the node in question.
