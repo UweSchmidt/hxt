@@ -37,6 +37,7 @@ import Text.XML.HXT.Arrow
         
 import Network.Server.Janus.Core as Shader
 import Network.Server.Janus.XmlHelper
+import Network.Server.Janus.JanusPaths
 
 {- |
 Ignores the input Transaction and deliveres the string value denoted by \/shader\/config\/\@value. If there is no value configured 
@@ -46,7 +47,7 @@ constExpr :: ShaderCreator
 constExpr =
     mkDynamicCreator $ arr $ \(conf, _) ->
     proc _ -> do
-        val     <- getValDef "/shader/config/@value" ""         -<  conf 
+        val     <- getValDef _shader_config_value ""            -<  conf 
         eelem "value" 
             += txt val                                          -<< ()
 
@@ -61,11 +62,11 @@ binaryIntExpr :: ShaderCreator
 binaryIntExpr =
     mkDynamicCreator $ proc (conf, associations) -> do         
         let shader = proc in_ta -> do
-            op      <- getValDef "/shader/config/@op" "+"           -<  conf
+            op      <- getValDef _shader_config_op "+"              -<  conf
             let l_shader = lookupShader "left"  zeroArrow associations 
             let r_shader = lookupShader "right" zeroArrow associations
-            (left' :: Int)  <- l_shader >>> getValP "/value"        -<< in_ta
-            (right' :: Int) <- r_shader >>> getValP "/value"        -<< in_ta
+            (left' :: Int)  <- l_shader >>> getValP _value          -<< in_ta
+            (right' :: Int) <- r_shader >>> getValP _value          -<< in_ta
 
             let op' = case op of 
                         "+" -> (+)
@@ -88,9 +89,9 @@ unaryIntExpr :: ShaderCreator
 unaryIntExpr =
     mkDynamicCreator $ proc (conf, associations) -> do            
         let shader = proc in_ta -> do
-            op      <- getValDef "/shader/config/@op" "-"           -<  conf
+            op      <- getValDef _shader_config_op "-"              -<  conf
             let expr = lookupShader "expr" zeroArrow associations 
-            (expr' :: Int) <- expr >>> getValP "/value"             -<< in_ta
+            (expr' :: Int) <- expr >>> getValP _value               -<< in_ta
 
             let op' = case op of 
                         "-" -> negate
@@ -111,11 +112,11 @@ binaryStrExpr :: ShaderCreator
 binaryStrExpr =
     mkDynamicCreator $ proc (conf, associations) -> do           
         let shader = proc in_ta -> do
-            op      <- getValDef "/shader/config/@op" "++"          -<  conf
+            op      <- getValDef _shader_config_op "++"             -<  conf
             let l_shader = lookupShader "left"  zeroArrow associations
             let r_shader = lookupShader "right" zeroArrow associations 
-            left'   <- l_shader >>> getVal "/value"                 -<< in_ta
-            right'  <- r_shader >>> getVal "/value"                 -<< in_ta
+            left'   <- l_shader >>> getVal _value                   -<< in_ta
+            right'  <- r_shader >>> getVal _value                   -<< in_ta
 
             let op' = case op of 
                         "++" -> (++)
@@ -133,8 +134,8 @@ stateExpr :: ShaderCreator
 stateExpr =
     mkDynamicCreator $ arr $ \(conf, _) ->
     proc _ -> do
-        def     <- getValDef "/shader/config/@default" ""       -<  conf 
-        path    <- getVal "/shader/config/@path"                -<  conf 
+        def     <- getValDef _shader_config_default ""          -<  conf 
+        path    <- getVal    _shader_config_path                -<  conf 
         val     <- (getSVS path) 
                    `orElse` 
                    (constA def)                                 -<< ()
@@ -142,16 +143,18 @@ stateExpr =
             += txt val                                          -<< ()
 
 {- |
-Delivers a string value from the current Transaction. A default value may be defined by \/shader\/config\/\@default, which defaults to the empty
-string. The node in question may be defined by \/shader\/config\/\@path. The Shader fails if no path is specified.
+Delivers a string value from the current Transaction. A default value may
+be defined by \/shader\/config\/\@default, which defaults to the empty
+string. The node in question may be defined by \/shader\/config\/\@path.
+The Shader fails if no path is specified.
 -}
 taExpr :: ShaderCreator
 taExpr = 
     mkDynamicCreator $ arr $ \(conf, _) -> 
     proc in_ta -> do
-        def     <- getValDef "/shader/config/@default" ""       -<  conf
-        path    <- getVal "/shader/config/@path"                -<  conf
-        val     <- getValDef path def                           -<< in_ta
+        def     <- getValDef _shader_config_default ""          -<  conf
+        path    <- getVal    _shader_config_path                -<  conf
+        val     <- getValDef (jp path) def                      -<< in_ta
         eelem "value" 
             += txt val                                          -<< ()
 

@@ -37,6 +37,7 @@ import Text.XML.HXT.Arrow
 import Network.Server.Janus.Core
 import Network.Server.Janus.HTMLBuilder
 import Network.Server.Janus.XmlHelper
+import Network.Server.Janus.JanusPaths
 
 {- |
 A Shader to return the front page. On this page the available scopes are listed. The user may select a scope, the according 
@@ -46,10 +47,10 @@ doorShader :: ShaderCreator
 doorShader =
    mkStaticCreator $
    proc in_ta -> do
-      sid      <- getValDef "/transaction/session/@sessionid" "0"                    -<  in_ta
+      sid      <- getValDef _transaction_session_sessionid "0"                       -<  in_ta
       scopes   <- listA $ listScopes                                                 -<  ()
       html_str <- browserPage [] [] (content sid (list sid scopes)) [] >>> html2Str  -<< undefined
-      setVal "/transaction/http/response/body" html_str                              -<< in_ta   
+      setVal _transaction_http_response_body html_str                                -<< in_ta   
    where
       content _ elements = 
          [ 
@@ -76,12 +77,12 @@ scopeShader :: ShaderCreator
 scopeShader =
    mkStaticCreator $
    proc in_ta -> do
-      sid   <- getValDef "/transaction/session/@sessionid" "0"             -<  in_ta
-      node  <- getValDef "/transaction/http/request/cgi/@node" ""          -<  in_ta
+      sid   <- getValDef _transaction_session_sessionid "0"                -<  in_ta
+      node  <- getValDef _transaction_http_request_cgi_node ""             -<  in_ta
       nodes <- listA $ listStateTrees node                                 -<<  ()
       
       html_str  <- browserPage [] [] (content sid node (list sid node nodes)) [] >>> html2Str    -<< undefined
-      setVal "/transaction/http/response/body" html_str                    -<< in_ta
+      setVal _transaction_http_response_body html_str                    -<< in_ta
    where
       content _ node elements = 
          [ 
@@ -90,17 +91,23 @@ scopeShader =
          ]
       list sid current nodes = 
          table ""
-            += (row "" +>> [cell "" += text "Node" "", cell "" += text "Cell" "", cell "" += text "&nbsp;" ""])
+            += ( row ""
+		 +>> [ cell "" += text "Node" ""
+		     , cell "" += text "Cell" ""
+		     , cell "" += text "&nbsp;" ""
+		     ]
+	       )
             +>> list' sid current nodes
       list' _ _ [] = 
-         [none]
+          [none]
       list' sid current (name:xs) =
-         (row "" +>> [cell "" += text name ""
-               , cell "" += text name ""
-               , cell "" += link ("/browser?node=" ++ current ++ "/" ++ name ++ 
-                        "&operation=browse&sessionid=" ++ sid) "Browse"
-               ]
-            ):(list' sid current xs)
+          ( row ""
+	    +>> [ cell "" += text name ""
+		, cell "" += text name ""
+		, cell "" += link ( "/browser?node=" ++ current ++ "/" ++ name ++ 
+				    "&operation=browse&sessionid=" ++ sid) "Browse"
+		]
+          ) : (list' sid current xs)
 
 {-
 A template Arrow to easily create a web form.

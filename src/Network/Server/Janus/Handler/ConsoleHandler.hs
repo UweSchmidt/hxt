@@ -37,30 +37,31 @@ import Network.Server.Janus.Core
 import Network.Server.Janus.Messaging
 import Network.Server.Janus.Transaction as TA
 import Network.Server.Janus.XmlHelper
+import Network.Server.Janus.JanusPaths
 
 {- |
 TODO
 -}
 ttyHandler :: HandlerCreator
 ttyHandler = proc (conf, shader) -> do
-    state   <- getVal "/config/@state"                                              -<  conf
-    ident   <- getVal "/config/@id"                                                 -<  conf
-    context <- getContext                                                           -<  ()
-    (state ++ "/ctx") <*! context                                                   -<< ()
-    (state ++ "/ctx_name") <-! ident                                                -<< ()
-    (state ++ "/cursor") <-! "/global"                                              -<< ()
+    state   <- getVal _config_state                                             -<  conf
+    ident   <- getVal _config_id                                                -<  conf
+    context <- getContext                                                       -<  ()
+    (state ++ "/ctx") <*! context                                               -<< ()
+    (state ++ "/ctx_name") <-! ident                                            -<< ()
+    (state ++ "/cursor") <-! "/global"                                          -<< ()
     let handler = proc _ -> do
         ctx_name    <- getSVS (state ++ "/ctx_name")                            -<  ()
-        -- cursor      <- getSVS (state ++ "/cursor")                          -<  ()
+        -- cursor      <- getSVS (state ++ "/cursor")                           -<  ()
         arrIO $ hSetBuffering stdout                                            -<  NoBuffering
         arrIO $ putStr                                                          -<  "(" ++ ctx_name ++ ")> "
         line        <- arrIO0 $ getLine                                         -<  ()
         -- let command = words line
         ta          <- createTA 1 Init                                          -<  ()
-        ta2         <- (setVal "/transaction/@handler" "ConsoleHandler")        -<< ta
+        ta2         <- setVal _transaction_handler "ConsoleHandler"             -<< ta
         ts_start    <- getCurrentTS                                             -<  ()
         ta3         <- setTAStart ts_start                                      -<< ta2 
-        ta4         <- setVal "/transaction/request_fragment" line              -<< ta3
+        ta4         <- setVal _transaction_requestFragment line                 -<< ta3
         ta5         <- TA.setTAState Processing                                 -<  ta4
         ta6         <- shader                                                   -<  ta5
         ta_state    <- getTAState                                               -<  ta6
@@ -69,7 +70,7 @@ ttyHandler = proc (conf, shader) -> do
             arrIO $ putStrLn                                                -<  "Error."
             listA $ TA.getTAMsg >>> showMsg >>> (arrIO $ putStrLn)          -<  ta'
          else proc ta' -> do
-            response    <- getValDef "/transaction/response_fragment" ""    -<  ta'
+            response    <- getValDef _transaction_responseFragment ""       -<  ta'
             listA $ arrIO $ putStrLn                                        -<  response
             )                                                                   -<< ta6
 

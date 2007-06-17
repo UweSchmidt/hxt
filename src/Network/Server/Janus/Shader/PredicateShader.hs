@@ -45,6 +45,7 @@ import Network.Server.Janus.Core
 import Network.Server.Janus.Messaging
 import Network.Server.Janus.Transaction
 import Network.Server.Janus.XmlHelper
+import Network.Server.Janus.JanusPaths
 
 {- |
 A Shader simply forwarding its Transaction to always denote True.
@@ -82,8 +83,8 @@ taPredicate :: ShaderCreator
 taPredicate = 
     mkFallibleCreator $ arr $ \(conf, _) -> 
     proc in_ta -> do
-        path    <- getVal "/shader/config/@path"                -<  conf
-        ifA (getVal path) (this) (zeroArrow)                    -<< in_ta
+        path    <- getVal _shader_config_path                   -<  conf
+        ifA (getVal $ jp path) (this) (zeroArrow)               -<< in_ta
         
 {- |
 A Shader checking the existence of a Transaction subtree denoted by \/config\/\@path. The Shader fails if no path is 
@@ -93,8 +94,8 @@ taTreePredicate :: ShaderCreator
 taTreePredicate = 
     mkFallibleCreator $ arr $ \(conf, _) -> 
     proc in_ta -> do
-        path    <- getVal "/shader/config/@path"                -<  conf
-        ifA (getTree path) (this) (zeroArrow)                   -<< in_ta
+        path    <- getVal _shader_config_path                   -<  conf
+        ifA (getTree $ jp path) (this) (zeroArrow)              -<< in_ta
         
 {- |
 A Shader checking the existence of a state value denoted by \/config\/\@path. The Shader fails if no path is configured.
@@ -103,7 +104,7 @@ statePredicate :: ShaderCreator
 statePredicate = 
     mkFallibleCreator $ arr $ \(conf, _) ->
     proc in_ta -> do
-        path    <- getVal "/shader/config/@path"                -<  conf
+        path    <- getVal _shader_config_path                   -<  conf
         ifA (getSV path) (this) (zeroArrow)                 	-<< in_ta
 
 {- |
@@ -131,8 +132,8 @@ matchPredicate =
     mkFallibleCreator $ proc (conf, associations) -> do              
         let shader = proc in_ta -> do
             let expr = lookupShader "expr" zeroArrow associations
-            val     <- expr >>> getVal "/value"                 -<< in_ta
-            match   <- getValDef "/shader/config/@match" ".*"   -<  conf
+            val     <- expr >>> getVal _value                   -<< in_ta
+            match   <- getValDef _shader_config_match ".*"      -<  conf
             (if txtMatch val match 
                 then this
                 else zeroArrow
@@ -148,11 +149,11 @@ comparePredicate :: ShaderCreator
 comparePredicate = 
     mkFallibleCreator $ proc (conf, associations) -> do              
         let shader = proc in_ta -> do
-            op      <- getValDef "/shader/config/@op" "=="      -<  conf
+            op      <- getValDef _shader_config_op "=="         -<  conf
             let l_shader  = lookupShader "left"  zeroArrow associations
             let r_shader  = lookupShader "right" zeroArrow associations
-            (left' :: Int)  <- l_shader >>> getValP "/value"    -<< in_ta
-            (right' :: Int) <- r_shader >>> getValP "/value"    -<< in_ta
+            (left' :: Int)  <- l_shader >>> getValP _value      -<< in_ta
+            (right' :: Int) <- r_shader >>> getValP _value      -<< in_ta
 
             let op' = case op of 
                         "=="    -> (==)
@@ -177,7 +178,7 @@ logicPredicate :: ShaderCreator
 logicPredicate = 
     mkFallibleCreator $ proc (conf, associations) -> do            
         let shader = proc in_ta -> do
-            op      <- getValDef "/shader/config/@op" "&&"      -<  conf
+            op      <- getValDef _shader_config_op "&&"         -<  conf
             let l_shader  = lookupShader "left"  zeroArrow associations
             let r_shader  = lookupShader "right" zeroArrow associations
             left'   <- (l_shader >>> constA True) 

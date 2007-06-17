@@ -80,6 +80,7 @@ import System.Time
 import Text.XML.HXT.Arrow
 import Text.XML.HXT.DOM.XmlTree (XmlTree)
 
+import Network.Server.Janus.JanusPaths
 import Network.Server.Janus.XmlHelper
 
 type Message  		= XmlTree
@@ -230,7 +231,7 @@ An Arrow delivering the type of a Message.
 getMsgType :: XmlAccess s MessageType
 getMsgType =
 	proc msg -> do
-		typ <- getVal "/message/@type" -< msg
+		typ <- getVal _message_type -< msg
 		returnA -< (read typ)
 
 {- |
@@ -238,7 +239,7 @@ An Arrow delivering the source of a Message.
 -}
 getMsgSource  :: XmlAccess s MessageSource
 getMsgSource =
-	getVal "/message/@source"
+	getVal _message_source
 
 {- |
 An Arrow delivering the code of a Message.
@@ -246,7 +247,7 @@ An Arrow delivering the code of a Message.
 getMsgCode :: XmlAccess s MessageCode
 getMsgCode =
 	proc msg -> do
-		code <- getVal "/message/@code" -< msg
+		code <- getVal _message_code -< msg
 		returnA -< (read code)
 
 {- |
@@ -254,7 +255,7 @@ An Arrow delivering the value of a Message.
 -}
 getMsgValue :: XmlAccess s MessageValue
 getMsgValue =
-	getVal "/message/@value"
+	getVal _message_value
 
 {- |
 An Arrow delivering the level of a Message.
@@ -262,7 +263,7 @@ An Arrow delivering the level of a Message.
 getMsgLevel :: XmlAccess s MessageLevel
 getMsgLevel =
 	proc msg -> do
-		level <- getVal "/message/@level" -< msg
+		level <- getVal _message_level -< msg
 		returnA -< (read level)
 
 {- |
@@ -271,7 +272,7 @@ An Arrow delivering the timestamp of a Message.
 getMsgTS :: XmlAccess s JanusTimestamp
 getMsgTS =
 	proc msg -> do
-		ts <- getVal "/message/@timestamp" -< msg
+		ts <- getVal _message_timestamp -< msg
 		returnA -< (read ts)
 
 {- |
@@ -296,37 +297,37 @@ An Arrow adding a name-value pair to the state of a message.
 -}
 addMsgState :: String -> String -> XmlTransform s
 addMsgState key val = 
-	setVal ("/message/state/@" ++ key) val
+	setVal (_message_state_ key) val
 
 {- |
 An Arrow removing a name-value pair from the state of a message by means of the name.
 -}
 delMsgState :: String -> XmlTransform s
 delMsgState key = 
-	delVal ("/message/state/@" ++ key)
+	delVal (_message_state_ key)
 
 {- |
 An Arrow deleting the whole state of a message.
 -}
 clearMsgState :: XmlTransform s
 clearMsgState = 
-	delTree "/message/state"
+	delTree _message_state
 	>>> 
-	insEmptyTree "/message/state"
+	insEmptyTree _message_state
 
 {- |
 An Arrow delivering the value of a name-value pair in a message's state.
 -}
 getMsgState :: String -> XmlAccess s String
 getMsgState key = 
-	getVal $ "/message/state/@" ++ key
+	getVal (_message_state_ key)
 
 {- |
 An Arrow delivering the names of name-value pairs in a message's state. This Arrow is non-deterministic.
 -}
 listMsgStates :: XmlAccess s String
 listMsgStates = 
-	listVals "message/state/@*"
+	listVals (_message_state_ "*")
 
 
 

@@ -54,6 +54,7 @@ import Text.XML.HXT.Arrow
 import Network.Server.Janus.Core as Shader
 import Network.Server.Janus.Messaging
 import Network.Server.Janus.XmlHelper
+import Network.Server.Janus.JanusPaths
 
 
 {- |
@@ -64,7 +65,7 @@ localEchoShader :: ShaderCreator
 localEchoShader = 
     mkStaticCreator $
     proc in_ta -> do
-        request     <- getValDef "/transaction/request_fragment" ""                 -<  in_ta
+        request     <- getValDef _transaction_requestFragment ""                    -<  in_ta
         let request_list    = (removeEmpty . splitRegex (mkRegex "\r")) request
         let output          = foldr (\str current -> str ++ "\n" ++ current) "" request_list
         "global" <-@ mkPlainMsg output                                              -<< ()
@@ -78,9 +79,9 @@ remoteEchoShader :: ShaderCreator
 remoteEchoShader = 
     mkStaticCreator $
     proc in_ta -> do
-        request <- getValDef "/transaction/request_fragment" ""                     -<  in_ta
+        request <- getValDef _transaction_requestFragment ""                        -<  in_ta
         let request_list = (removeEmpty . splitRegex (mkRegex "\r")) request
-        out_ta  <- setVal "/transaction/http/response/body" (concat request_list)   -<< in_ta
+        out_ta  <- setVal _transaction_http_response_body (concat request_list)     -<< in_ta
         returnA                                                                     -<  out_ta
 
 {- |
@@ -96,17 +97,17 @@ sessionReadShader :: ShaderCreator
 sessionReadShader = 
     mkStaticCreator $
     proc in_ta -> do
-        ta      <- insEmptyTree "/transaction/session"                              -<  in_ta
-        sid     <- (getVal "/transaction/http/request/cgi/@sessionid" >>> parseA)
+        ta      <- insEmptyTree _transaction_session                                -<  in_ta
+        sid     <- (getVal _transaction_http_request_cgi_sessionid >>> parseA)
                    `orElse`
                    (getQualifiedUID "Sessions" 1)                                   -<  in_ta
-        ta'     <- setVal "/transaction/session/@sessionid" (show sid)              -<< ta
+        ta'     <- setVal _transaction_session_sessionid (show sid)                 -<< ta
         (XmlVal s_state) 
                 <- (getSV ("/global/session/_" ++ show sid))
                    `orElse` 
                    (eelem "state" >>> arr XmlVal)                                   -<< ()
         
-        ta''    <- insTree "/transaction/session" (constA s_state)                  -<< ta'
+        ta''    <- insTree _transaction_session   (constA s_state)                  -<< ta'
         
         "global" <-@ mkSimpleLog "Lib_Shader:sessionReadShader" ("sessionReadShader read session: " ++ show sid) l_info -<< ()
         returnA                                                                     -<  ta''
@@ -119,12 +120,20 @@ sessionWriteShader :: ShaderCreator
 sessionWriteShader = 
     mkStaticCreator $
     proc in_ta -> do
-        sid     <- getVal "/transaction/session/@sessionid"                 
-                   <!> ("global", "sessionWriteShader", TAValueNotFound, "", [("value","/transaction/session/@sessionid")])  
-                                                                                    -<  in_ta
-        state   <- getTree ("/transaction/session/state")                   
-                   <!> ("global", "sessionWriteShader", TAValueNotFound, "", [("value","/transaction/session/state")])  
-                                                                                    -<  in_ta
+        sid     <- getVal _transaction_session_sessionid                 
+                   <!> ( "global"
+		       , "sessionWriteShader"
+		       , TAValueNotFound
+		       , ""
+		       , [("value", show _transaction_session_sessionid)]
+		       )                                                            -<  in_ta
+        state   <- getTree _transaction_session_state
+                   <!> ( "global"
+		       , "sessionWriteShader"
+		       , TAValueNotFound
+		       , ""
+		       , [("value", show _transaction_session_state)]
+		       )                                                            -<  in_ta
         let stateVal    = XmlVal state
         ("/global/session/_" ++ sid) <$! stateVal                                   -<< ()
         
@@ -149,22 +158,34 @@ authShader :: ShaderCreator
 authShader =
     mkDynamicCreator $ proc (conf, associations) -> do             
         let shader = proc in_ta -> do
-            userdb      <- getValDef "/shader/config/@userdb" "/userdb"             -<  conf 
-            authuser    <- listA $ getVal "/transaction/session/state/@authuser"    -<  in_ta
-            username    <- getVal "/transaction/session/@username" 
-                           <!> ("global", "authShader", TAValueNotFound, "", [("value","/transaction/session/@username")])   
-                                                                                    -<  in_ta
-            userpass    <- getVal "/transaction/session/@userpass"
-                           <!> ("global", "authShader", TAValueNotFound, "", [("value","/transaction/session/@userpass")])   
-                                                                                    -<  in_ta
+            userdb      <- getValDef _shader_config_userdb "/userdb"                -<  conf 
+            authuser    <- listA $ getVal _transaction_session_state_authuser       -<  in_ta
+            username    <- getVal _transaction_session_username
+                           <!> ( "global"
+			       , "authShader"
+			       , TAValueNotFound
+			       , ""
+			       , [("value", show _transaction_session_username)]
+			       )                                                    -<  in_ta
+            userpass    <- getVal _transaction_session_userpass
+                           <!> ( "global"
+			       , "authShader"
+			       , TAValueNotFound
+			       , ""
+			       , [("value", show _transaction_session_userpass)]
+			       )                                                    -<  in_ta
             dbpass      <- (getSVS (userdb ++ "/" ++ username ++ "/password"))
-                           <!> ("global", "authShader", ValueNotFound, "", [("value",userdb ++ "/" ++ username ++ "/password")])     
-                                                                                    -<< in_ta
+                           <!> ( "global"
+			       , "authShader"
+			       , ValueNotFound
+			       , ""
+			       , [("value",userdb ++ "/" ++ username ++ "/password")]
+			       )                                                    -<< in_ta
 
             (if Prelude.null authuser 
                 then (if dbpass == userpass 
-                        then setVal "/transaction/session/state/@authuser" username >>> seqShader associations
-                        else setVal "/transaction/session/state/@authfailed" username
+                        then setVal _transaction_session_state_authuser username >>> seqShader associations
+                        else setVal _transaction_session_state_authfailed username
                         )
                 else (seqShader associations)
                 )                                                                   -<< in_ta
@@ -190,23 +211,32 @@ dataLoadShader :: ShaderCreator
 dataLoadShader =
     mkDynamicCreator $ proc (conf, _) -> do               
         let shader = proc in_ta -> do
-            filename    <- getVal "/shader/config/@file"                            
-                           <+!> ("dataLoadShader", TAValueNotFound, "No data file specified.", [("value", "/shader/config/@file")])  
-                                                                                    -<  conf
-            delimiter   <- getValDef "/shader/config/@delim" ";"
+            filename    <- getVal _shader_config_file                            
+                           <+!> ( "dataLoadShader"
+				, TAValueNotFound
+				, "No data file specified."
+				, [("value", show _shader_config_file)]
+				)                                                   -<  conf
+            delimiter   <- getValDef _shader_config_delim ";"
                            >>>
                            arr (\xs -> if Prelude.null xs then ';' else head xs)    -<  conf
-            columns     <- listA $ listValPairs "/shader/config/@*"                 -<  conf
+            columns     <- listA $ listValPairs (_shader_config_ "@*")              -<  conf
             let columns'    = Prelude.map snd . Prelude.filter (\(key:_,_) -> 
                                 case key of
                                     '_'     -> True
                                     _       -> False) . sort $ columns
-            to          <- getVal "/shader/config/@to_state"                        
-                           <+!> ("dataLoadShader", TAValueNotFound, "No node specified.", [("value", "/shader/config/@to_state")])  
-                                                                                    -<  conf
+            to          <- getVal _shader_config_toState                        
+                           <+!> ( "dataLoadShader"
+                                , TAValueNotFound
+                                , "No node specified."
+                                , [("value", show _shader_config_toState)]
+				)                                                   -<  conf
             file        <- exceptZeroA readFile         
-                           <+!> ("dataLoadShader", FileNotFound, ("File '" ++ filename ++ "' not found."), []) 
-                                                                                    -<< filename
+                           <+!> ( "dataLoadShader"
+			        , FileNotFound
+				, ("File '" ++ filename ++ "' not found.")
+				, []
+				)                                                   -<< filename
             let file_lines  = lines file
             let line_words  = Prelude.map (splitAtElem delimiter) file_lines
 
@@ -250,19 +280,25 @@ dataStoreShader :: ShaderCreator
 dataStoreShader =
     mkDynamicCreator $ proc (conf, _) -> do              
         let shader = proc in_ta -> do
-            filename    <- getVal "/shader/config/@file"                            
-                           <+!> ("dataStoreShader", TAValueNotFound, "No data file specified.", [("value", "/shader/config/@file")])  
-                                                                                    -<  conf
-            delimiter   <- getValDef "/shader/config/@delim" ";" 
+            filename    <- getVal _shader_config_file                           
+                           <+!> ( "dataStoreShader"
+				, TAValueNotFound
+				, "No data file specified."
+				, [("value", show _shader_config_file)]
+				)                                                   -<  conf
+            delimiter   <- getValDef _shader_config_delim ";" 
                            >>> 
                            arr (\xs -> if Prelude.null xs then ';' else head xs)    -<  conf
-            columns     <- listA $ listValPairs "/shader/config/@*"                 -<  conf
+            columns     <- listA $ listValPairs (_shader_config_ "@*")              -<  conf
             let columns'    = Prelude.map snd . Prelude.filter (\(key:_,_) -> 
                                 case key of
                                     '_'     -> True
                                     _       -> False) . sort $ columns
-            from        <- getVal "/shader/config/@from_state"                 
-                           <+!> ("dataStoreShader", TAValueNotFound, "No node specified.", [("value", "/shader/config/@from_state")])  
+            from        <- getVal _shader_config_fromState                
+                           <+!> ( "dataStoreShader"
+                                , TAValueNotFound
+                                , "No node specified."
+                                , [("value", show _shader_config_fromState)])  
                                                                                     -<  conf
             rows        <- listA $ 
                 (proc _ -> do
@@ -286,12 +322,18 @@ loadXmlShader :: ShaderCreator
 loadXmlShader =
     mkDynamicCreator $ arr $ \(conf, _) -> 
     proc in_ta -> do
-        file    <- getVal "/shader/config/@file"                            
-                    <+!> ("loadXmlShader", TAValueNotFound, "No file specified.", [("value", "/shader/config/@file")])  
-                                                                                    -<  conf
-        node    <- getVal "/shader/config/@node"  
-                    <+!> ("loadXmlShader", TAValueNotFound, "No node specified.", [("value", "/shader/config/@node")])  
-                                                                                    -<  conf
+        file    <- getVal _shader_config_file
+                    <+!> ( "loadXmlShader"
+                         , TAValueNotFound
+                         , "No file specified."
+                         , [("value", show _shader_config_file)]
+			 )                                                          -<  conf
+        node    <- getVal _shader_config_node
+                    <+!> ( "loadXmlShader"
+                         , TAValueNotFound
+                         , "No node specified."
+                         , [("value", show _shader_config_node)]
+			 )                                                          -<  conf
         tree    <- fileSource file                                                  -<< ()
         node <$! (XmlVal tree)                                                      -<< ()
         returnA                                                                     -<  in_ta
@@ -303,12 +345,18 @@ storeXmlShader :: ShaderCreator
 storeXmlShader =
     mkDynamicCreator $ arr $ \(conf, _) -> 
     proc in_ta -> do
-        file        <- getVal "/shader/config/@file"                            
-                        <+!> ("loadXmlShader", TAValueNotFound, "No file specified.", [("value", "/shader/config/@file")])  
-                                                                                    -<  conf
-        node        <- getVal "/shader/config/@node" 
-                        <+!> ("loadXmlShader", TAValueNotFound, "No node specified.", [("value", "/shader/config/@node")])  
-                                                                                    -<  conf
+        file        <- getVal _shader_config_file                           
+                        <+!> ( "loadXmlShader"
+			     , TAValueNotFound
+			     , "No file specified."
+			     , [("value", show _shader_config_file)]
+			     )                                                      -<  conf
+        node        <- getVal _shader_config_node
+                        <+!> ( "loadXmlShader"
+			     , TAValueNotFound
+			     , "No node specified."
+			     , [("value", show _shader_config_node)]
+			     )                                                      -<  conf
         XmlVal tree <- getSV node                                                   -<< ()
         writeDocument [(a_indent, "1")] file                                        -<< tree
         returnA                                                                     -<  in_ta
@@ -322,14 +370,20 @@ contextShader :: ShaderCreator
 contextShader = 
     mkDynamicCreator $ arr $ \(conf, _) -> 
     proc in_ta -> do
-        node        <- getVal "/shader/config/@node" 
-                       <+!> ("contextShader", TAValueNotFound, "No source node specified.", [("value", "/shader/config/@node")])  
-                                                                                    -<  conf
-        target      <- getVal "/shader/config/@to"
-                       <+!> ("contextShader", TAValueNotFound, "No target node specified.", [("value", "/shader/config/@to")])  
-                                                                                    -<  conf
+        node        <- getVal _shader_config_node
+                       <+!> ( "contextShader"
+			    , TAValueNotFound
+			    , "No source node specified."
+			    , [("value", show _shader_config_node)]
+			    )                                                       -<  conf
+        target      <- getVal _shader_config_to
+                       <+!> ( "contextShader"
+			    , TAValueNotFound
+			    , "No target node specified."
+			    , [("value", show _shader_config_to)]
+			    )                                                       -<  conf
         val         <- getSVS node                                                  -<< ()
-        ta'         <- setVal target val                                            -<< in_ta
+        ta'         <- setVal (jp target) val                                       -<< in_ta
         returnA                                                                     -<  ta'
 
 {- |
@@ -341,7 +395,7 @@ traceShader :: ShaderCreator
 traceShader = 
     mkDynamicCreator $ arr $ \(conf, _) ->  
     proc in_ta -> do
-        message     <- getVal "/shader/config"          -<  conf
+        message     <- getVal _shader_config            -<  conf
         "global"    <-@ mkPlainMsg message              -<< ()
         returnA                                         -<  in_ta
     
@@ -368,9 +422,12 @@ registerChannel :: ShaderCreator
 registerChannel =
     mkDynamicCreator $ arr $ \(conf, _) -> 
     proc through -> do
-        reg_name    <- (getVal "/shader/config/@channel")   
-                       <+!> ("registerChannel", TAValueNotFound, "No channel specified.", [("value", "/shader/config/@channel")])  
-                                                                -<  conf
+        reg_name    <- getVal _shader_config_channel   
+                       <+!> ( "registerChannel"
+			    , TAValueNotFound
+			    , "No channel specified."
+			    , [("value", show _shader_config_channel)]
+			    )                                   -<  conf
         addChannel reg_name                                     -<< ()
         returnA                                                 -<  through
 
@@ -385,9 +442,12 @@ registerScope :: ShaderCreator
 registerScope =
     mkDynamicCreator $ arr $ \(conf, _) ->   
     proc through -> do
-        reg_name    <- (getVal "/shader/config/@scope")
-                       <+!> ("registerScope", TAValueNotFound, "No scope specified.", [("value", "/shader/config/@scope")])  
-                                                                -<  conf
+        reg_name    <- getVal _shader_config_scope
+                       <+!> ( "registerScope"
+			    , TAValueNotFound
+			    , "No scope specified."
+			    , [("value", show _shader_config_scope)]
+			    )                                   -<  conf
         addScope reg_name                                       -<< ()
         returnA                                                 -<  through
         
@@ -405,28 +465,28 @@ mappingShader :: ShaderCreator
 mappingShader = 
     mkDynamicCreator $ arr $ \(conf, _) -> 
     proc in_ta -> do
-        move        <- getValDef "/shader/config/@move" "no"                        -< conf
+        move        <- getValDef _shader_config_move "no"                           -< conf
         ta_maps     <- listA $ (proc xml -> do
-                            xml'    <- getTree "/shader/config/tamap"       -<  xml
-                            from    <- getVal "/tamap/@from"                -<  xml'
-                            to      <- getVal "/tamap/@to"                  -<  xml'
+                            xml'    <- getTree _shader_config_tamap         -<  xml
+                            from    <- getVal _tamap_from                   -<  xml'
+                            to      <- getVal _tamap_to                     -<  xml'
                             returnA                                         -<  (from, to)
                             )                                                       -<  conf
         state_maps  <- listA $ (proc xml -> do
-                            xml'    <- getTree "/shader/config/statemap"    -<  xml
-                            from    <- getVal "/statemap/@from"             -<  xml'
-                            to  <- getVal "/statemap/@to"                   -<  xml'
+                            xml'    <- getTree _shader_config_statemap      -<  xml
+                            from    <- getVal _statemap_from                -<  xml'
+                            to  <- getVal _statemap_to                      -<  xml'
                             returnA                                         -<  (from, to)
                             )                                                       -<  conf
         ta' <- foldl 
                 (\_ (from,to) -> 
                     proc in_ta' -> do
-                        val     <- getVal from                              -<  in_ta'
+                        val     <- getVal (jp from)                         -<  in_ta'
                         ta'     <- (if move == "yes"
-                                        then delVal from     
+                                        then delVal (jp from)     
                                         else this
                                         )                                   -<  in_ta'
-                        setVal to val                                       -<< ta'
+                        setVal (jp to) val                                  -<< ta'
                     ) 
                 this 
                 ta_maps                                                             -<< in_ta
@@ -461,7 +521,7 @@ mappingWrapper :: ShaderCreator
 mappingWrapper =
     mkDynamicCreator $ arr $ \(conf, associations) -> 
     proc in_ta -> do
-        conf'   <-  setVal "/shader/config/@move" "yes"                                     -<  conf
+        conf'   <-  setVal _shader_config_move "yes"                                        -<  conf
         conf''  <-  invert conf'                                                            -<< ()
         let wrapped = seqShader associations
         wrap    <-  mappingShader                                                           -< conf'
@@ -471,30 +531,30 @@ mappingWrapper =
         invert conf' = proc _ -> do
             new_ta_maps     <- listA $ 
                                 (proc xml -> do
-                                    xml'    <- getTree "/shader/config/tamap"       -<  xml
-                                    from    <- getVal "/tamap/@from"                -<  xml'
-                                    to      <- getVal "/tamap/@to"                  -<  xml'
-                                    let result = eelem "tamap"
+                                    xml'    <- getTree _shader_config_tamap         -<  xml
+                                    from    <- getVal _tamap_from                   -<  xml'
+                                    to      <- getVal _tamap_to                     -<  xml'
+                                    let result = eelem "tamap"					-- names must match JanusPath names
                                                     += sattr "from" to
                                                     += sattr "to" from
                                     returnA                                         -<  result
                                     )                                                       -<  conf'
             new_state_maps  <- listA $ 
                                 (proc xml -> do
-                                    xml'    <- getTree "/shader/config/statemap"    -<  xml
-                                    from    <- getVal "/statemap/@from"             -<  xml'
-                                    to      <- getVal "/statemap/@to"               -<  xml'
-                                    let result = eelem "statemap"
+                                    xml'    <- getTree _shader_config_statemap      -<  xml
+                                    from    <- getVal _statemap_from                -<  xml'
+                                    to      <- getVal _statemap_to                  -<  xml'
+                                    let result = eelem "statemap"				-- names must match JanusPath names
                                             += sattr "from" to
                                             += sattr "to" from
                                     returnA                                         -<  result
                                     )                                                       -<  conf'
-            (delTree "/shader/config/tamap"
-                >>>
-                delTree "/shader/config/statemap"
-                >>>
-                foldl (\arrow tree -> arrow >>> addTree "/shader/config" tree) this (new_ta_maps ++ new_state_maps)
-                )                                                                           -<< conf'
+            ( delTree _shader_config_tamap
+              >>>
+              delTree _shader_config_statemap
+              >>>
+              foldl (\arrow tree -> arrow >>> addTree _shader_config tree) this (new_ta_maps ++ new_state_maps)
+	      )                                                                           -<< conf'
                 
 {- |
 Registers an arbitrary Shader in the ShaderCreator-Repository. During the load-sequence of the server, ServerCreators are loaded 
@@ -511,9 +571,12 @@ aliasShader :: ShaderCreator
 aliasShader =
     mkDynamicCreator $ arr $ \(conf, associations) -> 
     proc through -> do
-        alias   <- (getVal "/shader/config/@alias")            
-                    <+!> ("aliasShader", TAValueNotFound, "No alias name.", [("value", "/shader/config/@alias")])  
-                                                                            -<  conf
+        alias   <- getVal _shader_config_alias            
+                   <+!> ( "aliasShader"
+                        , TAValueNotFound
+                        , "No alias name."
+                        , [("value", show _shader_config_alias)]
+			)                                                   -<  conf
         let shader = seqShader associations
         addShaderCreator alias (mkStaticCreator shader)                     -<< ()
         returnA                                                             -<  through
@@ -527,12 +590,15 @@ setValShader :: ShaderCreator
 setValShader =
     mkDynamicCreator $ arr $ \(conf, associations) -> 
     proc in_ta -> do
-        node    <- (getVal "/shader/config/@node")
-                    <+!> ("setValShader", TAValueNotFound, "No target node specified.", [("value", "/shader/config/@node")])  
-                                                                            -<  conf
+        node    <- getVal _shader_config_node
+                   <+!> ( "setValShader"
+			, TAValueNotFound
+			, "No target node specified."
+			, [("value", show _shader_config_node)]
+			)                                                   -<  conf
         let exprShader = lookupShader "expr" zeroArrow associations 
-        value   <- exprShader >>> getVal "/value"                           -<< in_ta
-        ta      <- setVal node value                                        -<< in_ta
+        value   <- exprShader >>> getVal _value                             -<< in_ta
+        ta      <- setVal (jp node) value                                   -<< in_ta
         returnA                                                             -<  ta
 
 {- |
@@ -544,11 +610,14 @@ setStateShader :: ShaderCreator
 setStateShader =
     mkDynamicCreator $ arr $ \(conf, associations) -> 
     proc in_ta -> do
-        node    <- (getVal "/shader/config/@node")                      
-                    <+!> ("setStateShader", TAValueNotFound, "No target node specified.", [("value", "/shader/config/@node")])  
-                                                                            -<  conf
+        node    <- getVal _shader_config_node                      
+                   <+!> ( "setStateShader"
+                        , TAValueNotFound
+			, "No target node specified."
+			, [("value", show _shader_config_node)]
+			)                                                   -<  conf
         let exprShader = lookupShader "expr" zeroArrow associations
-        value   <- exprShader >>> getVal "/value"                           -<< in_ta
+        value   <- exprShader >>> getVal _value                             -<< in_ta
         node <-! value                                                      -<< ()
         returnA                                                             -<  in_ta   
         

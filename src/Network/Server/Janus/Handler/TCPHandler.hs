@@ -28,33 +28,40 @@ module Network.Server.Janus.Handler.TCPHandler
 where
 
 import Control.Concurrent
+
 import Data.ByteString as BStr (hGet, hPut) -- length
 import Data.Char
 import Data.Maybe
+
 import Network
-import Network.BSD
-import Network.Socket   
+-- import Network.BSD ( getProtocolNumber )
+-- import Network.Socket
 import Network.URI
+
 import System.IO
+
 import Text.XML.HXT.Arrow
         
 import Network.Server.Janus.Messaging
 import Network.Server.Janus.Core as Shader
 import Network.Server.Janus.Transaction as TA
 import Network.Server.Janus.XmlHelper
+import Network.Server.Janus.JanusPaths
 
 import Network.Server.HWS.Util hiding (emptyLine, accept)
 
 {- |
-A HandlerCreator mapping the Handler configuration to newHandler, which operates on explicit configuration parameters.
+A HandlerCreator mapping the Handler configuration to newHandler,
+which operates on explicit configuration parameters.
 -}
+
 tcpHandler :: HandlerCreator
 tcpHandler = proc (conf, shader) -> do
     let handler = proc _ -> do
-        port    <- getValDef "/config/port" "80"                -<  conf
+        port    <- getValDef _config_port "80"                     -<  conf
         -- newHandler (read port) shader                           -<< ()
-        tcpHandler' (read port) shader -<< ()
-    returnA                                                             -<  handler
+        tcpHandler' (read port) shader                             -<< ()
+    returnA                                                        -<  handler
 
 
 -- Nachrichtenkanal je Handler
@@ -89,24 +96,22 @@ tcpHandler' port shader =
                 -- addr        <- arrIO $ inet_ntoa                                -<  haddr
                 arrIO $ takeMVar -<  lock
                 ta      <- createTA 1 Init                                      -<  ()
-                ta2     <- 
-                    (setVal "/transaction/@handler" "TCPHandler"
-                        >>>
-                        setVal "/transaction/tcp/@remote_host" hname
-                        >>>
-                        setVal "/transaction/tcp/@remote_port" (show pnum)
-                        )                                                       -<< ta
+                ta2     <- setVal _transaction_handler "TCPHandler"
+                           >>>
+                           setVal _transaction_tcp_remoteHost hname
+			   >>>
+                           setVal _transaction_tcp_remotePort (show pnum)       -<< ta
                 ts_start    <- getCurrentTS                                     -<  ()
                 ta3         <- setTAStart ts_start                              -<< ta2 
                 let body' = escapeURIString (\ch -> ch /= '\r') body
-                ta4         <- setVal "/transaction/request_fragment" 
+                ta4         <- setVal _transaction_requestFragment 
                                       (concat $ (concat req):[body'])           -<< ta3
                 ta_str      <- xshow (constA ta4)                               -<< ta4
 
                 "global"    <-@ mkSimpleLog "TCPHandler:newHandler" ("initial transaction is: " ++ ta_str) l_debug -<< ()
                 ta5         <- TA.setTAState Processing                         -<  ta4
                 ta6         <- shader'                                          -<  ta5
-                response    <- getValDef "/transaction/response_fragment" ""    -<  ta6
+                response    <- getValDef _transaction_responseFragment ""       -<  ta6
                 ta_str'     <- xshow (constA ta6)                               -<< ()
 
                 "global"    <-@ mkSimpleLog "TCPHandler:newHandler" ("final transaction is: " ++ ta_str') l_debug -<< ()
@@ -114,11 +119,11 @@ tcpHandler' port shader =
 
                 
                 (single $ proc in_ta -> do
-                    uid <- getVal "/transaction/http/response/body/@hdlop"  -<  in_ta
-                    (HandleVal hIn) <- getSV ("/local/files/_" ++ uid)        -<< ()
-                    delStateTree ("/local/files/_" ++ uid)                  -<< ()
+                    uid <- getVal _transaction_http_response_body_hdlop         -<  in_ta
+                    (HandleVal hIn) <- getSV ("/local/files/_" ++ uid)          -<< ()
+                    delStateTree ("/local/files/_" ++ uid)                      -<< ()
                     -- arrIO $ hPutStr hnd -<< "TEST"
-                    arrIO0 $ handleCopy hIn hnd 32768                            -<< ()
+                    arrIO0 $ handleCopy hIn hnd 32768                           -<< ()
                     arrIO0 $ hClose hIn -<< ()
                     returnA -<  in_ta
                     ) `orElse` this                                             -<  ta6
@@ -140,6 +145,8 @@ tcpHandler' port shader =
                 if not eof
                    then handleCopy hIn hOut blocksize 
                    else return ()
+
+{- not yet used
 
 {- |
 A HandlerCreator wrapping the respective Shader in a TCP listener. The first argument provides the TCP port to listen on,
@@ -188,33 +195,31 @@ newHandler port shader =
                     -- "global" <-@ mkPlainMsg $ "processing request..."            -<< ()
                     addr        <- arrIO $ inet_ntoa                                -<  haddr
                     ta      <- createTA 1 Init                                      -<  ()
-                    ta2     <- 
-                        (setVal "/transaction/@handler" "TCPHandler"
-                            >>>
-                            setVal "/transaction/tcp/@remote_ip" addr
-                            >>>
-                            setVal "/transaction/tcp/@remote_port" (show port')
-                            )                                                       -<< ta
+                    ta2     <- setVal _transaction_handler "TCPHandler"
+                               >>>
+                               setVal _transaction_tcp_remoteIp addr
+			       >>>
+                               setVal _transaction_tcp_remotePort (show port')      -<< ta
                     ts_start    <- getCurrentTS                                     -<  ()
                     ta3         <- setTAStart ts_start                              -<< ta2 
                     let body' = escapeURIString (\ch -> ch /= '\r') body
-                    ta4         <- setVal "/transaction/request_fragment" 
+                    ta4         <- setVal _transaction_requestFragment 
                                           (concat $ (concat req):[body'])           -<< ta3
                     ta_str      <- xshow (constA ta4)                               -<< ta4
                     
                     "global"    <-@ mkSimpleLog "TCPHandler:newHandler" ("initial transaction is: " ++ ta_str) l_debug -<< ()
                     ta5         <- TA.setTAState Processing                         -<  ta4
                     ta6         <- shader'                                          -<  ta5
-                    response    <- getValDef "/transaction/response_fragment" ""    -<  ta6
+                    response    <- getValDef _transaction_responseFragment ""       -<  ta6
                     ta_str'     <- xshow (constA ta6)                               -<< ()
                     
                     "global"    <-@ mkSimpleLog "TCPHandler:newHandler" ("final transaction is: " ++ ta_str') l_debug -<< ()
                     arrIO $ hPutStr handle                                          -<< response 
                                         
                     (listA $ proc in_ta -> do
-                        uid <- getVal "/transaction/http/response/body/@hdlop"  -<  in_ta
-                        (HdlOpVal op) <- getSV ("/local/files/_" ++ uid)        -<< ()
-                        arrIO $ op                                              -<< handle
+                        uid <- getVal _transaction_http_response_body_hdlop         -<  in_ta
+                        (HdlOpVal op) <- getSV ("/local/files/_" ++ uid)            -<< ()
+                        arrIO $ op                                                  -<< handle
                         )                                                           -<  ta6
                     
                     ts_end      <- getCurrentTS                                     -<  ()
@@ -225,7 +230,9 @@ newHandler port shader =
                                         (show runtime) ++ " ms\n"                   -<< ()
                     returnA                                                         -<  ()
             process _ _ _ = zeroArrow
-                
+-}
+
+               
 {- |
 Reads from a given handle and returns a tuple, where the first element represents the headers of an HTTP Request and the second
 element the body of the request. 

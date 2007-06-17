@@ -206,6 +206,7 @@ import Network.Server.Janus.DynamicLoader
 import Network.Server.Janus.Messaging
 import Network.Server.Janus.Transaction as TA
 import Network.Server.Janus.XmlHelper
+import Network.Server.Janus.JanusPaths
 
 infixr 0  <-@, <-!
 
@@ -483,18 +484,18 @@ TODO
 mkCreator :: Bool -> JanusArrow Context (XmlTree, Associations) Shader -> ShaderCreator
 mkCreator errorhandling creator = 
     proc conf -> do
-        ident           <- getVal "/shader/config/@id"                  -<  conf
-        state           <- getVal "/shader/config/@state"               -<  conf
+        ident           <- getVal _shader_config_id                  -<  conf
+        state           <- getVal _shader_config_state               -<  conf
 
         "global"        <-@ mkPlainMsg $ "loading init shader for shader '" ++ 
                                 ident ++ "'... "                        -<< ()
-        iShader         <- ((single $ getTree "/shader/init/shader")
+        iShader         <- ((single $ getTree _shader_init_shader)
                                 >>>
                                 loadShader
                                 >>>
                                 (arr snd)
                                 ) `orElse` (constA this)                -<  conf
-        "global"        <-@ mkPlainMsg $ "done\n"                      -<< ()
+        "global"        <-@ mkPlainMsg $ "done\n"                       -<< ()
         "global"        <-@ mkPlainMsg $ "executing init shader for shader '" ++ 
                                 ident ++ "'... "                        -<< ()
         (executeShader iShader) >>> ("global"        <-@ mkPlainMsg $ "done\n")
@@ -502,7 +503,7 @@ mkCreator errorhandling creator =
                                                                         -<< ()
 
         associations    <- loadAssocs                                   -<  conf 
-        root_cursor     <- getVal "/shader/config/@root_state"
+        root_cursor     <- getVal _shader_config_rootState
                            >>> 
                            (arr $ \str -> toId str [])                  -<  conf
         let root_cursor' = case root_cursor of
@@ -514,7 +515,7 @@ mkCreator errorhandling creator =
             <*> ("global", mkErr "Core.hs:mkCreator" GenericMessage ("Shader creator failed for shader '" ++ ident ++ "'") [])
                                                                         -<< (conf, associations)
         let shader' = (proc in_ta -> do
-                accepts     <- getVal "/shader/config/@accepts"
+                accepts     <- getVal _shader_config_accepts
                                 >>> 
                                 parseA                          -<  conf
                 ta_state    <- TA.getTAState                    -<  in_ta
@@ -556,7 +557,7 @@ forwarded to the compiled one.
 dynShader :: ShaderCreator
 dynShader =
     proc conf -> do
-        source  <- getValDef "/shader/config/haskell" ""        -<  conf
+        source  <- getValDef _shader_config_haskell ""        -<  conf
         creator <- arrIO0 $ 
             (unsafeEval 
                 ("(" ++ source ++ ") :: ShaderCreator") 
@@ -604,9 +605,9 @@ TODO
 loadShader :: JanusArrow Context XmlTree (String, Shader)
 loadShader = 
     proc sTree -> do
-        sConf           <- getTree "/shader/config"                     -<  sTree
-        ident           <- (getVal "/config/@id")                       -<  sConf
-        sType           <- (getVal "/config/@type")     
+        sConf           <- getTree _shader_config                       -<  sTree
+        ident           <- getVal _config_id                            -<  sConf
+        sType           <- getVal _config_type     
                            `orElse`
                            (constA ""
                                 >>> ("global" <-@ mkErr "Core.hs:loadShader" GenericMessage ("Type undefined for shader '" ++ ident ++ "'") [])
@@ -624,11 +625,11 @@ TODO
 loadAssocs :: JanusArrow Context XmlTree Associations
 loadAssocs =
     proc sTree -> do
-        sConf           <- getTree "/shader/config"                     -<  sTree
-        ident           <- (getVal "/config/@id")                       -<  sConf
+        sConf           <- getTree _shader_config                   -<  sTree
+        ident           <- getVal  _config_id                       -<  sConf
         associations <- listA (
             proc sTree' -> do
-                ssTree              <- getTree "/shader/shader"     -<  sTree'  
+                ssTree              <- getTree _shader_shader       -<  sTree'  
                 (ident', shader')   <- loadShader                   -<  ssTree              
                 "global" <-@ mkSimpleLog "Core.hs:loadAssocs" 
                              ("Associated shader '" ++ ident' ++ "' to parent shader '" ++ ident ++ "'") 
@@ -644,13 +645,6 @@ executeShader :: Shader -> JanusArrow Context a XmlTree
 executeShader shader =
     proc _ -> do
         createTA 0 Processing >>> shader                                -<< ()
-
-
-
-
-
-
-
 
 -- Context
 -- -- Construction and General Operations
@@ -722,15 +716,15 @@ runInContext ctx arrow =
     proc in_val -> do
         prev_ctx    <- getContext               -<  ()
         setContext ctx                          -<  ()
-        out_val     <- (arrow >>> setContext prev_ctx) `orElse` (setContext prev_ctx >>> zeroArrow) -<< in_val
+        out_val     <- ( arrow
+		         >>>
+			 setContext prev_ctx
+                       )
+                       `orElse`
+                       ( setContext prev_ctx
+                         >>> zeroArrow
+                       )                        -<< in_val
         returnA                                 -<  out_val
-
-
-
-
-
-
-
 
 -- -- Identifier Operations
 
@@ -785,15 +779,6 @@ local st_id =
         select_local ((Step Child (NameTest name) []):_)    = qualifiedName name
         select_local _                                      = "."
 
-
-
-
-
-
-
-
-
-
 -- -- Config Operations
 
 {- |
@@ -810,6 +795,7 @@ getConfig =
 The current configuration XmlTree is replaced by the input of the delivered Arrow. The previous configuration is 
 returned by the Arrow.
 -}
+
 swapConfig :: XmlTransform Context
 swapConfig = 
     proc new_config -> do
@@ -941,11 +927,6 @@ addHandlerCreator :: String -> HandlerCreator -> JanusArrow Context a a
 addHandlerCreator name handler = addRepositoryValue getHandlerCreators swapHandlerCreators name handler
 
 
-
-
-
-
-
 -- -- Shadow Operations
 
 {- |
@@ -983,10 +964,6 @@ extendShadow extension =
         setContext new_context                  -<< ()
         returnA                                 -<  through
         
-        
-
-
-
 
 -- -- State Operations  
 
@@ -2297,7 +2274,7 @@ The actual Handler is created by configuring the compiled HandlerCreator with th
 dynHandler :: HandlerCreator
 dynHandler = proc (conf, shader) -> do
     let result = proc _ -> do
-        source  <- getValDef "/config/@haskell" ""              -<  conf
+        source  <- getValDef _config_haskell ""                 -<  conf
         creator <- arrIO0 $ 
             (unsafeEval ("(" ++ source ++ ") :: HandlerCreator") [".", "./hs-plugins/src", "./HXT-6.0/src"] :: IO (Maybe HandlerCreator)) -<< ()
         (if isJust creator

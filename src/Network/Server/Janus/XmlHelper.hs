@@ -24,7 +24,6 @@ module Network.Server.Janus.XmlHelper
     (
     -- data types
       JanusArrow
-    , JanusPath
     , JanusTimestamp
     , XmlTransform
     , XmlAccess
@@ -80,9 +79,6 @@ module Network.Server.Janus.XmlHelper
     , addTree
     , delTree
 
-    -- Janus Path creation
-    , jp
-
     -- , get1Line
     )
 where
@@ -95,20 +91,10 @@ import Data.Maybe
 
 import System.Time
 
-import Text.ParserCombinators.Parsec
-
 import Text.XML.HXT.Arrow
 import Text.XML.HXT.DOM.XmlTree (XmlTree)
-import Text.XML.HXT.XPath
-import Text.XML.HXT.XPath.XPathDataTypes
-    (
-    Expr (..),
-    LocationPath (..),
-    Path (..),
-    XStep (..),
-    NodeTest (..),
-    AxisSpec (..)
-    )
+
+import Network.Server.Janus.JanusPaths
 
 -- ------------------------------------------------------------
 
@@ -131,11 +117,6 @@ type XmlAccess s a      = JanusArrow s XmlTree a
 type XmlSource s a      = JanusArrow s a XmlTree
 type XmlConstSource s   = XmlSource s ()
 type JanusTimestamp     = Integer
-
--- simple variant of an XPath expression to address the Janus XML store
-data JanusPath          = NoPath
-			| ChildPath String String
-			| AttrPath  String String
 
 -- ------------------------------------------------------------
 
@@ -437,37 +418,6 @@ xpOp _       _         NoPath              = zeroArrow
 Transforms an XPath string into a JanusPath
 -}
 
-jp	:: String -> JanusPath
-jp xpath
-    = let
-      path  = base xpath
-      parts = case runParser parseXPath [] "" xpath
-	      of
-	      Right xpExpr -> local_xpath xpExpr
-	      Left _       -> Nothing
-      in
-      case parts of
-      Just (axis, loc) -> case axis of
-			  Attribute -> AttrPath  loc path
-			  Child     -> ChildPath loc path
-			  _         -> NoPath
-      Nothing          -> NoPath
-    where
-    local_xpath (PathExpr _ (Just (LocPath Abs path)))  = select_parts (reverse $ path)
-    local_xpath _                                       = Nothing
-
-    select_parts ((Step axis (NameTest name) []):_)     = Just (axis, qualifiedName name)
-    select_parts _                                      = Just (Child, ".")
-
-    base xpath'
-        = let xpath'' = removeLastSlash xpath' in
-          case xpath'' of
-	  []   -> "/"
-          ('/':[]) -> "/"
-          (_:xs)   -> reverse xs
-
-    removeLastSlash xpath'  = dropWhile (\c -> c /= '/') (reverse xpath')
-
     
 {- |
 Returns an XPath denoted element of an XmlTree value. For a child element, all subsequent text nodes are delivered. For an
@@ -475,7 +425,7 @@ attribute, the attribute value is delivered. For a local part * in case of the A
 values of the node in question are delivered. Hence, this Arrow is a non-deterministic one. The Arrow fails for non-existing
 values.
 -}
-getVal :: String -> XmlAccess s String
+getVal :: JanusPath -> XmlAccess s String
 getVal xpath =
     xpOp
         (\loc path  ->
@@ -484,8 +434,8 @@ getVal xpath =
                 else getXPathTrees path >>> getAttrValue0 loc
                 ) -- ifA (getXPathTrees xpath) (getXPathTrees path >>> getAttrValue loc) (none) ))
             )
-        (\_ _       -> getXPathTrees xpath >>> getChildren >>> getText)
-        (jp xpath)
+        (\_ _       -> getXPathTrees (show xpath) >>> getChildren >>> getText)
+        xpath
 
 {- |
 Returns an XPath denoted element of an XmlTree value. For a child element, all subsequent text nodes are delivered. For an
@@ -493,7 +443,7 @@ attribute, the attribute value is delivered. For a local part * in case of the a
 values of the node in question are delivered. Hence, this Arrow is a non-deterministic one. The Arrow delivers a default string
 value in case the requested value does not exist.
 -}
-getValDef :: String -> String -> XmlAccess s String
+getValDef :: JanusPath -> String -> XmlAccess s String
 getValDef xpath def =
     getVal xpath
     `orElse`
@@ -504,7 +454,7 @@ Like getVal, but delivers a polymorphically bound type based on the Read type cl
 required to be installed in the Read and Show type classes. The Arrow fails if the requested value does not exist or cannot
 be parsed to the requested type.
 -}
-getValP :: (Read a, Show a) => String -> XmlAccess s a
+getValP :: (Read a, Show a) => JanusPath -> XmlAccess s a
 getValP xpath =
     getVal xpath >>> parseA
 
@@ -512,7 +462,7 @@ getValP xpath =
 Returns the names of all children respectively attributes of a given node. Hence, this Arrow is a non-deterministic one.
 The Arrow fails if the father node does not exist.
 -}
-listVals :: String -> XmlAccess s String
+listVals :: JanusPath -> XmlAccess s String
 listVals xpath =
     xpOp
         (\loc path  -> (if loc == "*"
@@ -521,13 +471,13 @@ listVals xpath =
         (\loc path  -> (if loc == "*"
                             then getXPathTrees path >>> processChildren (none `when` (neg isElem)) >>> getChildren >>> getName
                             else zeroArrow))
-        (jp xpath)
+        xpath
 
 {- |
 Pairwise returns the names and values of all children respectively attributes of a given node. Hence, this Arrow is a non-deterministic one.
 The Arrow fails if the father node does not exist.
 -}
-listValPairs :: String -> XmlAccess s (String, String)
+listValPairs :: JanusPath -> XmlAccess s (String, String)
 listValPairs xpath =
     xpOp
         (\loc path -> (if loc == "*"
@@ -543,40 +493,39 @@ listValPairs xpath =
                                     getChildren)                -< tree
                     getLocalPart &&& (getChildren >>> getText)  -< children
                 else zeroArrow))
-        (jp xpath)
+        xpath
 
 {- |
 Sets an XPath denoted XmlTree value by inserting a text node into an existing element or by inserting an attribute. Existing values are
 replaced. Missing intermediate nodes get created. In case of the * as local part, all children respectively attributes are changed.
 -}
-setVal :: String -> String -> XmlTransform s
+
+setVal :: JanusPath -> String -> XmlTransform s
 setVal xpath val =
     xpOp
-        (\loc path -> (insEmptyTree path `when` (neg $ getTree path))
+        (\loc path -> ( let path' = jp path in
+			( insEmptyTree path' `when` neg (getTree path') )
                         >>>
-                        (if loc == "*"
-                            then processXPathTrees (proc tree -> do
-                                attribute <- listA $ getAttrl >>> getLocalPart -< tree
-                                addAttr' attribute val -<< tree) path
-                            else processXPathTrees (addAttr loc val) path)
-                            )
-        (\_ _       -> (ifA
-                            (getTree xpath)
-                            (processXPathTrees (processChildren (none `when` isText)) xpath) --  >>> insertChildrenAt 0 (txt val)
-                            (this)
-                            )
-                        >>>
-                        insTree xpath (txt val)
-                )
-        (jp xpath)
-        where
-            addAttr' (x:xs) val'    = addAttr x val' >>> addAttr' xs val'
-            addAttr' [] _           = this
+			processXPathTrees
+			( if loc == "*"
+			  then processAttrl (replaceChildren (txt val))
+			  else addAttr loc val
+			) path
+                      )
+	)
+        (\_ _       -> ( processXPathTrees (processChildren (none `when` isText)) (show xpath)	-- remove text node
+			 `when`
+			 getTree xpath                                                          -- if set
+                       )
+                       >>>
+                       insTree xpath (txt val)                                                  -- insert new text
+        )
+        xpath
 
 {- |
 Like setVal, but storing an arbitrary polymorphically bound type installed in the Read and Show classes.
 -}
-setValP :: (Read a, Show a) => String -> a -> XmlTransform s
+setValP :: (Read a, Show a) => JanusPath -> a -> XmlTransform s
 setValP xpath val =
     setVal xpath (show val)
 
@@ -584,89 +533,96 @@ setValP xpath val =
 Removes an attribute or text node value from an XmlTree. Using *, all children's text values or the node's attribute get deleted. If an element
 remains empty (i.e. no subsequent elements), it gets removed from the tree.
 -}
-delVal :: String -> XmlTransform s
+
+delVal :: JanusPath -> XmlTransform s
 delVal xpath =
     xpOp
-        (\loc path ->
-                (if loc == "*"
-                    then processXPathTrees (processAttrl none) path
-                    else processXPathTrees (removeAttr loc) path)
-                    )
-        (\_ _ -> (processXPathTrees (processChildren (none `when` isText)) xpath)
-                    >>>
-                    (delTree xpath)
-                        `when`
-                        (neg $ getTree xpath >>> getChildren)
-                    )
-        (jp xpath)
+        ( \ loc path ->
+          processXPathTrees ( if loc == "*"
+			      then (processAttrl none)
+			      else (removeAttr loc)
+			    ) path
+        )
+        ( \ _ _ ->
+	  processXPathTrees (processChildren (none `when` isText)) (show xpath)
+	  >>>
+          ( delTree xpath
+	    `when`
+            neg ( getTree xpath >>> getChildren )
+	  )
+        )
+        xpath
 
 {- |
 Like setVal, but returns the previous value.
 -}
-swapVal :: String -> String -> XmlAccess s (XmlTree, String)
+
+swapVal :: JanusPath -> String -> XmlAccess s (XmlTree, String)
 swapVal xpath val =
     proc tree -> do
         resultVal   <- getVal xpath         -<  tree
         resultTree  <- setVal xpath val     -<  tree
         returnA                             -<  (resultTree, resultVal)
 
-
-
-
-
-
 {- |
 Returns an XPath denoted subtree of an XmlTree value.
 -}
-getTree :: String -> XmlTransform s
+
+getTree :: JanusPath -> XmlTransform s
 getTree xpath =
-    getXPathTrees xpath
+    getXPathTrees (show xpath)
 
 {- |
 Inserts an XmlTree delivered by an Arrow (second argument) into an existing XPath denoted element. Non-existing
 intermediate elements get created automatically.
 -}
-insTree :: String -> XmlTransform s -> XmlTransform s
+
+insTree :: JanusPath -> XmlTransform s -> XmlTransform s
 insTree xpath tree =
-    (insEmptyTree xpath) `when` (neg $ getTree xpath)
+    ( insEmptyTree xpath
+      `when`
+      neg (getTree xpath)
+    )
     >>>
-    (processXPathTrees (insertChildrenAt 0 tree) xpath)
+    processXPathTrees (replaceChildren (tree <+> getChildren)) (show xpath)
+    -- (processXPathTrees (insertChildrenAt 0 tree) (show xpath))
 
 {- |
 Creates an empty element in an existing XPath denoted element. Non-existing intermediate elements get created automatically.
 -}
-insEmptyTree :: String -> XmlTransform s
+
+insEmptyTree :: JanusPath -> XmlTransform s
 insEmptyTree xpath =
     xpOp
         (\_ _      -> zeroArrow)
         (\loc path ->
                 (if loc == "*"
                     then zeroArrow
-                    else insTree path (eelem loc)
+                    else insTree (jp path) (eelem loc)
                     )
             )
-        (jp xpath)
+        xpath
 
 {- |
 Like insTree, but the new subtree is inserted as the last child of the node in question.
 -}
-addTree :: String -> XmlTransform s -> XmlTransform s
-addTree xpath tree =
-        (insEmptyTree xpath)
-            `when`
-            (neg $ getTree xpath)
-        >>>
-        (proc tree' -> do
-            trees   <- listA $ getTree xpath                                    -<  tree'
-            processXPathTrees (insertChildrenAt (length trees + 1) tree) xpath  -<< tree'
-            )
 
+addTree :: JanusPath -> XmlTransform s -> XmlTransform s
+addTree xpath tree =
+        ( insEmptyTree xpath
+          `when`
+           neg (getTree xpath)
+	)
+        >>>
+        processXPathTrees (replaceChildren (getChildren <+> tree)) (show xpath)
+	
 {- |
 Removes a whole XPath denoted subtree.
 -}
-delTree :: String -> XmlTransform s
+
+delTree :: JanusPath -> XmlTransform s
 delTree xpath =
-    processXPathTrees none xpath
+    processXPathTrees none (show xpath)
 
 -- ------------------------------------------------------------
 {-

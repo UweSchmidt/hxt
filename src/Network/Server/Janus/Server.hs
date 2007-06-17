@@ -33,6 +33,7 @@ import Network.Server.Janus.Shader.SystemShader
 import Network.Server.Janus.Shader.ControlShader
 import Network.Server.Janus.Transaction as TA
 import Network.Server.Janus.XmlHelper
+import Network.Server.Janus.JanusPaths
 
 -- ------------------------------------------------------------
 
@@ -76,7 +77,7 @@ serverArrow conf_file =
                     >>> 
                     normalizeConfig
                     >>>
-                    getTree "/janus"                                                            -<  ()
+                    getTree _janus                                                              -<  ()
         "global"    <-@ mkPlainMsg $ "done\n"                                                   -<  ()
         
         -- initialize Context
@@ -118,7 +119,7 @@ serverArrow conf_file =
             
         -- load handler trees
         "global"    <-@ mkPlainMsg $ "loading system shader from configuration file... "        -<  ()
-        rootTree    <- single $ staticSource cfg >>> getTree "/janus/shader"                    -<< ()
+        rootTree    <- single $ staticSource cfg >>> getTree _janus_shader                      -<< ()
         "global"    <-@ mkPlainMsg $ "done\n"                                                   -<< ()              
         "global"    <-@ mkPlainMsg $ "constructing system shader...\n"                          -<  ()
         (_, shader) <- loadShader                                                               -<  rootTree
@@ -292,34 +293,34 @@ computeConfigNode =
             attribs         <- listA $ getAttrl                                                     -<  node
             node'           <- processChildren (addAttrl (constL attribs) `when` hasName "config")  -<< node
             node''          <- setAttrl none                                                        -<  node'
-            stype           <- (getVal "/shader/config/@type") 
+            stype           <- getVal _shader_config_type 
                                `orElse` 
                                (constA $ "control.seq")                                             -<  node''
-            ident           <- (getVal "/shader/config/@id") 
+            ident           <- getVal _shader_config_id
                                `orElse` 
                                (getQualifiedUID "shaderid" 1 
                                     >>> 
                                     arr (\x -> stype ++ "_" ++ show x))                             -<< node''
-            state           <- (getVal "/shader/config/@state") 
+            state           <- getVal _shader_config_state 
                                `orElse` 
                                (constA $ if stype == "control.seq" 
                                             then "/local" 
                                             else "/local/_" ++ ident)                               -<< node''
-            root_state      <- (getVal "/shader/config/@root_state") 
+            root_state      <- getVal _shader_config_rootState
                                `orElse` 
                                (constA $ state)                                                     -<< node''
-            accepts         <- ((getVal "/shader/config/@accepts") >>> parseA)
+            accepts         <- ( getVal _shader_config_accepts >>> parseA )
                                 `orElse` 
                                 (constA [Processing])                                               -<< node''
-            node'''         <- (setVal "/shader/config/@type" stype) 
+            node'''         <- setVal _shader_config_type stype
                                >>>
-                               (setVal "/shader/config/@id" ident) 
+                               setVal _shader_config_id ident
                                >>>
-                               (setVal "/shader/config/@state" state) 
+                               setVal _shader_config_state state
                                >>>
-                               (setVal "/shader/config/@root_state" root_state) 
+                               setVal _shader_config_rootState root_state
                                >>>
-                               (setVal "/shader/config/@accepts" (show accepts))                    -<< node''
+                               setVal _shader_config_accepts (show accepts)                         -<< node''
             returnA                                                                                 -<  node'''
             ) "/janus//shader[not(ancestor::config)]"
 

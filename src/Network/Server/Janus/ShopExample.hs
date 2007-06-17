@@ -43,6 +43,20 @@ import Text.XML.HXT.Arrow
 import Network.Server.Janus.Core
 import Network.Server.Janus.HTMLBuilder
 import Network.Server.Janus.XmlHelper
+import Network.Server.Janus.JanusPaths
+
+-- ------------------------------------------------------------
+
+cart		:: String
+cart		= "cart"
+
+_cart		:: JanusPath
+_cart		=  jp $ show _transaction_session_state ++ "/" ++ cart
+
+_cart_		:: String -> JanusPath
+_cart_ n	=  jp $ show _cart ++ n
+
+-- ------------------------------------------------------------
 
 {- |
 A door page to provide forms to register or to login with an existing account.
@@ -51,9 +65,9 @@ doorShader :: ShaderCreator
 doorShader =
     mkStaticCreator $ 
     proc in_ta -> do
-        sid      <- getValDef "/transaction/session/@sessionid" "0" -<  in_ta       
+        sid      <- getValDef _transaction_session_sessionid "0"    -<  in_ta       
         html_str <- shopPage [] [] (content sid ) [] >>> html2Str   -<< undefined
-        setVal "/transaction/http/response/body" html_str           -<< in_ta   
+        setVal _transaction_http_response_body   html_str           -<< in_ta   
     where
         content sid = 
             [ 
@@ -84,18 +98,18 @@ registerShader :: ShaderCreator
 registerShader =
     mkStaticCreator $
     proc in_ta -> do
-        user    <- getValDef "/transaction/http/request/cgi/@regname" ""  -<  in_ta           
-        pass    <- getValDef "/transaction/http/request/cgi/@regpass" ""  -<  in_ta   
-        (if user /= "" 
-            then ("/global/userdb/" ++ user ++ "/password") <-! pass
-            else this
-            ) -<< ()
-        (setVal "/transaction/http/request/cgi/@username" user 
-            >>>
-            setVal "/transaction/http/request/cgi/@password" pass
-            >>>
-            setVal "/transaction/http/request/cgi/@operation" "login"
-            ) -<< in_ta
+        user    <- getValDef (_transaction_http_request_cgi_ "@regname") ""  -<  in_ta           
+        pass    <- getValDef (_transaction_http_request_cgi_ "@regpass") ""  -<  in_ta   
+        ( if user /= "" 
+          then ("/global/userdb/" ++ user ++ "/password") <-! pass
+          else this
+          )                                                                   -<< ()
+        ( setVal (_transaction_http_request_cgi_ "@username") user 
+	  >>>
+          setVal (_transaction_http_request_cgi_ "@password") pass
+          >>>
+          setVal (_transaction_http_request_cgi_ "@operation") "login"
+          )                                                                    -<< in_ta
 
 {- |
 A shader to log an existing user in.
@@ -104,8 +118,8 @@ loginShader :: ShaderCreator
 loginShader =
     mkStaticCreator $ 
     proc in_ta -> do
-        user    <- getValDef "/transaction/http/request/cgi/@username" ""   -< in_ta
-        pass    <- getValDef "/transaction/http/request/cgi/@password" ""   -< in_ta
+        user    <- getValDef (_transaction_http_request_cgi_ "@username") ""   -< in_ta
+        pass    <- getValDef (_transaction_http_request_cgi_ "@password") ""   -< in_ta
         
         ifA (proc in_ta' -> do
                 pass' <- getSVS ("/global/userdb/" ++ user ++ "/password")  -<< ()
@@ -113,12 +127,12 @@ loginShader =
                     then this
                     else zeroArrow) -<< in_ta'
                 )
-            (setVal "/transaction/http/request/cgi/@operation" "catalogue"
-                >>>
-                setVal "/transaction/session/state/@authuser" user
-                )
-            (setVal "/transaction/http/request/cgi/@operation" "init"
-                )                                                           -<< in_ta
+            ( setVal (_transaction_http_request_cgi_ "@operation") "catalogue"
+              >>>
+              setVal (_transaction_http_request_cgi_ "@authuser") user
+            )
+            ( setVal (_transaction_http_request_cgi_ "@operation") "init"
+            )                                                                  -<< in_ta
 
 {- |
 A shader to log an existing user out.
@@ -127,9 +141,9 @@ logoutShader :: ShaderCreator
 logoutShader =
     mkStaticCreator $
     proc in_ta -> do
-        delVal "/transaction/session/state/@authuser"                   
-            >>>
-            setVal "/transaction/http/request/cgi/@operation" "init"    -<  in_ta
+        delVal _transaction_session_state_authuser
+        >>>
+        setVal (_transaction_http_request_cgi_ "@operation") "init"    -<  in_ta
             
 {- |
 A shader to display the shop's catalogue. The catalogue is taken from the /catalogue node in the "local" scope.
@@ -138,13 +152,13 @@ catalogueShader :: ShaderCreator
 catalogueShader =
     mkStaticCreator $
     proc in_ta -> do
-        sid      <- getValDef "/transaction/session/@sessionid" "0"         -<  in_ta
-        user     <- getValDef "/transaction/session/state/@authuser" ""     -<  in_ta
+        sid      <- getValDef _transaction_session_sessionid "0"         -<  in_ta
+        user     <- getValDef _transaction_session_state_authuser ""     -<  in_ta
         prods    <- listA $ listStateTrees "/local/catalogue"             -<  ()
         
         htmltree <- shopPage [] [] (content sid user (list sid prods)) []   -<< undefined
         htmlStr <- html2Str                                                 -<  htmltree
-        setVal "/transaction/http/response/body" htmlStr                    -<< in_ta
+        setVal _transaction_http_response_body htmlStr                      -<< in_ta
     where
         content sid user elements = 
             [ 
@@ -171,14 +185,14 @@ articleShader :: ShaderCreator
 articleShader =
     mkStaticCreator $
     proc in_ta -> do
-        sid     <- getValDef "/transaction/session/@sessionid" "0"          -<  in_ta
-        article <- getValDef "/transaction/http/request/cgi/@article" ""    -<  in_ta
+        sid     <- getValDef _transaction_session_sessionid "0"          -<  in_ta
+        article <- getValDef (_transaction_http_request_cgi_ "@article") ""    -<  in_ta
         price   <- getSVS ("/local/catalogue/" ++ article ++ "/price")      -<< ()
 
         htmltree    <- shopPage [] [] 
                 (content sid article (describe article price)) []           -<< undefined
         htmlStr <- html2Str                                                 -<  htmltree
-        setVal "/transaction/http/response/body" htmlStr                    -<< in_ta
+        setVal _transaction_http_response_body htmlStr                      -<< in_ta
     where
         content sid name desc = 
             [ 
@@ -205,17 +219,18 @@ addItemShader :: ShaderCreator
 addItemShader =
     mkStaticCreator $
     proc in_ta -> do
-        article <- getValDef "/transaction/http/request/cgi/@article" ""        -<  in_ta
-        (amount :: Int) <- getVal "/transaction/http/request/cgi/@amount" >>> parseA
-                    `orElse` constA 1               -<  in_ta
+        article <- getValDef (_transaction_http_request_cgi_ "@article") ""      -<  in_ta
+        (amount :: Int)
+                <- ( getVal (_transaction_http_request_cgi_ "@amount") >>> parseA )
+                   `orElse` constA 1                                            -<  in_ta
         (price :: Int) <- getSVP ("/local/catalogue/" ++ article ++ "/price")   -<< ()
 
-        (setVal ("/transaction/session/state/cart/" ++ article ++ "/@amount") (show amount)
-            >>>
-            setVal ("/transaction/session/state/cart/" ++ article ++ "/@price") (show price)
-            >>>
-            setVal "/transaction/http/request/cgi/@operation" "cart"
-            )                                                                   -<< in_ta
+        ( setVal (_cart_ $ article ++ "/@amount") (show amount)
+          >>>
+          setVal (_cart_ $ article ++ "/@price") (show price)
+          >>>
+          setVal (_transaction_http_request_cgi_ "@operation") cart
+          )                                                                   -<< in_ta
 
 {- |
 A shader to remove an article from the shopping cart.
@@ -224,11 +239,11 @@ delItemShader :: ShaderCreator
 delItemShader =
     mkStaticCreator $
     proc in_ta -> do
-        article <- getValDef "/transaction/http/request/cgi/@article" ""    -<  in_ta
+        article <- getValDef (_transaction_http_request_cgi_ "@article") ""    -<  in_ta
         
-        (delVal ("/transaction/session/state/cart/" ++ article) 
-            >>>
-            setVal "/transaction/http/request/cgi/@operation" "cart"
+        ( delVal (_cart_ article) 
+          >>>
+          setVal (_transaction_http_request_cgi_ "@operation") cart
             )                                                               -<< in_ta
 
 {- |
@@ -238,18 +253,18 @@ cartShader :: ShaderCreator
 cartShader =
     mkStaticCreator $
     proc in_ta -> do
-        sid     <- getValDef "/transaction/session/@sessionid" "0"       -<  in_ta
-        user    <- getValDef "/transaction/session/state/@authuser" ""   -<  in_ta       
+        sid     <- getValDef _transaction_session_sessionid "0"       -<  in_ta
+        user    <- getValDef _transaction_session_state_authuser ""   -<  in_ta       
         prods   <- listA $ (proc in_ta' -> do
-                name    <- listVals "/transaction/session/state/cart/*"  -<  in_ta'
-                (amount :: Int) <- getVal ("/transaction/session/state/cart/" ++ name ++ "/@amount") >>> parseA -<< in_ta'
-                (price :: Int)  <- getVal ("/transaction/session/state/cart/" ++ name ++ "/@price") >>> parseA  -<< in_ta'
+                name    <- listVals (_cart_ "*")                                    -<  in_ta'
+                (amount :: Int) <- getVal (_cart_ $ name ++ "/@amount") >>> parseA  -<< in_ta'
+                (price :: Int)  <- getVal (_cart_ $ name ++ "/@price")  >>> parseA  -<< in_ta'
                 returnA                                                  -<  (name, price, amount)
                 )                                                        -<  in_ta
         let value = foldr (\(_, price, amount) cum -> cum + price * amount) 0 prods
         htmltree <- shopPage [] [] (content sid user (list sid prods) value) [] -<< undefined
         htmlStr  <- html2Str                                             -<  htmltree
-        setVal "/transaction/http/response/body" htmlStr                 -<< in_ta
+        setVal _transaction_http_response_body htmlStr                   -<< in_ta
     where
         content sid user elements value = 
             [ 
@@ -261,8 +276,14 @@ cartShader =
             ]
         list sid products = 
             table ""
-                += (row "" +>> [cell "" += text "Article" "", cell "" += text "Price" "", cell "" += text "amount" "", cell "" += text "&nbsp;" ""])
-                +>> list' sid products
+	    += ( row ""
+		 +>> [ cell "" += text "Article" ""
+		     , cell "" += text "Price" ""
+		     , cell "" += text "amount" ""
+		     , cell "" += text "&nbsp;" ""
+		     ]
+	       )
+            +>> list' sid products
         list' _ []        = 
             [none]
         list' sid ((name,price,amount):xs)  = 
@@ -277,18 +298,18 @@ checkoutShader :: ShaderCreator
 checkoutShader =
     mkStaticCreator $
     proc in_ta -> do
-        sid     <- getValDef "/transaction/session/@sessionid" "0"          -<  in_ta
-        user    <- getValDef "/transaction/session/state/@authuser" ""      -<  in_ta       
+        sid     <- getValDef _transaction_session_sessionid "0"          -<  in_ta
+        user    <- getValDef _transaction_session_state_authuser ""      -<  in_ta       
         prods   <- listA $ (proc in_ta' -> do
-                name    <- listVals "/transaction/session/state/cart/*"     -<  in_ta'
-                (amount :: Int) <- getVal ("/transaction/session/state/cart/" ++ name ++ "/@amount") >>> parseA -<< in_ta'
-                (price :: Int)  <- getVal ("/transaction/session/state/cart/" ++ name ++ "/@price") >>> parseA  -<< in_ta'
+                name    <- listVals (_cart_ "*")                                   -<  in_ta'
+                (amount :: Int) <- getVal (_cart_ $ name ++ "/@amount") >>> parseA -<< in_ta'
+                (price :: Int)  <- getVal (_cart_ $ name ++ "/@price")  >>> parseA -<< in_ta'
                 returnA                                                     -<  (name, price, amount)
                 )                                                           -<  in_ta
         let value = foldr (\(_, price, amount) cum -> cum + price * amount) 0 prods
         htmltree <- shopPage [] [] (content sid user value) []              -<< undefined
         htmlStr <- html2Str                                                 -<  htmltree
-        setVal "/transaction/http/response/body" htmlStr                    -<< in_ta
+        setVal _transaction_http_response_body htmlStr                      -<< in_ta
     where
         content sid user value = 
             [ 
@@ -309,12 +330,12 @@ paymentShader :: ShaderCreator
 paymentShader =
     mkStaticCreator $
     proc in_ta -> do
-        sid     <- getValDef "/transaction/session/@sessionid" "0"      -<  in_ta
-        state   <- getTree "/transaction/session/state"                 -<  in_ta
+        sid     <- getValDef _transaction_session_sessionid "0"      -<  in_ta
+        state   <- getTree   _transaction_session_state                 -<  in_ta
         ("/local/orders/_" ++ sid) <$! (XmlVal state)                   -<< ()
-        (delTree "/transaction/session/state/cart" 
-            >>>
-            setVal "/transaction/http/request/cgi/@operation" "catalogue"
+        ( delTree _cart
+          >>>
+          setVal (_transaction_http_request_cgi_ "@operation") "catalogue"
             )                               -<  in_ta
         
 {- |

@@ -40,6 +40,7 @@ import Text.XML.HXT.Arrow
 import Network.Server.Janus.Core
 import Network.Server.Janus.HTMLBuilder
 import Network.Server.Janus.XmlHelper
+import Network.Server.Janus.JanusPaths
 
 data HttpServletContext = HSCON {
     servletid       :: String,
@@ -73,19 +74,19 @@ hostServlet :: (HttpServletContext -> HttpServletRequest -> HttpServletResponse 
 hostServlet servlet =
     mkDynamicCreator $ arr $ \(conf, _) -> 
     proc in_ta -> do
-        shaderid    <- getVal "/shader/config/@id"                                  -<  conf
-        attributes  <- listA $ listValPairs "/shader/config"                        -<  conf
+        shaderid    <- getVal _shader_config_id                                     -<  conf
+        attributes  <- listA $ listValPairs _shader_config                          -<  conf
         state'      <- listA $ listStatePairsStr ("/local/servlets/" ++ shaderid)   -<< ()
-        sessionid   <- getVal "/transaction/session/@sessionid"                     -<  in_ta
-        s_state     <- getTree "/transaction/session/state"                         -<  in_ta
-        authuser    <- getValDef "/transaction/session/state/@authuser" ""          -<  in_ta
+        sessionid   <- getVal _transaction_session_sessionid                        -<  in_ta
+        s_state     <- getTree _transaction_session_state                           -<  in_ta
+        authuser    <- getValDef _transaction_session_state_authuser ""             -<  in_ta
         url'        <- maybeA $ 
-                        getVal "/transaction/http/request/@url" 
+                        getVal _transaction_http_request_url
                         >>> 
                         (arr parseURIReference)                                     -<  in_ta   
-        cgi         <- listA $ listValPairs "/transaction/http/request/cgi/@*"      -<  in_ta
-        remote_ip   <- getVal "/transaction/tcp/@remote_ip"                         -<  in_ta
-        remote_port <- getVal "/transaction/tcp/@remote_port"                       -<  in_ta
+        cgi         <- listA $ listValPairs (_transaction_http_request_cgi_ "@*")   -<  in_ta
+        remote_ip   <- getVal _transaction_tcp_remoteIp                             -<  in_ta
+        remote_port <- getVal _transaction_tcp_remotePort                           -<  in_ta
 
         let context = HSCON { 
                           servletid = shaderid
@@ -113,14 +114,13 @@ hostServlet servlet =
         response'   <- responseArrow                                                 -<< undefined
         
         to_state (state_chg response') shaderid                                      -<< ()
-        (delTree "/transaction/session/state" 
-            >>> 
-            insTree "/transaction/session" (constA $ new_s_state response')
-            >>>
-            setVal "/transaction/http/response/body" (body response')       
-            >>>
-            setVal "/transaction/http/response/@status" (show $ status response')
-            )                                                                        -<< in_ta
+        ( delTree _transaction_session_state
+          >>> 
+          insTree _transaction_session (constA $ new_s_state response')
+          >>>
+          setVal _transaction_http_response_body (body response')       
+          >>>
+          setVal _transaction_http_response_status (show $ status response') )      -<< in_ta
     where
         to_state ((name, val):xs) sid   = 
                             (("/local/servlets/" ++ sid ++ "/" ++ name) <-! val)

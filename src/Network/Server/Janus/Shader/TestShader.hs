@@ -33,6 +33,7 @@ import Text.XML.HXT.Arrow
 
 import Network.Server.Janus.Core as Shader
 import Network.Server.Janus.XmlHelper
+import Network.Server.Janus.JanusPaths
 
 import Control.Concurrent
 import Data.List
@@ -46,7 +47,7 @@ testShader =
         let shader = proc in_ta -> do
             val <- arrIO $ takeMVar                                     -<  x
             arrIO $ putMVar x                                           -<< (val + 1)
-            setVal "/transaction/http/response/body" (show $ val + 1)   -<< in_ta
+            setVal _transaction_http_response_body (show $ val + 1)     -<< in_ta
         returnA                                                         -<  shader
 
 testShader2 :: ShaderCreator
@@ -56,7 +57,7 @@ testShader2 =
         let shader = proc in_ta -> do
             (val :: Int) <- getSVP "test" -< ()
             "test" <*! (val + 1) -<< ()
-            setVal "/transaction/http/response/body" (show $ val + 1) -<< in_ta
+            setVal _transaction_http_response_body (show $ val + 1) -<< in_ta
         returnA -< shader
 
 -- ------------------------------------------------------------
@@ -64,7 +65,7 @@ testShader2 =
 transactionStatusShader	:: ShaderCreator
 transactionStatusShader
     = mkStaticCreator
-      ( setVal "/transaction/http/response/body" $< statusPage )
+      ( setVal _transaction_http_response_body $< statusPage )
 
 statusPage	:: XmlAccess s String
 statusPage
@@ -117,7 +118,7 @@ counterPageShader =
 
 counterPage	:: MVar Int -> XmlTree -> Shader
 counterPage cnt pg
-    = setVal "/transaction/http/response/body"	-- insert result into transaction body
+    = setVal _transaction_http_response_body	-- insert result into transaction body
       $< ( processState
 	   >>> genOutPage
 	 )
@@ -179,18 +180,19 @@ genPage path processPage
 sessionDemo :: ShaderCreator
 sessionDemo =
     mkStaticCreator $ proc in_ta -> do
-        sid     <- getVal "/transaction/session/@sessionid"         -<  in_ta
-        myname  <- getVal "/transaction/http/request/@uri_path"     -<  in_ta
+        ta      <- getTree _transaction                             -<  in_ta
+        sid     <- getVal _transaction_session_sessionid            -<  in_ta
+        myname  <- getVal _transaction_http_request_uriPath         -<  in_ta
         (count :: Int) 
-                <- getValDef "/transaction/session/state/@count" "0" 
+                <- getValDef _transaction_session_state_count "0" 
                     >>> parseA                                      -<  in_ta
-        in_ta'  <- setVal "/transaction/session/state/@count" (show $ count + 1)      
+        in_ta'  <- setVal _transaction_session_state_count (show $ count + 1)      
                                                                     -<< in_ta
-        sessionPage myname sid (count + 1)                          -<< in_ta'
+        sessionPage myname sid (count + 1) ta                       -<< in_ta'
 
-sessionPage	:: String -> String -> Int -> Shader
-sessionPage path sid count
-    = setVal "/transaction/http/response/body"
+sessionPage	:: String -> String -> Int -> XmlTree -> Shader
+sessionPage path sid count ta
+    = setVal _transaction_http_response_body
       $< genPage
 	     ("wwwpages" ++ path)
 	     ( editRefs
@@ -225,6 +227,12 @@ sessionPage path sid count
 	     :-> txt (show count)
 	   , hasAttrValue "id" (== "sessionid")
 	     :-> txt sid
+	   , hasAttrValue "id" (== "transaction")
+	     :-> ( xshow ( constA ta
+			   >>> indentDoc
+			 )
+		   >>> mkText
+		 )
 	   , this
 	     :-> this
 	   ]

@@ -55,10 +55,12 @@ where
 
 import Text.XML.HXT.Arrow
 
+import Network.Server.Janus.JanusPaths
 import Network.Server.Janus.Messaging
 import Network.Server.Janus.XmlHelper
 
 type TransactionId      = Int
+
 data TransactionState   = 
       Init 
     | Processing 
@@ -66,6 +68,7 @@ data TransactionState   =
     | Completed 
     | Failure 
     deriving (Eq, Show, Read)
+
 type Transaction    = XmlTree
 type Transactions   = [Transaction]
 type Timestamp      = Integer
@@ -84,8 +87,8 @@ Creates an empty Transaction with a given id and in a given state.
 -}
 createTA :: TransactionId -> TransactionState -> XmlSource s a
 createTA ident state = 
-    eelem "transaction" 
-        += sattr "transaction_id" (show ident)              
+    eelem "transaction" 				-- these names must corrsepond to the
+        += sattr "transaction_id" (show ident)          -- names in JanusPaths
         += sattr "transaction_state" (show state)
         += eelem "messages"                 
         += eelem "request_fragment"
@@ -97,7 +100,7 @@ Returns a Transaction's id
 -}
 getTAId :: XmlAccess s TransactionId
 getTAId = 
-    getValDef "/transaction/@transaction_id" "0" 
+    getValDef _transaction_transactionId "0" 
     >>> 
     parseA
     
@@ -106,14 +109,14 @@ Replaces a Transaction's id
 -}
 setTAId :: TransactionId -> XmlTransform s
 setTAId ident = 
-    setVal "/transaction/@transaction_id" (show ident) 
+    setVal _transaction_transactionId (show ident) 
     
 {- |
 Returns a Transaction's state
 -}
 getTAState :: XmlAccess s TransactionState
 getTAState = 
-    getVal "/transaction/@transaction_state" 
+    getVal _transaction_transactionState
     >>> 
     parseA
 
@@ -122,14 +125,14 @@ Replaces a Transaction's state
 -}
 setTAState :: TransactionState -> XmlTransform s
 setTAState state = 
-    setVal "/transaction/@transaction_state" (show state)
+    setVal _transaction_transactionState (show state)
     
 {- |
 Returns a Transaction's start timestamp
 -}
 getTAStart :: XmlAccess s Timestamp
 getTAStart =
-    getVal "/transaction/@start" 
+    getVal _transaction_start
     >>> 
     parseA
 
@@ -138,14 +141,14 @@ Replaces a Transaction's start timestamp
 -}
 setTAStart :: Timestamp -> XmlTransform s
 setTAStart ts =
-    setVal "/transaction/@start" (show ts)
+    setVal _transaction_start (show ts)
 
 {- |
 Returns a Transaction's end timestamp
 -}
 getTAEnd :: XmlAccess s Timestamp
 getTAEnd =
-    getVal "/transaction/@end" 
+    getVal _transaction_end
     >>> 
     parseA
 
@@ -154,7 +157,7 @@ Replaces a Transaction's end timestamp
 -}
 setTAEnd :: Timestamp -> XmlTransform s
 setTAEnd ts =
-    setVal "/transaction/@end" (show ts)
+    setVal _transaction_end (show ts)
 
 {- |
 Returns a Transaction's runtime
@@ -171,20 +174,20 @@ Stores a message in a Transaction's \/transaction\/messages node
 -}
 sendTAMsg :: MessageArrow s -> XmlTransform s
 sendTAMsg msg =
-    insTree "/transaction/messages" (liftConstSource msg)
+    insTree _transaction_messages (liftConstSource msg)
 
 {- |
 Returns the messages stored in a Transaction's \/transaction\/messages node. This Arrow is non-deterministic.
 -}
 getTAMsg :: XmlAccess s Message
 getTAMsg =
-    getTree "/transaction/messages/*"
+    getTree (_transaction_messages_ "*")
     
 {- |
 Removes all messages from a Transaction's \/transaction\/messages node
 -}
 clearTAMsg :: XmlTransform s
 clearTAMsg =
-    delTree "/transaction/messages" 
+    delTree _transaction_messages
     >>> 
-    insEmptyTree "/transaction/messages"
+    insEmptyTree _transaction_messages

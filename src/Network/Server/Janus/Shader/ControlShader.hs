@@ -38,6 +38,7 @@ import Text.XML.HXT.Arrow
 
 import Network.Server.Janus.Core
 import Network.Server.Janus.XmlHelper
+import Network.Server.Janus.JanusPaths
       
 {- |
 Composes the sub-Shaders to a single Shader, delivering the effect of the original Shaders in sequence. The order of
@@ -62,15 +63,15 @@ Shader by \/shader\/config\/\@default.
 likeControl :: ShaderCreator
 likeControl = 
     mkFallibleCreator $ proc (conf, associations) -> do 
-        select  <- listA $ listValPairs "/shader/config/*"                      -<  conf
-        value   <- getValDef "/shader/config/@value" "value"                    -<  conf
-        def     <- getValDef "/shader/config/@default" "default"                -<  conf
+        select  <- listA $ listValPairs (_shader_config_ "*")                   -<  conf
+        value   <- getValDef _shader_config_value "value"                       -<  conf
+        def     <- getValDef _shader_config_default "default"                   -<  conf
         let select' = Prelude.map (\(name, regex) -> (regex, lookupShader name zeroArrow associations)) select
         let valueShader   = lookupShader value zeroArrow associations
         let defaultShader = lookupShader def   zeroArrow associations
         let shader = proc in_ta -> do
             compareTree     <- valueShader                              -<< in_ta
-            comp            <- getVal "/value"                          -<  compareTree
+            comp            <- getVal _value                            -<  compareTree
             let result = foldl (\current (expr, hit) -> if valMatch comp expr then (Just hit) else current) 
                                (Nothing)
                                select'
@@ -92,16 +93,16 @@ Shader by \/shader\/config\/\@default.
 selectControl :: ShaderCreator
 selectControl =
     mkFallibleCreator $ proc (conf, associations) -> do
-        select  <- listA $ listValPairs "/shader/config/*"                      -<  conf
-        value   <- getValDef "/shader/config/@value"   "value"                  -<  conf
-        def     <- getValDef "/shader/config/@default" "default"                -<  conf
+        select  <- listA $ listValPairs (_shader_config_ "*")                   -<  conf
+        value   <- getValDef _shader_config_value   "value"                     -<  conf
+        def     <- getValDef _shader_config_default "default"                   -<  conf
         let valueShader   = lookupShader value zeroArrow associations
         let defaultShader = lookupShader def   zeroArrow associations
         let select' = Prelude.map (\(name, regex) -> (regex, lookupShader name zeroArrow associations)) select
         let cases = fromList select'
         let shader = proc in_ta -> do
             compareTree <- valueShader                                  -<< in_ta
-            comp        <- getVal "/value"                              -<  compareTree
+            comp        <- getVal _value                                -<  compareTree
             findWithDefault defaultShader comp cases                    -<< in_ta
         returnA                                                                 -<  shader
 
@@ -174,4 +175,3 @@ valMatch val regex =
    isJust match
    where
       match = matchRegex (mkRegex regex) val
-

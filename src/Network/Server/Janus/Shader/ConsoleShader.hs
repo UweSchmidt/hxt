@@ -51,8 +51,31 @@ import Network.Server.Janus.DynamicLoader
 import Network.Server.Janus.Messaging
 import Network.Server.Janus.Server (normalizeConfig)
 import Network.Server.Janus.XmlHelper
+import Network.Server.Janus.JanusPaths
 
+-- ------------------------------------------------------------
 
+-- common subexpressions
+
+done	:: XmlTransform s
+done 	= setVal _transaction_responseFragment "Done."
+
+setRes  :: String -> XmlTransform s
+setRes  =  setVal _transaction_responseFragment
+
+getArgc :: (Read a, Show a) => XmlAccess s a
+getArgc	=  getValP _transaction_console_argcount
+
+getArg1 :: XmlAccess s String
+getArg1	=  getVal _transaction_console_args_1
+
+getArg2 :: XmlAccess s String
+getArg2	=  getVal _transaction_console_args_2
+
+getArg3 :: XmlAccess s String
+getArg3	=  getVal _transaction_console_args_3
+
+-- ------------------------------------------------------------
 
 testShader :: ShaderCreator
 testShader = 
@@ -61,7 +84,7 @@ testShader =
         let shader = proc in_ta -> do
             (val :: Int) <- getSVP "test"                               -<  ()
             "test" <*! (val+1)                                          -<< ()             
-            setVal "/transaction/response_fragment" (show $ val + 1)    -<< in_ta
+            setRes (show $ val + 1)                                     -<< in_ta
         returnA                                                                 -<  shader
 
 {- |
@@ -71,20 +94,23 @@ ttyCommandShader :: ShaderCreator
 ttyCommandShader = 
     mkStaticCreator $ 
     proc in_ta -> do
-        request <- getVal "/transaction/request_fragment" 
-                        <+!> ("requestShader", TAValueNotFound, "No request fragment found.", [("value", "/transaction/request_fragment")])  
-                                                                            -<  in_ta
+        request <- getVal _transaction_requestFragment 
+                   <+!> ( "requestShader"
+			, TAValueNotFound
+			, "No request fragment found."
+			, [("value", show _transaction_requestFragment)]
+			)                                                       -<  in_ta
         let command = words request
         (case command of 
-            cmd:xs  -> setVal "/transaction/console/@command" cmd
-                            >>>
-                            setVal "/transaction/console/@argcount" (show $ length command - 1)
-                            >>>
-                            add xs (1::Int)
+            cmd:xs  -> setVal _transaction_console_command cmd
+                       >>>
+                       setVal _transaction_console_argcount (show $ length command - 1)
+                       >>>
+                       add xs (1::Int)
             _       -> zeroArrow
             )                                           -<< in_ta
     where
-        add (x:xs) num = setVal ("/transaction/console/args/_" ++ (show num)) x >>> add xs (num+1)
+        add (x:xs) num = setVal (_transaction_console_args_ ('_' : (show num))) x >>> add xs (num+1)
         add []     _   = returnA
 
 {- |
@@ -94,14 +120,14 @@ ttyConfigShader :: ShaderCreator
 ttyConfigShader =
     mkStaticCreator $ 
     proc in_ta -> do
-        (argc :: Int)   <- getValP "/transaction/console/@argcount"             -<  in_ta
+        (argc :: Int)   <- getArgc                                              -<  in_ta
         context         <- getSVP ("ctx")                                       -<  ()        
         (case argc of
             0   ->
                 proc in_ta' -> do
                     cfg     <- runInContext context getConfig               -<  ()
-                    str     <- xshow (constA cfg)                           -<< ()
-                    setVal "/transaction/response_fragment" str             -<< in_ta'
+                    str     <- xshow (constA cfg >>> indentDoc)             -<< ()
+                    setRes str                                              -<< in_ta'
             _   -> 
                 returnA
             )                                                                   -<< in_ta
@@ -114,7 +140,7 @@ ttyExecuteShader :: ShaderCreator
 ttyExecuteShader =
     mkStaticCreator $ 
     proc in_ta -> do
-        (argc :: Int)   <- getValP "/transaction/console/@argcount"             -<  in_ta
+        (argc :: Int)   <- getArgc                                              -<  in_ta
         context         <- getSVP ("ctx")                                       -<  ()
         (case argc of
             0   ->
@@ -122,22 +148,21 @@ ttyExecuteShader =
                     sRep    <- runInContext context getShaderCreators       -<  ()
                     creators <- listA $ listComponents                      -<  sRep
                     let shdStr = foldl (\creator str -> str ++ "\n" ++ creator) "" creators
-                    setVal "/transaction/response_fragment" shdStr          -<< in_ta'
+                    setRes shdStr                                           -<< in_ta'
             3   ->
                 proc in_ta' -> do
-                    creator <- getVal "/transaction/console/args/_1"        -<  in_ta'
-                    ident   <- getVal "/transaction/console/args/_2"        -<  in_ta'
-                    select  <- getVal "/transaction/console/args/_3"        -<  in_ta'
+                    creator <- getArg1        -<  in_ta'
+                    ident   <- getArg2        -<  in_ta'
+                    select  <- getArg3        -<  in_ta'
                     
                     (XmlVal xml)
                             <- runInContext context $ getSV ident           -<< ()
-                    conf    <- single $ getTree ("//shader[config/@id='" ++ 
-                                            select ++ "']")                 -<< xml
+                    conf    <- single $ getTree (jp $ "//shader[config/@id='" ++ select ++ "']")  -<< xml
                     creator' <- runInContext context $ 
                                     getShaderCreator creator                -<< ()
                     shader  <- runInContext context $ creator'              -<< conf
                     runInContext context $ executeShader shader             -<< ()                  
-                    setVal "/transaction/response_fragment" "Done."         -<  in_ta'
+                    done                                                    -<  in_ta'
             _   -> 
                 returnA
             )                                                                   -<< in_ta
@@ -149,7 +174,7 @@ ttyExitShader :: ShaderCreator
 ttyExitShader =
     mkStaticCreator $ 
     proc in_ta -> do
-        (argc :: Int)   <- getValP "/transaction/console/@argcount"             -<  in_ta
+        (argc :: Int)   <- getArgc                                          -<  in_ta
         (case argc of
             0   ->
                 proc in_ta' -> do
@@ -166,26 +191,28 @@ ttyForkShader :: ShaderCreator
 ttyForkShader =
     mkStaticCreator $ 
     proc in_ta -> do
-        (argc :: Int)   <- getValP "/transaction/console/@argcount"             -<  in_ta
+        (argc :: Int)   <- getArgc                                              -<  in_ta
         context         <- getSVP ("ctx")                                       -<  ()        
         (case argc of
             0   ->
                 proc in_ta' -> do
                     cfg     <- runInContext context getConfig               -<  ()
-                    shaders <- listA $ getVal ("/janus//shader/config/@id") -<  cfg
+                    shaders <- listA $ getVal _janus__shader_config_id      -<  cfg
                     let shStr = foldl (\shader str -> str ++ "\n" ++ shader) "" shaders
-                    setVal "/transaction/response_fragment" shStr           -<< in_ta'            
+                    setRes shStr                                            -<< in_ta'            
             1   ->
                 proc in_ta' -> do
-                    ident   <- getVal "/transaction/console/args/_1"        -<  in_ta'
+                    ident   <- getArg1           -<  in_ta'
                     cfg     <- runInContext context getConfig               -<  ()
-                    xml     <- single $ getTree ("/janus//shader[config/@id='" ++ 
-                                    ident ++ "']")                  
-                                    <+!> ("ttyForkShader", ShaderFailed, "Definition not found.", [("id", ident)])     
-                                                                            -<< cfg 
+                    xml     <- single $ getTree (jp $ show _janus__shader ++ "[config/@id='" ++ ident ++ "']")
+                               <+!> ( "ttyForkShader"
+				    , ShaderFailed
+				    , "Definition not found."
+				    , [("id", ident)]
+				    )                                       -<< cfg 
                     (_, shader) <- runInContext context loadShader          -<  xml
                     runInContext context (executeShader shader)             -<< ()
-                    setVal "/transaction/response_fragment" "Done."         -<  in_ta'
+                    done                                                    -<  in_ta'
             _   -> 
                 returnA
             )                                                                   -<< in_ta
@@ -197,7 +224,7 @@ ttyHelpShader :: ShaderCreator
 ttyHelpShader =
     mkStaticCreator $ 
     proc in_ta -> do
-        setVal "/transaction/response_fragment" (concat helpString)             -<  in_ta
+        setRes (concat helpString) -<  in_ta
     where
         helpString = 
                     [ 
@@ -234,19 +261,19 @@ ttyListShader :: ShaderCreator
 ttyListShader =
     mkStaticCreator $ 
     proc in_ta -> do
-        (argc :: Int)   <- getValP "/transaction/console/@argcount"             -<  in_ta
+        (argc :: Int)   <- getArgc                                              -<  in_ta
         context         <- getSVP ("ctx")                                       -<  ()        
         (case argc of
             0   -> 
                 proc in_ta' -> do
                     value   <- listA $ runInContext context listScopes      -<  ()
-                    setVal "/transaction/response_fragment" (show value)    -<< in_ta'
+                    setRes (show value)                                     -<< in_ta'
             1   ->
                 proc in_ta' -> do
-                    ident   <- getVal "/transaction/console/args/_1"        -<  in_ta'
+                    ident   <- getArg1        -<  in_ta'
                     value   <- listA $ 
                                 runInContext context (listStateTrees ident) -<< ()
-                    setVal "/transaction/response_fragment" (show value)    -<< in_ta'
+                    setRes (show value)                                     -<< in_ta'
             _   -> 
                 returnA
             )                                                               -<< in_ta
@@ -258,40 +285,40 @@ ttyLoadShader :: ShaderCreator
 ttyLoadShader =
     mkStaticCreator $ 
     proc in_ta -> do
-        (argc :: Int)   <- getValP "/transaction/console/@argcount"                     -<  in_ta
+        (argc :: Int)   <- getArgc                                                      -<  in_ta
         context         <- getSVP ("ctx")                                               -<  ()        
         (case argc of
             2   ->
                 proc in_ta' -> do
-                    op      <- getVal "/transaction/console/args/_1"                -<  in_ta'
-                    ident   <- getVal "/transaction/console/args/_2"                -<  in_ta'
+                    op      <- getArg1                -<  in_ta'
+                    ident   <- getArg2                -<  in_ta'
                     (if op == "config"
                         then proc in_ta'' -> do
                             cfg     <- runInContext context getConfig           -<  ()
                             runInContext context $ ident <$! (XmlVal cfg)       -<< ()
-                            setVal "/transaction/response_fragment" "Done."     -<< in_ta''
+                            done                                                -<< in_ta''
                         else
                             this
                         )                                                           -<< in_ta'
             3   ->
                 proc in_ta' -> do
-                    op      <- getVal "/transaction/console/args/_1"                -<  in_ta'
-                    arg2    <- getVal "/transaction/console/args/_2"                -<  in_ta'
-                    ident   <- getVal "/transaction/console/args/_3"                -<  in_ta'                    
+                    op      <- getArg1                -<  in_ta'
+                    arg2    <- getArg2                -<  in_ta'
+                    ident   <- getArg3                -<  in_ta'                    
                     (case op of
                         "str"   ->
                             (runInContext context $ ident <-! arg2)
                             >>>
-                            setVal "/transaction/response_fragment" "Done."                            
+                            done
                         "xml"   ->
                             proc in_ta'' -> do
                                 cfg <- fileSource arg2 
                                         >>> 
                                         normalizeConfig
                                         >>>
-                                        getTree "/janus"                        -<< ()
+                                        getTree _janus                          -<< ()
                                 runInContext context $ ident <$! (XmlVal cfg)   -<< ()
-                                setVal "/transaction/response_fragment" "Done." -<  in_ta''
+                                done                                            -<  in_ta''
                         _       ->
                             this
                         )                                                           -<< in_ta'            
@@ -306,14 +333,14 @@ ttyShowShader :: ShaderCreator
 ttyShowShader =
     mkStaticCreator $ 
     proc in_ta -> do
-        (argc :: Int)   <- getValP "/transaction/console/@argcount"             -<  in_ta
+        (argc :: Int)   <- getArgc                                              -<  in_ta
         context         <- getSVP ("ctx")                                       -<  ()        
         (case argc of
             1   ->
                 proc in_ta' -> do
-                    ident   <- getVal "/transaction/console/args/_1"        -<  in_ta'
+                    ident   <- getArg1        -<  in_ta'
                     value   <- listA $ runInContext context (getSV ident)   -<< ()
-                    setVal "/transaction/response_fragment" (show value)    -<< in_ta'
+                    setRes (show value)                                     -<< in_ta'
             _   -> 
                 returnA
             )                                                                   -<< in_ta
@@ -325,27 +352,27 @@ ttyStoreShader :: ShaderCreator
 ttyStoreShader =
     mkStaticCreator $ 
     proc in_ta -> do
-        (argc :: Int)   <- getValP "/transaction/console/@argcount"                     -<  in_ta
+        (argc :: Int)   <- getArgc                                                      -<  in_ta
         context         <- getSVP ("ctx")                                               -<  ()        
         (case argc of
             2   ->
                 proc in_ta' -> do
-                    op      <- getVal "/transaction/console/args/_1"                -<  in_ta'
-                    ident   <- getVal "/transaction/console/args/_2"                -<  in_ta'
+                    op      <- getArg1                -<  in_ta'
+                    ident   <- getArg2                -<  in_ta'
                     (if op == "config"
                         then proc in_ta'' -> do
                             (XmlVal cfg)    <- runInContext context $ 
                                                     getSV ident                 -<< ()
                             runInContext context $ swapConfig                   -<< cfg
-                            setVal "/transaction/response_fragment" "Done."     -<  in_ta''
+                            done                                                -<  in_ta''
                         else
                             this
                         )                                                           -<< in_ta'
             3   ->
                 proc in_ta' -> do
-                    op      <- getVal "/transaction/console/args/_1"                -<  in_ta'
-                    file    <- getVal "/transaction/console/args/_2"                -<  in_ta'
-                    ident   <- getVal "/transaction/console/args/_3"                -<  in_ta'
+                    op      <- getArg1                -<  in_ta'
+                    file    <- getArg2                -<  in_ta'
+                    ident   <- getArg3                -<  in_ta'
                     
                     (if op == "xml"
                         then proc in_ta'' -> do
@@ -353,7 +380,7 @@ ttyStoreShader =
                                                     getSV ident                 -<< ()
                             
                             putXmlDocument file                                 -<< cfg
-                            setVal "/transaction/response_fragment" "Done."     -<  in_ta''
+                            done                                                -<  in_ta''
                         else
                             this
                         )                                                           -<< in_ta'            
@@ -368,12 +395,12 @@ ttySwitchShader :: ShaderCreator
 ttySwitchShader =
     mkStaticCreator $ 
     proc in_ta -> do
-        (argc :: Int)   <- getValP "/transaction/console/@argcount"                     -<  in_ta
+        (argc :: Int)   <- getArgc                                                      -<  in_ta
         context         <- getSVP ("ctx")                                               -<  ()        
         (case argc of
             1   ->
                 proc in_ta' -> do
-                    op      <- getVal "/transaction/console/args/_1"                -<  in_ta'
+                    op      <- getArg1                -<  in_ta'
                     (case op of
                         "server"   ->
                             proc in_ta'' -> do
@@ -381,27 +408,27 @@ ttySwitchShader =
                                     getSV ("/global/consoles/server")           -<  ()
                                 "ctx" <*! ctx                                   -<< ()
                                 "ctx_name" <-! "server"                         -<  ()
-                                setVal "/transaction/response_fragment" "Done." -<  in_ta''
+                                done                                            -<  in_ta''
                         "handler"   ->
                             proc in_ta'' -> do
                                 value   <- listA $ runInContext context 
                                             (listStateTrees "/global/consoles/handlers")    -<< ()
                                 let hdlStr = foldl (\hdl str -> str ++ "\n" ++ hdl) "" value
-                                setVal "/transaction/response_fragment" hdlStr  -<< in_ta''
+                                setRes hdlStr                                               -<< in_ta''
                         _           ->
                             this
                         )                                                           -<< in_ta'            
             2   ->
                 proc in_ta' -> do
-                    op      <- getVal "/transaction/console/args/_1"                -<  in_ta'
-                    handler <- getVal "/transaction/console/args/_2"                -<  in_ta'                    
+                    op      <- getArg1                -<  in_ta'
+                    handler <- getArg2                -<  in_ta'                    
                     (if op == "handler"
                         then proc in_ta'' -> do
                             (ContextVal ctx) <- 
                                 getSV ("/global/consoles/handlers/" ++ handler) -<< ()
                             "ctx" <*! ctx                                       -<< ()
                             "ctx_name" <-! handler                              -<< ()
-                            setVal "/transaction/response_fragment" "Done."     -<  in_ta''
+                            done                                                -<  in_ta''
                         else
                             this
                         )                                                           -<< in_ta'            
@@ -416,30 +443,30 @@ ttyThreadShader :: ShaderCreator
 ttyThreadShader =
     mkStaticCreator $ 
     proc in_ta -> do
-        (argc :: Int)   <- getValP "/transaction/console/@argcount"                     -<  in_ta
+        (argc :: Int)   <- getArgc                                                      -<  in_ta
         context         <- getSVP ("ctx")                                               -<  ()        
         (case argc of
             1   ->
                 proc in_ta' -> do
-                    op      <- getVal "/transaction/console/args/_1"                -<  in_ta'
+                    op      <- getArg1                -<  in_ta'
                     (if op == "list"
                         then proc in_ta'' -> do
                             value   <- listA $ runInContext context 
                                             (listStateTrees "/global/threads")      -<< ()
-                            setVal "/transaction/response_fragment" (show value)    -<< in_ta''
+                            setRes (show value)                                     -<< in_ta''
                         else
                             this
                         )                                                           -<< in_ta'            
             2   ->
                 proc in_ta' -> do
-                    op      <- getVal "/transaction/console/args/_1"                -<  in_ta'
-                    thread  <- getVal "/transaction/console/args/_2"                -<  in_ta'                    
+                    op      <- getArg1                -<  in_ta'
+                    thread  <- getArg2                -<  in_ta'                    
                     (if op == "terminate"
                         then proc in_ta'' -> do
                             (ThreadVal threadid)    <- runInContext context $ 
                                 getSV ("/global/threads/" ++ thread)            -<< ()
                             arrIO $ killThread                                  -<  threadid
-                            setVal "/transaction/response_fragment" "Done."     -<  in_ta''     
+                            done                                                -<  in_ta''     
                         else
                             this
                         )                                                           -<< in_ta'            
@@ -454,18 +481,17 @@ ttyVersionShader :: ShaderCreator
 ttyVersionShader =
     mkStaticCreator $ 
     proc in_ta -> do
-        (argc :: Int)   <- getValP "/transaction/console/@argcount"             -<  in_ta
+        (argc :: Int)   <- getArgc                                              -<  in_ta
         (case argc of
             0   ->
                 proc in_ta' -> do
                     version <- getSVS "/global/system/version"              -<  ()
-                    setVal "/transaction/response_fragment" 
-                            ("version: " ++ version)                        -<< in_ta'
+                    setRes  ("version: " ++ version)                        -<< in_ta'
             _   -> 
                 returnA
             )                                                                   -<< in_ta
 
-
+{-
 showId :: JanusArrow Context XmlTree (String, String)
 showId = 
     proc tree -> do
@@ -484,7 +510,7 @@ showId' =
             showId'                                                         -<  (child, ident', xpath')
             )                                                                       -<< ()
         constL $ (ident', xpath'):children'                                         -<< ()
-
+-}
 
 -- ==================================================================
 

@@ -38,6 +38,7 @@ import Text.XML.HXT.Arrow
 import Network.Server.Janus.Core as Shader
 import Network.Server.Janus.Messaging
 import Network.Server.Janus.XmlHelper
+import Network.Server.Janus.JanusPaths
 
 {- |
 Creates a Daemon Shader executing an arbitrary Arrow based on the Context state if invoked. The Arrow does not need to depend on an input and
@@ -46,7 +47,7 @@ does not need to deliver an output.
 daemonCreator :: JanusArrow Context () () -> ShaderCreator
 daemonCreator daemonArrow =
     mkDynamicCreator $ proc (conf, _) -> do
-        ident   <- getVal "/shader/config/@id"                      -<  conf
+        ident   <- getVal _shader_config_id                     -<  conf
         let shader = proc in_ta -> do
             createThread "/global/threads" ident daemonArrow    -<  ()
             returnA                                             -<  in_ta

@@ -40,6 +40,7 @@ import Network.Server.Janus.Core
 import Network.Server.Janus.DynamicLoader
 import Network.Server.Janus.Messaging
 import Network.Server.Janus.XmlHelper
+import Network.Server.Janus.JanusPaths
 
 {- |
 TODO 
@@ -47,9 +48,9 @@ TODO
 loadShaderCreator :: ShaderCreator
 loadShaderCreator =
     mkDynamicCreator $ proc (conf, _) -> do 
-        ref         <- getVal "/shader/config/@reference"                   -<  conf
-        obj         <- getVal "/shader/config/@object"                      -<  conf
-        file        <- getVal "/shader/config/@module"                      -<  conf
+        ref         <- getVal _shader_config_reference                      -<  conf
+        obj         <- getVal _shader_config_object                         -<  conf
+        file        <- getVal _shader_config_module                         -<  conf
         "global"    <-@ mkPlainMsg $ "loading shader creator '" ++ 
                             ref ++ "' (object '" ++ obj ++ 
                             "' in module '" ++ file ++ "')... "             -<< ()
@@ -68,9 +69,9 @@ TODO
 loadHandlerCreator :: ShaderCreator
 loadHandlerCreator =
     mkDynamicCreator $ proc (conf, _) -> do 
-        ref     <- getVal "/shader/config/@reference"                       -<  conf
-        obj     <- getVal "/shader/config/@object"                          -<  conf
-        file    <- getVal "/shader/config/@module"                          -<  conf
+        ref     <- getVal _shader_config_reference                          -<  conf
+        obj     <- getVal _shader_config_object                             -<  conf
+        file    <- getVal _shader_config_module                             -<  conf
         "global"    <-@ mkPlainMsg $ "loading handler creator '" ++ 
                             ref ++ "' (object '" ++ obj ++ 
                             "' in module '" ++ file ++ "')... "             -<< ()
@@ -89,11 +90,11 @@ TODO
 loadHandler :: ShaderCreator
 loadHandler =
     proc conf -> do
-        hConf       <- (getTree "/shader/config/handler/config")        -<  conf
-        hId         <- (getVal "/config/@id")                           -<  hConf
+        hConf       <- getTree _shader_config_handler_config            -<  conf
+        hId         <- getVal _config_id                                -<  hConf
         "global"    <-@ mkPlainMsg $ "constructing handler '" ++ 
                             hId ++ "'... "                              -<< ()
-        hType       <- (getVal "/config/@type")                         -<  hConf
+        hType       <- getVal _config_type                              -<  hConf
         let shader = createThread "/global/threads" hId (proc in_ta -> do 
             "global"    <-@ mkPlainMsg $ "starting handler '" ++ 
                             hId ++ "'...\n"                         -<  ()
@@ -121,9 +122,9 @@ loadStateHandler :: ShaderCreator
 loadStateHandler =
     mkDynamicCreator $ arr $ \(conf, _) -> 
     proc in_ta -> do
-        ref     <- getVal "/shader/config/@reference"               -<  conf
-        obj     <- getVal "/shader/config/@object"                  -<  conf
-        file    <- getVal "/shader/config/@module"                  -<  conf
+        ref     <- getVal _shader_config_reference                  -<  conf
+        obj     <- getVal _shader_config_object                     -<  conf
+        file    <- getVal _shader_config_module                     -<  conf
         sRep    <- getShaderCreators                                -<  ()
         sRep'   <- 
             (loadComponent ref file obj

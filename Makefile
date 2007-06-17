@@ -12,14 +12,29 @@ BUILDBASE	= build/Network/Server/Janus
 DOCBASE		= temp/Network/Server/Janus
 
 SRCS 		= $(SRCS_BASE) $(SRCS_HANDLER) $(SRCS_SHADER)
-SRCS_BASE	= $(SRCBASE)/ContextBrowser.hs $(SRCBASE)/DynamicLoader.hs $(SRCBASE)/HTMLBuilder.hs $(SRCBASE)/Messaging.hs $(SRCBASE)/Server.hs $(SRCBASE)/Core.hs $(SRCBASE)/ShopExample.hs $(SRCBASE)/Transaction.hs $(SRCBASE)/XmlHelper.hs
+SRCS_BASE	= $(SRCBASE)/ContextBrowser.hs \
+		  $(SRCBASE)/DynamicLoader.hs \
+		  $(SRCBASE)/HTMLBuilder.hs $(SRCBASE)/Messaging.hs $(SRCBASE)/Server.hs \
+		  $(SRCBASE)/Core.hs \
+		  $(SRCBASE)/ShopExample.hs $(SRCBASE)/Transaction.hs \
+		  $(SRCBASE)/XmlHelper.hs $(SRCBASE)/JanusPaths.hs
+
 SRCS_HANDLER 	= $(SRCBASE)/Handler/TCPHandler.hs $(SRCBASE)/Handler/ConsoleHandler.hs
-SRCS_SHADER 	= $(SRCBASE)/Shader/ControlShader.hs $(SRCBASE)/Shader/DaemonShader.hs $(SRCBASE)/Shader/ExprShader.hs $(SRCBASE)/Shader/HTTPShader.hs $(SRCBASE)/Shader/PredicateShader.hs $(SRCBASE)/Shader/ServletShader.hs $(SRCBASE)/Shader/ShaderLib.hs $(SRCBASE)/Shader/SOAPShader.hs $(SRCBASE)/Shader/ConsoleShader.hs
+SRCS_SHADER 	= $(SRCBASE)/Shader/ControlShader.hs $(SRCBASE)/Shader/DaemonShader.hs \
+		  $(SRCBASE)/Shader/ExprShader.hs $(SRCBASE)/Shader/HTTPShader.hs \
+		  $(SRCBASE)/Shader/PredicateShader.hs $(SRCBASE)/Shader/ServletShader.hs \
+	          $(SRCBASE)/Shader/ShaderLib.hs $(SRCBASE)/Shader/SOAPShader.hs $(SRCBASE)/Shader/ConsoleShader.hs
 
 OBJS 		= $(OBJS_BASE) $(OBJS_HANDLER) $(OBJS_SHADER)
-OBJS_BASE	= $(BUILDBASE)/Core.o $(BUILDBASE)/XmlHelper.o $(BUILDBASE)/Transaction.o $(BUILDBASE)/Messaging.o $(BUILDBASE)/DynamicLoader.o $(BUILDBASE)/HTMLBuilder.o
+OBJS_BASE	= $(BUILDBASE)/Core.o $(BUILDBASE)/XmlHelper.o $(BUILDBASE)/JanusPaths.o \
+		  $(BUILDBASE)/Transaction.o $(BUILDBASE)/Messaging.o $(BUILDBASE)/DynamicLoader.o $(BUILDBASE)/HTMLBuilder.o
 OBJS_HANDLER 	= $(BUILDBASE)/Handler/TCPHandler.o $(BUILDBASE)/Handler/ConsoleHandler.o
-OBJS_SHADER 	= $(BUILDBASE)/Shader/SystemShader.o $(BUILDBASE)/Shader/ControlShader.o $(BUILDBASE)/Shader/DaemonShader.o $(BUILDBASE)/Shader/ExprShader.o $(BUILDBASE)/Shader/HTTPShader.o $(BUILDBASE)/Shader/PredicateShader.o $(BUILDBASE)/Shader/ServletShader.o $(BUILDBASE)/Shader/ShaderLib.o $(BUILDBASE)/Shader/ConsoleShader.o $(BUILDBASE)/Shader/TestShader.o
+OBJS_SHADER 	= $(BUILDBASE)/Shader/SystemShader.o $(BUILDBASE)/Shader/ControlShader.o \
+		  $(BUILDBASE)/Shader/DaemonShader.o $(BUILDBASE)/Shader/ExprShader.o \
+		  $(BUILDBASE)/Shader/HTTPShader.o $(BUILDBASE)/Shader/PredicateShader.o \
+		  $(BUILDBASE)/Shader/ServletShader.o $(BUILDBASE)/Shader/ShaderLib.o \
+		  $(BUILDBASE)/Shader/ConsoleShader.o $(BUILDBASE)/Shader/TestShader.o
+
 OBJS_EXAMPLES	= $(BUILDBASE)/ContextBrowser.o  $(BUILDBASE)/ShopExample.o
 # $(BUILDBASE)/Shader/SOAPShader.o
 
@@ -72,13 +87,13 @@ clean:
 
 
 # DO NOT DELETE: Beginning of Haskell dependencies
+build/Network/Server/HWS/Util.o : src/Network/Server/HWS/Util.hs
 build/Network/Server/HWS/ParseError.o : src/Network/Server/HWS/ParseError.hs
 build/Network/Server/HWS/Parser.o : src/Network/Server/HWS/Parser.hs
 build/Network/Server/HWS/Parser.o : build/Network/Server/HWS/ParseError.hi
 build/Network/Server/HWS/MimeTypes.o : src/Network/Server/HWS/MimeTypes.hs
 build/Network/Server/HWS/Config.o : src/Network/Server/HWS/Config.hs
 build/Network/Server/HWS/Config.o : build/Network/Server/HWS/MimeTypes.hi
-build/Network/Server/HWS/Util.o : src/Network/Server/HWS/Util.hs
 build/Network/Server/HWS/Response.o : src/Network/Server/HWS/Response.hs
 build/Network/Server/HWS/Response.o : build/Network/Server/HWS/MimeTypes.hi
 build/Network/Server/HWS/Response.o : build/Network/Server/HWS/Util.hi
@@ -88,17 +103,22 @@ build/Network/Server/HWS/Request.o : build/Network/Server/HWS/Util.hi
 build/Network/Server/HWS/Request.o : build/Network/Server/HWS/Response.hi
 build/Network/Server/HWS/Request.o : build/Network/Server/HWS/Config.hi
 build/Network/Server/HWS/Request.o : build/Network/Server/HWS/Parser.hi
+build/Network/Server/Janus/JanusPaths.o : src/Network/Server/Janus/JanusPaths.hs
 build/Network/Server/Janus/XmlHelper.o : src/Network/Server/Janus/XmlHelper.hs
+build/Network/Server/Janus/XmlHelper.o : build/Network/Server/Janus/JanusPaths.hi
 build/Network/Server/Janus/Messaging.o : src/Network/Server/Janus/Messaging.hs
 build/Network/Server/Janus/Messaging.o : build/Network/Server/Janus/XmlHelper.hi
+build/Network/Server/Janus/Messaging.o : build/Network/Server/Janus/JanusPaths.hi
 build/Network/Server/Janus/Transaction.o : src/Network/Server/Janus/Transaction.hs
 build/Network/Server/Janus/Transaction.o : build/Network/Server/Janus/XmlHelper.hi
 build/Network/Server/Janus/Transaction.o : build/Network/Server/Janus/Messaging.hi
+build/Network/Server/Janus/Transaction.o : build/Network/Server/Janus/JanusPaths.hi
 build/Network/Server/Janus/HTMLBuilder.o : src/Network/Server/Janus/HTMLBuilder.hs
 build/Network/Server/Janus/HTMLBuilder.o : build/Network/Server/Janus/XmlHelper.hi
 build/Network/Server/Janus/DynamicLoader.o : src/Network/Server/Janus/DynamicLoader.hs
 build/Network/Server/Janus/DynamicLoader.o : build/Network/Server/Janus/XmlHelper.hi
 build/Network/Server/Janus/Core.o : src/Network/Server/Janus/Core.hs
+build/Network/Server/Janus/Core.o : build/Network/Server/Janus/JanusPaths.hi
 build/Network/Server/Janus/Core.o : build/Network/Server/Janus/XmlHelper.hi
 build/Network/Server/Janus/Core.o : build/Network/Server/Janus/Transaction.hi
 build/Network/Server/Janus/Core.o : build/Network/Server/Janus/Messaging.hi
@@ -116,8 +136,10 @@ build/Network/Server/Janus/Handler/TCPHandler.o : build/Network/Server/Janus/Mes
 build/Network/Server/Janus/Handler/ConsoleHandler.o : src/Network/Server/Janus/Handler/ConsoleHandler.hs
 build/Network/Server/Janus/Handler/ConsoleHandler.o : build/Network/Server/Janus/XmlHelper.hi
 build/Network/Server/Janus/Handler/ConsoleHandler.o : build/Network/Server/Janus/Transaction.hi
+build/Network/Server/Janus/Handler/ConsoleHandler.o : build/Network/Server/Janus/Messaging.hi
 build/Network/Server/Janus/Handler/ConsoleHandler.o : build/Network/Server/Janus/Core.hi
 build/Network/Server/Janus/Shader/ControlShader.o : src/Network/Server/Janus/Shader/ControlShader.hs
+build/Network/Server/Janus/Shader/ControlShader.o : build/Network/Server/Janus/JanusPaths.hi
 build/Network/Server/Janus/Shader/ControlShader.o : build/Network/Server/Janus/XmlHelper.hi
 build/Network/Server/Janus/Shader/ControlShader.o : build/Network/Server/Janus/Core.hi
 build/Network/Server/Janus/Shader/DaemonShader.o : src/Network/Server/Janus/Shader/DaemonShader.hs
@@ -152,11 +174,13 @@ build/Network/Server/Janus/Shader/SOAPShader.o : src/Network/Server/Janus/Shader
 build/Network/Server/Janus/Shader/SOAPShader.o : build/Network/Server/Janus/XmlHelper.hi
 build/Network/Server/Janus/Shader/SOAPShader.o : build/Network/Server/Janus/Core.hi
 build/Network/Server/Janus/Shader/SystemShader.o : src/Network/Server/Janus/Shader/SystemShader.hs
+build/Network/Server/Janus/Shader/SystemShader.o : build/Network/Server/Janus/JanusPaths.hi
 build/Network/Server/Janus/Shader/SystemShader.o : build/Network/Server/Janus/XmlHelper.hi
 build/Network/Server/Janus/Shader/SystemShader.o : build/Network/Server/Janus/Messaging.hi
 build/Network/Server/Janus/Shader/SystemShader.o : build/Network/Server/Janus/DynamicLoader.hi
 build/Network/Server/Janus/Shader/SystemShader.o : build/Network/Server/Janus/Core.hi
 build/Network/Server/Janus/Server.o : src/Network/Server/Janus/Server.hs
+build/Network/Server/Janus/Server.o : build/Network/Server/Janus/JanusPaths.hi
 build/Network/Server/Janus/Server.o : build/Network/Server/Janus/XmlHelper.hi
 build/Network/Server/Janus/Server.o : build/Network/Server/Janus/Transaction.hi
 build/Network/Server/Janus/Server.o : build/Network/Server/Janus/Shader/ControlShader.hi
