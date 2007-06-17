@@ -33,7 +33,6 @@ module Network.Server.Janus.XmlHelper
     -- utilities
     , getTS
     , getCurrentTS
-    , trim
 
     -- arrow operations
     , parseA
@@ -138,17 +137,6 @@ getCurrentTS =
     (arrIO0 $ getClockTime)
     >>>
     (arr getTS)
-
-{- |
-Removes leading and trailing whitespace (space, tab, line break).
--}
-trim :: String -> String
-trim =
-    applyTwice (reverse . trim1)
-    where
-        trim1           = dropWhile (`elem` delim)
-        delim           = [' ', '\t', '\n', '\r']
-        applyTwice f    = f . f
 
 {- |
 Delivers an Arrow parsing its input string to a polymorphically bound target type (which has to be installed

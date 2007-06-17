@@ -103,7 +103,7 @@ requestShader =
 	      , [("request", http_request)])                                                          -<<  ()
          
       let http_header' = Prelude.map (trimColon . break (== ':')) (tail http_header)
-                           where trimColon (l, r) = (l, (trim . tail) r)
+                           where trimColon (l, r) = (l, (stringTrim . tail) r)
                            
       let uri' = parseURIReference (show uri)
       
