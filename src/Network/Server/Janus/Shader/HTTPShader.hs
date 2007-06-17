@@ -125,13 +125,13 @@ requestShader =
         setVal _transaction_http_request_uriPath         (uriPath uri'') 
         >>> 
         setVal _transaction_http_request_uriQuery        (uriQuery uri'') 
-         >>> 
-         setVal _transaction_http_request_uriFrag        (uriFragment uri'')
-         >>> 
-         setVal _transaction_http_request_method         (requestCmdString method)
-         >>>
-         addHeader http_header'
-         )                                                                                            -<< in_ta
+        >>> 
+        setVal _transaction_http_request_uriFrag         (uriFragment uri'')
+        >>> 
+        setVal _transaction_http_request_method          (requestCmdString method)
+        >>>
+        addHeader http_header'
+        )                                                                                            -<< in_ta
    where
       findbody []                = ([], Nothing)
       findbody (x:xs) 

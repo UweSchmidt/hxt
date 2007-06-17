@@ -53,9 +53,7 @@ ttyHandler = proc (conf, shader) -> do
     let handler = proc _ -> do
         ctx_name    <- getSVS (state ++ "/ctx_name")                            -<  ()
         -- cursor      <- getSVS (state ++ "/cursor")                           -<  ()
-        arrIO $ hSetBuffering stdout                                            -<  NoBuffering
-        arrIO $ putStr                                                          -<  "(" ++ ctx_name ++ ")> "
-        line        <- arrIO0 $ getLine                                         -<  ()
+        line        <- arrIO $ getL                                             -< "(" ++ ctx_name ++ ")> "
         -- let command = words line
         ta          <- createTA 1 Init                                          -<  ()
         ta2         <- setVal _transaction_handler "ConsoleHandler"             -<< ta
@@ -79,4 +77,13 @@ ttyHandler = proc (conf, shader) -> do
         -- runtime     <- getTARunTime                                         -<  ta7 
         handler                                                             -<  ()
     returnA                                                                         -<  handler
-        
+    where        
+    getL prompt
+	= do
+          hSetBuffering stdout NoBuffering
+	  putStr prompt
+	  line' <- getLine
+	  let line = stringTrim line'
+	  if null line
+	     then getL prompt
+	     else return line
