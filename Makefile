@@ -53,6 +53,9 @@ all:		janus doc
 
 janus:		./build ./build/conf ./build/wwwpages ./build/errorpages $(OBJS_SERVER)
 		$(HC) $(HC_OPTS) --make -o build/janus $(SRCBASE)/Janus.hs
+		$(MAKE) pages
+
+pages	:
 		cp conf/* build/conf
 		cp -r wwwpages/* build/wwwpages
 		cp errorpages/* build/errorpages

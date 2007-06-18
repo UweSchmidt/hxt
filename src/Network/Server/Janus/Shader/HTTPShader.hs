@@ -361,16 +361,8 @@ cgiShader :: ShaderCreator
 cgiShader = 
    mkStaticCreator $ 
    proc in_ta -> do
-      url   <- getVal _transaction_http_request_url       
-               <+!>
-	       ( "cgiShader"
-	       , TAValueNotFound
-	       , "No URL found."
-	       , [("value", show _transaction_http_request_url)]
-	       )                                                                       -<  in_ta
-      let searchpath    = uriQuery (maybe nullURI id (parseURIReference url))
-      let searchpath'   = if (Prelude.null searchpath) then (searchpath) else (tail searchpath)
-      let params = toList $ parseSearchPath searchpath'
+      method <- getValDef _transaction_http_request_method "GET"                       -<  in_ta
+      params <- cgiParams method                                                       -<< in_ta
       
       "global" <-@ mkSimpleLog "HTTPShader.hs:cgiShader" ("cgiShader detected: " ++ show params) l_info -<< ()
       
@@ -380,6 +372,31 @@ cgiShader =
    where
    insertParam key val
        = setVal (_transaction_http_request_cgi_ ('@' : key)) val
+
+   cgiParams "GET"
+       = proc in_ta -> do
+	   url   <- getVal _transaction_http_request_url
+		    <+!>
+		    ( "cgiShader"
+		    , TAValueNotFound
+		    , "No URL found."
+		    , [("value", show _transaction_http_request_url)]
+		    )                                                                   -<  in_ta
+	   let searchpath    = uriQuery (maybe nullURI id (parseURIReference url))
+	   let searchpath'   = if (Prelude.null searchpath) then (searchpath) else (tail searchpath)
+           returnA  -< toList $ parseSearchPath searchpath'
+
+   cgiParams "POST"
+       = proc in_ta -> do
+	   mimeType <- getValDef (_transaction_http_request_header_ "Content-Type") "" -< in_ta
+	   body     <- getValDef  _transaction_http_request_body                    "" -< in_ta
+	   returnA   -< ( if mimeType == "application/x-www-form-urlencoded"
+			  then toList $ parseSearchPath body
+			  else []
+			)
+
+   cgiParams _
+       = constA []
 
 {- |
 Generates the HTTP status code at \/transaction\/http\/response\/\@status based on the state of the transaction. The Failure state is mapped

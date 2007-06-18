@@ -200,8 +200,26 @@ sessionPage path sid count ta
     where
     editRefs				-- append session id to all pages of session demo
 	= processTopDown $
-	  appendSessionId `when` (hasName "a" >>> hasAttr "href")
+	  ( ( appendSessionId
+	      `when`
+	      (hasName "a" >>> hasAttr "href")
+	    )
+	    >>>
+	    ( insertHiddenField
+	      `when`
+	      hasName "form"
+	    )
+	  )
 	where
+	insertHiddenField
+	    = replaceChildren
+	      ( aelem "input" [ sattr "type" "hidden"
+			      , sattr "name" "sessionid"
+			      , sattr "value" sid
+			      ]
+		<+>
+		( getChildren >>> editRefs )
+	      )
 	appendSessionId
 	    = (addAttr "href" $< editUrl)
 	      `orElse`
