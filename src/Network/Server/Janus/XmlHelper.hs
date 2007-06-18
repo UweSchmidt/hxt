@@ -406,7 +406,7 @@ xpOp _       _         NoPath              = zeroArrow
 Transforms an XPath string into a JanusPath
 -}
 
-    
+
 {- |
 Returns an XPath denoted element of an XmlTree value. For a child element, all subsequent text nodes are delivered. For an
 attribute, the attribute value is delivered. For a local part * in case of the Attribute axis (e.g. \/test\/\@*), all attribute
@@ -603,7 +603,7 @@ addTree xpath tree =
 	)
         >>>
         processXPathTrees (replaceChildren (getChildren <+> tree)) (show xpath)
-	
+
 {- |
 Removes a whole XPath denoted subtree.
 -}

@@ -11,7 +11,7 @@
    Version    : $Id: Transaction.hs, v1.0 2006/12/17 00:00:00 janus Exp $
 
    Janus Transactions
-   
+
    Beside the according data types, this module provides functions to create and access Transaction
    XML values.
 
@@ -27,13 +27,13 @@ module Network.Server.Janus.Transaction
       ta_http_request
     , ta_http_response
     , ta_http_url
-    
+
     -- data types
     , Transaction
     , Transactions
     , TransactionId
     , TransactionState (..)
-      
+
     -- transaction construction and access
     , createTA
     , getTAId
@@ -61,12 +61,12 @@ import Network.Server.Janus.XmlHelper
 
 type TransactionId      = Int
 
-data TransactionState   = 
-      Init 
-    | Processing 
-    | Reinvoke 
-    | Completed 
-    | Failure 
+data TransactionState   =
+      Init
+    | Processing
+    | Reinvoke
+    | Completed
+    | Failure
     deriving (Eq, Show, Read)
 
 type Transaction    = XmlTree
@@ -77,63 +77,63 @@ type Timestamp      = Integer
 ta_http_request,
  ta_http_response,
  ta_http_url 			:: String
- 
+
 ta_http_request			= "/transaction/http/request/body"
 ta_http_response		= "/transaction/http/response/body"
 ta_http_url			= "/transaction/http/request/@url"
- 
+
 {- |
 Creates an empty Transaction with a given id and in a given state.
 -}
 createTA :: TransactionId -> TransactionState -> XmlSource s a
-createTA ident state = 
+createTA ident state =
     eelem "transaction" 				-- these names must corrsepond to the
         += sattr "transaction_id" (show ident)          -- names in JanusPaths
         += sattr "transaction_state" (show state)
-        += eelem "messages"                 
+        += eelem "messages"
         += eelem "request_fragment"
         += eelem "response_fragment"
 
--- Access functions         
+-- Access functions
 {- |
 Returns a Transaction's id
 -}
 getTAId :: XmlAccess s TransactionId
-getTAId = 
-    getValDef _transaction_transactionId "0" 
-    >>> 
+getTAId =
+    getValDef _transaction_transactionId "0"
+    >>>
     parseA
-    
+
 {- |
 Replaces a Transaction's id
 -}
 setTAId :: TransactionId -> XmlTransform s
-setTAId ident = 
-    setVal _transaction_transactionId (show ident) 
-    
+setTAId ident =
+    setVal _transaction_transactionId (show ident)
+
 {- |
 Returns a Transaction's state
 -}
 getTAState :: XmlAccess s TransactionState
-getTAState = 
+getTAState =
     getVal _transaction_transactionState
-    >>> 
+    >>>
     parseA
 
 {- |
 Replaces a Transaction's state
 -}
 setTAState :: TransactionState -> XmlTransform s
-setTAState state = 
+setTAState state =
     setVal _transaction_transactionState (show state)
-    
+
 {- |
 Returns a Transaction's start timestamp
 -}
 getTAStart :: XmlAccess s Timestamp
 getTAStart =
     getVal _transaction_start
-    >>> 
+    >>>
     parseA
 
 {- |
@@ -149,7 +149,7 @@ Returns a Transaction's end timestamp
 getTAEnd :: XmlAccess s Timestamp
 getTAEnd =
     getVal _transaction_end
-    >>> 
+    >>>
     parseA
 
 {- |
@@ -168,7 +168,7 @@ getTARunTime =
         start   <- getTAStart   -<  ta
         end     <- getTAEnd     -<  ta
         returnA                 -<  (end - start)
-    
+
 {- |
 Stores a message in a Transaction's \/transaction\/messages node
 -}
@@ -182,12 +182,12 @@ Returns the messages stored in a Transaction's \/transaction\/messages node. Thi
 getTAMsg :: XmlAccess s Message
 getTAMsg =
     getTree (_transaction_messages_ "*")
-    
+
 {- |
 Removes all messages from a Transaction's \/transaction\/messages node
 -}
 clearTAMsg :: XmlTransform s
 clearTAMsg =
     delTree _transaction_messages
-    >>> 
+    >>>
     insEmptyTree _transaction_messages

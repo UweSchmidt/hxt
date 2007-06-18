@@ -183,10 +183,10 @@ sessionDemo =
         ta      <- getTree _transaction                             -<  in_ta
         sid     <- getVal _transaction_session_sessionid            -<  in_ta
         myname  <- getVal _transaction_http_request_uriPath         -<  in_ta
-        (count :: Int) 
-                <- getValDef _transaction_session_state_count "0" 
+        (count :: Int)
+                <- getValDef _transaction_session_state_count "0"
                     >>> parseA                                      -<  in_ta
-        in_ta'  <- setVal _transaction_session_state_count (show $ count + 1)      
+        in_ta'  <- setVal _transaction_session_state_count (show $ count + 1)
                                                                     -<< in_ta
         sessionPage myname sid (count + 1) ta                       -<< in_ta'
 

@@ -41,6 +41,6 @@ main = do
 
 	evalXml (proc _ -> serverArrow conf_file -< ()) initContext
 
-	return ()	
+	return ()
 
 -- ------------------------------------------------------------

@@ -11,7 +11,7 @@
    Version    : $Id: HTMLBuilder.hs, v1.0 2006/11/02 00:00:00 janus Exp $
 
    Janus HTML Builder
-   
+
    A set of Arrow functions to create an abstract representation of HTML documents. These Arrows base on
    HXT XML Arrows to represent XHTML.
 
@@ -26,7 +26,7 @@ module Network.Server.Janus.HTMLBuilder
    -- combinators and converters
      html2Str
    , (+>>)
-   
+
    -- constructors
    , html
    , headers
@@ -54,7 +54,7 @@ module Network.Server.Janus.HTMLBuilder
 where
 
 import Text.XML.HXT.Arrow
-      
+
 import Network.Server.Janus.XmlHelper
 
 infixl 7 +>>
@@ -63,7 +63,7 @@ infixl 7 +>>
 Converts a XHTML tree to a string
 -}
 html2Str :: XmlAccess s String
-html2Str = 
+html2Str =
     proc htmltree -> do
         str   <- xshow (constA htmltree) -<< ()
         returnA -< "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\n" ++ str
@@ -125,7 +125,7 @@ Operator to construct a block constituted by a list of XML Arrows, which is encl
 element. The argument defines the DIV's element style class.
 -}
 (|-|) :: String -> [XmlTransform s] -> XmlTransform s
-(|-|) style styled_block = 
+(|-|) style styled_block =
     (eelem "div"
         += (if style == "" then none else sattr "class" style)
         +>> styled_block
@@ -135,7 +135,7 @@ element. The argument defines the DIV's element style class.
 Constructs a DIV node. The argument defines the DIV's element style class.
 -}
 block :: String -> XmlTransform s
-block style = 
+block style =
     (eelem "div"
         += (if style == "" then none else sattr "class" style)
         )
@@ -163,7 +163,7 @@ link uri caption =
         )
 
 {- |
-Constructs a text node, where the content is denoted by the first argument. If a second argument \/= \"\" is provided, 
+Constructs a text node, where the content is denoted by the first argument. If a second argument \/= \"\" is provided,
 a span element with the second argument as its style encloses the new text.
 -}
 text :: String -> String -> XmlTransform s
@@ -181,7 +181,7 @@ heading level title_str =
         )
 
 {- |
-Constructs an image node, where the file is denoted by the first argument. The second argument provides a description 
+Constructs an image node, where the file is denoted by the first argument. The second argument provides a description
 (translates into an alt attribute), the third argument provides a style definition (ignored if it equals the empty string).
 -}
 image :: String -> String -> String -> XmlTransform s
@@ -196,7 +196,7 @@ image file desc style =
 Constructs a table with no border, where the argument provides a style definition (ignored if it equals the empty string).
 -}
 table :: String -> XmlTransform s
-table style =  
+table style =
     (eelem "table"
         += sattr "border" "0"
         += (if style == "" then none else sattr "class" style)
@@ -206,7 +206,7 @@ table style =
 Constructs a table row, where the argument provides a style definition (ignored if it equals the empty string).
 -}
 row :: String -> XmlTransform s
-row style =    
+row style =
     (eelem "tr"
         += (if style == "" then none else sattr "class" style)
         )
@@ -215,7 +215,7 @@ row style =
 Constructs a table cell, where the argument provides a style definition (ignored if it equals the empty string).
 -}
 cell :: String -> XmlTransform s
-cell style =   
+cell style =
     (eelem "td"
         += (if style == "" then none else sattr "class" style)
         )
@@ -230,7 +230,7 @@ form name action =
         += sattr "name"   name
         += (if action == "" then none else sattr "action" action)
         )
-   
+
 {- |
 Constructs a hidden input value for an HTML form, where the first argument defines the name and the second the value.
 -}
@@ -240,10 +240,10 @@ formHidden name value =
         += sattr "type"  "hidden"
         += sattr "name"  name
         += sattr "value" value
-        )  
+        )
 
 {- |
-Constructs a text input value for an HTML form, where the first argument defines the name, the second the value and the 
+Constructs a text input value for an HTML form, where the first argument defines the name, the second the value and the
 third the maximum length.
 -}
 formText :: String -> String -> Int -> XmlTransform s
@@ -267,7 +267,7 @@ formPass name size =
         )
 
 {- |
-Constructs an area input value for an HTML form, where the first argument defines the name, the second the value, the third 
+Constructs an area input value for an HTML form, where the first argument defines the name, the second the value, the third
 the number of columns and the fourth the number of rows.
 -}
 formArea :: String -> String -> Int -> Int -> XmlTransform s
@@ -288,10 +288,10 @@ formButton name value =
         += sattr "type"  "submit"
         += sattr "name"  name
         += sattr "value" value
-        )  
+        )
 
 {- |
-Constructs a selection field for an HTML form, where the first argument defines the name, the second the size and the 
+Constructs a selection field for an HTML form, where the first argument defines the name, the second the size and the
 third a list of name-value pairs.
 -}
 formSelection :: String -> Int -> [(String, String)] -> XmlTransform s
@@ -303,8 +303,8 @@ formSelection name size opts =
         )
     where
         options []              = this
-        options ((opt, val):_)  = 
+        options ((opt, val):_)  =
                 (eelem "option"
                     += sattr "value" val
                     += txt opt
-                    ) 
+                    )

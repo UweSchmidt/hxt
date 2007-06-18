@@ -48,7 +48,7 @@ import System.Eval.Haskell
 
 import Text.Regex
 import Text.XML.HXT.Arrow
-      
+
 import Network.Server.Janus.Core as Shader
 import Network.Server.Janus.Messaging
 import Network.Server.Janus.Transaction
@@ -74,8 +74,8 @@ url, uri_scheme, uri_path, uri_query, uri_frag, method. Furthermore, an empty tr
 created.
 -}
 requestShader :: ShaderCreator
-requestShader = 
-   mkStaticCreator $ 
+requestShader =
+   mkStaticCreator $
    proc in_ta -> do
       http_request <- getVal _transaction_requestFragment
                       <+!>
@@ -87,62 +87,62 @@ requestShader =
 
       let http_request_list         = splitRegex (mkRegex "\r") http_request
       let (http_header, http_body)  = findbody http_request_list
-      
+
       let parsed_request            = parseRequest http_header http_body
-      (uri, method, body) <- 
+      (uri, method, body) <-
          ( case parsed_request of
            Bad _    -> zeroArrow
            Ok req   -> constA ( HWSRequest.reqURI req
 			      , HWSRequest.reqCmd req
 			      , maybe ("") (id) (HWSRequest.reqBody req)
 			      )
-         ) 
+         )
          <+!> ( "requestShader"
 	      , FormatError
 	      , "Bad HTTP request."
 	      , [("request", http_request)])                                                          -<<  ()
-         
+
       let http_header' = Prelude.map (trimColon . break (== ':')) (tail http_header)
                            where trimColon (l, r) = (l, (stringTrim . tail) r)
-                           
+
       let uri' = parseURIReference (show uri)
-      
-      uri'' <- 
+
+      uri'' <-
          (if isJust uri'
             then arr $ fromJust
             else zeroArrow
             )
-         <+!> ("requestShader", FormatError, "Bad URI.", [("URI", show uri)])                         -<<  uri'   
+         <+!> ("requestShader", FormatError, "Bad URI.", [("URI", show uri)])                         -<<  uri'
 
       ( setVal _transaction_http_request_body body
-        >>> 
+        >>>
         insEmptyTree _transaction_http_response_body
-        >>> 
-	setVal _transaction_http_request_url             (show uri) 
-        >>> 
-        setVal _transaction_http_request_uriScheme       (uriScheme uri'') 
-        >>> 
-        setVal _transaction_http_request_uriPath         (uriPath uri'') 
-        >>> 
-        setVal _transaction_http_request_uriQuery        (uriQuery uri'') 
-        >>> 
+        >>>
+	setVal _transaction_http_request_url             (show uri)
+        >>>
+        setVal _transaction_http_request_uriScheme       (uriScheme uri'')
+        >>>
+        setVal _transaction_http_request_uriPath         (uriPath uri'')
+        >>>
+        setVal _transaction_http_request_uriQuery        (uriQuery uri'')
+        >>>
         setVal _transaction_http_request_uriFrag         (uriFragment uri'')
-        >>> 
+        >>>
         setVal _transaction_http_request_method          (requestCmdString method)
         >>>
         addHeader http_header'
         )                                                                                            -<< in_ta
    where
       findbody []                = ([], Nothing)
-      findbody (x:xs) 
+      findbody (x:xs)
          | Prelude.null x  = findbody' xs
-         | otherwise       = 
+         | otherwise       =
             let (headers, body) = findbody xs in
                                     (x:headers, body)
       findbody' []               = ([], Nothing)
       findbody' (x:_)            = ([], Just (unEscapeString x))
-      addHeader ((name, val):xs) = setVal (_transaction_http_request_header_ name) val 
-                                   >>> 
+      addHeader ((name, val):xs) = setVal (_transaction_http_request_header_ name) val
+                                   >>>
                                    addHeader xs
       addHeader []               = this
 
@@ -155,10 +155,10 @@ the \/transaction\/http\/response subtree, where the following data is read:
 \/transaction\/http\/response\/body\/\@filesize - The size of the response body. If no filesize is defined, the filesize is computed from the
 body. If a filesize is present, the body is actually NOT copied to the response - in this case, it is expected that the body is generated
 by the handler (due to performance issues).
--} 
+-}
 responseShader :: ShaderCreator
-responseShader = 
-   mkStaticCreator $ 
+responseShader =
+   mkStaticCreator $
    proc in_ta -> do
       body   <- getValDef _transaction_http_response_body    ""                       -<  in_ta
       mime   <- getValDef _transaction_http_response_mime   "text/html"               -<  in_ta
@@ -169,18 +169,18 @@ responseShader =
       fsize  <- getValDef _transaction_http_response_body_filesize ""                 -<  in_ta
       let response = Response {
          respCode          = status',
-         respHeaders       = header', 
-         respCoding        = [],  
+         respHeaders       = header',
+         respCoding        = [],
          respBody          = if fsize /= "" then FileBody (read fsize) undefined else HereItIs body,
          respSendBody      = True,
          respContentType   = Just mime
          }
       date <- arrIO0 $ dateHeader                                                      -<  ()
-      
+
       "global" <-@ mkSimpleLog "HTTPShader.hs:responseShader" ("responseShader generated: " ++ (generateResponse response date)) l_debug -<< ()
-      
+
       setVal _transaction_responseFragment (generateResponse response date)            -<< in_ta
-      
+
 {- |
 Populates response payload of \/transaction\/http\/response with static file content based on \/transaction\/http\/request\/\@url_*.
 The base URL, which is interpreted as root for the file request, can be defined by \/shader\/config\/\@base_url (defaults to \"\/\").
@@ -191,8 +191,8 @@ the location for the HTTP response body). The Shader fails if no URI is present 
 TODO: support for default page (e.g. index.html)
 -}
 fileShader :: ShaderCreator
-fileShader = 
-   mkDynamicCreator $ arr $ \(conf, _) -> 
+fileShader =
+   mkDynamicCreator $ arr $ \(conf, _) ->
    proc in_ta -> do
       base     <- getValDef _shader_config_baseUrl "/"                                     -<  conf
       mapsto   <- getValDef _shader_config_mapsTo "./"                                     -<  conf
@@ -212,7 +212,7 @@ fileShader =
       (proc x -> do
          uid   <- getUID (-1)                                                          -<  ()
          -- file  <- exceptZeroA BStr.readFile                                            -<  filename
-         file  <- exceptZeroA $ openFile filename                                      -<  ReadMode 
+         file  <- exceptZeroA $ openFile filename                                      -<  ReadMode
          fsize <- exceptZeroA $ hFileSize                                              -<< file
          exceptZeroA $ hClose                                                          -<  file
          file'  <- exceptZeroA $ openFile filename                                     -<< ReadWriteMode
@@ -227,53 +227,53 @@ fileShader =
          --                                                   handleCopy hFile hOut 128
                                                             -- content <- hGetContents hFile
                                                             -- putStrLn ("Reading... " ++ show uid)
-                                                            -- content <- BStr.hGet hFile 128 
-                                                            -- putStrLn ("Writing... " ++ show uid)                                                            
+                                                            -- content <- BStr.hGet hFile 128
+                                                            -- putStrLn ("Writing... " ++ show uid)
                                                             -- BStr.hPut hOut content
                                                             -- hPutStr h content
                                                             -- handleCopy hFile hOut buffer 64
          --                                                   putStrLn ("Closing... " ++ show uid)
          --                                                   hClose hFile
          --                                                   putStrLn ("Finished... " ++ show uid)
-         --                                                   )                          -<< ()  
+         --                                                   )                          -<< ()
          -- x'    <- setVal (loadsto ++ "/@filesize") (show $ BStr.length file)           -<< x
          x'    <- setVal (jpAttr loadsto "filesize") (show $ fsize)                    -<< x
          x''   <- setVal (jpAttr loadsto "hdlop")    (show $ uid)                      -<< x'
          setVal (jp loadsto) "xxx"                                                     -<< x''
-         )        
+         )
          <+!> ( "fileShader"
 	      , FileNotFound
 	      , ("File '" ++ filename ++ "' not found.")
 	      , [("file", filename)]
 	      )                                                                        -<< in_ta
    where
-      handleCopy hIn hOut blocksize = 
-         do 
-            content <- BStr.hGet hIn blocksize 
+      handleCopy hIn hOut blocksize =
+         do
+            content <- BStr.hGet hIn blocksize
             BStr.hPut hOut content
             eof <- hIsEOF hIn
             if not eof
-               then handleCopy hIn hOut blocksize 
+               then handleCopy hIn hOut blocksize
                else return ()
 --   where
---      handleCopy hIn hOut buffer blocksize = 
---         do 
+--      handleCopy hIn hOut buffer blocksize =
+--         do
 --            readWords <- hGetArray hIn buffer blocksize
 --            hPutArray hOut buffer readWords
 --            if readWords == blocksize
---               then handleCopy hIn hOut buffer blocksize 
+--               then handleCopy hIn hOut buffer blocksize
 --               else return ()
 --   where
---      handleCopy hIn hOut = do 
+--      handleCopy hIn hOut = do
 --                              eof <- hIsEOF hIn
---                              if not eof 
---                                 then (hGetChar hIn >>= hPutChar hOut >> handleCopy hIn hOut) 
+--                              if not eof
+--                                 then (hGetChar hIn >>= hPutChar hOut >> handleCopy hIn hOut)
 --                                 else return ()
 
 {- |
 Determines the MIME type belonging to a given file extension. The filename is taken from \/transaction\/http\/request\/\@uri_path. If no URL
 can be found, the Shader fails. The determined MIME type is stored at \/transaction\/http\/response\/\@mime.
-The default type, which is delivered if no type can be inferred by means of the filename extension, can be defined by \/shader\/config\/\@default 
+The default type, which is delivered if no type can be inferred by means of the filename extension, can be defined by \/shader\/config\/\@default
 (defaults to \"text\/plain\").
 The MIME types are inferred from a database in the global scope (global:\/mime). For each extension, a subnode is stored in this database
 (e.g. global:\/mime\/jpg). The value of each subnode is the associated MIME type, in this case \"image\/jpeg\". If a MIME type cannot be inferred
@@ -281,8 +281,8 @@ from the database, the configuration of the mimeShader is searched. E.g., for a 
 If both database and configuration based type inference fail, the default type is selected.
 -}
 mimeShader :: ShaderCreator
-mimeShader = 
-   mkDynamicCreator $ arr $ \(conf, _) -> 
+mimeShader =
+   mkDynamicCreator $ arr $ \(conf, _) ->
    proc in_ta -> do
       name           <- getVal _transaction_http_request_uriPath
                         <+!>
@@ -294,12 +294,12 @@ mimeShader =
       defaultType    <- getValDef _shader_config_default "text/plain"                   -<  conf
 
       mimeType       <- ( getSVS $ "/global/mime/" ++ extension name)
-			`orElse` 
+			`orElse`
 			getValDef (_shader_config_types_ (extension name)) defaultType  -<< conf
 
       "global"       <-@ mkSimpleLog "HTTPShader.hs:mimeShader" ("mimeShader selected: " ++ mimeType) l_info -<< ()
 
-      setVal _transaction_http_response_mime mimeType                                   -<< in_ta 
+      setVal _transaction_http_response_mime mimeType                                   -<< in_ta
    where
       extension :: String -> String
       extension fn = go (reverse fn) ""
@@ -309,11 +309,11 @@ mimeShader =
 
 {- |
 Loads the MIME extension database. The filename is specified by \/shader\/config\/\@typefile. If no file is defined, the Shader fails.
-IMPLEMENTATION CURRENTLY NOT FAILSAFE, FILE FORMAT IS WEAK. SHOULD BE REPLACED BY THE ShaderLib dataLoadShader. 
+IMPLEMENTATION CURRENTLY NOT FAILSAFE, FILE FORMAT IS WEAK. SHOULD BE REPLACED BY THE ShaderLib dataLoadShader.
 -}
 initMimeDB :: ShaderCreator
-initMimeDB = 
-   mkDynamicCreator $ arr $ \(conf, _) -> 
+initMimeDB =
+   mkDynamicCreator $ arr $ \(conf, _) ->
    proc through -> do
       "/global/mime" <$! NullVal                                                                -<  ()
       filename <- getVal _shader_config_typefile
@@ -331,24 +331,24 @@ initMimeDB =
 		  , [("file", filename)]
 		  )                                                                             -<< ReadMode
       arrIO $ hSetBuffering h                                                                   -<< LineBuffering
-      processFile h filename                                                                    -<< () 
+      processFile h filename                                                                    -<< ()
       returnA                                                                                   -<  through
    where
-      processFile handle filename = 
+      processFile handle filename =
          proc _ -> do
             line <- arrIO $ hGetLine               -<  handle
             let (mime:exts) = words line
             addExts exts mime                      -<< ()
             eof <- arrIO $ hIsEOF                  -<  handle
-            (if eof 
+            (if eof
                then this
                else processFile handle filename)   -<< ()
-      addExts [] _          = 
+      addExts [] _          =
          this
-      addExts (ext:xs) mime = 
+      addExts (ext:xs) mime =
          (("/global/mime/" ++ ext) <-! mime)
          >>>
-         constA () 
+         constA ()
          >>>
          addExts xs mime
 
@@ -358,14 +358,14 @@ Each parameter is stored as an attribute, e.g. \/transaction\/http\/request\/cgi
 TODO: Alternatively aquires data from HTTP headers (\/transaction\/http\/request\/headers attributes) (HTTP POST method).
 -}
 cgiShader :: ShaderCreator
-cgiShader = 
-   mkStaticCreator $ 
+cgiShader =
+   mkStaticCreator $
    proc in_ta -> do
       method <- getValDef _transaction_http_request_method "GET"                       -<  in_ta
       params <- cgiParams method                                                       -<< in_ta
-      
+
       "global" <-@ mkSimpleLog "HTTPShader.hs:cgiShader" ("cgiShader detected: " ++ show params) l_info -<< ()
-      
+
       ta2   <- insEmptyTree _transaction_http_request_cgi                              -<  in_ta
       ta3   <- (seqA . map (uncurry insertParam)) params                               -<< ta2
       returnA                                                                          -<  ta3
@@ -404,31 +404,31 @@ onto status code 404, the Processing (no unhandled errors occured) state is mapp
 -}
 httpStatusShader :: ShaderCreator
 httpStatusShader =
-   mkStaticCreator $ 
+   mkStaticCreator $
    proc in_ta -> do
       ta_state    <- getTAState                                                        -<  in_ta
       ta          <- (if ta_state == Processing
-                        then setVal _transaction_http_response_status "200" 
+                        then setVal _transaction_http_response_status "200"
                         else setVal _transaction_http_response_status "404"
 		     )                                                                 -<< in_ta
       setTAState Processing                                                            -<  ta
 
 {- |
 Generates a response body based on the status code (for all status codes >= 400). The bodies are read from files, where a file can be
-associated to each status code. The status is read from \/transaction\/http\/response\/\@status. If the status is unspecified, a default 
-status can be defined by \/shader\/config\/\@default (defaults to 200). Each status file is defined by \/shader\/config\/\@page_X, where X 
+associated to each status code. The status is read from \/transaction\/http\/response\/\@status. If the status is unspecified, a default
+status can be defined by \/shader\/config\/\@default (defaults to 200). Each status file is defined by \/shader\/config\/\@page_X, where X
 represents the according status code. If no file is defined for a given status code or the specified file cannot be read, the Shader fails.
 -}
 htmlStatusShader :: ShaderCreator
 htmlStatusShader =
-   mkDynamicCreator $ arr $ \(conf, _) -> 
+   mkDynamicCreator $ arr $ \(conf, _) ->
    proc in_ta -> do
       defaultStatus     <- getValDef _shader_config_default "200"                                   -<  conf
       (status :: Int)   <- getValDef _transaction_http_response_status defaultStatus >>> parseA     -<< in_ta
-      
+
       "global" <-@ mkSimpleLog "HTTPShader.hs:htmlStatusShader" ("status code found: " ++ show status) l_info -<< ()
-      
-      (if status >= 400 
+
+      (if status >= 400
          then proc ta -> do
             statusFile <- getVal (_shader_config_ ("@page_" ++ show status))
                           <+!>
@@ -437,14 +437,14 @@ htmlStatusShader =
 			  , ("No file specified for status code " ++ show status)
 			  , [("status", show status)]
 			  )                                                                         -<< conf
-            file       <- exceptZeroA readBinary 
+            file       <- exceptZeroA readBinary
                           <+!>
                           ( "htmlStatusShader"
 			  , FileNotFound
 			  , ("File '" ++ statusFile ++ "' not found.")
 			  , [("file", statusFile)]
 			  )                                                                        -<< statusFile
-            setVal _transaction_http_response_body file                                            -<< ta            
+            setVal _transaction_http_response_body file                                            -<< ta
          else this
          )                                                                                         -<< in_ta
 
@@ -469,14 +469,14 @@ readBinary filename =
             then return []
             else do
                c  <- hGetChar handle
-               d  <- getIt handle             
+               d  <- getIt handle
                return $ c:d
-               
+
 {- |
 Delivers a Map of name-value-pairs, parsed from a URL query part. The query part has to delivered without the leading ?-character.
 -}
 parseSearchPath :: String -> Map String String
-parseSearchPath searchpath = 
+parseSearchPath searchpath =
       if key /= "" then insert key val res else res
       where
          (res, key, val) = parseSearchPath' searchpath
@@ -484,17 +484,17 @@ parseSearchPath searchpath =
 parseSearchPath' :: String -> (Map String String, String, String)
 parseSearchPath' ('=':input) = parseSearchPath'' input
 parseSearchPath' (ch:input)  = (res, ch:key, val)
-      where 
-         (res, key, val)    = parseSearchPath' input        
+      where
+         (res, key, val)    = parseSearchPath' input
 parseSearchPath' [] = (empty, [], [])
 
 parseSearchPath'' :: String -> (Map String String, String, String)
 parseSearchPath'' ('&':input) = (insert key val res, [], [])
-      where 
-         (res, key, val)    = parseSearchPath' input        
+      where
+         (res, key, val)    = parseSearchPath' input
 parseSearchPath'' (ch:input)  = (res, key, ch:val)
-      where 
-         (res, key, val)    = parseSearchPath'' input       
+      where
+         (res, key, val)    = parseSearchPath'' input
 parseSearchPath'' [] = (empty, [], [])
 
 {- |

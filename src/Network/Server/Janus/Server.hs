@@ -53,7 +53,7 @@ full_release    = (show main_version) ++ "." ++ (show sub_version) ++ " Build " 
 The primary Arrow of Janus.
 -}
 serverArrow :: String -> JanusArrow Context () ()
-serverArrow conf_file = 
+serverArrow conf_file =
     proc _ -> do
 
         -- define channels and startup message-handlers
@@ -68,18 +68,18 @@ serverArrow conf_file =
         -- start-message
         "global"    <-@ mkPlainMsg $ "Janus Server " ++ full_release ++ " starting up...\n"     -<  ()
         "global"    <-@ mkPlainMsg $ "-----------------------------------------------\n"        -<  ()
-        "global"    <-@ mkPlainMsg $ ""                                                         -<  () 
-        
+        "global"    <-@ mkPlainMsg $ ""                                                         -<  ()
+
         -- load server configuration
         "global" <-@ mkPlainMsg $ "loading and normalizing server config (" ++ conf_file ++ ")... " -< ()
-        cfg         <- 
+        cfg         <-
                     fileSource conf_file
-                    >>> 
+                    >>>
                     normalizeConfig
                     >>>
                     getTree _janus                                                              -<  ()
         "global"    <-@ mkPlainMsg $ "done\n"                                                   -<  ()
-        
+
         -- initialize Context
         "global"    <-@ mkPlainMsg $ "updating context (adding global and local scopes)... "    -<  ()
         swapConfig                                                                              -<  cfg
@@ -87,13 +87,13 @@ serverArrow conf_file =
         addScope "local"                                                                        -<  ()
         "/global/system/version" <-! full_release                                               -<  ()
         "global"    <-@ mkPlainMsg $ "done\n"                                                   -<  ()
-        
+
         -- registering Server-Context
         "global"    <-@ mkPlainMsg $ "registering server context... "                           -<< ()
         context     <- getContext                                                               -<  ()
         "/global/consoles/server" <$! (ContextVal context)                                      -<< ()
         "global"    <-@ mkPlainMsg $ "done\n"                                                   -<< ()
-        
+
         -- load core Shaders
         "global"    <-@ mkPlainMsg $ "loading core shaders... "                                 -<< ()
         "global"    <-@ mkPlainMsg $ "system.loadshadercreator "                                -<< ()
@@ -102,7 +102,7 @@ serverArrow conf_file =
         addShaderCreator "system.loadhandlercreator" loadHandlerCreator                         -<< ()
         "global"    <-@ mkPlainMsg $ "system.loadhandler "                                      -<< ()
         addShaderCreator "system.loadhandler" loadHandler                                       -<< ()
-        
+
         "global"    <-@ mkPlainMsg $ "control.seq "                                             -<< ()
         addShaderCreator "control.seq" seqControl                                               -<< ()
         "global"    <-@ mkPlainMsg $ "control.like "                                            -<< ()
@@ -116,20 +116,20 @@ serverArrow conf_file =
         "global"    <-@ mkPlainMsg $ "control.if "                                              -<< ()
         addShaderCreator "control.if" ifThenElseControl                                         -<< ()
         "global"    <-@ mkPlainMsg $ "done\n"                                                   -<< ()
-            
+
         -- load handler trees
         "global"    <-@ mkPlainMsg $ "loading system shader from configuration file... "        -<  ()
         rootTree    <- single $ staticSource cfg >>> getTree _janus_shader                      -<< ()
-        "global"    <-@ mkPlainMsg $ "done\n"                                                   -<< ()              
+        "global"    <-@ mkPlainMsg $ "done\n"                                                   -<< ()
         "global"    <-@ mkPlainMsg $ "constructing system shader...\n"                          -<  ()
         (_, shader) <- loadShader                                                               -<  rootTree
-        "global"    <-@ mkPlainMsg $ "done: constructing system shader\n"                       -<< ()              
+        "global"    <-@ mkPlainMsg $ "done: constructing system shader\n"                       -<< ()
         "global"    <-@ mkPlainMsg $ "executing system shader...\n"                             -<  ()
         executeShader shader                                                                    -<< ()
-        "global"    <-@ mkPlainMsg $ "done: executing system shader\n"                          -<< ()              
-        
+        "global"    <-@ mkPlainMsg $ "done: executing system shader\n"                          -<< ()
+
         "global"    <-@ mkPlainMsg $ "server running...\n"                                      -<  ()
-        
+
         listenChannel "control"                                                                 -<  ()
         returnA                                                                                 -<  ()
 
@@ -154,17 +154,17 @@ normalizeConfig =
     computeConfigNode
     >>>
     computeInitNode
-    
+
 {- |
-Returns the child node \"janus\" as the root of a new XML tree. All other children of the root node are ignored. 
+Returns the child node \"janus\" as the root of a new XML tree. All other children of the root node are ignored.
 If no \"janus\" node is present, an empty one is created and returned.
 -}
-computeJanusRoot :: JanusArrow Context XmlTree XmlTree 
+computeJanusRoot :: JanusArrow Context XmlTree XmlTree
 computeJanusRoot =
     (insertChildrenAt 0 (eelem "janus")) `when` (neg $ getChildren >>> hasName "janus")
     >>>
-    getChildren 
-    >>> 
+    getChildren
+    >>>
     hasName "janus"
     -- >>>
     -- processXPathTrees ((insertChildrenAt 0 (eelem "shader")) `when` (neg $ getChildren >>> hasName "shader")) "/janus"
@@ -176,7 +176,7 @@ and is removed before resolving.
 1 loadshaders -> n loadshader, each attribute represents an reference=object pair, the module attribute represents the module file in question
 and is removed before resolving.
 -}
-resolveHighLevelShortcuts :: JanusArrow Context XmlTree XmlTree 
+resolveHighLevelShortcuts :: JanusArrow Context XmlTree XmlTree
 resolveHighLevelShortcuts =
     processXPathTrees (proc node -> do
         node'       <- replaceChildren zeroArrow                            -<  node
@@ -186,9 +186,9 @@ resolveHighLevelShortcuts =
             >>>
             (proc name -> do
                 val     <- getAttrValue name                        -<< node''
-                aelem "loadhandler" 
+                aelem "loadhandler"
                         [attr "reference" (txt name), attr "object" (txt val), attr "module" (txt mod_name)] -<< ()
-                )                                                           -<< node''    
+                )                                                           -<< node''
         )
         "/janus//loadhandlers[not(ancestor::config)]"
     >>>
@@ -200,9 +200,9 @@ resolveHighLevelShortcuts =
             >>>
             (proc name -> do
                 val     <- getAttrValue name                        -<< node''
-                aelem "loadshader" 
+                aelem "loadshader"
                         [attr "reference" (txt name), attr "object" (txt val), attr "module" (txt mod_name)] -<< ()
-                )                                                           -<< node''    
+                )                                                           -<< node''
         )
         "/janus//loadshaders[not(ancestor::config)]"
     >>>
@@ -225,7 +225,7 @@ loopuntil -> shader type=\"control.loopuntil\".
 loopwhile -> shader type=\"control.loopwhile\".
 if -> shader type=\"control.if\".
 -}
-resolveLowLevelShortcuts :: JanusArrow Context XmlTree XmlTree 
+resolveLowLevelShortcuts :: JanusArrow Context XmlTree XmlTree
 resolveLowLevelShortcuts =
     processXPathTrees (setElemName (mkName "shader") >>> addAttr "type" "system.loadshadercreator") "/janus//loadshader[not(ancestor::config)]"
     >>>
@@ -244,7 +244,7 @@ resolveLowLevelShortcuts =
 {- |
 If no \"shader\" child of the \"janus\" root is present, an empty one is created.
 -}
-computeJanusShader :: JanusArrow Context XmlTree XmlTree 
+computeJanusShader :: JanusArrow Context XmlTree XmlTree
 computeJanusShader =
     processXPathTrees ((insertChildrenAt 0 (eelem "shader")) `when` (neg $ getChildren >>> hasName "shader")) "/janus"
 
@@ -253,9 +253,9 @@ Applies the immediate attributes of each \"apply\" node to all descendant \"shad
 case of ambiguities the deeper nodes overrule the higher ones. Existing attributes of \"shader\" nodes don't get overwritten and therefore overrule
 any \"apply\" node attribute. After applying an \"apply\" node, the node is replaced by its children.
 Descendants of \"config\" nodes are ignored, so neither \"apply\" descendants of a \"config\" node are resolved nor \"apply\" attributes get forwarded to
-\"shader\" descendants of \"config\" nodes. 
+\"shader\" descendants of \"config\" nodes.
 -}
-propagateApply :: JanusArrow Context XmlTree XmlTree 
+propagateApply :: JanusArrow Context XmlTree XmlTree
 propagateApply =
     processXPathTrees (proc node -> do
         attribs     <- listA $ (getAttrl >>> getName)
@@ -269,48 +269,48 @@ propagateApply =
                             attribs
         node'       <- processXPathTrees addA "//shader[not(ancestor::config)]"         -<< node
         getChildren                                                                     -<  node'
-        ) 
+        )
         "/janus//apply[not(ancestor::config)]"
 
 {- |
-For each \"shader\" node and the \"janus\" root node, a \"config\" child is created if not present already. 
-All attributes of the \"shader\" node are moved into the \"config\" child. 
+For each \"shader\" node and the \"janus\" root node, a \"config\" child is created if not present already.
+All attributes of the \"shader\" node are moved into the \"config\" child.
 If no \"type\" attribute is present, the type \"control.seq\" is inserted (so this becomes the default type for shaders).
 If no \"id\" attribute is present, a unique one (across all shaders without predefined id) is generated.
 If no \"state\" attribute is present, it is set to /local/_<id>. In case of \"control.seq\" shaders, it is set to /local.
 If no \"root_state\" attribute is present, it is set to the \"state\" attribute's value.
 If no \"accepts\" attribute is present or if it cannot be parsed to a TransactionState list, it is set to [Processing].
-\"shader\" descendants of \"config\" nodes are ignored. 
+\"shader\" descendants of \"config\" nodes are ignored.
 -}
-computeConfigNode :: JanusArrow Context XmlTree XmlTree 
+computeConfigNode :: JanusArrow Context XmlTree XmlTree
 computeConfigNode =
     processXPathTrees ((insertChildrenAt 0 (eelem "config")) `when` (neg $ getChildren >>> hasName "config")) "/janus"
     >>>
     processXPathTrees ((insertChildrenAt 0 (eelem "config")) `when` (neg $ getChildren >>> hasName "config")) "/janus//shader[not(ancestor::config)]"
     >>>
-    processXPathTrees 
-        (proc node -> do 
+    processXPathTrees
+        (proc node -> do
             attribs         <- listA $ getAttrl                                                     -<  node
             node'           <- processChildren (addAttrl (constL attribs) `when` hasName "config")  -<< node
             node''          <- setAttrl none                                                        -<  node'
-            stype           <- getVal _shader_config_type 
-                               `orElse` 
+            stype           <- getVal _shader_config_type
+                               `orElse`
                                (constA $ "control.seq")                                             -<  node''
             ident           <- getVal _shader_config_id
-                               `orElse` 
-                               (getQualifiedUID "shaderid" 1 
-                                    >>> 
+                               `orElse`
+                               (getQualifiedUID "shaderid" 1
+                                    >>>
                                     arr (\x -> stype ++ "_" ++ show x))                             -<< node''
-            state           <- getVal _shader_config_state 
-                               `orElse` 
-                               (constA $ if stype == "control.seq" 
-                                            then "/local" 
+            state           <- getVal _shader_config_state
+                               `orElse`
+                               (constA $ if stype == "control.seq"
+                                            then "/local"
                                             else "/local/_" ++ ident)                               -<< node''
             root_state      <- getVal _shader_config_rootState
-                               `orElse` 
+                               `orElse`
                                (constA $ state)                                                     -<< node''
             accepts         <- ( getVal _shader_config_accepts >>> parseA )
-                                `orElse` 
+                                `orElse`
                                 (constA [Processing])                                               -<< node''
             node'''         <- setVal _shader_config_type stype
                                >>>
@@ -325,119 +325,119 @@ computeConfigNode =
             ) "/janus//shader[not(ancestor::config)]"
 
 {- |
-Checks the existence of an \"init\" child node for all \"shader\" nodes. If no one is present, an empty one gets inserted. 
-\"shader\" descendants of \"config\" nodes are ignored.  
+Checks the existence of an \"init\" child node for all \"shader\" nodes. If no one is present, an empty one gets inserted.
+\"shader\" descendants of \"config\" nodes are ignored.
 -}
-computeInitNode :: JanusArrow Context XmlTree XmlTree 
+computeInitNode :: JanusArrow Context XmlTree XmlTree
 computeInitNode =
     processXPathTrees ((insertChildrenAt 0 (eelem "init")) `when` (neg $ getChildren >>> hasName "init")) "/janus//shader[not(ancestor::config)]"
 
 {- |
 TODO
 -}
-resolveLike :: JanusArrow Context XmlTree XmlTree 
+resolveLike :: JanusArrow Context XmlTree XmlTree
 resolveLike =
     processXPathTrees (proc node -> do
-        defaultnode <- (single $ (getChildren >>> hasName "default" >>> setElemName (mkName "block"))) 
-                        `orElse` 
+        defaultnode <- (single $ (getChildren >>> hasName "default" >>> setElemName (mkName "block")))
+                        `orElse`
                         (eelem "block")                                                     -<  node
-        valuenode   <- (single $ (getChildren >>> hasName "value" >>> setElemName (mkName "block"))) 
-                        `orElse` 
+        valuenode   <- (single $ (getChildren >>> hasName "value" >>> setElemName (mkName "block")))
+                        `orElse`
                         (eelem "block")                                                     -<  node
         children    <- listA $ (getChildren >>> hasName "case")                             -<  node
         node'       <- setChildren []                                                       -<  node
-        let refactorA = foldr (\child arrow -> arrow 
-                                >>> 
+        let refactorA = foldr (\child arrow -> arrow
+                                >>>
                                 (proc (tree, selects, counter) -> do
                                     let ident = "case_" ++ (show counter)
                                     select  <- getAttrValue "match"                     -<  child
                                     child'  <- removeAttr "match"                       -<  child
-                                    child'' <- setElemName (mkName "block") 
-                                                >>> 
+                                    child'' <- setElemName (mkName "block")
+                                                >>>
                                                 addAttr "id" ident                      -<< child'
                                     tree'   <-  insertChildrenAt 0 (constA child'')     -<< tree
                                     returnA -<  (tree', (ident, select):selects, counter+1)
-                                    )                                
+                                    )
                                 )
                             this
                             children
         (node'', selects', nextid)   <- refactorA                                           -<< (node', [], 0 :: Int)
-        
-        node''' <- setElemName (mkName "shader") 
-                    >>> 
-                    addAttr "type" "control.like"                                  
+
+        node''' <- setElemName (mkName "shader")
                     >>>
-                    addAttr "value" ("case_" ++ (show nextid)) 
+                    addAttr "type" "control.like"
+                    >>>
+                    addAttr "value" ("case_" ++ (show nextid))
                     >>>
                     addAttr "default" ("case_" ++ (show $ nextid+1))                        -<< node''
-                    
- 
+
+
         let addA = foldr (\(ident, select) arrow -> arrow >>> insertChildrenAt 0 (selem ident [txt select]))
                              this
                              selects'
-        node4       <- ifA (getChildren >>> hasName "config") 
+        node4       <- ifA (getChildren >>> hasName "config")
                         zeroArrow
                         (insertChildrenAt 0 (eelem "config"))                               -<  node'''
-        
+
         node5       <- processXPathTrees addA "/shader/config"                              -<< node4
         valuenode'  <- addAttr "id" ("case_" ++ (show $ nextid))                            -<< valuenode
         defaultnode'    <- addAttr "id" ("case_" ++ (show $ nextid+1))                      -<< defaultnode
         node6       <- insertChildrenAt 0 (constA valuenode')                               -<< node5
         insertChildrenAt 0 (constA defaultnode')                                            -<< node6
-        ) 
+        )
         "/janus//like[not(ancestor::config)]"
-        
+
 {- |
 TODO
 -}
-resolveSelect :: JanusArrow Context XmlTree XmlTree 
+resolveSelect :: JanusArrow Context XmlTree XmlTree
 resolveSelect =
     processXPathTrees (proc node -> do
-        defaultnode <- (single $ (getChildren >>> hasName "default" >>> setElemName (mkName "block"))) 
-                        `orElse` 
+        defaultnode <- (single $ (getChildren >>> hasName "default" >>> setElemName (mkName "block")))
+                        `orElse`
                         (eelem "block")                                                     -<  node
-        valuenode   <- (single $ (getChildren >>> hasName "value" >>> setElemName (mkName "block"))) 
-                        `orElse` 
+        valuenode   <- (single $ (getChildren >>> hasName "value" >>> setElemName (mkName "block")))
+                        `orElse`
                         (eelem "block")                                                     -<  node
         children    <- listA $ (getChildren >>> hasName "case")                             -<  node
         node'       <- setChildren []                                                       -<  node
-        let refactorA = foldr (\child arrow -> arrow 
-                                >>> 
+        let refactorA = foldr (\child arrow -> arrow
+                                >>>
                                 (proc (tree, selects, counter) -> do
                                     let ident = "case_" ++ (show counter)
                                     select  <- getAttrValue "match"                     -<  child
                                     child'  <- removeAttr "match"                       -<  child
-                                    child'' <- setElemName (mkName "block") 
-                                                >>> 
+                                    child'' <- setElemName (mkName "block")
+                                                >>>
                                                 addAttr "id" ident                      -<< child'
                                     tree'   <-  insertChildrenAt 0 (constA child'')     -<< tree
                                     returnA -<  (tree', (ident, select):selects, counter+1)
-                                    )                                
+                                    )
                                 )
                             this
                             children
         (node'', selects', nextid)   <- refactorA                                           -<< (node', [], 0 :: Int)
-        
-        node''' <- setElemName (mkName "shader") 
-                    >>> 
-                    addAttr "type" "control.select"                                  
+
+        node''' <- setElemName (mkName "shader")
                     >>>
-                    addAttr "value" ("case_" ++ (show nextid)) 
+                    addAttr "type" "control.select"
+                    >>>
+                    addAttr "value" ("case_" ++ (show nextid))
                     >>>
                     addAttr "default" ("case_" ++ (show $ nextid+1))                        -<< node''
-                    
- 
+
+
         let addA = foldr (\(ident, select) arrow -> arrow >>> insertChildrenAt 0 (selem ident [txt select]))
                              this
                              selects'
-        node4       <- ifA (getChildren >>> hasName "config") 
+        node4       <- ifA (getChildren >>> hasName "config")
                         zeroArrow
                         (insertChildrenAt 0 (eelem "config"))                               -<  node'''
-        
+
         node5       <- processXPathTrees addA "/shader/config"                              -<< node4
         valuenode'  <- addAttr "id" ("case_" ++ (show $ nextid))                            -<< valuenode
         defaultnode'    <- addAttr "id" ("case_" ++ (show $ nextid+1))                      -<< defaultnode
         node6       <- insertChildrenAt 0 (constA valuenode')                               -<< node5
         insertChildrenAt 0 (constA defaultnode')                                            -<< node6
-        ) 
+        )
         "/janus//select[not(ancestor::config)]"

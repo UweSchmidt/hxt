@@ -11,7 +11,7 @@
    Version    : $Id: ShaderLib.hs, v1.1 2007/03/26 00:00:00 janus Exp $
 
    Janus Basic Shader Library
-   
+
    Provides a set of universal, mostly transport-independent Shaders.
 
 -}
@@ -25,8 +25,8 @@ module Network.Server.Janus.Shader.ShaderLib
     -- shaders
       localEchoShader
     , remoteEchoShader
-    , sessionReadShader 
-    , sessionWriteShader 
+    , sessionReadShader
+    , sessionWriteShader
     , authShader
     , dataLoadShader
     , dataStoreShader
@@ -39,7 +39,7 @@ module Network.Server.Janus.Shader.ShaderLib
     , registerScope
     , mappingShader
     , mappingWrapper
-    , aliasShader   
+    , aliasShader
     , setValShader
     , setStateShader
     )
@@ -50,7 +50,7 @@ import Data.Map as Map
 import Network.URI (unEscapeString)
 import Text.Regex
 import Text.XML.HXT.Arrow
-        
+
 import Network.Server.Janus.Core as Shader
 import Network.Server.Janus.Messaging
 import Network.Server.Janus.XmlHelper
@@ -62,7 +62,7 @@ Shows \/transaction\/request_fragment as plain text at command line (no effect o
 Shows the empty string if the value cannot be found.
 -}
 localEchoShader :: ShaderCreator
-localEchoShader = 
+localEchoShader =
     mkStaticCreator $
     proc in_ta -> do
         request     <- getValDef _transaction_requestFragment ""                    -<  in_ta
@@ -72,11 +72,11 @@ localEchoShader =
         returnA                                                                     -<  in_ta
 
 {- |
-Copies \/transaction\/request_fragment into \/transaction\/response_fragment and shows \/transaction\/request_fragment as plain text at 
+Copies \/transaction\/request_fragment into \/transaction\/response_fragment and shows \/transaction\/request_fragment as plain text at
 command line. Shows the empty string if the value cannot be found.
 -}
 remoteEchoShader :: ShaderCreator
-remoteEchoShader = 
+remoteEchoShader =
     mkStaticCreator $
     proc in_ta -> do
         request <- getValDef _transaction_requestFragment ""                        -<  in_ta
@@ -89,12 +89,12 @@ Retrieves session information from Context and stores it in the transaction (\/t
 A previously existing session subtree gets deleted.
 If no session information can be acquired from the Context, a new session id and session is generated.
 A session is identified by \/transaction\/http\/request\/cgi\/\@sessionid (sessionid-parameter of a URL-query part).
-A session state is stored in the context at global:\/session\/[sessionid]. 
-The session state is represented by the \/transaction\/session\/state subtree (attributes of \/session and subtrees 
+A session state is stored in the context at global:\/session\/[sessionid].
+The session state is represented by the \/transaction\/session\/state subtree (attributes of \/session and subtrees
 other than \/state are not stored in the Context).
 -}
 sessionReadShader :: ShaderCreator
-sessionReadShader = 
+sessionReadShader =
     mkStaticCreator $
     proc in_ta -> do
         ta      <- insEmptyTree _transaction_session                                -<  in_ta
@@ -102,25 +102,25 @@ sessionReadShader =
                    `orElse`
                    (getQualifiedUID "Sessions" 1)                                   -<  in_ta
         ta'     <- setVal _transaction_session_sessionid (show sid)                 -<< ta
-        (XmlVal s_state) 
+        (XmlVal s_state)
                 <- (getSV ("/global/session/_" ++ show sid))
-                   `orElse` 
+                   `orElse`
                    (eelem "state" >>> arr XmlVal)                                   -<< ()
-        
+
         ta''    <- insTree _transaction_session   (constA s_state)                  -<< ta'
-        
+
         "global" <-@ mkSimpleLog "Lib_Shader:sessionReadShader" ("sessionReadShader read session: " ++ show sid) l_info -<< ()
         returnA                                                                     -<  ta''
-    
+
 {- |
 Stores session information (\/transaction\/session\/state subtree) in the context (global:\/session\/[sessionid]).
 The session id is read from \/transaction\/session\/\@sessionid. If no session id or no session state can be found, the shader fails.
 -}
 sessionWriteShader :: ShaderCreator
-sessionWriteShader = 
+sessionWriteShader =
     mkStaticCreator $
     proc in_ta -> do
-        sid     <- getVal _transaction_session_sessionid                 
+        sid     <- getVal _transaction_session_sessionid
                    <!> ( "global"
 		       , "sessionWriteShader"
 		       , TAValueNotFound
@@ -136,14 +136,14 @@ sessionWriteShader =
 		       )                                                            -<  in_ta
         let stateVal    = XmlVal state
         ("/global/session/_" ++ sid) <$! stateVal                                   -<< ()
-        
+
         "global" <-@ mkSimpleLog "Lib_Shader:sessionWriteShader" ("sessionWriteShader updated session: " ++ sid) l_info -<< ()
         returnA                                                                     -<  in_ta
 
 {- |
 Provides a simple mean of authentication by clear user and password transmission. The user data is checked against a configurable
-credential repository in the \"global\" scope. 
-The database is configured via \/shader\/config\/\@userdb. If no database is defined, the default is \/userdb. 
+credential repository in the \"global\" scope.
+The database is configured via \/shader\/config\/\@userdb. If no database is defined, the default is \/userdb.
 Users are stored in subnodes of the userdb (f.e. \/userdb\/user10). The passwords are stored in a \/password subnode of the user (f.e.
 \/userdb\/user10\/password).
 The transmitted username is read from \/transaction\/session\/\@username. The transmitted password is read from \/transaction\/session\/\@userpass.
@@ -151,14 +151,14 @@ If authentication is successful, the username is stored in \/transaction\/sessio
 username is stored in \/transaction\/session\/state\/\@authfailed.
 Subshaders are invoked only if authentication is successful.
 If \/transaction\/session\/state\/\@authuser is already present when the shader is invoked, subshaders are executed without further
-credential check - this is to allow forwarding of already authenticated sessions. After all the idea of this shader is to encapsulate 
+credential check - this is to allow forwarding of already authenticated sessions. After all the idea of this shader is to encapsulate
 subshaders into a zone guaranteed to be reachable for authenticated users only.
 -}
 authShader :: ShaderCreator
 authShader =
-    mkDynamicCreator $ proc (conf, associations) -> do             
+    mkDynamicCreator $ proc (conf, associations) -> do
         let shader = proc in_ta -> do
-            userdb      <- getValDef _shader_config_userdb "/userdb"                -<  conf 
+            userdb      <- getValDef _shader_config_userdb "/userdb"                -<  conf
             authuser    <- listA $ getVal _transaction_session_state_authuser       -<  in_ta
             username    <- getVal _transaction_session_username
                            <!> ( "global"
@@ -182,14 +182,14 @@ authShader =
 			       , [("value",userdb ++ "/" ++ username ++ "/password")]
 			       )                                                    -<< in_ta
 
-            (if Prelude.null authuser 
-                then (if dbpass == userpass 
+            (if Prelude.null authuser
+                then (if dbpass == userpass
                         then setVal _transaction_session_state_authuser username >>> seqShader associations
                         else setVal _transaction_session_state_authfailed username
                         )
                 else (seqShader associations)
                 )                                                                   -<< in_ta
-        returnA                                                                             -<  shader    
+        returnA                                                                             -<  shader
 
 {- |
 Provides a mean to load data from a file into the context. The file has to contain data linewise, where each line represents a single
@@ -205,13 +205,13 @@ only their lexicographic order is utilized for field identification in the data 
 the key and it's values are used to name the entities.
 Example: to_state=\"\/global\/mynode\" _a=\"name\" _b=\"price\", the file contains rows like: P1;Banana;50. This will translate into an
 entity \/global\/mynode\/P1 with subnodes \/global\/mynode\/P1\/name (Banana) and \/global\/mynode\/P1\/price (50).
-Please note that the key field must comply to XPath location path step syntax - e.g. its values are not allowed to start with a number. 
+Please note that the key field must comply to XPath location path step syntax - e.g. its values are not allowed to start with a number.
 -}
 dataLoadShader :: ShaderCreator
 dataLoadShader =
-    mkDynamicCreator $ proc (conf, _) -> do               
+    mkDynamicCreator $ proc (conf, _) -> do
         let shader = proc in_ta -> do
-            filename    <- getVal _shader_config_file                            
+            filename    <- getVal _shader_config_file
                            <+!> ( "dataLoadShader"
 				, TAValueNotFound
 				, "No data file specified."
@@ -221,17 +221,17 @@ dataLoadShader =
                            >>>
                            arr (\xs -> if Prelude.null xs then ';' else head xs)    -<  conf
             columns     <- listA $ listValPairs (_shader_config_ "@*")              -<  conf
-            let columns'    = Prelude.map snd . Prelude.filter (\(key:_,_) -> 
+            let columns'    = Prelude.map snd . Prelude.filter (\(key:_,_) ->
                                 case key of
                                     '_'     -> True
                                     _       -> False) . sort $ columns
-            to          <- getVal _shader_config_toState                        
+            to          <- getVal _shader_config_toState
                            <+!> ( "dataLoadShader"
                                 , TAValueNotFound
                                 , "No node specified."
                                 , [("value", show _shader_config_toState)]
 				)                                                   -<  conf
-            file        <- exceptZeroA readFile         
+            file        <- exceptZeroA readFile
                            <+!> ( "dataLoadShader"
 			        , FileNotFound
 				, ("File '" ++ filename ++ "' not found.")
@@ -241,24 +241,24 @@ dataLoadShader =
             let line_words  = Prelude.map (splitAtElem delimiter) file_lines
 
             load to columns' line_words                                             -<< in_ta
-        returnA                                                                             -<  shader    
+        returnA                                                                             -<  shader
     where
         load state cols ((key:ls):xs)
-            | length ls >= length cols  = 
-                    foldr   (\(col,val) arrow -> 
-                              arrow 
-                              >>> 
+            | length ls >= length cols  =
+                    foldr   (\(col,val) arrow ->
+                              arrow
+                              >>>
                               ((state ++ "/" ++ key ++ "/" ++ col) <-! val)
-                              ) 
-                            (this) 
+                              )
+                            (this)
                             (Prelude.zip cols ls)
-                    >>> 
-                    load state cols xs          
+                    >>>
+                    load state cols xs
             | otherwise                 = load state cols xs
         load state cols (_:xs)    = load state cols xs
         load _     _    []        = this
         splitAtElem delimiter str       =
-            Prelude.map unEscapeString . lines $ 
+            Prelude.map unEscapeString . lines $
                 Prelude.map (\ch -> if ch == delimiter then '\n' else ch) str
 
 {- |
@@ -272,55 +272,55 @@ The columns are configured by config-attributes starting with an underline chara
 represents the name of the source field in the entities. The strings following the underline character do not need to represent a number -
 only their lexicographic order is utilized for field identification in the data file. The first column in the data is considered to be
 the key and it's values are equal to the names of the entities.
-Example: from_state=\"\/global\/mynode\" _a=\"name\" _b=\"price\", their exists a node \/global\/mynode\/P1 with subnodes 
-\/global\/mynode\/P1\/name (Banana) and \/global\/mynode\/P1\/price (50). This entity will be translated into a row \"P1;Banana;50\" in the 
-file. 
+Example: from_state=\"\/global\/mynode\" _a=\"name\" _b=\"price\", their exists a node \/global\/mynode\/P1 with subnodes
+\/global\/mynode\/P1\/name (Banana) and \/global\/mynode\/P1\/price (50). This entity will be translated into a row \"P1;Banana;50\" in the
+file.
 -}
 dataStoreShader :: ShaderCreator
 dataStoreShader =
-    mkDynamicCreator $ proc (conf, _) -> do              
+    mkDynamicCreator $ proc (conf, _) -> do
         let shader = proc in_ta -> do
-            filename    <- getVal _shader_config_file                           
+            filename    <- getVal _shader_config_file
                            <+!> ( "dataStoreShader"
 				, TAValueNotFound
 				, "No data file specified."
 				, [("value", show _shader_config_file)]
 				)                                                   -<  conf
-            delimiter   <- getValDef _shader_config_delim ";" 
-                           >>> 
+            delimiter   <- getValDef _shader_config_delim ";"
+                           >>>
                            arr (\xs -> if Prelude.null xs then ';' else head xs)    -<  conf
             columns     <- listA $ listValPairs (_shader_config_ "@*")              -<  conf
-            let columns'    = Prelude.map snd . Prelude.filter (\(key:_,_) -> 
+            let columns'    = Prelude.map snd . Prelude.filter (\(key:_,_) ->
                                 case key of
                                     '_'     -> True
                                     _       -> False) . sort $ columns
-            from        <- getVal _shader_config_fromState                
+            from        <- getVal _shader_config_fromState
                            <+!> ( "dataStoreShader"
                                 , TAValueNotFound
                                 , "No node specified."
-                                , [("value", show _shader_config_fromState)])  
+                                , [("value", show _shader_config_fromState)])
                                                                                     -<  conf
-            rows        <- listA $ 
+            rows        <- listA $
                 (proc _ -> do
                     name    <- listStateTrees from                              -<< ()
-                    pairs   <- listA $ 
+                    pairs   <- listA $
                         listStatePairsStr (from ++ "/" ++ name)                 -<< ()
                     let state   = fromList pairs
                     let row     = Prelude.map (\col -> if member col state then state ! col else "") columns'
                     let row''   = foldl (\row' col -> row' ++ [delimiter] ++ col) name row
                     returnA                                                     -<  row''
-                    )                                                               -<< ()   
+                    )                                                               -<< ()
 
             arrIO $ writeFile filename                                              -<< unlines rows
             returnA                                                                 -<  in_ta
-        returnA                                                                             -<  shader    
+        returnA                                                                             -<  shader
 
 {- |
 TODO
 -}
 loadXmlShader :: ShaderCreator
 loadXmlShader =
-    mkDynamicCreator $ arr $ \(conf, _) -> 
+    mkDynamicCreator $ arr $ \(conf, _) ->
     proc in_ta -> do
         file    <- getVal _shader_config_file
                     <+!> ( "loadXmlShader"
@@ -343,9 +343,9 @@ TODO
 -}
 storeXmlShader :: ShaderCreator
 storeXmlShader =
-    mkDynamicCreator $ arr $ \(conf, _) -> 
+    mkDynamicCreator $ arr $ \(conf, _) ->
     proc in_ta -> do
-        file        <- getVal _shader_config_file                           
+        file        <- getVal _shader_config_file
                         <+!> ( "loadXmlShader"
 			     , TAValueNotFound
 			     , "No file specified."
@@ -367,8 +367,8 @@ The source node is defined by \/shader\/config\/\@node. If no node is specified,
 The target node in the transaction is defined by \/shader\/config\/\@to. If no node is specified, the Shader fails.
 -}
 contextShader :: ShaderCreator
-contextShader = 
-    mkDynamicCreator $ arr $ \(conf, _) -> 
+contextShader =
+    mkDynamicCreator $ arr $ \(conf, _) ->
     proc in_ta -> do
         node        <- getVal _shader_config_node
                        <+!> ( "contextShader"
@@ -392,19 +392,19 @@ will immediately result in a stdout output on the server console when the Shader
 tracing of shader execution.
 -}
 traceShader :: ShaderCreator
-traceShader = 
-    mkDynamicCreator $ arr $ \(conf, _) ->  
+traceShader =
+    mkDynamicCreator $ arr $ \(conf, _) ->
     proc in_ta -> do
         message     <- getVal _shader_config            -<  conf
         "global"    <-@ mkPlainMsg message              -<< ()
         returnA                                         -<  in_ta
-    
+
 {- |
-Similar to traceShader, but no message can be defined. Instead, the current Transaction is send to the \"global\" 
+Similar to traceShader, but no message can be defined. Instead, the current Transaction is send to the \"global\"
 channel as a plain message.
 -}
 traceTAShader :: ShaderCreator
-traceTAShader = 
+traceTAShader =
     mkStaticCreator $
     proc in_ta -> do
         message     <- xshow (constA in_ta)             -<< ()
@@ -416,13 +416,13 @@ Adds a new message channel when the Shader is executed (typically used in init-e
 The channel name is defined by \/shader\/config\/\@channel. If no name is provided, the Shader fails.
 Please note that this operation is local to the current system entity - when executed in the server's init-sequence,
 the new channel will be visible throughout the whole system. When executed in a handler's init-sequence, the
-new channel will be local to that handler. 
+new channel will be local to that handler.
 -}
 registerChannel :: ShaderCreator
 registerChannel =
-    mkDynamicCreator $ arr $ \(conf, _) -> 
+    mkDynamicCreator $ arr $ \(conf, _) ->
     proc through -> do
-        reg_name    <- getVal _shader_config_channel   
+        reg_name    <- getVal _shader_config_channel
                        <+!> ( "registerChannel"
 			    , TAValueNotFound
 			    , "No channel specified."
@@ -436,11 +436,11 @@ Adds a new state scope when the Shader is executed (typically used in init-eleme
 The scope name is defined by \/shader\/config\/\@scope. If no name is provided, the Shader fails.
 Please note that this operation is local to the current system entity - when executed in the server's init-sequence,
 the new scope will be visible throughout the whole system. When executed in a handler's init-sequence, the
-new channel will be local to that handler. 
+new channel will be local to that handler.
 -}
 registerScope :: ShaderCreator
 registerScope =
-    mkDynamicCreator $ arr $ \(conf, _) ->   
+    mkDynamicCreator $ arr $ \(conf, _) ->
     proc through -> do
         reg_name    <- getVal _shader_config_scope
                        <+!> ( "registerScope"
@@ -450,20 +450,20 @@ registerScope =
 			    )                                   -<  conf
         addScope reg_name                                       -<< ()
         returnA                                                 -<  through
-        
+
 {- |
 Maps a set of state values and Transaction values to new locations. Transaction values can only be mapped to
 Transaction locations, state values can only be mapped to a location in the same scope.
 If \/shader\/config\/\@move is set to \"yes\", the original value gets deleted. Defaults to \"no\".
 Each Transaction mapping is defined by a \"tamap\"-element in the config, where the \"from\"-attribute defines the source
 and the \"to\"-attribute defines the target.
-Each state mapping is defined by a \"statemap\"-element in the config, where the \"scope\"-attribute defines the scope, 
-the \"from\"-attribute defines the source and the \"to\"-attribute defines the target. Remember, state mappings are 
+Each state mapping is defined by a \"statemap\"-element in the config, where the \"scope\"-attribute defines the scope,
+the \"from\"-attribute defines the source and the \"to\"-attribute defines the target. Remember, state mappings are
 limited to a single scope, the \"scope\"-attribute belongs to both the \"from\"- and the \"to\"-attribute.
 -}
 mappingShader :: ShaderCreator
-mappingShader = 
-    mkDynamicCreator $ arr $ \(conf, _) -> 
+mappingShader =
+    mkDynamicCreator $ arr $ \(conf, _) ->
     proc in_ta -> do
         move        <- getValDef _shader_config_move "no"                           -< conf
         ta_maps     <- listA $ (proc xml -> do
@@ -478,48 +478,48 @@ mappingShader =
                             to  <- getVal _statemap_to                      -<  xml'
                             returnA                                         -<  (from, to)
                             )                                                       -<  conf
-        ta' <- foldl 
-                (\_ (from,to) -> 
+        ta' <- foldl
+                (\_ (from,to) ->
                     proc in_ta' -> do
                         val     <- getVal (jp from)                         -<  in_ta'
                         ta'     <- (if move == "yes"
-                                        then delVal (jp from)     
+                                        then delVal (jp from)
                                         else this
                                         )                                   -<  in_ta'
                         setVal (jp to) val                                  -<< ta'
-                    ) 
-                this 
+                    )
+                this
                 ta_maps                                                             -<< in_ta
-        foldl 
-            (\_ (from,to) -> 
+        foldl
+            (\_ (from,to) ->
                 proc in_ta' -> do
                     val <- getSVS from                                      -<< ()
                     (if move == "yes"
-                        then delStateTree from     
+                        then delStateTree from
                         else this
                         )                                                   -<< ()
                     to <-! val                                              -<< in_ta'
-                ) 
-            this 
+                )
+            this
             state_maps                                                              -<< ta'
 
 {- |
 Executes a Transaction\/state-mapping before the sub-shaders are executed. Afterwards the mappings are reverted,
-the new values of the mappings are transfered back to the original locations. 
-If \/shader\/config\/\@move is set to \"yes\", the mapped values will be deleted at the end (defaults to \"yes\"). This shall regenerate 
-the original structure before the whole operation, implying that this operation transparently executes a shader with an arbitrary 
-interface in the presence of a different, arbitrary state\/Transaction structure. However, if intermediate nodes are created due to 
-the mapping, these are not deleted after the operation. E.g. if a mapping maps to \/transaction\/my\/node and \"my\" didn't exist before the 
+the new values of the mappings are transfered back to the original locations.
+If \/shader\/config\/\@move is set to \"yes\", the mapped values will be deleted at the end (defaults to \"yes\"). This shall regenerate
+the original structure before the whole operation, implying that this operation transparently executes a shader with an arbitrary
+interface in the presence of a different, arbitrary state\/Transaction structure. However, if intermediate nodes are created due to
+the mapping, these are not deleted after the operation. E.g. if a mapping maps to \/transaction\/my\/node and \"my\" didn't exist before the
 operation, it is created during the mapping. Afterwards, the \/transaction\/my\/node will get deleted, but \/transaction\/my remains.
 Each Transaction mapping is defined by a \"tamap\"-element in the config, where the \"from\"-attribute defines the source
 and the \"to\"-attribute defines the target.
-Each state mapping is defined by a \"statemap\"-element in the config, where the \"scope\"-attribute defines the scope, 
-the \"from\"-attribute defines the source and the \"to\"-attribute defines the target. Remember, state mappings are 
+Each state mapping is defined by a \"statemap\"-element in the config, where the \"scope\"-attribute defines the scope,
+the \"from\"-attribute defines the source and the \"to\"-attribute defines the target. Remember, state mappings are
 limited to a single scope, the \"scope\"-attribute belongs to both the \"from\"- and the \"to\"-attribute.
 -}
 mappingWrapper :: ShaderCreator
 mappingWrapper =
-    mkDynamicCreator $ arr $ \(conf, associations) -> 
+    mkDynamicCreator $ arr $ \(conf, associations) ->
     proc in_ta -> do
         conf'   <-  setVal _shader_config_move "yes"                                        -<  conf
         conf''  <-  invert conf'                                                            -<< ()
@@ -527,9 +527,9 @@ mappingWrapper =
         wrap    <-  mappingShader                                                           -< conf'
         unwrap  <-  mappingShader                                                           -< conf''
         wrap >>> wrapped >>> unwrap                                                         -<< in_ta
-    where 
+    where
         invert conf' = proc _ -> do
-            new_ta_maps     <- listA $ 
+            new_ta_maps     <- listA $
                                 (proc xml -> do
                                     xml'    <- getTree _shader_config_tamap         -<  xml
                                     from    <- getVal _tamap_from                   -<  xml'
@@ -539,7 +539,7 @@ mappingWrapper =
                                                     += sattr "to" from
                                     returnA                                         -<  result
                                     )                                                       -<  conf'
-            new_state_maps  <- listA $ 
+            new_state_maps  <- listA $
                                 (proc xml -> do
                                     xml'    <- getTree _shader_config_statemap      -<  xml
                                     from    <- getVal _statemap_from                -<  xml'
@@ -555,23 +555,23 @@ mappingWrapper =
               >>>
               foldl (\arrow tree -> arrow >>> addTree _shader_config tree) this (new_ta_maps ++ new_state_maps)
 	      )                                                                           -<< conf'
-                
+
 {- |
-Registers an arbitrary Shader in the ShaderCreator-Repository. During the load-sequence of the server, ServerCreators are loaded 
+Registers an arbitrary Shader in the ShaderCreator-Repository. During the load-sequence of the server, ServerCreators are loaded
 into the repository with the given names. These creators have to exist completely in code, it is not possible to make a specific
-combination of creators known with a name. However, the alias-Shader allows registrating an arbitrary Shader combination 
+combination of creators known with a name. However, the alias-Shader allows registrating an arbitrary Shader combination
 in the Repository to eliminate unnecessary redundancy in the configuration file.
 The registration name of the new Shader is defined by \/shader\/config\/\@alias with no default.
 The Shader to register is the sequence of subshaders of the alias-Shader.
 Please note that this operation is local to the current system entity - when executed in the server's init-sequence,
 the new alias will be visible throughout the whole system. When executed in a handler's init-sequence, the
-new alias will be local to that handler. 
+new alias will be local to that handler.
 -}
 aliasShader :: ShaderCreator
 aliasShader =
-    mkDynamicCreator $ arr $ \(conf, associations) -> 
+    mkDynamicCreator $ arr $ \(conf, associations) ->
     proc through -> do
-        alias   <- getVal _shader_config_alias            
+        alias   <- getVal _shader_config_alias
                    <+!> ( "aliasShader"
                         , TAValueNotFound
                         , "No alias name."
@@ -588,7 +588,7 @@ node with id \"expr\"). The Shader fails if the Expression subshader is not pres
 -}
 setValShader :: ShaderCreator
 setValShader =
-    mkDynamicCreator $ arr $ \(conf, associations) -> 
+    mkDynamicCreator $ arr $ \(conf, associations) ->
     proc in_ta -> do
         node    <- getVal _shader_config_node
                    <+!> ( "setValShader"
@@ -596,21 +596,21 @@ setValShader =
 			, "No target node specified."
 			, [("value", show _shader_config_node)]
 			)                                                   -<  conf
-        let exprShader = lookupShader "expr" zeroArrow associations 
+        let exprShader = lookupShader "expr" zeroArrow associations
         value   <- exprShader >>> getVal _value                             -<< in_ta
         ta      <- setVal (jp node) value                                   -<< in_ta
         returnA                                                             -<  ta
 
 {- |
-Sets a value in a state scope. The node to be set is identified by \/shader\/config\/\@node. The Shader fails if the node-attribute is 
-missing or the respective node qualifier is malformed. The value to insert is computed by an Expression subshader (a shader child node 
+Sets a value in a state scope. The node to be set is identified by \/shader\/config\/\@node. The Shader fails if the node-attribute is
+missing or the respective node qualifier is malformed. The value to insert is computed by an Expression subshader (a shader child node
 with id \"expr\"). The Shader fails if the expression subshader is not present or fails.
 -}
 setStateShader :: ShaderCreator
 setStateShader =
-    mkDynamicCreator $ arr $ \(conf, associations) -> 
+    mkDynamicCreator $ arr $ \(conf, associations) ->
     proc in_ta -> do
-        node    <- getVal _shader_config_node                      
+        node    <- getVal _shader_config_node
                    <+!> ( "setStateShader"
                         , TAValueNotFound
 			, "No target node specified."
@@ -619,8 +619,8 @@ setStateShader =
         let exprShader = lookupShader "expr" zeroArrow associations
         value   <- exprShader >>> getVal _value                             -<< in_ta
         node <-! value                                                      -<< ()
-        returnA                                                             -<  in_ta   
-        
+        returnA                                                             -<  in_ta
+
 
 {- |
 Removes empty lists from a list of lists.

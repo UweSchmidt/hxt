@@ -11,7 +11,7 @@
    Version    : $Id: Messaging.hs, v1.0 2006/10/28 00:00:00 janus Exp $
 
    Janus Messaging
-   
+
    Provides the data types for Janus messages and message filters as well as construction,
    access and filter functions.
 
@@ -88,17 +88,17 @@ type Messages 		= [Message]
 type MessageFilter s	= XmlTransform s
 type MessageArrow s	= XmlConstSource s
 
-data MessageType 
+data MessageType
 	= ControlMsg
-	| ErrorMsg 
+	| ErrorMsg
 	| EventMsg
-	| LogMsg 
+	| LogMsg
 	| PlainMsg
-	| WarningMsg 
+	| WarningMsg
 	deriving (Show, Eq, Read)
 
 -- message codes
-data MessageCode 
+data MessageCode
 	= FileNotFound
 	| FormatError
 	| GenericMessage
@@ -140,15 +140,15 @@ l_mandatory = 0
 Creates a new message Arrow, providing all fields.
 -}
 createMsg :: MessageType -> MessageSource -> MessageCode -> MessageValue -> MessageLevel -> MessageTime -> XmlSource s a
-createMsg typ src code val level _ = 
+createMsg typ src code val level _ =
 	proc _ -> do
 		ts	<- getCurrentTS 	-< ()
-		(eelem "message" 
-			+= sattr "type" (show typ)				
-			+= sattr "timestamp" (show ts)				
+		(eelem "message"
+			+= sattr "type" (show typ)
+			+= sattr "timestamp" (show ts)
 			+= sattr "source" src
-			+= sattr "level" (show level)				
-			+= sattr "code" (show code)				
+			+= sattr "level" (show level)
+			+= sattr "code" (show code)
 			+= sattr "value" val
 			+= eelem "state"
 			)			-<< ()
@@ -157,15 +157,15 @@ createMsg typ src code val level _ =
 Creates a new control message, only providing the message state and its code.
 -}
 mkControlMsg :: [(String, String)] -> MessageCode -> XmlSource s a
-mkControlMsg state code = 
+mkControlMsg state code =
 	proc _ -> do
 		ts <- arrIO0 $ getClockTime -< ()
 		msg <- createMsg ControlMsg "" code "" l_control ts -<< ()
 		addState state -< msg
 	where
 		addState             [] = this
-		addState ((key,val):xs) = addMsgState key val 
-					  >>> 
+		addState ((key,val):xs) = addMsgState key val
+					  >>>
 					  addState xs
 
 {- |
@@ -173,7 +173,7 @@ Creates a new plain message to get displayed to a human user without annotations
 level and is therefore shown in any case.
 -}
 mkPlainMsg :: MessageValue -> XmlSource s a
-mkPlainMsg val = 
+mkPlainMsg val =
 	proc _ -> do
 		ts <- arrIO0 $ getClockTime -< ()
 		createMsg PlainMsg "" GenericMessage val l_mandatory ts -<< ()
@@ -182,7 +182,7 @@ mkPlainMsg val =
 Creates a new simplified log message, adding the message source and level to a plain message.
 -}
 mkSimpleLog :: MessageSource -> MessageValue -> MessageLevel -> XmlSource s a
-mkSimpleLog src val level = 
+mkSimpleLog src val level =
 	proc _ -> do
 		ts <- arrIO0 $ getClockTime -< ()
 		createMsg LogMsg src GenericMessage val level ts -<< ()
@@ -191,7 +191,7 @@ mkSimpleLog src val level =
 Creates a new log message, adding the message code to a simple log message.
 -}
 mkLog :: MessageSource -> MessageCode -> MessageValue -> MessageLevel -> XmlSource s a
-mkLog src code val level = 
+mkLog src code val level =
 	proc _ -> do
 		ts <- arrIO0 $ getClockTime -< ()
 		createMsg LogMsg src code val level ts -<< ()
@@ -201,23 +201,23 @@ Creates a new error message. The message is created on the error level. Beside t
 state have to be defined (translating into readability by both human and automatic processors).
 -}
 mkErr :: MessageSource -> MessageCode -> MessageValue -> [(String, String)] -> XmlSource s a
-mkErr src code val state = 
+mkErr src code val state =
 	proc _ -> do
 		ts <- arrIO0 $ getClockTime -< ()
 		msg <- createMsg ErrorMsg src code val l_error ts -<< ()
 		addState state -< msg
 	where
 		addState             [] = this
-		addState ((key,val'):xs) = addMsgState key val' 
-					   >>> 
+		addState ((key,val'):xs) = addMsgState key val'
+					   >>>
 					   addState xs
 
 {- |
-Creates a new warning message. The message is created on the warning level. Beside the value the source and code 
+Creates a new warning message. The message is created on the warning level. Beside the value the source and code
 have to be defined.
 -}
 mkWarn :: MessageSource -> MessageCode -> MessageValue -> XmlSource s a
-mkWarn src code val = 
+mkWarn src code val =
 	proc _ -> do
 		ts <- arrIO0 $ getClockTime -< ()
 		createMsg WarningMsg src code val l_warn ts -<< ()
@@ -296,37 +296,37 @@ showMsg =
 An Arrow adding a name-value pair to the state of a message.
 -}
 addMsgState :: String -> String -> XmlTransform s
-addMsgState key val = 
+addMsgState key val =
 	setVal (_message_state_ key) val
 
 {- |
 An Arrow removing a name-value pair from the state of a message by means of the name.
 -}
 delMsgState :: String -> XmlTransform s
-delMsgState key = 
+delMsgState key =
 	delVal (_message_state_ key)
 
 {- |
 An Arrow deleting the whole state of a message.
 -}
 clearMsgState :: XmlTransform s
-clearMsgState = 
+clearMsgState =
 	delTree _message_state
-	>>> 
+	>>>
 	insEmptyTree _message_state
 
 {- |
 An Arrow delivering the value of a name-value pair in a message's state.
 -}
 getMsgState :: String -> XmlAccess s String
-getMsgState key = 
+getMsgState key =
 	getVal (_message_state_ key)
 
 {- |
 An Arrow delivering the names of name-value pairs in a message's state. This Arrow is non-deterministic.
 -}
 listMsgStates :: XmlAccess s String
-listMsgStates = 
+listMsgStates =
 	listVals (_message_state_ "*")
 
 
@@ -334,7 +334,7 @@ listMsgStates =
 
 -- message list transform
 {- |
-An Arrow delivering a message filter based on an access function, a binary comparison function and a comparison 
+An Arrow delivering a message filter based on an access function, a binary comparison function and a comparison
 value. Messages may pass the filter if they satisfy the comparison function.
 -}
 getMsgFilter :: XmlAccess s a -> (a -> a -> Bool) -> a -> MessageFilter s
@@ -349,21 +349,21 @@ getMsgFilter access comp value =
 An Arrow delivering a message filter to let only messages of a given type pass.
 -}
 getMsgTypeFilter :: MessageType -> MessageFilter s
-getMsgTypeFilter typ = 
+getMsgTypeFilter typ =
 	getMsgFilter getMsgType (==) typ
 
 {- |
 An Arrow delivering a message filter to let only messages less or equal to a given level pass.
 -}
 getMsgLevelFilter :: MessageLevel -> MessageFilter s
-getMsgLevelFilter level = 
+getMsgLevelFilter level =
 	getMsgFilter getMsgLevel (<=) level
 
 {- |
 An Arrow delivering a message filter to let only messages of a given message code pass.
 -}
 getMsgCodeFilter :: MessageCode -> MessageFilter s
-getMsgCodeFilter code = 
+getMsgCodeFilter code =
 	getMsgFilter getMsgCode (==) code
 
 {- |
@@ -371,5 +371,5 @@ An Arrow delivering a message filter to let only messages with a given name-valu
 state pass.
 -}
 getMsgStateFilter :: String -> String -> MessageFilter s
-getMsgStateFilter key val = 
+getMsgStateFilter key val =
 	getMsgFilter (getMsgState key) (==) val

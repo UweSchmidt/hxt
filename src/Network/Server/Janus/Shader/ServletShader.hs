@@ -11,7 +11,7 @@
    Version    : $Id: ServletShader.hs, v1.1 2007/03/26 00:00:00 janus Exp $
 
    Janus Java style Servlet wrapper
-   
+
    A module to provide a Java Servlet like interface of programming, which is
    mapped onto Janus Shaders.
 
@@ -36,7 +36,7 @@ where
 
 import Network.URI
 import Text.XML.HXT.Arrow
-        
+
 import Network.Server.Janus.Core
 import Network.Server.Janus.HTMLBuilder
 import Network.Server.Janus.XmlHelper
@@ -72,7 +72,7 @@ delivering a servlet response.
 -}
 hostServlet :: (HttpServletContext -> HttpServletRequest -> HttpServletResponse -> JanusArrow Context a HttpServletResponse) -> ShaderCreator
 hostServlet servlet =
-    mkDynamicCreator $ arr $ \(conf, _) -> 
+    mkDynamicCreator $ arr $ \(conf, _) ->
     proc in_ta -> do
         shaderid    <- getVal _shader_config_id                                     -<  conf
         attributes  <- listA $ listValPairs _shader_config                          -<  conf
@@ -80,29 +80,29 @@ hostServlet servlet =
         sessionid   <- getVal _transaction_session_sessionid                        -<  in_ta
         s_state     <- getTree _transaction_session_state                           -<  in_ta
         authuser    <- getValDef _transaction_session_state_authuser ""             -<  in_ta
-        url'        <- maybeA $ 
+        url'        <- maybeA $
                         getVal _transaction_http_request_url
-                        >>> 
-                        (arr parseURIReference)                                     -<  in_ta   
+                        >>>
+                        (arr parseURIReference)                                     -<  in_ta
         cgi         <- listA $ listValPairs (_transaction_http_request_cgi_ "@*")   -<  in_ta
         remote_ip   <- getVal _transaction_tcp_remoteIp                             -<  in_ta
         remote_port <- getVal _transaction_tcp_remotePort                           -<  in_ta
 
-        let context = HSCON { 
+        let context = HSCON {
                           servletid = shaderid
                         , attrs = attributes
                         , state = state'
                       }
-        let request = HSREQ { 
+        let request = HSREQ {
                           session = (read sessionid)
                         , session_state = s_state
                         , url = url'
                         , params = cgi
                         , user = authuser
                         , client_ip = remote_ip
-                        , client_port = remote_port 
+                        , client_port = remote_port
                       }
-        let response = HSRES { 
+        let response = HSRES {
                            header = []
                         , state_chg = []
                         , new_s_state = s_state
@@ -110,19 +110,19 @@ hostServlet servlet =
                         , body = ""
                        }
         let responseArrow = servlet context request response
-        
+
         response'   <- responseArrow                                                 -<< undefined
-        
+
         to_state (state_chg response') shaderid                                      -<< ()
         ( delTree _transaction_session_state
-          >>> 
+          >>>
           insTree _transaction_session (constA $ new_s_state response')
           >>>
-          setVal _transaction_http_response_body (body response')       
+          setVal _transaction_http_response_body (body response')
           >>>
           setVal _transaction_http_response_status (show $ status response') )      -<< in_ta
     where
-        to_state ((name, val):xs) sid   = 
+        to_state ((name, val):xs) sid   =
                             (("/local/servlets/" ++ sid ++ "/" ++ name) <-! val)
                             >>>
                             (to_state xs sid)
@@ -134,8 +134,8 @@ the state by means of the response value. The returned body simply contains the 
 servlet request.
 -}
 reflectServlet :: ShaderCreator
-reflectServlet = 
-    hostServlet 
+reflectServlet =
+    hostServlet
         (\context request response ->
             proc _ -> do
                 htmltree    <- createbody (url request) (state context)     -<  undefined
@@ -144,11 +144,11 @@ reflectServlet =
                 returnA                                                     -<  result
             )
     where
-        createbody url' elements =   
+        createbody url' elements =
             html
-                +>> [  headers 
+                +>> [  headers
                         += title "Reflection Servlet"
-                     , htmlbody 
+                     , htmlbody
                         += heading 1 ("Request URL is ... " ++ show url')
                         += heading 3 (show elements)
                     ]

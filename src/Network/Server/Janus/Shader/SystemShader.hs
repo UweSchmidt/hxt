@@ -11,8 +11,8 @@
    Version    : $Id: SystemShader.hs, v1.1 2007/03/26 00:00:00 janus Exp $
 
    Janus System Shader Definitions
-   
-   Definition of the Janus system Shaders, which provide functionality to dynamically 
+
+   Definition of the Janus system Shaders, which provide functionality to dynamically
    configure the server state and.get loaded statically by the server startup facility.
 
 -}
@@ -43,19 +43,19 @@ import Network.Server.Janus.XmlHelper
 import Network.Server.Janus.JanusPaths
 
 {- |
-TODO 
+TODO
 -}
 loadShaderCreator :: ShaderCreator
 loadShaderCreator =
-    mkDynamicCreator $ proc (conf, _) -> do 
+    mkDynamicCreator $ proc (conf, _) -> do
         ref         <- getVal _shader_config_reference                      -<  conf
         obj         <- getVal _shader_config_object                         -<  conf
         file        <- getVal _shader_config_module                         -<  conf
-        "global"    <-@ mkPlainMsg $ "loading shader creator '" ++ 
-                            ref ++ "' (object '" ++ obj ++ 
+        "global"    <-@ mkPlainMsg $ "loading shader creator '" ++
+                            ref ++ "' (object '" ++ obj ++
                             "' in module '" ++ file ++ "')... "             -<< ()
         sRep        <- getShaderCreators                                    -<  ()
-        sRep'       <- 
+        sRep'       <-
             (loadComponent ref file obj
                 <+!> ("SystemShader.hs:loadShaderCreator", GenericMessage, "Failed to load object " ++ ref ++ ".", [("object", ref)])
                 )                                                           -<< sRep
@@ -64,80 +64,80 @@ loadShaderCreator =
         returnA                                                             -<  this
 
 {- |
-TODO 
+TODO
 -}
 loadHandlerCreator :: ShaderCreator
 loadHandlerCreator =
-    mkDynamicCreator $ proc (conf, _) -> do 
+    mkDynamicCreator $ proc (conf, _) -> do
         ref     <- getVal _shader_config_reference                          -<  conf
         obj     <- getVal _shader_config_object                             -<  conf
         file    <- getVal _shader_config_module                             -<  conf
-        "global"    <-@ mkPlainMsg $ "loading handler creator '" ++ 
-                            ref ++ "' (object '" ++ obj ++ 
+        "global"    <-@ mkPlainMsg $ "loading handler creator '" ++
+                            ref ++ "' (object '" ++ obj ++
                             "' in module '" ++ file ++ "')... "             -<< ()
         hRep    <- getHandlerCreators                                       -<  ()
-        hRep'   <- 
+        hRep'   <-
             (loadComponent ref file obj
                 <+!> ("SystemShader.hs:loadHandlerCreator", GenericMessage, "Failed to load object " ++ ref ++ ".", [("object", ref)])
                 )                                                           -<< hRep
         swapHandlerCreators                                                 -<  hRep'
         "global"    <-@ mkPlainMsg $ "done\n"                               -<< ()
         returnA                                                             -<  this
-        
+
 {- |
-TODO 
+TODO
 -}
 loadHandler :: ShaderCreator
 loadHandler =
     proc conf -> do
         hConf       <- getTree _shader_config_handler_config            -<  conf
         hId         <- getVal _config_id                                -<  hConf
-        "global"    <-@ mkPlainMsg $ "constructing handler '" ++ 
+        "global"    <-@ mkPlainMsg $ "constructing handler '" ++
                             hId ++ "'... "                              -<< ()
         hType       <- getVal _config_type                              -<  hConf
-        let shader = createThread "/global/threads" hId (proc in_ta -> do 
-            "global"    <-@ mkPlainMsg $ "starting handler '" ++ 
+        let shader = createThread "/global/threads" hId (proc in_ta -> do
+            "global"    <-@ mkPlainMsg $ "starting handler '" ++
                             hId ++ "'...\n"                         -<  ()
             swapChannel "local"                                     -<  ()
             swapScope "local"                                       -<  ()
             context     <- getContext                               -<  ()
-            ("/global/consoles/handlers/" ++ hId) 
+            ("/global/consoles/handlers/" ++ hId)
                 <$! (ContextVal context)                            -<< ()
             let creator = mkDynamicCreator $ proc (_, associations) -> do
                 let shader' = head $ shaderList associations
                 hCreator    <- getHandlerCreator hType          -<< ()
                 handler     <- hCreator                         -<< (hConf, shader')
-                handler                                         -<< () 
-                returnA                                         -<  this            
+                handler                                         -<< ()
+                returnA                                         -<  this
             creator                                                 -<< conf
             returnA                                                 -<  in_ta
-            )                                                           
-        "global"    <-@ mkPlainMsg $ "done\n"                           -<< ()      
+            )
+        "global"    <-@ mkPlainMsg $ "done\n"                           -<< ()
         returnA                                                         -<  shader
-        
+
 {- |
-TODO 
+TODO
 -}
 loadStateHandler :: ShaderCreator
 loadStateHandler =
-    mkDynamicCreator $ arr $ \(conf, _) -> 
+    mkDynamicCreator $ arr $ \(conf, _) ->
     proc in_ta -> do
         ref     <- getVal _shader_config_reference                  -<  conf
         obj     <- getVal _shader_config_object                     -<  conf
         file    <- getVal _shader_config_module                     -<  conf
         sRep    <- getShaderCreators                                -<  ()
-        sRep'   <- 
+        sRep'   <-
             (loadComponent ref file obj
                 <+!> ("SystemShader.hs:loadStateHandler", GenericMessage, "Failed to load object " ++ ref ++ ".", [("object", ref)])
                 )                                                   -<< sRep
         swapShaderCreators                                          -<  sRep'
         returnA                                                     -<  in_ta
-        
-        
+
+
 {-
 ref     <- newRepositoryA classStr                                  -<  ()
-mod     <- listA 
-            (constL configs 
+mod     <- listA
+            (constL configs
              >>>
               (proc config -> do
                 ref     <- getAttrValue "reference"     -<  config
@@ -149,14 +149,14 @@ mod     <- listA
 -- arrIO $ putStrLn -< "Loading " ++ objname ++ " in module " ++ modname ++ " (" ++ modname' ++ ")"
 add tupels                                                          -<< rep
     where
-        add ((ref, name, modstr):xs) = 
+        add ((ref, name, modstr):xs) =
             forwardError "global" (add xs)
-            >>> 
+            >>>
             ("global" <-@ mkPlainMsg $ "Loading object '" ++ ref ++ "' (value '" ++ name ++ "' in module '" ++ modstr ++ "')")
             >>>
             (loadComponent ref modstr name
-                <+!> ("Server.hs:buildRepository", GenericMessage, "Failed to load object " ++ ref ++ ".", [("object", ref)])  
-                )                                                          
+                <+!> ("Server.hs:buildRepository", GenericMessage, "Failed to load object " ++ ref ++ ".", [("object", ref)])
+                )
         add [] = returnA
 -}
 

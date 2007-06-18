@@ -11,7 +11,7 @@
    Version    : $Id: TCPHandler.hs, v1.2 2007/04/29 00:00:00 janus Exp $
 
    Janus TCP Binding
-   
+
    A Handler to accept TCP connections.
 
 -}
@@ -41,7 +41,7 @@ import Network.URI
 import System.IO
 
 import Text.XML.HXT.Arrow
-        
+
 import Network.Server.Janus.Messaging
 import Network.Server.Janus.Core as Shader
 import Network.Server.Janus.Transaction as TA
@@ -73,24 +73,24 @@ tcpHandler' port shader =
     proc _ -> do
         lock    <- arrIO $ newMVar -<  ()
         sock    <- arrIO $ listenOn                                     -<  (PortNumber (fromInteger port))
-        acceptRequest sock lock                                         -<< ()                
+        acceptRequest sock lock                                         -<< ()
     where
         acceptRequest sock lock =
             proc _ -> do
                 (hnd, hname, pnum) <- arrIO $ Network.accept                    -<  sock
-                processA 
-                    (finallyA 
-                        (processHandle (hname, pnum) hnd shader lock) 
+                processA
+                    (finallyA
+                        (processHandle (hname, pnum) hnd shader lock)
                         (arrIO0 $ hClose hnd)
-                        )                                                       -<< ()                
-                acceptRequest sock lock                                         -<  ()     
+                        )                                                       -<< ()
+                acceptRequest sock lock                                         -<  ()
                 -- sClose sock
         processHandle (hname, pnum) hnd shader' lock =
             proc _ -> do
                 -- exceptZeroA_ (hSetBuffering handle LineBuffering)            -<< ()
                 req     <- arrIO $ getRequest                                   -<  hnd
                 processRequest (hname, pnum) hnd shader' lock                   -<  req
-        processRequest (hname, pnum) hnd shader' lock = 
+        processRequest (hname, pnum) hnd shader' lock =
             proc (req, body) -> do
                 -- "global" <-@ mkPlainMsg $ "processing request..."            -<< ()
                 -- addr        <- arrIO $ inet_ntoa                                -<  haddr
@@ -102,9 +102,9 @@ tcpHandler' port shader =
 			   >>>
                            setVal _transaction_tcp_remotePort (show pnum)       -<< ta
                 ts_start    <- getCurrentTS                                     -<  ()
-                ta3         <- setTAStart ts_start                              -<< ta2 
+                ta3         <- setTAStart ts_start                              -<< ta2
                 let body' = escapeURIString (\ch -> ch /= '\r') body
-                ta4         <- setVal _transaction_requestFragment 
+                ta4         <- setVal _transaction_requestFragment
                                       (concat $ (concat req):[body'])           -<< ta3
                 ta_str      <- xshow (constA ta4)                               -<< ta4
 
@@ -115,9 +115,9 @@ tcpHandler' port shader =
                 ta_str'     <- xshow (constA ta6)                               -<< ()
 
                 "global"    <-@ mkSimpleLog "TCPHandler:newHandler" ("final transaction is: " ++ ta_str') l_debug -<< ()
-                arrIO $ hPutStr hnd                                             -<< response 
+                arrIO $ hPutStr hnd                                             -<< response
 
-                
+
                 (single $ proc in_ta -> do
                     uid <- getVal _transaction_http_response_body_hdlop         -<  in_ta
                     (HandleVal hIn) <- getSV ("/local/files/_" ++ uid)          -<< ()
@@ -131,19 +131,19 @@ tcpHandler' port shader =
 
                 ts_end      <- getCurrentTS                                     -<  ()
                 ta7         <- setTAEnd ts_end                                  -<< ta6
-                runtime     <- getTARunTime                                     -<  ta7 
+                runtime     <- getTARunTime                                     -<  ta7
 
-                "global"    <-@ mkPlainMsg $ "OK. Took " ++ 
+                "global"    <-@ mkPlainMsg $ "OK. Took " ++
                                     (show runtime) ++ " ms\n"                   -<< ()
                 returnA                                                         -<  ()
         processRequest _ _ _ _ = zeroArrow
-        handleCopy hIn hOut blocksize = 
-            do 
-                content <- BStr.hGet hIn blocksize 
+        handleCopy hIn hOut blocksize =
+            do
+                content <- BStr.hGet hIn blocksize
                 BStr.hPut hOut content
                 eof <- hIsEOF hIn
                 if not eof
-                   then handleCopy hIn hOut blocksize 
+                   then handleCopy hIn hOut blocksize
                    else return ()
 
 {- not yet used
@@ -155,14 +155,14 @@ the second argument defines the Handler's Shader pipeline.
 newHandler :: Integer -> Shader -> Handler
 newHandler port shader =
     proc _ -> do
-        sock <- exceptZeroA_ 
+        sock <- exceptZeroA_
                     (do
                         proto   <- getProtocolNumber "tcp"
                         sock    <- socket AF_INET Stream proto
                         return sock)                                                -<< ()
-        finallyA 
+        finallyA
             (proc _ -> do
-                sock' <- exceptZeroA_ 
+                sock' <- exceptZeroA_
                     (do
                         proto <- getProtocolNumber "tcp"
                         sock'' <- socket AF_INET Stream proto
@@ -172,16 +172,16 @@ newHandler port shader =
                         return sock''
                         )                                               -<< ()
                 acceptRequest sock' shader                              -<< ()
-                ) 
+                )
             (arrIO0 $ sClose sock)                                                  -<< ()
         where
-            acceptRequest sock shader' = 
+            acceptRequest sock shader' =
                 proc _ -> do
                     (newsock, sockinfo)     <- exceptZeroA_ (Network.Socket.accept sock)           -<< ()
                     handle  <- exceptZeroA_ (socketToHandle newsock ReadWriteMode)  -<< ()
-                    processA 
-                        (finallyA 
-                            (processRequest sockinfo handle shader') 
+                    processA
+                        (finallyA
+                            (processRequest sockinfo handle shader')
                             (arrIO $ \t -> do { hClose handle; return t })
                             )                                                       -<< ()
                     acceptRequest sock shader'                                      -<< ()
@@ -190,7 +190,7 @@ newHandler port shader =
                     exceptZeroA_ (hSetBuffering handle LineBuffering)               -<< ()
                     req     <- arrIO $ getRequest                                   -<  handle
                     process sockinfo handle shader'                                 -<  req
-            process (SockAddrInet port' haddr) handle shader' = 
+            process (SockAddrInet port' haddr) handle shader' =
                 proc (req, body) -> do
                     -- "global" <-@ mkPlainMsg $ "processing request..."            -<< ()
                     addr        <- arrIO $ inet_ntoa                                -<  haddr
@@ -201,47 +201,47 @@ newHandler port shader =
 			       >>>
                                setVal _transaction_tcp_remotePort (show port')      -<< ta
                     ts_start    <- getCurrentTS                                     -<  ()
-                    ta3         <- setTAStart ts_start                              -<< ta2 
+                    ta3         <- setTAStart ts_start                              -<< ta2
                     let body' = escapeURIString (\ch -> ch /= '\r') body
-                    ta4         <- setVal _transaction_requestFragment 
+                    ta4         <- setVal _transaction_requestFragment
                                           (concat $ (concat req):[body'])           -<< ta3
                     ta_str      <- xshow (constA ta4)                               -<< ta4
-                    
+
                     "global"    <-@ mkSimpleLog "TCPHandler:newHandler" ("initial transaction is: " ++ ta_str) l_debug -<< ()
                     ta5         <- TA.setTAState Processing                         -<  ta4
                     ta6         <- shader'                                          -<  ta5
                     response    <- getValDef _transaction_responseFragment ""       -<  ta6
                     ta_str'     <- xshow (constA ta6)                               -<< ()
-                    
+
                     "global"    <-@ mkSimpleLog "TCPHandler:newHandler" ("final transaction is: " ++ ta_str') l_debug -<< ()
-                    arrIO $ hPutStr handle                                          -<< response 
-                                        
+                    arrIO $ hPutStr handle                                          -<< response
+
                     (listA $ proc in_ta -> do
                         uid <- getVal _transaction_http_response_body_hdlop         -<  in_ta
                         (HdlOpVal op) <- getSV ("/local/files/_" ++ uid)            -<< ()
                         arrIO $ op                                                  -<< handle
                         )                                                           -<  ta6
-                    
+
                     ts_end      <- getCurrentTS                                     -<  ()
                     ta7         <- setTAEnd ts_end                                  -<< ta6
-                    runtime     <- getTARunTime                                     -<  ta7 
+                    runtime     <- getTARunTime                                     -<  ta7
 
-                    "global"    <-@ mkPlainMsg $ "OK. Took " ++ 
+                    "global"    <-@ mkPlainMsg $ "OK. Took " ++
                                         (show runtime) ++ " ms\n"                   -<< ()
                     returnA                                                         -<  ()
             process _ _ _ = zeroArrow
 -}
 
-               
+
 {- |
 Reads from a given handle and returns a tuple, where the first element represents the headers of an HTTP Request and the second
-element the body of the request. 
+element the body of the request.
 Basing on the HWS-WP request read implementation, this function currently is specialized on HTTP. This should change in the future.
 -}
 getRequest :: Handle -> IO ([String], String)
 getRequest h = do
   l <- hGetLine h
-  if (emptyLine l) 
+  if (emptyLine l)
      then getRequest h
      else do
         (req, bodysize) <- getRequest' l h
@@ -256,10 +256,10 @@ is inferred based on a content-length header.
 -}
 getRequest' :: String -> Handle -> IO ([String], Maybe Int)
 getRequest' l h = do
-  if (emptyLine l) 
+  if (emptyLine l)
      then do
         return ([l], Nothing)
-     else do 
+     else do
         l' <- hGetLine h
         (ls, hint') <- getRequest' l' h
         let hint = parseContentLength l'
@@ -284,7 +284,7 @@ Recognizes an empty line (only containing a line break).
 -}
 emptyLine :: String -> Bool
 emptyLine "\r" = True
-emptyLine _    = False  
+emptyLine _    = False
 
 {- |
 Tries to recognize an HTTP content-length header in a given line. If found, the contained body size is delivered, otherwise
@@ -294,7 +294,7 @@ parseContentLength :: String -> Maybe Int
 parseContentLength header =
     let (header_type, val) = break (==':') header
     in case val of
-          ':':val'  -> if (Prelude.map toLower header_type) == "content-length" 
-                            then Just (read $ stripWS val') 
+          ':':val'  -> if (Prelude.map toLower header_type) == "content-length"
+                            then Just (read $ stripWS val')
                             else Nothing
           _         -> Nothing
