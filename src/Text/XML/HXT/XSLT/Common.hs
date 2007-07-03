@@ -20,8 +20,7 @@ module Text.XML.HXT.XSLT.Common
     ( module Control.Arrow
     , module Text.XML.HXT.Arrow.XmlNode
     , module Text.XML.HXT.DOM.XmlKeywords
-    , module Text.XML.HXT.DOM.XmlTreeTypes
-    , module Text.XML.HXT.DOM.XmlTreeFunctions
+    , module Text.XML.HXT.DOM.TypeDefs
     , module Text.XML.HXT.DOM.FormatXmlTree
     , module Text.XML.HXT.XPath.XPathDataTypes
     , module Text.XML.HXT.XPath.XPathParser
@@ -38,9 +37,9 @@ module Text.XML.HXT.XSLT.Common
     , zipTreeWith                -- Tree t => (a -> b -> c) -> t a -> t b -> t c
     , zipTree                    -- Tree t => t a -> t b -> t (a,b)           (zipTreeWith (,))
     , unzipTree                  -- Tree t => t (a,b) -> (t a, t b)           (mapTree fst &&& mapTree snd)
+    , showTrees
 
     -- XML functions
-    , isRoot                     -- XmlTree -> Bool
     , isElemType                 -- XmlNode n => QName -> n -> Bool
     , isAttrType                 -- XmlNode n => QName -> n -> Bool
     , isWhitespaceNode           -- XmlTree -> Bool
@@ -86,27 +85,29 @@ module Text.XML.HXT.XSLT.Common
 where
 
 import Control.Arrow
+import Control.Arrow.ListArrow
+import Control.Arrow.ArrowList
 
+import Text.XML.HXT.Arrow.XmlArrow
+    ( xshow
+    )
 import Text.XML.HXT.Arrow.XmlNode
     ( XmlNode (..)
     , mkElement
+    , mkRoot
     , mkAttr
     , mergeAttrl
     )
 import Text.XML.HXT.DOM.XmlKeywords
 
-import Text.XML.HXT.DOM.XmlTreeTypes
+import Text.XML.HXT.DOM.TypeDefs
     ( XmlTree
     , XNode(XTag, XAttr)
     , QName(QN, namePrefix, localPart, namespaceUri)
     , equivQName
+    , mkName
     )
-import Text.XML.HXT.DOM.XmlTreeFunctions
-    ( mkRootTree
-    , xshow
-    , isRootNode
-    , mkXPiTree
-    )
+
 import Text.XML.HXT.DOM.FormatXmlTree
     ( formatXmlTree )
 
@@ -195,11 +196,13 @@ zipTree      = zipTreeWith (,)
 unzipTree  :: Functor t => t (a,b) -> (t a, t b)
 unzipTree   = fmap fst &&& fmap snd
 
+showTrees	:: [XmlTree] -> String
+showTrees ts
+    = concat 
+      (runLA (xshow (constL ts)) $ undefined)
+
 --------------------------- 
 -- Xml Functions
-
-isRoot :: XmlTree -> Bool
-isRoot = isRootNode . getNode
 
 collectTextnodes :: [XmlTree] -> String
 collectTextnodes = concat . mapMaybe getText

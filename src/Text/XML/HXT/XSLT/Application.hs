@@ -129,7 +129,7 @@ evalXPathExpr _ CtxEmpty
 evalRtf :: Template -> String -> Context -> XPathValue
 evalRtf template rtfId ctx = XPVNode [ntree rtfRoot]
   where
-    rtfRoot = setAttribute rootIdName ("rtf " ++ rtfId) $ mkRootTree [] $ applyTemplate template ctx
+    rtfRoot = setAttribute rootIdName ("rtf " ++ rtfId) $ mkRoot [] $ applyTemplate template ctx
     rootIdName = mkQName "" "rootId" ""
 
 applySelect :: SelectExpr -> Context -> [NavXmlTree]
@@ -224,7 +224,7 @@ applyMessage (TemplMessage halt template) ctx
     | otherwise
 	= []	-- trace ("Message(trace): " ++ msg) []
     where
-    msg     = xshow content
+    msg     = showTrees content
     content = applyTemplate template ctx
 
 applyMessage _ _ = []
@@ -291,7 +291,7 @@ applyComment _ _ = []
 
 applyProcInstr :: Template -> Context -> [XmlTree]
 applyProcInstr (TemplProcInstr nameExpr template) ctx =
-    return $ mkXPiTree name $ format $ collectTextnodes $ applyTemplate template ctx
+    return $ mkPi (mkName name) [mkText . format . collectTextnodes . applyTemplate template $ ctx]
   where
     name      = applyStringExpr nameExpr ctx      
     format ""           = ""                       -- In a better Haskell: format = replaceAll "?>" "? >"

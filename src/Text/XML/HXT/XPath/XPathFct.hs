@@ -209,7 +209,7 @@ nodeID (Just t@(NT (NTree (XAttr qn) _)  _ _ _)) = IdAttr qn : nodeID (upNT t)
 nodeID (Just t@(NT node _ prev _))               
    | isRootNode $ getNode node = return $ IdRoot (getText $ getValue "rootId" node) 
    | otherwise       = IdPos (length prev) : nodeID (upNT t)
-   where getText ((NTree (XText t) _):_) = t
+   where getText ((NTree (XText t') _):_) = t'
          getText _         = ""
    
 
@@ -780,8 +780,9 @@ xdocument' uri = map ntree $ concatMap (addAttr "rootId" ("doc " ++ uri)) $ unsa
 
 -- generate-id, should be fully compliant with XSLT specification.
 xgenerateId :: XFct
-xgenerateId _ _ [XPVNode (node:_)] = xgenerateId' node
-xgenerateId c@(_, _, node) _ [] = xgenerateId' node
+xgenerateId _            _ [XPVNode (node:_)] = xgenerateId' node
+xgenerateId (_, _, node) _ []                 = xgenerateId' node
+xgenerateId _            _ _                  = error "illegal arguments in xgenerateId"
 
 xgenerateId' :: NavXmlTree -> XPathValue
 xgenerateId' = XPVString . ("id_"++) . str2XmlId . show . nodeID . Just
