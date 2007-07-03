@@ -28,6 +28,7 @@ module Text.XML.HXT.Arrow
     , module Text.XML.HXT.Arrow.XmlArrow
     , module Text.XML.HXT.Arrow.XmlIOStateArrow
     , module Text.XML.HXT.Arrow.XmlNodeSet
+    , module Text.XML.HXT.Arrow.XmlPickle
 
     , module Text.XML.HXT.Arrow.DocumentInput
     , module Text.XML.HXT.Arrow.DocumentOutput
@@ -49,6 +50,7 @@ import Text.XML.HXT.Arrow.DOMInterface
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlIOStateArrow
 import Text.XML.HXT.Arrow.XmlNodeSet
+import Text.XML.HXT.Arrow.XmlPickle
 import Text.XML.HXT.Arrow.Edit
 import Text.XML.HXT.Arrow.GeneralEntitySubstitution
 import Text.XML.HXT.Arrow.Namespace

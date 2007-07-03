@@ -5,6 +5,7 @@
 
 EXAMPLES	= \
 		HelloWorld hparser hunit hxpath dtd2hxt absurls \
+		pickle \
 		hrelaxng \
 		RelaxTestSuite \
 		AGentleIntroductionToHXT
