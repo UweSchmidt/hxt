@@ -40,6 +40,7 @@ class XmlNode a where
     isCdata		:: a -> Bool
     isPi		:: a -> Bool
     isElem		:: a -> Bool
+    isRoot		:: a -> Bool
     isDTD		:: a -> Bool
     isAttr		:: a -> Bool
     isError		:: a -> Bool
@@ -143,6 +144,10 @@ instance XmlNode XNode where
 
     isElem (XTag _ _)		= True
     isElem _			= False
+
+    isRoot t                    = isElem t
+				  &&
+				  fromMaybe "" (getQualifiedName t) == t_root
 
     isDTD (XDTD _ _)		= True
     isDTD _			= False
@@ -250,6 +255,7 @@ instance XmlNode a => XmlNode (NTree a) where
     isCdata		= isCdata     . getNode
     isPi		= isPi        . getNode
     isElem		= isElem      . getNode
+    isRoot		= isRoot      . getNode
     isDTD		= isDTD       . getNode
     isAttr		= isAttr      . getNode
     isError		= isError     . getNode
@@ -288,6 +294,9 @@ instance XmlNode a => XmlNode (NTree a) where
 
 mkElement	:: QName -> XmlTrees -> XmlTrees -> XmlTree
 mkElement n al	= mkTree (mkElementNode n al)
+
+mkRoot		:: XmlTrees -> XmlTrees -> XmlTree
+mkRoot al	= mkTree (mkElementNode (mkSNsName t_root) al)
 
 mkAttr		:: QName -> XmlTrees -> XmlTree
 mkAttr n	= mkTree (mkAttrNode n)
