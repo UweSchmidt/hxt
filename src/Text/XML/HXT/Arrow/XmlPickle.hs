@@ -58,14 +58,13 @@ module Text.XML.HXT.Arrow.XmlPickle
     , xpAlt
     , xpElem
     , xpAttr
+    , xpTree
     , pickleDoc
     , unpickleDoc
     , XmlPickler
     , xpickle
     , xpickleDocument
     , xunpickleDocument
-    , uncurry3
-    , uncurry4
     )
 where
 
@@ -124,11 +123,24 @@ unpickle :: PU a -> XmlTree -> Maybe a
 unpickle p t = fst . appUnPickle p $ addCont t emptySt
 -}
 
+-- | conversion of an arbitrary value into an XML document tree.
+--
+-- The pickler, first parameter, controls the conversion process.
+-- Result is a complete document tree including a root node
+
 pickleDoc	:: PU a -> a -> XmlTree
 pickleDoc p v
     = XN.mkRoot (attributes st) (contents st)
     where
     st = appPickle p (v, emptySt)
+
+-- | Conversion of an XML document tree into an arbitrary data type
+--
+-- The inverse of 'pickleDoc'.
+-- This law should hold for all picklers: @ unpickle px . pickle px $ v == Just v @.
+-- Not every possible combination of picklers make sense.
+-- For reconverting a value from an XML tree, is becomes neccessary,
+-- to introduce \"enough\" markup for unpickling the value
 
 unpickleDoc :: PU a -> XmlTree -> Maybe a
 unpickleDoc p t
@@ -141,7 +153,9 @@ unpickleDoc p t
 
 -- ------------------------------------------------------------
 
--- the zero pickler, fails always during unpickling
+-- | The zero pickler
+--
+-- Encodes othing, fails always during unpickling
 
 xpZero			:: PU a
 xpZero			=  PU { appPickle   = snd
@@ -153,23 +167,30 @@ xpZero			=  PU { appPickle   = snd
 xpUnit			:: PU ()
 xpUnit			= xpLift ()
 
--- lift a value to a pickler
+-- Lift a value to a pickler
+--
+-- When pickling, nothing is encoded, when unpickling, the given value is inserted.
+-- This pickler always succeeds.
 
 xpLift			:: a -> PU a
 xpLift x		=  PU { appPickle   = snd
 			      , appUnPickle = \ s -> (Just x, s)
 			      }
 
--- lift a Maybe to a pickler, Nothing is mapped to the zero pickler
+-- Lift a Maybe value to a pickler.
+--
+-- @Nothing@ is mapped to the zero pickler, @Just x@ is pickled with @xpLift x@.
 
 xpLiftMaybe		:: Maybe a -> PU a
 xpLiftMaybe Nothing	= xpZero
 xpLiftMaybe (Just x) 	= xpLift x
 
 
--- unpickle combinator for sequence and choice. When 1. unpickler fails,
--- the 2. one is taken, else the 3. configured with the result from the 1.
--- is taken
+-- | pickle\/unpickle combinator for sequence and choice.
+--
+-- When the first unpickler fails,
+-- the second one is taken, else the third one configured with the result from the first
+-- is taken. This pickler is a generalisation for 'xpSeq' and 'xpChoice' .
 
 xpCondSeq	:: PU b -> (b -> a) -> PU a -> (a -> PU b) -> PU b
 xpCondSeq pd f pa k
@@ -191,15 +212,19 @@ xpCondSeq pd f pa k
 	 }
 
 
--- combine two picklers sequentially. If the first fails during
+-- | Combine two picklers sequentially.
+--
+-- If the first fails during
 -- unpickling, the whole unpickler fails
 
 xpSeq	:: (b -> a) -> PU a -> (a -> PU b) -> PU b
 xpSeq	= xpCondSeq xpZero
 
 
--- run two picklers in sequence like with xpSeq.
--- When during unpickling the first fails,
+-- | combine tow picklers with a choice
+--
+-- Run two picklers in sequence like with xpSeq.
+-- When during unpickling the first one fails,
 -- an alternative pickler (first argument) is applied.
 -- This pickler only is used as combinator for unpickling.
  
@@ -207,18 +232,25 @@ xpChoice		:: PU b -> PU a -> (a -> PU b) -> PU b
 xpChoice pb	= xpCondSeq pb undefined
 
 
--- map value into another domain and apply pickler there
+-- | map value into another domain and apply pickler there
+--
+-- One of the most often used picklers.
 
 xpWrap			:: (a -> b, b -> a) -> PU a -> PU b
 xpWrap (i, j) pa		= xpSeq j pa (xpLift . i)
 
--- map value into another domain. If the inverse mapping is
+-- | like 'xpWrap', but if the inverse mapping is undefined, the unpickler fails
+--
+-- Map a value into another domain. If the inverse mapping is
 -- undefined (Nothing), the unpickler fails
 
 xpWrapMaybe		:: (a -> Maybe b, b -> a) -> PU a -> PU b
 xpWrapMaybe (i, j) pa	= xpSeq j pa (xpLiftMaybe . i)
 
--- pickle a pair of values
+-- | pickle a pair of values sequentially
+--
+-- Used for pairs or together with wrap for pickling
+-- algebraic data types with two components
 
 xpPair	:: PU a -> PU b -> PU (a, b)
 xpPair pa pb
@@ -226,7 +258,7 @@ xpPair pa pb
       xpSeq snd pb (\ b ->
       xpLift (a,b)))
 
--- pickle a 3-tuple
+-- | Like 'xpPair' but for triples
 
 xpTriple	:: PU a -> PU b -> PU c -> PU (a, b, c)
 xpTriple pa pb pc
@@ -235,7 +267,7 @@ xpTriple pa pb pc
     toTriple   ~(a, ~(b, c)) = (a,  b, c )
     fromTriple ~(a,   b, c ) = (a, (b, c))
 
--- pickle a 4-tuple
+-- | Like 'xpPair' and 'xpTriple' but for 4-tuples
 
 xp4Tuple	:: PU a -> PU b -> PU c -> PU d -> PU (a, b, c, d)
 xp4Tuple pa pb pc pd
@@ -244,8 +276,10 @@ xp4Tuple pa pb pc pd
     toQuad   ~(a, ~(b, ~(c, d))) = (a,  b,  c, d  )
     fromQuad ~(a,   b,   c, d  ) = (a, (b, (c, d)))
 
-
--- pickle a string into an XML text node
+-- | Pickle a string into an XML text node
+--
+-- One of the most often used primitive picklers. Attention:
+-- For pickling empty strings use 'xpText0'.
 
 xpText	:: PU String
 xpText	= PU { appPickle   = \ (s, st) -> addCont (XN.mkText s) st
@@ -258,12 +292,13 @@ xpText	= PU { appPickle   = \ (s, st) -> addCont (XN.mkText s) st
 	  s <- XN.getText t
 	  return (Just s, dropCont st)
 
--- pickle a possibly empty string into an XML node.
+-- | Pickle a possibly empty string into an XML node.
 --
--- Must be used for all places, where empty strings could be form a text node.
--- Empty contents of an element is not represented by an empty text node,
--- so the unpickling must be handled with care.
--- This pickler is implemented by use of the option pickler.
+-- Must be used in all places, where empty strings are legal values.
+-- If the content of an element can be an empty string, this string disapears
+-- during storing the DOM into a document and reparse the document.
+-- So the empty text node becomes nothing, and the pickler must deliver an empty string,
+-- if there is no text node in the document.
 
 xpText0	:: PU String
 xpText0
@@ -272,8 +307,12 @@ xpText0
     emptyToNothing "" = Nothing
     emptyToNothing x  = Just x
 
--- pickle an arbitrary value by applyling show during pickling
--- and read during unpickling. Real pickling is done with string
+-- | Pickle an arbitrary value by applyling show during pickling
+-- and read during unpickling.
+--
+-- Real pickling is then done with 'xpString'.
+-- One of the most often used pimitive picklers. Applicable for all
+-- types which are instances of @Read@ and @Show@
 
 xpPrim	:: (Read a, Show a) => PU a
 xpPrim
@@ -286,8 +325,24 @@ xpPrim
 	val [(x,"")] = Just x
 	val _        = Nothing
 
--- encoding of optional data by ignoring the Nothing case during pickling
+-- | Pickle an XmlTree by just adding it
+--
+-- Usefull for components of type XmlTree in other data structures
+
+xpTree	:: PU XmlTree
+xpTree	= PU { appPickle   = \ (s, st) -> addCont s st
+	     , appUnPickle = \ st -> fromMaybe (Nothing, st) (unpickleTree st)
+	     }
+    where
+    unpickleTree st
+	= do
+	  t <- getCont st
+	  return (Just t, dropCont st)
+
+-- | Encoding of optional data by ignoring the Nothing case during pickling
 -- and relying on failure during unpickling to recompute the Nothing case
+--
+-- The default pickler for Maybe types
 
 xpOption	:: PU a -> PU (Maybe a)
 xpOption pa
@@ -301,8 +356,11 @@ xpOption pa
 	                 xpChoice (xpLift Nothing) pa (xpLift . Just)
 	 }
 
--- encoding of list values by pickling all list elements sequentially
--- end relying on failure for detecting the end of the list during unpickling
+-- | Encoding of list values by pickling all list elements sequentially.
+--
+-- Unpickler relies on failure for detecting the end of the list.
+-- The standard pickler for lists. Can also be used in compination with 'xpWrap'
+-- for constructing set and map picklers
 
 xpList	:: PU a -> PU [a]
 xpList pa
@@ -321,7 +379,9 @@ xpList pa
 	   xpSeq tail (xpList pa) (\ xs ->
 	   xpLift (x:xs)))
 
--- pickler for sum data types, every constructor is mapped to an index into the list of picklers.
+-- | Pickler for sum data types.
+--
+-- Every constructor is mapped to an index into the list of picklers.
 -- The index is used only during pickling, not during unpickling, there the 1. match is taken
 
 xpAlt	:: (a -> Int) -> [PU a] -> PU a
@@ -339,7 +399,10 @@ xpAlt tag ps
 			 )
 	 }
 
--- pickler for wrapping/unwrapping data into an XML element with given name
+-- Pickler for wrapping/unwrapping data into an XML element
+--
+-- Extra parameter is the element name. THE pickler for constructing
+-- nested structures
 
 xpElem	:: String -> PU a -> PU a
 xpElem name pa
@@ -364,7 +427,9 @@ xpElem name pa
 		    res <- fst . appUnPickle pa $ St {attributes = al, contents = cs}
 		    return (Just res, dropCont st)
 
--- pickler for storing/retreiving data into/from an attribute value
+-- | Pickler for storing/retreiving data into/from an attribute value
+--
+-- The attribute is inserted in the surrounding element constructed by the 'xpElem' pickler
 
 xpAttr	:: String -> PU a -> PU a
 xpAttr name pa
@@ -387,18 +452,7 @@ xpAttr name pa
 
 -- ------------------------------------------------------------
 
--- mothers little helper
---
--- in conjuction with triple and quadruple for complex
--- algebraic data types
-
-uncurry3			:: (a -> b -> c -> d) -> (a, b, c) -> d
-uncurry3 f ~(a, b, c)		= f a b c
-
-uncurry4			:: (a -> b -> c -> d -> e) -> (a, b, c, d) -> e
-uncurry4 f ~(a, b, c, d)	= f a b c d
-
--- ------------------------------------------------------------
+-- | The class for overloading 'xpickle', the default pickler
 
 class XmlPickler a where
     xpickle :: PU a
@@ -438,7 +492,7 @@ instance XmlPickler a => XmlPickler (Maybe a) where
 
 -- ------------------------------------------------------------
 
--- the main arrows
+-- the arrow interface for pickling and unpickling
 
 -- | store an arbitray value in a persistent XML document
 --
@@ -455,7 +509,11 @@ xpickleDocument xp al dest
 --
 -- The document is read with 'Text.XML.HXT.Arrow.readDocument'. Options are passed
 -- to 'Text.XML.HXT.Arrow.readDocument'. The conversion from XmlTree is done with the
--- pickler
+-- pickler.
+--
+-- @ xpickleDocument xp al dest >>> xunpickleDocument xp al' dest @ is the identity arrow
+-- when applied with the appropriate options. When during pickling indentation is switched on,
+-- the whitespace must be removed during unpickling.
 
 xunpickleDocument	:: PU a -> Attributes -> String -> IOStateArrow s b a
 xunpickleDocument xp al src

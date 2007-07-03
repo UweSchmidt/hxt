@@ -27,6 +27,9 @@ module Text.XML.HXT.DOM.Util
     , swap
     , partitionEither
     , toMaybe
+
+    , uncurry3
+    , uncurry4
     )
 where
 
@@ -253,5 +256,15 @@ partitionEither =
 toMaybe :: Bool -> a -> Maybe a
 toMaybe False _ = Nothing
 toMaybe True  x = Just x
+
+-- ------------------------------------------------------------
+
+-- | mothers little helpers for to much curry
+
+uncurry3			:: (a -> b -> c -> d) -> (a, b, c) -> d
+uncurry3 f ~(a, b, c)		= f a b c
+
+uncurry4			:: (a -> b -> c -> d -> e) -> (a, b, c, d) -> e
+uncurry4 f ~(a, b, c, d)	= f a b c d
 
 -- ------------------------------------------------------------
