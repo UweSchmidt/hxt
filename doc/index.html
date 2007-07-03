@@ -86,6 +86,8 @@
       <li><a href="http://www.relaxng.org/">Relax NG</a> schema
 	validator</li>
       <li>integrated <a href="http://www.w3.org/TR/xslt">XSLT</a> transformer</li>
+      <li>easy conversion between user defined data structures and XML
+	by the use of pickler functions</ls>
     </ul>
 
     <a name="docu"></a>
@@ -234,6 +236,15 @@
     <ul>
       <li>In <a href="%SOFTWARE%-7.2.tar.gz">Version 7.2</a>
 	<ul>
+	  <li>New module Text.XML.HXT.XmlPickler for conversion between user
+	    defined data types and the HXT DOM structure. This enables
+	    the simple persistent storage and retreival of arbitray
+	    data in XML documents. See example directory
+	    <tt>examples/arrows/pickle</tt> for a none trivial example
+	    of these picklers. These functions are an adoption of
+	    <a href="http://research.microsoft.com/~akenn/fun/picklercombinators.pdf">Andrew
+	      Kennedys pickler combinators</a>.
+	  </li>
 	  <li>UTF-8 decoding done with UTF8 module from
 	    <a href="http://www.abridgegame.org/darcs/">darcs</a>.
 	    Decoding errors are detected and issued.
