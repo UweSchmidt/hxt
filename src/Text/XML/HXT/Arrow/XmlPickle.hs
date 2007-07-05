@@ -167,7 +167,7 @@ xpZero			=  PU { appPickle   = snd
 xpUnit			:: PU ()
 xpUnit			= xpLift ()
 
--- Lift a value to a pickler
+-- | Lift a value to a pickler
 --
 -- When pickling, nothing is encoded, when unpickling, the given value is inserted.
 -- This pickler always succeeds.
@@ -177,7 +177,7 @@ xpLift x		=  PU { appPickle   = snd
 			      , appUnPickle = \ s -> (Just x, s)
 			      }
 
--- Lift a Maybe value to a pickler.
+-- | Lift a Maybe value to a pickler.
 --
 -- @Nothing@ is mapped to the zero pickler, @Just x@ is pickled with @xpLift x@.
 
@@ -399,7 +399,7 @@ xpAlt tag ps
 			 )
 	 }
 
--- Pickler for wrapping/unwrapping data into an XML element
+-- | Pickler for wrapping\/unwrapping data into an XML element
 --
 -- Extra parameter is the element name. THE pickler for constructing
 -- nested structures
@@ -427,7 +427,7 @@ xpElem name pa
 		    res <- fst . appUnPickle pa $ St {attributes = al, contents = cs}
 		    return (Just res, dropCont st)
 
--- | Pickler for storing/retreiving data into/from an attribute value
+-- | Pickler for storing\/retreiving data into\/from an attribute value
 --
 -- The attribute is inserted in the surrounding element constructed by the 'xpElem' pickler
 
