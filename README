@@ -7,29 +7,45 @@ servlet modules.
 
 To build the library package, the following is required:
 
-- GHC 6.4.2 
+- GHC 6.6
 - http-bundle 20060707
-- HXT 7.0
-- fps 0.7 (ByteString)
-- hs-plugins 1.0-rc0
+- HXT 7.2              or newer
+- fps 0.7 (ByteString) or newer
+- hs-plugins 1.0-rc0   or newer
 
-The four libraries are contained in the /libs directory. They may be installed by means of the following steps:
+The four libraries must be installed, before compiling Janus
 
-1. Use e.g. "tar -xvzf [...].tar.gz" to extract the respective source files.
-2. Move into the created directory and start building the package with Cabal...
-3. Use "ghc --make -o Setup Setup.lhs" or "ghc --make -o Setup Setup.hs" to generate the setup binary.
-4. Use "./Setup configure" to create the compilation script.
-5. Use "./Setup install" to register the library with your GHC system.
+Order of installation is arbitrary, except for the http-bundle. This library is required to build the HXT package and has to be created and registered
+in advance
 
-Order of installation is arbitrary, except for the http-bundle. This library is required to build the HXT-7.0 package and has to be created and registered
-in advance. Finally the procedure to create the janus-1.0 package is the same.
+Quick Janus installation:
+=========================
+
+tar xvzf janus-1.0.tar.gz
+cd janus-1.0
+make all
+
+make all compiles all janus sources, copies the server into the build dir
+and copies all example pages to build/wwwpages and build/errorpages.
+All dynamically loaded modules are copied to build/Network/...
+The default janus config file is copied to build/conf/server.xml
+
+Start of Janus:
+===============
+
+cd build
+./janus
+
+Jaunus will then listen on port 8080.
+check "http://localhost:8080/index.html for a running server.
+The janus state can be queried by giving commands on the janus console.
 
 In case of the hs-plugins package, an error message may occur stating lacking permissions for the configuration script. Please change the file
 permissions of the "configure" file in the hs-plugins directory accordingly.
 
 If you installed the janus-1.0 package, you may optinally continue with building an executable Janus server installation. This may be done simply by
-invoking "make janus". Afterwards you will find a relocatable Janus installation in the /build subdirectory. In the /build/conf directory, there will be a
-default configuration file "server.xml". The "/build/Network" subdirectory contains the servlet object files to start the server.
+invoking "make janus". Afterwards you will find a relocatable Janus installation in the ../build subdirectory. In the ../build/conf directory, there will be a
+default configuration file "server.xml". The ".../build/Network/..." subdirectories contains the servlet object files to start the server.
 
 
 
