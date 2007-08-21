@@ -119,7 +119,7 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
     -- |
     -- pronounced \"outside\" meaning f containing g
     --
-    -- defined as @ f <\/ g = f \`containing\` (getChildren >>> g) @
+    -- defined as @ f \<\/ g = f \`containing\` (getChildren >>> g) @
 
     (</)		:: Tree t => a (t b) (t b) -> a (t b) (t b) -> a (t b) (t b)
     f </ g		= f `containing` (getChildren >>> g)
