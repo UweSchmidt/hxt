@@ -4,8 +4,8 @@
 #
 
 HXT_HOME	= ..
-VERSION		= 7.2
-LASTVERSION	= 7.1
+VERSION		= 7.3
+LASTVERSION	= 7.2
 
 EXAMPLES	= mini hparser hxpath hfilter hunit hsvg dtd2haskell arrows
 MORE_SAMPLES	= w3ctest blutgraetsche photoalbum

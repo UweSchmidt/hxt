@@ -54,6 +54,7 @@ module Text.XML.HXT.Arrow.XmlPickle
     , xpPair
     , xpTriple
     , xp4Tuple
+    , xp5Tuple
     , xpOption
     , xpAlt
     , xpElem
@@ -276,6 +277,15 @@ xp4Tuple pa pb pc pd
     toQuad   ~(a, ~(b, ~(c, d))) = (a,  b,  c, d  )
     fromQuad ~(a,   b,   c, d  ) = (a, (b, (c, d)))
 
+-- | Like 'xpPair' and 'xpTriple' but for 5-tuples
+
+xp5Tuple	:: PU a -> PU b -> PU c -> PU d -> PU e -> PU (a, b, c, d, e)
+xp5Tuple pa pb pc pd pe
+    = xpWrap (toQuint, fromQuint) (xpPair pa (xpPair pb (xpPair pc (xpPair pd pe))))
+    where
+    toQuint   ~(a, ~(b, ~(c, ~(d, e)))) = (a,  b,  c,  d, e   )
+    fromQuint ~(a,   b,   c,   d, e   ) = (a, (b, (c, (d, e))))
+
 -- | Pickle a string into an XML text node
 --
 -- One of the most often used primitive picklers. Attention:
@@ -483,6 +493,9 @@ instance (XmlPickler a, XmlPickler b, XmlPickler c) => XmlPickler (a,b,c) where
 
 instance (XmlPickler a, XmlPickler b, XmlPickler c, XmlPickler d) => XmlPickler (a,b,c,d) where
     xpickle = xp4Tuple xpickle xpickle xpickle xpickle
+
+instance (XmlPickler a, XmlPickler b, XmlPickler c, XmlPickler d, XmlPickler e) => XmlPickler (a,b,c,d,e) where
+    xpickle = xp5Tuple xpickle xpickle xpickle xpickle xpickle
 
 instance XmlPickler a => XmlPickler [a] where
     xpickle = xpList xpickle
