@@ -27,7 +27,7 @@ dist		:
 		cp Makefile $(DIST_DIR)
 
 clean		:
-		$(foreach i,$(EXAMPLES),$(MAKE) -C $$i $@ ;)
+		$(foreach i,$(EXAMPLES),$(MAKE) -C $i $@ ;)
 
 .PHONY		: all clean test dist
 

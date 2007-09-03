@@ -1,6 +1,6 @@
 -- arch-tag: Haskell XML Toolbox main description file
 name: hxt
-version: 7.2
+version: 7.3
 -- license: MIT
 license-file: LICENCE
 maintainer: Uwe Schmidt <uwe@fh-wedel.de>
