@@ -1,7 +1,7 @@
 -- ------------------------------------------------------------
 
 {- |
-   Module     : Text.XML.HXT.Arrow.XmlPickle
+   Module     : Text.XML.HXT.Arrow.Pickle.Xml
    Copyright  : Copyright (C) 2005 Uwe Schmidt
    License    : MIT
 
@@ -36,37 +36,7 @@ of the picklers for a none trivial data structure.
 
 -- ------------------------------------------------------------
 
-module Text.XML.HXT.Arrow.XmlPickle
-    ( PU(..)
-    , xpZero
-    , xpUnit
-    , xpLift
-    , xpLiftMaybe
-    , xpCondSeq
-    , xpSeq
-    , xpList
-    , xpText
-    , xpText0
-    , xpPrim
-    , xpChoice
-    , xpWrap
-    , xpWrapMaybe
-    , xpPair
-    , xpTriple
-    , xp4Tuple
-    , xp5Tuple
-    , xpOption
-    , xpAlt
-    , xpElem
-    , xpAttr
-    , xpTree
-    , pickleDoc
-    , unpickleDoc
-    , XmlPickler
-    , xpickle
-    , xpickleDocument
-    , xunpickleDocument
-    )
+module Text.XML.HXT.Arrow.Pickle.Xml
 where
 
 import           Data.Maybe
@@ -74,10 +44,8 @@ import           Data.Maybe
 import           Control.Arrow.ListArrows
 import           Text.XML.HXT.Arrow.DOMInterface
 import           Text.XML.HXT.Arrow.XmlArrow
-import           Text.XML.HXT.Arrow.XmlIOStateArrow
-import           Text.XML.HXT.Arrow.ReadDocument
-import           Text.XML.HXT.Arrow.WriteDocument
 import qualified Text.XML.HXT.Arrow.XmlNode as XN
+import           Text.XML.HXT.Arrow.Pickle.Schema
 
 -- ------------------------------------------------------------
 
@@ -87,6 +55,7 @@ data St		= St { attributes :: [XmlTree]
 
 data PU a	= PU { appPickle   :: (a, St) -> St
 		     , appUnPickle :: St -> (Maybe a, St)
+		     , theSchema   :: Schema
 		     }
 
 emptySt		:: St
@@ -115,14 +84,6 @@ getCont		:: St -> Maybe XmlTree
 getCont s	= listToMaybe . contents $ s
 
 -- ------------------------------------------------------------
-
-{-
-pickle	:: PU a -> a -> XmlTree
-pickle p v = head . contents . appPickle p $ (v, emptySt)
-
-unpickle :: PU a -> XmlTree -> Maybe a
-unpickle p t = fst . appUnPickle p $ addCont t emptySt
--}
 
 -- | conversion of an arbitrary value into an XML document tree.
 --
@@ -156,11 +117,12 @@ unpickleDoc p t
 
 -- | The zero pickler
 --
--- Encodes othing, fails always during unpickling
+-- Encodes nothing, fails always during unpickling
 
 xpZero			:: PU a
 xpZero			=  PU { appPickle   = snd
 			      , appUnPickle = \ s -> (Nothing, s)
+			      , theSchema   = scNull
 			      }
 
 -- unit pickler
@@ -176,6 +138,7 @@ xpUnit			= xpLift ()
 xpLift			:: a -> PU a
 xpLift x		=  PU { appPickle   = snd
 			      , appUnPickle = \ s -> (Just x, s)
+			      , theSchema   = scEmpty
 			      }
 
 -- | Lift a Maybe value to a pickler.
@@ -183,8 +146,10 @@ xpLift x		=  PU { appPickle   = snd
 -- @Nothing@ is mapped to the zero pickler, @Just x@ is pickled with @xpLift x@.
 
 xpLiftMaybe		:: Maybe a -> PU a
-xpLiftMaybe Nothing	= xpZero
-xpLiftMaybe (Just x) 	= xpLift x
+xpLiftMaybe v		= (xpLiftMaybe' v) { theSchema = scOption scEmpty }
+    where
+    xpLiftMaybe' Nothing	= xpZero
+    xpLiftMaybe' (Just x) 	= xpLift x
 
 
 -- | pickle\/unpickle combinator for sequence and choice.
@@ -192,6 +157,8 @@ xpLiftMaybe (Just x) 	= xpLift x
 -- When the first unpickler fails,
 -- the second one is taken, else the third one configured with the result from the first
 -- is taken. This pickler is a generalisation for 'xpSeq' and 'xpChoice' .
+--
+-- The schema must be attached later, e.g. in xpPair or other higher level combinators
 
 xpCondSeq	:: PU b -> (b -> a) -> PU a -> (a -> PU b) -> PU b
 xpCondSeq pd f pa k
@@ -210,6 +177,7 @@ xpCondSeq pd f pa k
 			   Nothing -> appUnPickle pd     s
 			   Just a' -> appUnPickle (k a') s'
 			 )
+	 , theSchema   = undefined
 	 }
 
 
@@ -238,7 +206,7 @@ xpChoice pb	= xpCondSeq pb undefined
 -- One of the most often used picklers.
 
 xpWrap			:: (a -> b, b -> a) -> PU a -> PU b
-xpWrap (i, j) pa		= xpSeq j pa (xpLift . i)
+xpWrap (i, j) pa	= (xpSeq j pa (xpLift . i)) { theSchema = theSchema pa }
 
 -- | like 'xpWrap', but if the inverse mapping is undefined, the unpickler fails
 --
@@ -246,7 +214,7 @@ xpWrap (i, j) pa		= xpSeq j pa (xpLift . i)
 -- undefined (Nothing), the unpickler fails
 
 xpWrapMaybe		:: (a -> Maybe b, b -> a) -> PU a -> PU b
-xpWrapMaybe (i, j) pa	= xpSeq j pa (xpLiftMaybe . i)
+xpWrapMaybe (i, j) pa	= (xpSeq j pa (xpLiftMaybe . i)) { theSchema = theSchema pa }
 
 -- | pickle a pair of values sequentially
 --
@@ -255,9 +223,10 @@ xpWrapMaybe (i, j) pa	= xpSeq j pa (xpLiftMaybe . i)
 
 xpPair	:: PU a -> PU b -> PU (a, b)
 xpPair pa pb
-    = xpSeq fst pa (\ a ->
-      xpSeq snd pb (\ b ->
-      xpLift (a,b)))
+    = ( xpSeq fst pa (\ a ->
+        xpSeq snd pb (\ b ->
+        xpLift (a,b)))
+      ) { theSchema = scSeq (theSchema pa) (theSchema pb) }
 
 -- | Like 'xpPair' but for triples
 
@@ -294,6 +263,7 @@ xp5Tuple pa pb pc pd pe
 xpText	:: PU String
 xpText	= PU { appPickle   = \ (s, st) -> addCont (XN.mkText s) st
 	     , appUnPickle = \ st -> fromMaybe (Nothing, st) (unpickleString st)
+	     , theSchema   = PCData noneEmptyText
 	     }
     where
     unpickleString st
@@ -342,6 +312,7 @@ xpPrim
 xpTree	:: PU XmlTree
 xpTree	= PU { appPickle   = \ (s, st) -> addCont s st
 	     , appUnPickle = \ st -> fromMaybe (Nothing, st) (unpickleTree st)
+	     , theSchema   = Any
 	     }
     where
     unpickleTree st
@@ -364,12 +335,14 @@ xpOption pa
 
 	 , appUnPickle = appUnPickle $
 	                 xpChoice (xpLift Nothing) pa (xpLift . Just)
+
+         , theSchema   = scOption (theSchema pa)
 	 }
 
 -- | Encoding of list values by pickling all list elements sequentially.
 --
 -- Unpickler relies on failure for detecting the end of the list.
--- The standard pickler for lists. Can also be used in compination with 'xpWrap'
+-- The standard pickler for lists. Can also be used in combination with 'xpWrap'
 -- for constructing set and map picklers
 
 xpList	:: PU a -> PU [a]
@@ -381,13 +354,27 @@ xpList pa
 			 )
 	 , appUnPickle = appUnPickle $
                          xpChoice (xpLift []) pa
-	                   (\ x -> xpSeq id (xpList pa) (\xs -> xpLift (x:xs))
-			 )
+	                   (\ x -> xpSeq id (xpList pa) (\xs -> xpLift (x:xs)))
+
+	 , theSchema   = scList 0 (-1) (theSchema pa)
 	 }
       where
       pc = xpSeq head  pa       (\ x ->
 	   xpSeq tail (xpList pa) (\ xs ->
 	   xpLift (x:xs)))
+
+-- | Encoding of a none empty list of values
+--
+-- Attention: when calling this pickler with an empty list,
+-- an internal error \"head of empty list is raised\".
+
+xpList1	:: PU a -> PU [a]
+xpList1 pa
+    = ( xpWrap (\ (x, xs) -> x : xs
+	       ,\ (x : xs) -> (x, xs)
+	       ) $
+	xpPair pa (xpList pa)
+      ) { theSchema = scList 1 (-1) (theSchema pa) }
 
 -- | Pickler for sum data types.
 --
@@ -407,6 +394,7 @@ xpAlt tag ps
 			   []     -> xpZero
 			   pa:ps1 -> xpChoice (xpAlt tag ps1) pa xpLift
 			 )
+	 , theSchema   = scAlts (map theSchema ps)
 	 }
 
 -- | Pickler for wrapping\/unwrapping data into an XML element
@@ -423,6 +411,7 @@ xpElem name pa
 			   addCont (XN.mkElement (mkName name) (attributes st') (contents st')) st
 			 )
 	 , appUnPickle = \ st -> fromMaybe (Nothing, st) (unpickleElement st)
+	 , theSchema   = scElem name (theSchema pa)
 	 }
       where
       unpickleElement st
@@ -450,6 +439,7 @@ xpAttr name pa
 			   addAtt (XN.mkAttr (mkName name) (contents st')) st
 			 )
 	 , appUnPickle = \ st -> fromMaybe (Nothing, st) (unpickleAttr st)
+	 , theSchema   = scAttr name (theSchema pa)
 	 }
       where
       unpickleAttr st
@@ -459,6 +449,38 @@ xpAttr name pa
 	    res <- fst . appUnPickle pa $ St {attributes = [], contents = av}
 	    return (Just res, st)	-- attribute is not removed from attribute list,
 					-- attributes are selected by name
+
+-- | Add an optional attribute for an optional value (Maybe a).
+
+xpAttrImplied	:: String -> PU a -> PU (Maybe a)
+xpAttrImplied name pa
+    = xpOption $ xpAttr name pa
+
+xpAttrFixed	:: String -> String -> PU ()
+xpAttrFixed name val
+    = ( xpWrapMaybe ( \ v -> if v == val then Just () else Nothing
+		    , const val
+		    ) $
+	xpAttr name xpText
+      ) { theSchema   = scAttr name (scFixedCData val) }
+
+-- | Add an attribute with a fixed value.
+--
+-- Useful e.g. to declare namespaces. Is implemented by 'xpAttrFixed'
+
+xpAddFixedAttr	:: String -> String -> PU a -> PU a
+xpAddFixedAttr name val pa
+    = xpWrap ( snd
+	     , (,) ()
+	     ) $
+      xpPair (xpAttrFixed name val) pa
+
+-- | Restrict the structure of a value, e.g. for attributes restrict the
+-- value to NMTOKEN, NMTOKENS or a fixed set of values
+
+xpRestrict	::  SchemaRestriction -> PU a -> PU a
+xpRestrict re pa
+    = pa { theSchema = scRestrict re (theSchema pa) }
 
 -- ------------------------------------------------------------
 
@@ -502,36 +524,5 @@ instance XmlPickler a => XmlPickler [a] where
 
 instance XmlPickler a => XmlPickler (Maybe a) where
     xpickle = xpOption xpickle
-
--- ------------------------------------------------------------
-
--- the arrow interface for pickling and unpickling
-
--- | store an arbitray value in a persistent XML document
---
--- The pickler converts a value into an XML tree, this is written out with
--- 'Text.XML.HXT.Arrow.writeDocument'. The option list is passed to 'Text.XML.HXT.Arrow.writeDocument'
-
-xpickleDocument		:: PU a -> Attributes -> String -> IOStateArrow s a XmlTree
-xpickleDocument xp al dest
-    = arr (pickleDoc xp)
-      >>>
-      writeDocument al dest
-
--- | read an arbitray value from an XML document
---
--- The document is read with 'Text.XML.HXT.Arrow.readDocument'. Options are passed
--- to 'Text.XML.HXT.Arrow.readDocument'. The conversion from XmlTree is done with the
--- pickler.
---
--- @ xpickleDocument xp al dest >>> xunpickleDocument xp al' dest @ is the identity arrow
--- when applied with the appropriate options. When during pickling indentation is switched on,
--- the whitespace must be removed during unpickling.
-
-xunpickleDocument	:: PU a -> Attributes -> String -> IOStateArrow s b a
-xunpickleDocument xp al src
-    = readDocument  al src
-      >>>
-      arrL (maybeToList . unpickleDoc xp)
 
 -- ------------------------------------------------------------

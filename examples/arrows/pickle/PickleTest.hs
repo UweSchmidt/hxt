@@ -49,7 +49,12 @@ data UnOp
 -- the main pickler
 
 xpProgram :: PU Program
-xpProgram = xpickle
+xpProgram = xpElem "program" $
+	    xpAddFixedAttr "xmlns" "program42" $
+	    xpickle
+
+xpMissingRootElement	:: PU Program
+xpMissingRootElement 	= xpickle
 
 instance XmlPickler UnOp where
     xpickle = xpPrim

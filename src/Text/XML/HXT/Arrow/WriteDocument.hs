@@ -137,7 +137,7 @@ writeDocument userOptions dst
 -- ------------------------------------------------------------
 
 -- |
--- Convert a document into a string. Formatiing is done the same way
+-- Convert a document into a string. Formating is done the same way
 -- and with the same options as in 'writeDocument'.
 
 writeDocumentToString	:: Attributes  ->  IOStateArrow s XmlTree String

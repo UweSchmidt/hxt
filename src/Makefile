@@ -64,6 +64,7 @@ HXT_SRC		= $(wildcard ./Data/*.hs) \
 		  $(wildcard ./Text/XML/HXT/XPath/*.hs) \
 		  $(wildcard ./Text/XML/HXT/Arrow.hs) \
 		  $(wildcard ./Text/XML/HXT/Arrow/[DEGNPRWX]*.hs) \
+		  $(wildcard ./Text/XML/HXT/Arrow/Pickle/*.hs) \
 		  $(wildcard ./Text/XML/HXT/IO/*.hs) \
 		  $(wildcard ./Text/XML/HXT/RelaxNG.hs) \
 		  $(wildcard ./Text/XML/HXT/RelaxNG/*.hs) \
@@ -96,6 +97,7 @@ HXT_SRC_ARROW	= $(wildcard ./Data/*.hs) \
 		  $(wildcard ./Text/XML/HXT/Parser/XmlOptions.hs) \
 		  $(wildcard ./Text/XML/HXT/Arrow.hs) \
 		  $(wildcard ./Text/XML/HXT/Arrow/[DEGNPRWX]*.hs) \
+		  $(wildcard ./Text/XML/HXT/Arrow/Pickle/*.hs) \
 		  $(wildcard ./Text/XML/HXT/RelaxNG/[SV]*.hs) \
 		  $(wildcard ./Text/XML/HXT/XSLT/[ACNX]*.hs)
 

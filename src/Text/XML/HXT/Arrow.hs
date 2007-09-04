@@ -28,7 +28,6 @@ module Text.XML.HXT.Arrow
     , module Text.XML.HXT.Arrow.XmlArrow
     , module Text.XML.HXT.Arrow.XmlIOStateArrow
     , module Text.XML.HXT.Arrow.XmlNodeSet
-    , module Text.XML.HXT.Arrow.XmlPickle
 
     , module Text.XML.HXT.Arrow.DocumentInput
     , module Text.XML.HXT.Arrow.DocumentOutput
@@ -38,6 +37,7 @@ module Text.XML.HXT.Arrow
     , module Text.XML.HXT.Arrow.ProcessDocument
     , module Text.XML.HXT.Arrow.ReadDocument
     , module Text.XML.HXT.Arrow.WriteDocument
+    , module Text.XML.HXT.Arrow.Pickle
 
     , module Text.XML.HXT.XSLT.XsltArrows
     )
@@ -45,20 +45,19 @@ where
 
 import Control.Arrow.ListArrows			-- arrow classes
 
+import Text.XML.HXT.Arrow.DocumentInput
+import Text.XML.HXT.Arrow.DocumentOutput
 import Text.XML.HXT.Arrow.DOMInterface
-
-import Text.XML.HXT.Arrow.XmlArrow
-import Text.XML.HXT.Arrow.XmlIOStateArrow
-import Text.XML.HXT.Arrow.XmlNodeSet
-import Text.XML.HXT.Arrow.XmlPickle
 import Text.XML.HXT.Arrow.Edit
 import Text.XML.HXT.Arrow.GeneralEntitySubstitution
 import Text.XML.HXT.Arrow.Namespace
-import Text.XML.HXT.Arrow.DocumentInput
-import Text.XML.HXT.Arrow.DocumentOutput
+import Text.XML.HXT.Arrow.Pickle
 import Text.XML.HXT.Arrow.ProcessDocument
 import Text.XML.HXT.Arrow.ReadDocument
 import Text.XML.HXT.Arrow.WriteDocument
+import Text.XML.HXT.Arrow.XmlArrow
+import Text.XML.HXT.Arrow.XmlIOStateArrow
+import Text.XML.HXT.Arrow.XmlNodeSet
 
 import Text.XML.HXT.XSLT.XsltArrows
 
