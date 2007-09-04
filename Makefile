@@ -2,15 +2,19 @@
 
 HXT_HOME	= .
 
-SOFTWARE	= HXT
+software	= hxt
+dist		= $(software)-$(VERSION)
+DIST_FILES	= Makefile README LICENSE Setup.lhs hxt.cabal
+DIST_TAR	= $(dist).tar.gz
+
+SOFTWARE	= hxt
 VERSION		= 7.3
-VERSIONTAG	= hxt-7-03				# use: make tag for creating cvs tag
+VERSIONTAG	= $(software)-7-03				# use: make tag for creating darcs tag
 LASTVERSION	= 7.2
 DIST		= $(SOFTWARE)-$(VERSION)
 PUBDATE		:= $(shell date +%Y-%m-%d)
 
 EDIT_VERSION	= sed 's/%DISTFILE%/$(DIST)/g' \
-		| sed 's/%SOFTWARE%/$(SOFTWARE)/g' \
 		| sed 's/%VERSION%/$(VERSION)/g' \
 		| sed 's/%PUBDATE%/$(PUBDATE)/g'
 
@@ -35,10 +39,6 @@ test		:
 setup		: Setup.lhs
 		ghc -package Cabal Setup.lhs -o setup
 		rm -f Setup.hi Setup.o
-
-
-DIST_FILES	= Makefile README LICENSE Setup.lhs hxt.cabal
-DIST_TAR	= $(DIST).tar.gz
 
 hxt.cabal	: src/hxt-package.conf src/Makefile Makefile
 		$(MAKE) -C src ../hxt.cabal VERSION=$(VERSION)
