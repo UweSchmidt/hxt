@@ -156,7 +156,7 @@
     <a name="req"></a>
     <h3>Requirements</h3>
     <ul>
-      <li>GHC >= 6.4.1 or GHC-6.6</li>
+      <li>GHC-6.6</li>
       <li>GNU make (to build a compiled version) or Cabal</li>
     </ul>
 
@@ -167,13 +167,14 @@
       released %PUBDATE%:
     </p>
     <ul>
-      <li>This version works (at least) with ghc.6.4.2. and ghc 6.6.
+      <li>This version works (at least) with ghc 6.6.
       </li>
       <li>Includes sources for building a ghc package
 	<code>hxt</code> with Cabal or make.
 	This package contains a Haskell DOM, an XML parser, a
 	DTD validator,  namespace processing functions, a Relax
-	NG validator, an XPath expression evaluator and an XSLT transformer.
+	NG validator, an XPath expression evaluator, an XSLT transformer,
+	and serialization/deserialisation of data to/from XML.
       </li>
       <li>HTTP access can be done with the 
 	<a href="http://www.haskell.org/http/">Haskell HTTP module</a>
@@ -234,7 +235,19 @@
     <a name="change"></a>
     <h3>Change history</h3>
     <ul>
-      <li>In <a href="%SOFTWARE%-7.2.tar.gz">Version 7.2</a>
+      <li>In <a href="hxt-7.3.tar.gz">Version 7.3</a>
+	<ul>
+	  <li>Module <tt>Text.XML.HXT.Pickle</tt> for conversion between user
+	    defined data types and the HXT DOM structure extendet.
+	    The picklers are extended, such that a DTD can be derived
+	    from a pickler and can be checked for consistency.
+	    See Haddock doc (<tt>Text.XML.HXT.Pickle</tt>)
+	    and example directory
+	    <tt>examples/arrows/pickle</tt> for examples.
+	  </li>
+	</ul>
+      </li>
+      <li>In <a href="HXT-7.2.tar.gz">Version 7.2</a>
 	<ul>
 	  <li>New module Text.XML.HXT.XmlPickler for conversion between user
 	    defined data types and the HXT DOM structure. This enables
@@ -258,7 +271,7 @@
 	  </li>
 	</ul>
       </li>
-      <li>In <a href="%SOFTWARE%-7.1.tar.gz">Version 7.1</a>
+      <li>In <a href="HXT-7.1.tar.gz">Version 7.1</a>
 	<ul>
 	  <li>Version control changed from CVS to darcs.
 	    darcs repository is available under
@@ -273,7 +286,7 @@
 	  <li>HTTP access via curl extended to handle automatic redirects</li>
 	</ul>
       </li>
-      <li>In <a href="%SOFTWARE%-7.0.tar.gz">Version 7.0</a>
+      <li>In <a href="HXT-7.0.tar.gz">Version 7.0</a>
 	<ul>
 	  <li>New integrated XSLT transformer module. The example
 	    parser (<tt>examples/arrows/hparser</tt>) is extended to act as an XSLT transformer.
@@ -289,7 +302,7 @@
 	  </li>
 	</ul>
       </li>
-      <li>In <a href="%SOFTWARE%-6.1.tar.gz">Version 6.1</a>
+      <li>In <a href="HXT-6.1.tar.gz">Version 6.1</a>
 	<ul>
 	  <li>HXT 6.1. contains only changes in the cabal installation process for
 	    working with the <a href="http://www.haskell.org/http/">Haskell HTTP module</a> in tar archive http-20060707.tgz.
@@ -298,7 +311,7 @@
 	  </li>
 	</ul>
       </li>
-      <li>In <a href="%SOFTWARE%-6.0.tar.gz">Version 6.0</a>
+      <li>In <a href="HXT-6.0.tar.gz">Version 6.0</a>
 	<ul>
 	  <li>The arrow interface has changed slightly, especially the handling of user defined states in the state and IO arrows has been simplified.
 	    This is the main reason for a 6.0 version.
@@ -318,7 +331,7 @@
 	  <li>Cabal config file and dependencies change to work with ghc 6.4.2.
 	</ul>
       </li>
-      <li>In <a href="%SOFTWARE%-5.5.tar.gz">Version 5.5</a>
+      <li>In <a href="HXT-5.5.tar.gz">Version 5.5</a>
 	<ul>
 	  <li>Changes in file path and default base URI handling.
 	    This release compiles and runs (at least) under Windows XP,
@@ -327,14 +340,14 @@
 	  </li>
 	</ul>
       </li>
-      <li>In <a href="%SOFTWARE%-5.4.tar.gz">Version 5.4</a>
+      <li>In <a href="HXT-5.4.tar.gz">Version 5.4</a>
 	<ul>
 	  <li>Bug fix in parameter entity substitution for external
 	    parameter entities.
 	  </li>
 	</ul>
       </li>
-      <li>In <a href="%SOFTWARE%-5.3.tar.gz">Version 5.3</a>
+      <li>In <a href="HXT-5.3.tar.gz">Version 5.3</a>
 	<ul>
 	  <li>
 	    Documentation and usage examples for the new arrow interface
@@ -352,14 +365,14 @@
 	    nested and recursive parameter entity substitution.</li>
 	</ul>
       </li>
-      <li>In <a href="%SOFTWARE%-5.2.tar.gz">Version 5.2</a>
+      <li>In <a href="HXT-5.2.tar.gz">Version 5.2</a>
 	<ul>
 	  <li>Bug fix with entity substitution of nested
 	    external parameter entities in DTDs.</li>
 	  <li>Some minor changes in the arrow interface.</li>
 	</ul>
       </li>
-      <li>In <a href="%SOFTWARE%-5.01.tar.gz">Version 5.01</a>
+      <li>In <a href="HXT-5.01.tar.gz">Version 5.01</a>
 	<ul>
 	  <li>Sources ported to work with ghc-6.4 and ghc-6.4 is required.
 	    Please use toolbox versions &lt;= 5.00 for older ghc's.</li>
@@ -372,7 +385,7 @@
 	  <li>Build and install can be done with Cabal. See README file for installation.</li>
 	</ul>
       </li>
-      <li>In <a href="%SOFTWARE%-5.00.tar.gz">Version 5.00</a>
+      <li>In <a href="HXT-5.00.tar.gz">Version 5.00</a>
 	<ul>
 	  <li>All compiled modules are packaged into
             a single ghc package <code>hxt</code>.</li>
