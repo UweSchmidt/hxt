@@ -4,7 +4,7 @@ HXT_HOME	= .
 
 software	= hxt
 dist		= $(software)-$(VERSION)
-DIST_FILES	= Makefile README LICENSE Setup.lhs hxt.cabal
+DIST_FILES	= Makefile README LICENCE Setup.lhs hxt.cabal
 DIST_TAR	= $(dist).tar.gz
 
 SOFTWARE	= hxt
