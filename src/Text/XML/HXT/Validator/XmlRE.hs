@@ -26,6 +26,8 @@ module Text.XML.HXT.Validator.XmlRE
     )
 where
 
+-- import Debug.Trace(trace)
+
 import Text.XML.HXT.Validator.RE hiding (matches)
 
 import Text.XML.HXT.DOM.XmlTree
@@ -50,7 +52,8 @@ matches re list
       where
       removeUnimportantStuff :: XmlFilter
       removeUnimportantStuff = processBottomUp (removeWhiteSpace `o` removeComment)
-
+      -- trace of growth of REs
+      -- delta' re el = delta (trace (("RE : " ++) . (++ "\n" ) . show $ re) re) el
 
 
 -- |

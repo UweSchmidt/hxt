@@ -107,7 +107,20 @@ re_dot			= RE_DOT
 re_rep			:: RE a -> RE a
 re_rep RE_UNIT		= RE_UNIT
 re_rep (RE_ZERO _)	= RE_UNIT
+re_rep e@(RE_REP _)	= RE_REP (rem_rep e)		-- remove nested reps
+re_rep e@(RE_ALT _ _)	= RE_REP (rem_rep e)		-- remove nested reps in alternatives
 re_rep e		= RE_REP e
+
+-- |
+-- remove redundant nested *'s in RE
+-- theoretically this is unneccessary,
+-- but without this simplification the runtime can increase exponentally
+-- when computing deltas, e.g. for a** or (a|b*)* which is the same as (a|b)*
+
+rem_rep			:: RE a -> RE a
+rem_rep (RE_ALT e1 e2)	= RE_ALT (rem_rep e1) (rem_rep e2)
+rem_rep (RE_REP e1)	= rem_rep e1
+rem_rep e1		= e1
 
 
 -- |
@@ -209,18 +222,18 @@ nullable RE_DOT		= True
 
 delta :: (Eq a, Show a) => RE a -> a -> RE a
 delta re x = case re of
-	RE_ZERO	m		-> re_zero m
+	RE_ZERO	_		-> re					-- re_zero m
 	RE_UNIT			-> re_zero ("Symbol " ++ show x ++ " unexpected.")
 	RE_SYM sym
 		| x == sym	-> re_unit
 		| otherwise	-> re_zero ("Symbol " ++ show sym ++ " expected, but symbol " ++ show x ++ " found.")
-	RE_REP e		-> re_seq (delta e x) (re_rep e)
+	RE_REP  e		-> re_seq (delta e x) re		-- (re_rep e)
 	RE_PLUS e		-> re_seq (delta e x) (re_rep e)
-	RE_OPT e		-> delta e x
-	RE_SEQ e f
+	RE_OPT  e		-> delta e x
+	RE_SEQ  e f
 		| nullable e	-> re_alt (re_seq (delta e x) f) (delta f x)
 		| otherwise	-> re_seq (delta e x) f
-	RE_ALT e f		-> re_alt (delta e x) (delta f x)
+	RE_ALT  e f		-> re_alt (delta e x) (delta f x)
 	RE_DOT			-> re_unit
 
 
