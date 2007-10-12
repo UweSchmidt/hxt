@@ -28,8 +28,8 @@ import Network.URI
   , parseURI
   , URI(..)
   )
-import Maybe
-import Char 
+import Data.Maybe
+import Data.Char 
 
 
 -- ------------------------------------------------------------
@@ -69,9 +69,7 @@ normalizeURI uri
 -- | Tests whether a string matches a number [-](0-9)*
 parseNumber :: String -> Bool
 parseNumber s
-    = case (parse parseNumber' "" s) of
-      Left _  -> False
-      Right _ -> True
+    = either (const False) (const True) (parse parseNumber' "" s)
     where
     parseNumber' :: Parser String
     parseNumber'

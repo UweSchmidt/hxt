@@ -21,7 +21,7 @@ import Text.XML.HXT.RelaxNG.DataTypeLibMysql
 import Text.XML.HXT.RelaxNG.DataTypeLibW3C
     ( w3cDatatypeLib )
 
-import Maybe
+import Data.Maybe
     ( fromJust )
 
     

@@ -94,18 +94,18 @@ numericTypes = [ "SIGNED-TINYINT"
 
 -- | List of allowed params for the numeric datatypes
 numericParams :: AllowedParams
-numericParams = [ "maxExclusive"
-		, "minExclusive"
-                , "maxInclusive"
-		, "minInclusive"
+numericParams = [ rng_maxExclusive
+		, rng_minExclusive
+                , rng_maxInclusive
+		, rng_minInclusive
                 ]
                 
 
 -- | List of allowed params for the string datatypes
 stringParams :: AllowedParams
-stringParams = [ "length"
-	       , "maxLength"
-	       , "minLength"
+stringParams = [ rng_length
+	       , rng_maxLength
+	       , rng_minLength
 	       ]
                 
 

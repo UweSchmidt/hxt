@@ -4,6 +4,13 @@
 module Text.XML.HXT.RelaxNG.DataTypeLibW3C
   ( w3cNS
   , w3cDatatypeLib
+  , xsd_NCName
+  , xsd_anyURI
+  , xsd_QName
+  , xsd_string
+  , xsd_length
+  , xsd_maxLength
+  , xsd_minLength
   )
 where
 
@@ -21,8 +28,22 @@ import Text.XML.HXT.DOM.NamespaceFilter
 -- ------------------------------------------------------------
 
 -- | Namespace of the W3C XML schema datatype library
-w3cNS :: String
-w3cNS = "http://www.w3.org/2001/XMLSchema-datatypes"
+w3cNS	:: String
+w3cNS	= "http://www.w3.org/2001/XMLSchema-datatypes"
+
+
+xsd_NCName, xsd_anyURI, xsd_QName, xsd_string :: String
+
+xsd_NCName	= "NCName"
+xsd_anyURI	= "anyURI"
+xsd_QName	= "QName"
+xsd_string	= "string"
+
+xsd_length, xsd_maxLength, xsd_minLength :: String
+
+xsd_length	= rng_length
+xsd_maxLength	= rng_maxLength
+xsd_minLength	= rng_minLength
 
 
 -- | The main entry point to the W3C XML schema datatype library.
@@ -36,55 +57,50 @@ w3cDatatypeLib = (w3cNS, DTC datatypeAllowsW3C datatypeEqualW3C w3cDatatypes)
 
 -- | All supported datatypes of the library
 w3cDatatypes :: AllowedDatatypes
-w3cDatatypes = [ ("NCName", stringParams)
-               , ("anyURI", stringParams)
-               , ("QName", stringParams)
-               , ("string", stringParams)               
+w3cDatatypes = [ (xsd_NCName, stringParams)
+               , (xsd_anyURI, stringParams)
+               , (xsd_QName, stringParams)
+               , (xsd_string, stringParams)               
                ]
 
 
 -- | List of allowed params for the string datatypes
 stringParams :: AllowedParams
-stringParams = ["length", "maxLength", "minLength"]
+stringParams = [xsd_length, xsd_maxLength, xsd_minLength]
 
 
 -- | Tests whether a XML instance value matches a data-pattern.
 -- (see also: 'checkString')
 datatypeAllowsW3C :: DatatypeAllows
-datatypeAllowsW3C d@"NCName" params value _
-  = let v = normalizeWhitespace value
-    in ( if isNCName v && v /= ""
-         then checkString d value 0 (-1) params 
-         else Just $ errorMsgDataLibQName value "NCName" w3cNS
-       )
-datatypeAllowsW3C d@"anyURI" params value _
-  = let v = escapeURI $ normalizeWhitespace value
-    in ( if isURIReference v 
-         then checkString d value 0 (-1) params
-         else Just $ errorMsgDataLibQName value "anyURI" w3cNS
-       )
-datatypeAllowsW3C d@"QName" params value _
-  = let v = normalizeWhitespace value
-    in ( if isWellformedQualifiedName v && v /= "" 
-         then checkString d value 0 (-1) params
-         else Just $ errorMsgDataLibQName value "QName" w3cNS
-       )
-
-datatypeAllowsW3C d@"string" params value _
-  = checkString d value 0 (-1) params
-
-datatypeAllowsW3C d params value _ 
-  = Just $ errorMsgDataTypeNotAllowed d params value w3cNS
+datatypeAllowsW3C d params value _
+    | d == xsd_NCName
+	= if isNCName v && not (null v)
+          then checkString d value 0 (-1) params 
+	  else err1
+    | d == xsd_anyURI
+	= if isURIReference v2
+          then checkString d value 0 (-1) params
+	  else err1
+    | d == xsd_QName
+	= if isWellformedQualifiedName v && not (null v)
+          then checkString d value 0 (-1) params
+	  else err1
+    | d == xsd_string
+	= checkString d value 0 (-1) params
+    | otherwise
+	= err2
+    where
+    v    = normalizeWhitespace value
+    v2   = escapeURI v
+    err1 = Just $ errorMsgDataLibQName value d w3cNS
+    err2 = Just $ errorMsgDataTypeNotAllowed d params value w3cNS
 
 -- | Tests whether a XML instance value matches a value-pattern.
 datatypeEqualW3C :: DatatypeEqual
-datatypeEqualW3C d@"NCName" s1 _ s2 _
-  = if s1 == s2 then Nothing else Just $ errorMsgEqual d s1 s2 
-datatypeEqualW3C d@"anyURI" s1 _ s2 _ 
-  = if s1 == s2 then Nothing else Just $ errorMsgEqual d s1 s2 
-datatypeEqualW3C d@"QName" s1 _ s2 _ 
-  = if s1 == s2 then Nothing else Just $ errorMsgEqual d s1 s2 
-datatypeEqualW3C d@"string" s1 _ s2 _ 
-  = if s1 == s2 then Nothing else Just $ errorMsgEqual d s1 s2 
-datatypeEqualW3C d _ _ _ _
-  = Just $ errorMsgDataTypeNotAllowed0 d w3cNS
+datatypeEqualW3C d s1 _ s2 _
+    | d `elem` [xsd_NCName, xsd_anyURI, xsd_QName, xsd_string]
+	= if s1 == s2
+	  then Nothing
+	  else Just $ errorMsgEqual d s1 s2
+    | otherwise
+	= Just $ errorMsgDataTypeNotAllowed0 d w3cNS

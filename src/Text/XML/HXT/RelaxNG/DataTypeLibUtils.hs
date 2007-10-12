@@ -9,6 +9,13 @@ module Text.XML.HXT.RelaxNG.DataTypeLibUtils
   , errorMsgDataTypeNotAllowed0
   , errorMsgDataTypeNotAllowed2
   , errorMsgDataLibQName
+  , rng_length
+  , rng_maxLength
+  , rng_minLength
+   ,rng_maxExclusive
+  , rng_minExclusive
+  , rng_maxInclusive
+  , rng_minInclusive
   , module Text.XML.HXT.DOM.Util
   , module Text.XML.HXT.RelaxNG.Utils
   , module Text.XML.HXT.RelaxNG.DataTypes  
@@ -21,29 +28,42 @@ import Text.XML.HXT.DOM.Util
 import Text.XML.HXT.RelaxNG.DataTypes
 import Text.XML.HXT.RelaxNG.Utils
 
-import Maybe
+import Data.Maybe
   ( fromJust )
 
+rng_length, rng_maxLength, rng_minLength
+ ,rng_maxExclusive, rng_minExclusive, rng_maxInclusive, rng_minInclusive :: String
+
+rng_length		= "length"
+rng_maxLength		= "maxLength"
+rng_minLength		= "minLength"
+
+rng_maxExclusive	= "maxExclusive"
+rng_minExclusive	= "minExclusive"
+rng_maxInclusive	= "maxInclusive"
+rng_minInclusive	= "minInclusive"
 
 -- ------------------------------------------------------------
 
 -- | Function table for numeric tests,
 -- XML document value is first operand, schema value second
 fctTableNum :: (Ord a, Num a) => [(String, a -> a -> Bool)]
-fctTableNum = [ ("maxExclusive", (<))
-              , ("minExclusive", (>))
-              , ("maxInclusive", (<=))
-              , ("minInclusive", (>=))
-              ]
+fctTableNum
+    = [ (rng_maxExclusive, (<))
+      , (rng_minExclusive, (>))
+      , (rng_maxInclusive, (<=))
+      , (rng_minInclusive, (>=))
+      ]
 
 
 -- | Function table for string tests,
 -- XML document value is first operand, schema value second
 fctTableString :: [(String, String -> String -> Bool)]
-fctTableString = [ ("length", (checkStrWithNumParam (==)))
-                 , ("maxLength", (checkStrWithNumParam (<=)))
-                 , ("minLength", (checkStrWithNumParam (>=)))
-                 ]
+fctTableString
+    = [ (rng_length,    (checkStrWithNumParam (==)))
+      , (rng_maxLength, (checkStrWithNumParam (<=)))
+      , (rng_minLength, (checkStrWithNumParam (>=)))
+      ]
 
 
 {- | 
@@ -58,12 +78,11 @@ invalid example:
 > <data type="CHAR"> <param name="minLength">foo</param> </data>
 
 -}
-checkStrWithNumParam :: (Int -> Int -> Bool) -> String -> String -> Bool
+checkStrWithNumParam :: (Integer -> Integer -> Bool) -> String -> String -> Bool
 checkStrWithNumParam fct a b
-  = if parseNumber b
-    then (length a) `fct` (read b)
-    else False
-
+  = parseNumber b
+    &&
+    ( toInteger (length a) `fct` (read b) )
     
 {- | 
 Tests whether a \"string\" datatype value is between the lower and 
@@ -84,10 +103,10 @@ All tests are performed on the string value.
    - return : Just \"Errormessage\" in case of an error, else Nothing
    
 -}
-checkString :: DatatypeName -> String -> Int -> Int -> ParamList -> Maybe String
+checkString :: DatatypeName -> String -> Integer -> Integer -> ParamList -> Maybe String
 checkString datatype value lowerBound upperBound params
-  = if (length value >= lowerBound) && 
-       ((upperBound == (-1)) || (length value <= upperBound))
+  = if (toInteger (length value) >= lowerBound) && 
+       ((upperBound == (-1)) || (toInteger (length value) <= upperBound))
     then checkParamsString value params
     else Just $ "Length of " ++ value ++ " (" ++ (show $ length value) ++ 
                 " Chars) out of Range: " ++ show lowerBound ++ 

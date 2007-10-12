@@ -23,6 +23,7 @@ module Text.XML.HXT.Arrow.Pickle.Schema
 where
 
 import Text.XML.HXT.DOM.XmlKeywords (k_required, k_implied, k_fixed)
+import Text.XML.HXT.DOM.TypeDefs
 
 -- ------------------------------------------------------------
 
@@ -34,10 +35,11 @@ data Schema			= Any
 				| Option	Schema
 				| Seq		[Schema]
 				| Alt		[Schema]
-				| Rep	Int Int Schema
+				| Rep		Int Int Schema
 				| Element	Name	Schema
 				| Attribute	Name	Schema
 				| ElemRef	Name
+				| CharData	DataTypeDescr
 				  deriving (Show)
 
 type Name			= String
@@ -49,6 +51,12 @@ data SchemaRestriction		= FixedValue	String
 				| ValEnum	[String]
 				| RegEx		String
 				| XmlSchemaType	String
+				  deriving (Eq, Show)
+
+data DataTypeDescr		= DTDescr { dtLib    :: String
+					  , dtName   :: String
+					  , dtParams :: Attributes
+					  }
 				  deriving (Eq, Show)
 
 isScElem		:: Schema -> Bool
