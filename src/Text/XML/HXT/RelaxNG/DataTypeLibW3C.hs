@@ -11,6 +11,8 @@ module Text.XML.HXT.RelaxNG.DataTypeLibW3C
   , xsd_length
   , xsd_maxLength
   , xsd_minLength
+  , xsd_pattern
+  , xsd_enumeration
   )
 where
 
@@ -32,12 +34,14 @@ w3cNS	:: String
 w3cNS	= "http://www.w3.org/2001/XMLSchema-datatypes"
 
 
-xsd_NCName, xsd_anyURI, xsd_QName, xsd_string :: String
+xsd_NCName, xsd_anyURI, xsd_QName, xsd_string, xsd_pattern, xsd_enumeration :: String
 
 xsd_NCName	= "NCName"
 xsd_anyURI	= "anyURI"
 xsd_QName	= "QName"
 xsd_string	= "string"
+xsd_pattern	= "pattern"
+xsd_enumeration	= "enumeration"
 
 xsd_length, xsd_maxLength, xsd_minLength :: String
 
@@ -59,7 +63,7 @@ w3cDatatypeLib = (w3cNS, DTC datatypeAllowsW3C datatypeEqualW3C w3cDatatypes)
 w3cDatatypes :: AllowedDatatypes
 w3cDatatypes = [ (xsd_NCName, stringParams)
                , (xsd_anyURI, stringParams)
-               , (xsd_QName, stringParams)
+               , (xsd_QName,  stringParams)
                , (xsd_string, stringParams)               
                ]
 

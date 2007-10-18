@@ -24,6 +24,10 @@ where
 
 import Text.XML.HXT.DOM.XmlKeywords (k_required, k_implied, k_fixed)
 import Text.XML.HXT.DOM.TypeDefs
+import Text.XML.HXT.RelaxNG.DataTypeLibW3C
+
+import Data.List
+    ( sort )
 
 -- ------------------------------------------------------------
 
@@ -47,7 +51,7 @@ type Kind               	= String	-- k_fixed, k_implies, k_required
 type Schemas			= [Schema]
 
 data SchemaRestriction		= FixedValue	String
-				| DTDAttrType	String
+                                | DTDAttrType   String
 				| ValEnum	[String]
 				| RegEx		String
 				| XmlSchemaType	String
@@ -57,7 +61,32 @@ data DataTypeDescr		= DTDescr { dtLib    :: String
 					  , dtName   :: String
 					  , dtParams :: Attributes
 					  }
-				  deriving (Eq, Show)
+				  deriving (Show)
+
+instance Eq DataTypeDescr where
+    x1 == x2 = dtLib x1 == dtLib x2
+	       &&
+	       dtName x1 == dtName x2
+	       &&
+	       sort (dtParams x1) == sort (dtParams x2)
+
+-- ------------------------------------------------------------
+--
+-- predefined xsd data types for representation of DTD types
+
+xsd_dt		:: String -> Attributes -> DataTypeDescr
+xsd_dt n rl	= DTDescr w3cNS n rl
+
+dt_string	:: DataTypeDescr
+dt_string	= xsd_dt xsd_string []
+
+dt_string1	:: DataTypeDescr
+dt_string1	= xsd_dt xsd_string [(xsd_minLength, "1")]
+
+dt_fixed	:: String -> DataTypeDescr
+dt_fixed v	= xsd_dt xsd_string [(xsd_enumeration, v)]
+
+-- ------------------------------------------------------------
 
 isScElem		:: Schema -> Bool
 isScElem (Element _ _)	= True
@@ -70,6 +99,10 @@ isScElemRef _		= False
 isScPCData		:: Schema -> Bool
 isScPCData (PCData _)	= True
 isScPCData _		= False
+
+isScCharData		:: Schema -> Bool
+isScCharData (CharData _)	= True
+isScCharData _			= False
 
 isScCData		:: Schema -> Bool
 isScCData (CData _ _)	= True
@@ -91,8 +124,8 @@ noneEmptyText			= restrictRegEx ".+"
 restrictRegEx			:: String -> SchemaRestriction
 restrictRegEx			= RegEx
 
-restrictDTDAttrType		:: String -> SchemaRestriction
-restrictDTDAttrType		= DTDAttrType
+restrictDTDAttrType             :: String -> SchemaRestriction
+restrictDTDAttrType             = DTDAttrType
 
 restrictEnum			:: [String] -> SchemaRestriction
 restrictEnum			= ValEnum
