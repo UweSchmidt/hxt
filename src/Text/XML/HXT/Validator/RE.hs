@@ -206,7 +206,7 @@ nullable (RE_PLUS e)	= nullable e
 nullable (RE_OPT _)	= True
 nullable (RE_SEQ e f)	= nullable e && nullable f
 nullable (RE_ALT e f)	= nullable e || nullable f
-nullable RE_DOT		= True
+nullable RE_DOT		= False
 
 
 -- |

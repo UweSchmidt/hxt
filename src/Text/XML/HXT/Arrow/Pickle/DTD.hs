@@ -26,6 +26,7 @@ import           Data.Maybe
 import           Text.XML.HXT.Arrow.DOMInterface
 import           Text.XML.HXT.Arrow.Pickle.Schema
 import qualified Text.XML.HXT.Arrow.XmlNode as XN
+import           Text.XML.HXT.RelaxNG.DataTypeLibW3C
 
 -- ------------------------------------------------------------
 
@@ -94,73 +95,95 @@ checkAM en (Attribute an sc)			= checkAMC en an sc
 checkAM _ _					= []
 
 checkAMC					:: Name -> Name -> Schema -> XmlTrees
-checkAMC _en _an (CData _ _)			= []
-checkAMC  en  an sc				= foundErr ( "weird attribute type found for attribute "
-							     ++ show an
-							     ++ " for element "
-							     ++ show en
-							     ++ "\n\t(internal structure: " ++ show sc ++ ")"
-							     ++ "\n\thint: create an element instead of an attribute for "
-							     ++ show an
-							   )
+checkAMC _en _an (CharData _)			= []
+checkAMC en an sc
+    | isScCharData sc	= []
+    | isScList sc
+      &&
+      (sc_1 sc == scNmtoken)
+			= []
+    | isScOpt sc	= checkAMC en an (sc_1 sc)
+    | otherwise		= foundErr
+			  ( "weird attribute type found for attribute "
+			    ++ show an
+			    ++ " for element "
+			    ++ show en
+			    ++ "\n\t(internal structure: " ++ show sc ++ ")"
+			    ++ "\n\thint: create an element instead of an attribute for "
+			    ++ show an
+			  )
+
 -- checkContentModell1 n sc = foundErr (n ++ " : " ++ show sc) ++ checkContentModell n sc
 
 checkContentModell				:: Name -> Schema -> XmlTrees
-checkContentModell _ Any			= []
-checkContentModell _ (ElemRef _)		= []
-checkContentModell _ (PCData _)			= []
-checkContentModell n (CData _ _)		= foundErr
-						  ( "attribute data spec found in content modell for "
-						    ++ show n
-						  )
-checkContentModell n (Option _sc)		= foundErr
-						  ("optional data spec found in content modell for "
-						   ++ show n
-						  )
-checkContentModell _ (Seq [])			= []
-checkContentModell n (Seq scs)			= checkErr pcDataInCM
-						  ( "PCDATA found in a sequence spec in the content modell for "
-						    ++ show n
-						    ++ "\n\thint: create an element for this data"
-						  )
-						  ++
-						  checkErr somethingElseInCM
-						  ( "something weired found in a sequence spec in the content modell for "
-						    ++ show n
-						  )
-						  ++
-						  concatMap (checkContentModell n) scs
-				  		  where
-						  pcDataInCM        = any isScPCData scs
-						  somethingElseInCM = any (\ sc -> not (isScSARE sc) && not (isScPCData sc)) scs
 
-checkContentModell n (Alt scs)			= checkErr mixedCM
-						  ( "PCDATA mixed up with illegal content spec in mixed contents for "
-						    ++ show n
-						    ++ "\n\thint: create an element for this data"
-						  )
-						  ++
-						  concatMap (checkContentModell n) scs
-						  where
-						  mixedCM
-						      | any isScPCData scs
-							  = any (not . isScElemRef) . filter (not . isScPCData) $ scs
-						      | otherwise
-							  = False
-checkContentModell _ (Rep _ _ (ElemRef _))	= []
-checkContentModell n (Rep _ _ sc@(Seq _))	= checkContentModell n sc
-checkContentModell n (Rep _ _ sc@(Alt _))	= checkContentModell n sc
-checkContentModell n (Rep _ _ _)		= foundErr
-						  ( "illegal content spec found for "
-						    ++ show n
-						  )
-checkContentModell _ _				= []
+checkContentModell _ Any
+    = []
+
+checkContentModell _ (ElemRef _)
+    = []
+
+checkContentModell _ (CharData _)
+    = []
+
+checkContentModell _ (Seq [])
+    = []
+
+checkContentModell n (Seq scs)
+    = checkErr pcDataInCM
+      ( "PCDATA found in a sequence spec in the content modell for "
+	++ show n
+	++ "\n\thint: create an element for this data"
+      )
+      ++
+      checkErr somethingElseInCM
+      ( "something weired found in a sequence spec in the content modell for "
+	++ show n
+      )
+      ++
+      concatMap (checkContentModell n) scs
+    where
+    pcDataInCM        = any isScCharData scs
+    somethingElseInCM = any (\ sc -> not (isScSARE sc) && not (isScCharData sc)) scs
+
+checkContentModell n (Alt scs)
+    = checkErr mixedCM
+      ( "PCDATA mixed up with illegal content spec in mixed contents for "
+	++ show n
+	++ "\n\thint: create an element for this data"
+      )
+      ++
+      concatMap (checkContentModell n) scs
+    where
+    mixedCM
+	| any isScCharData scs
+	    = any (not . isScElemRef) . filter (not . isScCharData) $ scs
+	| otherwise
+	    = False
+
+checkContentModell _ (Rep _ _ (ElemRef _))
+    = []
+
+checkContentModell n (Rep _ _ sc@(Seq _))
+    = checkContentModell n sc
+
+checkContentModell n (Rep _ _ sc@(Alt _))
+    = checkContentModell n sc
+
+checkContentModell n (Rep _ _ _)
+    = foundErr
+      ( "illegal content spec found for "
+	++ show n
+      )
+
+checkContentModell _ _
+    = []
 
 
 scContToXml			:: Schema -> (Attributes, XmlTrees)
 
 scContToXml Any			= ( [(a_type, v_any)],    [] )
-scContToXml (PCData _)		= ( [(a_type, v_pcdata)], [] )	-- restrictions are currently ignored
+scContToXml (CharData _)	= ( [(a_type, v_pcdata)], [] )
 scContToXml (Seq [])		= ( [(a_type, v_empty)],  [] )
 scContToXml sc@(ElemRef _)	= scContToXml (Seq [sc])
 scContToXml sc@(Seq _)		= ( [(a_type, v_children)]
@@ -174,7 +197,7 @@ scContToXml sc@(Alt sc1)
 				  , scCont [] sc
 				  ) 
     where
-    isMixed			= not . null . filter isScPCData
+    isMixed			= not . null . filter isScCharData
 scContToXml sc@(Rep _ _ _)	= ( [(a_type, v_children)]
 				  , scCont [] sc
 				  )
@@ -195,25 +218,41 @@ scCont al (Rep 0 (-1) sc)	= scCont ((a_modifier, "*")   : al) (scWrap sc)
 scCont al (Rep 1 (-1) sc)	= scCont ((a_modifier, "+")   : al) (scWrap sc)
 scCont al (Rep 0 1    sc)	= scCont ((a_modifier, "?")   : al) (scWrap sc)
 scCont al (ElemRef n)		= [XN.mkDTDElem NAME ((a_name, n) : al) []]
-scCont _  (PCData _)		= [XN.mkDTDElem NAME [(a_name, "#PCDATA")] []]			-- error case
+scCont _  (CharData _)		= [XN.mkDTDElem NAME [(a_name, "#PCDATA")] []]
 scCont _  _sc			= [XN.mkDTDElem NAME [(a_name, "bad-content-spec")] []]		-- error case
 
 scConts				:: Attributes -> Schemas -> XmlTrees
 scConts al scs			= [XN.mkDTDElem CONTENT al (concatMap (scCont []) scs)]
 
 scAttrToXml			:: Schema -> (Attributes, XmlTrees)
-scAttrToXml (CData k re)	= ( (a_kind, k) : al, cl )
-                                  where
-				  (al, cl) = scAttrType re
-scAttrToXml sc			= ( [(a_kind, k_fixed), (a_default, "bad-attribute-type: " ++ show sc)], [] )
 
-scAttrType			:: SchemaRestriction -> (Attributes, XmlTrees)
-scAttrType (FixedValue v)	= ( [(a_type, k_cdata), (a_default, v)],	[] )
-scAttrType (DTDAttrType k)	= ( [(a_type, k)],	[] )
-scAttrType (ValEnum ns)		= ( [(a_type, k_enumeration)]
-				  , map (\ n -> XN.mkDTDElem NAME [(a_name, n)] []) ns
+scAttrToXml sc
+    | isScFixed	sc		= ( [ (a_kind, k_fixed)
+				    , (a_type, k_cdata)
+				    , (a_default, (xsdParam xsd_enumeration sc))
+				    ]
+				  , [])
+    | isScEnum sc		= ( [ (a_kind, k_required)
+				    , (a_type, k_enumeration)
+				    ]
+				  , map (\ n -> XN.mkDTDElem NAME [(a_name, n)] []) enums
 				  )
-scAttrType _re			= ( [(a_type, k_cdata)],[] )	-- default rule for R.E.s and schema types
+    | isScCharData sc		= ( [ (a_kind, k_required)
+				    , (a_type, d_type)
+				    ]
+				  , [])
+    | isScOpt sc		= (addEntry a_kind k_implied al, cl)
+    | isScList sc		= (addEntry a_type k_nmtokens al, cl)
+    | otherwise			= ( [ (a_kind, k_fixed)
+				    , (a_default, "bad-attribute-type: " ++ show sc)
+				    ]
+				  , [] )
+    where
+    (al, cl)			= scAttrToXml (sc_1 sc)
+    d_type
+	| sc == scNmtoken	= k_nmtoken
+	| otherwise		= k_cdata
+    enums			= words . xsdParam xsd_enumeration $ sc
 
 checkErr			:: Bool -> String -> XmlTrees
 checkErr True s			= [XN.mkError c_err s]
@@ -246,7 +285,6 @@ elementDecs es (s:ss)
     where
     elemDecs (Seq scs)		= elementDecs es scs
     elemDecs (Alt scs)		= elementDecs es scs
-    elemDecs (Option  sc)	= elemDecs sc
     elemDecs (Rep _ _ sc)	= elemDecs sc
     elemDecs e@(Element n sc)
 	| n `elem` elemNames es	= es
@@ -268,7 +306,6 @@ elemRefs	= map elemRef
     pruneElem (Element n _)  = ElemRef n
     pruneElem (Seq scs)      = Seq (map pruneElem scs)
     pruneElem (Alt scs)      = Alt (map pruneElem scs)
-    pruneElem (Option sc)    = Option (pruneElem sc)
     pruneElem (Rep l u sc)   = Rep l u (pruneElem sc)
     pruneElem sc             = sc
 

@@ -80,7 +80,7 @@ invalid example:
 -}
 checkStrWithNumParam :: (Integer -> Integer -> Bool) -> String -> String -> Bool
 checkStrWithNumParam fct a b
-  = parseNumber b
+  = isNumber b
     &&
     ( toInteger (length a) `fct` (read b) )
     
@@ -148,7 +148,7 @@ If no error occur, all following tests are performed on the numeric value.
 -}
 checkNumeric :: DatatypeName -> String -> Int -> Int -> ParamList -> Maybe String
 checkNumeric datatype value lowerBound upperBound params
-  = if parseNumber value 
+  = if isNumber value 
     then ( if (x >= lowerBound) && (x <= upperBound)
            then checkParamsNumeric x params
            else Just $ "Value = " ++ value ++ " out of Range: " ++ show lowerBound ++ 
@@ -172,7 +172,7 @@ checkParamsNumeric value (x@(pName, pValue):xs)
     getFct paramName = fromJust $ lookup paramName fctTableNum
     checkParam :: (String, String) -> Bool
     checkParam (pName', pValue')
-      = if parseNumber pValue'
+      = if isNumber pValue'
         then (getFct pName') value (read pValue')
         else False
 

@@ -72,10 +72,11 @@ module Text.XML.HXT.Arrow.Pickle
     , xpOption
     , xpPair
     , xpPrim
-    , xpRestrict
     , xpSeq
     , xpText
     , xpText0
+    , xpTextDT
+    , xpText0DT
     , xpTree
     , xpTriple
     , xpUnit
@@ -86,14 +87,7 @@ module Text.XML.HXT.Arrow.Pickle
       -- from Text.XML.HXT.Arrow.Pickle.Schema
     , Schema
     , Schemas
-    , SchemaRestriction
-
-    , emptyText
-    , noneEmptyText
-    , restrictRegEx
-    , restrictDTDAttrType
-    , restrictEnum
-    , restrictOption
+    , DataTypeDescr
     )
 where
 

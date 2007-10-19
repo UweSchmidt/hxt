@@ -7,6 +7,7 @@ module Text.XML.HXT.DOM.Util
     , stringToUpper
     , normalizeNumber
     , normalizeWhitespace
+    , normalizeBlanks
 
     , escapeURI
     , textEscapeXml
@@ -39,20 +40,20 @@ import Data.Char
 -- |
 -- remove leading and trailing whitespace with standard Haskell predicate isSpace
 
-stringTrim	:: String -> String
+stringTrim		:: String -> String
 stringTrim
     = reverse . dropWhile isSpace . reverse . dropWhile isSpace
 
 -- |
 -- convert string to upercase with standard Haskell toUpper function
 
-stringToUpper	:: String -> String
+stringToUpper		:: String -> String
 stringToUpper
     = map toUpper
 
 -- | Removes leading \/ trailing whitespaces and leading zeros
 
-normalizeNumber :: String -> String
+normalizeNumber		:: String -> String
 normalizeNumber
     = reverse . dropWhile (== ' ') . reverse . 
       dropWhile (\x -> x == '0' || x == ' ')
@@ -60,9 +61,15 @@ normalizeNumber
 
 -- | Reduce whitespace sequences to a single whitespace
 
-normalizeWhitespace :: String -> String
+normalizeWhitespace	:: String -> String
 normalizeWhitespace
     = unwords . words
+
+-- | replace all whitespace chars by blanks
+
+normalizeBlanks		:: String -> String
+normalizeBlanks
+    = map (\ x -> if isSpace x then ' ' else x)
 
 -- ------------------------------------------------------------
 

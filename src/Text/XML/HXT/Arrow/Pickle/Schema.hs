@@ -22,7 +22,6 @@ This schema further enables checking the picklers.
 module Text.XML.HXT.Arrow.Pickle.Schema
 where
 
-import Text.XML.HXT.DOM.XmlKeywords (k_required, k_implied, k_fixed)
 import Text.XML.HXT.DOM.TypeDefs
 import Text.XML.HXT.RelaxNG.DataTypeLibW3C
 
@@ -34,28 +33,28 @@ import Data.List
 -- | The datatype for modelling the structure of an
 
 data Schema			= Any
-				| PCData	SchemaRestriction
-				| CData		Kind	SchemaRestriction
-				| Option	Schema
-				| Seq		[Schema]
-				| Alt		[Schema]
-				| Rep		Int Int Schema
-				| Element	Name	Schema
-				| Attribute	Name	Schema
-				| ElemRef	Name
-				| CharData	DataTypeDescr
-				  deriving (Show)
+				| Seq		{ sc_l	:: [Schema]
+						}
+				| Alt		{ sc_l	:: [Schema]
+						}
+				| Rep		{ sc_lb	:: Int
+						, sc_ub	:: Int
+						, sc_1	:: Schema
+						}
+				| Element	{ sc_n	:: Name
+						, sc_1	:: Schema
+						}
+				| Attribute	{ sc_n	:: Name
+						, sc_1	:: Schema
+						}
+				| ElemRef	{ sc_n	:: Name
+						}
+				| CharData	{ sc_dt	:: DataTypeDescr
+						}
+				  deriving (Eq, Show)
 
 type Name			= String
-type Kind               	= String	-- k_fixed, k_implies, k_required
 type Schemas			= [Schema]
-
-data SchemaRestriction		= FixedValue	String
-                                | DTDAttrType   String
-				| ValEnum	[String]
-				| RegEx		String
-				| XmlSchemaType	String
-				  deriving (Eq, Show)
 
 data DataTypeDescr		= DTDescr { dtLib    :: String
 					  , dtName   :: String
@@ -71,42 +70,44 @@ instance Eq DataTypeDescr where
 	       sort (dtParams x1) == sort (dtParams x2)
 
 -- ------------------------------------------------------------
---
--- predefined xsd data types for representation of DTD types
 
-xsd_dt		:: String -> Attributes -> DataTypeDescr
-xsd_dt n rl	= DTDescr w3cNS n rl
+-- | test: is schema a simple XML Schema datatype
 
-dt_string	:: DataTypeDescr
-dt_string	= xsd_dt xsd_string []
+isScXsd			:: (String -> Bool) -> Schema -> Bool
 
-dt_string1	:: DataTypeDescr
-dt_string1	= xsd_dt xsd_string [(xsd_minLength, "1")]
+isScXsd p (CharData (DTDescr lib n _ps))
+			= lib == w3cNS
+			  &&
+			  p n
+isScXsd _ _		= False
 
-dt_fixed	:: String -> DataTypeDescr
-dt_fixed v	= xsd_dt xsd_string [(xsd_enumeration, v)]
+-- | test: is type a fixed value attribute type
 
--- ------------------------------------------------------------
+isScFixed		:: Schema -> Bool
+isScFixed sc		= isScXsd (== xsd_string) sc
+			  &&
+			  ((== 1) . length . words . xsdParam xsd_enumeration) sc
+
+isScEnum		:: Schema -> Bool
+isScEnum sc		= isScXsd (== xsd_string) sc
+			  &&
+			  (not . null . xsdParam xsd_enumeration) sc
 
 isScElem		:: Schema -> Bool
 isScElem (Element _ _)	= True
 isScElem _		= False
 
+isScAttr		:: Schema -> Bool
+isScAttr (Attribute _ _)= True
+isScAttr _		= False
+
 isScElemRef		:: Schema -> Bool
 isScElemRef (ElemRef _)	= True
 isScElemRef _		= False
 
-isScPCData		:: Schema -> Bool
-isScPCData (PCData _)	= True
-isScPCData _		= False
-
 isScCharData		:: Schema -> Bool
-isScCharData (CharData _)	= True
-isScCharData _			= False
-
-isScCData		:: Schema -> Bool
-isScCData (CData _ _)	= True
-isScCData _		= False
+isScCharData (CharData _)= True
+isScCharData _		= False
 
 isScSARE		:: Schema -> Bool
 isScSARE (Seq _)	= True
@@ -115,45 +116,57 @@ isScSARE (Rep _ _ _)	= True
 isScSARE (ElemRef _)	= True
 isScSARE _		= False
 
-emptyText			:: SchemaRestriction
-emptyText			= restrictRegEx ".*"
+isScList		:: Schema -> Bool
+isScList (Rep 0 (-1) _)	= True
+isScList _		= False
 
-noneEmptyText			:: SchemaRestriction
-noneEmptyText			= restrictRegEx ".+"
+isScOpt			:: Schema -> Bool
+isScOpt (Rep 0 1 _)	= True
+isScOpt _		= False
 
-restrictRegEx			:: String -> SchemaRestriction
-restrictRegEx			= RegEx
+-- | access an attribute of a descr of an atomic type
 
-restrictDTDAttrType             :: String -> SchemaRestriction
-restrictDTDAttrType             = DTDAttrType
-
-restrictEnum			:: [String] -> SchemaRestriction
-restrictEnum			= ValEnum
-
-restrictOption			:: SchemaRestriction -> SchemaRestriction
-restrictOption (RegEx re)	= restrictRegEx $ "(" ++ re ++ ")?"
-restrictOption r		= r
+xsdParam		:: String -> Schema -> String
+xsdParam n (CharData dtd)
+                        = lookup1 n (dtParams dtd)
+xsdParam _ _            = ""
 
 -- ------------------------------------------------------------
 
 -- smart constructors for Schema datatype
 
+-- ------------------------------------------------------------
+--
+-- predefined xsd data types for representation of DTD types
+
+scDT		:: String -> String -> Attributes -> Schema
+scDT l n rl	= CharData $ DTDescr l n rl
+
+scDTxsd		:: String -> Attributes -> Schema
+scDTxsd		= scDT w3cNS
+
+scString	:: Schema
+scString	= scDTxsd xsd_string []
+
+scString1	:: Schema
+scString1	= scDTxsd xsd_string [(xsd_minLength, "1")]
+
+scFixed		:: String -> Schema
+scFixed v	= scDTxsd xsd_string [(xsd_enumeration, v)]
+
+scEnum		:: [String] -> Schema
+scEnum vs	= scFixed (unwords vs)
+
+scNmtoken	:: Schema
+scNmtoken	= scDTxsd xsd_NCName []
+
+scNmtokens	:: Schema
+scNmtokens	= scList scNmtoken
+
+-- ------------------------------------------------------------
+
 scEmpty				:: Schema
 scEmpty				= Seq []
-
-scRequiredAttr			:: SchemaRestriction -> Schema
-scRequiredAttr re		= CData k_required re
-
-scImpliedAttr			:: SchemaRestriction -> Schema
-scImpliedAttr re		= CData k_implied re
-
-scFixedCData			:: String -> Schema
-scFixedCData v			= CData k_fixed (FixedValue v)
-
-scRestrict			:: SchemaRestriction -> Schema -> Schema
-scRestrict re (CData k _)	= CData k re
-scRestrict re (PCData _)	= PCData re
-scRestrict _ sc			= sc
 
 scSeq				:: Schema -> Schema -> Schema
 scSeq (Seq [])   sc2		= sc2
@@ -182,28 +195,27 @@ scAlts		= foldl scAlt scNull
 
 scOption	:: Schema -> Schema
 scOption     (Seq [])		= scEmpty
+scOption (Attribute n sc2)	= Attribute n (scOption sc2)
+scOption sc1
+    | sc1 == scString1		= scString
+    | otherwise			= scOpt sc1
 
-scOption (PCData re)
-    | re == noneEmptyText	= PCData emptyText
-    | otherwise			= PCData (restrictOption re)
+scList		:: Schema -> Schema
+scList		= scRep 0 (-1)
 
-scOption (Attribute n sc2)	= Attribute n (scOptionAttr sc2)
-    where
-    scOptionAttr (CData _ re)	= scImpliedAttr re
-    scOptionAttr sc'		= sc'
+scList1		:: Schema -> Schema
+scList1		= scRep 1 (-1)
 
-scOption sc1			= Rep 0 1 sc1
+scOpt		:: Schema -> Schema
+scOpt		= scRep 0 1
 
-scList		:: Int -> Int -> Schema -> Schema
-scList l u sc1  = Rep l u sc1
+scRep		:: Int -> Int -> Schema -> Schema
+scRep l u sc1  = Rep l u sc1
 
 scElem		:: String -> Schema -> Schema
 scElem n sc1	= Element n sc1
 
 scAttr		:: String -> Schema -> Schema
-scAttr n sc1	= Attribute n (scAttrCont sc1)
-    where
-    scAttrCont (PCData re)	= scRequiredAttr re
-    scAttrCont sc'		= sc'
+scAttr n sc1	= Attribute n sc1
 
 -- ------------------------------------------------------------

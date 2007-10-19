@@ -1,5 +1,5 @@
 -- | This modul exports the list of supported datatype libraries.
--- It also exports the main functions to validate in XML instance value
+-- It also exports the main functions to validate an XML instance value
 -- with respect to a datatype.
 
 module Text.XML.HXT.RelaxNG.DataTypeLibraries
@@ -63,7 +63,6 @@ datatypeEqual uri d s1 c1 s2 c2
     where
     DTC _ dtEqFct _ = fromJust $ lookup uri datatypeLibraries
 
-
 {- |
 Tests whether a XML instance value matches a data-pattern.
 
@@ -94,45 +93,49 @@ datatypeAllows uri d params s1 c1
 -- --------------------------------------------------------------------------------------                    
 -- Relax NG build in datatype library
 
-relaxDatatypeLib :: DatatypeLibrary
-relaxDatatypeLib 
-    = (relaxNamespace, DTC datatypeAllowsRelax datatypeEqualRelax relaxDatatypes)
-
+relaxDatatypeLib 	:: DatatypeLibrary
+relaxDatatypeLib	= (relaxNamespace, DTC datatypeAllowsRelax datatypeEqualRelax relaxDatatypes)
 
 -- | if there is no datatype uri, the build in datatype library is used
-relaxDatatypeLib' :: DatatypeLibrary
-relaxDatatypeLib'
-    = ("", DTC datatypeAllowsRelax datatypeEqualRelax relaxDatatypes)
-
+relaxDatatypeLib'	:: DatatypeLibrary
+relaxDatatypeLib'	= ("",             DTC datatypeAllowsRelax datatypeEqualRelax relaxDatatypes)
 
 -- | The build in Relax NG datatype lib supportes only the token and string datatype,
 -- without any params.
+
 relaxDatatypes :: AllowedDatatypes
 relaxDatatypes
-    = [ ("token", [])
-      , ("string", [])
-      ]
+    = map ( (\ x -> (x, [])) . fst ) relaxDatatypeTable
 
 datatypeAllowsRelax :: DatatypeAllows
-datatypeAllowsRelax "string" [] _ _ = Nothing
-datatypeAllowsRelax "token" [] _ _ = Nothing
 datatypeAllowsRelax d p v _ 
-    = Just $ errorMsgDataTypeNotAllowed d p v relaxNamespace
+    = maybe notAllowed allowed . lookup d $ relaxDatatypeTable
+    where
+    notAllowed
+	= Just $ errorMsgDataTypeNotAllowed d p v relaxNamespace
+    allowed _
+	= Nothing
 
 -- | If the token datatype is used, the values have to be normalized
 -- (trailing and leading whitespaces are removed).
 -- token does not perform any changes to the values.
+
 datatypeEqualRelax :: DatatypeEqual
-datatypeEqualRelax d@"string" s1 _ s2 _
-    = if s1 == s2
-      then Nothing 
-      else Just $ errorMsgEqual d s1 s2
-
-datatypeEqualRelax d@"token" s1 _ s2 _
-    = if (normalizeWhitespace s1) == (normalizeWhitespace s2) 
-      then Nothing 
-      else Just $ errorMsgEqual d s1 s2
-
 datatypeEqualRelax d s1 _ s2 _
-    = Just $ errorMsgDataTypeNotAllowed2 d s1 s2 relaxNamespace
+    = maybe notAllowed checkValues . lookup d $ relaxDatatypeTable
+      where
+      notAllowed
+	  = Just $ errorMsgDataTypeNotAllowed2 d s1 s2 relaxNamespace
+      checkValues predicate
+	  = if predicate s1 s2
+	    then Nothing
+	    else Just $ errorMsgEqual d s1 s2
 
+relaxDatatypeTable :: [(String, String -> String -> Bool)]
+relaxDatatypeTable
+    = [ ("string", (==))
+      , ("token",  \ s1 s2 -> normalizeWhitespace s1 == normalizeWhitespace s2 )
+      ]
+
+
+-- --------------------------------------------------------------------------------------                    

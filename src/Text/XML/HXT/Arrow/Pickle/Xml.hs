@@ -258,13 +258,25 @@ xp5Tuple pa pb pc pd pe
 -- | Pickle a string into an XML text node
 --
 -- One of the most often used primitive picklers. Attention:
--- For pickling empty strings use 'xpText0'.
+-- For pickling empty strings use 'xpText0'. If the text has a more
+-- specific datatype than xsd:string, use 'xpTextDT'
 
 xpText	:: PU String
-xpText	= PU { appPickle   = \ (s, st) -> addCont (XN.mkText s) st
-	     , appUnPickle = \ st -> fromMaybe (Nothing, st) (unpickleString st)
-	     , theSchema   = PCData noneEmptyText
-	     }
+xpText	= xpTextDT scString1
+
+-- | Pickle a string into an XML text node
+--
+-- Text pickler with a description of the structure of the text
+-- by a schema. A schema for a data type can be defined by 'Text.XML.HXT.Arrow.Pickle.Schema.scDT'.
+-- In 'Text.XML.HXT.Arrow.Pickle.Schema' there are some more functions for creating
+-- simple datatype descriptions.
+
+xpTextDT	:: Schema -> PU String
+xpTextDT sc
+    = PU { appPickle   = \ (s, st) -> addCont (XN.mkText s) st
+	 , appUnPickle = \ st -> fromMaybe (Nothing, st) (unpickleString st)
+	 , theSchema   = sc
+	 }
     where
     unpickleString st
 	= do
@@ -281,8 +293,15 @@ xpText	= PU { appPickle   = \ (s, st) -> addCont (XN.mkText s) st
 -- if there is no text node in the document.
 
 xpText0	:: PU String
-xpText0
-    = xpWrap (fromMaybe "", emptyToNothing) $ xpOption xpText
+xpText0	= xpText0DT scString1
+
+-- | Pickle a possibly empty string with a datatype description into an XML node.
+--
+-- Like 'xpText0' but with extra Parameter for datatype description as in 'xpTextDT'.
+
+xpText0DT	:: Schema -> PU String
+xpText0DT sc
+    = xpWrap (fromMaybe "", emptyToNothing) $ xpOption $ xpTextDT sc
     where
     emptyToNothing "" = Nothing
     emptyToNothing x  = Just x
@@ -356,7 +375,7 @@ xpList pa
                          xpChoice (xpLift []) pa
 	                   (\ x -> xpSeq id (xpList pa) (\xs -> xpLift (x:xs)))
 
-	 , theSchema   = scList 0 (-1) (theSchema pa)
+	 , theSchema   = scList (theSchema pa)
 	 }
       where
       pc = xpSeq head  pa       (\ x ->
@@ -374,7 +393,7 @@ xpList1 pa
 	       ,\ (x : xs) -> (x, xs)
 	       ) $
 	xpPair pa (xpList pa)
-      ) { theSchema = scList 1 (-1) (theSchema pa) }
+      ) { theSchema = scList1 (theSchema pa) }
 
 -- | Pickler for sum data types.
 --
@@ -462,7 +481,7 @@ xpAttrFixed name val
 		    , const val
 		    ) $
 	xpAttr name xpText
-      ) { theSchema   = scAttr name (scFixedCData val) }
+      ) { theSchema   = scAttr name (scFixed val) }
 
 -- | Add an attribute with a fixed value.
 --
@@ -474,13 +493,6 @@ xpAddFixedAttr name val pa
 	     , (,) ()
 	     ) $
       xpPair (xpAttrFixed name val) pa
-
--- | Restrict the structure of a value, e.g. for attributes restrict the
--- value to NMTOKEN, NMTOKENS or a fixed set of values
-
-xpRestrict	::  SchemaRestriction -> PU a -> PU a
-xpRestrict re pa
-    = pa { theSchema = scRestrict re (theSchema pa) }
 
 -- ------------------------------------------------------------
 

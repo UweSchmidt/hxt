@@ -5,7 +5,9 @@ module Text.XML.HXT.RelaxNG.Utils
     ( isRelaxAnyURI
     , compareURI
     , normalizeURI
-    , parseNumber
+    , isNumber
+    , isNmtoken
+    , isName
     , formatStringList
     , formatStringListPatt
     , formatStringListId
@@ -20,16 +22,25 @@ import Text.XML.HXT.Arrow.DOMInterface
 
 import Text.ParserCombinators.Parsec
 import Text.XML.HXT.Parser.XmlParser
-    ( skipS0 )
+    ( skipS0
+    , nmtoken
+    , name
+    )
 
 import Network.URI
-  ( isURI
-  , isRelativeReference
-  , parseURI
-  , URI(..)
-  )
+    ( isURI
+    , isRelativeReference
+    , parseURI
+    , URI(..)
+    )
+
 import Data.Maybe
-import Data.Char 
+    ( fromMaybe
+    )
+
+import Data.Char
+    ( toLower
+    )
 
 
 -- ------------------------------------------------------------
@@ -65,11 +76,15 @@ normalizeURI uri
 		    then init uri
 		    else uri
 		  )
+
+checkByParsing	:: Parser String -> String -> Bool
+checkByParsing p s
+    = either (const False) (const True) (parse p "" s)
                   
 -- | Tests whether a string matches a number [-](0-9)*
-parseNumber :: String -> Bool
-parseNumber s
-    = either (const False) (const True) (parse parseNumber' "" s)
+isNumber :: String -> Bool
+isNumber
+    = checkByParsing parseNumber'
     where
     parseNumber' :: Parser String
     parseNumber'
@@ -80,7 +95,12 @@ parseNumber s
 	  skipS0
 	  eof
 	  return $ m ++ n
-      
+
+isNmtoken	:: String -> Bool
+isNmtoken    = checkByParsing nmtoken
+
+isName	:: String -> Bool
+isName	= checkByParsing name
 
 {- | 
 

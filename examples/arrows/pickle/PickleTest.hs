@@ -203,6 +203,10 @@ pickleUnpickleTests
 	  , TestCase $
 	    res6 >>= 
 	    assertEqual "pickle/unpickle with xpickleDocument/xunpickleDocument: " [p]
+
+	  , TestCase $
+	    res7 >>= 
+	    assertEqual "pickle/unpickle with DTD validation xpickleDocument/xunpickleDocument: " [p]
 	  ]
 	where
 	res1	:: [Program]
@@ -265,6 +269,23 @@ pickleUnpickleTests
 		 xunpickleDocument xpProgram
                                    [ (a_remove_whitespace, v_1)	-- formated external XML document => Program
 				   , (a_validate, v_0)
+				   ] "pickle.xml"
+	       )
+	res7	:: IO [Program]					-- the most important case
+								-- for persistent data storage
+								-- and message passing
+								-- same as res5, but the convenient way
+	res7 = runX
+	       ( constA p					-- take the Program value
+		 >>>
+		 xpickleDocument   xpProgram
+                                 [ (a_indent, v_1)		-- Program => formated external XML document
+				 , (a_addDTD, v_1)
+				 ] "pickle.xml"
+		 >>>
+		 xunpickleDocument xpProgram
+                                   [ (a_remove_whitespace, v_1)	-- formated external XML document => Program
+				   , (a_validate, v_1)
 				   ] "pickle.xml"
 	       )
 

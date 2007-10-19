@@ -26,7 +26,7 @@ force		:
 
 test		: $(prog)
 		@echo "===> Relax NG examples" ; echo ; sleep 1
-		@$(MAKE) example1 example2 example3 example4 example5
+		@$(MAKE) example1 example2 example3 example5
 
 example1	:
 		@echo "===> Validate a valid Relax NG schema with respect to a valid xml file" ; echo ; sleep 1

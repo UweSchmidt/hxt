@@ -255,6 +255,7 @@ pubidLiteral
 	    oneOf "-()+,./:=?;!*#@$_%"
             <|>
 	    oneOf quoteChars
+
 -- ------------------------------------------------------------
 --
 -- Character and Entity References (4.1)
