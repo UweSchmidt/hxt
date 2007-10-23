@@ -271,7 +271,7 @@ hread			:: ArrowXml a => a String XmlTree
 hread
     = parseHtmlContent
       >>>
-      processTopDown substHtmlEntityRefs
+      substHtmlEntityRefs
       >>>
       processTopDown ( none `when` isError )
       >>>

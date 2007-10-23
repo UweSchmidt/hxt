@@ -139,10 +139,10 @@ parseHtmlDocument warnings
 			  >>>
 			  parseHtmlDoc				-- run parser
 			  >>>
-			  processTopDown substHtmlEntityRefs	-- substitute entity refs
+			  substHtmlEntityRefs			-- substitute entity refs
 			)
 	>>>
-	processTopDownWithAttrl ( if warnings		-- remove warnings inserted by parser and entity subst
+	processTopDownWithAttrl ( if warnings			-- remove warnings inserted by parser and entity subst
 				  then filterErrorMsg
 				  else ( none
 					 `when`

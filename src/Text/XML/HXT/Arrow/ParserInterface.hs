@@ -7,7 +7,13 @@ module Text.XML.HXT.Arrow.ParserInterface
     ( module Text.XML.HXT.Arrow.ParserInterface )
 where
 
+import Control.Arrow
 import Control.Arrow.ArrowList
+import Control.Arrow.ArrowIf
+import Control.Arrow.ArrowTree
+import Control.Arrow.ListArrow
+
+import Text.XML.HXT.Parser.XhtmlEntities
 
 import Text.XML.HXT.Arrow.DOMInterface
 import Text.XML.HXT.Arrow.XmlArrow
@@ -64,9 +70,6 @@ parseHtmlDoc			= arr2L HP.parseHtmlDocument
 parseHtmlContent		:: ArrowList a => a String XmlTree
 parseHtmlContent		= arrL  HP.parseHtmlContent
 
-substHtmlEntityRefs		:: ArrowList a => a XmlTree XmlTree
-substHtmlEntityRefs		= arrL HP.substHtmlEntities
-
 -- ------------------------------------------------------------
 
 validateDoc
@@ -74,5 +77,37 @@ validateDoc
 
 validateDoc			= arrL VA.validate
 transformDoc			= arrL VA.transform
+
+-- ------------------------------------------------------------
+
+-- | substitution of all predefined XHTMT entities for none ASCII chars
+--
+-- This arrow recurses through a whole XML tree and substitutes all
+-- entity refs within text nodes and attribute values by a text node
+-- containing of a single char corresponding to this entity.
+--
+-- Unknown entity refs remain unchanged
+
+substHtmlEntityRefs		:: ArrowList a => a XmlTree XmlTree
+substHtmlEntityRefs
+    = fromLA substHtmlEntities
+    where
+    substHtmlEntities		:: LA XmlTree XmlTree
+    substHtmlEntities
+	= choiceA
+	  [ isEntityRef	:-> ( substEntity $< getEntityRef )
+	  , isElem	:-> ( processAttrl (processChildren substHtmlEntities)
+			      >>>
+			      processChildren substHtmlEntities
+			    )
+	  , this	:-> this
+	  ]
+	where
+	substEntity en
+	    = case (lookup en xhtmlEntities) of
+	      Just i
+		  -> txt [toEnum i] 	-- constA i >>> mkCharRef
+	      Nothing
+		  -> this
 
 -- ------------------------------------------------------------
