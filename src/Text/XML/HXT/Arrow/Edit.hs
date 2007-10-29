@@ -73,10 +73,10 @@ import Text.XML.HXT.DOM.Unicode
 import Text.XML.HXT.DOM.FormatXmlTree
     ( formatXmlTree )
 
-import Text.XML.HXT.Parser.XmlParsec
+import Text.XML.HXT.Parser.XmlEntities
     ( xmlEntities )
 
-import Text.XML.HXT.Parser.HtmlParsec
+import Text.XML.HXT.Parser.XhtmlEntities
     ( xhtmlEntities )
 
 import Data.Maybe

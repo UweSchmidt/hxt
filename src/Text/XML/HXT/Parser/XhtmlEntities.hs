@@ -12,10 +12,12 @@ module Text.XML.HXT.Parser.XhtmlEntities
 
 where
 
-import Text.XML.HXT.Parser.XmlParsec
+import Text.XML.HXT.Parser.XmlEntities
     ( xmlEntities )
 
 -- ------------------------------------------------------------
+
+-- | table with all XHTML entity refs and corresponding unicode values
 
 xhtmlEntities	:: [(String, Int)]
 xhtmlEntities	= xmlEntities

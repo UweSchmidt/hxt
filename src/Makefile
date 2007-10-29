@@ -98,7 +98,7 @@ HXT_SRC_ARROW	= $(wildcard ./Data/*.hs) \
 		  $(wildcard ./Text/XML/HXT/Arrow.hs) \
 		  $(wildcard ./Text/XML/HXT/Arrow/[DEGNPRWX]*.hs) \
 		  $(wildcard ./Text/XML/HXT/Arrow/Pickle/*.hs) \
-		  $(wildcard ./Text/XML/HXT/RelaxNG/[SV]*.hs) \
+		  $(wildcard ./Text/XML/HXT/RelaxNG/[DSV]*.hs) \
 		  $(wildcard ./Text/XML/HXT/XSLT/[ACNX]*.hs)
 
 

@@ -285,7 +285,7 @@ xread			:: ArrowXml a => a String XmlTree
 xread
     = parseXmlContent
       >>>
-      processTopDown substXmlEntityRefs
+      substXmlEntityRefs
       >>>
       canonicalizeContents
 

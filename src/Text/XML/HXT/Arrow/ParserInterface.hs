@@ -13,6 +13,7 @@ import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
 import Control.Arrow.ListArrow
 
+import Text.XML.HXT.Parser.XmlEntities
 import Text.XML.HXT.Parser.XhtmlEntities
 
 import Text.XML.HXT.Arrow.DOMInterface
@@ -36,8 +37,7 @@ parseXmlContent			=  arrL XP.xread
 
 parseXmlEntityEncodingSpec
   , parseXmlDocEncodingSpec
-  , removeEncodingSpec
-  , substXmlEntityRefs		:: ArrowXml a => a XmlTree XmlTree
+  , removeEncodingSpec		:: ArrowXml a => a XmlTree XmlTree
 
 parseXmlDocEncodingSpec		=  arrL XP.parseXmlDocEncodingSpec
 parseXmlEntityEncodingSpec	=  arrL XP.parseXmlEntityEncodingSpec
@@ -59,8 +59,6 @@ parseXmlAttrValue context	=  arrL (XP.parseXmlAttrValue context)
 parseXmlGeneralEntityValue	:: ArrowXml a => String -> a XmlTree XmlTree
 parseXmlGeneralEntityValue context
 				=  arrL (XP.parseXmlGeneralEntityValue context)
-
-substXmlEntityRefs		=  arrL XP.substXmlEntities
 
 -- ------------------------------------------------------------
 
@@ -89,25 +87,37 @@ transformDoc			= arrL VA.transform
 -- Unknown entity refs remain unchanged
 
 substHtmlEntityRefs		:: ArrowList a => a XmlTree XmlTree
-substHtmlEntityRefs
-    = fromLA substHtmlEntities
+substHtmlEntityRefs		= substEntityRefs xhtmlEntities
+
+
+-- | substitution of the five predefined XMT entities, works like 'substHtmlEntityRefs'
+
+substXmlEntityRefs		:: ArrowList a => a XmlTree XmlTree
+substXmlEntityRefs		= substEntityRefs xmlEntities
+
+-- | the entity substitution arrow called from 'substXmlEntityRefs' and 'substHtmlEntityRefs'
+
+substEntityRefs		:: ArrowList a => [(String, Int)] -> a XmlTree XmlTree
+substEntityRefs entities
+    = fromLA substEntities
     where
-    substHtmlEntities		:: LA XmlTree XmlTree
-    substHtmlEntities
+    substEntities		:: LA XmlTree XmlTree
+    substEntities
 	= choiceA
 	  [ isEntityRef	:-> ( substEntity $< getEntityRef )
-	  , isElem	:-> ( processAttrl (processChildren substHtmlEntities)
+	  , isElem	:-> ( processAttrl (processChildren substEntities)
 			      >>>
-			      processChildren substHtmlEntities
+			      processChildren substEntities
 			    )
 	  , this	:-> this
 	  ]
 	where
 	substEntity en
-	    = case (lookup en xhtmlEntities) of
+	    = case (lookup en entities) of
 	      Just i
 		  -> txt [toEnum i] 	-- constA i >>> mkCharRef
 	      Nothing
 		  -> this
+
 
 -- ------------------------------------------------------------

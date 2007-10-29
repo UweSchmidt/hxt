@@ -54,8 +54,6 @@ module Text.XML.HXT.Parser.XmlParsec
     , parseName
 
     , removeEncodingSpec
-    , substXmlEntities
-    , xmlEntities
     )
 where
 
@@ -78,7 +76,6 @@ import Text.ParserCombinators.Parsec
     )
 
 import           Text.XML.HXT.DOM.XmlTree 		hiding     (choice)
-import qualified Text.XML.HXT.DOM.XmlTree		as XmlTree (choice)
 
 import Text.XML.HXT.Parser.XmlCharParser               (xmlChar)
 
@@ -512,9 +509,8 @@ encodingDecl
 -- the string parameter is parsed with the XML content parser.
 -- result is the list of trees or in case of an error a single element list with the
 -- error message as node. No entity or character subtitution is done.
--- For substitution of predefined XML entities 'substXmlEntities' can be used.
 --
--- see also: 'parseXmlContent', 'substXmlEntities'
+-- see also: 'parseXmlContent'
 
 xread			:: String -> XmlTrees
 xread str
@@ -529,7 +525,7 @@ xread str
 -- |
 -- the filter version of 'xread'
 
-parseXmlContent		:: XmlFilter
+parseXmlContent		:: XmlTree -> XmlTrees
 parseXmlContent
     = xread . xshow . this
 
@@ -537,7 +533,7 @@ parseXmlContent
 -- a more general version of 'parseXmlContent'.
 -- The parser to be used and the context are extra parameter
 
-parseXmlText		:: Parser XmlTrees -> String -> XmlFilter
+parseXmlText		:: Parser XmlTrees -> String -> XmlTree -> XmlTrees
 parseXmlText p loc	= parseXmlFromString p loc . xshow . this
 
 parseXmlDocument	:: String -> String -> XmlTrees
@@ -551,7 +547,7 @@ parseXmlFromString parser loc
 -- ------------------------------------------------------------
 --
 
-removeEncodingSpec	:: XmlFilter
+removeEncodingSpec	:: XmlTree -> XmlTrees
 removeEncodingSpec (NTree (XText s) _cs)
     = either (xerr . (++ "\n") . show) xtext . parse parser "remove encoding spec" $ s
     where
@@ -568,7 +564,7 @@ removeEncodingSpec n
 -- |
 -- general parser for parsing arbitray parts of a XML document
 
-parseXmlPart	:: Parser XmlTrees -> String -> String -> XmlFilter
+parseXmlPart	:: Parser XmlTrees -> String -> String -> XmlTree -> XmlTrees
 parseXmlPart parser expected context t
     = parseXmlText ( do
 		     res <- parser
@@ -582,7 +578,7 @@ parseXmlPart parser expected context t
 -- |
 -- Parser for parts of a DTD
 
-parseXmlDTDPart	:: String -> XmlFilter
+parseXmlDTDPart	:: String -> XmlTree -> XmlTrees
 parseXmlDTDPart
     = parseXmlPart markupOrDeclSep "markup declaration"
 
@@ -591,7 +587,7 @@ parseXmlDTDPart
 -- |
 -- Parser for general entites
 
-parseXmlGeneralEntityValue	:: String -> XmlFilter
+parseXmlGeneralEntityValue	:: String -> XmlTree -> XmlTrees
 parseXmlGeneralEntityValue
     = parseXmlPart content "general entity value"
 
@@ -600,7 +596,7 @@ parseXmlGeneralEntityValue
 -- |
 -- Parser for attribute values
 
-parseXmlAttrValue	:: String -> XmlFilter
+parseXmlAttrValue	:: String -> XmlTree -> XmlTrees
 parseXmlAttrValue
     = parseXmlPart (XT.attrValueT' "<&") "attribute value"
 
@@ -609,7 +605,7 @@ parseXmlAttrValue
 -- |
 -- Parser for NMTOKENs
 
-parseNMToken		:: String -> XmlFilter
+parseNMToken		:: String -> XmlTree -> XmlTrees
 parseNMToken
     = parseXmlPart (many1 XT.nmtokenT) "nmtoken"
 
@@ -618,7 +614,7 @@ parseNMToken
 -- |
 -- Parser for XML names
 
-parseName		:: String -> XmlFilter
+parseName		:: String -> XmlTree -> XmlTrees
 parseName
     = parseXmlPart (many1 XT.nameT) "name"
 
@@ -637,7 +633,7 @@ parseName
 --			  in case of a valid encoding spec
 --			  else the unchanged tree
 
-parseXmlEncodingSpec	:: Parser XmlTree -> XmlFilter
+parseXmlEncodingSpec	:: Parser XmlTree -> XmlTree -> XmlTrees
 parseXmlEncodingSpec encDecl
     =  parseEncSpec
       `when` isRoot
@@ -651,47 +647,10 @@ parseXmlEncodingSpec encDecl
 	  where
 	  source = valueOf a_source r
 
-parseXmlEntityEncodingSpec	:: XmlFilter
+parseXmlEntityEncodingSpec	:: XmlTree -> XmlTrees
 parseXmlEntityEncodingSpec	= parseXmlEncodingSpec textDecl''
 
-parseXmlDocEncodingSpec		:: XmlFilter
+parseXmlDocEncodingSpec		:: XmlTree -> XmlTrees
 parseXmlDocEncodingSpec		= parseXmlEncodingSpec xMLDecl''
-
--- ------------------------------------------------------------
-
--- |
--- Filter for substitution of all occurences the predefined XML entites quot, amp, lt, gt, apos
--- by equivalent character references
-
-substXmlEntities	:: XmlFilter
-substXmlEntities
-    = XmlTree.choice
-      [ isXEntityRef	:-> substEntity
-      , isXTag		:-> processAttr (processChildren substXmlEntities)
-      , this		:-> this
-      ]
-      where
-      substEntity t'@(NTree (XEntityRef en) _)
-	  = case (lookup en xmlEntities) of
-	    Just i
-		-> [mkXCharRefTree i]
-	    Nothing
-		-> this t'
-
-      substEntity _					-- just for preventing ghc warning
-	  = error "substXmlEntities: illegal argument"
-
--- |
--- list of predefined XML entity names and their unicode values
---
--- used by 'substXmlEntities'
-
-xmlEntities	:: [(String, Int)]
-xmlEntities	= [ ("quot",	34)
-		  , ("amp",	38)
-		  , ("lt",	60)
-		  , ("gt",	62)
-		  , ("apos",	39)
-		  ]
 
 -- ------------------------------------------------------------

@@ -8,17 +8,17 @@ module Text.XML.HXT.Parser.XmlParser
     ( module Text.XML.HXT.Parser.XmlParsec
     , module Text.XML.HXT.Parser.XmlTokenParser
     , parseXmlDoc
+    , substXmlEntities
     )
 where
 
 import Text.XML.HXT.DOM.XmlTree
-
 import Text.XML.HXT.DOM.XmlState
 
 import Text.XML.HXT.Parser.XmlTokenParser
 
+import Text.XML.HXT.Parser.XmlEntities
 import Text.XML.HXT.Parser.XmlParsec
-
 import Text.XML.HXT.Parser.XmlOutput
     ( traceTree
     , traceSource
@@ -56,5 +56,29 @@ parseXmlDoc
 	        getChildren
 	  parser
 	      = processChildrenM (liftF (parseXmlText document' loc))
+
+-- ------------------------------------------------------------
+
+-- |
+-- Filter for substitution of all occurences of the predefined XML entites quot, amp, lt, gt, apos
+-- by equivalent character references
+
+substXmlEntities	:: XmlFilter
+substXmlEntities
+    = choice
+      [ isXEntityRef	:-> substEntity
+      , isXTag		:-> processAttr (processChildren substXmlEntities)
+      , this		:-> this
+      ]
+      where
+      substEntity t'@(NTree (XEntityRef en) _)
+	  = case (lookup en xmlEntities) of
+	    Just i
+		-> [mkXCharRefTree i]
+	    Nothing
+		-> this t'
+
+      substEntity _					-- just for preventing ghc warning
+	  = error "substXmlEntities: illegal argument"
 
 -- ------------------------------------------------------------
