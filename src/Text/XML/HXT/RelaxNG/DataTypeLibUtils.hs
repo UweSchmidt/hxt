@@ -19,6 +19,10 @@ module Text.XML.HXT.RelaxNG.DataTypeLibUtils
   , module Text.XML.HXT.DOM.Util
   , module Text.XML.HXT.RelaxNG.Utils
   , module Text.XML.HXT.RelaxNG.DataTypes  
+  , alwaysErr
+  , orErr
+  , andCheck
+  , stringValid
   )
 
 where
@@ -65,6 +69,71 @@ fctTableString
       , (rng_minLength, (checkStrWithNumParam (>=)))
       ]
 
+-- ------------------------------------------------------------
+
+alwaysOK	:: a -> Maybe String
+alwaysOK _	= Nothing
+
+-- | error message combinator: create an error message for an illegal value
+
+alwaysErr	:: (a -> String) -> a -> Maybe String
+alwaysErr msg	= Just . msg
+
+-- | Perform check and generate error message on failure
+
+orErr	:: (a -> Bool) -> (a -> String) -> (a -> Maybe String)
+orErr p msg s
+    | p s	= Nothing
+    | otherwise	= Just $ msg s
+
+-- | Combine two checks
+
+andCheck	:: (a -> Maybe String) -> (a -> Maybe String) -> (a -> Maybe String)
+andCheck c1 c2 s
+    = res (c1 s)
+    where
+    res Nothing	= c2 s
+    res r1	= r1
+
+-- ------------------------------------------------------------
+-- new check functions
+
+stringValid :: DatatypeName -> Integer -> Integer -> ParamList -> String -> Maybe String
+stringValid datatype lowerBound upperBound params
+    = boundsOK `orErr` boundsErr
+      `andCheck`
+      paramsStringValid params
+    where
+    boundsOK v
+	= (toInteger (length v) >= lowerBound)
+	  &&
+	  ((upperBound == (-1)) || (toInteger (length v) <= upperBound))
+    boundsErr v
+	= "Length of " ++ v
+          ++ " (" ++ (show $ length v) ++ " Chars) out of Range: "
+          ++ show lowerBound ++ " .. " ++ show upperBound
+          ++ " for datatype " ++ datatype
+
+-- ------------------------------------------------------------
+
+paramValid :: [(String, String -> String -> Bool)] -> (LocalName, String) -> (String -> Maybe String)
+paramValid ftab (pn, pv)
+    = paramOK `orErr` paramErr
+    where
+    paramOK v  = paramFct pn v pv
+    paramErr v = "Can't check Param-Restriction: " ++ pn ++ " = " ++ pv
+		  ++ " against value = " ++ v
+    paramFct n = fromJust $ lookup n ftab
+
+paramsValid :: [(String, String -> String -> Bool)] -> [(LocalName, String)] -> (String -> Maybe String)
+paramsValid ftab
+    = foldr andCheck alwaysOK . map (paramValid ftab)
+
+paramsStringValid :: ParamList -> (String -> Maybe String)
+paramsStringValid
+    = paramsValid fctTableString
+
+-- ------------------------------------------------------------
 
 {- | 
 tests whether a string value matches a numeric param
@@ -103,6 +172,7 @@ All tests are performed on the string value.
    - return : Just \"Errormessage\" in case of an error, else Nothing
    
 -}
+
 checkString :: DatatypeName -> String -> Integer -> Integer -> ParamList -> Maybe String
 checkString datatype value lowerBound upperBound params
   = if (toInteger (length value) >= lowerBound) && 

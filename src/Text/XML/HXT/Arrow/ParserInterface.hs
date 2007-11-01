@@ -13,8 +13,8 @@ import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
 import Control.Arrow.ListArrow
 
-import Text.XML.HXT.Parser.XmlEntities
-import Text.XML.HXT.Parser.XhtmlEntities
+import Text.XML.HXT.Parser.XmlEntities	( xmlEntities   )
+import Text.XML.HXT.Parser.XhtmlEntities( xhtmlEntities )
 
 import Text.XML.HXT.Arrow.DOMInterface
 import Text.XML.HXT.Arrow.XmlArrow

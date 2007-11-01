@@ -108,51 +108,44 @@ stringParams = [ xsd_length
 datatypeAllowsW3C :: DatatypeAllows
 datatypeAllowsW3C d params value _
     | d == xsd_string
-	= checkString d value 0 (-1) params
+	= validString value
 
     | d == xsd_normalizedString
-	= checkString d value3 0 (-1) params
+	= validString (normalizeBlanks value)
 
     | d == xsd_token
-	= checkString d value1 0 (-1) params
+	= validString value1
 
     | d == xsd_NMTOKEN
-	= if isNmtoken value1
-	  then checkString d value1 0 (-1) params
-	  else err1
+	= isNmtoken `andValidString` value1
 
     | d == xsd_Name
-	= if isName value1
-	  then checkString d value1 0 (-1) params
-	  else err1
+	= isName `andValidString` value1
 
     | d `elem` [ xsd_NCName
 	       , xsd_ID
 	       , xsd_IDREF
 	       , xsd_ENTITY
 	       ]
-	= if isNCName value1
-          then checkString d value 0 (-1) params 
-	  else err1
+        =  isNCName `andValidString` value1
 
     | d == xsd_anyURI
-	= if isURIReference value2
-          then checkString d value 0 (-1) params
-	  else err1
+	= isURIReference `andValidString` value2
 
     | d == xsd_QName
-	= if isWellformedQualifiedName value1 && not (null value1)
-          then checkString d value 0 (-1) params
-	  else err1
+	= isWellformedQualifiedName `andValidString` value1
 
     | otherwise
-	= err2
+	= alwaysErr notAllowed value
+
     where
     value1 = normalizeWhitespace value
-    value2 = escapeURI value1
-    value3 = normalizeBlanks value
-    err1   = Just $ errorMsgDataLibQName value d w3cNS
-    err2   = Just $ errorMsgDataTypeNotAllowed d params value w3cNS
+    value2 = escapeURI           value1
+
+    andValidString p = (p `orErr` notValid) `andCheck` validString
+    validString      = stringValid d 0 (-1) params
+    notValid v'      = errorMsgDataLibQName v' d w3cNS
+    notAllowed v'    = errorMsgDataTypeNotAllowed d params v' w3cNS
 
 -- | Tests whether a XML instance value matches a value-pattern.
 datatypeEqualW3C :: DatatypeEqual

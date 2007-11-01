@@ -16,7 +16,6 @@ module Text.XML.HXT.Parser.HtmlParsec
     , parseHtmlText
     , parseHtmlDocument
     , parseHtmlContent
-    , xhtmlEntities
     , isEmptyHtmlTag
     , isInnerHtmlTagOf
     , emptyHtmlTags
