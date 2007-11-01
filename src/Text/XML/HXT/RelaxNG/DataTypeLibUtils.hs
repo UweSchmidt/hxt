@@ -16,13 +16,19 @@ module Text.XML.HXT.RelaxNG.DataTypeLibUtils
   , rng_minExclusive
   , rng_maxInclusive
   , rng_minInclusive
+
   , module Text.XML.HXT.DOM.Util
   , module Text.XML.HXT.RelaxNG.Utils
   , module Text.XML.HXT.RelaxNG.DataTypes  
+
+  , alwaysOK
   , alwaysErr
   , orErr
   , andCheck
-  , stringValid
+  , withVal
+
+  , stringValid		-- checkString
+  , numberValid		-- checkNumeric
   )
 
 where
@@ -49,8 +55,14 @@ rng_minInclusive	= "minInclusive"
 
 -- ------------------------------------------------------------
 
+-- | Function table type
+
+type FunctionTable	= [(String, String -> String -> Bool)]
+type Check a		= a -> Maybe String
+
 -- | Function table for numeric tests,
 -- XML document value is first operand, schema value second
+
 fctTableNum :: (Ord a, Num a) => [(String, a -> a -> Bool)]
 fctTableNum
     = [ (rng_maxExclusive, (<))
@@ -59,10 +71,9 @@ fctTableNum
       , (rng_minInclusive, (>=))
       ]
 
-
 -- | Function table for string tests,
 -- XML document value is first operand, schema value second
-fctTableString :: [(String, String -> String -> Bool)]
+fctTableString :: FunctionTable
 fctTableString
     = [ (rng_length,    (checkStrWithNumParam (==)))
       , (rng_maxLength, (checkStrWithNumParam (<=)))
@@ -71,34 +82,39 @@ fctTableString
 
 -- ------------------------------------------------------------
 
-alwaysOK	:: a -> Maybe String
+-- | Unit for checks
+alwaysOK	:: Check a
 alwaysOK _	= Nothing
 
--- | error message combinator: create an error message for an illegal value
+-- | Zero for checks: Create an error message for an illegal value
 
-alwaysErr	:: (a -> String) -> a -> Maybe String
+alwaysErr	:: (a -> String) -> Check a
 alwaysErr msg	= Just . msg
 
 -- | Perform check and generate error message on failure
 
-orErr	:: (a -> Bool) -> (a -> String) -> (a -> Maybe String)
+orErr	:: (a -> Bool) -> (a -> String) -> Check a
 orErr p msg s
     | p s	= Nothing
     | otherwise	= Just $ msg s
 
 -- | Combine two checks
 
-andCheck	:: (a -> Maybe String) -> (a -> Maybe String) -> (a -> Maybe String)
+andCheck	:: Check a -> Check a -> Check a
 andCheck c1 c2 s
     = res (c1 s)
     where
     res Nothing	= c2 s
     res r1	= r1
 
+withVal	:: Check a -> (b -> a) -> Check b
+withVal c1 f v
+    = c1 (f v)
+
 -- ------------------------------------------------------------
 -- new check functions
 
-stringValid :: DatatypeName -> Integer -> Integer -> ParamList -> String -> Maybe String
+stringValid :: DatatypeName -> Integer -> Integer -> ParamList -> Check String
 stringValid datatype lowerBound upperBound params
     = boundsOK `orErr` boundsErr
       `andCheck`
@@ -114,24 +130,59 @@ stringValid datatype lowerBound upperBound params
           ++ show lowerBound ++ " .. " ++ show upperBound
           ++ " for datatype " ++ datatype
 
--- ------------------------------------------------------------
-
-paramValid :: [(String, String -> String -> Bool)] -> (LocalName, String) -> (String -> Maybe String)
-paramValid ftab (pn, pv)
+paramStringValid :: (LocalName, String) -> (Check String)
+paramStringValid (pn, pv)
     = paramOK `orErr` paramErr
     where
     paramOK v  = paramFct pn v pv
     paramErr v = "Can't check Param-Restriction: " ++ pn ++ " = " ++ pv
 		  ++ " against value = " ++ v
-    paramFct n = fromJust $ lookup n ftab
+    paramFct n = fromJust $ lookup n fctTableString
 
-paramsValid :: [(String, String -> String -> Bool)] -> [(LocalName, String)] -> (String -> Maybe String)
-paramsValid ftab
-    = foldr andCheck alwaysOK . map (paramValid ftab)
-
-paramsStringValid :: ParamList -> (String -> Maybe String)
+paramsStringValid :: ParamList -> (Check String)
 paramsStringValid
-    = paramsValid fctTableString
+    = foldr andCheck alwaysOK . map paramStringValid
+
+-- ------------------------------------------------------------
+
+numberValid :: DatatypeName -> Integer -> Integer -> ParamList -> Check String
+numberValid datatype lowerBound upperBound params
+    = (isNumber `orErr` numErr)
+      `andCheck`
+      ( ( (inRange `orErr` rangeErr)
+	  `andCheck`
+	  paramsNumValid params
+	)
+	`withVal` read
+      )
+    where
+    inRange	:: Integer -> Bool
+    inRange x
+	= x >= lowerBound
+	  &&
+	  x <= upperBound
+    rangeErr v
+	= "Value = " ++ show v ++ " out of Range: "
+          ++ show lowerBound ++ " .. " ++ show upperBound
+          ++ " for datatype " ++ datatype
+    numErr v
+	= "Value = " ++ v ++ " is not a number"
+
+paramsNumValid	:: ParamList -> Check Integer
+paramsNumValid
+    = foldr andCheck alwaysOK . map paramNumValid
+
+paramNumValid	:: (LocalName, String) -> Check Integer
+paramNumValid (pn, pv)
+    = paramOK `orErr` paramErr
+    where
+    paramOK  v = isNumber pv
+		 &&
+		 paramFct pn v (read pv)
+    paramErr v = "Can't check Param-Restriction: "
+		 ++ pn ++ " = " ++ pv
+		 ++ " against value = " ++ show v
+    paramFct n = fromJust $ lookup n fctTableNum
 
 -- ------------------------------------------------------------
 
