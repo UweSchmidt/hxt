@@ -28,8 +28,15 @@ force		:
 testcases	= testCases
 testarchive	= RelaxTestCases.tgz
 
-test		: $(prog) $(testcases)
+test		:
+		$(MAKE) testrng
+		$(MAKE) testschema
+
+testrng		: $(prog) $(testcases)
 		$(prog) $(shell pwd)/$(testcases)
+
+testschema	:
+		$(prog) $(shell pwd)/w3cSchemaDataTypes
 
 $(testcases)	: $(testarchive)
 		tar xvzf $(testarchive)

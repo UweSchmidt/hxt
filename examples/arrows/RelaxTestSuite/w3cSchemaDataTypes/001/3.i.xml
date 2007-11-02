@@ -1,0 +1,2 @@
+<!-- id not with length 4 -->
+<foo string2-4="xxx" id4="x12"/>

@@ -26,11 +26,23 @@ force		:
 
 test		: $(prog)
 		@echo "===> Relax NG examples" ; echo ; sleep 1
-		@$(MAKE) example1 example2 example3 example5
+		@$(MAKE) example1 example1a example2 example3 example5
 
 example1	:
 		@echo "===> Validate a valid Relax NG schema with respect to a valid xml file" ; echo ; sleep 1
 		$(prog) ./valid1.xml ./valid1.rng
+		@echo
+
+example1a	:
+		@echo "a valid document"
+		$(prog) ./valid2.xml ./valid2.rng
+		@echo
+
+example1b	:
+		@echo "===> 1. invalid document\n"
+		$(prog) ./inv2.xml ./valid2.rng || true
+		@echo "\n===> 2. invalid document\n"
+		$(prog) ./inv3.xml ./valid2.rng || true
 		@echo
 
 example2	:

@@ -52,6 +52,8 @@ import qualified Text.XML.HXT.DOM.XmlTreeFunctions as TF ( xshow )
 import Data.Char
 import Data.Maybe
 
+-- import qualified Debug.Trace as T
+
 -- ------------------------------------------------------------
 
 validateWithRelaxAndHandleErrors	:: IOSArrow XmlTree XmlTree -> IOSArrow XmlTree XmlTree
@@ -413,25 +415,25 @@ attDeriv cx (OneOrMore p) att
       (choice (OneOrMore p) Empty)
 
 attDeriv cx (Attribute nc p) (NTree (XAttr qn) attrValue)
-    = attDeriv' (TF.xshow attrValue)
+    | not (contains nc qn)
+	= NotAllowed $
+	  "Attribute with name " ++ nameClassToString nc
+          ++ " expected, but " ++ qn2String qn ++ " found"
+    | not (valueMatch cx p val)
+	= NotAllowed $
+	  "Attribute value '" ++ val
+          ++ "' does not match datatype spec " ++ show p
+    | otherwise
+	= Empty
     where
-    attDeriv' val
-	= if contains nc qn && valueMatch cx p val
-	  then Empty
-	  else ( if (not $ contains nc qn)
-		 then ( NotAllowed $ "Attribut with name " ++ 
-			nameClassToString nc ++ " expected, but " ++ 
-			qn2String qn ++ " found")
-		 else ( NotAllowed $ "Attributvalue " ++ val ++ 
-			" expected, but " ++ show p ++ " found")
-               )
+    val = TF.xshow attrValue
 
 attDeriv _ n@(NotAllowed _) _
     = n
 
 attDeriv _ p att
-    = NotAllowed ( "Attribute-Pattern for Attribute " ++  show att ++ 
-		   " expected, but Pattern " ++ show p ++ " found"
+    = NotAllowed ( "Attribute pattern for attribute '" ++  (TF.xshow [att]) ++ 
+		   "' expected, but pattern " ++ show p ++ " found"
 		 )
 
 -- | tests, whether an attribute value matches a pattern

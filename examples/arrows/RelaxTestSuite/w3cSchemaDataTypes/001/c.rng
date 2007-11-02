@@ -1,0 +1,46 @@
+<grammar
+  xmlns="http://relaxng.org/ns/structure/1.0"
+  datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <ref name="foo"/>
+  </start>
+  
+  <define name="foo">
+    <element name="foo">
+
+      <optional>
+	<attribute name="string2-4">
+	  <data type="string">
+	    <param name="minLength">2</param>
+	    <param name="maxLength">4</param>
+	  </data>
+	</attribute>
+      </optional>
+
+      <optional>
+	<attribute name="id4">
+	  <data type="ID">
+	    <param name="length">4</param>
+	  </data>
+	</attribute>
+      </optional>
+      
+      <optional>
+	<attribute name="token">
+	  <data type="token">
+	  </data>
+	</attribute>
+      </optional>
+      
+      <optional>
+	<attribute name="token5">
+	  <data type="token">
+	    <param name="length">5</param>
+	  </data>
+	</attribute>
+      </optional>
+      
+    </element>
+  </define>
+
+</grammar>
