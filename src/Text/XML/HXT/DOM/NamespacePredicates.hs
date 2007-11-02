@@ -76,8 +76,6 @@ isNCName n
 
 isWellformedQualifiedName	:: String -> Bool
 isWellformedQualifiedName s
-    | null s
-	= True
     | null lp
 	= isNCName px
     | otherwise

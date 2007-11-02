@@ -127,13 +127,16 @@ datatypeAllowsW3C d params value _
 	       , xsd_IDREF
 	       , xsd_ENTITY
 	       ]
-        =  isNCName `andValidString` value1
+        = isNCName
+	  `andValidString` value1
 
     | d == xsd_anyURI
-	= isURIReference `andValidString` value2
+	= isURIReference
+	  `andValidString` value2
 
     | d == xsd_QName
-	= isWellformedQualifiedName `andValidString` value1
+	=  isWellformedQualifiedName
+	  `andValidString` value1
 
     | otherwise
 	= alwaysErr notAllowed value
