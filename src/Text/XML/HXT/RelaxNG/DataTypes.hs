@@ -127,6 +127,10 @@ type Context = (Uri, [(Prefix, Uri)])
 
 type Datatype = (Uri, LocalName)
 
+showDatatype	:: Datatype -> String
+showDatatype (u, ln)
+	 | null u	= ln
+	 | otherwise	= "{" ++ u ++ "}" ++ ln
 
 -- | Represents a name class
 
@@ -141,16 +145,19 @@ data NameClass = AnyName
 
 instance Show NameClass
     where
-    show AnyName = "AnyName"
+    show AnyName	= "AnyName"
     show (AnyNameExcept nameClass) 
-         = "AnyNameExcept: " ++ show nameClass
-    show (Name uri localName) = "{" ++ uri ++ "}" ++ localName
-    show (NsName uri) = "{" ++ uri ++ "}AnyName"
+        		= "AnyNameExcept: " ++ show nameClass
+    show (Name uri localName)
+	| null uri	= localName
+	| otherwise	= "{" ++ uri ++ "}" ++ localName
+    show (NsName uri)	= "{" ++ uri ++ "}AnyName"
     show (NsNameExcept uri nameClass) 
-          = "NsNameExcept: {" ++ uri ++ "}" ++ show nameClass
+          		= "NsNameExcept: {" ++ uri ++ "}" ++ show nameClass
     show (NameClassChoice nameClass1 nameClass2)
-         = "NameClassChoice: " ++ show nameClass1 ++ "|" ++ show nameClass2
-    show (NCError string) = "NCError: " ++ string
+         		= "NameClassChoice: " ++ show nameClass1 ++ "|" ++ show nameClass2
+    show (NCError string)
+			 = "NCError: " ++ string
 
 
 -- | Represents a pattern after simplification
@@ -169,7 +176,26 @@ data Pattern = Empty
              | Attribute NameClass Pattern
              | Element NameClass Pattern
              | After Pattern Pattern
-    deriving Show
+
+instance Show Pattern where
+    show Empty			= "empty"
+    show (NotAllowed e) 	= "not allowed: " ++ e
+    show Text			= "text"
+    show (Choice p1 p2)		= "( " ++ show p1 ++ " | " ++ show p2 ++ " )"
+    show (Interleave p1 p2)	= "( " ++ show p1 ++ " & " ++ show p2 ++ " )"
+    show (Group p1 p2)		= "( " ++ show p1 ++ " , " ++ show p2 ++ " )"
+    show (OneOrMore p)		= show p ++ "+"
+    show (List p)		= "list { " ++ show p ++ " }"
+    show (Data dt pl)		= showDatatype dt ++ showPL pl
+				  where
+				  showPL []	= ""
+				  showPL l	= "{" ++ concatMap showP l ++ " }"
+				  showP (ln, v)   = " " ++ ln ++ " = " ++ show v
+    show (DataExcept dt pl p)	= show (Data dt pl) ++ " - (" ++ show p ++ " )"
+    show (Value dt v _cx)	= showDatatype dt ++ " " ++ show v
+    show (Attribute nc p)	= "attribute " ++ show nc ++ " { " ++ show p ++ " }"
+    show (Element nc p)		= "element "   ++ show nc ++ " { " ++ show p ++ " }"
+    show (After p1 p2)		=  "( " ++ show p1 ++ " ; " ++ show p2 ++ " )"
 
 -- | Possible content types of a Relax NG pattern.
 -- (see also chapter 7.2 in Relax NG specification)

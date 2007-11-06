@@ -45,9 +45,9 @@ import qualified Text.XML.HXT.Arrow.XmlNode as XN
     ( getText
     )
 
-import Data.Tree.NTree.TypeDefs	( NTree (..) )
+import Text.XML.HXT.DOM.Unicode ( isXmlSpaceChar )
 
-import qualified Text.XML.HXT.DOM.XmlTreeFunctions as TF ( xshow )
+import Data.Tree.NTree.TypeDefs	( NTree (..) )
 
 import Data.Char
 import Data.Maybe
@@ -381,6 +381,13 @@ startTagOpenDeriv p (QN _ local uri)
 -- | To compute the derivative of a pattern with respect to a sequence of attributes, 
 -- simply compute the derivative with respect to each attribute in turn.
 
+{-
+attsDeriv' cx p ts
+    = T.trace ("attsDeriv: p=" ++ (take 1000 . show) p ++ ", t=" ++ TF.xshow ts) res
+    where
+    res = attsDeriv cx p ts
+-}
+
 attsDeriv :: Context -> Pattern -> XmlTrees -> Pattern
 
 attsDeriv _ p []
@@ -414,7 +421,7 @@ attDeriv cx (OneOrMore p) att
       (attDeriv cx p att)
       (choice (OneOrMore p) Empty)
 
-attDeriv cx (Attribute nc p) (NTree (XAttr qn) attrValue)
+attDeriv cx (Attribute nc p) (NTree (XAttr qn) av)
     | not (contains nc qn)
 	= NotAllowed $
 	  "Attribute with name " ++ nameClassToString nc
@@ -426,15 +433,13 @@ attDeriv cx (Attribute nc p) (NTree (XAttr qn) attrValue)
     | otherwise
 	= Empty
     where
-    val = TF.xshow attrValue
+    val = showXts av
 
 attDeriv _ n@(NotAllowed _) _
     = n
 
-attDeriv _ p att
-    = NotAllowed ( "Attribute pattern for attribute '" ++  (TF.xshow [att]) ++ 
-		   "' expected, but pattern " ++ show p ++ " found"
-		 )
+attDeriv _ _p att
+    = NotAllowed ( "No matching pattern for attribute '" ++  showXts [att] ++ "' found" )
 
 -- | tests, whether an attribute value matches a pattern
 valueMatch :: Context -> Pattern -> String -> Bool
@@ -573,16 +578,15 @@ applyAfter _ _			= NotAllowed "Call to applyAfter with wrong arguments"
 
 -- --------------------
 
-strip	:: XmlTree -> Bool
-strip
-    = maybe False whitespace . XN.getText
-{-
-strip (NTree (XText s) _) = whitespace s
-strip _ = False
--}
+-- mothers little helpers
 
-whitespace :: String -> Bool
-whitespace
-    = all isSpace
+strip		:: XmlTree -> Bool
+strip		= maybe False whitespace . XN.getText
+
+whitespace 	:: String -> Bool
+whitespace	= all isXmlSpaceChar
+
+showXts		:: XmlTrees -> String
+showXts		= concat . runLA (xshow $ arrL id)
 
 -- ------------------------------------------------------------
