@@ -138,7 +138,7 @@ pattern2PatternTree
 
 notAllowed2PatternTree :: SLA [NameClass] Pattern PatternTree
 notAllowed2PatternTree
-    = arr $ \(NotAllowed s) -> NTree "notAllowed" [NTree s []]
+    = arr $ \(NotAllowed (ErrMsg _l sl)) -> NTree "notAllowed" $ map (\ s -> NTree s []) sl
 
 
 data2PatternTree :: SLA [NameClass] Pattern PatternTree
@@ -263,7 +263,7 @@ patternToFormatedString :: SLA [NameClass] Pattern String
 patternToFormatedString
     = choiceA
       [ isA isRelaxEmpty      :-> (constA " empty ")
-      , isA isRelaxNotAllowed :-> (arr $ \ (NotAllowed errorEnv) -> errorEnv)
+      , isA isRelaxNotAllowed :-> (arr $ \ (NotAllowed errorEnv) -> show errorEnv)
       , isA isRelaxText       :-> (constA " text ")
       , isA isRelaxChoice     :-> children2FormatedString "choice"
       , isA isRelaxInterleave :-> children2FormatedString "interleave"

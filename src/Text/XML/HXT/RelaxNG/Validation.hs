@@ -245,7 +245,7 @@ childDeriv _ p (NTree (XTag qn atts) children)
       endTagDeriv p4
 
 childDeriv _ _ _
-    = NotAllowed "Call to childDeriv with wrong arguments"
+    = notAllowed "Call to childDeriv with wrong arguments"
 
 
 -- | computes the derivative of a pattern with respect to a text node
@@ -280,32 +280,32 @@ textDeriv cx1 (Value (uri, s) value cx2) s1
     = case datatypeEqual uri s value cx2 s1 cx1
       of
       Nothing     -> Empty 
-      Just errStr -> NotAllowed errStr
+      Just errStr -> notAllowed errStr
 
 textDeriv cx (Data (uri, s) params) s1
     = case datatypeAllows uri s params s1 cx
       of
       Nothing     -> Empty 
-      Just errStr -> NotAllowed errStr
+      Just errStr -> notAllowed2 errStr
 
 textDeriv cx (DataExcept (uri, s) params p) s1
     = case (datatypeAllows uri s params s1 cx)
       of
       Nothing     -> if not $ nullable $ textDeriv cx p s1 
                      then Empty 
-		     else NotAllowed
+		     else notAllowed
 			      ( "Any value except " ++
 				show (show p) ++ 
 				" expected, but value " ++
 				show (show s1) ++
 				" found"
 			      )
-      Just errStr -> NotAllowed errStr
+      Just errStr -> notAllowed errStr
 
 textDeriv cx (List p) s
     = if nullable (listDeriv cx p (words s)) 
       then Empty
-      else NotAllowed
+      else notAllowed
 	       ( "List with value(s) " ++
 		 show p ++ 
 		 " expected, but value(s) " ++ 
@@ -317,7 +317,7 @@ textDeriv _ n@(NotAllowed _) _
     = n
 
 textDeriv _ p s
-    = NotAllowed
+    = notAllowed
       ( "Pattern " ++ show (getPatternName p) ++
 	" expected, but text " ++ show s ++ " found"
       )
@@ -345,7 +345,7 @@ startTagOpenDeriv (Choice p1 p2) qn
 startTagOpenDeriv (Element nc p) qn@(QN _ local uri)
     = if contains nc qn 
       then after p Empty
-	   else NotAllowed ( "Element with name " ++ nameClassToString nc ++ 
+	   else notAllowed ( "Element with name " ++ nameClassToString nc ++ 
 			     " expected, but {" ++ uri ++ "}" ++ local ++ " found"
 			   )
 
@@ -374,7 +374,7 @@ startTagOpenDeriv n@(NotAllowed _) _
     = n
 
 startTagOpenDeriv p (QN _ local uri)
-    = NotAllowed ( show p ++ " expected, but Element {" ++
+    = notAllowed ( show p ++ " expected, but Element {" ++
 		   uri ++ "}" ++ local ++ " found"
 		 )
 
@@ -396,7 +396,7 @@ attsDeriv cx p (attribute@(NTree (XAttr _) _):xs)
     = attsDeriv cx (attDeriv cx p attribute) xs
 
 attsDeriv _ _ _
-    = NotAllowed "Call to attsDeriv with wrong arguments"
+    = notAllowed "Call to attsDeriv with wrong arguments"
 
 attDeriv :: Context -> Pattern -> XmlTree -> Pattern
 
@@ -423,23 +423,36 @@ attDeriv cx (OneOrMore p) att
 
 attDeriv cx (Attribute nc p) (NTree (XAttr qn) av)
     | not (contains nc qn)
-	= NotAllowed $
+	= notAllowed1 $
 	  "Attribute with name " ++ nameClassToString nc
           ++ " expected, but " ++ qn2String qn ++ " found"
-    | not (valueMatch cx p val)
-	= NotAllowed $
-	  "Attribute value '" ++ val
-          ++ "' does not match datatype spec " ++ show p
-    | otherwise
+    | ( ( nullable p
+	  &&
+	  whitespace val
+	)
+	|| nullable p'
+      )
 	= Empty
+    | otherwise
+	= err' p'
     where
     val = showXts av
+    p'  = textDeriv cx p val
+
+    err' (NotAllowed (ErrMsg _l es))
+	= err'' (": " ++ head es)
+    err' _
+	= err'' ""
+    err'' e = notAllowed2 $
+	      "Attribute value '" ++ val
+	      ++ "' does not match datatype spec " ++ show p ++ e
+	      
 
 attDeriv _ n@(NotAllowed _) _
     = n
 
 attDeriv _ _p att
-    = NotAllowed ( "No matching pattern for attribute '" ++  showXts [att] ++ "' found" )
+    = notAllowed ( "No matching pattern for attribute '" ++  showXts [att] ++ "' found" )
 
 -- | tests, whether an attribute value matches a pattern
 valueMatch :: Context -> Pattern -> String -> Bool
@@ -478,7 +491,7 @@ startTagCloseDeriv (OneOrMore p)
     = oneOrMore (startTagCloseDeriv p)
 
 startTagCloseDeriv (Attribute nc _)
-    = NotAllowed ( "Attribut with name, " ++ show nc ++ 
+    = notAllowed ( "Attribut with name, " ++ show nc ++ 
                    " expected, but no more attributes found"
 		 )
 
@@ -526,45 +539,14 @@ endTagDeriv (Choice p1 p2)
 endTagDeriv (After p1 p2)
     = if nullable p1 
       then p2 
-      else NotAllowed $ show p1 ++ " expected"
+      else notAllowed $ show p1 ++ " expected"
 
 endTagDeriv n@(NotAllowed _)
     = n
 
 endTagDeriv _
-    = NotAllowed "Call to endTagDeriv with wrong arguments"
+    = notAllowed "Call to endTagDeriv with wrong arguments"
 
-
--- ------------------------------------------------------------
--- some helper function
-
-choice :: Pattern -> Pattern -> Pattern
-choice p              (NotAllowed _) = p
-choice (NotAllowed _) p              = p
-choice p1             p2             = Choice p1 p2
-
-group :: Pattern -> Pattern -> Pattern
-group _                n@(NotAllowed _) = n
-group n@(NotAllowed _) _                = n
-group p                Empty            = p
-group Empty            p                = p
-group p1               p2               = Group p1 p2
-
-oneOrMore :: Pattern -> Pattern
-oneOrMore n@(NotAllowed _) = n
-oneOrMore p                = OneOrMore p
-
-interleave :: Pattern -> Pattern -> Pattern
-interleave _                n@(NotAllowed _) = n
-interleave n@(NotAllowed _) _                = n
-interleave p                Empty            = p
-interleave Empty            p                = p
-interleave p1               p2               = Interleave p1 p2
-
-after :: Pattern -> Pattern -> Pattern
-after _                n@(NotAllowed _) = n
-after n@(NotAllowed _) _                = n
-after p1               p2               = After p1 p2
 
 -- --------------------
 -- | applies a function (first parameter) to the second part of a after pattern
@@ -574,7 +556,7 @@ applyAfter :: (Pattern -> Pattern) -> Pattern -> Pattern
 applyAfter f (After p1 p2)	= after p1 (f p2)
 applyAfter f (Choice p1 p2)	= choice (applyAfter f p1) (applyAfter f p2)
 applyAfter _ n@(NotAllowed _)	= n
-applyAfter _ _			= NotAllowed "Call to applyAfter with wrong arguments"
+applyAfter _ _			= notAllowed "Call to applyAfter with wrong arguments"
 
 -- --------------------
 

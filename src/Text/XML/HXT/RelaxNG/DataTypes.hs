@@ -163,7 +163,7 @@ instance Show NameClass
 -- | Represents a pattern after simplification
 
 data Pattern = Empty
-             | NotAllowed String -- ^ String represents the error message
+             | NotAllowed ErrMessage
              | Text
              | Choice Pattern Pattern
              | Interleave Pattern Pattern
@@ -179,7 +179,7 @@ data Pattern = Empty
 
 instance Show Pattern where
     show Empty			= "empty"
-    show (NotAllowed e) 	= "not allowed: " ++ e
+    show (NotAllowed e) 	= show e
     show Text			= "text"
     show (Choice p1 p2)		= "( " ++ show p1 ++ " | " ++ show p2 ++ " )"
     show (Interleave p1 p2)	= "( " ++ show p1 ++ " & " ++ show p2 ++ " )"
@@ -196,6 +196,93 @@ instance Show Pattern where
     show (Attribute nc p)	= "attribute " ++ show nc ++ " { " ++ show p ++ " }"
     show (Element nc p)		= "element "   ++ show nc ++ " { " ++ show p ++ " }"
     show (After p1 p2)		=  "( " ++ show p1 ++ " ; " ++ show p2 ++ " )"
+
+data ErrMessage	= ErrMsg ErrLevel [String]
+		  -- deriving Show
+
+instance Show ErrMessage where
+    show (ErrMsg _lev es) = foldr1 (\ x y -> x ++ "\n" ++ y) es
+
+type ErrLevel	= Int
+
+-- ------------------------------------------------------------
+
+-- smart constructor funtions for Pattern
+
+-- | smart constructor for NotAllowed
+
+notAllowed	:: String -> Pattern
+notAllowed	= notAllowedN 0
+
+notAllowed1	:: String -> Pattern
+notAllowed1	= notAllowedN 1
+
+notAllowed2	:: String -> Pattern
+notAllowed2	= notAllowedN 2
+
+notAllowedN	:: ErrLevel -> String -> Pattern
+notAllowedN l s	= NotAllowed (ErrMsg l [s])
+
+-- | merge error messages
+--
+-- If error levels are different, the more important is taken,
+-- if level is 2 (max level) both error messages are taken
+-- else the 2. error mesage is taken
+
+mergeNotAllowed	:: Pattern -> Pattern -> Pattern
+mergeNotAllowed p1@(NotAllowed (ErrMsg l1 _s1)) p2@(NotAllowed (ErrMsg l2 _s2))
+    | l1 < l2	= p2
+    | l1 > l2	= p1
+    -- | l1 >= 2	= NotAllowed (ErrMsg l1 (s1 ++ s2))
+    | otherwise	= p1
+
+-- TODO : weird error when collecting error messages errors are duplicated
+
+mergeNotAllowed _p1 _p2
+    = notAllowed2 "mergeNotAllowed with wrong patterns"
+
+-- | smart constructor for Choice
+
+choice :: Pattern -> Pattern -> Pattern
+choice p1@(NotAllowed _) p2@(NotAllowed _)	= mergeNotAllowed p1 p2
+choice p1                   (NotAllowed _)	= p1
+choice (NotAllowed _)    p2              	= p2
+choice p1                p2	    		= Choice p1 p2
+
+-- | smart constructor for Group
+
+group :: Pattern -> Pattern -> Pattern
+group p1@(NotAllowed _)  p2@(NotAllowed _)	= mergeNotAllowed p1 p2
+group _                   n@(NotAllowed _)	= n
+group   n@(NotAllowed _)  _			= n
+group p                  Empty			= p
+group Empty              p			= p
+group p1                 p2			= Group p1 p2
+
+-- | smart constructor for OneOrMore
+
+oneOrMore :: Pattern -> Pattern
+oneOrMore n@(NotAllowed _) = n
+oneOrMore p                = OneOrMore p
+
+-- | smart constructor for Interleave
+
+interleave :: Pattern -> Pattern -> Pattern
+interleave p1@(NotAllowed _) p2@(NotAllowed _)	= mergeNotAllowed p1 p2
+interleave _                 p2@(NotAllowed _)	= p2
+interleave p1@(NotAllowed _) _			= p1
+interleave p1                Empty		= p1
+interleave Empty             p2			= p2
+interleave p1		     p2			= Interleave p1 p2
+
+-- | smart constructor for After
+
+after :: Pattern -> Pattern -> Pattern
+after p1@(NotAllowed _) p2@(NotAllowed _)	= mergeNotAllowed p1 p2
+after _                 p2@(NotAllowed _)	= p2
+after p1@(NotAllowed _) _			= p1
+after p1                p2			= After p1 p2
+
 
 -- | Possible content types of a Relax NG pattern.
 -- (see also chapter 7.2 in Relax NG specification)

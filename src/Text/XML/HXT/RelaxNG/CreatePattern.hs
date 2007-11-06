@@ -101,7 +101,7 @@ mkRelaxRef :: Env -> LA XmlTree Pattern
 mkRelaxRef e
  = getRngAttrName
    >>>
-   arr (\n -> fromMaybe (NotAllowed $ "define-pattern with name " ++ n ++ " not found")
+   arr (\n -> fromMaybe (notAllowed $ "define-pattern with name " ++ n ++ " not found")
               . lookup n $ transformEnv e
        )
  where
@@ -113,28 +113,28 @@ mkRelaxRef e
 
 -- | Transforms a notAllowed-element.
 mkNotAllowed :: LA XmlTree Pattern
-mkNotAllowed = constA $ NotAllowed "notAllowed-pattern in Relax NG schema definition"
+mkNotAllowed = constA $ notAllowed "notAllowed-pattern in Relax NG schema definition"
 
 
 -- | Creates an error message.
 mkRelaxError :: String -> LA XmlTree Pattern
 mkRelaxError errStr
  = choiceA [
-     isRngRelaxError :-> (getRngAttrDescr >>> arr NotAllowed),
+     isRngRelaxError :-> (getRngAttrDescr >>> arr notAllowed),
      isElem  :-> ( getName
                    >>>
-                   arr (\n -> NotAllowed $ "Pattern " ++ n ++ 
+                   arr (\n -> notAllowed $ "Pattern " ++ n ++ 
                                            " is not allowed in Relax NG schema"
                        )
                  ),
      isAttr  :-> ( getName
                    >>>
-                   arr (\n -> NotAllowed $ "Attribute " ++ n ++ 
+                   arr (\n -> notAllowed $ "Attribute " ++ n ++ 
                                            " is not allowed in Relax NG schema"
                        )
                  ),
-     isError :-> (getErrorMsg >>> arr NotAllowed),                          
-     this    :-> (arr (\e -> NotAllowed $ if errStr /= ""
+     isError :-> (getErrorMsg >>> arr notAllowed),                          
+     this    :-> (arr (\e -> notAllowed $ if errStr /= ""
                                           then errStr
                                           else "Can't create pattern from " ++ show e)
                  )

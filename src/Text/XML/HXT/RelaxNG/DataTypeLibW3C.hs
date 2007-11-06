@@ -139,7 +139,7 @@ datatypeAllowsW3C d params value _
 	  `andValidString` value1
 
     | otherwise
-	= alwaysErr notAllowed value
+	= alwaysErr notAllowed' value
 
     where
     value1 = normalizeWhitespace value
@@ -148,7 +148,7 @@ datatypeAllowsW3C d params value _
     andValidString p = (p `orErr` notValid) `andCheck` validString
     validString      = stringValid d 0 (-1) params
     notValid v'      = errorMsgDataLibQName v' d w3cNS
-    notAllowed v'    = errorMsgDataTypeNotAllowed d params v' w3cNS
+    notAllowed' v'   = errorMsgDataTypeNotAllowed d params v' w3cNS
 
 -- | Tests whether a XML instance value matches a value-pattern.
 datatypeEqualW3C :: DatatypeEqual

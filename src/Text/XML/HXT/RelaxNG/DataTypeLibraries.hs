@@ -109,9 +109,9 @@ relaxDatatypes
 
 datatypeAllowsRelax :: DatatypeAllows
 datatypeAllowsRelax d p v _ 
-    = maybe notAllowed allowed . lookup d $ relaxDatatypeTable
+    = maybe notAllowed' allowed . lookup d $ relaxDatatypeTable
     where
-    notAllowed
+    notAllowed'
 	= Just $ errorMsgDataTypeNotAllowed d p v relaxNamespace
     allowed _
 	= Nothing
@@ -122,9 +122,9 @@ datatypeAllowsRelax d p v _
 
 datatypeEqualRelax :: DatatypeEqual
 datatypeEqualRelax d s1 _ s2 _
-    = maybe notAllowed checkValues . lookup d $ relaxDatatypeTable
+    = maybe notAllowed' checkValues . lookup d $ relaxDatatypeTable
       where
-      notAllowed
+      notAllowed'
 	  = Just $ errorMsgDataTypeNotAllowed2 d s1 s2 relaxNamespace
       checkValues predicate
 	  = if predicate s1 s2

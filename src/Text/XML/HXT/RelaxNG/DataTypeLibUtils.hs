@@ -135,8 +135,8 @@ paramStringValid (pn, pv)
     = paramOK `orErr` paramErr
     where
     paramOK v  = paramFct pn v pv
-    paramErr v = "Can't check Param-Restriction: " ++ pn ++ " = " ++ pv
-		  ++ " against value = " ++ v
+    paramErr v = "Parameter restriction: '" ++ pn ++ " = " ++ pv
+		  ++ "' does not hold for value = '" ++ v ++ "'"
     paramFct n = fromJust $ lookup n fctTableString
 
 paramsStringValid :: ParamList -> (Check String)
@@ -179,9 +179,9 @@ paramNumValid (pn, pv)
     paramOK  v = isNumber pv
 		 &&
 		 paramFct pn v (read pv)
-    paramErr v = "Can't check Param-Restriction: "
+    paramErr v = "Parameter restriction: '"
 		 ++ pn ++ " = " ++ pv
-		 ++ " against value = " ++ show v
+		 ++ "' does not hold for value = '" ++ show v ++ "'"
     paramFct n = fromJust $ lookup n fctTableNum
 
 -- ------------------------------------------------------------
