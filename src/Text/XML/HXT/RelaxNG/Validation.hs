@@ -51,9 +51,9 @@ import Data.Tree.NTree.TypeDefs	( NTree (..) )
 
 import Data.Char
 import Data.Maybe
-
--- import qualified Debug.Trace as T
-
+{-
+import qualified Debug.Trace as T
+-}
 -- ------------------------------------------------------------
 
 validateWithRelaxAndHandleErrors	:: IOSArrow XmlTree XmlTree -> IOSArrow XmlTree XmlTree
@@ -196,8 +196,7 @@ validateXMLDoc al xmlDoc
 
 
 -- ------------------------------------------------------------
-
-
+--
 -- | tests whether a 'NameClass' contains a particular 'QName'
 contains :: NameClass -> QName -> Bool
 contains AnyName _			= True
@@ -210,6 +209,8 @@ contains (NameClassChoice nc1 nc2) n 	= (contains nc1 n) || (contains nc2 n)
 contains (NCError _) _ 			= False
 
 
+-- ------------------------------------------------------------
+--  
 -- | tests whether a pattern matches the empty sequence
 nullable:: Pattern -> Bool
 nullable (Group p1 p2)		= nullable p1 && nullable p2
@@ -228,7 +229,10 @@ nullable Text			= True
 nullable (After _ _)		= False
 
 
+-- ------------------------------------------------------------
+--  
 -- | computes the derivative of a pattern with respect to a XML-Child and a 'Context'
+
 childDeriv :: Context -> Pattern -> XmlTree -> Pattern
 
 childDeriv cx p (NTree (XText s) _)
@@ -248,7 +252,10 @@ childDeriv _ _ _
     = notAllowed "Call to childDeriv with wrong arguments"
 
 
+-- ------------------------------------------------------------
+--  
 -- | computes the derivative of a pattern with respect to a text node
+
 textDeriv :: Context -> Pattern -> String -> Pattern
 
 textDeriv cx (Choice p1 p2) s
@@ -323,6 +330,8 @@ textDeriv _ p s
       )
 
 
+-- ------------------------------------------------------------
+--  
 -- | To compute the derivative of a pattern with respect to a list of strings, 
 -- simply compute the derivative with respect to each member of the list in turn.
 
@@ -335,6 +344,8 @@ listDeriv cx p (x:xs)
     = listDeriv cx (textDeriv cx p x) xs
     
 
+-- ------------------------------------------------------------
+--  
 -- | computes the derivative of a pattern with respect to a start tag open
 
 startTagOpenDeriv :: Pattern -> QName -> Pattern
@@ -343,11 +354,12 @@ startTagOpenDeriv (Choice p1 p2) qn
     = choice (startTagOpenDeriv p1 qn) (startTagOpenDeriv p2 qn)
 
 startTagOpenDeriv (Element nc p) qn@(QN _ local uri)
-    = if contains nc qn 
-      then after p Empty
-	   else notAllowed ( "Element with name " ++ nameClassToString nc ++ 
-			     " expected, but {" ++ uri ++ "}" ++ local ++ " found"
-			   )
+    | contains nc qn
+	= after p Empty
+    | otherwise
+	= notAllowed $
+	  "Element with name " ++ nameClassToString nc ++ 
+	    " expected, but {" ++ uri ++ "}" ++ local ++ " found"
 
 startTagOpenDeriv (Interleave p1 p2) qn
     = choice
@@ -378,15 +390,25 @@ startTagOpenDeriv p (QN _ local uri)
 		   uri ++ "}" ++ local ++ " found"
 		 )
 
--- | To compute the derivative of a pattern with respect to a sequence of attributes, 
--- simply compute the derivative with respect to each attribute in turn.
+-- ------------------------------------------------------------
 
+-- auxiliary functions for tracing
 {-
 attsDeriv' cx p ts
-    = T.trace ("attsDeriv: p=" ++ (take 1000 . show) p ++ ", t=" ++ TF.xshow ts) res
+    = T.trace ("attsDeriv: p=" ++ (take 1000 . show) p ++ ", t=" ++ showXts ts) $
+      T.trace ("res= " ++ (take 1000 . show) res) res
     where
     res = attsDeriv cx p ts
+
+attDeriv' cx p t
+    = T.trace ("attDeriv: p=" ++ (take 1000 . show) p ++ ", t=" ++ showXts [t]) $
+      T.trace ("res= " ++ (take 1000 . show) res) res
+    where
+    res = attDeriv cx p t
 -}
+
+-- | To compute the derivative of a pattern with respect to a sequence of attributes, 
+-- simply compute the derivative with respect to each attribute in turn.
 
 attsDeriv :: Context -> Pattern -> XmlTrees -> Pattern
 
@@ -443,28 +465,20 @@ attDeriv cx (Attribute nc p) (NTree (XAttr qn) av)
 	= err'' (": " ++ head es)
     err' _
 	= err'' ""
-    err'' e = notAllowed2 $
-	      "Attribute value '" ++ val
-	      ++ "' does not match datatype spec " ++ show p ++ e
-	      
+    err'' e
+	= notAllowed2 $
+	  "Attribute value \"" ++ val ++
+	  "\" does not match datatype spec " ++ show p ++ e
 
 attDeriv _ n@(NotAllowed _) _
     = n
 
 attDeriv _ _p att
-    = notAllowed ( "No matching pattern for attribute '" ++  showXts [att] ++ "' found" )
+    = notAllowed $
+      "No matching pattern for attribute '" ++  showXts [att] ++ "' found"
 
--- | tests, whether an attribute value matches a pattern
-valueMatch :: Context -> Pattern -> String -> Bool
-valueMatch cx p s = 
-    ( nullable p
-      &&
-      whitespace s
-    )
-    ||
-    nullable (textDeriv cx p s)
-  
-  
+-- ------------------------------------------------------------
+--  
 -- | computes the derivative of a pattern with respect to a start tag close
 
 startTagCloseDeriv :: Pattern -> Pattern
@@ -491,29 +505,36 @@ startTagCloseDeriv (OneOrMore p)
     = oneOrMore (startTagCloseDeriv p)
 
 startTagCloseDeriv (Attribute nc _)
-    = notAllowed ( "Attribut with name, " ++ show nc ++ 
-                   " expected, but no more attributes found"
-		 )
+    = notAllowed1 $
+      "Attribut with name, " ++ show nc ++ 
+      " expected, but no more attributes found"
 
 startTagCloseDeriv p
     = p
 
 
+-- ------------------------------------------------------------
+--  
 -- | Computing the derivative of a pattern with respect to a list of children involves 
 -- computing the derivative with respect to each pattern in turn, except
 -- that whitespace requires special treatment.
 
 childrenDeriv :: Context -> Pattern -> XmlTrees -> Pattern
-childrenDeriv cx p []
-    = childrenDeriv cx p [(NTree (XText "") [])]
+childrenDeriv _cx p@(NotAllowed _) _
+    = p
 
-childrenDeriv cx p [(NTree (XText s) children)]
-    = let
-      p1 = childDeriv cx p (NTree (XText s) children)
-      in
-      if whitespace s
-      then choice p p1
-      else p1
+childrenDeriv cx p []
+    = childrenDeriv cx p etxt
+    where
+    etxt = [(NTree (XText "") [])]
+
+childrenDeriv cx p [tt@(NTree (XText s) _)]
+    | whitespace s
+	= choice p p1
+    | otherwise
+	= p1
+    where
+    p1 = childDeriv cx p tt
 
 childrenDeriv cx p children
     = stripChildrenDeriv cx p children    
@@ -530,6 +551,8 @@ stripChildrenDeriv cx p (h:t)
       ) t
 
 
+-- ------------------------------------------------------------
+--  
 -- | computes the derivative of a pattern with respect to a end tag
 
 endTagDeriv :: Pattern -> Pattern
@@ -537,9 +560,11 @@ endTagDeriv (Choice p1 p2)
     = choice (endTagDeriv p1) (endTagDeriv p2)
 
 endTagDeriv (After p1 p2)
-    = if nullable p1 
-      then p2 
-      else notAllowed $ show p1 ++ " expected"
+    | nullable p1 
+	= p2 
+    | otherwise
+	= notAllowed $
+	  show p1 ++ " expected"
 
 endTagDeriv n@(NotAllowed _)
     = n
@@ -547,8 +572,8 @@ endTagDeriv n@(NotAllowed _)
 endTagDeriv _
     = notAllowed "Call to endTagDeriv with wrong arguments"
 
-
--- --------------------
+-- ------------------------------------------------------------
+--  
 -- | applies a function (first parameter) to the second part of a after pattern
 
 applyAfter :: (Pattern -> Pattern) -> Pattern -> Pattern

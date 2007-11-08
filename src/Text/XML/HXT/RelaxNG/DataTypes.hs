@@ -189,8 +189,8 @@ instance Show Pattern where
     show (Data dt pl)		= showDatatype dt ++ showPL pl
 				  where
 				  showPL []	= ""
-				  showPL l	= "{" ++ concatMap showP l ++ " }"
-				  showP (ln, v)   = " " ++ ln ++ " = " ++ show v
+				  showPL l	= " {" ++ concatMap showP l ++ " }"
+				  showP (ln, v) = " " ++ ln ++ " = " ++ show v
     show (DataExcept dt pl p)	= show (Data dt pl) ++ " - (" ++ show p ++ " )"
     show (Value dt v _cx)	= showDatatype dt ++ " " ++ show v
     show (Attribute nc p)	= "attribute " ++ show nc ++ " { " ++ show p ++ " }"
@@ -227,13 +227,13 @@ notAllowedN l s	= NotAllowed (ErrMsg l [s])
 --
 -- If error levels are different, the more important is taken,
 -- if level is 2 (max level) both error messages are taken
--- else the 2. error mesage is taken
+-- else the 1. error mesage is taken
 
 mergeNotAllowed	:: Pattern -> Pattern -> Pattern
-mergeNotAllowed p1@(NotAllowed (ErrMsg l1 _s1)) p2@(NotAllowed (ErrMsg l2 _s2))
+mergeNotAllowed p1@(NotAllowed (ErrMsg l1 s1)) p2@(NotAllowed (ErrMsg l2 s2))
     | l1 < l2	= p2
     | l1 > l2	= p1
-    -- | l1 >= 2	= NotAllowed (ErrMsg l1 (s1 ++ s2))
+    | l1 == 2	= NotAllowed $ ErrMsg 2 (s1 ++ s2)
     | otherwise	= p1
 
 -- TODO : weird error when collecting error messages errors are duplicated

@@ -104,7 +104,8 @@ stringParams = [ xsd_length
 	       ]
 
 -- | Tests whether a XML instance value matches a data-pattern.
--- (see also: 'checkString')
+-- (see also: 'stringValid')
+
 datatypeAllowsW3C :: DatatypeAllows
 datatypeAllowsW3C d params value _
     | d == xsd_string

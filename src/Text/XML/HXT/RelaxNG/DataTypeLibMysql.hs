@@ -11,6 +11,7 @@ where
 
 import Text.XML.HXT.RelaxNG.DataTypeLibUtils  
 
+import Data.Maybe
 
 -- ------------------------------------------------------------
 
@@ -107,11 +108,48 @@ stringParams = [ rng_length
 	       , rng_maxLength
 	       , rng_minLength
 	       ]
-                
 
+-- ------------------------------------------------------------
+--
 -- | Tests whether a XML instance value matches a data-pattern.
--- (see also: 'checkString' and 'checkNumeric') 
+                
+datatypeAllowsMysql :: DatatypeAllows
+datatypeAllowsMysql d params value _
+    | isJust ndt
+	= (uncurry (numberValid d) . fromJust $ ndt) params value
+    | isJust sdt
+	= (uncurry (stringValid d) . fromJust $ sdt) params value
+    | otherwise
+	= Just $ errorMsgDataTypeNotAllowed d params value mysqlNS
+    where
+    ndt = lookup d $
+	  [ ("SIGNED-TINYINT", ((-128), 127))
+	  , ("UNSIGNED-TINYINT", (0, 255))
+	  , ("SIGNED-SMALLINT", ((-32768), 32767))
+	  , ("UNSIGNED-SMALLINT", (0, 65535))
+	  , ("SIGNED-MEDIUMINT", ((-8388608), 8388607))
+	  , ("UNSIGNED-MEDIUMINT", (0, 16777215))
+	  , ("SIGNED-INT", ((-2147483648), 2147483647))
+	  , ("UNSIGNED-INT", (0, 4294967295))
+	  , ("SIGNED-BIGINT", ((-9223372036854775808), 9223372036854775807))
+	  , ("UNSIGNED-BIGINT", (0, 18446744073709551615))
+	  ]
+    sdt = lookup d $
+	  [ ("CHAR", (0, 255))
+	  , ("VARCHAR", (0, 65535))
+	  , ("BINARY", (0, 255))    
+	  , ("VARBINARY", (0, 65535))
+	  , ("TINYTEXT", (0, 256))
+	  , ("TINYBLOB", (0, 256))    
+	  , ("TEXT", (0, 65536))
+	  , ("BLOB", (0, 65536))
+	  , ("MEDIUMTEXT", (0, 16777216))
+	  , ("MEDIUMBLOB", (0, 16777216))
+	  , ("LONGTEXT", (0, 4294967296))
+	  , ("LONGBLOB", (0, 4294967296))
+	  ]
 
+{-
 datatypeAllowsMysql :: DatatypeAllows
 
 datatypeAllowsMysql d@"SIGNED-TINYINT" params value _ 
@@ -184,6 +222,7 @@ datatypeAllowsMysql d@"LONGBLOB" params value _
 
 datatypeAllowsMysql t p v _
     = Just $ errorMsgDataTypeNotAllowed t p v mysqlNS
+-}
 
 -- | Tests whether a XML instance value matches a value-pattern.
 datatypeEqualMysql :: DatatypeEqual
