@@ -127,7 +127,6 @@ exposed-modules:
   Text.XML.HXT.RelaxNG.DataTypeLibMysql,
   Text.XML.HXT.RelaxNG.DataTypeLibraries,
   Text.XML.HXT.RelaxNG.DataTypeLibUtils,
-  Text.XML.HXT.RelaxNG.DataTypeLibW3C,
   Text.XML.HXT.RelaxNG.DataTypes,
   Text.XML.HXT.RelaxNG.PatternFunctions,
   Text.XML.HXT.RelaxNG.PatternToString,
@@ -136,7 +135,12 @@ exposed-modules:
   Text.XML.HXT.RelaxNG.Simplification,
   Text.XML.HXT.RelaxNG.Utils,
   Text.XML.HXT.RelaxNG.Validation,
-  Text.XML.HXT.RelaxNG.Validator
+  Text.XML.HXT.RelaxNG.Validator,
+  Text.XML.HXT.RelaxNG.Unicode.Blocks,
+  Text.XML.HXT.RelaxNG.Unicode.CharProps,
+  Text.XML.HXT.RelaxNG.XmlSchema.DataTypeLibW3C,
+  Text.XML.HXT.RelaxNG.XmlSchema.Regex,
+  Text.XML.HXT.RelaxNG.XmlSchema.RegexParser
 hs-source-dirs: src
 ghc-options: -Wall -O2 -fglasgow-exts
 -- import-dirs: /usr/lib/ghc-6.8.1/hxt/imports

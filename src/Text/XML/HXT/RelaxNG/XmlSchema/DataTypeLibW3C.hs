@@ -1,7 +1,22 @@
--- |
--- Datatype library for the W3C XML schema datatypes
+-- ------------------------------------------------------------
 
-module Text.XML.HXT.RelaxNG.DataTypeLibW3C
+{- |
+   Module     : Text.XML.HXT.RelaxNG.XmlSchema.DataTypeLibW3C
+   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : experimental
+   Portability: portable
+   Version    : $Id$
+
+   Datatype library for the W3C XML schema datatypes
+
+-}
+
+-- ------------------------------------------------------------
+
+module Text.XML.HXT.RelaxNG.XmlSchema.DataTypeLibW3C
   ( w3cNS
   , w3cDatatypeLib
   , xsd_NCName
@@ -25,6 +40,11 @@ import Text.XML.HXT.DOM.NamespacePredicates
   ( isWellformedQualifiedName
   , isNCName
   )
+
+import Text.XML.HXT.RelaxNG.XmlSchema.Regex
+    ( match )
+import Text.XML.HXT.RelaxNG.XmlSchema.RegexParser
+    ( parseRegex )
 
 import Data.Maybe
   

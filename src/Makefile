@@ -42,6 +42,13 @@ packagename	:
 
 # ------------------------------------------------------------
 #
+# Unicode Codeblocks and Char Properties generated from Unicode DB
+
+./Text/XML/HXT/RelaxNG/Unicode/Blocks.hs ./Text/XML/HXT/RelaxNG/Unicode/CharProps.hs	:
+		$(MAKE) -C ./Text/XML/HXT/RelaxNG/Unicode all
+
+# ------------------------------------------------------------
+#
 # hxt package variables and rules
 
 HXT_SRC		= $(wildcard ./Data/*.hs) \
@@ -63,6 +70,8 @@ HXT_SRC		= $(wildcard ./Data/*.hs) \
 		  $(wildcard ./Text/XML/HXT/IO/*.hs) \
 		  $(wildcard ./Text/XML/HXT/RelaxNG.hs) \
 		  $(wildcard ./Text/XML/HXT/RelaxNG/*.hs) \
+		  $(wildcard ./Text/XML/HXT/RelaxNG/Unicode/[BC]*.hs) \
+		  $(wildcard ./Text/XML/HXT/RelaxNG/XmlSchema/*.hs) \
 		  $(wildcard ./Text/XML/HXT/XSLT/[ACNX]*.hs)
 
 HXT_SRC_FILTER	= $(wildcard ./Data/*.hs) \
@@ -94,6 +103,8 @@ HXT_SRC_ARROW	= $(wildcard ./Data/*.hs) \
 		  $(wildcard ./Text/XML/HXT/Arrow/[DEGNPRWX]*.hs) \
 		  $(wildcard ./Text/XML/HXT/Arrow/Pickle/*.hs) \
 		  $(wildcard ./Text/XML/HXT/RelaxNG/[DSV]*.hs) \
+		  $(wildcard ./Text/XML/HXT/RelaxNG/Unicode/[BC]*.hs) \
+		  $(wildcard ./Text/XML/HXT/RelaxNG/XmlSchema/*.hs) \
 		  $(wildcard ./Text/XML/HXT/XSLT/[ACNX]*.hs)
 
 
@@ -238,7 +249,10 @@ DIST		= $(HXT_HOME)/dist
 DIST_DIR	= $(DIST)/src
 DIST_FILES	= Makefile \
 		  $(HXT_SRC) $(HXT_DRIVER:.o=.hs) $(HXT_PACKAGE)-package.conf \
-		  ./Text/XML/HXT/ProtocolHandler/ProtocolHandler.hs ./Text/XML/HXT/ProtocolHandler/Makefile
+		  ./Text/XML/HXT/ProtocolHandler/ProtocolHandler.hs ./Text/XML/HXT/ProtocolHandler/Makefile \
+		  $(wildcard ./Text/XML/HXT/RelaxNG/Unicode/G*.hs) \
+		  $(wildcard ./Text/XML/HXT/RelaxNG/Unicode/Makefile) \
+		  $(wildcard ./Text/XML/HXT/RelaxNG/Unicode/*.txt)
 
 dist		:
 		[ -d $(DIST_DIR) ] || mkdir -p $(DIST_DIR)

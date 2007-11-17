@@ -23,7 +23,7 @@ module Text.XML.HXT.Arrow.Pickle.Schema
 where
 
 import Text.XML.HXT.DOM.TypeDefs
-import Text.XML.HXT.RelaxNG.DataTypeLibW3C
+import Text.XML.HXT.RelaxNG.XmlSchema.DataTypeLibW3C
 
 import Data.List
     ( sort )

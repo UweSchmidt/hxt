@@ -26,7 +26,7 @@ import           Data.Maybe
 import           Text.XML.HXT.Arrow.DOMInterface
 import           Text.XML.HXT.Arrow.Pickle.Schema
 import qualified Text.XML.HXT.Arrow.XmlNode as XN
-import           Text.XML.HXT.RelaxNG.DataTypeLibW3C
+import           Text.XML.HXT.RelaxNG.XmlSchema.DataTypeLibW3C
 
 -- ------------------------------------------------------------
 
