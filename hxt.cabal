@@ -10,7 +10,7 @@ synopsis: A collection of tools for processing XML with Haskell.
 description:  The Haskell XML Toolbox bases on the ideas of HaXml and HXML, but introduces a more general approach for processing XML with Haskell. The Haskell XML Toolbox uses a generic data model for representing XML documents, including the DTD subset and the document subset, in Haskell. It contains a validating XML parser, a HTML parser, namespace support, an XPath expression evaluator, an XSLT library, a RelaxNG schema validator and funtions for serialization and deserialization of user defined data. The libraray make extensive use of the arrow approach for processing XML.
 homepage: http://www.fh-wedel.de/~si/HXmlToolbox/index.html
 copyright: Copyright (c) 2005 Uwe Schmidt
--- tested-with: ghc-6.6
+-- tested-with: ghc-6.8
 -- exposed: True
 exposed-modules:
   Control.Arrow.ArrowIf,
@@ -139,7 +139,7 @@ exposed-modules:
   Text.XML.HXT.RelaxNG.Validator
 hs-source-dirs: src
 ghc-options: -Wall -O2 -fglasgow-exts
--- import-dirs: /usr/lib/ghc-6.6/hxt/imports
--- library-dirs: /usr/lib/ghc-6.6/hxt
+-- import-dirs: /usr/lib/ghc-6.8.1/hxt/imports
+-- library-dirs: /usr/lib/ghc-6.8.1/hxt
 -- hs-libraries: HShxt
-build-depends: base, haskell98, parsec, HTTP, HUnit, network
+build-depends: base, haskell98, parsec, HTTP, HUnit, network, containers, directory, process

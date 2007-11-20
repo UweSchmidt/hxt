@@ -21,12 +21,7 @@ GHCFLAGS	= -Wall -O2 -fglasgow-exts -ignore-package $(HXT_PACKAGE)
 GHC             = ghc $(GHCFLAGS)
 GHCVERSION	=  $(shell ghc -v 2>&1 | head -n 2 | tail -n 1 | cut -d " " -f 5 | sed 's|^.*ghc-\([0-9.]*\)/package.conf|\1|')
 
-ifeq ($(GHCVERSION),6.6)
 HXT_PACKAGE_NAME=$(HXT_PACKAGE)-$(VERSION)
-else
-HXT_PACKAGE_NAME=$(HXT_PACKAGE)
-endif
-
 
 HDOCFLAGS	= -v -h $(HDOC_FLAGS) --use-package=base
 HDOC            = haddock $(HDOCFLAGS)
