@@ -2,7 +2,7 @@
 #
 # global names and dirs
 
-VERSION		= 7.3
+VERSION		= 7.4
 HXT_HOME	= ..
 HXT_HOME_PATH	= $(shell cd $(HXT_HOME) ; pwd)
 PACKAGE_DIR	= $(HXT_HOME_PATH)/lib/hxt

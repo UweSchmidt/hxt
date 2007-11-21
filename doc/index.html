@@ -156,8 +156,8 @@
     <a name="req"></a>
     <h3>Requirements</h3>
     <ul>
-      <li>GHC-6.6</li>
-      <li>GNU make (to build a compiled version) or Cabal</li>
+      <li>ghc-6.8 (HXT 7.3 works with ghc-6.6</li>
+      <li>Cabal of GNU make</li>
     </ul>
 
     <a name="down"></a>
@@ -167,8 +167,7 @@
       released %PUBDATE%:
     </p>
     <ul>
-      <li>This version works (at least) with ghc 6.6.
-      </li>
+      <li>This version works with ghc 6.8. For ghc 6.6 use HXT 7.3.</li>
       <li>Includes sources for building a ghc package
 	<code>hxt</code> with Cabal or make.
 	This package contains a Haskell DOM, an XML parser, a
@@ -237,6 +236,7 @@
     <ul>
       <li>In <a href="hxt-7.4.tar.gz">Version 7.4</a>
 	<ul>
+	  <li>Configuration changes for ghc-6.8</li>
 	  <li>Error in DTD validation algorithm resulting in exponential
 	    growth of runtime during validating mixed content elements removed.
 	  </li>
@@ -336,73 +336,6 @@
 	  <li>DTD processing for the arrow part is done completely by arrow based routines.
 	  </li>
 	  <li>Cabal config file and dependencies change to work with ghc 6.4.2.
-	</ul>
-      </li>
-      <li>In <a href="HXT-5.5.tar.gz">Version 5.5</a>
-	<ul>
-	  <li>Changes in file path and default base URI handling.
-	    This release compiles and runs (at least) under Windows XP,
-	    Cygwin (DLL 1.5.19-4 release)
-	    and ghc 6.4.1.
-	  </li>
-	</ul>
-      </li>
-      <li>In <a href="HXT-5.4.tar.gz">Version 5.4</a>
-	<ul>
-	  <li>Bug fix in parameter entity substitution for external
-	    parameter entities.
-	  </li>
-	</ul>
-      </li>
-      <li>In <a href="HXT-5.3.tar.gz">Version 5.3</a>
-	<ul>
-	  <li>
-	    Documentation and usage examples for the new arrow interface
-	    of the toolbox: <em>A Cookbook for the Haskell
-	      XML Toolbox with Examples for Processing RDF Documents</em>
-	    (<a href="cookbook/doc/thesis.pdf">PDF-document</a>).
-	  </li>
-	  <li>Integration of <a href="http://www.relaxng.org/">Relax NG</a> schema validator into the
-	    toolbox.
-	    A usage example is included in the
-	    <tt>examples/arrows/hparser/HXmlParser.hs</tt> source.</li>
-	  <li>Some data structure changes made for runtime and space
-	    optimization.</li>
-	  <li>Parameter entity substitution reworked because of bugs in
-	    nested and recursive parameter entity substitution.</li>
-	</ul>
-      </li>
-      <li>In <a href="HXT-5.2.tar.gz">Version 5.2</a>
-	<ul>
-	  <li>Bug fix with entity substitution of nested
-	    external parameter entities in DTDs.</li>
-	  <li>Some minor changes in the arrow interface.</li>
-	</ul>
-      </li>
-      <li>In <a href="HXT-5.01.tar.gz">Version 5.01</a>
-	<ul>
-	  <li>Sources ported to work with ghc-6.4 and ghc-6.4 is required.
-	    Please use toolbox versions &lt;= 5.00 for older ghc's.</li>
-	  <li>Native HTTP-modules removed from the distribution.
-	    Install the latest version of the <a href="http://www.dtek.chalmers.se/~d00bring/haskell-xml-rpc/http.html">Haskell HTTP module</a>
-	    before installing Version 5.01</li>
-	  <li>Interface for the HTTP access via curl done with
-	    routines form System.Process, so the deprecated module POSIX
-	    is no longer needed.</li>
-	  <li>Build and install can be done with Cabal. See README file for installation.</li>
-	</ul>
-      </li>
-      <li>In <a href="HXT-5.00.tar.gz">Version 5.00</a>
-	<ul>
-	  <li>All compiled modules are packaged into
-            a single ghc package <code>hxt</code>.</li>
-          <li>A new interface for arrows is added.
-            Modules in this interface are found in
-	    <code>Control.Arrow</code>
-            and <code>Text.XML.HXT.Arrow</code> (see <a
-	      href="./hdoc/index.html">Haddock documentation</a>)</li>
-	  <li>Examples for the usage of the arrow interface are found
-	    in the examples/arrows subdirectory.</li>
 	</ul>
       </li>
     </ul>

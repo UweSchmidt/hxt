@@ -42,9 +42,9 @@ import Text.XML.HXT.DOM.NamespacePredicates
   )
 
 import Text.XML.HXT.RelaxNG.XmlSchema.Regex
-    ( match )
+    ( ) -- match )
 import Text.XML.HXT.RelaxNG.XmlSchema.RegexParser
-    ( parseRegex )
+    ( ) -- parseRegex )
 
 import Data.Maybe
   
