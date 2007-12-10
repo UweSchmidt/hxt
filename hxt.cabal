@@ -143,7 +143,7 @@ exposed-modules:
   Text.XML.HXT.RelaxNG.XmlSchema.RegexParser
 hs-source-dirs: src
 ghc-options: -Wall -O2 -fglasgow-exts
--- import-dirs: /usr/lib/ghc-6.8.1/hxt/imports
--- library-dirs: /usr/lib/ghc-6.8.1/hxt
+-- import-dirs: /usr/local/lib/ghc-6.8.1/hxt/imports
+-- library-dirs: /usr/local/lib/ghc-6.8.1/hxt
 -- hs-libraries: HShxt
 build-depends: base, haskell98, parsec, HTTP, HUnit, network, containers, directory, process

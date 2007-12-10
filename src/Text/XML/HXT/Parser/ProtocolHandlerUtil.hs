@@ -23,6 +23,9 @@ import qualified Text.ParserCombinators.Parsec as P
 -- try to extract charset spec from Content-Type header
 -- e.g. "text/html; charset=ISO-8859-1"
 
+-- sometimes the server deliver the charset spec in quotes
+-- these are removed
+
 parseContentType	:: P.Parser [(String, String)]
 parseContentType
     = P.try ( do
@@ -34,7 +37,8 @@ parseContentType
 			    P.char ';'
 			    P.many  (P.oneOf " \t'")
 			    P.string "charset="
-			    cs <- P.many1 P.anyChar
+			    P.option '"' (P.oneOf "\"'")
+			    cs <- P.many1 (P.noneOf "\"'")
 			    return [ (transferEncoding, stringToUpper cs) ]
 			  )
 	      return (mimeType ++ charset)
