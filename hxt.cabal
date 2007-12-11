@@ -149,7 +149,7 @@ library
   Text.XML.HXT.RelaxNG.XmlSchema.Regex,
   Text.XML.HXT.RelaxNG.XmlSchema.RegexParser
  hs-source-dirs: src
- ghc-options: -Wall -O2 -fglasgow-exts
+ ghc-options: -Wall -fglasgow-exts
 -- import-dirs: /usr/local/lib/ghc-6.8.1/hxt/imports
 -- library-dirs: /usr/local/lib/ghc-6.8.1/hxt
 -- hs-libraries: HShxt
