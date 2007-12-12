@@ -158,7 +158,7 @@ PKG_LIB		=
 PKG_NAME	=
 PKG_HI		=
 
-install_local_$(HXT_PACKAGE)	: $(HXT_LIB) $(HXT_PACKAGE)-package.conf
+install_local_$(HXT_PACKAGE)	: $(HXT_LIB) hxt-package.conf
 		$(MAKE) install_local_package PKG_NAME=$(HXT_PACKAGE) PKG_LIB="$(HXT_LIB)" PKG_HI="$(HXT_HI)"
 
 install_local_package	: $(PKG_NAME)-package.conf
@@ -168,17 +168,14 @@ install_local_package	: $(PKG_NAME)-package.conf
 		tar cvf - $(PKG_HI) | ( cd $(LOCAL_IMPORT_DIR) ; tar xf - )
 		[ -f $(LOCAL_INSTALL_DIR)/package.conf ] || echo "[]" > $(LOCAL_INSTALL_DIR)/package.conf
 		cat $(PKG_NAME)-package.conf \
-		| sed 's|^version:.*$$|version: $(VERSION)|' \
-		| sed 's|/usr/local/lib/hxt|$(LOCAL_INSTALL_DIR)|g' \
 		| ghc-pkg --update-package --config-file $(LOCAL_INSTALL_DIR)/package.conf
 		@echo use package with: ghc\(i\) ... -package-conf $(LOCAL_INSTALL_DIR)/package.conf -package $(PKG_NAME) ...
-
 
 GHC_INSTALL	= $(shell ghc -v 2>&1 | head -n 2 | tail -n 1 | cut -d " " -f 5 | sed 's|/package.conf||')
 GHC_INSTALL_DIR	= $(GHC_INSTALL)/hxt
 GHC_PKG_CONF	=
 
-install		: $(HXT_PACKAGE)-package.conf
+install		: hxt-package.conf
 		@[ -d $(GHC_INSTALL)     ] || ( echo "ghc install dir not found"       1>&2 ; exit 1 )
 		@[ -w $(GHC_INSTALL)     ] || ( echo "you need root access for this target" ; exit 1 )
 		[ -d $(GHC_INSTALL_DIR) ] || mkdir -p $(GHC_INSTALL_DIR)
@@ -198,23 +195,14 @@ uninstall	:
 all		:
 		$(MAKE) install_local_$(HXT_PACKAGE)
 
-../hxt.cabal	: $(HXT_PACKAGE)-package.conf Makefile ../Makefile
-		cat $(HXT_PACKAGE)-package.conf \
-		| sed 's|^tested-with:|-- tested-with:|' \
-		| sed 's|^exposed:|-- exposed:|' \
-		| sed 's|^import-dirs:|-- import-dirs:|' \
-		| sed 's|^library-dirs:|-- library-dirs:|' \
-		| sed 's|^hs-libraries:|-- hs-libraries:|' \
-		| sed 's|^depends:|build-depends:|' \
-		| sed 's|^version:.*$$|version: $(VERSION)|' \
-		| sed 's|^hs-source-dirs:.*$$|hs-source-dirs: src|' \
-		| sed 's|/usr/local/lib/hxt|$(GHC_INSTALL_DIR)|g' \
-		> $@
+hxt-package.conf	: hxt-package.hs
+		runghc hxt-package.hs $(VERSION) "ghc" $(LOCAL_INSTALL_DIR) $(HXT_SRC) > $@
+
+../hxt.cabal	: hxt-package.hs Makefile ../Makefile
+		runghc hxt-package.hs $(VERSION) "cabal" $(GHC_INSTALL_DIR) $(HXT_SRC) > $@
 
 install_packages	:
-		cat $(HXT_PACKAGE)-package.conf \
-		| sed 's|^version:.*$$|version: $(VERSION)|' \
-		| sed 's|/usr/local/lib/hxt|$(GHC_INSTALL_DIR)|g' \
+		runghc hxt-package.hs $(VERSION) "ghc" $(GHC_INSTALL_DIR) $(HXT_SRC) \
 		| ghc-pkg --update-package
 
 uninstall_packages	:
@@ -248,7 +236,7 @@ clean_$(HXT_PACKAGE)	:
 DIST		= $(HXT_HOME)/dist
 DIST_DIR	= $(DIST)/src
 DIST_FILES	= Makefile \
-		  $(HXT_SRC) $(HXT_DRIVER:.o=.hs) $(HXT_PACKAGE)-package.conf \
+		  $(HXT_SRC) $(HXT_DRIVER:.o=.hs) hxt-package.hs \
 		  ./Text/XML/HXT/ProtocolHandler/ProtocolHandler.hs ./Text/XML/HXT/ProtocolHandler/Makefile \
 		  $(wildcard ./Text/XML/HXT/RelaxNG/Unicode/G*.hs) \
 		  $(wildcard ./Text/XML/HXT/RelaxNG/Unicode/Makefile) \

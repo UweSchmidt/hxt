@@ -40,7 +40,7 @@ setup		: Setup.lhs
 		ghc -package Cabal Setup.lhs -o setup
 		rm -f Setup.hi Setup.o
 
-hxt.cabal	: src/hxt-package.conf src/Makefile Makefile
+hxt.cabal	: src/hxt-package.hs src/Makefile Makefile
 		$(MAKE) -C src ../hxt.cabal VERSION=$(VERSION)
 
 dist		: all doc hxt.cabal
