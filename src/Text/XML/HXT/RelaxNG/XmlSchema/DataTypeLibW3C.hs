@@ -42,9 +42,9 @@ import Text.XML.HXT.DOM.NamespacePredicates
   )
 
 import Text.XML.HXT.RelaxNG.XmlSchema.Regex
-    ( ) -- match )
+    ( match )
 import Text.XML.HXT.RelaxNG.XmlSchema.RegexParser
-    ( ) -- parseRegex )
+    ( parseRegex )
 
 import Data.Maybe
   
@@ -103,25 +103,36 @@ w3cDatatypeLib = (w3cNS, DTC datatypeAllowsW3C datatypeEqualW3C w3cDatatypes)
 
 -- | All supported datatypes of the library
 w3cDatatypes :: AllowedDatatypes
-w3cDatatypes = [ (xsd_anyURI,	stringParams)
-               , (xsd_QName,	stringParams)
-               , (xsd_string,	stringParams)
+w3cDatatypes = [ (xsd_anyURI,		stringParams)
+               , (xsd_QName,		stringParams)
+               , (xsd_string,		stringParams)
 	       , (xsd_normalizedString, stringParams)
-               , (xsd_token,	stringParams)
-               , (xsd_NMTOKEN,	stringParams)
-	       , (xsd_Name,	stringParams)
-	       , (xsd_NCName,	stringParams)
-	       , (xsd_ID,	stringParams)
-	       , (xsd_IDREF,	stringParams)
-	       , (xsd_ENTITY,	stringParams)
+               , (xsd_token,		stringParams)
+               , (xsd_NMTOKEN,		stringParams)
+	       , (xsd_Name,		stringParams)
+	       , (xsd_NCName,		stringParams)
+	       , (xsd_ID,		stringParams)
+	       , (xsd_IDREF,		stringParams)
+	       , (xsd_ENTITY,		stringParams)
                ]
 
 -- | List of allowed params for the string datatypes
 stringParams :: AllowedParams
-stringParams = [ xsd_length
-	       , xsd_maxLength
-	       , xsd_minLength
-	       ]
+stringParams = map fst $ fctTableString ++ fctTablePattern
+
+-- | Function table for string tests,
+-- XML document value is first operand, schema value second
+
+fctTablePattern :: FunctionTable
+fctTablePattern
+    = [ (xsd_pattern,	patParamValid) ]
+
+patParamValid :: String -> String -> Bool
+patParamValid a regex
+    = case parseRegex regex of
+      (Left _  )	-> False
+      (Right ex)	-> isNothing . match ex $ a
+
 
 -- | Tests whether a XML instance value matches a data-pattern.
 -- (see also: 'stringValid')
@@ -129,49 +140,62 @@ stringParams = [ xsd_length
 datatypeAllowsW3C :: DatatypeAllows
 datatypeAllowsW3C d params value _
     | d == xsd_string
-	= validString value
+	= validString id value
 
     | d == xsd_normalizedString
-	= validString (normalizeBlanks value)
+	= validString normalizeBlanks value
 
     | d == xsd_token
-	= validString value1
+	= validString normalizeBlanks value
 
     | d == xsd_NMTOKEN
-	= isNmtoken `andValidString` value1
+	= check isNmtoken
+	  `andCheck`
+	  validString normalizeBlanks $ value
 
     | d == xsd_Name
-	= isName `andValidString` value1
+	= check isName
+	  `andCheck`
+	  validString normalizeBlanks $ value
 
     | d `elem` [ xsd_NCName
 	       , xsd_ID
 	       , xsd_IDREF
 	       , xsd_ENTITY
 	       ]
-        = isNCName
-	  `andValidString` value1
+        = check isNCName
+	  `andCheck`
+	  validString normalizeBlanks $ value
 
     | d == xsd_anyURI
-	= isURIReference
-	  `andValidString` value2
+	= check isURIReference
+	  `andCheck`
+	  validString escapeURI $ value
 
     | d == xsd_QName
-	=  isWellformedQualifiedName
-	  `andValidString` value1
+	=  check isWellformedQualifiedName
+	  `andCheck`
+	  validString normalizeBlanks $ value
 
     | otherwise
 	= alwaysErr notAllowed' value
 
     where
-    value1 = normalizeWhitespace value
-    value2 = escapeURI           value1
+    check p = p `orErr` notValid
 
-    andValidString p = (p `orErr` notValid) `andCheck` validString
-    validString      = stringValid d 0 (-1) params
+    validString normFct
+	= validPattern
+	  `andCheck`
+	  ( validLength `withVal` normFct )
+        where
+	validLength  = stringValidFT fctTableString  d 0 (-1) (filter ((/= xsd_pattern) . fst) params)
+	validPattern = stringValidFT fctTablePattern d 0 (-1) (filter ((== xsd_pattern) . fst) params)
+
     notValid v'      = errorMsgDataLibQName v' d w3cNS
     notAllowed' v'   = errorMsgDataTypeNotAllowed d params v' w3cNS
 
 -- | Tests whether a XML instance value matches a value-pattern.
+
 datatypeEqualW3C :: DatatypeEqual
 datatypeEqualW3C d s1 _ s2 _
     | isJust nf
@@ -198,3 +222,5 @@ datatypeEqualW3C d s1 _ s2 _
 	   , (xsd_anyURI,		escapeURI . normalizeWhitespace	)
 	   , (xsd_QName,		normalizeWhitespace	)
 	   ]
+
+-- ----------------------------------------

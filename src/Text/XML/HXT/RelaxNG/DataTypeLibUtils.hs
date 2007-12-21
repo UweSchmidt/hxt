@@ -19,14 +19,22 @@ module Text.XML.HXT.RelaxNG.DataTypeLibUtils
   , module Text.XML.HXT.RelaxNG.Utils
   , module Text.XML.HXT.RelaxNG.DataTypes  
 
+  , Check
+  , FunctionTable
+
   , alwaysOK
   , alwaysErr
   , orErr
   , andCheck
   , withVal
 
+  , stringValidFT	-- generalized checkString
+  , fctTableString	-- minLength, maxLenght, length
+
   , stringValid		-- checkString
   , numberValid		-- checkNumeric
+
+  , numParamValid
   )
 
 where
@@ -150,8 +158,11 @@ All tests are performed on the string value.
    
 -}
 
-stringValid :: DatatypeName -> Integer -> Integer -> ParamList -> Check String
-stringValid datatype lowerBound upperBound params
+stringValid 	:: DatatypeName -> Integer -> Integer -> ParamList -> Check String
+stringValid	= stringValidFT fctTableString
+
+stringValidFT :: FunctionTable -> DatatypeName -> Integer -> Integer -> ParamList -> Check String
+stringValidFT ft datatype lowerBound upperBound params
     = boundsOK `orErr` boundsErr
       `andCheck`
       paramsStringValid params
@@ -160,22 +171,23 @@ stringValid datatype lowerBound upperBound params
 	= (toInteger (length v) >= lowerBound)
 	  &&
 	  ((upperBound == (-1)) || (toInteger (length v) <= upperBound))
+
     boundsErr v
 	= "Length of " ++ v
           ++ " (" ++ (show $ length v) ++ " chars) out of range: "
           ++ show lowerBound ++ " .. " ++ show upperBound
           ++ " for datatype " ++ datatype
 
-paramStringValid :: (LocalName, String) -> (Check String)
-paramStringValid (pn, pv)
-    = paramOK `orErr` errorMsgParam pn pv
-    where
-    paramOK v  = paramFct pn v pv
-    paramFct n = fromJust $ lookup n fctTableString
+    paramStringValid :: (LocalName, String) -> Check String
+    paramStringValid (pn, pv)
+	= paramOK `orErr` errorMsgParam pn pv
+	  where
+	  paramOK v  = paramFct pn v pv
+	  paramFct n = fromJust $ lookup n ft
 
-paramsStringValid :: ParamList -> (Check String)
-paramsStringValid
-    = foldr andCheck alwaysOK . map paramStringValid
+    paramsStringValid :: ParamList -> Check String
+    paramsStringValid
+	= foldr andCheck alwaysOK . map paramStringValid
 
 -- ------------------------------------------------------------
 
