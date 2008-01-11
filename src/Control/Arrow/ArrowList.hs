@@ -293,6 +293,25 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
     ($<$)		:: (c -> (a b b)) -> a b c -> a b b
     g $<$ f		= applyA (listA (f >>> arr g) >>> arr seqA)
 
+    -- | merge the result pairs of an arrow with type @a a1 (b1, b2)@
+    -- by combining the tuple components with the @op@ arrow
+    --
+    -- examples with simple list arrows working on strings and XmlTrees
+    --
+    -- >     a1 :: a String (XmlTree, XmlTree)
+    -- >     a1 = selem "foo" [this >>> mkText]
+    -- > 	  &&&
+    -- > 	  selem "bar" [arr (++"0") >>> mkText]
+    -- > 
+    -- >     runLA (a1 >>> mergeA (<+>) >>> xshow this) "42" == ["<foo>42</foo>","<bar>420</bar>"]
+    -- >     runLA (a1 >>> mergeA (+=)  >>> xshow this) "42" == ["<foo>42<bar>420</bar></foo>"]
+    --
+    -- see also: 'applyA', '$<' and '+=' in class 'Text.XML.HXT.Arrow.ArrowXml'
+
+    mergeA		:: (a (a1, b1) a1 -> a (a1, b1) b1 -> a (a1, b1) c) ->
+			   a (a1, b1) c
+    mergeA op		= (\ x -> arr fst `op` constA (snd x)) $< this
+
     -- | useful only for arrows with side effects: perform applies an arrow to the input
     -- ignores the result and returns the input
     --
