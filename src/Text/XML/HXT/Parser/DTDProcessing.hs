@@ -180,7 +180,7 @@ processDTD
 	  = do
 	    sequence_ . map (\ (a, ts) -> setSysParamTree a ts) . toTreel . getAttrl $ t
 	    setSysParam a_standalone ""
-	    ( traceMsg 1 ("processDTD: process parameter enitities")
+	    ( traceMsg 1 ("processDTD: process parameter entities")
 	      .>>
 	      liftMf (modifyChildren addDoctype)
 	      .>>
@@ -698,7 +698,7 @@ addGeEntry k a (GeEnv env)
 
 processGeneralEntities	:: XmlStateFilter a
 processGeneralEntities
-    = ( traceMsg 1 "processGeneralEntities: collect and substitute general enities"
+    = ( traceMsg 1 "processGeneralEntities: collect and substitute general entities"
 	.>>
 	processEntities
 	.>>

@@ -232,7 +232,7 @@ parseDocument userOptions
 	[ hasOption a_parse_html
 		:-> parseHtmlDoc			-- parse everything as HTML
 	, this
-		:-> checkWellformedDoc			-- parse XML and process enitities
+		:-> checkWellformedDoc			-- parse XML and process entities
 	            .>>
                     ( getValidatedDoc			-- validate
 		      `whenM`

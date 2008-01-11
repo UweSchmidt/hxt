@@ -239,7 +239,7 @@ collapseAllXText
 
 -- |
 -- escape XmlText,
--- transform all special XML chars into char- or enitity- refs
+-- transform all special XML chars into char- or entity- refs
 
 type EntityRefTable	= M.Map Int String
 

@@ -102,7 +102,7 @@ v_0,				-- attribute values
 k_any,				-- DTD keywords
  k_cdata,
  k_empty,
- k_enitity,
+ k_entity,
  k_entities,
  k_id,
  k_idref,
@@ -205,7 +205,7 @@ v_plus		= "+"
 k_any		= "ANY"
 k_cdata		= "CDATA"
 k_empty		= "EMPTY"
-k_enitity	= "ENTITY"
+k_entity	= "ENTITY"
 k_entities	= "ENTITIES"
 k_id		= "ID"
 k_idref		= "IDREF"

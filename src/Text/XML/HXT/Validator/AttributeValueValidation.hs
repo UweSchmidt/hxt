@@ -79,7 +79,7 @@ checkValue :: String -> XmlTrees -> String -> XmlTree -> XmlFilter
 checkValue typ dtdPart attrValue attrDecl
 	| typ == k_cdata	= none
 	| typ == k_enumeration	= checkValueEnumeration attrDecl attrValue
-	| typ == k_enitity	= checkValueEntity dtdPart attrDecl attrValue
+	| typ == k_entity	= checkValueEntity dtdPart attrDecl attrValue
 	| typ == k_entities	= checkValueEntities dtdPart attrDecl attrValue
 	| typ == k_id		= checkValueId attrDecl attrValue
 	| typ == k_idref	= checkValueIdref attrDecl attrValue

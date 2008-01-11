@@ -341,7 +341,7 @@ tokenizedOrStringType
 		  , k_idrefs
 		  , k_idref
 		  , k_id
-		  , k_enitity
+		  , k_entity
 		  , k_entities
 		  , k_nmtokens
 		  , k_nmtoken

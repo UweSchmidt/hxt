@@ -125,7 +125,7 @@ processDTD
 
       processRoot	:: IOStateArrow s XmlTree XmlTree
       processRoot
-	  = ( traceMsg 1 ("processDTD: process parameter enitities")
+	  = ( traceMsg 1 ("processDTD: process parameter entities")
 	      >>>
 	      setParamString a_standalone ""
 	      >>>

@@ -89,7 +89,7 @@ addGeEntry k a (GEEnv env)
 
 processGeneralEntities	:: IOStateArrow s XmlTree XmlTree
 processGeneralEntities
-    = ( traceMsg 1 "processGeneralEntities: collect and substitute general enities"
+    = ( traceMsg 1 "processGeneralEntities: collect and substitute general entities"
 	>>>
 	withOtherUserState emptyGeEnv (processChildren (processGeneralEntity ReferenceInContent []))
 	>>>
@@ -205,7 +205,7 @@ processGeneralEntity context recl
     substEntitiesInAttrDefaultValue	:: GEArrow XmlTree XmlTree
     substEntitiesInAttrDefaultValue
 	= applyA ( xshow ( getDTDAttrValue a_default			-- parse the default value
-			   >>>						-- substitute enities
+			   >>>						-- substitute entities
 			   mkText					-- and convert value into a string
 			   >>>
 			   parseXmlAttrValue "default value of attribute"
