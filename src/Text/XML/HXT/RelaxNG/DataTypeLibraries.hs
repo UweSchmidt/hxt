@@ -24,7 +24,6 @@ import Text.XML.HXT.RelaxNG.XmlSchema.DataTypeLibW3C
 import Data.Maybe
     ( fromJust )
 
-    
 -- ------------------------------------------------------------
     
 
@@ -96,7 +95,7 @@ datatypeAllows uri d params s1 c1
 relaxDatatypeLib 	:: DatatypeLibrary
 relaxDatatypeLib	= (relaxNamespace, DTC datatypeAllowsRelax datatypeEqualRelax relaxDatatypes)
 
--- | if there is no datatype uri, the build in datatype library is used
+-- | if there is no datatype uri, the built in datatype library is used
 relaxDatatypeLib'	:: DatatypeLibrary
 relaxDatatypeLib'	= ("",             DTC datatypeAllowsRelax datatypeEqualRelax relaxDatatypes)
 
@@ -112,7 +111,7 @@ datatypeAllowsRelax d p v _
     = maybe notAllowed' allowed . lookup d $ relaxDatatypeTable
     where
     notAllowed'
-	= Just $ errorMsgDataTypeNotAllowed d p v relaxNamespace
+	= Just $ errorMsgDataTypeNotAllowed relaxNamespace d p v
     allowed _
 	= Nothing
 
@@ -125,7 +124,7 @@ datatypeEqualRelax d s1 _ s2 _
     = maybe notAllowed' checkValues . lookup d $ relaxDatatypeTable
       where
       notAllowed'
-	  = Just $ errorMsgDataTypeNotAllowed2 d s1 s2 relaxNamespace
+	  = Just $ errorMsgDataTypeNotAllowed2 relaxNamespace d s1 s2
       checkValues predicate
 	  = if predicate s1 s2
 	    then Nothing

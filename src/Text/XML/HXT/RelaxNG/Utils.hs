@@ -79,8 +79,13 @@ normalizeURI uri
 
 checkByParsing	:: Parser String -> String -> Bool
 checkByParsing p s
-    = either (const False) (const True) (parse p "" s)
-                  
+    = either (const False) (const True) (parse p' "" s)
+      where
+      p' = do
+	   r <- p
+	   eof
+	   return r
+
 -- | Tests whether a string matches a number [-](0-9)*
 isNumber :: String -> Bool
 isNumber
@@ -93,7 +98,6 @@ isNumber
 	  m <- option "" (string "-")
 	  n <- many1 digit
 	  skipS0
-	  eof
 	  return $ m ++ n
 
 isNmtoken	:: String -> Bool

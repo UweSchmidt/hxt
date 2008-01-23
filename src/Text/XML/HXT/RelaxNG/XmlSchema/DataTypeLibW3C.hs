@@ -19,11 +19,24 @@
 module Text.XML.HXT.RelaxNG.XmlSchema.DataTypeLibW3C
   ( w3cNS
   , w3cDatatypeLib
+
+  , xsd_string			-- data type names
+  , xsd_normalizedString
+  , xsd_token
+  , xsd_NMTOKEN
+  , xsd_NMTOKENS
+  , xsd_Name
   , xsd_NCName
+  , xsd_ID
+  , xsd_IDREF
+  , xsd_IDREFS
+  , xsd_ENTITY
+  , xsd_ENTITIES
   , xsd_anyURI
   , xsd_QName
-  , xsd_string
-  , xsd_length
+  , xsd_NOTATION
+
+  , xsd_length			-- facet names
   , xsd_maxLength
   , xsd_minLength
   , xsd_pattern
@@ -51,33 +64,42 @@ import Data.Maybe
 -- ------------------------------------------------------------
 
 -- | Namespace of the W3C XML schema datatype library
+
 w3cNS	:: String
 w3cNS	= "http://www.w3.org/2001/XMLSchema-datatypes"
 
 
-xsd_anyURI
- , xsd_QName
- , xsd_string
+xsd_string
  , xsd_normalizedString
  , xsd_token
  , xsd_NMTOKEN
+ , xsd_NMTOKENS
  , xsd_Name
  , xsd_NCName
  , xsd_ID
  , xsd_IDREF
- , xsd_ENTITY :: String
+ , xsd_IDREFS
+ , xsd_ENTITY
+ , xsd_ENTITIES
+ , xsd_anyURI
+ , xsd_QName
+ , xsd_NOTATION :: String
 
-xsd_anyURI		= "anyURI"
-xsd_QName		= "QName"
 xsd_string		= "string"
 xsd_normalizedString	= "normalizedString"
 xsd_token		= "token"
 xsd_NMTOKEN		= "NMTOKEN"
+xsd_NMTOKENS		= "NMTOKENS"
 xsd_Name		= "Name"
 xsd_NCName		= "NCName"
 xsd_ID			= "ID"
 xsd_IDREF		= "IDREF"
+xsd_IDREFS		= "IDREFS"
 xsd_ENTITY		= "ENTITY"
+xsd_ENTITIES		= "ENTITIES"
+xsd_anyURI		= "anyURI"
+xsd_QName		= "QName"
+xsd_NOTATION		= "NOTATION"
 
 xsd_length
  , xsd_maxLength
@@ -103,24 +125,32 @@ w3cDatatypeLib = (w3cNS, DTC datatypeAllowsW3C datatypeEqualW3C w3cDatatypes)
 
 -- | All supported datatypes of the library
 w3cDatatypes :: AllowedDatatypes
-w3cDatatypes = [ (xsd_anyURI,		stringParams)
-               , (xsd_QName,		stringParams)
-               , (xsd_string,		stringParams)
+w3cDatatypes = [ (xsd_string,		stringParams)
 	       , (xsd_normalizedString, stringParams)
                , (xsd_token,		stringParams)
                , (xsd_NMTOKEN,		stringParams)
+               , (xsd_NMTOKENS,		listParams  )
 	       , (xsd_Name,		stringParams)
 	       , (xsd_NCName,		stringParams)
 	       , (xsd_ID,		stringParams)
 	       , (xsd_IDREF,		stringParams)
+	       , (xsd_IDREFS,		listParams  )
 	       , (xsd_ENTITY,		stringParams)
+	       , (xsd_ENTITIES,		listParams  )
+               , (xsd_anyURI,		stringParams)
+               , (xsd_QName,		stringParams)
+               , (xsd_NOTATION,		stringParams)
                ]
 
 -- | List of allowed params for the string datatypes
-stringParams :: AllowedParams
-stringParams = map fst $ fctTableString ++ fctTablePattern
+stringParams	:: AllowedParams
+stringParams	= map fst $ fctTableString ++ fctTablePattern
 
--- | Function table for string tests,
+-- | List of allowed params for the list datatypes
+listParams	:: AllowedParams
+listParams	= map fst $ fctTableList ++ fctTablePattern
+
+-- | Function table for pattern tests,
 -- XML document value is first operand, schema value second
 
 fctTablePattern :: FunctionTable
@@ -133,94 +163,109 @@ patParamValid a regex
       (Left _  )	-> False
       (Right ex)	-> isNothing . match ex $ a
 
+isNameList	:: (String -> Bool) -> String -> Bool
+isNameList p w
+    = not (null ts) && all p ts
+      where
+      ts = words w
 
 -- | Tests whether a XML instance value matches a data-pattern.
 -- (see also: 'stringValid')
 
 datatypeAllowsW3C :: DatatypeAllows
 datatypeAllowsW3C d params value _
-    | d == xsd_string
-	= validString id value
-
-    | d == xsd_normalizedString
-	= validString normalizeBlanks value
-
-    | d == xsd_token
-	= validString normalizeBlanks value
-
-    | d == xsd_NMTOKEN
-	= check isNmtoken
-	  `andCheck`
-	  validString normalizeBlanks $ value
-
-    | d == xsd_Name
-	= check isName
-	  `andCheck`
-	  validString normalizeBlanks $ value
-
-    | d `elem` [ xsd_NCName
-	       , xsd_ID
-	       , xsd_IDREF
-	       , xsd_ENTITY
-	       ]
-        = check isNCName
-	  `andCheck`
-	  validString normalizeBlanks $ value
-
-    | d == xsd_anyURI
-	= check isURIReference
-	  `andCheck`
-	  validString escapeURI $ value
-
-    | d == xsd_QName
-	=  check isWellformedQualifiedName
-	  `andCheck`
-	  validString normalizeBlanks $ value
-
-    | otherwise
-	= alwaysErr notAllowed' value
-
+    = performCheck check value
     where
-    check p = p `orErr` notValid
-
     validString normFct
 	= validPattern
-	  `andCheck`
-	  ( validLength `withVal` normFct )
-        where
-	validLength  = stringValidFT fctTableString  d 0 (-1) (filter ((/= xsd_pattern) . fst) params)
-	validPattern = stringValidFT fctTablePattern d 0 (-1) (filter ((== xsd_pattern) . fst) params)
+	  >>>
+	  arr normFct
+	  >>>
+	  validLength
 
-    notValid v'      = errorMsgDataLibQName v' d w3cNS
-    notAllowed' v'   = errorMsgDataTypeNotAllowed d params v' w3cNS
+    validNormString
+	= validString normalizeWhitespace
+
+    validPattern
+	= stringValidFT fctTablePattern  d 0 (-1) (filter ((== xsd_pattern) . fst) params)
+
+    validLength
+	= stringValidFT fctTableString  d 0 (-1) (filter ((/= xsd_pattern) . fst) params)
+
+    validList
+	= validPattern
+	  >>>
+	  arr normalizeWhitespace
+	  >>>
+	  validListLength
+
+    validListLength
+	= stringValidFT fctTableList  d 0 (-1) (filter ((/= xsd_pattern) . fst) params)
+
+    validName isN
+	= assert isN (errorMsgDataLibQName w3cNS d)
+
+    validNCName
+	= validNormString >>> validName isNCName
+
+    validQName
+	= validNormString >>> validName isWellformedQualifiedName
+
+    check	:: CheckString
+    check	= fromMaybe notFound . lookup d $ checks
+
+    notFound	= failure $ errorMsgDataTypeNotAllowed w3cNS d params
+
+    checks	:: [(String, CheckA String String)]
+    checks	= [ (xsd_string,		validString id)
+		  , (xsd_normalizedString,	validString normalizeBlanks)
+		  , (xsd_token,			validNormString)
+		  , (xsd_NMTOKEN,		validNormString >>> validName isNmtoken)
+		  , (xsd_NMTOKENS,		validList       >>> validName (isNameList isNmtoken))
+		  , (xsd_Name,			validNormString >>> validName isName)
+		  , (xsd_NCName,		validNCName)
+		  , (xsd_ID,			validNCName)
+		  , (xsd_IDREF,			validNCName)
+		  , (xsd_IDREFS,		validList       >>> validName (isNameList isNCName))
+		  , (xsd_ENTITY,		validNCName)
+		  , (xsd_ENTITIES,		validList       >>> validName (isNameList isNCName))
+		  , (xsd_anyURI,		validName isURIReference >>> validString escapeURI)
+		  , (xsd_QName,			validQName)
+		  , (xsd_NOTATION,		validQName)
+		  ]
+
+-- ----------------------------------------
 
 -- | Tests whether a XML instance value matches a value-pattern.
 
 datatypeEqualW3C :: DatatypeEqual
 datatypeEqualW3C d s1 _ s2 _
-    | isJust nf
-	= check (fromJust nf)
-    | otherwise
-	= Just $ errorMsgDataTypeNotAllowed0 d w3cNS
+    = performCheck check (s1, s2)
     where
-    check f
-	| s1' == s2' = Nothing
-	| otherwise  = Just $ errorMsgEqual d s1' s2'
-	where
-	s1' = f s1
-	s2' = f s2
-    nf = lookup d norm
+    check	:: CheckA (String, String) (String, String)
+    check	= maybe notFound found . lookup d $ norm
+
+    notFound	= failure $ const (errorMsgDataTypeNotAllowed0 w3cNS d)
+
+    found nf	= arr (\ (x1, x2) -> (nf x1, nf x2))			-- normalize both values
+		  >>>
+		  assert (uncurry (==)) (uncurry $ errorMsgEqual d)	-- and check on (==)
+
     norm = [ (xsd_string,		id			)
 	   , (xsd_normalizedString,	normalizeBlanks		)
 	   , (xsd_token,		normalizeWhitespace	)
 	   , (xsd_NMTOKEN,		normalizeWhitespace	)
+	   , (xsd_NMTOKENS,		normalizeWhitespace	)
 	   , (xsd_Name,			normalizeWhitespace	)
 	   , (xsd_NCName,		normalizeWhitespace	)
 	   , (xsd_ID,			normalizeWhitespace	)
 	   , (xsd_IDREF,		normalizeWhitespace	)
+	   , (xsd_IDREFS,		normalizeWhitespace	)
 	   , (xsd_ENTITY,		normalizeWhitespace	)
+	   , (xsd_ENTITIES,		normalizeWhitespace	)
 	   , (xsd_anyURI,		escapeURI . normalizeWhitespace	)
 	   , (xsd_QName,		normalizeWhitespace	)
+	   , (xsd_NOTATION,		normalizeWhitespace	)
 	   ]
 
 -- ----------------------------------------

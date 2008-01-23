@@ -25,28 +25,28 @@ $(prog)		: $(modules)
 force		:
 		$(GHC) --make -o $(prog) $(prog).hs
 
-testcases	= testCases
 testarchive	= RelaxTestCases.tgz
 
-test		:
-		$(MAKE) testrng
-		$(MAKE) testschema
+test		: test1 test2
 
-testrng		: $(prog) $(testcases)
-		$(prog) $(shell pwd)/$(testcases)
+test1		: testCases
+		$(prog) $(shell pwd)/testCases
 
-testschema	:
+test2		:
 		$(prog) $(shell pwd)/w3cSchemaDataTypes
 
-$(testcases)	: $(testarchive)
+testCases	: $(testarchive)
 		tar xvzf $(testarchive)
-		touch $(testcases)
+		touch testCases
 
 dist		:
 		[ -d $(DIST_DIR) ] || mkdir -p $(DIST_DIR)
 		cp Makefile $(modules) $(testarchive) $(DIST_DIR)
-
+		find w3cSchemaDataTypes '(' -name '*.xml' -or -name '*.rng' ')' -print | xargs tar cvf - | \
+			( cd $(DIST_DIR) ; tar xf - ; )
 clean		:
 		rm -f $(prog) *.o *.hi
+
+.PHONY		: all prof local force test test1 test2 dist clean
 
 # eof ------------------------------------------------------------
