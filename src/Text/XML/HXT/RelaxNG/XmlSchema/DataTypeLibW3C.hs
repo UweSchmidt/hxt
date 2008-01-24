@@ -35,6 +35,8 @@ module Text.XML.HXT.RelaxNG.XmlSchema.DataTypeLibW3C
   , xsd_anyURI
   , xsd_QName
   , xsd_NOTATION
+  , xsd_hexBinary
+  , xsd_base64Binary
 
   , xsd_length			-- facet names
   , xsd_maxLength
@@ -55,7 +57,9 @@ import Text.XML.HXT.DOM.NamespacePredicates
   )
 
 import Text.XML.HXT.RelaxNG.XmlSchema.Regex
-    ( match )
+    ( Regex
+    , match
+    )
 import Text.XML.HXT.RelaxNG.XmlSchema.RegexParser
     ( parseRegex )
 
@@ -83,7 +87,9 @@ xsd_string
  , xsd_ENTITIES
  , xsd_anyURI
  , xsd_QName
- , xsd_NOTATION :: String
+ , xsd_NOTATION
+ , xsd_hexBinary
+ , xsd_base64Binary :: String
 
 xsd_string		= "string"
 xsd_normalizedString	= "normalizedString"
@@ -100,6 +106,8 @@ xsd_ENTITIES		= "ENTITIES"
 xsd_anyURI		= "anyURI"
 xsd_QName		= "QName"
 xsd_NOTATION		= "NOTATION"
+xsd_hexBinary		= "hexBinary"
+xsd_base64Binary	= "base64Binary"
 
 xsd_length
  , xsd_maxLength
@@ -140,6 +148,8 @@ w3cDatatypes = [ (xsd_string,		stringParams)
                , (xsd_anyURI,		stringParams)
                , (xsd_QName,		stringParams)
                , (xsd_NOTATION,		stringParams)
+	       , (xsd_hexBinary,	stringParams)
+	       , (xsd_base64Binary,	stringParams)
                ]
 
 -- | List of allowed params for the string datatypes
@@ -168,6 +178,36 @@ isNameList p w
     = not (null ts) && all p ts
       where
       ts = words w
+
+rexHexBinary	:: Regex
+rexHexBinary	= either undefined id . parseRegex $ "([A-Fa-f0-9]{2})*"
+
+rexBase64Binary	:: Regex
+rexBase64Binary	= either undefined id . parseRegex $
+		  "(" ++ b64 ++ "{4})*((" ++ b64 ++ "{2}==)|(" ++ b64 ++ "{3}=)|)"
+		  where
+		  b64     = "[A-Za-z0-9+/]"
+
+isHexBinary	:: String -> Bool
+isHexBinary	= isNothing . match rexHexBinary
+
+isBase64Binary	:: String -> Bool
+isBase64Binary	= isNothing . match rexBase64Binary
+
+normBase64	:: String -> String
+normBase64	= filter isB64
+		  where
+		  isB64 c = ( 'A' <= c && c <= 'Z')
+			    ||
+			    ( 'a' <= c && c <= 'z')
+			    ||
+			    ( '0' <= c && c <= '9')
+			    ||
+			    c == '+'
+			    ||
+			    c == '/'
+			    ||
+			    c == '='
 
 -- | Tests whether a XML instance value matches a data-pattern.
 -- (see also: 'stringValid')
@@ -203,7 +243,7 @@ datatypeAllowsW3C d params value _
 	= stringValidFT fctTableList  d 0 (-1) (filter ((/= xsd_pattern) . fst) params)
 
     validName isN
-	= assert isN (errorMsgDataLibQName w3cNS d)
+	= assert isN errW3C
 
     validNCName
 	= validNormString >>> validName isNCName
@@ -232,7 +272,10 @@ datatypeAllowsW3C d params value _
 		  , (xsd_anyURI,		validName isURIReference >>> validString escapeURI)
 		  , (xsd_QName,			validQName)
 		  , (xsd_NOTATION,		validQName)
+		  , (xsd_hexBinary,		validString id  >>> assert isHexBinary errW3C)
+		  , (xsd_base64Binary,		validString normBase64 >>> assert isBase64Binary errW3C)
 		  ]
+    errW3C	= errorMsgDataLibQName w3cNS d
 
 -- ----------------------------------------
 
@@ -266,6 +309,8 @@ datatypeEqualW3C d s1 _ s2 _
 	   , (xsd_anyURI,		escapeURI . normalizeWhitespace	)
 	   , (xsd_QName,		normalizeWhitespace	)
 	   , (xsd_NOTATION,		normalizeWhitespace	)
+	   , (xsd_hexBinary,		id			)
+	   , (xsd_base64Binary,		normBase64		)
 	   ]
 
 -- ----------------------------------------
