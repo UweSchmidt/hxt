@@ -304,10 +304,10 @@ unicodeString	= "UNICODE"
 -- known namespaces
 
 -- |
--- the predefined namespace uri for xml: \"http:\/\/www.w3.org\/XML\/1998\/namespaces\"
+-- the predefined namespace uri for xml: \"http:\/\/www.w3.org\/XML\/1998\/namespace\"
 
 xmlNamespace	:: String
-xmlNamespace	= "http://www.w3.org/XML/1998/namespaces"
+xmlNamespace	= "http://www.w3.org/XML/1998/namespace"
 
 -- |
 -- the predefined namespace uri for xmlns: \"http:\/\/www.w3.org\/2000\/xmlns\/\"
