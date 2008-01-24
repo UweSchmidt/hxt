@@ -271,7 +271,7 @@ delta (Seq e1 e2) c
     | nullable e1	= mkAlt (mkSeq (delta e1 c) e2) (delta e2 c)
     | otherwise		= mkSeq (delta e1 c) e2
 delta (Rep i e)   c	= mkSeq (delta e c) (mkRep (i-1) e)
-delta (Rng i j e) c	= mkSeq (delta e c) (mkRng (i-1) (j-1) e)
+delta (Rng i j e) c	= mkSeq (delta e c) (mkRng ((i-1) `max` 0) (j-1) e)
 delta (Dif e1 e2) c	= mkDif (delta e1 c) (delta e2 c)
 
 -- ------------------------------------------------------------
