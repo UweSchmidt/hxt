@@ -65,6 +65,7 @@ import Text.XML.HXT.RelaxNG.XmlSchema.RegexParser
     ( parseRegex )
 
 import Data.Maybe
+import Data.Ratio
   
 -- ------------------------------------------------------------
 
@@ -91,7 +92,8 @@ xsd_string
  , xsd_QName
  , xsd_NOTATION
  , xsd_hexBinary
- , xsd_base64Binary :: String
+ , xsd_base64Binary
+ , xsd_decimal :: String
 
 xsd_string		= "string"
 xsd_normalizedString	= "normalizedString"
@@ -111,6 +113,7 @@ xsd_QName		= "QName"
 xsd_NOTATION		= "NOTATION"
 xsd_hexBinary		= "hexBinary"
 xsd_base64Binary	= "base64Binary"
+xsd_decimal		= "decimal"
 
 xsd_length
  , xsd_maxLength
@@ -154,6 +157,7 @@ w3cDatatypes = [ (xsd_string,		stringParams)
                , (xsd_NOTATION,		stringParams)
 	       , (xsd_hexBinary,	stringParams)
 	       , (xsd_base64Binary,	stringParams)
+	       , (xsd_decimal,		decimalParams)
                ]
 
 -- | List of allowed params for the string datatypes
@@ -164,12 +168,20 @@ stringParams	= map fst $ fctTableString ++ fctTablePattern
 listParams	:: AllowedParams
 listParams	= map fst $ fctTableList ++ fctTablePattern
 
+-- | List of allowed params for the list datatypes
+decimalParams	:: AllowedParams
+decimalParams	= map fst $ fctTableDecimal ++ fctTablePattern
+
 -- | Function table for pattern tests,
 -- XML document value is first operand, schema value second
 
 fctTablePattern :: FunctionTable
 fctTablePattern
     = [ (xsd_pattern,	patParamValid) ]
+
+fctTableDecimal	:: FunctionTable
+fctTableDecimal
+    = []	-- TODO
 
 patParamValid :: String -> String -> Bool
 patParamValid a regex
@@ -195,7 +207,8 @@ isRex ex	= isNothing . match ex
 
 rexLanguage
   , rexHexBinary
-  , rexBase64Binary	:: Regex
+  , rexBase64Binary
+  , rexDecimal	:: Regex
 
 rexLanguage	= rex "[A-Za-z]{1,8}(-[A-Za-z]{1,8})*"
 rexHexBinary	= rex "([A-Fa-f0-9]{2})*"
@@ -203,14 +216,17 @@ rexBase64Binary	= rex $
 		  "(" ++ b64 ++ "{4})*((" ++ b64 ++ "{2}==)|(" ++ b64 ++ "{3}=)|)"
 		  where
 		  b64     = "[A-Za-z0-9+/]"
+rexDecimal	= rex "(+|-)([0-9]+(.[0-9]*)?|.[0-9]+)?"
 
 isLanguage
   , isHexBinary
-  , isBase64Binary	:: String -> Bool
+  , isBase64Binary
+  , isDecimal	:: String -> Bool
 
 isLanguage	= isRex rexLanguage
 isHexBinary	= isRex rexHexBinary
 isBase64Binary	= isRex rexBase64Binary
+isDecimal	= isRex rexDecimal
 
 -- ----------------------------------------
 
@@ -228,6 +244,47 @@ normBase64	= filter isB64
 			    c == '/'
 			    ||
 			    c == '='
+
+-- ----------------------------------------
+
+readDecimal
+  , readDecimal'	:: String -> Rational
+
+readDecimal ('+':s)	= readDecimal' s
+readDecimal ('-':s)	= negate (readDecimal' s)
+readDecimal      s	= readDecimal' s
+
+readDecimal' s
+    | f == 0	= (n % 1)
+    | otherwise	= (n % 1) + (f % (10 ^ (toInteger (length fs))))
+    where
+    (ns, fs') = span (/= '.') s
+    fs = drop 1 fs'
+
+    f :: Integer
+    f | null fs		= 0
+      | otherwise	= read fs
+    n :: Integer
+    n | null ns		= 0
+      | otherwise	= read ns
+
+totalDigits
+  , totalDigits'
+  , fractionDigits	:: Rational -> Int
+
+totalDigits r
+    | r == 0			= 0
+    | r < 0			= totalDigits' . negate  $ r
+    | otherwise			= totalDigits'           $ r
+
+totalDigits' r
+    | denominator r == 1	= length . show . numerator  $ r
+    | r < (1%1)			= (\ x -> x-1) . totalDigits' . (+ (1%1))    $ r
+    | otherwise			= totalDigits' . (* (10 % 1)) $ r
+
+fractionDigits r
+    | denominator r == 1	= 0
+    | otherwise			= (+1) . fractionDigits . (* (10 % 1)) $ r
 
 -- ----------------------------------------
 
@@ -273,6 +330,11 @@ datatypeAllowsW3C d params value _
     validQName
 	= validNormString >>> validName isWellformedQualifiedName
 
+    validDecimal
+	= assert isDecimal errW3C
+	  >>>
+	  stringValidFT fctTableDecimal  d 0 (-1) (filter ((/= xsd_pattern) . fst) params)
+
     check	:: CheckString
     check	= fromMaybe notFound . lookup d $ checks
 
@@ -297,6 +359,7 @@ datatypeAllowsW3C d params value _
 		  , (xsd_NOTATION,		validQName)
 		  , (xsd_hexBinary,		validString id  >>> assert isHexBinary errW3C)
 		  , (xsd_base64Binary,		validString normBase64 >>> assert isBase64Binary errW3C)
+		  , (xsd_decimal,		validNormString >>> validDecimal)
 		  ]
     errW3C	= errorMsgDataLibQName w3cNS d
 
@@ -335,6 +398,7 @@ datatypeEqualW3C d s1 _ s2 _
 	   , (xsd_NOTATION,		normalizeWhitespace	)
 	   , (xsd_hexBinary,		id			)
 	   , (xsd_base64Binary,		normBase64		)
+	   , (xsd_decimal,		show . readDecimal . normalizeWhitespace	)
 	   ]
 
 -- ----------------------------------------
