@@ -40,6 +40,42 @@
 	</attribute>
       </optional>
       
+      <optional>
+	<attribute name="NMTOKEN">
+	  <data type="NMTOKEN">
+	  </data>
+	</attribute>
+      </optional>
+      
+      <optional>
+	<attribute name="NMTOKENS">
+	  <data type="NMTOKENS">
+	    <param name="length">3</param>
+	  </data>
+	</attribute>
+      </optional>
+      
+      <optional>
+	<attribute name="Name">
+	  <data type="Name">
+	  </data>
+	</attribute>
+      </optional>
+      
+      <optional>
+	<attribute name="NCName">
+	  <data type="NCName">
+	  </data>
+	</attribute>
+      </optional>
+      
+      <optional>
+	<attribute name="language">
+	  <data type="language">
+	  </data>
+	</attribute>
+      </optional>
+      
       <text/>
     </element>
   </define>

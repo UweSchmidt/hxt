@@ -23,6 +23,7 @@ module Text.XML.HXT.RelaxNG.XmlSchema.DataTypeLibW3C
   , xsd_string			-- data type names
   , xsd_normalizedString
   , xsd_token
+  , xsd_language
   , xsd_NMTOKEN
   , xsd_NMTOKENS
   , xsd_Name
@@ -76,6 +77,7 @@ w3cNS	= "http://www.w3.org/2001/XMLSchema-datatypes"
 xsd_string
  , xsd_normalizedString
  , xsd_token
+ , xsd_language
  , xsd_NMTOKEN
  , xsd_NMTOKENS
  , xsd_Name
@@ -94,6 +96,7 @@ xsd_string
 xsd_string		= "string"
 xsd_normalizedString	= "normalizedString"
 xsd_token		= "token"
+xsd_language		= "language"
 xsd_NMTOKEN		= "NMTOKEN"
 xsd_NMTOKENS		= "NMTOKENS"
 xsd_Name		= "Name"
@@ -136,6 +139,7 @@ w3cDatatypes :: AllowedDatatypes
 w3cDatatypes = [ (xsd_string,		stringParams)
 	       , (xsd_normalizedString, stringParams)
                , (xsd_token,		stringParams)
+	       , (xsd_language,		stringParams)
                , (xsd_NMTOKEN,		stringParams)
                , (xsd_NMTOKENS,		listParams  )
 	       , (xsd_Name,		stringParams)
@@ -179,20 +183,36 @@ isNameList p w
       where
       ts = words w
 
-rexHexBinary	:: Regex
-rexHexBinary	= either undefined id . parseRegex $ "([A-Fa-f0-9]{2})*"
+-- ----------------------------------------
 
-rexBase64Binary	:: Regex
-rexBase64Binary	= either undefined id . parseRegex $
+rex		:: String -> Regex
+rex		= either undefined id . parseRegex
+
+isRex		:: Regex -> String -> Bool
+isRex ex	= isNothing . match ex
+
+-- ----------------------------------------
+
+rexLanguage
+  , rexHexBinary
+  , rexBase64Binary	:: Regex
+
+rexLanguage	= rex "[A-Za-z]{1,8}(-[A-Za-z]{1,8})*"
+rexHexBinary	= rex "([A-Fa-f0-9]{2})*"
+rexBase64Binary	= rex $
 		  "(" ++ b64 ++ "{4})*((" ++ b64 ++ "{2}==)|(" ++ b64 ++ "{3}=)|)"
 		  where
 		  b64     = "[A-Za-z0-9+/]"
 
-isHexBinary	:: String -> Bool
-isHexBinary	= isNothing . match rexHexBinary
+isLanguage
+  , isHexBinary
+  , isBase64Binary	:: String -> Bool
 
-isBase64Binary	:: String -> Bool
-isBase64Binary	= isNothing . match rexBase64Binary
+isLanguage	= isRex rexLanguage
+isHexBinary	= isRex rexHexBinary
+isBase64Binary	= isRex rexBase64Binary
+
+-- ----------------------------------------
 
 normBase64	:: String -> String
 normBase64	= filter isB64
@@ -208,6 +228,8 @@ normBase64	= filter isB64
 			    c == '/'
 			    ||
 			    c == '='
+
+-- ----------------------------------------
 
 -- | Tests whether a XML instance value matches a data-pattern.
 -- (see also: 'stringValid')
@@ -260,6 +282,7 @@ datatypeAllowsW3C d params value _
     checks	= [ (xsd_string,		validString id)
 		  , (xsd_normalizedString,	validString normalizeBlanks)
 		  , (xsd_token,			validNormString)
+		  , (xsd_language,		validNormString >>> assert isLanguage errW3C)
 		  , (xsd_NMTOKEN,		validNormString >>> validName isNmtoken)
 		  , (xsd_NMTOKENS,		validList       >>> validName (isNameList isNmtoken))
 		  , (xsd_Name,			validNormString >>> validName isName)
@@ -297,6 +320,7 @@ datatypeEqualW3C d s1 _ s2 _
     norm = [ (xsd_string,		id			)
 	   , (xsd_normalizedString,	normalizeBlanks		)
 	   , (xsd_token,		normalizeWhitespace	)
+	   , (xsd_language,		normalizeWhitespace	)
 	   , (xsd_NMTOKEN,		normalizeWhitespace	)
 	   , (xsd_NMTOKENS,		normalizeWhitespace	)
 	   , (xsd_Name,			normalizeWhitespace	)

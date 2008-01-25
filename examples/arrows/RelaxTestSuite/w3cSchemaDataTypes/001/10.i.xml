@@ -1,0 +1,3 @@
+<!-- NMTOKENS, but not 3 elems -->
+<foo NMTOKENS=" abc  def  ghi jkl "/>
+ 
