@@ -38,10 +38,17 @@ module Text.XML.HXT.RelaxNG.XmlSchema.DataTypeLibW3C
   , xsd_NOTATION
   , xsd_hexBinary
   , xsd_base64Binary
+  , xsd_decimal
 
   , xsd_length			-- facet names
   , xsd_maxLength
   , xsd_minLength
+  , xsd_maxExclusive
+  , xsd_minExclusive
+  , xsd_maxInclusive
+  , xsd_minInclusive
+  , xsd_totalDigits
+  , xsd_fractionDigits
   , xsd_pattern
   , xsd_enumeration
   )
@@ -118,14 +125,29 @@ xsd_decimal		= "decimal"
 xsd_length
  , xsd_maxLength
  , xsd_minLength
+ , xsd_maxExclusive
+ , xsd_minExclusive
+ , xsd_maxInclusive
+ , xsd_minInclusive
+ , xsd_totalDigits
+ , xsd_fractionDigits
  , xsd_pattern
  , xsd_enumeration :: String
 
-xsd_length	= rng_length
-xsd_maxLength	= rng_maxLength
-xsd_minLength	= rng_minLength
-xsd_pattern	= "pattern"
-xsd_enumeration	= "enumeration"
+xsd_length		= rng_length
+xsd_maxLength		= rng_maxLength
+xsd_minLength		= rng_minLength
+
+xsd_maxExclusive	= rng_maxExclusive
+xsd_minExclusive	= rng_minExclusive
+xsd_maxInclusive	= rng_maxInclusive
+xsd_minInclusive	= rng_minInclusive
+
+xsd_totalDigits		= "totalDigits"
+xsd_fractionDigits	= "fractionDigits"
+
+xsd_pattern		= "pattern"
+xsd_enumeration		= "enumeration"
 
 
 -- | The main entry point to the W3C XML schema datatype library.
@@ -170,7 +192,7 @@ listParams	= map fst $ fctTableList ++ fctTablePattern
 
 -- | List of allowed params for the list datatypes
 decimalParams	:: AllowedParams
-decimalParams	= map fst $ fctTableDecimal ++ fctTablePattern
+decimalParams	= map fst fctTableDecimal ++ map fst fctTablePattern
 
 -- | Function table for pattern tests,
 -- XML document value is first operand, schema value second
@@ -179,15 +201,40 @@ fctTablePattern :: FunctionTable
 fctTablePattern
     = [ (xsd_pattern,	patParamValid) ]
 
-fctTableDecimal	:: FunctionTable
-fctTableDecimal
-    = []	-- TODO
-
 patParamValid :: String -> String -> Bool
 patParamValid a regex
     = case parseRegex regex of
       (Left _  )	-> False
       (Right ex)	-> isNothing . match ex $ a
+
+-- ----------------------------------------
+
+fctTableDecimal	:: [(String, Rational -> String -> Bool)]
+fctTableDecimal
+    = [ (xsd_maxExclusive,   cvd (<))
+      , (xsd_minExclusive,   cvd (>))
+      , (xsd_maxInclusive,   cvd (<=))
+      , (xsd_minInclusive,   cvd (>=))
+      , (xsd_totalDigits,    cvi (\ v l ->    totalDigits v == l))
+      , (xsd_fractionDigits, cvi (\ v l -> fractionDigits v == l))
+      ]
+    where
+    cvd		:: (Rational -> Rational -> Bool) -> (Rational -> String -> Bool)
+    cvd	op	= \ x y -> isDecimal y && x `op` readDecimal y
+    cvi		:: (Rational -> Int -> Bool) -> (Rational -> String -> Bool)
+    cvi	op	= \ x y -> isNumber y && x `op` read y
+
+decimalValidFT	:: ParamList -> CheckA Rational Rational
+decimalValidFT params
+    = foldr (>>>) ok . map paramDecimalValid $ params
+    where
+    paramDecimalValid (pn, pv)
+	= assert paramOK (errorMsgParam pn pv . showDecimal)
+	where
+	paramOK v  = paramFct pn v pv
+	paramFct n = fromJust $ lookup n fctTableDecimal
+
+-- ----------------------------------------
 
 isNameList	:: (String -> Bool) -> String -> Bool
 isNameList p w
@@ -216,7 +263,7 @@ rexBase64Binary	= rex $
 		  "(" ++ b64 ++ "{4})*((" ++ b64 ++ "{2}==)|(" ++ b64 ++ "{3}=)|)"
 		  where
 		  b64     = "[A-Za-z0-9+/]"
-rexDecimal	= rex "(+|-)([0-9]+(.[0-9]*)?|.[0-9]+)?"
+rexDecimal	= rex "(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))"
 
 isLanguage
   , isHexBinary
@@ -286,6 +333,25 @@ fractionDigits r
     | denominator r == 1	= 0
     | otherwise			= (+1) . fractionDigits . (* (10 % 1)) $ r
 
+showDecimal
+  , showDecimal'		:: Rational -> String
+
+showDecimal d
+    | d < 0	= ('-':) . showDecimal' . negate    $ d
+    | d < 1	= drop 1 . showDecimal' . (+ (1%1)) $ d
+    | otherwise	=          showDecimal'             $ d
+
+showDecimal' d
+    | denominator d == 1    	= show . numerator $ d
+    | otherwise			= times10 0        $ d
+    where
+    times10 i' d'
+	| denominator d' == 1	= let
+				  (x, y) = splitAt i' . reverse . show . numerator $ d'
+				  in
+				  reverse y ++ "." ++ reverse x
+	| otherwise		= times10 (i' + 1) (d' * (10 % 1))
+				  
 -- ----------------------------------------
 
 -- | Tests whether a XML instance value matches a data-pattern.
@@ -331,9 +397,12 @@ datatypeAllowsW3C d params value _
 	= validNormString >>> validName isWellformedQualifiedName
 
     validDecimal
-	= assert isDecimal errW3C
+	= arr normalizeWhitespace
 	  >>>
-	  stringValidFT fctTableDecimal  d 0 (-1) (filter ((/= xsd_pattern) . fst) params)
+	  assert isDecimal errW3C
+	  >>>
+	  checkWith readDecimal
+	  ( decimalValidFT (filter ((/= xsd_pattern) . fst) params) )
 
     check	:: CheckString
     check	= fromMaybe notFound . lookup d $ checks
@@ -359,7 +428,7 @@ datatypeAllowsW3C d params value _
 		  , (xsd_NOTATION,		validQName)
 		  , (xsd_hexBinary,		validString id  >>> assert isHexBinary errW3C)
 		  , (xsd_base64Binary,		validString normBase64 >>> assert isBase64Binary errW3C)
-		  , (xsd_decimal,		validNormString >>> validDecimal)
+		  , (xsd_decimal,		validPattern >>> validDecimal)
 		  ]
     errW3C	= errorMsgDataLibQName w3cNS d
 

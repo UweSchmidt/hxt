@@ -7,6 +7,7 @@ module Text.XML.HXT.RelaxNG.DataTypeLibUtils
   , errorMsgDataTypeNotAllowed0
   , errorMsgDataTypeNotAllowed2
   , errorMsgDataLibQName
+  , errorMsgParam
 
   , rng_length
   , rng_maxLength
