@@ -18,6 +18,7 @@ module Text.XML.HXT.Parser.HtmlParsec
     , parseHtmlContent
     , isEmptyHtmlTag
     , isInnerHtmlTagOf
+    , closesHtmlTag
     , emptyHtmlTags
     )
 
@@ -472,7 +473,11 @@ n `isInnerHtmlTagOf` tn
 	]
       )
 
-closes :: String -> String -> Bool
+closesHtmlTag
+  , closes :: String -> String -> Bool
+
+closesHtmlTag	= closes
+
 "a"	`closes` "a"					= True
 "li"	`closes` "li"					= True
 "th"	`closes`  t    | t `elem` ["th","td"]		= True
