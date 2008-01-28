@@ -262,7 +262,10 @@ stringValidFT ft datatype lowerBound upperBound params
       paramsStringValid params
     where
     boundsOK v
-	= (toInteger (length v) >= lowerBound)
+	= ( (lowerBound == 0)
+	    ||
+	    (toInteger (length v) >= lowerBound)
+	  )
 	  &&
 	  ( (upperBound == (-1))
 	    ||
@@ -280,7 +283,7 @@ stringValidFT ft datatype lowerBound upperBound params
 	= assert paramOK (errorMsgParam pn pv)
 	  where
 	  paramOK v  = paramFct pn v pv
-	  paramFct n = fromJust $ lookup n ft
+	  paramFct n = fromMaybe (const . const $ True) $ lookup n ft
 
     paramsStringValid :: ParamList -> CheckString
     paramsStringValid

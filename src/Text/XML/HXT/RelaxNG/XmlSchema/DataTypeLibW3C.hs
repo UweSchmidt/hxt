@@ -149,6 +149,7 @@ xsd_fractionDigits	= "fractionDigits"
 xsd_pattern		= "pattern"
 xsd_enumeration		= "enumeration"
 
+-- ----------------------------------------
 
 -- | The main entry point to the W3C XML schema datatype library.
 --
@@ -182,57 +183,69 @@ w3cDatatypes = [ (xsd_string,		stringParams)
 	       , (xsd_decimal,		decimalParams)
                ]
 
+-- ----------------------------------------
+
 -- | List of allowed params for the string datatypes
 stringParams	:: AllowedParams
-stringParams	= map fst $ fctTableString ++ fctTablePattern
+stringParams	= xsd_pattern : map fst fctTableString
 
--- | List of allowed params for the list datatypes
-listParams	:: AllowedParams
-listParams	= map fst $ fctTableList ++ fctTablePattern
+-- ----------------------------------------
 
--- | List of allowed params for the list datatypes
-decimalParams	:: AllowedParams
-decimalParams	= map fst fctTableDecimal ++ map fst fctTablePattern
-
--- | Function table for pattern tests,
--- XML document value is first operand, schema value second
-
-fctTablePattern :: FunctionTable
-fctTablePattern
-    = [ (xsd_pattern,	patParamValid) ]
+patternValid	:: ParamList -> CheckString
+patternValid params
+    = foldr (>>>) ok . map paramPatternValid $ params
+      where
+      paramPatternValid (pn, pv)
+	  | pn == xsd_pattern   = assert (patParamValid pv) (errorMsgParam pn pv)
+	  | otherwise		= ok
 
 patParamValid :: String -> String -> Bool
-patParamValid a regex
+patParamValid regex a
     = case parseRegex regex of
       (Left _  )	-> False
       (Right ex)	-> isNothing . match ex $ a
 
 -- ----------------------------------------
 
-fctTableDecimal	:: [(String, Rational -> String -> Bool)]
+-- | List of allowed params for the decimal datatype
+
+decimalParams	:: AllowedParams
+decimalParams	= xsd_pattern : map fst fctTableDecimal
+
+fctTableDecimal	:: [(String, String -> Rational -> Bool)]
 fctTableDecimal
-    = [ (xsd_maxExclusive,   cvd (<))
-      , (xsd_minExclusive,   cvd (>))
-      , (xsd_maxInclusive,   cvd (<=))
-      , (xsd_minInclusive,   cvd (>=))
-      , (xsd_totalDigits,    cvi (\ v l ->    totalDigits v == l))
-      , (xsd_fractionDigits, cvi (\ v l -> fractionDigits v == l))
+    = [ (xsd_maxExclusive,   cvd (>))
+      , (xsd_minExclusive,   cvd (<))
+      , (xsd_maxInclusive,   cvd (>=))
+      , (xsd_minInclusive,   cvd (<=))
+      , (xsd_totalDigits,    cvi (\ l v ->    totalDigits v == l))
+      , (xsd_fractionDigits, cvi (\ l v -> fractionDigits v == l))
       ]
     where
-    cvd		:: (Rational -> Rational -> Bool) -> (Rational -> String -> Bool)
-    cvd	op	= \ x y -> isDecimal y && x `op` readDecimal y
-    cvi		:: (Rational -> Int -> Bool) -> (Rational -> String -> Bool)
-    cvi	op	= \ x y -> isNumber y && x `op` read y
+    cvd		:: (Rational -> Rational -> Bool) -> (String -> Rational -> Bool)
+    cvd	op	= \ x y -> isDecimal x && readDecimal x `op` y
 
-decimalValidFT	:: ParamList -> CheckA Rational Rational
-decimalValidFT params
+    cvi		:: (Int -> Rational -> Bool) -> (String -> Rational -> Bool)
+    cvi	op	= \ x y -> isNumber x && read x `op` y
+
+decimalValid	:: ParamList -> CheckA Rational Rational
+decimalValid params
     = foldr (>>>) ok . map paramDecimalValid $ params
     where
     paramDecimalValid (pn, pv)
-	= assert paramOK (errorMsgParam pn pv . showDecimal)
-	where
-	paramOK v  = paramFct pn v pv
-	paramFct n = fromJust $ lookup n fctTableDecimal
+	= assert
+	  ((fromMaybe (const . const $ True) . lookup pn $ fctTableDecimal) pv)
+	  (errorMsgParam pn pv . showDecimal)
+
+-- ----------------------------------------
+
+-- | List of allowed params for the list datatypes
+
+listParams	:: AllowedParams
+listParams	= xsd_pattern : map fst fctTableList
+
+listValid	:: DatatypeName -> ParamList -> CheckString
+listValid d	= stringValidFT fctTableList d 0 (-1)
 
 -- ----------------------------------------
 
@@ -372,10 +385,10 @@ datatypeAllowsW3C d params value _
 	= validString normalizeWhitespace
 
     validPattern
-	= stringValidFT fctTablePattern  d 0 (-1) (filter ((== xsd_pattern) . fst) params)
+	= patternValid params
 
     validLength
-	= stringValidFT fctTableString  d 0 (-1) (filter ((/= xsd_pattern) . fst) params)
+	= stringValid d 0 (-1) params
 
     validList
 	= validPattern
@@ -385,10 +398,10 @@ datatypeAllowsW3C d params value _
 	  validListLength
 
     validListLength
-	= stringValidFT fctTableList  d 0 (-1) (filter ((/= xsd_pattern) . fst) params)
+	= listValid d params
 
     validName isN
-	= assert isN errW3C
+	= assertW3C isN
 
     validNCName
 	= validNormString >>> validName isNCName
@@ -399,10 +412,9 @@ datatypeAllowsW3C d params value _
     validDecimal
 	= arr normalizeWhitespace
 	  >>>
-	  assert isDecimal errW3C
+	  assertW3C isDecimal
 	  >>>
-	  checkWith readDecimal
-	  ( decimalValidFT (filter ((/= xsd_pattern) . fst) params) )
+	  checkWith readDecimal (decimalValid params)
 
     check	:: CheckString
     check	= fromMaybe notFound . lookup d $ checks
@@ -413,7 +425,7 @@ datatypeAllowsW3C d params value _
     checks	= [ (xsd_string,		validString id)
 		  , (xsd_normalizedString,	validString normalizeBlanks)
 		  , (xsd_token,			validNormString)
-		  , (xsd_language,		validNormString >>> assert isLanguage errW3C)
+		  , (xsd_language,		validNormString >>> assertW3C isLanguage)
 		  , (xsd_NMTOKEN,		validNormString >>> validName isNmtoken)
 		  , (xsd_NMTOKENS,		validList       >>> validName (isNameList isNmtoken))
 		  , (xsd_Name,			validNormString >>> validName isName)
@@ -426,10 +438,11 @@ datatypeAllowsW3C d params value _
 		  , (xsd_anyURI,		validName isURIReference >>> validString escapeURI)
 		  , (xsd_QName,			validQName)
 		  , (xsd_NOTATION,		validQName)
-		  , (xsd_hexBinary,		validString id  >>> assert isHexBinary errW3C)
-		  , (xsd_base64Binary,		validString normBase64 >>> assert isBase64Binary errW3C)
+		  , (xsd_hexBinary,		validString id         >>> assertW3C isHexBinary)
+		  , (xsd_base64Binary,		validString normBase64 >>> assertW3C isBase64Binary)
 		  , (xsd_decimal,		validPattern >>> validDecimal)
 		  ]
+    assertW3C p	= assert p errW3C
     errW3C	= errorMsgDataLibQName w3cNS d
 
 -- ----------------------------------------
