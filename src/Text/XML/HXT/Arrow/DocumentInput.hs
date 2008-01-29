@@ -139,38 +139,6 @@ addTxtContent c
       >>>
       addAttr transferStatus "200"
 
-{-
-getHttpContents		:: IOStateArrow s XmlTree XmlTree
-getHttpContents
-    = applyA ( ( getAttrValue transferURI
-		 &&&
-		 getParamString a_proxy
-	       )
-	       >>>
-	       applyA ( getParamInt 0 a_use_curl
-			>>>
-			ifP (==0)
-			  ( constA $ arrIO2 HTTP.getCont )		-- native http
-			  ( constA $
-			    ( getParamString a_options_curl &&& this )
-			    >>>
-			    arrIO3 CURL.getCont
-			  )
-		      )
-	       >>>
-	       ( arr addError
-		 |||
-		 arr addContent
-	       )
-	     )
-      where
-      addContent	:: (AssocList String String, String) -> IOStateArrow s XmlTree XmlTree
-      addContent (al, c)
-	  = replaceChildren (txt c)
-	    >>>
-	    seqA (map (uncurry addAttr) al)
--}
-
 getHttpContents		:: IOStateArrow s XmlTree XmlTree
 getHttpContents
     = getCont $<<<< ( getAttrValue transferURI

@@ -1,14 +1,24 @@
--- |
--- HTML Parser
---
--- Version : $Id: HtmlParser.hs,v 1.4 2006/11/12 14:53:00 hxml Exp $
---
--- This parser tries to interprete everything as HTML
--- no errors are emitted during parsing. If something looks
--- weired, warning messages are inserted in the document tree
---
--- module contains state filter for easy parsing and error handling
--- real work is done in 'Text.XML.HXT.Parser.HtmlParsec'
+-- ------------------------------------------------------------
+
+{- |
+   Module     : Text.XML.HXT.Parser.HtmlParser
+   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : stable
+   Portability: portable
+
+   This parser tries to interprete everything as HTML
+   no errors are emitted during parsing. If something looks
+   weired, warning messages are inserted in the document tree.
+  
+   Module contains state filter for easy parsing and error handling
+   real work is done in 'Text.XML.HXT.Parser.HtmlParsec'
+
+-}
+
+-- ------------------------------------------------------------
 
 module Text.XML.HXT.Parser.HtmlParser
     ( getHtmlDoc

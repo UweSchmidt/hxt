@@ -72,6 +72,7 @@ a_canonicalize,
  a_source,
  a_status,
  a_standalone,
+ a_tagsoup,
  a_trace,
  a_type,
  a_use_curl,
@@ -173,6 +174,7 @@ a_show_tree			= "show-tree"
 a_source			= "source"
 a_standalone			= "standalone"
 a_status			= "status"
+a_tagsoup			= "tagsoup"
 a_trace				= "trace"
 a_type				= "type"
 a_url				= "url"

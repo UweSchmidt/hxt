@@ -52,6 +52,7 @@ inputOptions
       , Option ""	[a_issue_errors]		(NoArg	(att a_issue_errors      v_1))	"issue all errorr messages on stderr (default)"
       , Option ""	[a_do_not_issue_errors]		(NoArg	(att a_issue_errors      v_0))	"ignore all error messages"
       , Option "H"	[a_parse_html]			(NoArg	(att a_parse_html        v_1))	"parse input as HTML, try to interprete everything as HTML, no validation"
+      , Option "T"	[a_tagsoup]			(NoArg	(att a_tagsoup           v_1))	"lasy tagsoup parser, for HTML and XML, no DTD, no validation, no PIs, only XHTML entityrefs"
       , Option ""	[a_issue_warnings]		(NoArg	(att a_issue_warnings    v_1))	"issue warnings, when parsing HTML (default)"
       , Option "Q"	[a_do_not_issue_warnings]	(NoArg	(att a_issue_warnings    v_0))	"ignore warnings, when parsing HTML"
       , Option ""	[a_parse_xml]			(NoArg	(att a_parse_html        v_0))	"parse input as XML (default)"

@@ -124,7 +124,7 @@ options
       ++
       outputOptions
       ++
-      [ Option "T"	["xslt"]		(ReqArg (att "xslt") "STYLESHEET")	"STYLESHEET is the uri of the XSLT stylesheet to be applied"
+      [ Option ""	["xslt"]		(ReqArg (att "xslt") "STYLESHEET")	"STYLESHEET is the uri of the XSLT stylesheet to be applied"
       , Option "q"	["no-output"]		(NoArg  ("no-output", "1"))		"no output of resulting document"
       , Option "x"	["show-text"]		(NoArg	("show-text", "1"))		"output only the raw text, remove all markup"
       ]

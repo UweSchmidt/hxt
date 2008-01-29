@@ -1,15 +1,25 @@
--- |
--- HTML Parsec Parser
---
--- Version : $Id: HtmlParsec.hs,v 1.11 2006/12/08 11:48:20 hxml Exp $
---
--- This parser tries to interprete everything as HTML
--- no errors are emitted during parsing. If something looks
--- weired, warning messages are inserted in the document tree
---
--- all filter are pure XmlFilter,
--- errror handling and IO is done in 'Text.XML.HXT.Parser.HtmlParser'
--- or other modules
+-- ------------------------------------------------------------
+
+{- |
+   Module     : Text.XML.HXT.Parser.HtmlParsec
+   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : stable
+   Portability: portable
+
+   This parser tries to interprete everything as HTML
+   no errors are emitted during parsing. If something looks
+   weired, warning messages are inserted in the document tree.
+  
+   All filter are pure XmlFilter,
+   errror handling and IO is done in 'Text.XML.HXT.Parser.HtmlParser'
+   or other modules
+
+-}
+
+-- ------------------------------------------------------------
 
 module Text.XML.HXT.Parser.HtmlParsec
     ( substHtmlEntities

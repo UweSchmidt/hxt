@@ -106,7 +106,10 @@ test4		:
 		cat $(EX4)
 		@sleep 2 ; echo ; echo "===> parser accepts this document and tries to build a document tree" ; echo ; sleep 2
 		$(prog) --indent --preserve-comment --parse-html $(EX4)
+		@sleep 2 ; echo ; echo "===> same with lasy parser with tagsoup" ; echo ; sleep 2
+		$(prog) -H -T -r --indent $(EX4)
 		@echo
+
 
 test5		:
 		@echo "===> Validate a valid xml file with respect to a valid Relax NG schema" ; echo ; sleep 1
@@ -129,6 +132,17 @@ test5		:
 		$(prog) --relax-schema ./invalid3.rng ./valid1.xml || true
 		@echo
 
+test6		:
+		@echo "===> tagsoup parsing examples" ; echo ; sleep 2
+		@echo "===> www.w3c.org homepage (valid XHTML)" ; echo ; sleep 2
+		$(prog) --tagsoup http://www.w3c.org/
+		@echo "===> same again with removed whitespace and tree output" ; echo ; sleep 2
+		$(prog) --tagsoup --remove-whitespace --show-tree http://www.w3c.org/
+		@echo "===> same procedure with www.haskell.org homepage (rather valid HTML)" ; echo ; sleep 2
+		$(prog) --tagsoup --parse-html http://www.haskell.org/
+		@echo "===> same again with removed whitespace and tree output" ; echo ; sleep 2
+		$(prog) --tagsoup --parse-html --remove-whitespace --show-tree http://www.haskell.org/
+		@echo
 
 xslttest	:
 		$(MAKE) -C xslt test

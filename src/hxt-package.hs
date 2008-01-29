@@ -59,7 +59,7 @@ part4a dir
       , "import-dirs: " ++ dir ++ "/imports"
       , "library-dirs: " ++ dir
       , "hs-libraries: HShxt"
-      , "depends: base, haskell98, parsec, HTTP, HUnit, network, containers, directory, process"
+      , "depends: base, haskell98, parsec, HTTP, HUnit, network, containers, directory, process, tagsoup"
       ]
 
 part4b :: [String]
@@ -67,7 +67,7 @@ part4b
     = [ " hs-source-dirs: src"
       , " ghc-options: -Wall -fglasgow-exts"
       , ""
-      , " build-depends: base, haskell98, parsec, HTTP, HUnit, network"
+      , " build-depends: base, haskell98, parsec, HTTP, HUnit, network, tagsoup"
       , " if flag(splitBase)"
       , "   build-depends: base >= 3, containers, directory, process"
       , " else"

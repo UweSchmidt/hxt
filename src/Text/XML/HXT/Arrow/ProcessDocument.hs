@@ -38,6 +38,7 @@ import Text.XML.HXT.Arrow.XmlIOStateArrow
 import Text.XML.HXT.Arrow.ParserInterface
     ( parseXmlDoc
     , parseHtmlDoc
+    , parseHtmlTagSoup
     , substHtmlEntityRefs
     , validateDoc
     , transformDoc
@@ -128,8 +129,8 @@ arbitray errors, but the application is only interested in parts of the document
 
 -}
 
-parseHtmlDocument	:: Bool -> IOStateArrow s XmlTree XmlTree
-parseHtmlDocument warnings
+parseHtmlDocument	:: Bool -> Bool -> Bool -> Bool -> Bool -> IOStateArrow s XmlTree XmlTree
+parseHtmlDocument withTagSoup warnings preserveCmt removeWhitespace asHtml
     = ( perform ( getAttrValue a_source >>> traceString 1 (("parseHtmlDoc: parse HTML document " ++) . show) )
 	>>>
 	replaceChildren ( ( getAttrValue a_source		-- get source name
@@ -137,18 +138,10 @@ parseHtmlDocument warnings
 			    xshow getChildren
 			  ) 					-- get string to be parsed
 			  >>>
-			  parseHtmlDoc				-- run parser
-			  >>>
-			  substHtmlEntityRefs			-- substitute entity refs
+			  parseHtml
 			)
 	>>>
-	processTopDownWithAttrl ( if warnings			-- remove warnings inserted by parser and entity subst
-				  then filterErrorMsg
-				  else ( none
-					 `when`
-					 isError
-				       )
-				)
+	removeWarnings
 	>>>
 	setDocumentStatusFromSystemState "parse HTML document"
 	>>>
@@ -156,9 +149,30 @@ parseHtmlDocument warnings
 	>>>
 	traceSource
 	>>>
-	perform ( getAttrValue a_source >>> traceString 1 (\ src -> "parse HTML document " ++ show src ++ " finished") )
+	perform ( getAttrValue a_source
+		  >>>
+		  traceString 1 (\ src -> "parse HTML document " ++ show src ++ " finished")
+		)
       )
       `when` documentStatusOk
+    where
+    parseHtml
+	| withTagSoup	= parseHtmlTagSoup warnings preserveCmt removeWhitespace asHtml
+	| otherwise	= parseHtmlDoc				-- run parser
+			  >>>
+			  substHtmlEntityRefs			-- substitute entity refs
+    removeWarnings
+	| withTagSoup
+	  &&
+	  not warnings	= this
+	| otherwise	= processTopDownWithAttrl
+			  ( if warnings				-- remove warnings inserted by parser and entity subst
+			    then filterErrorMsg
+			    else ( none
+				   `when`
+				   isError
+				 )
+			  )
 
 -- ------------------------------------------------------------
 

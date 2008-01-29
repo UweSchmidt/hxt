@@ -83,6 +83,8 @@
       <li>XPath support for selection of document parts</li>
       <li>liberal HTML parser for interpreting any text containing &lt;
 	... &gt; as HTML/XML</li>
+      <li>liberal and lasy lightweight HTML/XML parser based on
+	<a href="http://www-users.cs.york.ac.uk/~ndm/tagsoup/">tagsoup</a></li>
       <li><a href="http://www.relaxng.org/">Relax NG</a> schema
 	validator</li>
       <li>integrated <a href="http://www.w3.org/TR/xslt">XSLT</a> transformer</li>
@@ -156,8 +158,10 @@
     <a name="req"></a>
     <h3>Requirements</h3>
     <ul>
-      <li>ghc-6.8 or ghc-6.6 with cabal 1.2, HXT 7.3 works with
-	ghc-6.6 and cabal < 1.2</li>
+      <li>ghc-6.8 or ghc-6.6 with cabal 1.2, HXT %VERSION% works with
+	ghc-6.6 and cabal &lt; 1.2</li>
+      <li><a href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/HTTP">HTTP package</a></li>
+      <li><a href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/tagsoup">tagsoup package</a></li>
       <li>Cabal of GNU make</li>
     </ul>
 
@@ -172,7 +176,8 @@
 	1.2. For ghc 6.6 and cabal < 1.2 please use HXT 7.3.</li>
       <li>Includes sources for building a ghc package
 	<code>hxt</code> with Cabal or make.
-	This package contains a Haskell DOM, an XML parser, a
+	This package contains a Haskell DOM, an XML parser, a HTML parser based on parsec,
+	a lightweight HTML/XML parser based on tagsoup, a
 	DTD validator,  namespace processing functions, a Relax
 	NG validator, an XPath expression evaluator, an XSLT transformer,
 	and serialization/deserialisation of data to/from XML.
@@ -238,6 +243,17 @@
     <ul>
       <li>In <a href="hxt-7.5.tar.gz">Version 7.5</a>
 	<ul>
+	  <li>
+	    New lasy and lightweight HTML/XML parser based on tagsoup library.
+	    Useful espessially for converting XML into native Haskell data.
+	  </li>
+	  <li>
+	    W3C XML Schema Datatype library for validating with RelaxNG extended.
+	    Currently supported Datatypes: Strings, URIs, QNames, binary string-encoded and decimal.
+	  </li>
+	  <li>
+	    Regular expression pattern matcher for W3C XML Schema datatype patterns.
+	  <li>
 	  <li>New arrow combinator 'mergeA' in Control.Arrow.ArrowList
 	    for combining the components of a tuple, resulting from
 	    applying arrows constructed with (&&&), (***) and similar combinators.

@@ -19,6 +19,7 @@ import Text.XML.HXT.Parser.XhtmlEntities( xhtmlEntities )
 import Text.XML.HXT.Arrow.DOMInterface
 import Text.XML.HXT.Arrow.XmlArrow
 
+import qualified Text.XML.HXT.Parser.TagSoup		 as TS
 import qualified Text.XML.HXT.Parser.HtmlParsec          as HP
 import qualified Text.XML.HXT.Parser.XmlParsec           as XP
 import qualified Text.XML.HXT.Parser.XmlDTDParser	 as DP
@@ -67,6 +68,10 @@ parseHtmlDoc			= arr2L HP.parseHtmlDocument
 
 parseHtmlContent		:: ArrowList a => a String XmlTree
 parseHtmlContent		= arrL  HP.parseHtmlContent
+
+parseHtmlTagSoup		:: ArrowList a => Bool -> Bool -> Bool -> Bool -> a (String, String) XmlTree
+parseHtmlTagSoup withWarnings preserveCmt removeWS asHtml
+				= arr2L (TS.parseHtmlTagSoup withWarnings preserveCmt removeWS asHtml)
 
 -- ------------------------------------------------------------
 

@@ -63,6 +63,8 @@ available options:
 
 * 'a_parse_html': use HTML parser, else use XML parser (default)
 
+- 'a_tagsoup' : use light weight and lasy parser based on tagsoup lib
+
 - 'a_validate' : validate document againsd DTD (default), else skip validation
 
 - 'a_relax_schema' : validate document with Relax NG, the options value is the schema URI
@@ -112,9 +114,11 @@ reads document \"test.xml\" without validation, default encoding 'isoLatin1'.
 
 > readDocument [ (a_parse_html, "1")
 >              , (a_encoding, isoLatin1)
+>              , (a_tagsoup,    "1")
 >              ] ""
 
-reads a HTML document from standard input, no validation is done when parsing HTML, default encoding is 'isoLatin1'
+reads a HTML document from standard input, no validation is done when parsing HTML, default encoding is 'isoLatin1',
+parsing is done with tagsoup parser
 
 > readDocument [ (a_parse_html,     "1")
 >              , (a_proxy,          "www-cache:3128")
@@ -162,9 +166,14 @@ readDocument userOptions src
     parse
 	| validateWithRelax		= parseXmlDocument False		-- for Relax NG use XML parser without validation
 
-	| hasOption a_parse_html	= parseHtmlDocument			-- parse as HTML
+	| hasOption a_parse_html
+	  || 
+	  hasOption a_tagsoup		= parseHtmlDocument			-- parse as HTML or with tagsoup XML
+					  (hasOption a_tagsoup)
 					  (hasOption a_issue_warnings)
-
+					  (not (hasOption a_canonicalize) && hasOption a_preserve_comment)
+					  (hasOption a_remove_whitespace)
+					  (hasOption a_parse_html)
 	| otherwise			= parseXmlDocument
 					  (hasOption a_validate)		-- parse as XML
 
@@ -175,6 +184,7 @@ readDocument userOptions src
 	| otherwise			= this
 
     canonicalize
+	| hasOption a_tagsoup		= this					-- tagsoup already removes redundant struff
 	| validateWithRelax		= canonicalizeAllNodes
 	| hasOption a_canonicalize
 	  &&
@@ -187,7 +197,9 @@ readDocument userOptions src
 	| otherwise			= this
 
     whitespace
-	| hasOption a_remove_whitespace	= removeDocWhiteSpace
+	| hasOption a_remove_whitespace
+	  &&
+	  not (hasOption a_tagsoup)	= removeDocWhiteSpace			-- tagsoup already removes whitespace
 	| otherwise			= this
 
     addInputOptionsToSystemState
@@ -212,6 +224,7 @@ readDocument userOptions src
 
     defaultOptions
 	= [ ( a_parse_html,		v_0 )
+	  , ( a_tagsoup,		v_0 )
 	  , ( a_validate,		v_1 )
 	  , ( a_issue_warnings,		v_1 )
 	  , ( a_check_namespaces,	v_0 )
