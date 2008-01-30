@@ -19,6 +19,7 @@ Compound arrow for writing XML documents
 module Text.XML.HXT.Arrow.WriteDocument
     ( writeDocument
     , writeDocumentToString
+    , prepareContents
     )
 where
 
@@ -147,6 +148,9 @@ writeDocumentToString userOptions
       xshow getChildren
 
 -- ------------------------------------------------------------
+
+-- |
+-- indent and format output
 
 prepareContents	:: Attributes -> IOStateArrow s XmlTree XmlTree
 prepareContents userOptions

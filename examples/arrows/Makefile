@@ -8,7 +8,8 @@ EXAMPLES	= \
 		pickle \
 		hrelaxng \
 		RelaxTestSuite \
-		AGentleIntroductionToHXT
+		AGentleIntroductionToHXT \
+		performance
 
 HXT_HOME	= ../..
 PKGFLAGS	=
