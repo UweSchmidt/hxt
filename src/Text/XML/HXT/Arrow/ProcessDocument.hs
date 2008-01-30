@@ -157,8 +157,15 @@ parseHtmlDocument withTagSoup warnings preserveCmt removeWhitespace asHtml
       `when` documentStatusOk
     where
     parseHtml
-	| withTagSoup	= parseHtmlTagSoup warnings preserveCmt removeWhitespace asHtml
-	| otherwise	= parseHtmlDoc				-- run parser
+	| withTagSoup	= traceMsg 1 ("parse document with tagsoup " ++
+				      ( if asHtml then "HT" else "X" ) ++ "ML parser"
+				     )
+			  >>>
+			  parseHtmlTagSoup warnings preserveCmt removeWhitespace asHtml
+
+	| otherwise	= traceMsg 1 ("parse document with parsec HTML parser")
+			  >>>
+			  parseHtmlDoc				-- run parser
 			  >>>
 			  substHtmlEntityRefs			-- substitute entity refs
     removeWarnings

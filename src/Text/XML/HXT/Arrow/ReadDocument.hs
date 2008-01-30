@@ -147,15 +147,7 @@ readDocument userOptions src
       >>>
       getDocumentContents remainingOptions src
       >>>
-      parse
-      >>>
-      checknamespaces
-      >>>
-      canonicalize
-      >>>
-      whitespace
-      >>>
-      relax
+      ( processDoc $< getMimeType )
       >>>
       traceMsg 1 ("readDocument: " ++ show src ++ " processed")
       >>>
@@ -163,64 +155,8 @@ readDocument userOptions src
       >>>
       traceTree
     where
-    parse
-	| validateWithRelax		= parseXmlDocument False		-- for Relax NG use XML parser without validation
-
-	| hasOption a_parse_html
-	  || 
-	  hasOption a_tagsoup		= parseHtmlDocument			-- parse as HTML or with tagsoup XML
-					  (hasOption a_tagsoup)
-					  (hasOption a_issue_warnings)
-					  (not (hasOption a_canonicalize) && hasOption a_preserve_comment)
-					  (hasOption a_remove_whitespace)
-					  (hasOption a_parse_html)
-	| otherwise			= parseXmlDocument
-					  (hasOption a_validate)		-- parse as XML
-
-    checknamespaces
-	| hasOption a_check_namespaces
-	  ||
-	  validateWithRelax		= propagateAndValidateNamespaces
-	| otherwise			= this
-
-    canonicalize
-	| hasOption a_tagsoup		= this					-- tagsoup already removes redundant struff
-	| validateWithRelax		= canonicalizeAllNodes
-	| hasOption a_canonicalize
-	  &&
-	  hasOption a_preserve_comment	= canonicalizeForXPath
-	| hasOption a_canonicalize	= canonicalizeAllNodes
-	| otherwise			= this
-
-    relax
-	| validateWithRelax		= validateDocumentWithRelaxSchema remainingOptions relaxSchema
-	| otherwise			= this
-
-    whitespace
-	| hasOption a_remove_whitespace
-	  &&
-	  not (hasOption a_tagsoup)	= removeDocWhiteSpace			-- tagsoup already removes whitespace
-	| otherwise			= this
-
-    addInputOptionsToSystemState
-	= addSysOptions (filter ((`elem` httpOptions) . fst) remainingOptions)
-	  where
-	  addSysOptions
-	      = seqA . map (uncurry setParamString)
-
-    traceLevel
-	= maybe this (setTraceLevel . read) . lookup a_trace $ options
-
-    validateWithRelax
-	= hasEntry a_relax_schema options
-
-    relaxSchema
-	= lookup1 a_relax_schema options
-
-    hasOption n
-	= optionIsSet n options
-
-    options = addEntries userOptions defaultOptions
+    options
+ 	= addEntries userOptions defaultOptions
 
     defaultOptions
 	= [ ( a_parse_html,		v_0 )
@@ -231,6 +167,7 @@ readDocument userOptions src
 	  , ( a_canonicalize,		v_1 )
 	  , ( a_preserve_comment,	v_0 )
 	  , ( a_remove_whitespace,	v_0 )
+	  , ( a_parse_by_mimetype,	v_0 )
 	  ]
 
     httpOptions
@@ -238,6 +175,92 @@ readDocument userOptions src
 
     remainingOptions
 	 = filter (not . flip hasEntry defaultOptions . fst) options
+
+    traceLevel
+	= maybe this (setTraceLevel . read) . lookup a_trace $ options
+
+    addInputOptionsToSystemState
+	= addSysOptions (filter ((`elem` httpOptions) . fst) remainingOptions)
+	  where
+	  addSysOptions
+	      = seqA . map (uncurry setParamString)
+
+    getMimeType
+	= getAttrValue transferMimeType
+
+    processDoc mimeType
+	= traceMsg 1 ("readDocument: " ++ show src ++ " (mime type: " ++ mimeType ++ ") will be processed")
+	  >>>
+	  parse
+	  >>>
+	  ( if isXmlOrHtml
+	    then ( checknamespaces
+		   >>>
+		   canonicalize
+		   >>>
+		   whitespace
+		   >>>
+		   relax
+		 )
+	    else this
+	  )
+	where
+	parse
+	    | isHtml
+	      || 
+	      withTagSoup		= parseHtmlDocument			-- parse as HTML or with tagsoup XML
+					  withTagSoup
+					  issueW
+					  (not (hasOption a_canonicalize) && preserveCmt)
+					  removeWS
+					  isHtml
+	    | validateWithRelax		= parseXmlDocument False		-- for Relax NG use XML parser without validation
+	    | isXml			= parseXmlDocument validate		-- parse as XML
+	    | otherwise			= this					-- don't parse, mime type is not XML nor HTML
+	checknamespaces
+	    | hasOption a_check_namespaces
+	      ||
+	      validateWithRelax		= propagateAndValidateNamespaces
+	    | otherwise			= this
+	canonicalize
+	    | withTagSoup		= this					-- tagsoup already removes redundant struff
+	    | validateWithRelax		= canonicalizeAllNodes
+	    | hasOption a_canonicalize
+	      &&
+	      preserveCmt			= canonicalizeForXPath
+	    | hasOption a_canonicalize	= canonicalizeAllNodes
+	    | otherwise			= this
+	relax
+	    | validateWithRelax		= validateDocumentWithRelaxSchema remainingOptions relaxSchema
+	    | otherwise			= this
+	whitespace
+	    | removeWS
+	      &&
+	      not withTagSoup		= removeDocWhiteSpace			-- tagsoup already removes whitespace
+	    | otherwise			= this
+	validateWithRelax	= hasEntry a_relax_schema options
+	relaxSchema		= lookup1 a_relax_schema options
+	parseHtml		= hasOption a_parse_html
+	parseXml		= hasOption a_parse_xml
+	isHtml			= parseHtml				-- force HTML
+				  ||
+				  mimeTypeIsHtml
+	isXml			= parseXml				-- force XML parsing
+				  ||
+				  ( not parseHtml
+				    &&
+				    ( mimeTypeIsXml || null mimeType )	-- mime type is XML or not there
+				  )
+	isXmlOrHtml	= isHtml || isXml
+	parseByMimeType	= hasOption a_parse_by_mimetype
+	validate	= hasOption a_validate
+	withTagSoup	= hasOption a_tagsoup
+	issueW		= hasOption a_issue_warnings
+	removeWS	= hasOption a_remove_whitespace
+	preserveCmt	= hasOption a_preserve_comment
+	mimeTypeIsHtml	= parseByMimeType && mimeType == text_html
+	mimeTypeIsXml	= parseByMimeType && mimeType `elem` [text_xml, text_xhtml]
+	hasOption n	= optionIsSet n options
 
 -- ------------------------------------------------------------
 

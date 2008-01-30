@@ -60,6 +60,7 @@ a_canonicalize,
  a_output_file,
  a_output_xml,
  a_output_html,
+ a_parse_by_mimetype,
  a_parse_html,
  a_parse_xml,
  a_peref,
@@ -162,6 +163,7 @@ a_output_file			= "output-file"
 a_output_encoding		= "output-encoding"
 a_output_html			= "output-html"
 a_output_xml			= "output-xml"
+a_parse_by_mimetype		= "parse-by-mimetype"
 a_parse_html			= "parse-html"
 a_parse_xml			= "parse-xml"
 a_peref				= k_peref
@@ -343,5 +345,16 @@ a_do_not_validate_include     = "do-not-validate-include"
 a_validate_include            = "validate-include"
 a_output_changes              = "output-pattern-transformations"
 a_do_not_collect_errors       = "do-not-collect-errors"
+
+-- ------------------------------------------------------------
+-- mime types
+
+text_html,
+ text_xhtml,
+ text_xml	:: String
+
+text_html	= "text/html"
+text_xml	= "text/xml"
+text_xhtml	= "text/xhtml"
 
 -- ------------------------------------------------------------
