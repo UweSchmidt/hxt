@@ -58,8 +58,8 @@ parseHtmlTagSoup withWarnings withComment removeWhiteSpace asHtml doc
 	| removeWhiteSpace
 	  &&
 	  all isXmlSpaceChar t
-			= xtext t
-	| otherwise	= []
+			= []
+	| otherwise	= xtext t
 
     isEmptyElem n	= asHtml && isEmptyHtmlTag n
     isInnerElem n  n1	= asHtml && n `isInnerHtmlTagOf` n1
