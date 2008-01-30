@@ -16,12 +16,15 @@ main	:: IO ()
 main
     = do
       pn <- getProgName
-      (i : _) <- getArgs
+      (is : _) <- getArgs
+      let i = (read is)::Int
       if "GenDoc" `isSuffixOf` pn
-	 then main1 (read i)
+	 then main1 i
 	 else if "ReadDoc" `isSuffixOf` pn
-	      then main2 (read i)
-	      else return ()
+	      then main2 i
+	      else main3 i
+
+-- generate a document containing a binary tree of 2^i leafs (= 2^(i-1) XML elements)
 
 main1	:: Int -> IO ()
 main1 i
@@ -29,12 +32,24 @@ main1 i
       runX (genDoc i (fn i))
       return ()
 
+-- read a document containing a binary tree of 2^i leafs
+
 main2	:: Int -> IO ()
 main2 i
     = do
       [t] <- runX (readDoc (fn i))
       putStrLn ("maximum value in tree is " ++ show (foldT1 max t) ++ ", expected value was " ++ show ((2::Int)^i))
-      
+
+-- just to check how much memory is used for the tree
+
+main3	:: Int -> IO ()
+main3 i
+    = do
+      let t = mkBTree i
+      let m = show . foldT1 max $ t
+      putStrLn ("maximum value in tree is " ++ m ++ ", minimum value is " ++ show (foldT1 min t))
+      return ()
+
 fn	:: Int -> String
 fn	= ("tree-" ++) . (++ ".xml") . reverse . take 4 . reverse . ((replicate 4 '0') ++ ) . show
 

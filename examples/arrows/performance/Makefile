@@ -19,7 +19,15 @@ $(prog)		: GenDoc.hs
 $(prog2)	: $(prog)
 		ln -f $(prog) $(prog2)
 
-tests		= 2 3 10 11 12 13 14 15 16 17 18 19 20 21 22
+# generate and read documents containing a binary tree
+# with 2^i leaf nodes containing the numbers 1 to 2^i
+# for i up to at least 22 (8M XML elements) output works fine
+# for i up to 19 (1M XML elements) input works without swapping
+# with i=20 swapping starts, but the program it still terminates
+# the size of the XML file for i=20 is about 36Mb
+# these tests have run on a box with 1Gb memory
+
+tests		= 2 3 10 11 12 13 14 15 16 17 18 19
 
 test		: $(prog)
 		$(MAKE) genfiles
