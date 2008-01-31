@@ -48,18 +48,19 @@ parseHtmlTagSoup withWarnings withComment removeWhiteSpace asHtml doc
 	. parseTags
       )
     where
-    warn w
-	| withWarnings	= xwarn (show doc ++ " " ++ w)
-	| otherwise	= []
-    cmt c
-	| withComment	= xcmt c
-	| otherwise	= []
-    txt t
+    warn
+	| withWarnings	= \ w -> xwarn (show doc ++ " " ++ w)
+	| otherwise	= const []
+    cmt
+	| withComment	= xcmt
+	| otherwise	= const []
+    txt
 	| removeWhiteSpace
-	  &&
-	  all isXmlSpaceChar t
-			= []
-	| otherwise	= xtext t
+			= \ t ->
+			  if all isXmlSpaceChar t
+			  then []
+			  else xtext t
+	| otherwise	= xtext
 
     isEmptyElem n	= asHtml && isEmptyHtmlTag n
     isInnerElem n  n1	= asHtml && n `isInnerHtmlTagOf` n1
