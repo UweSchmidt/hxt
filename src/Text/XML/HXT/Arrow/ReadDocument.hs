@@ -66,9 +66,9 @@ available options:
 - 'a_tagsoup' : use light weight and lasy parser based on tagsoup lib
 
 - 'a_parse_by_mimetype' : select the parser by the mime type of the document
-                          (pulled out of the HTTP header). When the mime type is set to \"text/html\"
+                          (pulled out of the HTTP header). When the mime type is set to \"text\/html\"
 			  the HTML parser (parsec or tagsoup) is taken, when it\'s set to
-			  \"text/xml\" or \"text/xhtml\" the XML parser (parsec or tagsoup) is taken.
+			  \"text\/xml\" or \"text\/xhtml\" the XML parser (parsec or tagsoup) is taken.
 			  If the mime type is something else no further processing is performed,
 			  the contents is given back to the application in form of a single text node.
 			  If the default document encoding ('a_encoding') is set to isoLatin1, this even enables processing
