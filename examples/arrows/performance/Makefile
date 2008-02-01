@@ -10,14 +10,18 @@ DIST_DIR	= $(DIST)/performance
 
 prog		= ./GenDoc
 prog2		= ./ReadDoc
+prog3		= ./PruneDoc
 
-all		: $(prog) $(prog2)
+all		: $(prog) $(prog2) $(prog3)
 
 $(prog)		: GenDoc.hs
 		$(GHC) --make -o $@ $<
 
 $(prog2)	: $(prog)
 		ln -f $(prog) $(prog2)
+
+$(prog3)	: $(prog)
+		ln -f $(prog) $(prog3)
 
 # generate and read documents containing a binary tree
 # with 2^i leaf nodes containing the numbers 1 to 2^i
@@ -38,7 +42,7 @@ genfiles	:
 		do \
 		echo time $(prog) $$i ; \
 		time $(prog) $$i ; \
-		ls -l "tree-$$i.xml" ; \
+		ls -l "tree-*$$i.xml" ; \
 		echo ; \
 		done
 
@@ -47,6 +51,14 @@ readfiles	:
 		do \
 		echo time $(prog2) $$i ; \
 		time $(prog2) $$i ; \
+		echo ; \
+		done
+
+prunefiles	:
+		@for i in $(tests) ; \
+		do \
+		echo time $(prog3) $$i ; \
+		time $(prog3) $$i ; \
 		echo ; \
 		done
 

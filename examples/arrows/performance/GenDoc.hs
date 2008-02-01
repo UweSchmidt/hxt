@@ -3,7 +3,7 @@ where
 
 import Text.XML.HXT.Arrow
 
-import Control.Monad.State.Strict
+import Control.Monad.State.Strict hiding (when)
 
 import Data.List
 
@@ -22,7 +22,9 @@ main
 	 then main1 i
 	 else if "ReadDoc" `isSuffixOf` pn
 	      then main2 i
-	      else main3 i
+	      else if "PruneDoc" `isSuffixOf` pn
+		   then main3 i
+		   else main4 i
 
 -- generate a document containing a binary tree of 2^i leafs (= 2^(i-1) XML elements)
 
@@ -40,10 +42,25 @@ main2 i
       [t] <- runX (readDoc (fn i))
       putStrLn ("maximum value in tree is " ++ show (foldT1 max t) ++ ", expected value was " ++ show ((2::Int)^i))
 
--- just to check how much memory is used for the tree
+-- test on lasyness, is the whole tree read or only the first child of every child node
 
 main3	:: Int -> IO ()
 main3 i
+    = do
+      [t] <- runX ( readDocument [ (a_tagsoup, v_1)
+				 , (a_remove_whitespace, v_1)
+				 , (a_encoding, isoLatin1)
+				 , (a_issue_warnings, v_0)
+				 ] (fn i)
+		    >>>
+		    fromLA (xshow (getChildren >>> pruneFork))
+		  )
+      putStrLn ("pruned binary tree is : " ++ show t)
+      
+-- just to check how much memory is used for the tree
+
+main4	:: Int -> IO ()
+main4 i
     = do
       let t = mkBTree i
       let m = show . foldT1 max $ t
@@ -67,6 +84,17 @@ readDoc src
 				, (a_remove_whitespace, v_1)
 				, (a_encoding, isoLatin1)
 				, (a_issue_warnings, v_0) ] src
+
+-- ----------------------------------------
+
+pruneFork	:: LA XmlTree XmlTree
+pruneFork
+    = ( replaceChildren
+	( ( getChildren >>. take 1 )
+	  >>>
+	  pruneFork
+	)
+      ) `when` (hasName "fork")
 
 -- ----------------------------------------
 
