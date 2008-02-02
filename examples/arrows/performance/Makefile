@@ -19,7 +19,7 @@ $(prog)		: $(prog).hs
 		$(GHC) --make -o $@ $<
 
 local		:
-		ghc --make -o $(prog) -Wall -O -fglasgow-exts -ignore-package hxt -i../../../src $(prog).hs
+		$(GHC) --make -o $(prog) -fglasgow-exts -ignore-package hxt -i../../../src $(prog).hs
 
 $(prog2)	: $(prog)
 		ln -f $(prog) $(prog2)
@@ -38,7 +38,7 @@ $(prog4)	: $(prog)
 # the size of the XML file for i=20 is about 36Mb
 # these tests have run on a box with 1Gb memory
 
-tests		= 2 3 10 11 12 13 14 15 16 17 18 19
+tests		= 2 3 10 11 12 13 14 15 16 17 18 19 20
 
 test		: $(prog)
 		$(MAKE) genfiles

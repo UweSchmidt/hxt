@@ -26,6 +26,10 @@ import Text.XML.HXT.DOM.Unicode
     ( isXmlSpaceChar
     )
 
+import Text.XML.HXT.DOM.NamespacePredicates
+    ( isWellformedQualifiedName
+    )
+
 import Text.XML.HXT.Parser.HtmlParsec
     ( isEmptyHtmlTag
     , isInnerHtmlTagOf
@@ -34,9 +38,13 @@ import Text.XML.HXT.Parser.HtmlParsec
 
 import Text.XML.HXT.Arrow.DOMInterface
     ( XmlTrees
+    , QName
     , c_warn
+    , mkName
+    , mkPrefixLocalPart
     , mkSNsName
     )
+
 import Text.XML.HXT.Arrow.XmlNode
     ( isElem
     , mkError
@@ -46,9 +54,13 @@ import Text.XML.HXT.Arrow.XmlNode
     , mkAttr
     )
 
-type Tags	= [Tag]
+import Data.Maybe
 
-newtype Parser a = P { parse :: Tags -> (a, Tags)}
+type Tags	= [Tag]
+type NameTable	= [(String,String)]
+type State	= (Tags, NameTable)
+
+newtype Parser a = P { parse :: State -> (a, State)}
 
 instance Monad Parser where
     return x	= P $ \ ts -> (x, ts)
@@ -57,19 +69,24 @@ instance Monad Parser where
                               in
 			      parse (f res) ts'
 
+runParser	:: Parser a -> Tags -> a
+runParser p ts	= fst . parse p $ (ts, [])
+
+-- ----------------------------------------
+
 cond		:: Parser Bool -> Parser a -> Parser a -> Parser a
 cond c t e	= do
 		  p <- c
 		  if p then t else e
 
 lookAhead	:: (Tag -> Bool) -> Parser Bool
-lookAhead p	= P $ \ ts -> (not (null ts) && p (head ts), ts)
+lookAhead p	= P $ \ s@(ts, _) -> (not (null ts) && p (head ts), s)
 
 -- ----------------------------------------
 -- primitive look ahead tests
 
 isEof		:: Parser Bool
-isEof		= P $ \ ts -> (null ts, ts)
+isEof		= P $ \ ~s@(ts, _) -> (null ts, s)
 
 isText		:: Parser Bool
 isText		= lookAhead is
@@ -110,52 +127,55 @@ isOpn		= lookAhead is
 -- ----------------------------------------
 -- primitive symbol parsers
 
+getTag		:: Parser Tag
+getTag		= P $ \ ~(t1:ts1, nt) -> (t1, (ts1, nt))
+
+getSym		:: (Tag -> a) -> Parser a
+getSym f	= do
+		  t <- getTag
+		  return (f t)
+
 getText		:: Parser String
-getText		= P sym
+getText		= getSym sym
     		  where
-		  sym (TagText t : ts1)	= (t, ts1)
+		  sym (TagText t)	= t
 		  sym _			= undefined
 
 getCmt		:: Parser String
-getCmt		= P sym
+getCmt		= getSym sym
 		  where
-		  sym (TagComment c : ts1)
-		      			= (c, ts1)
+		  sym (TagComment c)	= c
 	  	  sym _			= undefined
 
 getWarn		:: Parser String
-getWarn		= P sym
+getWarn		= getSym sym
 	  	  where
-		  sym (TagWarning w : ts1)
-					= (w, ts1)
+		  sym (TagWarning w)	= w
 		  sym _			= undefined
 
 getPos		:: Parser (Int, Int)
-getPos		= P sym
+getPos		= getSym sym
 		  where
-		  sym (TagPosition l c : ts1)
-					= ((l, c), ts1)
+		  sym (TagPosition l c)	= (l, c)
 		  sym _			= undefined
 
 getCls		:: Parser String
-getCls		= P sym
+getCls		= getSym sym
 		  where
-		  sym (TagClose n : ts1)
-					= (n, ts1)
+		  sym (TagClose n)	= n
 		  sym _			= undefined
 
 getOpn		:: Parser (String, [(String,String)])
-getOpn		= P sym
+getOpn		= getSym sym
 		  where
-		  sym (TagOpen n al : ts1)
-					= ((n, al), ts1)
+		  sym (TagOpen n al)	= (n, al)
 		  sym _			= undefined
 
 -- ----------------------------------------
 -- pushback parsers for inserting missing tags
 
 pushBack	:: Tag -> Parser ()
-pushBack t	= P $ \ ts -> ((), t:ts)
+pushBack t	= P $ \ ~(ts, nt) -> ((), (t:ts, nt))
 
 insCls		:: String -> Parser ()
 insCls n	= pushBack (TagClose n)
@@ -164,13 +184,42 @@ insOpn		:: String -> [(String, String)] -> Parser ()
 insOpn n al	= pushBack (TagOpen n al)
 
 -- ----------------------------------------
+
+insertName	:: String -> Parser String
+insertName n	= P $ \ ~(ts, nt) -> let
+				     (n', nt') = insert n nt
+				     in
+				     (n', (ts, nt'))
+		  where
+		  insert s nt
+		      | isJust r	= (fromJust r, nt)
+		      | otherwise	= (s, (s,s) : nt)
+		      where
+		      r = lookup s nt
+
+mkQN		:: String -> Parser QName
+mkQN s
+    | isSimpleName			= do					-- the most frequent case
+					  s' <- insertName s
+					  return (mkName s')
+    | isWellformedQualifiedName s	= do					-- qualified name
+					  px' <- insertName px
+					  lp' <- insertName lp
+					  return (mkPrefixLocalPart px' lp')
+    | otherwise				= do					-- not a namespace conformant name
+					  s' <- insertName s
+					  return (mkName s')
+    where
+    isSimpleName	= all (/= ':') s
+    (px, (_ : lp))	= span(/= ':') s
+
+-- ----------------------------------------
 -- the main parser
 
 parseHtmlTagSoup	:: Bool -> Bool -> Bool -> Bool -> String -> String -> XmlTrees
 parseHtmlTagSoup withWarnings withComment removeWhiteSpace asHtml doc
     = ( docRootElem
-	. fst
-	. parse (buildCont [])
+	. runParser (buildCont [])
 	. ( if asHtml
 	    then canonicalizeTags
 	    else id
@@ -288,27 +337,32 @@ parseHtmlTagSoup withWarnings withComment removeWhiteSpace asHtml doc
 					 )
 
 	openTag			:: [String] -> String -> [(String, String)] -> Parser XmlTrees
-	openTag ns' n1 al
+	openTag ns' n1 al1
 	    | isPiDT n1		= buildCont ns'
 	    | isEmptyElem n1
 				= do
+				  qn <- mkQN n1
+				  al <- mkAttrs al1
 				  rl <- buildCont ns'
-				  return (mkElement (mkQN n1) (mkAttrs al) [] : rl)
+				  return (mkElement qn al [] : rl)
 	    | closesElem ns' n1	= do
-				  insOpn n1 al
+				  insOpn n1 al1
 				  insCls (head ns')
 				  buildCont ns'
 	    | otherwise		= do
+				  qn <- mkQN n1
+				  al <- mkAttrs al1
 				  cs <- buildCont (n1:ns')
 				  rl <- buildCont ns'
-				  return (mkElement (mkQN n1) (mkAttrs al) cs : rl)
+				  return (mkElement qn al cs : rl)
 	    where
 	    isPiDT ('?':_)	= True
 	    isPiDT ('!':_)	= True
 	    isPiDT _		= False
-	    mkAttrs		= map (uncurry mkA)
-	    mkA an av		= mkAttr (mkQN an) (wrap . mkText $ av)
-	    mkQN n		= mkSNsName n
+	    mkAttrs		= mapM (uncurry mkA)
+	    mkA an av		= do
+				  qan <- mkQN an
+				  return (mkAttr qan (wrap . mkText $ av))
 
 	closeAll		:: [String] -> Parser XmlTrees
 	closeAll ns'		= return (concatMap wrn ns')
@@ -319,4 +373,4 @@ parseHtmlTagSoup withWarnings withComment removeWhiteSpace asHtml doc
 
 p1 = parseHtmlTagSoup True True False True "emil"
 
-t1 = p1 "yyyy<a>bbb</a>xxx"
+tt1 = p1 "yyyy<x:a href='x:xxx'>bbb</x:a>xxx"

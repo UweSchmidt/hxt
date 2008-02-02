@@ -176,6 +176,16 @@ buildUniversalName bf n
 -- |
 -- constructs a simple, namespace unaware name, 'namePrefix' and 'namespaceUri' are set to the empty string.
 
+mkQName	:: String -> String -> String -> QName
+mkQName p l n
+    = QN { namePrefix	= p
+	 , localPart	= l
+	 , namespaceUri	= n
+	 }
+
+-- |
+-- constructs a simple, namespace unaware name, 'namePrefix' and 'namespaceUri' are set to the empty string.
+
 mkName	:: String -> QName
 mkName s
     = QN { namePrefix	= ""
