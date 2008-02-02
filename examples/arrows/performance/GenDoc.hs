@@ -3,9 +3,14 @@ where
 
 import Text.XML.HXT.Arrow
 
+import Text.XML.HXT.DOM.Unicode
+    ( unicodeToXmlEntity
+    )
+
 import Control.Monad.State.Strict hiding (when)
 
 import Data.List
+import Data.Maybe
 
 import System.IO			-- import the IO and commandline option stuff
 import System.Environment
@@ -15,16 +20,19 @@ import System.Environment
 main	:: IO ()
 main
     = do
-      pn <- getProgName
+      p <- getProgName
       (is : _) <- getArgs
       let i = (read is)::Int
-      if "GenDoc" `isSuffixOf` pn
-	 then main1 i
-	 else if "ReadDoc" `isSuffixOf` pn
-	      then main2 i
-	      else if "PruneDoc" `isSuffixOf` pn
-		   then main3 i
-		   else main4 i
+      main' p i
+    where
+    main' p' = fromMaybe main0 . lookup (pn p') $ mpt
+    mpt = [ ("GenDoc",	   main1)
+	  , ("ReadDoc",    main2)
+	  , ("PruneRight", main3 False)
+	  , ("PruneLeft",  main3 True)
+	 ]
+
+-- ----------------------------------------
 
 -- generate a document containing a binary tree of 2^i leafs (= 2^(i-1) XML elements)
 
@@ -34,65 +42,102 @@ main1 i
       runX (genDoc i (fn i))
       return ()
 
+-- ----------------------------------------
+
 -- read a document containing a binary tree of 2^i leafs
 
 main2	:: Int -> IO ()
 main2 i
     = do
-      [t] <- runX (readDoc (fn i))
-      putStrLn ("maximum value in tree is " ++ show (foldT1 max t) ++ ", expected value was " ++ show ((2::Int)^i))
+      [x] <- runX (readDoc (fn i)
+		   >>>
+		   unpickleTree
+		   >>>
+		   arr (foldT1 max)
+		  )
+      putStrLn ( "maximum value in tree is " ++ show x ++
+		 ", expected value was " ++ show ((2::Int)^i)
+	       )
 
--- test on lasyness, is the whole tree read or only the first child of every child node
+-- ----------------------------------------
 
-main3	:: Int -> IO ()
-main3 i
+-- test on lasyness, is the whole tree read or only the first child of every child node?
+
+main3	:: Bool -> Int -> IO ()
+main3 l i
     = do
-      [t] <- runX ( readDocument [ (a_tagsoup, v_1)
-				 , (a_remove_whitespace, v_1)
-				 , (a_encoding, isoLatin1)
-				 , (a_issue_warnings, v_0)
-				 ] (fn i)
+      [t] <- runX ( readDoc (fn i)
 		    >>>
-		    fromLA (xshow (getChildren >>> pruneFork))
+		    fromLA (xshow ( getChildren
+				    >>>
+				    if l then pruneForkLeft else pruneForkRight
+				  )
+			   )
 		  )
       putStrLn ("pruned binary tree is : " ++ show t)
-      
+
+-- ----------------------------------------
+
 -- just to check how much memory is used for the tree
 
-main4	:: Int -> IO ()
-main4 i
+main0	:: Int -> IO ()
+main0 i
     = do
       let t = mkBTree i
       let m = show . foldT1 max $ t
       putStrLn ("maximum value in tree is " ++ m ++ ", minimum value is " ++ show (foldT1 min t))
       return ()
 
+-- ----------------------------------------
+
+pn	:: String -> String
+pn	= reverse . takeWhile (/= '/') . reverse
+
 fn	:: Int -> String
 fn	= ("tree-" ++) . (++ ".xml") . reverse . take 4 . reverse . ((replicate 4 '0') ++ ) . show
 
-genDoc	:: Int -> String -> IOSArrow b XmlTree
-genDoc d out
-    = constA (mkBTree d)
-      >>>
-      xpickleVal xpickle
-      >>>
-      putDoc out
+-- ----------------------------------------
 
-readDoc	:: String -> IOSArrow b BTree
-readDoc src
-    = xunpickleDocument xpickle [ (a_tagsoup, v_1)
-				, (a_remove_whitespace, v_1)
-				, (a_encoding, isoLatin1)
-				, (a_issue_warnings, v_0) ] src
+genDoc		:: Int -> String -> IOSArrow b XmlTree
+genDoc d out    = constA (mkBTree d)
+		  >>>
+		  xpickleVal xpickle
+		  >>>
+		  putDoc out
 
 -- ----------------------------------------
 
-pruneFork	:: LA XmlTree XmlTree
-pruneFork
+readDoc	:: String -> IOSArrow b XmlTree
+readDoc src
+    = readDocument [ (a_tagsoup, v_1)
+		   , (a_remove_whitespace, v_1)
+		   , (a_encoding, isoLatin1)
+		   , (a_issue_warnings, v_0)
+		   ] src
+
+-- ----------------------------------------
+
+unpickleTree	:: ArrowXml a => a XmlTree BTree
+unpickleTree	= xunpickleVal xpickle
+
+-- ----------------------------------------
+
+pruneForkRight	:: LA XmlTree XmlTree
+pruneForkRight
     = ( replaceChildren
 	( ( getChildren >>. take 1 )
 	  >>>
-	  pruneFork
+	  pruneForkRight
+	)
+      ) `when` (hasName "fork")
+
+
+pruneForkLeft	:: LA XmlTree XmlTree
+pruneForkLeft
+    = ( replaceChildren
+	( ( getChildren >>. drop 1 )
+	  >>>
+	  pruneForkLeft
 	)
       ) `when` (hasName "fork")
 
@@ -145,9 +190,22 @@ foldT1 op (Fork l r)	= foldT1 op l `op` foldT1 op r
 
 -- ----------------------------------------
 
+-- output is done with low level ops to write the
+-- document i a lasy manner
+-- adding an xml pi and encoding is done "by hand"
+-- latin1 decoding is the identity, so please generate the
+-- docs with latin1 encoding. Here ist done even with ASCCI
+-- every none ASCII char is represented by a char ref (&nnn;)
+
 putDoc	:: String -> IOStateArrow s XmlTree XmlTree
 putDoc dst
-    = xshow getChildren
+    = addXmlPi
+      >>>
+      addXmlPiEncoding isoLatin1
+      >>>
+      xshow getChildren
+      >>>
+      arr unicodeToXmlEntity
       >>>
       arrIO (\ s -> hPutDocument (\h -> hPutStrLn h s))
       >>>

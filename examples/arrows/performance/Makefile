@@ -10,18 +10,25 @@ DIST_DIR	= $(DIST)/performance
 
 prog		= ./GenDoc
 prog2		= ./ReadDoc
-prog3		= ./PruneDoc
+prog3		= ./PruneRight
+prog4		= ./PruneLeft
 
-all		: $(prog) $(prog2) $(prog3)
+all		: $(prog) $(prog2) $(prog3) $(prog4)
 
-$(prog)		: GenDoc.hs
+$(prog)		: $(prog).hs
 		$(GHC) --make -o $@ $<
+
+local		:
+		ghc --make -o $(prog) -Wall -O -fglasgow-exts -ignore-package hxt -i../../../src $(prog).hs
 
 $(prog2)	: $(prog)
 		ln -f $(prog) $(prog2)
 
 $(prog3)	: $(prog)
 		ln -f $(prog) $(prog3)
+
+$(prog4)	: $(prog)
+		ln -f $(prog) $(prog4)
 
 # generate and read documents containing a binary tree
 # with 2^i leaf nodes containing the numbers 1 to 2^i
@@ -36,13 +43,15 @@ tests		= 2 3 10 11 12 13 14 15 16 17 18 19
 test		: $(prog)
 		$(MAKE) genfiles
 		$(MAKE) readfiles
+		$(MAKE) pruneright
+		$(MAKE) pruneleft
 
 genfiles	:
 		@for i in $(tests) ; \
 		do \
 		echo time $(prog) $$i ; \
 		time $(prog) $$i ; \
-		ls -l "tree-*$$i.xml" ; \
+		ls -l tree-*$$i.xml ; \
 		echo ; \
 		done
 
@@ -54,11 +63,19 @@ readfiles	:
 		echo ; \
 		done
 
-prunefiles	:
+pruneright	:
 		@for i in $(tests) ; \
 		do \
 		echo time $(prog3) $$i ; \
 		time $(prog3) $$i ; \
+		echo ; \
+		done
+
+pruneleft	:
+		@for i in $(tests) ; \
+		do \
+		echo time $(prog4) $$i ; \
+		time $(prog4) $$i ; \
 		echo ; \
 		done
 
