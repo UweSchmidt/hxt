@@ -45,7 +45,7 @@ parseContentType
 	    )
       P.<|>
       ( do
-	mimeType <- P.many P.anyChar
+	mimeType <- P.many (P.noneOf ";")
 	return [ (transferMimeType, mimeType) ]
       )
 

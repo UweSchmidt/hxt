@@ -52,6 +52,10 @@ import Text.XML.HXT.RelaxNG.Validator
     ( validateDocumentWithRelaxSchema
     )
 
+import Data.Char
+    ( toLower
+    )
+
 -- ------------------------------------------------------------
 
 {- |
@@ -195,7 +199,7 @@ readDocument userOptions src
 	      = seqA . map (uncurry setParamString)
 
     getMimeType
-	= getAttrValue transferMimeType
+	= getAttrValue transferMimeType >>^ map toLower
 
     processDoc mimeType
 	= traceMsg 1 ("readDocument: " ++ show src ++ " (mime type: " ++ mimeType ++ ") will be processed")
@@ -267,8 +271,8 @@ readDocument userOptions src
 	issueW		= hasOption a_issue_warnings
 	removeWS	= hasOption a_remove_whitespace
 	preserveCmt	= hasOption a_preserve_comment
-	mimeTypeIsHtml	= parseByMimeType && mimeType == text_html
-	mimeTypeIsXml	= parseByMimeType && mimeType `elem` [text_xml, text_xhtml]
+	mimeTypeIsHtml	= parseByMimeType && isHtmlMimeType mimeType
+	mimeTypeIsXml	= parseByMimeType && isXmlMimeType  mimeType
 	hasOption n	= optionIsSet n options
 
 -- ------------------------------------------------------------

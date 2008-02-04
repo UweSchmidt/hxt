@@ -53,6 +53,11 @@ import Text.XML.HXT.Arrow.ParserInterface
 import Data.List
     ( isPrefixOf
     )
+
+import Data.Char
+    ( toLower
+    )
+
 import Data.Maybe
 
 -- ----------------------------------------------------------
@@ -318,8 +323,18 @@ decodeDocument	:: IOStateArrow s XmlTree XmlTree
 decodeDocument
     = ( decodeArr $< getEncoding )
       `when`
-      isRoot
+      ( isRoot >>> isXmlOrHtmlDoc )
     where
+    isXmlOrHtmlDoc
+	= ( getAttrValue transferMimeType >>^ map toLower )
+	  >>>
+	  isA ( `elem` [ ""			-- no mime type: e.g. file input without taking file name extension into account
+		       , application_xhtml
+		       , application_xml
+		       , text_html
+		       , text_xml
+		       ] )
+
     decodeArr	:: String -> IOStateArrow s XmlTree XmlTree
     decodeArr enc
 	= maybe notFound found . getDecodingFct $ enc

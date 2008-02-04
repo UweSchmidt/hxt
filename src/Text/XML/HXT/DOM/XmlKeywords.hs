@@ -20,6 +20,10 @@
 module Text.XML.HXT.DOM.XmlKeywords
 where
 
+import Data.List
+    ( isSuffixOf
+    )
+
 -- ------------------------------------------------------------
 --
 -- string constants for representing DTD keywords and attributes
@@ -347,14 +351,43 @@ a_output_changes              = "output-pattern-transformations"
 a_do_not_collect_errors       = "do-not-collect-errors"
 
 -- ------------------------------------------------------------
+
 -- mime types
+--
+-- see RFC \"http:\/\/www.rfc-editor.org\/rfc\/rfc3023.txt\"
 
-text_html,
- text_xhtml,
- text_xml	:: String
+application_xhtml,
+ application_xml,
+ application_xml_external_parsed_entity,
+ application_xml_dtd,
+ text_html,
+ text_xml,
+ text_xml_external_parsed_entity	:: String
 
-text_html	= "text/html"
-text_xml	= "text/xml"
-text_xhtml	= "text/xhtml"
+application_xhtml			= "application/xhtml+xml"
+application_xml				= "application/xml"
+application_xml_external_parsed_entity	= "application/xml-external-parsed-entity"
+application_xml_dtd			= "application/xml-dtd"
+
+text_html				= "text/html"
+text_xml				= "text/xml"
+text_xml_external_parsed_entity		= "text/xml-external-parsed-entity"
+
+isHtmlMimeType	:: String -> Bool
+isHtmlMimeType t
+    = t == text_html
+
+isXmlMimeType	:: String -> Bool
+isXmlMimeType t
+    = ( t `elem` [ application_xhtml
+		, application_xml
+		, application_xml_external_parsed_entity
+		, application_xml_dtd
+		, text_xml
+		, text_xml_external_parsed_entity
+		]
+	||
+	"+xml" `isSuffixOf` t		-- application/mathml+xml
+      )					-- or image/svg+xml
 
 -- ------------------------------------------------------------
