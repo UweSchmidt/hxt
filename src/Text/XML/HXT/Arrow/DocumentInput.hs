@@ -328,12 +328,7 @@ decodeDocument
     isXmlOrHtmlDoc
 	= ( getAttrValue transferMimeType >>^ map toLower )
 	  >>>
-	  isA ( `elem` [ ""			-- no mime type: e.g. file input without taking file name extension into account
-		       , application_xhtml
-		       , application_xml
-		       , text_html
-		       , text_xml
-		       ] )
+	  isA (\ t -> null t || isXmlMimeType t || isHtmlMimeType t)
 
     decodeArr	:: String -> IOStateArrow s XmlTree XmlTree
     decodeArr enc
