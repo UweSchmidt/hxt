@@ -75,8 +75,8 @@ traverseTree valiEnv n@(NTree (XTag name _) cs)
       where
       valFct :: XmlFilter
       valFct
-          = case (lookup (tName name) valiEnv) of
-	    Nothing -> err ("Element " ++ show (tName name) ++ " not declared in DTD.")
+          = case (lookup (qualifiedName name) valiEnv) of
+	    Nothing -> err ("Element " ++ show (qualifiedName name) ++ " not declared in DTD.")
 	    Just f  -> f
 
 traverseTree _ _ = []
@@ -198,7 +198,7 @@ buildContentValidation nd@(NTree (XDTD ELEMENT al) _)
       contentValidationPcdata n@(NTree (XTag name _) cs)
           = if msg == ""
             then []
-            else err ("The content of element "++ show (tName name) ++
+            else err ("The content of element "++ show (qualifiedName name) ++
 	              " must match (#PCDATA). "++ msg) n
 	    where
 	    re = re_rep (re_sym k_pcdata)
@@ -213,7 +213,7 @@ buildContentValidation nd@(NTree (XDTD ELEMENT al) _)
       contentValidationEmpty n@(NTree (XTag name _) cs)
           = if msg == ""
             then []
-            else err ("The content of element " ++ show (tName name) ++
+            else err ("The content of element " ++ show (qualifiedName name) ++
 	              " must match EMPTY. " ++ msg) n
 	    where
 	    re = re_unit
@@ -228,7 +228,7 @@ buildContentValidation nd@(NTree (XDTD ELEMENT al) _)
       contentValidationAny n@(NTree (XTag name _) cs)
           = if msg == ""
             then []
-            else err ("The content of element " ++ show (tName name) ++
+            else err ("The content of element " ++ show (qualifiedName name) ++
 	              " must match ANY. " ++ msg) n
 	    where
 	    re = re_rep (re_dot)
@@ -243,7 +243,7 @@ buildContentValidation nd@(NTree (XDTD ELEMENT al) _)
       contentValidationChildren cm n@(NTree (XTag name _) cs)
           = if msg == ""
             then []
-            else err ("The content of element " ++ show (tName name) ++
+            else err ("The content of element " ++ show (qualifiedName name) ++
 	              " must match " ++ printRE re ++ ". " ++ msg) n
 	    where
 	    re = createRE (head cm)
@@ -258,7 +258,7 @@ buildContentValidation nd@(NTree (XDTD ELEMENT al) _)
       contentValidationMixed cm n@(NTree (XTag name _) cs)
           = if msg == ""
             then []
-            else err ("The content of element "++ show (tName name) ++
+            else err ("The content of element "++ show (qualifiedName name) ++
 	              " must match " ++ printRE re ++ ". " ++ msg) n
 	    where
 	    re = re_rep (re_alt (re_sym k_pcdata) (createRE (head cm)))
@@ -400,7 +400,7 @@ checkRequiredAttributes attrDecls (NTree (XDTD ELEMENT al) _)
           = if satisfies (hasAttr attName) n
 	    then checkRequired xs n
 	    else err ("Attribute " ++ show attName ++ " must be declared for element type " ++
-	             show (tName name) ++ ".") n
+	             show (qualifiedName name) ++ ".") n
 	         ++
 		 checkRequired xs n
 	    where
@@ -441,7 +441,7 @@ checkFixedAttributes attrDecls (NTree (XDTD ELEMENT al) _)
           = if satisfies (hasAttr attName) n
 	    then if attValue == fixedValue
 	         then checkFixed xs n
-	         else err ("Attribute " ++ show attName ++ " of element " ++ show (tName name) ++
+	         else err ("Attribute " ++ show attName ++ " of element " ++ show (qualifiedName name) ++
 		           " with value " ++ show attValue ++ " must have a value of " ++
 			   show fixedValue ++ ".") n
 	              ++
@@ -494,7 +494,7 @@ checkNotDeclardAttributes attrDecls elemDescr
 	    else searchForDeclaredAtt name xs att
 
       searchForDeclaredAtt name [] (NTree (XAttr attrName) _)
-          = err ("Attribute " ++ show (aName attrName) ++ " of element " ++ show name ++ " is not declared in DTD.")
+          = err ("Attribute " ++ show (qualifiedName attrName) ++ " of element " ++ show name ++ " is not declared in DTD.")
 
       searchForDeclaredAtt _ nd a
           = error ("searchForDeclaredAtt: illegeal paramter:\n" ++ show nd ++ show a)

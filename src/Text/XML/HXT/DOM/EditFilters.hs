@@ -216,8 +216,12 @@ collapseXText n
     = replaceChildren (collapseXText' $ getChildren n) n
     where
     collapseXText' :: XmlSFilter
-    collapseXText' ((NTree (XText t1) _) : (NTree (XText t2) _):zs)
-        = collapseXText' $ (xtext (t1++t2)) ++ zs
+    collapseXText' ((NTree n1 _) : (NTree n2 _) : zs)
+	| isXTextNode n1 && isXTextNode n2
+            = collapseXText' $ (xtext (t1 ++ t2)) ++ zs
+	      where
+	      t1 = textOfXNode n1
+	      t2 = textOfXNode n2
 
     collapseXText' (x:xs)
         = x : (collapseXText' xs)
@@ -411,8 +415,9 @@ escapeString isEsc s
       (s1, s2) = break isEsc s
 
 escapeText		:: (Char -> Bool) -> XmlFilter
-escapeText isEsc (NTree (XText str) _)
-    = escapeString isEsc str
+escapeText isEsc (NTree n _)
+    | isXTextNode n
+	= escapeString isEsc (textOfXNode n)
 
 escapeText isEsc (NTree (XCmt c) _)
     = xcmt (xshow . escapeString isEsc $ c)

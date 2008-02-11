@@ -548,7 +548,7 @@ substParamEntity loc n@(NTree xn _cs)
 
 
 evalCond :: XmlTree -> DTDStateFilter
-evalCond content (NTree (XText c) _)
+evalCond content (NTree n _)
     | c == k_include
 	= liftF (parseXmlDTDPart "conditional section")
 	  .>>
@@ -558,8 +558,8 @@ evalCond content (NTree (XText c) _)
           $ content 
     | otherwise
 	= return []
-evalCond _ n'
-    = error ("evalCond: illegal argument: " ++ show n')
+    where
+    c = textOfXNode n
 
 -- ------------------------------------------------------------
 

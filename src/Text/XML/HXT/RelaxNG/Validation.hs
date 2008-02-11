@@ -16,7 +16,6 @@
 -}
 
 -- ------------------------------------------------------------
--- |
 
 module Text.XML.HXT.RelaxNG.Validation
     ( validateWithRelaxAndHandleErrors
@@ -56,18 +55,19 @@ import Text.XML.HXT.RelaxNG.Utils
     )
 
 import qualified Text.XML.HXT.Arrow.XmlNode as XN
-    ( getText
+
+import Text.XML.HXT.DOM.Unicode
+    ( isXmlSpaceChar
     )
 
-import Text.XML.HXT.DOM.Unicode ( isXmlSpaceChar )
-
-import Data.Tree.NTree.TypeDefs	( NTree (..) )
-
-import Data.Char
 import Data.Maybe
+    ( fromJust
+    )
+
 {-
 import qualified Debug.Trace as T
 -}
+
 -- ------------------------------------------------------------
 
 validateWithRelaxAndHandleErrors	:: IOSArrow XmlTree XmlTree -> IOSArrow XmlTree XmlTree
@@ -249,22 +249,19 @@ nullable (After _ _)		= False
 
 childDeriv :: Context -> Pattern -> XmlTree -> Pattern
 
-childDeriv cx p (NTree (XText s) _)
-    = textDeriv cx p s
-
-childDeriv _ p (NTree (XTag qn atts) children)
-    = let
-      cx = ("",[])
-      p1 = startTagOpenDeriv p qn
-      p2 = attsDeriv cx p1 atts
-      p3 = startTagCloseDeriv p2
-      p4 = childrenDeriv cx p3 children
-      in
-      endTagDeriv p4
-
-childDeriv _ _ _
-    = notAllowed "Call to childDeriv with wrong arguments"
-
+childDeriv cx p t
+    | XN.isText t	= textDeriv cx p . fromJust . XN.getText $ t
+    | XN.isElem t	= endTagDeriv p4
+    | otherwise		= notAllowed "Call to childDeriv with wrong arguments"
+    where
+    children	=            XN.getChildren $ t
+    qn		= fromJust . XN.getElemName $ t 
+    atts	= fromJust . XN.getAttrl    $ t
+    cx1		= ("",[])
+    p1		= startTagOpenDeriv p qn
+    p2		= attsDeriv cx1 p1 atts
+    p3		= startTagCloseDeriv p2
+    p4		= childrenDeriv cx1 p3 children
 
 -- ------------------------------------------------------------
 --  
@@ -426,11 +423,11 @@ attsDeriv :: Context -> Pattern -> XmlTrees -> Pattern
 
 attsDeriv _ p []
     = p
-attsDeriv cx p (attribute@(NTree (XAttr _) _):xs)
-    = attsDeriv cx (attDeriv cx p attribute) xs
-
-attsDeriv _ _ _
-    = notAllowed "Call to attsDeriv with wrong arguments"
+attsDeriv cx p (t : ts)
+    | XN.isAttr t
+	= attsDeriv cx (attDeriv cx p t) ts
+    | otherwise
+	= notAllowed "Call to attsDeriv with wrong arguments"
 
 attDeriv :: Context -> Pattern -> XmlTree -> Pattern
 
@@ -455,21 +452,28 @@ attDeriv cx (OneOrMore p) att
       (attDeriv cx p att)
       (choice (OneOrMore p) Empty)
 
-attDeriv cx (Attribute nc p) (NTree (XAttr qn) av)
-    | not (contains nc qn)
+attDeriv cx (Attribute nc p) att
+    | isa
+      &&
+      not (contains nc qn)
 	= notAllowed1 $
 	  "Attribute with name " ++ nameClassToString nc
           ++ " expected, but " ++ universalName qn ++ " found"
-    | ( ( nullable p
+    | isa
+      &&
+      ( ( nullable p
 	  &&
 	  whitespace val
 	)
 	|| nullable p'
       )
 	= Empty
-    | otherwise
+    | isa
 	= err' p'
     where
+    isa =            XN.isAttr      $ att
+    qn  = fromJust . XN.getAttrName $ att
+    av  =            XN.getChildren $ att
     val = showXts av
     p'  = textDeriv cx p val
 
@@ -536,17 +540,19 @@ childrenDeriv _cx p@(NotAllowed _) _
     = p
 
 childrenDeriv cx p []
-    = childrenDeriv cx p etxt
-    where
-    etxt = [(NTree (XText "") [])]
+    = childrenDeriv cx p [XN.mkText ""]
 
-childrenDeriv cx p [tt@(NTree (XText s) _)]
-    | whitespace s
+childrenDeriv cx p [tt]
+    | ist
+      &&
+      whitespace s
 	= choice p p1
-    | otherwise
+    | ist
 	= p1
     where
-    p1 = childDeriv cx p tt
+    ist =            XN.isText    tt
+    s   = fromJust . XN.getText $ tt
+    p1  = childDeriv cx p tt
 
 childrenDeriv cx p children
     = stripChildrenDeriv cx p children    

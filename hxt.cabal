@@ -65,6 +65,7 @@ library
   Text.XML.HXT.DOM.Namespace,
   Text.XML.HXT.DOM.NamespaceFilter,
   Text.XML.HXT.DOM.NamespacePredicates,
+  Text.XML.HXT.DOM.QualifiedName,
   Text.XML.HXT.DOM.TypeDefs,
   Text.XML.HXT.DOM.UTF8Decoding,
   Text.XML.HXT.DOM.Unicode,

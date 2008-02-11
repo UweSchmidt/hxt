@@ -91,11 +91,11 @@ delta re el
 
     where
     expectedNode :: XmlTree -> String -> Bool
-    expectedNode (NTree (XTag n _) _) sym = (tName n) == sym
+    expectedNode (NTree (XTag n _) _) sym = (qualifiedName n) == sym
     expectedNode _ _			  = False
 
     elemName :: XmlTree -> String
-    elemName (NTree (XTag n _) _)	= "element "++ show (tName n)
+    elemName (NTree (XTag n _) _)	= "element "++ show (qualifiedName n)
     elemName _				= "character data"
 
     allowed :: XmlTree -> Bool

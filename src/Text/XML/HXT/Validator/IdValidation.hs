@@ -82,7 +82,7 @@ traverseTree idEnv n@(NTree (XTag name _) cs)
       where
       idFct :: XmlFilter
       idFct
-          = case (lookup (tName name) idEnv) of
+          = case (lookup (qualifiedName name) idEnv) of
 	    Nothing -> none
 	    Just f  -> f
 
@@ -102,7 +102,7 @@ traverseTree _ _ = []
 
 getIdValue :: XmlTrees -> XmlTree -> String
 getIdValue (x@(NTree (XDTD ATTLIST al) _):xs) n@(NTree (XTag name _al') _)
-    = if (tName name) == elemName
+    = if (qualifiedName name) == elemName
       then attrValue
       else getIdValue xs n
       where
@@ -188,7 +188,7 @@ buildIdrefValidationFcts dtdPart idNodeList
 		       else let valueList = words attrValue
 		            in if null valueList
 		               then err ("Attribute " ++ show attrName ++
-					 " of Element " ++ show (tName name) ++
+					 " of Element " ++ show (qualifiedName name) ++
 					 " must have at least one name.") n
 		               else concatMap (checkValueDeclared n) (words attrValue)
 	          else []
@@ -237,13 +237,13 @@ checkForUniqueIds idNodeList dtdPart
       checkForUniqueId (x@(NTree (XTag name _) _):xs) used
           = if attrValue `elem` used
 	    then err ("Attribute value " ++ show attrValue ++ " of type ID for element " ++
-	              show (tName name) ++ " must be unique within the document.") x
+	              show (qualifiedName name) ++ " must be unique within the document.") x
 		 ++
 		 checkForUniqueId xs used
 
 	    else checkForUniqueId xs (attrValue : used)
 	    where
-	    attrValue = getIdValue (isAttlistOfElement (tName name) $$ idAttrTypes) x
+	    attrValue = getIdValue (isAttlistOfElement (qualifiedName name) $$ idAttrTypes) x
 
       checkForUniqueId _ _ = []
 

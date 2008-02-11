@@ -31,19 +31,31 @@ import Text.XML.HXT.XPath.XPathParser
 import Text.XML.HXT.XPath.XPathArithmetic
       ( xPathAdd )
 
-import Text.XML.HXT.Arrow.ReadDocument (readDocument)
-import Text.XML.HXT.Arrow.XmlIOStateArrow (runX)
+import qualified Text.XML.HXT.Arrow.XmlNode as XN
+import           Text.XML.HXT.Arrow.ReadDocument (readDocument)
+import           Text.XML.HXT.Arrow.XmlIOStateArrow (runX)
 
 import Text.XML.HXT.DOM.XmlTree
       hiding (mkNode)
 
-import System.IO.Unsafe (unsafePerformIO)
-import Data.Maybe
-      ( fromJust )      
+import System.IO.Unsafe
+    ( unsafePerformIO
+    )
 
 import Data.Char
+    ( isAscii
+    , isUpper
+    , isLower
+    , isDigit
+    , ord
+    )
 import Data.List
-    ( sortBy )
+    ( sortBy
+    )
+import Data.Maybe
+      ( fromJust
+      , fromMaybe
+      )      
 
 -- -----------------------------------------------------------------------------
 
@@ -199,7 +211,7 @@ isNotInNodeList n xs' = nodeID (Just n) `notElem` map (nodeID . Just) xs'
 
 -- Tim Walkenhorst:
 --   - Attributes are identified by their QName (they do not have previous siblings)
---   - Elemts are identified by their relative position (# of previous siblings)
+--   - Elements are identified by their relative position (# of previous siblings)
 
 data IdPathStep = IdRoot String | IdPos Int | IdAttr QName deriving (Show, Eq, Ord)
 
@@ -207,12 +219,14 @@ nodeID :: Maybe (NavXmlTree) -> [IdPathStep]
 nodeID Nothing = []
 nodeID (Just t@(NT (NTree (XAttr qn) _)  _ _ _)) = IdAttr qn : nodeID (upNT t)
 nodeID (Just t@(NT node _ prev _))               
-   | isRootNode $ getNode node = return $ IdRoot (getText $ getValue "rootId" node) 
-   | otherwise       = IdPos (length prev) : nodeID (upNT t)
-   where getText ((NTree (XText t') _):_) = t'
-         getText _         = ""
-   
-
+   | isRootNode $ getNode node
+       = return $ IdRoot (getText $ getValue "rootId" node) 
+   | otherwise
+       = IdPos (length prev) : nodeID (upNT t)
+   where
+   getText	:: XmlTrees -> String
+   getText (x:_) = fromMaybe "" (XN.getText x)
+   getText _	 = ""
 
 -- |
 -- Calculates the position of a node in a tree (in document order)

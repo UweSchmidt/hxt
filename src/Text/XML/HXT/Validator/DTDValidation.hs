@@ -78,8 +78,9 @@ getXTextValues :: XmlTrees -> [String]
 getXTextValues
   = concatMap showT
   where
-    showT (NTree (XText t) _) = [t]
-    showT _                   = []
+    showT (NTree n _)
+	| isXTextNode n = [textOfXNode n]
+    showT _             = []
 
 
 -- ------------------------------------------------------------

@@ -548,8 +548,12 @@ parseXmlFromString parser loc
 --
 
 removeEncodingSpec	:: XmlTree -> XmlTrees
-removeEncodingSpec (NTree (XText s) _cs)
-    = either (xerr . (++ "\n") . show) xtext . parse parser "remove encoding spec" $ s
+removeEncodingSpec (NTree n _cs)
+    | isXTextNode n
+	= ( either (xerr . (++ "\n") . show) xtext
+	    . parse parser "remove encoding spec"
+	    . textOfXNode
+	  ) n
     where
     parser :: Parser String
     parser = do

@@ -641,8 +641,9 @@ parseXmlDTDdecl _
 
 collectText	:: XmlTree -> String
 
-collectText (NTree (XText s) _)
-    = s
+collectText (NTree n _)
+    | isXTextNode n
+	= textOfXNode n
 
 collectText (NTree (XDTD PEREF al) cl)
     = prefixPe ++ concatMap collectText cl ++ suffixPe

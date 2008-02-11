@@ -84,7 +84,7 @@ traverseTree :: TransEnvTable -> XmlFilter
 traverseTree transEnv n@(NTree (XTag name _) cs)
     = replaceChildren (concatMap (traverseTree transEnv) cs) (head (transFct n))
       where
-      transFct = case (lookup (tName name) transEnv) of
+      transFct = case (lookup (qualifiedName name) transEnv) of
           Nothing -> this   -- element not in DTD, can't be transformed
 	  Just f  -> f
 

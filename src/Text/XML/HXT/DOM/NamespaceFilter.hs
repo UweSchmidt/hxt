@@ -78,7 +78,7 @@ propagateNamespaceEnv env n
 				)
 			     )
 			     . span (/= ':')		-- break the name into a pair ("prefix", ":localPart")
-			     . aName			-- select attribute name
+			     . qualifiedName		-- select attribute name
 			   )
 		  $ n
     nsDecl	= zip (map (drop 1			-- drop the ":", empty local part represents default name space
@@ -101,7 +101,7 @@ propagateNamespaceEnv env n
 			   )
 		       )
 		       . span (/= ':')			-- break the name into a pair ("prefix", ":localPart")
-		       . aName				-- select attribute name
+		       . qualifiedName			-- select attribute name
 		     )
 	    `guards`
 	    modifyQName (setNamespace attrEnv)

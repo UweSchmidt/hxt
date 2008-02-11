@@ -64,14 +64,14 @@ isRootNode			:: XNode -> Bool
 isRootNode			= isTagNode t_root
 
 isTagNode			:: String -> XNode -> Bool
-isTagNode n			= isOfTagNode ((== n) . tName)
+isTagNode n			= isOfTagNode ((== n) . qualifiedName)
 
 isOfTagNode			:: (TagName -> Bool) -> XNode -> Bool
 isOfTagNode p (XTag n _)	= p n
 isOfTagNode _ _			= False
 
 isAttrNode			:: String -> XNode -> Bool
-isAttrNode n			= isOfAttrNode ((== n) . aName)
+isAttrNode n			= isOfAttrNode ((== n) . qualifiedName)
 
 isOfAttrNode			:: (AttrName -> Bool) -> XNode -> Bool
 isOfAttrNode p (XAttr n)	= p n
@@ -85,7 +85,7 @@ isOfTextNode p (XText t)	= p t
 isOfTextNode _ _		= False
 
 isPiNode			:: String -> XNode -> Bool
-isPiNode n			= isOfPiNode ((== n) . tName)
+isPiNode n			= isOfPiNode ((== n) . qualifiedName)
 
 isOfPiNode			:: (TagName -> Bool) -> XNode -> Bool
 isOfPiNode p (XPi n _)		= p n
@@ -98,6 +98,12 @@ isDTDElemNode _ _		= False
 isErrorNode 			:: Int -> XNode -> Bool
 isErrorNode l (XError l'  _)    = l == l'
 isErrorNode _ _  = False
+
+-- -----------------------------------------------------------------------------
+
+textOfXNode			:: XNode -> String
+textOfXNode (XText t)		= t
+textOfXNode _			= ""
 
 -- -----------------------------------------------------------------------------
 --
@@ -435,7 +441,7 @@ showXmlTree (NTree (XPi n al) _)
       where
       showPiAttr	:: XmlTree -> String -> String
       showPiAttr a@(NTree (XAttr an) cs)
-	  | aName an == a_value
+	  | qualifiedName an == a_value
 	      = showBlank . showXmlTrees cs
 	  | otherwise
 	      = showXmlTree a
@@ -776,9 +782,9 @@ nameOf				:: XmlTree -> String
 nameOf
     = selName . getNode
       where
-      selName (XTag  n _)	= tName n
-      selName (XAttr n  )	= aName n
-      selName (XPi   n _)	= tName n
+      selName (XTag  n _)	= qualifiedName n
+      selName (XAttr n  )	= qualifiedName n
+      selName (XPi   n _)	= qualifiedName n
       selName _			= ""
 
 -- |
@@ -791,7 +797,7 @@ localPartOf
       where
       selName (XTag  n _)	= localPart n
       selName (XAttr n  )	= localPart n
-      selName (XPi   n _)	= tName n
+      selName (XPi   n _)	= qualifiedName n
       selName _			= ""
 
 -- |
@@ -880,7 +886,7 @@ toTreel		:: XmlTrees -> AssocList String XmlTrees
 toTreel
     = concatMap toTree
       where
-      toTree (NTree (XAttr n) cs) = [(aName n, cs)]
+      toTree (NTree (XAttr n) cs) = [(qualifiedName n, cs)]
       toTree _			  = []
 
 toAttrl		:: XmlTrees -> Attributes

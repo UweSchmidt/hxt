@@ -230,8 +230,9 @@ isWhiteSpace		:: XmlFilter
 isWhiteSpace
     = isOfNode isWS
       where
-      isWS (XText s1) = all isXmlSpaceChar s1
-      isWS _          = False
+      isWS n
+	  = isXTextNode n
+	    && all isXmlSpaceChar (textOfXNode n)
 
 -- ------------------------------------------------------------
 --
@@ -605,7 +606,8 @@ replaceQName n				= modifyQName (const (mkName n))
 -- @processBottomUp (modifyText f \`when\` isXText)@
 
 modifyText				:: (String -> String) -> XmlFilter
-modifyText f t@(NTree (XText str) _)	= replaceNode (XText (f str)) t
+modifyText f t@(NTree n _)
+    | isXTextNode n			= replaceNode (XText (f (textOfXNode n))) t
 modifyText _ _				= []
 
 -- |
@@ -667,7 +669,7 @@ add1Attr a@(NTree (XAttr an) _av) t
       al = getAttrl t
       replace [] = [a]
       replace (a1 : as)
-	  | satisfies (isAttr (aName an)) a1
+	  | satisfies (isAttr (qualifiedName an)) a1
 	      = a : as
 	  | otherwise
 	      = a1 : replace as
