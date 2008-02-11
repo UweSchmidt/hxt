@@ -96,7 +96,7 @@ HXT_SRC_ARROW	= $(wildcard ./Data/*.hs) \
 		  $(wildcard ./Control/Strategies/*.hs) \
 		  $(wildcard ./Text/XML/HXT/[A]*.hs) \
 		  $(wildcard ./Text/XML/HXT/DOM/NamespacePredicates.hs) \
-		  $(wildcard ./Text/XML/HXT/DOM/[ITU]*.hs) \
+		  $(wildcard ./Text/XML/HXT/DOM/[IQTU]*.hs) \
 		  $(wildcard ./Text/XML/HXT/DOM/XmlKeywords.hs) \
 		  $(wildcard ./Text/XML/HXT/Parser/XmlOptions.hs) \
 		  $(wildcard ./Text/XML/HXT/Arrow.hs) \
