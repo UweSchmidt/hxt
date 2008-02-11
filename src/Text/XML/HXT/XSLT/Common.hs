@@ -51,7 +51,6 @@ module Text.XML.HXT.XSLT.Common
     , setAttribute               -- XmlNode n => QName -> String -> n -> n
 
     -- Namespace functions
-    , mkQName                    -- String (prefix) -> String (local) -> String (uri) -> QName
     , ExName(ExName)             -- String (local) -> String (uri) -> ExName
     , mkExName                   -- QName -> ExName
     , exLocal		         -- ExName -> String
@@ -103,9 +102,10 @@ import Text.XML.HXT.DOM.XmlKeywords
 import Text.XML.HXT.DOM.TypeDefs
     ( XmlTree
     , XNode(XTag, XAttr)
-    , QName(QN, namePrefix, localPart, namespaceUri)
+    , QName(namePrefix, localPart, namespaceUri)
     , equivQName
     , mkName
+    , mkQName
     )
 
 import Text.XML.HXT.DOM.FormatXmlTree
@@ -205,13 +205,20 @@ showTrees ts
 -- Xml Functions
 
 collectTextnodes :: [XmlTree] -> String
-collectTextnodes = concat . mapMaybe getText
+collectTextnodes
+    = concat . mapMaybe getText
 
 isElemType :: XmlNode n => QName -> n -> Bool
-isElemType qn node = isElem node && equivQName qn (fromJust $ getElemName node)
+isElemType qn node
+    = isElem node
+      &&
+      equivQName qn (fromJust $ getElemName node)
 
 isAttrType :: XmlNode n => QName -> n -> Bool
-isAttrType qname node = isAttr node && equivQName qname (fromJust $ getAttrName node)
+isAttrType qname node
+    = isAttr node
+      &&
+      equivQName qname (fromJust $ getAttrName node)
 
 tryFetchAttribute :: XmlNode n => n -> QName -> Maybe String
 tryFetchAttribute node qn
@@ -252,10 +259,8 @@ isWhitespaceNode = maybe False (all isSpace) . getText
 --------------------------- 
 -- Namespace Functions
 
-mkQName :: String -> String -> String -> QName
-mkQName p l u = QN {namePrefix=p, localPart=l, namespaceUri=u}
-
 -- Expanded name, is unique can therefore be used as a key (unlike QName)
+
 data ExName = ExName String String
   deriving (Show, Eq, Ord)
 
@@ -267,36 +272,39 @@ exLocal (ExName l _) = l
 exUri   (ExName _ u) = u
 
 parseExName :: UriMapping -> String -> ExName
-parseExName uris str =
-
-    if noPrefix 
-    then ExName str ""
-
-    else ExName loc $ lookupPrefix uris prefix
-
-  where
+parseExName uris str
+    | noPrefix	= ExName str ""
+    | otherwise	= ExName loc $ lookupPrefix uris prefix
+    where
     noPrefix       = null loc 
     loc            = drop 1 loc'                
     (prefix, loc') = span (/= ':') str
 
 -- Mapping from namespace-Prefixes to namespace-URIs
+
 type UriMapping = Map String String
 
 getUriMap :: XmlNode n => n -> UriMapping
-getUriMap = uriMappingsFromNsAttrs . filter isNsAttr . maybe err id . getAttrl
-  where err = error "Internal error: getUriMap on none-element node"
+getUriMap
+    = uriMappingsFromNsAttrs . filter isNsAttr . maybe err id . getAttrl
+      where
+      err = error "Internal error: getUriMap on none-element node"
 
 setUriMap :: XmlNode n => UriMapping -> n -> n
-setUriMap nsMap node = setElemAttrl (mergeAttrl (maybe [] id $ getAttrl node) $ uriMap2Attrs nsMap) node
+setUriMap nsMap node
+    = setElemAttrl (mergeAttrl (maybe [] id $ getAttrl node) $ uriMap2Attrs nsMap) node
 
 uriMap2Attrs :: UriMapping -> [XmlTree]
-uriMap2Attrs  = map joinNsAttr . Map.toAscList
+uriMap2Attrs
+    = map joinNsAttr . Map.toAscList
 
 lookupPrefix :: UriMapping -> String -> String
-lookupPrefix uris prefix = fromJustErr ("No namespace-Uri bound to prefix: "++prefix) $ Map.lookup prefix uris
+lookupPrefix uris prefix
+    = fromJustErr ("No namespace-Uri bound to prefix: "++prefix) $ Map.lookup prefix uris
 
 expandNSDecls :: XmlTree -> XmlTree
-expandNSDecls = mapTreeCtx (expandNSElem) $ Map.fromAscList [("xml", xmlNamespace), ("xmlns", xmlnsNamespace)]
+expandNSDecls
+    = mapTreeCtx (expandNSElem) $ Map.fromAscList [("xml", xmlNamespace), ("xmlns", xmlnsNamespace)]
 
 expandNSElem :: UriMapping -> XNode -> (UriMapping, XNode)
 expandNSElem umap node
@@ -309,16 +317,20 @@ expandNSElem umap node
     (nsAttrs, attrs) = partition isNsAttr $ fromJust $ getAttrl node
 
 uriMappingsFromNsAttrs :: [XmlTree] -> UriMapping
-uriMappingsFromNsAttrs = Map.fromList . map splitNsAttr
+uriMappingsFromNsAttrs
+    = Map.fromList . map splitNsAttr
 
 isNsAttr :: XmlTree -> Bool
-isNsAttr = maybe False ((==) xmlnsNamespace . namespaceUri) . getAttrName
+isNsAttr
+    = maybe False ((==) xmlnsNamespace . namespaceUri) . getAttrName
 
 splitNsAttr :: XmlTree -> (String, String)
-splitNsAttr node = (localPart $ fromJust $ getAttrName node, collectTextnodes $ getChildren node)
+splitNsAttr node
+    = (localPart $ fromJust $ getAttrName node, collectTextnodes $ getChildren node)
 
 joinNsAttr :: (String, String) -> XmlTree
-joinNsAttr (prefix, uri) = mkAttr (mkQName "xmlns" prefix xmlnsNamespace) [mkText uri]
+joinNsAttr (prefix, uri)
+    = mkAttr (mkQName "xmlns" prefix xmlnsNamespace) [mkText uri]
 
 -------------------------
 -- additions to XPATH:

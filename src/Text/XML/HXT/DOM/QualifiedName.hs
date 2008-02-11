@@ -63,7 +63,7 @@ qualifiedName n
 -- (specialisation of 'buildUniversalName')
 
 universalName	:: QName -> String
-universalName	= buildUniversalName (\ ns lp -> '{' : (ns ++ ('}' : lp)))
+universalName	= buildUniversalName (\ ns lp -> '{' : ns ++ '}' : lp)
 
 -- |
 -- builds an \"universal\" uri, that is the namespace uri followed by the local part. This is usefull for RDF applications,
@@ -88,7 +88,7 @@ buildUniversalName bf n
     lp = localPart    n
 
 -- |
--- constructs a simple, namespace unaware name, 'namePrefix' and 'namespaceUri' are set to the empty string.
+-- constructs a complete qualified name with 'namePrefix', 'localPart' and 'namespaceUri'.
 
 mkQName	:: String -> String -> String -> QName
 mkQName p l n

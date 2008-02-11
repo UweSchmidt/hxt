@@ -65,7 +65,7 @@ instance Show XPNumber
     where
     show NaN           = "NaN"
     show NegInf        = "-Infinity"
-    show Neg0          = "0"
+    show Neg0          = "-0"
     show Pos0          = "0"
     show (Float f)     = show f
     show PosInf        = "Infinity"

@@ -29,7 +29,7 @@ import Data.AssocList
 import Data.Tree.NTree.TypeDefs
 import Data.Typeable
 
-import Text.XML.HXT.DOM.QualifiedName
+import Text.XML.HXT.DOM.QualifiedName hiding ( QN )
 
 -- -----------------------------------------------------------------------------
 --

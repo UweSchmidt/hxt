@@ -1,7 +1,22 @@
+-- ------------------------------------------------------------
+
+{- |
+   Module     : Text.XML.HXT.RelaxNG.Validation
+   Copyright  : Copyright (C) 2008 Torben Kuseler, Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : stable
+   Portability: portable
+
+   Validation of a XML document with respect to a valid Relax NG schema in simple form.
+   Copied and modified from \"An algorithm for RELAX NG validation\" by James Clark
+   (<http://www.thaiopensource.com/relaxng/derivative.html>).
+
+-}
+
+-- ------------------------------------------------------------
 -- |
--- Validation of a XML document with respect to a valid Relax NG schema in simple form.
--- Copied and modified from \"An algorithm for RELAX NG validation\" by James Clark
--- (<http://www.thaiopensource.com/relaxng/derivative.html>).
 
 module Text.XML.HXT.RelaxNG.Validation
     ( validateWithRelaxAndHandleErrors
@@ -36,8 +51,7 @@ import Text.XML.HXT.RelaxNG.CreatePattern
 import Text.XML.HXT.RelaxNG.PatternToString
 import Text.XML.HXT.RelaxNG.DataTypeLibraries
 import Text.XML.HXT.RelaxNG.Utils
-    ( qn2String
-    , formatStringListQuot
+    ( formatStringListQuot
     , compareURI
     )
 
@@ -198,13 +212,13 @@ validateXMLDoc al xmlDoc
 -- ------------------------------------------------------------
 --
 -- | tests whether a 'NameClass' contains a particular 'QName'
+
 contains :: NameClass -> QName -> Bool
 contains AnyName _			= True
-contains (AnyNameExcept nc) n		= not (contains nc n)
-contains (NsName ns1) (QN _ _ ns2)	= ns1 == ns2
-contains (NsNameExcept ns1 nc) qn@(QN _ _ ns2)
-					= ns1 == ns2 && not (contains nc qn)
-contains (Name ns1 ln1) (QN _ ln2 ns2)	= (ns1 == ns2) && (ln1 == ln2)
+contains (AnyNameExcept nc)    n	= not (contains nc n)
+contains (NsName ns1)          qn	= ns1 == namespaceUri qn
+contains (NsNameExcept ns1 nc) qn	= ns1 == namespaceUri qn && not (contains nc qn)
+contains (Name ns1 ln1)        qn	= (ns1 == namespaceUri qn) && (ln1 == localPart qn)
 contains (NameClassChoice nc1 nc2) n 	= (contains nc1 n) || (contains nc2 n)
 contains (NCError _) _ 			= False
 
@@ -353,13 +367,13 @@ startTagOpenDeriv :: Pattern -> QName -> Pattern
 startTagOpenDeriv (Choice p1 p2) qn
     = choice (startTagOpenDeriv p1 qn) (startTagOpenDeriv p2 qn)
 
-startTagOpenDeriv (Element nc p) qn@(QN _ local uri)
+startTagOpenDeriv (Element nc p) qn
     | contains nc qn
 	= after p Empty
     | otherwise
 	= notAllowed $
 	  "Element with name " ++ nameClassToString nc ++ 
-	    " expected, but {" ++ uri ++ "}" ++ local ++ " found"
+	    " expected, but " ++ universalName qn ++ " found"
 
 startTagOpenDeriv (Interleave p1 p2) qn
     = choice
@@ -385,10 +399,8 @@ startTagOpenDeriv (After p1 p2) qn
 startTagOpenDeriv n@(NotAllowed _) _
     = n
 
-startTagOpenDeriv p (QN _ local uri)
-    = notAllowed ( show p ++ " expected, but Element {" ++
-		   uri ++ "}" ++ local ++ " found"
-		 )
+startTagOpenDeriv p qn
+    = notAllowed ( show p ++ " expected, but Element " ++ universalName qn ++ " found" )
 
 -- ------------------------------------------------------------
 
@@ -447,7 +459,7 @@ attDeriv cx (Attribute nc p) (NTree (XAttr qn) av)
     | not (contains nc qn)
 	= notAllowed1 $
 	  "Attribute with name " ++ nameClassToString nc
-          ++ " expected, but " ++ qn2String qn ++ " found"
+          ++ " expected, but " ++ universalName qn ++ " found"
     | ( ( nullable p
 	  &&
 	  whitespace val

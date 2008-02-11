@@ -34,26 +34,17 @@ setNamespace nst n
     qn = qualifiedName n	-- using qualifiedName instead of localPart enables recomputing of setNamespace
 
     ns :: String -> String -> QName
-    ns lp ""					-- no ":" found in name
-	= QN { namePrefix   = ""		-- use default namespace uri
-	     , localPart    = lp
-	     , namespaceUri = lookup1 "" nst
-	     }
+    ns lp ""					-- no ":" found in name, use default namespace uri
+	= mkQName "" lp (lookup1 "" nst)
 
-    ns px@(_:_) (':' : lp@(_:_))		-- none empty prefix and none empty local part found
-	= QN { namePrefix   = px
-	     , localPart    = lp
-	     , namespaceUri = lookup1 px nst
-	     }
+    ns px@(_:_) (':' : lp@(_:_))		-- non empty prefix and non empty local part found
+	= mkQName px lp (lookup1 px nst)
 
     ns _ _					-- not a legal qualified name, don't change name
 	= n
 
 xmlnsQN	:: QName
-xmlnsQN	= QN { namePrefix	= ""
-	     , localPart	= a_xmlns
-	     , namespaceUri	= xmlnsNamespace
-	     }
+xmlnsQN	= mkQName "" a_xmlns xmlnsNamespace
 
 -- -----------------------------------------------------------------------------
 --

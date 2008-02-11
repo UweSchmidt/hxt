@@ -196,7 +196,7 @@ isRngZeroOrMore		= isElem >>> hasRngName "zeroOrMore"
 -- ------------------------------------------------------------
 
 mkRngElement		:: ArrowXml a => String -> a n XmlTree -> a n XmlTree -> a n XmlTree
-mkRngElement n		= mkElement (QN "" n relaxNamespace)
+mkRngElement n		= mkElement (mkQName "" n relaxNamespace)
 
 mkRngChoice		:: ArrowXml a => a n XmlTree -> a n XmlTree -> a n XmlTree
 mkRngChoice		= mkRngElement "choice"
@@ -240,7 +240,7 @@ mkRngText a		= mkRngElement "text" a none
 -- ------------------------------------------------------------
 
 setRngName		:: ArrowXml a => String -> a XmlTree XmlTree
-setRngName n		= setElemName (QN "" n relaxNamespace)
+setRngName n		= setElemName (mkQName "" n relaxNamespace)
 
 setRngNameDiv		:: ArrowXml a => a XmlTree XmlTree
 setRngNameDiv		= setRngName "div"

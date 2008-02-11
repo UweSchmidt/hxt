@@ -1,5 +1,19 @@
--- |
--- Some helper functions
+-- ------------------------------------------------------------
+
+{- |
+   Module     : Text.XML.HXT.RelaxNG.Utils
+   Copyright  : Copyright (C) 2008 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : stable
+   Portability: portable
+
+   Helper functions for RelaxNG validation
+
+-}
+
+-- ------------------------------------------------------------
 
 module Text.XML.HXT.RelaxNG.Utils
     ( isRelaxAnyURI
@@ -14,13 +28,11 @@ module Text.XML.HXT.RelaxNG.Utils
     , formatStringListQuot
     , formatStringListPairs
     , formatStringListArr
-    , qn2String
     )
 where
 
-import Text.XML.HXT.Arrow.DOMInterface
-
 import Text.ParserCombinators.Parsec
+
 import Text.XML.HXT.Parser.XmlParser
     ( skipS0
     , nmtoken
@@ -146,11 +158,4 @@ formatStringList sf spacer l
     = reverse $ drop (length spacer) $ reverse $ 
       foldr (\e -> ((if e /= "" then sf e ++ spacer else "") ++)) "" l
 
-
--- | Formats a qualified name, e.g. \"{namespace}localName\"
-
-qn2String :: QName -> String
-qn2String (QN _ lp ns)
-    = if null ns
-      then lp
-      else "{" ++ ns ++ "}" ++ lp
+-- ----------------------------------------

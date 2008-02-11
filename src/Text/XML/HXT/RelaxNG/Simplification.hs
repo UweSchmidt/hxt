@@ -1,7 +1,20 @@
--- |
--- The modul creates the simplified form of a Relax NG schema.
--- See also chapter 4 of the Relax NG specification.
+-- ------------------------------------------------------------
 
+{- |
+   Module     : Text.XML.HXT.RelaxNG.Simplification
+   Copyright  : Copyright (C) 2008 Torben Kuseler, Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : stable
+   Portability: portable
+
+   The modul creates the simplified form of a Relax NG schema.
+   See also chapter 4 of the Relax NG specification.
+
+-}
+
+-- ------------------------------------------------------------
 
 module Text.XML.HXT.RelaxNG.Simplification
   ( createSimpleForm
@@ -26,7 +39,6 @@ import Text.XML.HXT.Arrow.Edit
     ( removeWhiteSpace
     )
 
-
 import qualified Text.XML.HXT.Arrow.XmlNode as XN
     ( mkAttr
     , mkText
@@ -44,6 +56,7 @@ import Text.XML.HXT.RelaxNG.SchemaGrammar as SG
 import Data.Maybe
 import Data.Char
 import Data.List
+
 import System.Directory
   ( doesFileExist )
 
@@ -238,13 +251,16 @@ simplificationStep1
 	createAttrL
 	    = setBaseUri &&& constA (map createAttr env) >>> arr2L (:)
 	    where
+
 	    createAttr :: (String, String) -> XmlTree
 	    createAttr (pre, uri)
-		= if null pre					 -- default namespace
-		  then XN.mkAttr (QN "" "RelaxContextDefault" "") [XN.mkText uri]
-		  else XN.mkAttr (QN "" (contextAttributes++pre) "") [XN.mkText uri]
+		= XN.mkAttr (mkName nm) [XN.mkText uri]
+		where
+		nm  | null pre	= "RelaxContextDefault"
+		    | otherwise	= contextAttributes ++ pre
+
 	    setBaseUri :: IOSArrow String XmlTree
-	    setBaseUri = mkAttr (QN "" contextBaseAttr "") (txt $< this)
+	    setBaseUri = mkAttr (mkName contextBaseAttr) (txt $< this)
 
 	replaceQNames :: [(String, String)] -> String -> IOSArrow XmlTree XmlTree                        
 	replaceQNames e name
@@ -1156,7 +1172,7 @@ simplificationStep5
 
     createPatternElem :: (ArrowXml a) => String -> String -> String -> XmlTrees -> a n XmlTree  
     createPatternElem pattern name combine trees
-	= mkRngElement pattern (mkAttr (QN "" "name" "") (txt name)) 
+	= mkRngElement pattern (mkAttr (mkName "name") (txt name)) 
 	  ( ( mkRngElement combine none 
               (arrL (const trees) >>> getChildren)
             )
@@ -1353,9 +1369,9 @@ simplificationStep6 =
 
     createAttr :: NewName -> OldName -> IOSArrow XmlTree XmlTree
     createAttr name oldname
-      = mkAttr (QN "" "name" "") (txt name) 
+      = mkAttr (mkName "name") (txt name) 
         <+>
-        mkAttr (QN "" defineOrigName "") (txt $ "created for element " ++ oldname)
+        mkAttr (mkName defineOrigName) (txt $ "created for element " ++ oldname)
        
   getExpandableDefines :: (ArrowXml a) => a XmlTree Env 
   getExpandableDefines 
@@ -2025,19 +2041,19 @@ illegalUri		= "\x1"
 
 representatives		:: NameClass -> [QName]
 representatives AnyName
-    = [QN "" illegalLocalName illegalUri]
+    = [mkQName "" illegalLocalName illegalUri]
 
 representatives (AnyNameExcept nc)
-    = (QN "" illegalLocalName illegalUri) : (representatives nc)
+    = (mkQName "" illegalLocalName illegalUri) : (representatives nc)
 
 representatives (NsName ns)
-    = [QN "" illegalLocalName ns]
+    = [mkQName "" illegalLocalName ns]
 
 representatives (NsNameExcept ns nc)
-    = (QN "" illegalLocalName ns) : (representatives nc)
+    = (mkQName "" illegalLocalName ns) : (representatives nc)
 
 representatives (Name ns ln)
-    = [QN "" ln ns]
+    = [mkQName "" ln ns]
 
 representatives (NameClassChoice nc1 nc2)
     = (representatives nc1) ++ (representatives nc2)
@@ -2191,7 +2207,7 @@ setChangesAttr str
           `when`
           (hasRngName a_relaxSimplificationChanges)
       )
-      (mkAttr (QN "" a_relaxSimplificationChanges "") (txt str))
+      (mkAttr (mkName a_relaxSimplificationChanges) (txt str))
 
 
 getChangesAttr :: IOSArrow XmlTree String

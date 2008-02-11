@@ -426,12 +426,22 @@ evalAttr _ _
 
 
 evalAttrNodeTest :: NodeTest -> NavXmlTree -> NavXmlTrees
-evalAttrNodeTest (NameTest (QN _pre local uri)) ns@(NT (NTree (XAttr (QN _pre1 local1 uri1)) _) _ _ _)
-    = if ( ( uri == uri1               && local == local1) || 
-           ((uri == "" || uri == uri1) && local == "*") 
-         ) then [ns] else [] 
+evalAttrNodeTest (NameTest qn) ns@(NT (NTree (XAttr qn1) _) _ _ _)
+    = if ( ( uri == uri1               && lp == lp1)
+	   || 
+           ((uri == "" || uri == uri1) && lp == "*") 
+         )
+      then [ns]
+      else []
+      where
+      uri  = namespaceUri qn
+      uri1 = namespaceUri qn1
+      lp   = localPart    qn
+      lp1  = localPart    qn1
+
 evalAttrNodeTest (TypeTest XPNode) ns@(NT (NTree (XAttr _) _) _ _ _)
     = [ns]
+
 evalAttrNodeTest _ _
     = []
 
