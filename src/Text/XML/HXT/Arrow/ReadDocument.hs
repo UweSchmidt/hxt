@@ -202,7 +202,7 @@ readDocument userOptions src
 	= getAttrValue transferMimeType >>^ map toLower
 
     processDoc mimeType
-	= traceMsg 1 ("readDocument: " ++ show src ++ " (mime type: " ++ mimeType ++ ") will be processed")
+	= traceMsg 1 ("readDocument: " ++ show src ++ " (mime type: " ++ show mimeType ++ ") will be processed")
 	  >>>
 	  parse
 	  >>>

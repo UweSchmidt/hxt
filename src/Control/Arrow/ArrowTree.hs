@@ -82,11 +82,11 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
     -- example: @ processChildren (none \`when\` isCmt) @ removes all children, for which isCmt holds
 
     processChildren	:: Tree t => a (t b) (t b) -> a (t b) (t b)
-    processChildren f	= listA (getChildren >>> f)		-- new children, deterministic filter: single element result
+    processChildren f	= arr T.getNode
 			  &&&
-			  this					-- pair with root
+			  listA (arrL T.getChildren >>> f)	-- new children, deterministic filter: single element result
 			  >>>
-			  arr2 T.setChildren			-- apply binary filter
+			  arr2 T.mkTree
 
     -- | similar to processChildren, but the new children are computed by processing
     -- the whole input tree
@@ -95,11 +95,11 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
     -- and substitutes the children component of the root node with this list
 
     replaceChildren	:: Tree t => a (t b) (t b) -> a (t b) (t b)
-    replaceChildren f	= listA f				-- compute new children
+    replaceChildren f	= arr T.getNode
 			  &&&
-			  this
+			  listA f				-- compute new children
 			  >>>
-			  arr2 T.setChildren
+			  arr2 T.mkTree
 
     -- |
     -- pronounced \"slash\", meaning g inside f

@@ -64,7 +64,7 @@ class Tree t where
 
     -- | substitute children: @ setChildren cl = changeChildren (const cl) @
 
-    setChildren	::            [t a] -> t a -> t a
+    setChildren		::            [t a] -> t a -> t a
     setChildren cl	= changeChildren (const cl)
 
     -- | fold for trees

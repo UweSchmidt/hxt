@@ -2,7 +2,7 @@
 
 HXT_HOME	= ../../..
 PKGFLAGS	= 
-GHCFLAGS	= -Wall -O2
+GHCFLAGS	= -Wall -O2 -fbang-patterns
 GHC		= ghc $(GHCFLAGS) $(PKGFLAGS)
 
 DIST		= $(HXT_HOME)/dist/examples/arrows
@@ -12,8 +12,10 @@ prog		= ./GenDoc
 prog2		= ./ReadDoc
 prog3		= ./PruneRight
 prog4		= ./PruneLeft
+prog5		= ./MemTest
+progs		= $(prog) $(prog2) $(prog3) $(prog4) $(prog5)
 
-all		: $(prog) $(prog2) $(prog3) $(prog4)
+all		: $(progs)
 
 $(prog)		: $(prog).hs
 		$(GHC) --make -o $@ $<
@@ -29,6 +31,9 @@ $(prog3)	: $(prog)
 
 $(prog4)	: $(prog)
 		ln -f $(prog) $(prog4)
+
+$(prog5)	: $(prog)
+		ln -f $(prog) $(prog5)
 
 # generate and read documents containing a binary tree
 # with 2^i leaf nodes containing the numbers 1 to 2^i
@@ -79,10 +84,18 @@ pruneleft	:
 		echo ; \
 		done
 
+memtest	:
+		@for i in $(tests) ; \
+		do \
+		echo time $(prog5) $$i ; \
+		time $(prog5) $$i ; \
+		echo ; \
+		done
+
 dist		:
 		[ -d $(DIST_DIR) ] || mkdir -p $(DIST_DIR)
 		cp Makefile GenDoc.hs $(DIST_DIR)
 
 clean		:
-		rm -f $(prog) *.o *.hi *.xml
+		rm -f $(progs) *.o *.hi *.xml
 

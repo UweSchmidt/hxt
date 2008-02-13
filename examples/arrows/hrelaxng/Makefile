@@ -35,7 +35,7 @@ example1	:
 
 example1a	:
 		@echo "a valid document"
-		$(prog) ./valid2.xml ./valid2.rng
+		$(prog) ./valid2.xml ./valid2.rng || true
 		@echo
 
 example1b	:

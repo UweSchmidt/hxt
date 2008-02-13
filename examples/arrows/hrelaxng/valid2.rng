@@ -1,0 +1,27 @@
+<grammar
+  xmlns="http://relaxng.org/ns/structure/1.0"
+  datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <ref name="foo"/>
+  </start>
+  
+  <define name="foo">
+    <element name="foo">
+
+      <attribute name="string2-4">
+	<data type="string">
+	  <param name="minLength">2</param>
+	  <param name="maxLength">4</param>
+	</data>
+      </attribute>
+
+      <attribute name="id">
+	<data type="ID">
+	  <param name="length">4</param>
+	</data>
+      </attribute>
+      
+    </element>
+  </define>
+
+</grammar>

@@ -30,6 +30,7 @@ main
 	  , ("ReadDoc",    main2)
 	  , ("PruneRight", main3 False)
 	  , ("PruneLeft",  main3 True)
+	  , ("MemTest",    main4)
 	 ]
 
 -- ----------------------------------------
@@ -51,7 +52,11 @@ main2 i
     = do
       [x] <- runX (readDoc (fn i)
 		   >>>
+		   traceMsg 1 "start unpickle"
+		   >>>
 		   unpickleTree
+		   >>>
+		   traceMsg 1 "start fold"
 		   >>>
 		   arr (foldT1 max)
 		  )
@@ -78,6 +83,35 @@ main3 l i
 
 -- ----------------------------------------
 
+main4	:: Int -> IO ()
+main4 i
+    = do
+      [x] <- runX ( setTraceLevel 1
+		    >>>
+		    traceMsg 1 ("generate tree of depth " ++ show i)
+		    >>>
+		    fromLA (genTree 0 i)
+		    >>>
+		    traceMsg 1 ("compute maximum and minimum")
+		    >>>
+		    fromLA ( foldBTree maximum &&& foldBTree minimum )	-- 2 traversals: complete tree in mem
+		    >>>
+		    arr2 (\ ma mi -> "maximum value = " ++ show ma ++ ", minimum = " ++ show mi )
+		    >>>
+		    traceString 1 id
+		  )
+      putStrLn x
+
+foldBTree	:: ([Int] -> Int) -> LA XmlTree Int
+foldBTree f
+    = choiceA
+      [ hasName "leaf" :-> ( getAttrValue "value" >>^ read )
+      , hasName "fork" :-> ( (getChildren >>> foldBTree f) >. f )
+      , this           :-> none
+      ]
+
+-- ----------------------------------------
+
 -- just to check how much memory is used for the tree
 
 main0	:: Int -> IO ()
@@ -98,6 +132,15 @@ fn	= ("tree-" ++) . (++ ".xml") . reverse . take 4 . reverse . ((replicate 4 '0'
 
 -- ----------------------------------------
 
+genTree	:: Int -> Int -> LA XmlTree XmlTree
+genTree !n !d
+    | d == 0	= aelem "leaf" [sattr "value" (show (n + 1))]
+    | otherwise	= selem "fork" [ genTree (2*n)   (d-1)
+			       , genTree (2*n+1) (d-1)
+			       ]
+
+-- ----------------------------------------
+
 genDoc		:: Int -> String -> IOSArrow b XmlTree
 genDoc d out    = constA (mkBTree d)
 		  >>>
@@ -113,6 +156,7 @@ readDoc src
 		   , (a_remove_whitespace, v_1)
 		   , (a_encoding, isoLatin1)
 		   , (a_issue_warnings, v_0)
+		   , (a_trace, "2")
 		   ] src
 
 -- ----------------------------------------
