@@ -731,6 +731,9 @@ parseHtmlTagSoup withWarnings withComment removeWhiteSpace asHtml doc
 -- not a string built by the parser.
 
 import Text.HTML.TagSoup
+import Text.HTML.TagSoup.Entity
+    ( lookupNumericEntity
+    )
 
 import Text.XML.HXT.DOM.Unicode
     ( isXmlSpaceChar
@@ -739,6 +742,11 @@ import Text.XML.HXT.DOM.Unicode
 import Text.XML.HXT.DOM.NamespacePredicates
     ( isWellformedQualifiedName
     )
+
+import Text.XML.HXT.Parser.XmlEntities
+    ( xmlEntities
+    )
+
 import Text.XML.HXT.Parser.XhtmlEntities
     ( xhtmlEntities
     )
@@ -935,14 +943,26 @@ mkQN s
 
 -- own entity lookup to prevent problems with &amp; and tagsoup hack for IE
 
-lookupEntity	:: Bool -> String -> [Tag]
-lookupEntity withWarnings e
-    = case (lookup e xhtmlEntities) of
+lookupEntity	:: Bool -> Bool -> String -> [Tag]
+lookupEntity withWarnings _asHtml e0@('#':e)
+    = case lookupNumericEntity e of
+      Just c  -> [ TagText [c] ]
+      Nothing -> ( TagText $ "&" ++ e0 ++ ";") :
+		 if withWarnings
+		 then [TagWarning $ "illegal char reference: &" ++ e ++ ";"]
+		 else []
+
+lookupEntity withWarnings asHtml e
+    = case (lookup e entities) of
       Just x  -> [ TagText [toEnum x]]
       Nothing -> (TagText $ "&" ++ e ++ ";") :
 		 if withWarnings
-		 then [TagWarning $ "Unknown entity: &" ++ e ++ ";"]
+		 then [TagWarning $ "Unknown entity reference: &" ++ e ++ ";"]
 		 else []
+    where
+    entities
+	| asHtml    = xhtmlEntities
+	| otherwise = xmlEntities
 
 -- ----------------------------------------
 -- the main parser
@@ -955,7 +975,10 @@ parseHtmlTagSoup withWarnings withComment removeWhiteSpace asHtml doc
 	    then canonicalizeTags
 	    else id
 	  )
-	. parseTagsOptions (options { optLookupEntity = lookupEntity withWarnings})
+	. parseTagsOptions (options { optTagWarning   = withWarnings
+				    , optLookupEntity = lookupEntity withWarnings asHtml
+				    }
+			   )
       )
     where
     -- This is essential for lasy parsing:
