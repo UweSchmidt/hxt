@@ -744,7 +744,7 @@ import Text.XML.HXT.DOM.NamespacePredicates
     )
 
 import Text.XML.HXT.Parser.XmlEntities
-    ( xmlEntities
+    ( -- xmlEntities
     )
 
 import Text.XML.HXT.Parser.XhtmlEntities
@@ -962,7 +962,7 @@ lookupEntity withWarnings asHtml e
     where
     entities
 	| asHtml    = xhtmlEntities
-	| otherwise = xmlEntities
+	| otherwise = xhtmlEntities -- xmlEntities (TODO: xhtml is xml and html)
 
 -- ----------------------------------------
 -- the main parser
