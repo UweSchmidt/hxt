@@ -739,6 +739,9 @@ import Text.XML.HXT.DOM.Unicode
 import Text.XML.HXT.DOM.NamespacePredicates
     ( isWellformedQualifiedName
     )
+import Text.XML.HXT.Parser.XhtmlEntities
+    ( xhtmlEntities
+    )
 
 import Text.XML.HXT.Parser.HtmlParsec
     ( isEmptyHtmlTag
@@ -929,6 +932,19 @@ mkQN s
     (px, (_ : lp))	= span(/= ':') s
 
 -- ----------------------------------------
+
+-- own entity lookup to prevent problems with &amp; and tagsoup hack for IE
+
+lookupEntity	:: Bool -> String -> [Tag]
+lookupEntity withWarnings e
+    = case (lookup e xhtmlEntities) of
+      Just x  -> [ TagText [toEnum x]]
+      Nothing -> (TagText $ "&" ++ e ++ ";") :
+		 if withWarnings
+		 then [TagWarning $ "Unknown entity: &" ++ e ++ ";"]
+		 else []
+
+-- ----------------------------------------
 -- the main parser
 
 parseHtmlTagSoup	:: Bool -> Bool -> Bool -> Bool -> String -> String -> XmlTrees
@@ -939,7 +955,7 @@ parseHtmlTagSoup withWarnings withComment removeWhiteSpace asHtml doc
 	    then canonicalizeTags
 	    else id
 	  )
-	. parseTags
+	. parseTagsOptions (options { optLookupEntity = lookupEntity withWarnings})
       )
     where
     -- This is essential for lasy parsing:
