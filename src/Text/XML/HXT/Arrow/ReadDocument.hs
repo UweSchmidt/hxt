@@ -222,6 +222,7 @@ readDocument userOptions src
 	    | isHtml
 	      || 
 	      withTagSoup		= parseHtmlDocument			-- parse as HTML or with tagsoup XML
+					  withNamespaces
 					  withTagSoup
 					  issueW
 					  (not (hasOption a_canonicalize) && preserveCmt)
@@ -231,7 +232,7 @@ readDocument userOptions src
 	    | isXml			= parseXmlDocument validate		-- parse as XML
 	    | otherwise			= this					-- don't parse, mime type is not XML nor HTML
 	checknamespaces
-	    | hasOption a_check_namespaces
+	    | (withNamespaces && not withTagSoup)
 	      ||
 	      validateWithRelax		= propagateAndValidateNamespaces
 	    | otherwise			= this
@@ -267,6 +268,7 @@ readDocument userOptions src
 	isXmlOrHtml	= isHtml || isXml
 	parseByMimeType	= hasOption a_parse_by_mimetype
 	validate	= hasOption a_validate
+	withNamespaces	= hasOption a_check_namespaces
 	withTagSoup	= hasOption a_tagsoup
 	issueW		= hasOption a_issue_warnings
 	removeWS	= hasOption a_remove_whitespace

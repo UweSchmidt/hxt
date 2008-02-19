@@ -129,8 +129,8 @@ arbitray errors, but the application is only interested in parts of the document
 
 -}
 
-parseHtmlDocument	:: Bool -> Bool -> Bool -> Bool -> Bool -> IOStateArrow s XmlTree XmlTree
-parseHtmlDocument withTagSoup warnings preserveCmt removeWhitespace asHtml
+parseHtmlDocument	:: Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> IOStateArrow s XmlTree XmlTree
+parseHtmlDocument withTagSoup withNamespaces warnings preserveCmt removeWhitespace asHtml
     = ( perform ( getAttrValue a_source >>> traceString 1 (("parseHtmlDoc: parse HTML document " ++) . show) )
 	>>>
 	replaceChildren ( ( getAttrValue a_source		-- get source name
@@ -161,7 +161,7 @@ parseHtmlDocument withTagSoup warnings preserveCmt removeWhitespace asHtml
 				      ( if asHtml then "HT" else "X" ) ++ "ML parser"
 				     )
 			  >>>
-			  parseHtmlTagSoup warnings preserveCmt removeWhitespace asHtml
+			  parseHtmlTagSoup withNamespaces warnings preserveCmt removeWhitespace asHtml
 
 	| otherwise	= traceMsg 1 ("parse document with parsec HTML parser")
 			  >>>

@@ -69,9 +69,9 @@ parseHtmlDoc			= arr2L HP.parseHtmlDocument
 parseHtmlContent		:: ArrowList a => a String XmlTree
 parseHtmlContent		= arrL  HP.parseHtmlContent
 
-parseHtmlTagSoup		:: ArrowList a => Bool -> Bool -> Bool -> Bool -> a (String, String) XmlTree
-parseHtmlTagSoup withWarnings preserveCmt removeWS asHtml
-				= arr2L (TS.parseHtmlTagSoup withWarnings preserveCmt removeWS asHtml)
+parseHtmlTagSoup		:: ArrowList a => Bool -> Bool -> Bool -> Bool -> Bool -> a (String, String) XmlTree
+parseHtmlTagSoup withNamespaces withWarnings preserveCmt removeWS asHtml
+				= arr2L (TS.parseHtmlTagSoup withNamespaces withWarnings preserveCmt removeWS asHtml)
 
 -- ------------------------------------------------------------
 

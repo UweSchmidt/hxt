@@ -57,9 +57,15 @@ import Text.XML.HXT.Parser.HtmlParsec
 import Text.XML.HXT.Arrow.DOMInterface
     ( XmlTrees
     , QName
-    , c_warn
+    , NsEnv
+    , mkQName
     , mkName
     , mkPrefixLocalPart
+    , c_warn
+    , a_xml
+    , a_xmlns
+    , xmlNamespace
+    , xmlnsNamespace
     )
 
 import Text.XML.HXT.Arrow.XmlNode
@@ -80,6 +86,8 @@ import qualified Data.Map as M
 type Tags	= [Tag]
 
 type NameTable	= M.Map QName QName
+
+type Context	= ([String], NsEnv)
 
 data State	= S !Tags !NameTable		-- the name table must be evaluated striktly, else a stack overflow occurs
 
@@ -220,14 +228,43 @@ insertQName n	= P $ \ (S ts nt) -> let
 		      where
 		      r = M.lookup s nt
 
-mkQN		:: String -> Parser QName
-mkQN s
-    | isSimpleName			= insertQName (mkName s)
-    | isWellformedQualifiedName s	= insertQName (mkPrefixLocalPart px lp)
-    | otherwise				= insertQName (mkName s)
+mkQN		:: Bool -> Bool -> NsEnv -> String -> Parser QName
+mkQN withNamespaces isAttr env s
+    | withNamespaces
+	= insertQName qn1
+    | otherwise
+	= insertQName qn0
     where
+    qn1
+	| isAttr && isSimpleName	= mkName s
+	| isSimpleName			= mkQName "" s (nsUri "")
+	| isWellformedQualifiedName s	= mkQName px lp (nsUri px)
+	| otherwise			= mkName s
+    qn0
+	| isSimpleName			= mkName s
+	| isWellformedQualifiedName s	= mkPrefixLocalPart px lp
+	| otherwise			= mkName s
+
+    nsUri x		= fromMaybe "" . lookup x $ env
     isSimpleName	= all (/= ':') s
     (px, (_ : lp))	= span(/= ':') s
+
+extendNsEnv	:: Bool -> [(String, String)] -> NsEnv -> NsEnv
+extendNsEnv withNamespaces al1 env
+    | withNamespaces
+	= concatMap (uncurry addNs) al1 ++ env
+    | otherwise
+	= env
+    where
+    addNs n v
+	| px == a_xmlns
+	  &&
+	  (null lp || (not . null . tail $ lp))
+	    = [(drop 1 lp, v)]
+	| otherwise
+	    = []
+	where
+	(px, lp) = span (/= ':') n
 
 -- ----------------------------------------
 
@@ -257,10 +294,10 @@ lookupEntity withWarnings asHtml e
 -- ----------------------------------------
 -- the main parser
 
-parseHtmlTagSoup	:: Bool -> Bool -> Bool -> Bool -> String -> String -> XmlTrees
-parseHtmlTagSoup withWarnings withComment removeWhiteSpace asHtml doc
+parseHtmlTagSoup	:: Bool -> Bool -> Bool -> Bool -> Bool -> String -> String -> XmlTrees
+parseHtmlTagSoup withNamespaces withWarnings withComment removeWhiteSpace asHtml doc
     = ( docRootElem
-	. runParser (buildCont [])
+	. runParser (buildCont initContext)
 	. ( if asHtml
 	    then canonicalizeTags
 	    else id
@@ -278,6 +315,12 @@ parseHtmlTagSoup withWarnings withComment removeWhiteSpace asHtml doc
 
     docRootElem
 	= take 1 . filter isElem
+
+    initContext		= ( []
+			  , [ (a_xml,   xmlNamespace)
+			    , (a_xmlns, xmlnsNamespace)
+			    ]
+			  )
 
     wrap		= (:[])
 
@@ -310,7 +353,7 @@ parseHtmlTagSoup withWarnings withComment removeWhiteSpace asHtml doc
 			  n1 `closesHtmlTag` (head ns)
 	| otherwise	= const (const False)
 
-    buildCont	:: [String] -> Parser XmlTrees
+    buildCont	:: Context -> Parser XmlTrees
     buildCont ns
 	= cond isText ( do
 			t <- getText
@@ -352,11 +395,11 @@ parseHtmlTagSoup withWarnings withComment removeWhiteSpace asHtml doc
 	    )
 	  )
 	where
-	closeTag		:: [String] -> String -> Parser XmlTrees
-	closeTag (n':_) n1
+	closeTag		:: Context -> String -> Parser XmlTrees
+	closeTag ((n':_), _) n1
 	    | n' == n1		= return []			-- a normal closing tag
 								-- all other cases try to repair wrong html
-	closeTag (ns'@(n':_)) n1				-- n1 closes n implicitly
+	closeTag ns'@((n':_), _) n1				-- n1 closes n implicitly
 	    | n' `isInnerElem` n1				-- e.g. <td>...</tr>
 				= do
 				  insCls n1			-- pushback </n1>
@@ -364,7 +407,7 @@ parseHtmlTagSoup withWarnings withComment removeWhiteSpace asHtml doc
 				  buildCont ns'			-- try again
 	closeTag ns' n1
 	    | isEmptyElem n1	= buildCont ns'			-- ignore a redundant closing tag for empty element
-	closeTag ns'@(n':ns1') n1				-- insert a missing closing tag
+	closeTag ns'@((n':ns1'), _) n1				-- insert a missing closing tag
 	    | n1 `elem` ns1'	= do
 				  insCls n1
 				  insCls n'
@@ -380,36 +423,39 @@ parseHtmlTagSoup withWarnings withComment removeWhiteSpace asHtml doc
 					   ++ rl
 					 )
 
-	openTag			:: [String] -> String -> [(String, String)] -> Parser XmlTrees
-	openTag ns' n1 al1
-	    | isPiDT n1		= buildCont ns'
+	openTag			:: Context -> String -> [(String, String)] -> Parser XmlTrees
+	openTag cx'@(ns',env') n1 al1
+	    | isPiDT n1		= buildCont cx'
 	    | isEmptyElem n1
 				= do
-				  qn <- mkQN n1
+				  qn <- mkElemQN nenv n1
 				  al <- mkAttrs al1
-				  rl <- buildCont ns'
+				  rl <- buildCont cx'
 				  return (mkElement qn al [] : rl)
 	    | closesElem ns' n1	= do
 				  insOpn n1 al1
 				  insCls (head ns')
-				  buildCont ns'
+				  buildCont cx'
 	    | otherwise		= do
-				  qn <- mkQN n1
+				  qn <- mkElemQN nenv n1
 				  al <- mkAttrs al1
-				  cs <- buildCont (n1:ns')
-				  rl <- buildCont ns'
+				  cs <- buildCont ((n1 : ns'), nenv)
+				  rl <- buildCont cx'
 				  return (mkElement qn al cs : rl)
 	    where
+	    nenv		= extendNsEnv withNamespaces al1 env'
+	    mkElemQN		= mkQN withNamespaces False
+	    mkAttrQN		= mkQN withNamespaces True
 	    isPiDT ('?':_)	= True
 	    isPiDT ('!':_)	= True
 	    isPiDT _		= False
 	    mkAttrs		= mapM (uncurry mkA)
 	    mkA an av		= do
-				  qan <- mkQN an
+				  qan <- mkAttrQN nenv an
 				  return (mkAttr qan (wrap . mkText $ av))
 
-	closeAll		:: [String] -> Parser XmlTrees
-	closeAll ns'		= return (concatMap wrn ns')
+	closeAll		:: ([String], NsEnv) -> Parser XmlTrees
+	closeAll (ns',_)	= return (concatMap wrn ns')
 				  where
 				  wrn = warn . ("insert missing closing tag " ++) . show
 
