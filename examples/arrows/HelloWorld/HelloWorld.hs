@@ -8,6 +8,7 @@ main	:: IO()
 main
     = do
       [rc] <- runX ( readDocument [ (a_trace, "1")
+				  , (a_validate, v_0)
 				  ] "hello.xml"
 		     >>>
 		     writeDocument [ (a_output_encoding, isoLatin1)

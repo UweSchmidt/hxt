@@ -40,7 +40,23 @@ data QName = QN { namePrefix	:: String	-- ^ the name prefix part of a qualified 
 		, localPart	:: String	-- ^ the local part of a qualified name \"namePrefix:localPart\"
 		, namespaceUri	:: String	-- ^ the associated namespace uri
 		}
-	     deriving (Eq, Ord, Show, Read, Typeable)
+	     deriving (Ord, Show, Read, Typeable)
+
+-- | Two QNames are equal if (1. case) namespaces are both empty and the qualified names
+-- (prefix:localpart) are the same or (2. case) namespaces are set and namespaces and
+-- local parts both are equal
+    
+instance Eq QName where
+    q1 == q2
+	| null ns1 && null ns2
+	    = qualifiedName q1 == qualifiedName q2
+	| otherwise
+	    = localPart q1 == localPart q2
+	      &&
+	      ns1 == ns2
+	where
+	ns1 = namespaceUri q1
+	ns2 = namespaceUri q2
 
 instance DeepSeq QName where
     deepSeq (QN np lp ns) y	= deepSeq np $ deepSeq lp $ deepSeq ns y
