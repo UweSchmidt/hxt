@@ -207,7 +207,7 @@ patParamValid regex a
 
 -- ----------------------------------------
 
--- | List of allowed params for the decimal datatype
+-- | List of allowed params for the decimal datatypes
 
 decimalParams	:: AllowedParams
 decimalParams	= xsd_pattern : map fst fctTableDecimal
@@ -236,6 +236,29 @@ decimalValid params
 	= assert
 	  ((fromMaybe (const . const $ True) . lookup pn $ fctTableDecimal) pv)
 	  (errorMsgParam pn pv . showDecimal)
+
+-- ----------------------------------------
+
+-- | List of allowed params for the decimal and integer datatypes
+
+integerParams	:: AllowedParams
+integerParams	= xsd_pattern : map fst fctTableInteger
+
+fctTableInteger	:: [(String, String -> Integer -> Bool)]
+fctTableInteger
+    = [ (xsd_maxExclusive,   cvi (>))
+      , (xsd_minExclusive,   cvi (<))
+      , (xsd_maxInclusive,   cvi (>=))
+      , (xsd_minInclusive,   cvi (<=))
+      , (xsd_totalDigits,    cvi (\ l v -> totalD v == toInteger l))
+      ]
+    where
+    cvi		:: (Integer -> Integer -> Bool) -> (String -> Integer -> Bool)
+    cvi	op	= \ x y -> isNumber x && read x `op` y
+
+    totalD i
+	| i < 0	    = totalD (0-i)
+	| otherwise = toInteger . length . show $ i
 
 -- ----------------------------------------
 
