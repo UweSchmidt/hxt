@@ -138,6 +138,9 @@ _shader_config_channel		= jp "/shader/config/@channel"
 _shader_config_default		:: JanusPath
 _shader_config_default		= jp "/shader/config/@default"
 
+_shader_config_deffile		:: JanusPath
+_shader_config_deffile		= jp "/shader/config/@default_file"
+
 _shader_config_delim		:: JanusPath
 _shader_config_delim		= jp "/shader/config/@delim"
 

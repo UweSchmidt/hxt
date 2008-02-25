@@ -79,11 +79,11 @@ requestShader =
    proc in_ta -> do
       http_request <- getVal _transaction_requestFragment
                       <+!>
-		      ( "requestShader"
-		      , TAValueNotFound
-		      , "No request fragment found."
-		      , [("value", show _transaction_requestFragment)]
-		      )                                                                               -< in_ta
+                      ( "requestShader"
+                      , TAValueNotFound
+                      , "No request fragment found."
+                      , [("value", show _transaction_requestFragment)]
+                        )                                                                          -< in_ta
 
       let http_request_list         = splitRegex (mkRegex "\r") http_request
       let (http_header, http_body)  = findbody http_request_list
@@ -93,14 +93,14 @@ requestShader =
          ( case parsed_request of
            Bad _    -> zeroArrow
            Ok req   -> constA ( HWSRequest.reqURI req
-			      , HWSRequest.reqCmd req
-			      , maybe ("") (id) (HWSRequest.reqBody req)
-			      )
+                              , HWSRequest.reqCmd req
+                              , maybe ("") (id) (HWSRequest.reqBody req)
+                              )
          )
          <+!> ( "requestShader"
-	      , FormatError
-	      , "Bad HTTP request."
-	      , [("request", http_request)])                                                          -<<  ()
+               , FormatError
+               , "Bad HTTP request."
+               , [("request", http_request)])                                                      -<<  ()
 
       let http_header' = Prelude.map (trimColon . break (== ':')) (tail http_header)
                            where trimColon (l, r) = (l, (stringTrim . tail) r)
@@ -112,13 +112,13 @@ requestShader =
             then arr $ fromJust
             else zeroArrow
             )
-         <+!> ("requestShader", FormatError, "Bad URI.", [("URI", show uri)])                         -<<  uri'
+         <+!> ("requestShader", FormatError, "Bad URI.", [("URI", show uri)])                      -<<  uri'
 
       ( setVal _transaction_http_request_body body
         >>>
         insEmptyTree _transaction_http_response_body
         >>>
-	setVal _transaction_http_request_url             (show uri)
+        setVal _transaction_http_request_url             (show uri)
         >>>
         setVal _transaction_http_request_uriScheme       (uriScheme uri'')
         >>>
@@ -131,7 +131,7 @@ requestShader =
         setVal _transaction_http_request_method          (requestCmdString method)
         >>>
         addHeader http_header'
-        )                                                                                            -<< in_ta
+        )                                                                                          -<< in_ta
    where
       findbody []                = ([], Nothing)
       findbody (x:xs)
@@ -188,24 +188,31 @@ The directory from which files are loaded (the path following the base-URL is co
 the fully qualified filename) can be defined by \/shader\/config\/\@maps_to (defaults to \".\/\", the base directory of Janus).
 The transaction node, to which file content is loaded, can be defined by \/shader\/config\/\@loads_to (defaults to \/transaction\/http\/response\/body,
 the location for the HTTP response body). The Shader fails if no URI is present in the Transaction.
-TODO: support for default page (e.g. index.html)
+If no resource is specified by the requester (URL \"\/\"), the shader redirects the request to a default root file. This file can be defined by
+\/shader\/config\/\@default_file (defaults to \"\/index.html\"). There is no explicit option to suppress this behaviour, however, if no redirection
+is desired one can configure the default_file option to \"\/\". Technically redirection still occurs in this case, but doesn't actually change
+the effective target URL. Attention: If redirection occurs, the Transaction's URI-Path gets updated, but the over-all URL stays unchanged. This
+is to identify requests originally directed at a different URL. As a result the redirection is not completely transparent for adjacent shaders.
 -}
 fileShader :: ShaderCreator
 fileShader =
    mkDynamicCreator $ arr $ \(conf, _) ->
    proc in_ta -> do
+      defFile  <- getValDef _shader_config_deffile "/index.html"                           -<  conf
       base     <- getValDef _shader_config_baseUrl "/"                                     -<  conf
       mapsto   <- getValDef _shader_config_mapsTo "./"                                     -<  conf
       loadsto  <- getValDef _shader_config_loadsTo (show _transaction_http_response_body)  -<  conf
-      target   <- getVal _transaction_http_request_url
+      target   <- getVal _transaction_http_request_uriPath
                   <+!>
-		  ( "fileShader"
-		  , TAValueNotFound
-		  , "No URI found."
-		  , [("value", show _transaction_http_request_url)])                       -<  in_ta
+                  ( "fileShader"
+                  , TAValueNotFound
+                  , "No URI found."
+                  , [("value", show _transaction_http_request_uriPath)])                   -<  in_ta
+      let target'    = if target == "/" then defFile else target
       let baseURL    = maybe nullURI id (parseURIReference ("http://host" ++ base))
-      let targetURL  = maybe nullURI id (parseURIReference ("http://host" ++ target))
+      let targetURL  = maybe nullURI id (parseURIReference ("http://host" ++ target'))
       let filename   = mapsto ++ (show $ relativeFrom targetURL baseURL)
+      in_ta'   <- setVal _transaction_http_request_uriPath target'                         -<< in_ta
 
       "global" <-@ mkSimpleLog "HTTPShader.hs:fileShader" ("fileShader requested file: " ++ filename) l_info -<< ()
 
@@ -214,9 +221,9 @@ fileShader =
          -- file  <- exceptZeroA BStr.readFile                                            -<  filename
          file  <- exceptZeroA $ openFile filename                                      -<  ReadMode
          fsize <- exceptZeroA $ hFileSize                                              -<< file
-         exceptZeroA $ hClose                                                          -<  file
-         file'  <- exceptZeroA $ openFile filename                                     -<< ReadWriteMode
-         ("/local/files/_" ++ (show uid)) <$! (HandleVal file') -<< ()
+         -- exceptZeroA $ hClose                                                          -<  file
+         -- file'  <- exceptZeroA $ openFile filename                                     -<< ReadWriteMode
+         ("/local/files/_" ++ (show uid)) <$! (HandleVal file) -<< ()
 
          -- ("/local/files/_" ++ (show uid)) <$! HdlOpVal (\hOut -> do
          --                                                   (buffer :: IOUArray Int Word8) <- newArray (1,64) 0
@@ -245,7 +252,7 @@ fileShader =
 	      , FileNotFound
 	      , ("File '" ++ filename ++ "' not found.")
 	      , [("file", filename)]
-	      )                                                                        -<< in_ta
+	      )                                                                                 -<< in_ta'
    where
       handleCopy hIn hOut blocksize =
          do
@@ -286,16 +293,16 @@ mimeShader =
    proc in_ta -> do
       name           <- getVal _transaction_http_request_uriPath
                         <+!>
-			( "mimeShader"
-			, TAValueNotFound
-			, "No URI found."
-			, [("value", show _transaction_http_request_url)]
-			)                                                               -<  in_ta
+                        ( "mimeShader"
+                        , TAValueNotFound
+                        , "No URI found."
+                        , [("value", show _transaction_http_request_url)]
+                        )                                                               -<  in_ta
       defaultType    <- getValDef _shader_config_default "text/plain"                   -<  conf
 
       mimeType       <- ( getSVS $ "/global/mime/" ++ extension name)
-			`orElse`
-			getValDef (_shader_config_types_ (extension name)) defaultType  -<< conf
+                        `orElse`
+                        getValDef (_shader_config_types_ (extension name)) defaultType  -<< conf
 
       "global"       <-@ mkSimpleLog "HTTPShader.hs:mimeShader" ("mimeShader selected: " ++ mimeType) l_info -<< ()
 
@@ -318,18 +325,18 @@ initMimeDB =
       "/global/mime" <$! NullVal                                                                -<  ()
       filename <- getVal _shader_config_typefile
                   <+!>
-		  ( "initMimeDB"
+                  ( "initMimeDB"
                   , TAValueNotFound
-		  , "No data file specified."
-		  , [("value", show _shader_config_typefile)]
-		  )                                                                             -<  conf
+                  , "No data file specified."
+                  , [("value", show _shader_config_typefile)]
+                  )                                                                             -<  conf
       h        <- ( exceptZeroA $ openFile filename )
                   <+!>
-		  ( "initMimeDB"
-		  , FileNotFound
-		  , ("File '" ++ filename ++ "' not found.")
-		  , [("file", filename)]
-		  )                                                                             -<< ReadMode
+                  ( "initMimeDB"
+                  , FileNotFound
+                  , ("File '" ++ filename ++ "' not found.")
+                  , [("file", filename)]
+                  )                                                                             -<< ReadMode
       arrIO $ hSetBuffering h                                                                   -<< LineBuffering
       processFile h filename                                                                    -<< ()
       returnA                                                                                   -<  through
@@ -375,25 +382,25 @@ cgiShader =
 
    cgiParams "GET"
        = proc in_ta -> do
-	   url   <- getVal _transaction_http_request_url
-		    <+!>
-		    ( "cgiShader"
-		    , TAValueNotFound
-		    , "No URL found."
-		    , [("value", show _transaction_http_request_url)]
-		    )                                                                   -<  in_ta
-	   let searchpath    = uriQuery (maybe nullURI id (parseURIReference url))
-	   let searchpath'   = if (Prelude.null searchpath) then (searchpath) else (tail searchpath)
-           returnA  -< toList $ parseSearchPath searchpath'
+            url   <- getVal _transaction_http_request_url
+                     <+!>
+                     ( "cgiShader"
+                     , TAValueNotFound
+                     , "No URL found."
+                     , [("value", show _transaction_http_request_url)]
+                     )                                                                   -<  in_ta
+            let searchpath    = uriQuery (maybe nullURI id (parseURIReference url))
+            let searchpath'   = if (Prelude.null searchpath) then (searchpath) else (tail searchpath)
+            returnA  -< toList $ parseSearchPath searchpath'
 
    cgiParams "POST"
        = proc in_ta -> do
-	   mimeType <- getValDef (_transaction_http_request_header_ "Content-Type") "" -< in_ta
-	   body     <- getValDef  _transaction_http_request_body                    "" -< in_ta
-	   returnA   -< ( if mimeType == "application/x-www-form-urlencoded"
-			  then toList $ parseSearchPath body
-			  else []
-			)
+            mimeType <- getValDef (_transaction_http_request_header_ "Content-Type") "" -< in_ta
+            body     <- getValDef  _transaction_http_request_body                    "" -< in_ta
+            returnA   -< ( if mimeType == "application/x-www-form-urlencoded"
+                           then toList $ parseSearchPath body
+                           else []
+                         )
 
    cgiParams _
        = constA []
@@ -410,7 +417,7 @@ httpStatusShader =
       ta          <- (if ta_state == Processing
                         then setVal _transaction_http_response_status "200"
                         else setVal _transaction_http_response_status "404"
-		     )                                                                 -<< in_ta
+                     )                                                                 -<< in_ta
       setTAState Processing                                                            -<  ta
 
 {- |
@@ -433,17 +440,17 @@ htmlStatusShader =
             statusFile <- getVal (_shader_config_ ("@page_" ++ show status))
                           <+!>
                           ( "htmlStatusShader"
-			  , TAValueNotFound
-			  , ("No file specified for status code " ++ show status)
-			  , [("status", show status)]
-			  )                                                                         -<< conf
+                          , TAValueNotFound
+                          , ("No file specified for status code " ++ show status)
+                          , [("status", show status)]
+                          )                                                                        -<< conf
             file       <- exceptZeroA readBinary
                           <+!>
                           ( "htmlStatusShader"
-			  , FileNotFound
-			  , ("File '" ++ statusFile ++ "' not found.")
-			  , [("file", statusFile)]
-			  )                                                                        -<< statusFile
+                          , FileNotFound
+                          , ("File '" ++ statusFile ++ "' not found.")
+                          , [("file", statusFile)]
+                          )                                                                        -<< statusFile
             setVal _transaction_http_response_body file                                            -<< ta
          else this
          )                                                                                         -<< in_ta
