@@ -51,26 +51,30 @@ main
 	 else evalLoop env doc
 
 evalArgs			:: [String] -> IO (String, NsEnv, XmlTrees)
-evalArgs []			= return ("", [], [])
-evalArgs [doc]			= evalArgs ("": "[]" : doc : [])
+evalArgs []			= evalArgs (""   : "[]" : ""  : [])
+evalArgs [doc]			= evalArgs (""   : "[]" : doc : [])
 evalArgs [path, doc]		= evalArgs (path : "[]" : doc : [])
+evalArgs [path, env, ""]	= return (path, addEntries (read env) $ defaultEnv, [])
 evalArgs [path, env, doc]	= do
-				  d <- loadDoc doc
-				  return (path, read env ++ defaultEnv, d)
+				  (d, ne) <- loadDoc doc
+				  return (path, addEntries ne $ addEntries (read env) $ defaultEnv, d)
 evalArgs al			= evalArgs (take 3 al)
 
-loadDoc		:: String -> IO [XmlTree]
+loadDoc		:: String -> IO ([XmlTree], NsEnv)
 loadDoc doc
-    = runX ( readDocument [ (a_tagsoup, v_1)
-			  , (a_parse_by_mimetype, v_1)
-			  , (a_check_namespaces, v_1)
-			  , (a_remove_whitespace, v_1)
-			  , (a_validate, v_0)
-			  , (a_canonicalize, v_1)
-			  ] doc
-	     >>>
-	     (documentStatusOk `guards` this)
-	   )
+    = do
+      d <- runX ( readDocument [ (a_tagsoup, v_0)
+			       , (a_parse_by_mimetype, v_1)
+			       , (a_check_namespaces, v_1)
+			       , (a_remove_whitespace, v_1)
+			       , (a_validate, v_0)
+			       , (a_canonicalize, v_1)
+			       ] doc
+		  >>>
+		  (documentStatusOk `guards` this)
+		)
+      let env = runLA (unlistA >>> collectNamespaceDecl) d
+      return (d, env)
 
 showDoc		:: XmlTree -> IO ()
 showDoc doc
@@ -78,6 +82,17 @@ showDoc doc
       runX ( constA doc
 	     >>>
 	     writeDocument [ (a_indent, v_1)
+			   , (a_no_xml_pi, v_1)
+			   ] ""
+	   )
+      return ()
+
+showTree		:: XmlTree -> IO ()
+showTree doc
+    = do
+      runX ( constA doc
+	     >>>
+	     writeDocument [ (a_show_tree, v_1)
 			   , (a_no_xml_pi, v_1)
 			   ] ""
 	   )
@@ -113,13 +128,13 @@ evalLoop env doc
 		     if null ws
 			then evalLoop env doc
 			else do
-			     addHistory (unlines ws)
+			     addHistory line
 			     evalCmd (words line)
     where
     evalCmd []		= evalLoop env doc
     evalCmd [":ns",uri]	= evalCmd [":ns", "", uri]
     evalCmd [":ns", ns, uri]
-			= evalLoop ((ns, uri) : (delEntry ns env)) doc
+			= evalLoop (addEntry ns uri env) doc
     evalCmd (":?":_)	= do
 			  putStrLn . unlines $
 				       [ "XPath Tester"
@@ -129,6 +144,7 @@ evalLoop env doc
 				       , ":ns <px> <uri>\tset namespace"
 				       , ":q\t\tquit"
 				       , ":s\t\tshow current document"
+				       , ":t\t\tshow current document in tree format"
 				       , ":x\t\tshow current namespace environment"
 				       , ":?\t\tthis message"
 				       , "<xpath-expr>\tevaluate XPath expression"
@@ -140,13 +156,16 @@ evalLoop env doc
     evalCmd [":s"]	= do
 			  M.when (not . null $ doc) (showDoc . head $ doc)
 			  evalLoop env doc
+    evalCmd [":t"]	= do
+			  M.when (not . null $ doc) (showTree . head $ doc)
+			  evalLoop env doc
     evalCmd [":l",n]	= do
-			  nd <- loadDoc n
+			  (nd, nv) <- loadDoc n
 			  if null nd
 			     then do
 				  putStrLn ("error when loading " ++ show doc)
 				  evalLoop env doc
-			     else evalLoop env nd
+			     else evalLoop (addEntries nv env) nd
     evalCmd ws@((':':_):_)
 			= do
 			  putStrLn ("unknown command (:? for help): " ++ (show . unwords $ ws))
