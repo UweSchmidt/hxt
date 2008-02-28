@@ -100,7 +100,20 @@ xsd_string
  , xsd_NOTATION
  , xsd_hexBinary
  , xsd_base64Binary
- , xsd_decimal :: String
+ , xsd_decimal
+ , xsd_integer
+ , xsd_nonPositiveInteger
+ , xsd_negativeInteger
+ , xsd_nonNegativeInteger
+ , xsd_positiveInteger
+ , xsd_long
+ , xsd_int
+ , xsd_short
+ , xsd_byte
+ , xsd_unsignedLong
+ , xsd_unsignedInt
+ , xsd_unsignedShort
+ , xsd_unsignedByte :: String
 
 xsd_string		= "string"
 xsd_normalizedString	= "normalizedString"
@@ -121,6 +134,20 @@ xsd_NOTATION		= "NOTATION"
 xsd_hexBinary		= "hexBinary"
 xsd_base64Binary	= "base64Binary"
 xsd_decimal		= "decimal"
+xsd_integer		= "integer"
+xsd_nonPositiveInteger	= "nonPositiveInteger"
+xsd_negativeInteger	= "negativeInteger"
+xsd_nonNegativeInteger	= "nonNegativeInteger"
+xsd_positiveInteger	= "positiveInteger"
+xsd_long		= "long"
+xsd_int			= "int"
+xsd_short		= "short"
+xsd_byte		= "byte"
+xsd_unsignedLong	= "unsignedLong"
+xsd_unsignedInt		= "unsignedInt"
+xsd_unsignedShort	= "unsignedShort"
+xsd_unsignedByte	= "unsignedByte"
+
 
 xsd_length
  , xsd_maxLength
@@ -162,25 +189,38 @@ w3cDatatypeLib = (w3cNS, DTC datatypeAllowsW3C datatypeEqualW3C w3cDatatypes)
 
 -- | All supported datatypes of the library
 w3cDatatypes :: AllowedDatatypes
-w3cDatatypes = [ (xsd_string,		stringParams)
-	       , (xsd_normalizedString, stringParams)
-               , (xsd_token,		stringParams)
-	       , (xsd_language,		stringParams)
-               , (xsd_NMTOKEN,		stringParams)
-               , (xsd_NMTOKENS,		listParams  )
-	       , (xsd_Name,		stringParams)
-	       , (xsd_NCName,		stringParams)
-	       , (xsd_ID,		stringParams)
-	       , (xsd_IDREF,		stringParams)
-	       , (xsd_IDREFS,		listParams  )
-	       , (xsd_ENTITY,		stringParams)
-	       , (xsd_ENTITIES,		listParams  )
-               , (xsd_anyURI,		stringParams)
-               , (xsd_QName,		stringParams)
-               , (xsd_NOTATION,		stringParams)
-	       , (xsd_hexBinary,	stringParams)
-	       , (xsd_base64Binary,	stringParams)
-	       , (xsd_decimal,		decimalParams)
+w3cDatatypes = [ (xsd_string,			stringParams)
+	       , (xsd_normalizedString, 	stringParams)
+               , (xsd_token,			stringParams)
+	       , (xsd_language,			stringParams)
+               , (xsd_NMTOKEN,			stringParams)
+               , (xsd_NMTOKENS,			listParams  )
+	       , (xsd_Name,			stringParams)
+	       , (xsd_NCName,			stringParams)
+	       , (xsd_ID,			stringParams)
+	       , (xsd_IDREF,			stringParams)
+	       , (xsd_IDREFS,			listParams  )
+	       , (xsd_ENTITY,			stringParams)
+	       , (xsd_ENTITIES,			listParams  )
+               , (xsd_anyURI,			stringParams)
+               , (xsd_QName,			stringParams)
+               , (xsd_NOTATION,			stringParams)
+	       , (xsd_hexBinary,		stringParams)
+	       , (xsd_base64Binary,		stringParams)
+	       , (xsd_decimal,			decimalParams)
+	       , (xsd_integer,			integerParams)
+	       , (xsd_nonPositiveInteger,	integerParams)
+	       , (xsd_negativeInteger,		integerParams)
+	       , (xsd_nonNegativeInteger,	integerParams)
+	       , (xsd_positiveInteger,		integerParams)
+	       , (xsd_long,			integerParams)
+	       , (xsd_int,			integerParams)
+	       , (xsd_short,			integerParams)
+	       , (xsd_byte,			integerParams)
+	       , (xsd_unsignedLong,		integerParams)
+	       , (xsd_unsignedInt,		integerParams)
+	       , (xsd_unsignedShort,		integerParams)
+	       , (xsd_unsignedByte,		integerParams)
                ]
 
 -- ----------------------------------------
@@ -260,6 +300,45 @@ fctTableInteger
 	| i < 0	    = totalD (0-i)
 	| otherwise = toInteger . length . show $ i
 
+integerValid	:: DatatypeName -> ParamList -> CheckA Integer Integer
+integerValid datatype params 
+    = assertInRange
+      >>>
+      (foldr (>>>) ok . map paramIntegerValid $ params)
+    where
+    assertInRange 	:: CheckA Integer Integer
+    assertInRange
+	= assert
+	  (fromMaybe (const True) . lookup datatype $ integerRangeTable)
+	  (\ v -> ( "Datatype " ++ show datatype ++
+		    " with value = " ++ show v ++
+		    " not in integer value range"
+		  )
+	  )
+    paramIntegerValid (pn, pv)
+	= assert
+	  ((fromMaybe (const . const $ True) . lookup pn $ fctTableInteger) pv)
+	  (errorMsgParam pn pv . show)
+
+integerRangeTable	:: [(String, Integer -> Bool)]
+integerRangeTable	= [ (xsd_integer,		const True)
+			  , (xsd_nonPositiveInteger,	(<=0)	)
+			  , (xsd_negativeInteger,	( <0)	)
+			  , (xsd_nonNegativeInteger,	(>=0)	)
+			  , (xsd_positiveInteger,	( >0)	)
+			  , (xsd_long,			inR 9223372036854775808)
+			  , (xsd_int,			inR 2147483648)
+			  , (xsd_short,			inR 32768)
+			  , (xsd_byte,			inR 128)
+			  , (xsd_unsignedLong,		inP 18446744073709551616)
+			  , (xsd_unsignedInt,		inP 4294967296)
+			  , (xsd_unsignedShort,		inP 65536)
+			  , (xsd_unsignedByte,		inP 256)
+			  ]
+                          where
+			  inR b i	= (0 - b) <= i && i < b
+			  inP b i	= 0 <= i       && i < b
+
 -- ----------------------------------------
 
 -- | List of allowed params for the list datatypes
@@ -291,7 +370,8 @@ isRex ex	= isNothing . match ex
 rexLanguage
   , rexHexBinary
   , rexBase64Binary
-  , rexDecimal	:: Regex
+  , rexDecimal
+  , rexInteger	:: Regex
 
 rexLanguage	= rex "[A-Za-z]{1,8}(-[A-Za-z]{1,8})*"
 rexHexBinary	= rex "([A-Fa-f0-9]{2})*"
@@ -300,16 +380,19 @@ rexBase64Binary	= rex $
 		  where
 		  b64     = "[A-Za-z0-9+/]"
 rexDecimal	= rex "(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))"
+rexInteger	= rex "(\\+|-)?[0-9]+"
 
 isLanguage
   , isHexBinary
   , isBase64Binary
-  , isDecimal	:: String -> Bool
+  , isDecimal
+  , isInteger	:: String -> Bool
 
 isLanguage	= isRex rexLanguage
 isHexBinary	= isRex rexHexBinary
 isBase64Binary	= isRex rexBase64Binary
 isDecimal	= isRex rexDecimal
+isInteger	= isRex rexInteger
 
 -- ----------------------------------------
 
@@ -439,6 +522,15 @@ datatypeAllowsW3C d params value _
 	  >>>
 	  checkWith readDecimal (decimalValid params)
 
+    validInteger inRange
+	= validPattern
+	  >>>
+	  arr normalizeWhitespace
+	  >>>
+	  assertW3C isInteger
+	  >>>
+	  checkWith read (integerValid inRange params)
+
     check	:: CheckString
     check	= fromMaybe notFound . lookup d $ checks
 
@@ -464,6 +556,19 @@ datatypeAllowsW3C d params value _
 		  , (xsd_hexBinary,		validString id         >>> assertW3C isHexBinary)
 		  , (xsd_base64Binary,		validString normBase64 >>> assertW3C isBase64Binary)
 		  , (xsd_decimal,		validPattern >>> validDecimal)
+		  , (xsd_integer,		validInteger xsd_integer)
+		  , (xsd_nonPositiveInteger,	validInteger xsd_nonPositiveInteger)
+		  , (xsd_negativeInteger,	validInteger xsd_negativeInteger)
+		  , (xsd_nonNegativeInteger,	validInteger xsd_nonNegativeInteger)
+		  , (xsd_positiveInteger,	validInteger xsd_positiveInteger)
+		  , (xsd_long,			validInteger xsd_long)
+		  , (xsd_int,			validInteger xsd_int)
+		  , (xsd_short,			validInteger xsd_short)
+		  , (xsd_byte,			validInteger xsd_byte)
+		  , (xsd_unsignedLong,		validInteger xsd_unsignedLong)
+		  , (xsd_unsignedInt,		validInteger xsd_unsignedInt)
+		  , (xsd_unsignedShort,		validInteger xsd_unsignedShort)
+		  , (xsd_unsignedByte,		validInteger xsd_unsignedByte)
 		  ]
     assertW3C p	= assert p errW3C
     errW3C	= errorMsgDataLibQName w3cNS d

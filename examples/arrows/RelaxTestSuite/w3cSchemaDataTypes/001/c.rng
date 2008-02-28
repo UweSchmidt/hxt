@@ -76,6 +76,36 @@
 	</attribute>
       </optional>
       
+      <optional>
+	<attribute name="decimalValue">
+	  <data type="decimal">
+	    <param name="pattern">[1-9.]*</param>
+	    <param name="totalDigits">5</param>
+	    <param name="fractionDigits">2</param>
+	    <param name="minInclusive">123.45</param>
+	    <param name="maxInclusive">666.66</param>
+	  </data>
+	</attribute>
+      </optional>
+      
+      <optional>
+	<attribute name="integerValue">
+	  <data type="integer">
+	    <param name="pattern">[1-9]*</param>
+	    <param name="totalDigits">3</param>
+	    <param name="minInclusive">123</param>
+	    <param name="maxInclusive">666</param>
+	  </data>
+	</attribute>
+      </optional>
+      
+      <optional>
+	<attribute name="byteValue">
+	  <data type="byte">
+	  </data>
+	</attribute>
+      </optional>
+      
       <text/>
     </element>
   </define>
