@@ -80,7 +80,7 @@ getXPath		= getXPathWithNsEnv []
 -- are interpreted with respect to the given namespace environment
 
 getXPathWithNsEnv	:: NsEnv -> String -> XmlFilter
-getXPathWithNsEnv	= getXPathValues xPValue2XmlTrees xPathErr canonicalizeForXPath
+getXPathWithNsEnv env s	= canonicalizeForXPath .> getXPathValues xPValue2XmlTrees xPathErr env s
 
 -- |
 -- Select parts of an XML tree by a XPath expression.
@@ -101,8 +101,8 @@ getXPathSubTrees	= getXPathSubTreesWithNsEnv []
 -- | Same as 'getXPathSubTrees' but with namespace aware XPath expression
 
 getXPathSubTreesWithNsEnv	:: NsEnv -> String -> XmlFilter
-getXPathSubTreesWithNsEnv nsEnv xpStr t
-    = getXPathValues xPValue2XmlTrees xPathErr this nsEnv xpStr $ addRoot t
+getXPathSubTreesWithNsEnv nsEnv xpStr
+    = getXPathValues xPValue2XmlTrees xPathErr nsEnv xpStr
 
 -- | compute the node set of an XPath query
 
@@ -112,13 +112,13 @@ getXPathNodeSet		= getXPathNodeSetWithNsEnv []
 -- | compute the node set of a namespace aware XPath query
 
 getXPathNodeSetWithNsEnv	:: NsEnv -> String -> XmlTree -> XmlNodeSet
-getXPathNodeSetWithNsEnv nsEnv xpStr t
-    = getXPathValues xPValue2NodeSet (const (const emptyNodeSet)) this nsEnv xpStr $ addRoot t
+getXPathNodeSetWithNsEnv nsEnv xpStr
+    = getXPathValues xPValue2NodeSet (const (const emptyNodeSet)) nsEnv xpStr
 
 -- | parse xpath, evaluate xpath expr and prepare results
 
-getXPathValues	:: (XPathValue -> a) -> (String -> String -> a) -> XmlFilter -> NsEnv -> String -> XmlTree -> a
-getXPathValues cvRes cvErr canonicalize nsEnv xpStr t
+getXPathValues	:: (XPathValue -> a) -> (String -> String -> a) -> NsEnv -> String -> XmlTree -> a
+getXPathValues cvRes cvErr nsEnv xpStr t
     = case (runParser parseXPath nsEnv "" xpStr) of
       Left parseError
 	  -> cvErr xpStr (show parseError)
@@ -128,16 +128,19 @@ getXPathValues cvRes cvErr canonicalize nsEnv xpStr t
     evalXP xpe
 	= cvRes xpRes
 	where
-	idAttr	= (("", "idAttr"), idAttributesToXPathValue . getIdAttributes $ t)
-	navTD	= (ntree . head . canonicalize) t
+	t'      = head . addRoot $ t			-- we need a root node for starting xpath eval
+	idAttr	= ( ("", "idAttr")			-- id attributes from DTD (if there)
+		  , idAttributesToXPathValue . getIdAttributes $ t'
+		  )
+	navTD	= ntree t'
 	xpRes	= evalExpr (idAttr:(getVarTab varEnv),[]) (1, 1, navTD) xpe (XPVNode [navTD])
 
-addRoot	:: XmlTree -> XmlTree
+addRoot	:: XmlFilter
 addRoot t
     | null . isRoot $ t
-	= head . rootTag [] [this] $ t
+	= rootTag [] [this] $ t
     | otherwise
-	= t
+	= this t
 
 xPathErr	:: String -> String -> [XmlTree]
 xPathErr xpStr parseError
@@ -634,3 +637,5 @@ getIdAttributes
       isXDTD
       .>
       deep (isIdAttrType)
+
+-- ----------------------------------------

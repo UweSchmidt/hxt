@@ -244,6 +244,14 @@
       <li>In <a href="hxt-7.5.tar.gz">Version 7.5</a>
 	<ul>
 	  <li>
+	    A module <tt>Text.XML.HXT.Arrow.XPathSimple</tt> for fast XPath selection for simple XPath queries
+	    added. If the XPath query only contains for navigaion the axis from the
+	    root down to the leaves, the query is evaluated by computing
+	    a simple arrow and applying the arrow. This gives a
+	    speedup for queries like <tt>/htm/body//h1/text()</tt> for
+	    extraction of the headline text of a HTML document.
+	  </li>
+	  <li>
 	    Option added to control the selection of the parser
 	    (XML/HTML) by the mime type of the document.
 	  </li>

@@ -121,6 +121,15 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
     listA		:: a b c -> a b [c]
     listA af		= af >>.  (:[])
 
+    -- | the inverse of 'listA'
+    --
+    -- @ listA af >>> unlistA = af @
+    --
+    -- unlistA is defined as @ arrL id @
+
+    unlistA		:: a [b] b
+    unlistA		= arrL id
+
     -- | the identity arrow, alias for returnA
 
     this		:: a b b

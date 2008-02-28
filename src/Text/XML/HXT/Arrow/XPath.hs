@@ -1,14 +1,13 @@
 -- ------------------------------------------------------------
 
 {- |
-   Module     : Text.XML.HXT.Arrow.XmlNodeSet
+   Module     : Text.XML.HXT.Arrow.XPath
    Copyright  : Copyright (C) 2006 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: XmlNodeSet.hs,v 1.5 2006/11/12 14:52:59 hxml Exp $
 
    Arrows for working with XPath and XmlNodeSets.
 
@@ -33,7 +32,7 @@
 
 -- ------------------------------------------------------------
 
-module Text.XML.HXT.Arrow.XmlNodeSet
+module Text.XML.HXT.Arrow.XPath
     ( getXPathTreesInDoc
     , getXPathTreesInDocWithNsEnv
     , getXPathTrees
@@ -49,8 +48,7 @@ module Text.XML.HXT.Arrow.XmlNodeSet
 where
 
 import qualified Text.XML.HXT.XPath as PT
-    ( getXPathWithNsEnv
-    , getXPathSubTreesWithNsEnv
+    ( getXPathSubTreesWithNsEnv
     , getXPathNodeSetWithNsEnv
     )
 
@@ -58,6 +56,10 @@ import Control.Arrow.ListArrows
 
 import Text.XML.HXT.Arrow.DOMInterface
 import Text.XML.HXT.Arrow.XmlArrow
+
+import Text.XML.HXT.Arrow.Edit
+    ( canonicalizeForXPath
+    )
 
 -- ------------------------------------------------------------
 
@@ -76,13 +78,15 @@ import Text.XML.HXT.Arrow.XmlArrow
 -- XPath values other than XmlTrees (numbers, attributes, tagnames, ...)
 -- are convertet to text nodes.
 
-getXPathTreesInDoc			:: ArrowList a => String -> a XmlTree XmlTree
+getXPathTreesInDoc			:: ArrowXml a => String -> a XmlTree XmlTree
 getXPathTreesInDoc			= getXPathTreesInDocWithNsEnv []
 
 -- | Same as 'getXPathTreesInDoc' but with namespace environment for the XPath names
 
-getXPathTreesInDocWithNsEnv		:: ArrowList a => NsEnv -> String -> a XmlTree XmlTree
-getXPathTreesInDocWithNsEnv env query	= arrL (PT.getXPathWithNsEnv env query)
+getXPathTreesInDocWithNsEnv		:: ArrowXml a => NsEnv -> String -> a XmlTree XmlTree
+getXPathTreesInDocWithNsEnv env query	= canonicalizeForXPath
+					  >>>
+					  arrL (PT.getXPathSubTreesWithNsEnv env query)
 
 -- |
 -- Select parts of an arbitrary XML tree by a XPath expression.
@@ -97,12 +101,12 @@ getXPathTreesInDocWithNsEnv env query	= arrL (PT.getXPathWithNsEnv env query)
 -- XPath values other than XmlTrees (numbers, attributes, tagnames, ...)
 -- are convertet to text nodes.
 
-getXPathTrees				:: ArrowList a => String -> a XmlTree XmlTree
+getXPathTrees				:: ArrowXml a => String -> a XmlTree XmlTree
 getXPathTrees				= getXPathTreesWithNsEnv []
 
 -- | Same as 'getXPathTrees' but with namespace environment for the XPath names
 
-getXPathTreesWithNsEnv			:: ArrowList a => NsEnv -> String -> a XmlTree XmlTree
+getXPathTreesWithNsEnv			:: ArrowXml a => NsEnv -> String -> a XmlTree XmlTree
 getXPathTreesWithNsEnv env query	= arrL (PT.getXPathSubTreesWithNsEnv env query)
 
 -- | Select a set of nodes via an XPath expression from an arbitray XML tree
@@ -113,12 +117,12 @@ getXPathTreesWithNsEnv env query	= arrL (PT.getXPathSubTreesWithNsEnv env query)
 -- This function enables for parsing an XPath expressions and traversing the tree for node selection once
 -- and reuse this result possibly many times for later selection and modification operations.
 
-getXPathNodeSet				:: ArrowList a => String -> a XmlTree XmlNodeSet
+getXPathNodeSet				:: ArrowXml a => String -> a XmlTree XmlNodeSet
 getXPathNodeSet				= getXPathNodeSetWithNsEnv []
 
 -- | Same as 'getXPathNodeSet' but with namespace environment for the XPath names
 
-getXPathNodeSetWithNsEnv		:: ArrowList a => NsEnv -> String -> a XmlTree XmlNodeSet
+getXPathNodeSetWithNsEnv		:: ArrowXml a => NsEnv -> String -> a XmlTree XmlNodeSet
 getXPathNodeSetWithNsEnv nsEnv query	= arr (PT.getXPathNodeSetWithNsEnv nsEnv query)
 
 -- ------------------------------------------------------------

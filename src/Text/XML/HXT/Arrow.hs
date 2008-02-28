@@ -27,7 +27,7 @@ module Text.XML.HXT.Arrow
 
     , module Text.XML.HXT.Arrow.XmlArrow
     , module Text.XML.HXT.Arrow.XmlIOStateArrow
-    , module Text.XML.HXT.Arrow.XmlNodeSet
+    , module Text.XML.HXT.Arrow.XPath
 
     , module Text.XML.HXT.Arrow.DocumentInput
     , module Text.XML.HXT.Arrow.DocumentOutput
@@ -57,7 +57,9 @@ import Text.XML.HXT.Arrow.ReadDocument
 import Text.XML.HXT.Arrow.WriteDocument
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlIOStateArrow
-import Text.XML.HXT.Arrow.XmlNodeSet
+import Text.XML.HXT.Arrow.XPath
+import qualified				-- just for adding the module to the lib
+       Text.XML.HXT.Arrow.XPathSimple as XPS ()
 
 import Text.XML.HXT.XSLT.XsltArrows
 
