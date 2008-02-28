@@ -6,13 +6,17 @@ GHCFLAGS	= -Wall -O2
 GHC		= ghc $(GHCFLAGS) $(PKGFLAGS)
 
 prog		= ./HXPath
+prog2		= ./XPathShell
 
-all		: $(prog)
+all		: $(prog) $(prog2)
 
 force		:
 		$(GHC) --make -o $(prog) $(prog).hs
 
 $(prog)		: $(prog).hs
+		$(GHC) --make -o $@ $<
+
+$(prog2)	: $(prog2).hs
 		$(GHC) --make -o $@ $<
 
 EX		= ../../xhtml/xhtml.xml
@@ -46,7 +50,7 @@ DIST_DIR	= $(DIST)/hxpath
 
 dist		:
 		[ -d $(DIST_DIR) ] || mkdir -p $(DIST_DIR)
-		cp Makefile $(prog).hs $(DIST_DIR)
+		cp Makefile $(prog).hs $(prog2).hs $(DIST_DIR)
 
 clean		:
 		rm -f $(prog) *.hi *.o

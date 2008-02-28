@@ -1,0 +1,166 @@
+-- ------------------------------------------------------------
+
+{- |
+   Module     : XPathShell
+   Copyright  : Copyright (C) 2008 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : experimental
+   Portability: portable
+
+   XPath example program for testing xpath evaluation
+   with both evaluation stategies, the full XPath functionality
+   and the limited but faster one for simple XPath queries
+
+-}
+
+-- ------------------------------------------------------------
+
+
+module Main
+where
+
+import qualified Control.Monad as M
+
+import Data.Maybe
+
+import Text.XML.HXT.Arrow
+
+import qualified
+       Text.XML.HXT.Arrow.XPathSimple as XPS
+
+import Text.XML.HXT.XPath.XPathParser
+    ( parseXPath
+    )
+
+import System.Console.Readline
+import System.Environment
+
+import Text.ParserCombinators.Parsec
+    ( runParser )
+
+
+main	:: IO()
+main
+    = do
+      args <- getArgs
+      (path, env, doc) <- evalArgs args
+      if not (null path) && not (null doc)
+	 then evalXPath path env (head doc)
+	 else evalLoop env doc
+
+evalArgs			:: [String] -> IO (String, NsEnv, XmlTrees)
+evalArgs []			= return ("", [], [])
+evalArgs [doc]			= evalArgs ("": "[]" : doc : [])
+evalArgs [path, doc]		= evalArgs (path : "[]" : doc : [])
+evalArgs [path, env, doc]	= do
+				  d <- loadDoc doc
+				  return (path, read env ++ defaultEnv, d)
+evalArgs al			= evalArgs (take 3 al)
+
+loadDoc		:: String -> IO [XmlTree]
+loadDoc doc
+    = runX ( readDocument [ (a_tagsoup, v_1)
+			  , (a_parse_by_mimetype, v_1)
+			  , (a_check_namespaces, v_1)
+			  , (a_remove_whitespace, v_1)
+			  , (a_validate, v_0)
+			  , (a_canonicalize, v_1)
+			  ] doc
+	     >>>
+	     (documentStatusOk `guards` this)
+	   )
+
+showDoc		:: XmlTree -> IO ()
+showDoc doc
+    = do
+      runX ( constA doc
+	     >>>
+	     writeDocument [ (a_indent, v_1)
+			   , (a_no_xml_pi, v_1)
+			   ] ""
+	   )
+      return ()
+
+evalXPath	:: String -> NsEnv -> XmlTree -> IO()
+evalXPath path env doc
+    | nr == xr
+	= putStrLn . unlines $ "ok: " : nr
+    | otherwise
+	= do
+	  putStrLn . unlines $
+		       [ "results differ"
+		       , "expected: "
+		       ] ++ xr ++
+		       [ "got:      "
+		       ] ++ nr
+	  putStrLn $ xpt path
+    where
+    xpt = either show show . runParser parseXPath env ""
+    nr = runLA (XPS.getXPathTreesWithNsEnv env path >>> xshow this) doc
+    xr = runLA (    getXPathTreesWithNsEnv env path >>> xshow this) doc
+
+evalLoop	:: NsEnv -> XmlTrees -> IO ()
+evalLoop env doc
+    = do
+      maybeLine <- readline "xpath> "
+      case maybeLine of 
+        Nothing	-> return () -- EOF / control-d
+	Just ":q"	-> return ()
+	Just line -> do
+		     let ws = words line
+		     if null ws
+			then evalLoop env doc
+			else do
+			     addHistory (unlines ws)
+			     evalCmd (words line)
+    where
+    evalCmd []		= evalLoop env doc
+    evalCmd [":ns",uri]	= evalCmd [":ns", "", uri]
+    evalCmd [":ns", ns, uri]
+			= evalLoop ((ns, uri) : (delEntry ns env)) doc
+    evalCmd (":?":_)	= do
+			  putStrLn . unlines $
+				       [ "XPath Tester"
+				       , "Commands:"
+				       , ":l <document>\tload a document"
+				       , ":ns <uri>\tset default namespace"
+				       , ":ns <px> <uri>\tset namespace"
+				       , ":q\t\tquit"
+				       , ":s\t\tshow current document"
+				       , ":x\t\tshow current namespace environment"
+				       , ":?\t\tthis message"
+				       , "<xpath-expr>\tevaluate XPath expression"
+				       ]
+			  evalLoop env doc
+    evalCmd [":x"]	= do
+			  putStrLn . unlines . map show $ env
+			  evalLoop env doc
+    evalCmd [":s"]	= do
+			  M.when (not . null $ doc) (showDoc . head $ doc)
+			  evalLoop env doc
+    evalCmd [":l",n]	= do
+			  nd <- loadDoc n
+			  if null nd
+			     then do
+				  putStrLn ("error when loading " ++ show doc)
+				  evalLoop env doc
+			     else evalLoop env nd
+    evalCmd ws@((':':_):_)
+			= do
+			  putStrLn ("unknown command (:? for help): " ++ (show . unwords $ ws))
+			  evalLoop env doc
+    evalCmd ws		= do
+			  let path = unwords ws
+			  if null doc
+			     then putStrLn "no document loaded"
+			     else evalXPath path env (head doc)
+			  evalLoop env doc
+
+defaultEnv	:: NsEnv
+defaultEnv	= [ ("xml",xmlNamespace)
+		  , ("xmlns",xmlnsNamespace)
+		  ]
+
+-- ----------------------------------------

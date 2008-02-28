@@ -2,13 +2,12 @@
 
 {- |
    Module     : Text.XML.HXT.XPath.GetSimpleXPath
-   Copyright  : Copyright (C) 2006 Uwe Schmidt
+   Copyright  : Copyright (C) 2008 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: XPathParser.hs,v 1.6 2006/10/12 11:51:29 hxml Exp $
 
    XPath selection for simple XPath expressions with list arrows
    instead of navigatable trees.
