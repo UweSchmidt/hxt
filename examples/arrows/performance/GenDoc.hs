@@ -158,6 +158,8 @@ readDoc src
 		   , (a_issue_warnings, v_0)
 		   , (a_trace, "1")
 		   ] src
+      >>>
+      processChildren (isElem `guards` this)
 
 -- ----------------------------------------
 

@@ -226,7 +226,7 @@ doc_filter	: $(HXT_SRC_FILTER)
 clean		:
 		$(MAKE) clean_packages
 		$(MAKE) -C ./Text/XML/HXT/ProtocolHandler clean
-		rm -rf $(LOCAL_INSTALL_DIR)
+		rm -rf $(LOCAL_INSTALL_DIR) hxt-package.conf ../hxt.cabal
 
 clean_$(HXT_PACKAGE)	:
 		$(RM) $(HXT_DRIVER) $(HXT_DRIVER:.o=.hi) $(HXT_OBJ) $(HXT_HI) $(HXT_LIB)
