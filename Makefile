@@ -3,14 +3,14 @@
 HXT_HOME	= .
 
 software	= hxt
-VERSION		= 7.4
+VERSION		= 7.5
 dist		= $(software)-$(VERSION)
 DIST		= $(software)-$(VERSION)
 DIST_FILES	= Makefile README LICENCE Setup.lhs hxt.cabal
 DIST_TAR	= $(dist).tar.gz
 
-VERSIONTAG	= $(software)-7-04				# use: make tag for creating darcs tag
-LASTVERSION	= 7.3
+VERSIONTAG	= $(software)-7-05				# use: make tag for creating darcs tag
+LASTVERSION	= 7.4
 PUBDATE		:= $(shell date +%Y-%m-%d)
 
 EDIT_VERSION	= sed 's/%DISTFILE%/$(DIST)/g' \
