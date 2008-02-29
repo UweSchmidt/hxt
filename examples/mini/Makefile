@@ -15,7 +15,7 @@ force		:
 $(prog)		: $(prog).hs
 		$(GHC) --make -o $@ $<
 
-test		:
+test		: $(prog)
 		@echo "===> a very simple test"
 		@echo "===> a xml source"
 		@cat example1.xml
