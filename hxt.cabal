@@ -59,6 +59,7 @@ library
   Text.XML.HXT.Arrow.XmlArrow,
   Text.XML.HXT.Arrow.XmlIOStateArrow,
   Text.XML.HXT.Arrow.XmlNode,
+  Text.XML.HXT.Arrow.XmlRegex,
   Text.XML.HXT.DOM,
   Text.XML.HXT.DOM.EditFilters,
   Text.XML.HXT.DOM.FormatXmlTree,
@@ -150,7 +151,8 @@ library
   Text.XML.HXT.XSLT.Names,
   Text.XML.HXT.XSLT.XsltArrows
  hs-source-dirs: src
- ghc-options: -Wall -fglasgow-exts
+ ghc-options: -Wall
+ extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances
 
  build-depends: base, haskell98, parsec, HTTP, HUnit, network, tagsoup
  if flag(splitBase)

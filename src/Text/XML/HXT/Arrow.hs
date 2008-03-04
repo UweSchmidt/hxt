@@ -57,6 +57,7 @@ import Text.XML.HXT.Arrow.ReadDocument
 import Text.XML.HXT.Arrow.WriteDocument
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlIOStateArrow
+import Text.XML.HXT.Arrow.XmlRegex ()		-- import this "by hand"
 import Text.XML.HXT.Arrow.XPath
 import qualified				-- just for adding the module to the lib
        Text.XML.HXT.Arrow.XPathSimple as XPS ()

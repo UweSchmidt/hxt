@@ -65,7 +65,8 @@ part4a dir
 part4b :: [String]
 part4b
     = [ " hs-source-dirs: src"
-      , " ghc-options: -Wall -fglasgow-exts"
+      , " ghc-options: -Wall"
+      , " extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances"
       , ""
       , " build-depends: base, haskell98, parsec, HTTP, HUnit, network, tagsoup"
       , " if flag(splitBase)"
