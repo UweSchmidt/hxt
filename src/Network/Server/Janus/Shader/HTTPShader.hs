@@ -38,7 +38,7 @@ import Data.ByteString as BStr (hGet, hPut) -- length
 import Data.Array ()
 import Data.Array.IO ()
 import Data.Array.MArray ()
-import Data.Map ( Map, empty, insert, toList )
+import Data.Map ( Map, empty, insertWith, toList )
 import Data.Word ()
 
 import Network.URI
@@ -140,7 +140,10 @@ requestShader =
             let (headers, body) = findbody xs in
                                     (x:headers, body)
       findbody' []               = ([], Nothing)
-      findbody' (x:_)            = ([], Just (unEscapeString x))
+      findbody' (x:_)            = ([], Just ((unEscapeString.unEscapePlus) x))
+      -- Parameter parsing is not exactly the same for get and post methods. When using post (with application/x-www-form-urlencoded as default), spaces are not encoded as hex value, but as '+', but this is not handled in unEscapeString.
+      unEscapePlus [] = []
+      unEscapePlus (c:cs) = (if (c=='+') then ' ' else c):(unEscapePlus cs)
       addHeader ((name, val):xs) = setVal (_transaction_http_request_header_ name) val
                                    >>>
                                    addHeader xs
@@ -391,19 +394,38 @@ cgiShader =
                      )                                                                   -<  in_ta
             let searchpath    = uriQuery (maybe nullURI id (parseURIReference url))
             let searchpath'   = if (Prelude.null searchpath) then (searchpath) else (tail searchpath)
-            returnA  -< toList $ parseSearchPath searchpath'
+            returnA  -< toListNumbering $ parseSearchPath searchpath'
 
    cgiParams "POST"
        = proc in_ta -> do
             mimeType <- getValDef (_transaction_http_request_header_ "Content-Type") "" -< in_ta
             body     <- getValDef  _transaction_http_request_body                    "" -< in_ta
             returnA   -< ( if mimeType == "application/x-www-form-urlencoded"
-                           then toList $ parseSearchPath body
+                           then toListNumbering $ parseSearchPath body
                            else []
                          )
 
    cgiParams _
        = constA []
+
+{- |
+If more than one value exists for a key, the key is numbered for each value. Thus, the way single values are handled remains exactly the same, while multiple values can be queried by a prefix. New conflicts arise if there are already parameters with that name and a following number (but that should be considered less common by far).
+-}
+toListNumbering :: Map String [String] -> [(String, String)]
+toListNumbering
+    = unlistSubLists.toList
+    where
+      unlistSubLists :: [(String, [String])] -> [(String, String)]
+      unlistSubLists = foldr ((++).unlistSubList) []
+      unlistSubList :: (String, [String]) -> [(String, String)]
+      unlistSubList (key, vals) =
+          case length vals of
+            0 -> [] --but this should not happen
+            1 -> [(key, vals !! 0)]
+            _ -> unlistSubList' 1 key vals
+      unlistSubList' :: Int -> String -> [String] -> [(String, String)]
+      unlistSubList' _ _ [] = []
+      unlistSubList' count key (val:vals) = ((key++(show count)), val):(unlistSubList' (count+1) key vals)
 
 {- |
 Generates the HTTP status code at \/transaction\/http\/response\/\@status based on the state of the transaction. The Failure state is mapped
@@ -482,21 +504,21 @@ readBinary filename =
 {- |
 Delivers a Map of name-value-pairs, parsed from a URL query part. The query part has to delivered without the leading ?-character.
 -}
-parseSearchPath :: String -> Map String String
+parseSearchPath :: String -> Map String [String]
 parseSearchPath searchpath =
-      if key /= "" then insert key val res else res
+      if key /= "" then insertWith (++) key [val] res else res
       where
          (res, key, val) = parseSearchPath' searchpath
 
-parseSearchPath' :: String -> (Map String String, String, String)
+parseSearchPath' :: String -> (Map String [String], String, String)
 parseSearchPath' ('=':input) = parseSearchPath'' input
 parseSearchPath' (ch:input)  = (res, ch:key, val)
       where
          (res, key, val)    = parseSearchPath' input
 parseSearchPath' [] = (empty, [], [])
 
-parseSearchPath'' :: String -> (Map String String, String, String)
-parseSearchPath'' ('&':input) = (insert key val res, [], [])
+parseSearchPath'' :: String -> (Map String [String], String, String)
+parseSearchPath'' ('&':input) = (insertWith (++) key [val] res, [], [])
       where
          (res, key, val)    = parseSearchPath' input
 parseSearchPath'' (ch:input)  = (res, key, ch:val)

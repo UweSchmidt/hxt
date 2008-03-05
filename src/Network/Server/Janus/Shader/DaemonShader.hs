@@ -102,27 +102,34 @@ logControlDaemon =
 {- |
 Periodically (every 10 seconds) checks the timestamps of all sessions (stored under \/session in the \"global\" scope). If a session state
 change is older than 60 seconds, the respective session is removed from the \"global\" scope.
+Updated to understand a parameter (validTime, milliseconds) for the time a session is kept. 0 means indefinitely, so sessions are not removed automatically at all. Negative values remove them on as soon as  checked.
 -}
 sessionDaemon :: ShaderCreator
 sessionDaemon =
-    daemonCreator thedaemon
+    mkDynamicCreator $ proc (conf, _) -> do
+        ident   <- getVal _shader_config_id                                                             -<  conf
+        validTime <- getValDef (_shader_config_ "@validTime") "60000" >>> parseA                        -<  conf
+        let shader = proc in_ta -> do
+            createThread "/global/threads" ident (thedaemon validTime)                                  -<  ()
+            returnA                                                                                     -<  in_ta
+        returnA                                                                                         -<  shader
     where
-        thedaemon =
+        thedaemon validTime =
             proc _ -> do
                 "global" <-@ mkSimpleLog "sessionDaemon" ("sessionDaemon invoked...") l_debug           -<  ()
                 arrIO $ threadDelay                                                                     -<  10000000
                 (
                     (proc _ -> do
                         sessions <- listA $ listStateTrees "/global/session"                    -<  ()
-                        checkSessions sessions                                                  -<< ()
+                        checkSessions sessions validTime                                        -<< ()
                         )
                     `orElse`
                     this
                     )                                                                                   -<  ()
                 "global" <-@ mkSimpleLog "sessionDaemon" ("sessionDaemon completed...") l_debug         -<  ()
-                thedaemon                                                                               -<  ()
-        checkSessions []     = this
-        checkSessions (x:xs) =
+                thedaemon validTime                                                                     -<  ()
+        checkSessions [] _    = this
+        checkSessions (x:xs) validTime =
             proc _ -> do
                 current_ts  <- getCurrentTS                                                             -<  ()
                 session_ts  <- getSC ("/global/session/" ++ x) >>> getCellTS                            -<  ()
@@ -133,5 +140,5 @@ sessionDaemon =
                     delStateTree  ("/global/session/" ++ x)
                     )
                     `whenP`
-                    (\_ -> diff_ts > 60000)                                                             -<< ()
-                checkSessions xs                                                                        -<  ()
+                    (\_ -> (validTime /= 0 && (diff_ts > validTime)))                                             -<< ()
+                checkSessions xs validTime                                                                        -<  ()

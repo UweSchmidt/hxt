@@ -33,7 +33,7 @@ import Control.Concurrent
 import Data.Char
 import Data.Maybe
 
-import Foreign.Marshal.Array
+import Foreign.Marshal.Alloc
 import Foreign.Ptr
 
 import Network
@@ -77,38 +77,39 @@ tcpHandler' :: Integer -> Shader -> Handler
 tcpHandler' port shader =
     proc _ -> do
         lock    <- arrIO $ newMVar                                      -<  ()
+        (buffer :: Ptr Char) <- arrIO $ mallocBytes                     -<  chunksize
         sock    <- arrIO0 $ (withSocketsDo $ 
                         installHandler sigPIPE Ignore Nothing
                         >>
                         listenOn (PortNumber (fromInteger port)))       -<  ()
-        acceptRequest sock lock                                         -<< ()
-        -- sClose sock
+        acceptRequest sock lock buffer                                  -<< ()
+        arrIO $ free                                                    -<  buffer -- never reached
+        arrIO $ sClose                                                  -<  sock   -- never reached
     where
-        acceptRequest sock lock =
+        acceptRequest sock lock buffer =
             proc _ -> do
                 -- arrIO $ takeMVar -<  lock
                 (hnd, hname, pnum) <- arrIO $ Network.accept                    -<  sock
                 processA
                     (finallyA
-                        (processHandle (hname, pnum) hnd shader lock `orElse` (arrIO0 $ putStrLn "Aborted."))
-                        (finallyA 
-                                (exceptZeroA_ $ hClose hnd)
-                                (this) --arrIO0 $ putMVar lock ())
-                                )
+                        (processHandle (hname, pnum) hnd shader lock buffer 
+                            `orElse` 
+                            (arrIO0 $ putStrLn "Aborted due to unhandled error.")
+                            )
+                        ((exceptZeroA_ $ hClose hnd)
+                            `orElse` 
+                            (arrIO0 $ putStrLn "Failed to close socket handle.")
+                            -- arrIO0 $ putMVar lock ())
+                            )
                         )                                                       -<< ()
-                acceptRequest sock lock                                         -<  ()
-        processHandle (hname, pnum) hnd shader' lock =
+                acceptRequest sock lock buffer                                  -<  ()
+        processHandle (hname, pnum) hnd shader' lock buffer =
             proc _ -> do
                 exceptZeroA_ (hSetBuffering hnd LineBuffering)                  -<< ()
                 req     <- exceptZeroA $ getRequest                             -<  hnd
-                processRequest (hname, pnum) hnd shader' lock                   -<  req
-        processRequest (hname, pnum) hnd shader' lock =
+                processRequest (hname, pnum) hnd shader' lock buffer            -<  req
+        processRequest (hname, pnum) hnd shader' lock buffer =
             proc (req, body) -> do
-                -- "global" <-@ mkPlainMsg $ "processing request..."            -<< ()
-                -- addr        <- arrIO $ inet_ntoa                             -<  haddr
-                (buffer :: Ptr Char)
-                        <- arrIO $ mallocArray                                  -<  chunksize
-
                 ta      <- createTA 1 Init                                      -<  ()
                 ta2     <- setVal _transaction_handler "TCPHandler"
                            >>>
@@ -128,29 +129,52 @@ tcpHandler' port shader =
                 ta6         <- shader'                                          -<  ta5
                 response    <- getValDef _transaction_responseFragment ""       -<  ta6
                 ta_str'     <- xshow (constA ta6)                               -<< ()
-
                 "global"    <-@ mkSimpleLog "TCPHandler:newHandler" ("final transaction is: " ++ ta_str') l_debug -<< ()
-                exceptZeroA $ hPutStr hnd                                       -<< response
-                exceptZeroA_ $ hFlush hnd                                       -<< ()
 
-                (single $ proc in_ta -> do
-                    uid <- getVal _transaction_http_response_body_hdlop -<  in_ta
-                    (HandleVal hIn) <- getSV ("/local/files/_" ++ uid)  -<< ()
-                    delStateTree ("/local/files/_" ++ uid)              -<< ()
-                    exceptZeroA_ $ handleCopy hIn hnd buffer chunksize  -<< ()
-                    exceptZeroA_ $ hFlush hnd                           -<< ()
-                    exceptZeroA_ $ hClose hIn                           -<< ()
-                    returnA                                             -<  in_ta
-                    ) `orElse` this                                             -<< ta6
+                filehdl     <-
+                    (single $ proc in_ta -> do
+                        uid <- getVal _transaction_http_response_body_hdlop -<  in_ta
+                        (HandleVal hIn) <- getSV ("/local/files/_" ++ uid)  -<< ()
+                        delStateTree ("/local/files/_" ++ uid)              -<< ()
+                        returnA                                             -<  Just hIn
+                        ) `orElse` (constA Nothing)                             -<< ta6
+
+                ta7        <- (case filehdl of
+                    Just hIn ->
+                        (wrapExceptIO (hPutStr hnd response) HandlerError "Failed to write response string to socket handle (file mode)."
+                           >>>
+                           wrapExceptIO (hFlush hnd) HandlerError "Failed to flush socket handle after response write (file mode)."
+                           >>>
+                           wrapExceptIO (handleCopy hIn hnd buffer chunksize) HandlerError "Failed to write file to socket handle (file mode)."
+                           >>>
+                           wrapExceptIO (hFlush hnd) HandlerError "Failed to flush socket handle after file write (file mode)."
+                           >>>
+                           wrapExceptIO (hClose hIn) HandlerError "Failed to close file handle (file mode)."
+                           )
+                    Nothing  ->
+                        (wrapExceptIO (hPutStr hnd response) HandlerError "Failed to write response string to socket handle (dynamic mode)."
+                           >>>
+                           wrapExceptIO (hFlush hnd) HandlerError "Failed to flush socket handle after response write (dynamic mode)."
+                           )
+                    )                                                           -<< ta6
 
                 ts_end      <- getCurrentTS                                     -<  ()
-                ta7         <- setTAEnd ts_end                                  -<< ta6
-                runtime     <- getTARunTime                                     -<  ta7
+                ta8         <- setTAEnd ts_end                                  -<< ta7
+                runtime     <- getTARunTime                                     -<  ta8
 
-                "global"    <-@ mkPlainMsg $ "OK. Took " ++
-                                    (show runtime) ++ " ms\n"                   -<< ()
+                -- Error Check
+                hMsgs       <- listA $ getTAMsg
+                                       >>>
+                                       getMsgCodeFilter HandlerError
+                                       >>>
+                                       getMsgValue                              -<  ta8
+
+                (if null hMsgs
+                  then ("global" <-@ mkPlainMsg $ "OK. Took " ++ (show runtime) ++ " ms\n")
+                  else ("global" <-@ mkPlainMsg $ "Failed. Took " ++ (show runtime) ++ " ms. Reasons: \n" ++ (show hMsgs) ++ "\n")
+                  )                                                             -<< ()
                 returnA                                                         -<  ()
-        processRequest _ _ _ _ = zeroArrow
+        processRequest _ _ _ _ _ = zeroArrow
         handleCopy hIn hOut buffer blocksize =
             do
                 actual <- hGetBuf hIn buffer blocksize
@@ -161,6 +185,12 @@ tcpHandler' port shader =
                 if not eof
                    then handleCopy hIn hOut buffer blocksize 
                    else return ()
+        wrapExceptIO action code desc =
+            proc in_ta -> do
+               ifA
+                  (exceptZeroA_ action)
+                  (this)
+                  (sendTAMsg $ mkErr "TCPHandler.hs:TCPHandler" code desc [])   -<< in_ta
 
 {- |
 Reads from a given handle and returns a tuple, where the first element represents the headers of an HTTP Request and the second

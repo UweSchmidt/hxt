@@ -89,28 +89,29 @@ type MessageFilter s	= XmlTransform s
 type MessageArrow s	= XmlConstSource s
 
 data MessageType
-	= ControlMsg
-	| ErrorMsg
-	| EventMsg
-	| LogMsg
-	| PlainMsg
-	| WarningMsg
-	deriving (Show, Eq, Read)
+   = ControlMsg
+   | ErrorMsg
+   | EventMsg
+   | LogMsg
+   | PlainMsg
+   | WarningMsg
+   deriving (Show, Eq, Read)
 
 -- message codes
 data MessageCode
-	= FileNotFound
-	| FormatError
-	| GenericMessage
-	| LoaderError
-	| NewMessageLevel
-	| Reload
-	| ShaderFailed
-	| TAValueNotFound
-	| Terminate
-	| TypeError
-	| ValueNotFound
-	deriving (Show, Eq, Read)
+   = FileNotFound
+   | FormatError
+   | GenericMessage
+   | HandlerError
+   | LoaderError
+   | NewMessageLevel
+   | Reload
+   | ShaderFailed
+   | TAValueNotFound
+   | Terminate
+   | TypeError
+   | ValueNotFound
+   deriving (Show, Eq, Read)
 
 type MessageLevel 	= Integer
 type MessageSource 	= String
