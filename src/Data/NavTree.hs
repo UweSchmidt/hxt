@@ -6,11 +6,11 @@
 
 module Data.NavTree
     ( module Data.NavTree
-    , module Data.Tree.NTree.Filter
+    , module Data.Tree.NTree.TypeDefs
     )
 where
 
-import Data.Tree.NTree.Filter
+import Data.Tree.NTree.TypeDefs
 import Data.Maybe
 
 -- -----------------------------------------------------------------------------

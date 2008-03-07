@@ -22,12 +22,14 @@ module Text.XML.HXT.XPath.XPathParser
     )
 where
 
+import Data.Maybe
+
+import Text.ParserCombinators.Parsec
+
 import Text.XML.HXT.DOM.TypeDefs
 
 import Text.XML.HXT.XPath.XPathKeywords
-import Text.XML.HXT.XPath.XPathDataTypes hiding (choice)
-
-import Data.Maybe
+import Text.XML.HXT.XPath.XPathDataTypes
 
 import Text.XML.HXT.Parser.XmlParser
     ( separator
@@ -36,8 +38,6 @@ import Text.XML.HXT.Parser.XmlParser
     , ncName
     , qName
     )
-
-import Text.ParserCombinators.Parsec
 
 lookupNs		:: NsEnv -> String -> String
 lookupNs uris prefix
