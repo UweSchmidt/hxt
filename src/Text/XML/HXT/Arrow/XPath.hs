@@ -228,7 +228,12 @@ processXPathTrees f		= processXPathTreesWithNsEnv f []
 
 processXPathTreesWithNsEnv	:: ArrowXml a => a XmlTree XmlTree  -> NsEnv -> String -> a XmlTree XmlTree
 processXPathTreesWithNsEnv f nsEnv query
-    = processFromNodeSet f $< getXPathNodeSetWithNsEnv nsEnv query
+    = choiceA
+      [ isRoot :-> processChildren pns
+      , this   :-> pns
+      ]
+    where
+    pns = processFromNodeSet f $< getXPathNodeSetWithNsEnv nsEnv query
 
 -- |
 -- process all subtrees specified by a previously computed node set in bottom up manner

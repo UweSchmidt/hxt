@@ -96,3 +96,11 @@ prune		:: Int -> LA XmlTree XmlTree
 prune 0		= none
 prune i		= processChildren (prune (i-1))
 
+-- ----------------------------------------
+
+pxt	:: ArrowXml a => a XmlTree XmlTree  -> String -> a XmlTree XmlTree
+pxt f s
+    = choiceA
+      [ isRoot :-> processChildren (processXPathTrees f s `when` isElem)
+      , this   :-> processXPathTrees f s
+      ]
