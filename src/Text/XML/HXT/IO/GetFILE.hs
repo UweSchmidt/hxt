@@ -28,10 +28,6 @@ import System.Directory
     , readable
     )
 
-import Network.URI
-    ( unEscapeString
-    )
-
 -- ------------------------------------------------------------
 
 getStdinCont		:: IO (Either String String)
@@ -64,7 +60,8 @@ getCont source
 			       )
 		      return (either readErr Right c)
     where
-    source' = drivePath . unEscapeString $ source
+    -- please NO call of unEscapeString for file names, NOT: source' = drivePath . unEscapeString $ source
+    source' = drivePath $ source
     readErr e
 	= Left ( "system error when reading file "
 		 ++ show source
