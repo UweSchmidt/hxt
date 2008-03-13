@@ -591,13 +591,13 @@
   </TEST>
 </TESTCASES>
 <TESTCASES PROFILE="IBM XML Conformance Test Suite - Production 30">
-  <TEST URI="not-wf/P30/ibm30n01.xml" TYPE="not-wf" ID="ibm-not-wf-P30-ibm30n01.xml" ENTITIES="paramenter" SECTIONS="2.8">
+  <TEST URI="not-wf/P30/ibm30n01.xml" TYPE="not-wf" ID="ibm-not-wf-P30-ibm30n01.xml" ENTITIES="parameter" SECTIONS="2.8">
     Tests extSubset with wrong field ordering. In the file "ibm30n01.dtd", 
     the TextDecl occurs after the extSubsetDecl (the element declaration). 
   </TEST>
 </TESTCASES>
 <TESTCASES PROFILE="IBM XML Conformance Test Suite - Production 31">
-  <TEST URI="not-wf/P31/ibm31n01.xml" TYPE="not-wf" ID="ibm-not-wf-P31-ibm31n01.xml" ENTITIES="paramenter" SECTIONS="2.8">
+  <TEST URI="not-wf/P31/ibm31n01.xml" TYPE="not-wf" ID="ibm-not-wf-P31-ibm31n01.xml" ENTITIES="parameter" SECTIONS="2.8">
     Tests extSubsetDecl with an illegal field. A general entity 
     reference occurs in file "ibm31n01.dtd".
   </TEST>

@@ -10,22 +10,22 @@
    Portability: portable
    Version    : $Id: XmlIOStateArrow.hs,v 1.39 2006/11/09 20:27:42 hxml Exp $
 
-the basic state arrows for XML processing
+   the basic state arrows for XML processing
 
-A state is needed for global processing options,
-like encoding options, document base URI, trace levels
-and error message handling
+   A state is needed for global processing options,
+   like encoding options, document base URI, trace levels
+   and error message handling
 
-The state is separated into a user defined state
-and a system state. The system state contains variables
-for error message handling, for tracing, for the document base
-for accessing XML documents with relative references, e.g. DTDs,
-and a global key value store. This assoc list has strings as keys
-and lists of XmlTrees as values. It is used to store arbitrary
-XML and text values, e.g. user defined global options.
+   The state is separated into a user defined state
+   and a system state. The system state contains variables
+   for error message handling, for tracing, for the document base
+   for accessing XML documents with relative references, e.g. DTDs,
+   and a global key value store. This assoc list has strings as keys
+   and lists of XmlTrees as values. It is used to store arbitrary
+   XML and text values, e.g. user defined global options.
 
-The user defined part of the store is in the default case empty, defined as ().
-It can be extended with an arbitray data type
+   The user defined part of the store is in the default case empty, defined as ().
+   It can be extended with an arbitray data type
 
 -}
 

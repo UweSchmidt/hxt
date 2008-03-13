@@ -63,6 +63,7 @@ HXT_SRC		= $(wildcard ./Data/*.hs) \
 		  $(wildcard ./Text/XML/HXT/DOM/*.hs) \
 		  $(wildcard ./Text/XML/HXT/Parser/*.hs) \
 		  $(wildcard ./Text/XML/HXT/Validator/*.hs) \
+		  $(wildcard ./Text/XML/HXT/DTDValidation/*.hs) \
 		  $(wildcard ./Text/XML/HXT/XPath/*.hs) \
 		  $(wildcard ./Text/XML/HXT/Arrow.hs) \
 		  $(wildcard ./Text/XML/HXT/Arrow/[DEGNPRWX]*.hs) \
@@ -102,6 +103,7 @@ HXT_SRC_ARROW	= $(wildcard ./Data/*.hs) \
 		  $(wildcard ./Text/XML/HXT/Arrow.hs) \
 		  $(wildcard ./Text/XML/HXT/Arrow/[DEGNPRWX]*.hs) \
 		  $(wildcard ./Text/XML/HXT/Arrow/Pickle/*.hs) \
+		  $(wildcard ./Text/XML/HXT/DTDValidation/*.hs) \
 		  $(wildcard ./Text/XML/HXT/RelaxNG/[DSV]*.hs) \
 		  $(wildcard ./Text/XML/HXT/RelaxNG/Unicode/[BC]*.hs) \
 		  $(wildcard ./Text/XML/HXT/RelaxNG/XmlSchema/*.hs) \

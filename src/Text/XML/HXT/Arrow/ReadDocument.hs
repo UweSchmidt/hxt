@@ -222,8 +222,8 @@ readDocument userOptions src
 	    | isHtml
 	      || 
 	      withTagSoup		= parseHtmlDocument			-- parse as HTML or with tagsoup XML
-					  withNamespaces
 					  withTagSoup
+					  withNamespaces
 					  issueW
 					  (not (hasOption a_canonicalize) && preserveCmt)
 					  removeWS

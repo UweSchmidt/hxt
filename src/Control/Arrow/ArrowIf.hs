@@ -85,6 +85,11 @@ class ArrowList a => ArrowIf a where
     guardsP		:: (b -> Bool) -> a b d -> a b d
     f `guardsP` g	= ifP f g none
 
+    -- | shortcut for @ f `guards` this @
+
+    filterA		:: a b c -> a b b
+    filterA f		= ifA f this none
+
     -- | @ f \`containing\` g @ : keep only those results from f for which g holds
     --
     -- definition: @ f \`containing\` g = f >>> g \`guards\` this @

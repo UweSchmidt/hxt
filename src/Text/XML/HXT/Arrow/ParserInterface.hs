@@ -23,7 +23,7 @@ import qualified Text.XML.HXT.Parser.TagSoup		 as TS
 import qualified Text.XML.HXT.Parser.HtmlParsec          as HP
 import qualified Text.XML.HXT.Parser.XmlParsec           as XP
 import qualified Text.XML.HXT.Parser.XmlDTDParser	 as DP
-import qualified Text.XML.HXT.Validator.ValidationFilter as VA
+import qualified Text.XML.HXT.DTDValidation.Validation   as VA
 
 -- ------------------------------------------------------------
 
@@ -78,8 +78,12 @@ parseHtmlTagSoup withNamespaces withWarnings preserveCmt removeWS asHtml
 validateDoc
   , transformDoc		:: ArrowList a => a XmlTree XmlTree
 
-validateDoc			= arrL VA.validate
-transformDoc			= arrL VA.transform
+validateDoc			= fromLA VA.validate
+transformDoc			= fromLA VA.transform
+
+-- old stuff
+-- validateDoc			= arrL VA.validate
+-- transformDoc			= arrL VA.transform
 
 -- ------------------------------------------------------------
 

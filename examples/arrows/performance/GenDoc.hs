@@ -153,10 +153,11 @@ genDoc d out    = constA (mkBTree d)
 readDoc	:: String -> IOSArrow b XmlTree
 readDoc src
     = readDocument [ (a_tagsoup, v_1)
+		   , (a_parse_xml, v_1)
 		   , (a_remove_whitespace, v_1)
 		   , (a_encoding, isoLatin1)
 		   , (a_issue_warnings, v_0)
-		   , (a_trace, "1")
+		   , (a_trace, "2")
 		   ] src
       >>>
       processChildren (isElem `guards` this)
