@@ -62,10 +62,12 @@ import Control.Arrow.ArrowTree
 
 import Control.Arrow.ListArrow
 
-import Text.XML.HXT.Arrow.DOMInterface
 import Text.XML.HXT.Arrow.XmlArrow
 
-import qualified Text.XML.HXT.Arrow.XmlNode as XN
+import Text.XML.HXT.DOM.Interface
+
+import qualified
+       Text.XML.HXT.DOM.XmlNode as XN
 
 import Text.XML.HXT.DOM.Unicode
     ( isXmlSpaceChar )

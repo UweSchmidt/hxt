@@ -9,7 +9,7 @@ module Text.XML.HXT.RelaxNG.DataTypeLibraries
   )
 where
 
-import Text.XML.HXT.Arrow.DOMInterface
+import Text.XML.HXT.DOM.Interface
     ( relaxNamespace
     )
 

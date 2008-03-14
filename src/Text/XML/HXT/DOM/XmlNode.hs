@@ -1,24 +1,30 @@
 -- ------------------------------------------------------------
 
 {- |
-   Module     : Text.XML.HXT.Arrow.XmlNode
-   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   Module     : Text.XML.HXT.DOM.XmlNode
+   Copyright  : Copyright (C) 2008 Uwe Schmidt
    License    : MIT
 
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
-   Stability  : experimental
+   Stability  : stable
    Portability: portable
-   Version    : $Id: XmlNode.hs,v 1.14 2006/08/28 19:14:15 hxml Exp $
 
    Interface for XmlArrow to basic data types NTree and XmlTree
+
+   If this module must be used in code working with arrows,
+   it should be imported qualified e.g. @as XN@, to prevent name clashes.
+
+   For code working on the \"node and tree level\" this module
+   is the interface for writing code without using the
+   constructor functions of 'XNode' and 'NTree' directly
 
 -}
 
 -- ------------------------------------------------------------
 
-module Text.XML.HXT.Arrow.XmlNode
-    ( module Text.XML.HXT.Arrow.XmlNode
+module Text.XML.HXT.DOM.XmlNode
+    ( module Text.XML.HXT.DOM.XmlNode
     , module Data.Tree.NTree.TypeDefs
     )
 where
@@ -28,7 +34,7 @@ import Control.Monad
 import Data.Tree.NTree.TypeDefs
 import Data.Maybe
 
-import Text.XML.HXT.Arrow.DOMInterface
+import Text.XML.HXT.DOM.Interface
 
 class XmlNode a where
     -- discriminating predicates

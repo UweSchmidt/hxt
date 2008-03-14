@@ -45,7 +45,7 @@ import Text.XML.HXT.Arrow.Edit
     ( removeComment
     , removeWhiteSpace
     )
-import qualified Text.XML.HXT.Arrow.XmlNode as XN
+import qualified Text.XML.HXT.DOM.XmlNode as XN
 
 -- |
 -- Derives a regular expression with respect to a list of elements.

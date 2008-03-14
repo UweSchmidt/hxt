@@ -47,7 +47,7 @@ import Control.Arrow.ListArrows
 
 import Data.Maybe
 
-import Text.XML.HXT.Arrow.DOMInterface
+import Text.XML.HXT.DOM.Interface
 
 -- ------------------------------------------------------------
 -- the exported regex arrows

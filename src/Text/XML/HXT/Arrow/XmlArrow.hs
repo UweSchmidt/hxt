@@ -37,7 +37,7 @@ import           Text.XML.HXT.DOM.TypeDefs
 import qualified Text.XML.HXT.DOM           as XD ( t_root, xshow )
 import           Text.XML.HXT.DOM.Unicode         ( isXmlSpaceChar )
 
-import qualified Text.XML.HXT.Arrow.XmlNode as XN
+import qualified Text.XML.HXT.DOM.XmlNode as XN
 
 {- | Arrows for processing 'Text.XML.HXT.DOM.TypeDefs.XmlTree's
 

@@ -22,10 +22,10 @@ where
 
 import           Data.Maybe
 
+import qualified Text.XML.HXT.DOM.XmlNode as XN
 
-import           Text.XML.HXT.Arrow.DOMInterface
+import           Text.XML.HXT.DOM.Interface
 import           Text.XML.HXT.Arrow.Pickle.Schema
-import qualified Text.XML.HXT.Arrow.XmlNode as XN
 import           Text.XML.HXT.RelaxNG.XmlSchema.DataTypeLibW3C
 
 -- ------------------------------------------------------------

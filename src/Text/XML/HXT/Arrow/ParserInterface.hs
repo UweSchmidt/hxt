@@ -16,7 +16,7 @@ import Control.Arrow.ListArrow
 import Text.XML.HXT.Parser.XmlEntities	( xmlEntities   )
 import Text.XML.HXT.Parser.XhtmlEntities( xhtmlEntities )
 
-import Text.XML.HXT.Arrow.DOMInterface
+import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlArrow
 
 import qualified Text.XML.HXT.Parser.TagSoup		 as TS

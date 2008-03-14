@@ -54,7 +54,7 @@ import Text.XML.HXT.Parser.HtmlParsec
     , closesHtmlTag
     )
 
-import Text.XML.HXT.Arrow.DOMInterface
+import Text.XML.HXT.DOM.Interface
     ( XmlTrees
     , QName
     , NsEnv
@@ -68,7 +68,7 @@ import Text.XML.HXT.Arrow.DOMInterface
     , xmlnsNamespace
     )
 
-import Text.XML.HXT.Arrow.XmlNode
+import Text.XML.HXT.DOM.XmlNode
     ( isElem
     , mkError
     , mkCmt

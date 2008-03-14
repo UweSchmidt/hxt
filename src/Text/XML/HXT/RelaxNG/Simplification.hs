@@ -26,7 +26,12 @@ where
 
 import Control.Arrow.ListArrows
 
-import Text.XML.HXT.Arrow.DOMInterface
+import           Text.XML.HXT.DOM.Interface
+import qualified Text.XML.HXT.DOM.XmlNode as XN
+    ( mkAttr
+    , mkText
+    )
+
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlIOStateArrow
 
@@ -37,11 +42,6 @@ import Text.XML.HXT.Arrow.Namespace
 
 import Text.XML.HXT.Arrow.Edit
     ( removeWhiteSpace
-    )
-
-import qualified Text.XML.HXT.Arrow.XmlNode as XN
-    ( mkAttr
-    , mkText
     )
 
 import Text.XML.HXT.RelaxNG.DataTypes

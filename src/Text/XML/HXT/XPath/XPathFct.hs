@@ -31,7 +31,8 @@ import Text.XML.HXT.XPath.XPathParser
 import Text.XML.HXT.XPath.XPathArithmetic
       ( xPathAdd )
 
-import qualified Text.XML.HXT.Arrow.XmlNode as XN
+import qualified Text.XML.HXT.DOM.XmlNode as XN
+
 import           Text.XML.HXT.Arrow.ReadDocument (readDocument)
 import           Text.XML.HXT.Arrow.XmlIOStateArrow (runX)
 

@@ -1,11 +1,23 @@
--- |
--- The interface to the DOM data types and constants
---
--- Version : $Id: DOMInterface.hs,v 1.2 2006/11/09 20:27:42 hxml Exp $
---
+-- ------------------------------------------------------------
+
+{- |
+   Module     : Text.XML.HXT.DOM.Interface
+   Copyright  : Copyright (C) 2008 Uwe Schmidt
+   License    : MIT
 
 
-module Text.XML.HXT.Arrow.DOMInterface
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : stable
+   Portability: portable
+
+   The interface to the primitive DOM data types and constants
+   and utility functions
+
+-}
+
+-- ------------------------------------------------------------
+
+module Text.XML.HXT.DOM.Interface
     ( module Text.XML.HXT.DOM.XmlKeywords
     , module Text.XML.HXT.DOM.TypeDefs
     , module Text.XML.HXT.DOM.NamespacePredicates

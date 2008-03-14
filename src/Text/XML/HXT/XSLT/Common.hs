@@ -18,7 +18,7 @@
 
 module Text.XML.HXT.XSLT.Common
     ( module Control.Arrow
-    , module Text.XML.HXT.Arrow.XmlNode
+    , module Text.XML.HXT.DOM.XmlNode
     , module Text.XML.HXT.DOM.XmlKeywords
     , module Text.XML.HXT.DOM.TypeDefs
     , module Text.XML.HXT.DOM.FormatXmlTree
@@ -90,7 +90,7 @@ import Control.Arrow.ArrowList
 import Text.XML.HXT.Arrow.XmlArrow
     ( xshow
     )
-import Text.XML.HXT.Arrow.XmlNode
+import Text.XML.HXT.DOM.XmlNode
     ( XmlNode (..)
     , mkElement
     , mkRoot

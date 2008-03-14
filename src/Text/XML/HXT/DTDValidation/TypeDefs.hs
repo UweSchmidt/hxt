@@ -17,7 +17,7 @@
 
 module Text.XML.HXT.DTDValidation.TypeDefs
     ( module Text.XML.HXT.DTDValidation.TypeDefs
-    , module Text.XML.HXT.Arrow.DOMInterface
+    , module Text.XML.HXT.DOM.Interface
     , module Text.XML.HXT.Arrow.XmlArrow
     , module Control.Arrow
     , module Control.Arrow.ArrowList
@@ -38,11 +38,10 @@ import Control.Arrow.ArrowTree
 import Control.Arrow.ListArrow		-- arrow types
 import Control.Arrow.StateListArrow
 
-import Text.XML.HXT.Arrow.DOMInterface
 import Text.XML.HXT.Arrow.XmlArrow
 
-import qualified
-       Text.XML.HXT.Arrow.XmlNode as XN
+import           Text.XML.HXT.DOM.Interface
+import qualified Text.XML.HXT.DOM.XmlNode as XN
 
 -- ------------------------------------------------------------
 

@@ -36,7 +36,7 @@ import qualified Control.Exception as E
 
 import Control.Arrow.ListArrows
 
-import Text.XML.HXT.Arrow.DOMInterface
+import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlIOStateArrow
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.ReadDocument

@@ -40,7 +40,7 @@ import qualified Text.XML.HXT.IO.GetFILE	as FILE
 import qualified Text.XML.HXT.IO.GetHTTPNative	as HTTP
 import qualified Text.XML.HXT.IO.GetHTTPCurl	as CURL
 
-import Text.XML.HXT.Arrow.DOMInterface
+import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlIOStateArrow
 

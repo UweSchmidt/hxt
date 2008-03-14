@@ -12,7 +12,7 @@ import Control.Arrow.ListArrows
 
 import Data.Tree.NTree.TypeDefs
 
-import Text.XML.HXT.Arrow.DOMInterface
+import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.RelaxNG.DataTypes
 import Text.XML.HXT.RelaxNG.CreatePattern

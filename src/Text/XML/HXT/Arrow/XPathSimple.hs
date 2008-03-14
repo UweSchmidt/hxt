@@ -50,7 +50,7 @@ import Data.Maybe
 import Text.ParserCombinators.Parsec
     ( runParser )
 
-import Text.XML.HXT.Arrow.DOMInterface
+import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlArrow
 
 import qualified Text.XML.HXT.Arrow.XPath as XP
