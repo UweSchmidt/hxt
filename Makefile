@@ -9,6 +9,8 @@ DIST		= $(software)-$(VERSION)
 DIST_FILES	= Makefile README LICENCE Setup.lhs hxt.cabal
 DIST_TAR	= $(dist).tar.gz
 
+SETUP		= Setup.lhs
+
 VERSIONTAG	= $(software)-7-05				# use: make tag for creating darcs tag
 LASTVERSION	= 7.4
 PUBDATE		:= $(shell date +%Y-%m-%d)
@@ -17,6 +19,8 @@ EDIT_VERSION	= sed 's/%DISTFILE%/$(DIST)/g' \
 		| sed 's/%VERSION%/$(VERSION)/g' \
 		| sed 's/%PUBDATE%/$(PUBDATE)/g'
 
+HSCOLOUR	= HsColour
+HSCOLOUR_CSS	= doc/hscolour.css
 
 # --------------------------------------------------
 
@@ -27,20 +31,37 @@ all		:
 allexamples	:
 		$(MAKE) -C examples all VERSION=$(VERSION)
 
+test		:
+		$(MAKE) -C examples test VERSION=$(VERSION) LASTVERSION=$(LASTVERSION)
+
+# ------------------------------------------------------------
+
+cabal		:
+		$(MAKE) cabal_configure cabal_build cabal_doc cabal_install
+
+cabal_configure :
+		runhaskell $(SETUP) configure
+
+cabal_doc	:
+		$(HSCOLOUR) -print-css > $(HSCOLOUR)
+		runhaskell $(SETUP) haddock --hyperlink-source --hscolour-css=$(HSCOLOUR)
+		rm -f $(HSCOLOUR)
+
+cabal_build	:
+		runhaskell $(SETUP) build
+
+cabal_install	:
+		sudo runhaskell $(SETUP) build
+
+# ------------------------------------------------------------
+
+hxt.cabal	: src/hxt-package.hs src/Makefile Makefile
+		$(MAKE) -C src ../hxt.cabal VERSION=$(VERSION)
+
 doc		:
 		$(MAKE) -C src doc        VERSION=$(VERSION)
 		$(MAKE) -C src doc_filter VERSION=$(VERSION)
 		$(MAKE) -C src doc_arrow  VERSION=$(VERSION)
-
-test		:
-		$(MAKE) -C examples test VERSION=$(VERSION) LASTVERSION=$(LASTVERSION)
-
-setup		: Setup.lhs
-		ghc -package Cabal Setup.lhs -o setup
-		rm -f Setup.hi Setup.o
-
-hxt.cabal	: src/hxt-package.hs src/Makefile Makefile
-		$(MAKE) -C src ../hxt.cabal VERSION=$(VERSION)
 
 dist		: all doc hxt.cabal
 		[ -d $(DIST) ] || mkdir -p $(DIST)
@@ -53,11 +74,15 @@ dist		: all doc hxt.cabal
 tarball		: dist
 		tar -zcvf $(DIST_TAR) $(DIST)
 
+# ------------------------------------------------------------
+
 clean		:
 		$(MAKE) -C src      clean
 		$(MAKE) -C examples clean
 		$(MAKE) -C doc      clean
 		rm -rf $(DIST) $(DIST_TAR) hxt.cabal setup .setup-config .installed-pkg-config dist
+
+# ------------------------------------------------------------
 
 tag		:
 		darcs tag $(VERSIONTAG) .

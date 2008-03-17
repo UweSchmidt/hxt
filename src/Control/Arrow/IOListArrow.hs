@@ -8,9 +8,8 @@
    Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: IOListArrow.hs,v 1.6 2005/09/02 17:09:39 hxml Exp $
 
-Implementation of pure list arrows with io
+   Implementation of pure list arrows with IO
 
 -}
 
