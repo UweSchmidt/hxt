@@ -10,19 +10,23 @@ module Text.XML.HXT.XPath.NavTree
     )
 where
 
-import Data.NavTree
-
-import Text.XML.HXT.DOM.XmlTreeTypes
-    ( XNode(..) )
-
-import Text.XML.HXT.DOM.XmlTreeFunctions
-    ( isRootNode, namespaceOf )
-
-import Text.XML.HXT.DOM.XmlKeywords
-   ( xmlnsNamespace )
-
 import Data.Maybe
 	
+import Data.NavTree
+
+import Text.XML.HXT.DOM.Interface
+    ( XNode
+    , xmlnsNamespace
+    , namespaceUri
+    )
+
+import Text.XML.HXT.DOM.XmlNode
+    ( isRoot
+    , isElem
+    , getName
+    , getAttrl
+    )
+
 -- -----------------------------------------------------------------------------
 -- functions for representing XPath axes. All axes except the namespace-axis are supported
 
@@ -62,11 +66,14 @@ precedingAxis		= revPreorderNT  `o'` precedingSiblingAxis `o'` ancestorOrSelfAxi
 
 
 attributeAxis :: NavTree XNode -> [NavTree XNode]
-attributeAxis t@(NT (NTree x@(XTag _ alFull) _) a _ _)
-    | not . isRootNode $ x
+attributeAxis t@(NT xt a _ _)
+    | isElem xt
+      &&
+      not (isRoot xt)
 	= foldr (\ attr -> ((NT attr (t:a) [] []):)) [] al
     | otherwise
-        = []
-    where al = filter ((/= xmlnsNamespace) . namespaceOf) alFull
+	= []
+    where
+    al = filter ((/= xmlnsNamespace) . maybe "" namespaceUri . getName) . fromMaybe [] . getAttrl $ xt
 
-attributeAxis _ = []
+-- ------------------------------------------------------------
