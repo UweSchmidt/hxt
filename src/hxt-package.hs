@@ -68,9 +68,9 @@ part4b
       , " ghc-options: -Wall"
       , " extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances"
       , ""
-      , " build-depends: base, haskell98, parsec, HTTP, HUnit, network, tagsoup"
+      , " build-depends: base, haskell98 >= 1, parsec >= 2.1 && < 3, HTTP, HUnit >= 1.2, network >= 2.1, tagsoup >= 0.4"
       , " if flag(splitBase)"
-      , "   build-depends: base >= 3, containers, directory, process"
+      , "   build-depends: base >= 3, containers >= 0.1, directory >= 1, process >= 1"
       , " else"
       , "   build-depends: base < 3"
       ]
