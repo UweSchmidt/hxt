@@ -11,7 +11,7 @@ module Text.XML.HXT.XPath.NavTree
 where
 
 import Data.Maybe
-	
+
 import Data.NavTree
 
 import Text.XML.HXT.DOM.Interface

@@ -100,6 +100,7 @@ HXT_SRC_ARROW	= $(wildcard ./Data/*.hs) \
 		  $(wildcard ./Text/XML/HXT/DOM/[QTU]*.hs) \
 		  $(wildcard ./Text/XML/HXT/DOM/Interface.hs) \
 		  $(wildcard ./Text/XML/HXT/DOM/Iso*.hs) \
+		  $(wildcard ./Text/XML/HXT/DOM/ShowXml.hs) \
 		  $(wildcard ./Text/XML/HXT/DOM/XmlKeywords.hs) \
 		  $(wildcard ./Text/XML/HXT/DOM/XmlNode.hs) \
 		  $(wildcard ./Text/XML/HXT/Parser/XmlOptions.hs) \

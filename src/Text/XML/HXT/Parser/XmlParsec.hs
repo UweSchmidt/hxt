@@ -75,10 +75,33 @@ import Text.ParserCombinators.Parsec
     , sourceName
     )
 
-import           Text.XML.HXT.DOM.XmlTree 		hiding     (choice)
+import Text.XML.HXT.DOM.XmlTreeFunctions(xshow)
 
-import Text.XML.HXT.Parser.XmlCharParser               (xmlChar)
+import Text.XML.HXT.DOM.Interface
 
+import Text.XML.HXT.DOM.XmlNode
+    ( mkElement
+    , mkAttr
+    , mkRoot
+    , mkDTDElem
+    , mkText
+    , mkCmt
+    , mkCdata
+    , mkError
+    , mkPi
+    , isText
+    , isRoot
+    , getText
+    , getChildren
+    , getAttrl
+    , getAttrName
+    , changeAttrl
+    , mergeAttrl
+    )
+
+import Text.XML.HXT.Parser.XmlCharParser
+    ( xmlChar
+    )
 import qualified Text.XML.HXT.Parser.XmlTokenParser	as XT
 import qualified Text.XML.HXT.Parser.XmlDTDTokenParser	as XD
 
@@ -97,7 +120,7 @@ charData'		:: GenParser Char state XmlTree
 charData'
     = try ( do
 	    t <- XT.allBut1 many1 (\ c -> not (c `elem` "<&")) "]]>"
-	    return (mkXTextTree $! t)
+	    return (mkText $! t)
 	  )
 
 -- ------------------------------------------------------------
@@ -109,7 +132,7 @@ comment		:: GenParser Char state XmlTree
 comment
     = ( do
 	c <- between (try $ string "<!--") (string "-->") (XT.allBut many "--")
-	return (mkXCmtTree $! c)
+	return (mkCmt $! c)
       ) <?> "comment"
 
 -- ------------------------------------------------------------
@@ -125,7 +148,7 @@ pI
 			XT.sPace
 			XT.allBut many "?>"
 		       )
-	return (mkXPiTree n $! p)
+	return $ mkPi (mkName n) [mkAttr (mkName a_value) [mkText p]]
       ) <?> "processing instruction"
       where
       pITarget	:: GenParser Char state String
@@ -145,7 +168,7 @@ cDSect		:: GenParser Char state XmlTree
 cDSect
     = do
       t <- between ( try $ string "<![CDATA[") (string "]]>") (XT.allBut many "]]>")
-      return (mkXCdataTree $! t)
+      return (mkCdata $! t)
       <?> "CDATA section"
 
 -- ------------------------------------------------------------
@@ -157,9 +180,9 @@ document
     = do
       pos <- getPosition
       dl <- document'
-      return ( (head . replaceChildren dl)
-	       $ newDocument (sourceName pos)
-	     )
+      return $ mkRoot [ mkAttr (mkName a_source) [mkText (sourceName pos)]
+		      , mkAttr (mkName a_status) [mkText (show c_ok)]
+		      ] dl
 
 document'	:: GenParser Char state XmlTrees
 document'
@@ -195,13 +218,13 @@ xMLDecl'	:: GenParser Char state XmlTrees
 xMLDecl'
     = do
       al <- xMLDecl
-      return [mkXmlDeclTree al]
+      return [mkPi (mkName t_xml) al]
 
 xMLDecl''	:: GenParser Char state XmlTree
 xMLDecl''
     = do
       al     <- option [] (try xMLDecl)
-      return (newRoot al)
+      return (mkRoot al [])
 
 versionInfo	:: GenParser Char state XmlTrees
 versionInfo
@@ -212,7 +235,7 @@ versionInfo
 	    )
 	XT.eq
 	vi <- XT.quoted XT.versionNum
-	return (xattr a_version vi)
+	return [mkAttr (mkName a_version) [mkText vi]]
       )
       <?> "version info (with quoted version number)"
 
@@ -224,7 +247,7 @@ misc
       <|>
       ( ( do
 	  ws <- XT.sPace
-	  return (mkXTextTree ws)
+	  return (mkText ws)
 	) <?> ""
       )
 
@@ -250,7 +273,7 @@ doctypedecl
 		    XT.skipS0
 		    return m
 		  )
-	return [mkXDTDTree DOCTYPE ((a_name, n) : exId) markup]
+	return [mkDTDElem DOCTYPE ((a_name, n) : exId) markup]
       )
 
 markupOrDeclSep	:: GenParser Char state XmlTrees
@@ -297,7 +320,7 @@ sDDecl
 	  )
       XT.eq
       sd <- XT.quoted (XT.keywords [v_yes, v_no])
-      return (xattr a_standalone sd)
+      return [mkAttr (mkName a_standalone) [mkText sd]]
 
 -- ------------------------------------------------------------
 --
@@ -343,16 +366,18 @@ elementRest	:: (String, [(String, XmlTrees)]) -> GenParser Char state XmlTree
 elementRest (n, al)
     = ( do
 	try $ string "/>"
-	return (mkXTagTree n (map (uncurry mkXAttrTree) al) [])
+	return $! (mkElement (mkName n) (map (mkA $!) al) [])
       )
       <|>
       ( do
 	XT.gt
 	c <- content
 	eTag n
-	return (mkXTagTree n (map ((uncurry mkXAttrTree) $!) al) $! c)
+	return $! (mkElement (mkName n) (map (mkA $!) al) $! c)
       )
       <?> "proper attribute list followed by \"/>\" or \">\""
+    where
+    mkA (n', ts') = mkAttr (mkName n') ts'
 
 eTag		:: String -> GenParser Char state ()
 eTag n'
@@ -413,7 +438,7 @@ conditionalSect
       cs <- many XD.dtdToken
       char '['
       sect <- condSectCont
-      return (mkXDTDTree CONDSECT [(a_value, sect)] cs)
+      return (mkDTDElem CONDSECT [(a_value, sect)] cs)
     where
 
     condSectCont	:: GenParser Char state String
@@ -480,7 +505,7 @@ textDecl''	:: GenParser Char state XmlTree
 textDecl''
     = do
       al    <- option [] (try textDecl)
-      return (newRoot al)
+      return (mkRoot al [])
 
 -- ------------------------------------------------------------
 --
@@ -495,7 +520,7 @@ encodingDecl
 	  )
       XT.eq
       ed <- XT.quoted XT.encName
-      return (xattr a_encoding ed)
+      return [mkAttr (mkName a_encoding) [mkText ed]]
 
 -- ------------------------------------------------------------
 --
@@ -527,14 +552,14 @@ xread str
 
 parseXmlContent		:: XmlTree -> XmlTrees
 parseXmlContent
-    = xread . xshow . this
+    = xread . xshow . (:[])
 
 -- |
 -- a more general version of 'parseXmlContent'.
 -- The parser to be used and the context are extra parameter
 
 parseXmlText		:: Parser XmlTrees -> String -> XmlTree -> XmlTrees
-parseXmlText p loc	= parseXmlFromString p loc . xshow . this
+parseXmlText p loc	= parseXmlFromString p loc . xshow . (:[])
 
 parseXmlDocument	:: String -> String -> XmlTrees
 parseXmlDocument	= parseXmlFromString document'
@@ -542,27 +567,30 @@ parseXmlDocument	= parseXmlFromString document'
 
 parseXmlFromString	:: Parser XmlTrees -> String -> String -> XmlTrees
 parseXmlFromString parser loc
-    = either (xerr . (++ "\n") . show) id . parse parser loc
+    = either ((:[]) . mkError c_err . (++ "\n") . show) id . parse parser loc
 
 -- ------------------------------------------------------------
 --
 
 removeEncodingSpec	:: XmlTree -> XmlTrees
-removeEncodingSpec (NTree n _cs)
-    | isXTextNode n
-	= ( either (xerr . (++ "\n") . show) xtext
+removeEncodingSpec t
+    | isText t
+	= ( either ((:[]) . mkError c_err . (++ "\n") . show) ((:[]) . mkText)
 	    . parse parser "remove encoding spec"
-	    . textOfXNode
-	  ) n
+	    . fromMaybe ""
+	    . getText
+	  ) t
+    | otherwise
+	= [t]
     where
     parser :: Parser String
     parser = do
 	     option [] textDecl
 	     getInput
-
+{-
 removeEncodingSpec n
     = [n]
-
+-}
 -- ------------------------------------------------------------
 
 -- |
@@ -638,18 +666,22 @@ parseName
 --			  else the unchanged tree
 
 parseXmlEncodingSpec	:: Parser XmlTree -> XmlTree -> XmlTrees
-parseXmlEncodingSpec encDecl
-    =  parseEncSpec
-      `when` isRoot
-      where
-      parseEncSpec r
-	  = case ( parse encDecl source . xshow . getChildren $ r ) of
-	    Right t
-		-> addAttrl (const (getAttrl t)) r
-	    Left _
-		-> this r
-	  where
-	  source = valueOf a_source r
+parseXmlEncodingSpec encDecl x
+    = (:[]) .
+      ( if isRoot x
+	then parseEncSpec
+	else id
+      ) $ x
+    where
+    parseEncSpec r
+	= case ( parse encDecl source . xshow . getChildren $ r ) of
+	  Right t
+	      -> changeAttrl (mergeAttrl . fromMaybe [] . getAttrl $ t) r
+	  Left _
+	      -> r
+	where
+	-- arrow \"getAttrValue a_source\" programmed on the tree level (oops!)
+	source = xshow . concat . map getChildren . filter ((== a_source) . maybe "" qualifiedName . getAttrName) . fromMaybe [] . getAttrl $ r
 
 parseXmlEntityEncodingSpec	:: XmlTree -> XmlTrees
 parseXmlEntityEncodingSpec	= parseXmlEncodingSpec textDecl''

@@ -10,7 +10,9 @@ GHC		= ghc $(GHCFLAGS) $(PKGFLAGS)
 DIST		= $(HXT_HOME)/dist/examples/arrows
 DIST_DIR	= $(DIST)/pickle
 
-all		: pickleTest
+PROG		= ./pickleTest
+
+all		: $(PROG)
 
 force		:
 		$(MAKE) distclean all
@@ -27,11 +29,10 @@ dist		:
 		cp PickleTest.hs Makefile $(DIST_DIR)
 
 clean		:
-		rm -f *.o *.hi pickle.xml
+		rm -f *.o *.hi pickle.xml $(PROG)
 
 distclean	:
 		$(MAKE) clean
-		rm -f pickleTest
 
 .PHONY		: all test dist clean distclean force
 

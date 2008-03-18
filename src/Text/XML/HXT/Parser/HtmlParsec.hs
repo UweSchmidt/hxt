@@ -22,8 +22,7 @@
 -- ------------------------------------------------------------
 
 module Text.XML.HXT.Parser.HtmlParsec
-    ( substHtmlEntities
-    , parseHtmlText
+    ( parseHtmlText
     , parseHtmlDocument
     , parseHtmlContent
     , isEmptyHtmlTag
@@ -34,7 +33,16 @@ module Text.XML.HXT.Parser.HtmlParsec
 
 where
 
-import Text.XML.HXT.DOM.XmlTree
+import Text.XML.HXT.DOM.Interface
+
+import Text.XML.HXT.DOM.XmlNode
+    ( mkText
+    , mkError
+    , mkCmt
+    , mkElement
+    , mkAttr
+    , mkDTDElem
+    )
 
 import Text.ParserCombinators.Parsec
     ( Parser
@@ -83,10 +91,6 @@ import Text.XML.HXT.Parser.XmlCharParser
     ( xmlChar
     )
 
-import Text.XML.HXT.Parser.XhtmlEntities
-    ( xhtmlEntities
-    )
-
 import Data.Maybe
     ( fromMaybe
     )
@@ -98,7 +102,7 @@ import Data.Char
 
 -- ------------------------------------------------------------
 
-parseHtmlText	:: String -> XmlFilter
+parseHtmlText	:: String -> XmlTree -> XmlTrees
 parseHtmlText loc t
     = parseXmlText htmlDocument loc $ t
 
@@ -106,7 +110,7 @@ parseHtmlText loc t
 
 parseHtmlFromString	:: Parser XmlTrees -> String -> String -> XmlTrees
 parseHtmlFromString parser loc
-    = either (xerr . (++ "\n") . show) id . parse parser loc
+    = either ((:[]) . mkError c_err . (++ "\n") . show) id . parse parser loc
 
 parseHtmlDocument	:: String -> String -> XmlTrees
 parseHtmlDocument	= parseHtmlFromString htmlDocument
@@ -133,7 +137,7 @@ htmlProlog
 	       ( do
 		 pos <- getPosition
 		 try (string "<?")
-		 return $ xwarn (show pos ++ " wrong XML declaration")
+		 return $ [mkError c_warn (show pos ++ " wrong XML declaration")]
 	       )
 	     )
       misc1   <- many misc
@@ -143,7 +147,7 @@ htmlProlog
 		   ( do
 		     pos <- getPosition
 		     try (upperCaseString "<!DOCTYPE")
-		     return $ xwarn (show pos ++ " HTML DOCTYPE declaration ignored")
+		     return $ [mkError c_warn (show pos ++ " HTML DOCTYPE declaration ignored")]
 		   )
 		 )
       return (xml ++ misc1 ++ dtdPart)
@@ -159,7 +163,7 @@ doctypedecl
 		  option [] externalID
 		)
 	skipS0
-	return [mkXDTDTree DOCTYPE ((a_name, n) : exId) []]
+	return [mkDTDElem DOCTYPE ((a_name, n) : exId) []]
       )
 
 externalID	:: Parser Attributes
@@ -212,7 +216,7 @@ hElement context
 	c   <- xmlChar
 	return ( addHtmlWarn (show pos ++ " markup char " ++ show c ++ " not allowed in this context")
 		 .
-		 addHtmlElems (xtext [c])
+		 addHtmlElems [mkText [c]]
 		 $
 		 context
 	       )
@@ -301,7 +305,7 @@ hAttrList
 	    n <- lowerCaseName
 	    v <- hAttrValue
 	    skipS0
-	    return $ mkXAttrTree n v
+	    return $ mkAttr (mkName n) v
 
 hAttrValue	:: Parser XmlTrees
 hAttrValue
@@ -320,7 +324,7 @@ hAttrValue'
       <|>
       ( do			-- HTML allows unquoted attribute values
 	cs <- many (noneOf " \r\t\n>\"\'")
-	return [mkXTextTree cs]
+	return [mkText cs]
       )
 
 hAttrValue''	:: String -> Parser XmlTrees
@@ -333,7 +337,7 @@ hReference'
       <|>
       ( do
 	char '&'
-	return (mkXTextTree "&")
+	return (mkText "&")
       )
 
 hContent	:: Context -> Parser Context
@@ -351,7 +355,7 @@ hComment		:: Parser XmlTree
 hComment
     = do
       c <- between (try $ string "<!--") (string "-->") (allBut many "-->")
-      return (mkXCmtTree c)
+      return (mkCmt c)
 
 checkSymbol	:: Parser a -> String -> Context -> Parser Context
 checkSymbol p msg context
@@ -377,11 +381,11 @@ upperCaseString
 
 addHtmlTag	:: String -> XmlTrees -> XmlTrees -> Context -> Context
 addHtmlTag tn al body (body1, openTags)
-    = (xtag tn al (reverse body) ++ body1, openTags)
+    = ([mkElement (mkName tn) al (reverse body)] ++ body1, openTags)
 
 addHtmlWarn	:: String -> Context -> Context
 addHtmlWarn msg
-    = addHtmlElems (xwarn msg)
+    = addHtmlElems [mkError c_warn msg]
 
 addHtmlElems	:: XmlTrees -> Context -> Context
 addHtmlElems elems (body, openTags)
@@ -529,28 +533,5 @@ t	`closes` t2 | t `elem` ["h1","h2","h3"
 				,"p"			-- not "div"
 				]			= True
 _	`closes` _					= False
-
--- ------------------------------------------------------------
---
--- XHTML entities
-
-substHtmlEntities	:: XmlFilter
-substHtmlEntities
-    = choice [ isXEntityRef	:-> substEntity
-	     , isXTag		:-> processAttr (processChildren substHtmlEntities)
-	     , this		:-> this
-	     ]
-      where
-      substEntity t'@(NTree (XEntityRef en) _)
-	  = case (lookup en xhtmlEntities) of
-	    Just i
-		-> [mkXCharRefTree i]
-	    Nothing
-		-> xwarn ("no XHTML entity found for reference: \"&" ++ en ++ ";\"")
-		   ++
-		   (xmlTreesToText [t'])
-
-      substEntity _
-	  = error "substHtmlEntities: illegal argument"
 
 -- ------------------------------------------------------------

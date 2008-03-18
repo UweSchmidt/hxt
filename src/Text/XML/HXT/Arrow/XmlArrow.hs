@@ -10,9 +10,10 @@
    Portability: portable
    Version    : $Id: XmlArrow.hs,v 1.34 2006/11/02 16:43:39 hxml Exp $
 
-Basic arrows for processing XML documents
+   Basic arrows for processing XML documents
 
-All arrows use IO and a global state for options, errorhandling, ...
+   All arrows use IO and a global state for options, errorhandling, ...
+
 -}
 
 -- ------------------------------------------------------------
@@ -33,11 +34,12 @@ import Control.Arrow.StateListArrow
 import Control.Arrow.IOListArrow
 import Control.Arrow.IOStateListArrow
 
-import           Text.XML.HXT.DOM.TypeDefs
-import qualified Text.XML.HXT.DOM           as XD ( t_root, xshow )
-import           Text.XML.HXT.DOM.Unicode         ( isXmlSpaceChar )
-
+import           Text.XML.HXT.DOM.Interface
+import           Text.XML.HXT.DOM.Unicode
+    ( isXmlSpaceChar
+    )
 import qualified Text.XML.HXT.DOM.XmlNode as XN
+import qualified Text.XML.HXT.DOM.ShowXml as XS
 
 {- | Arrows for processing 'Text.XML.HXT.DOM.TypeDefs.XmlTree's
 
@@ -105,7 +107,7 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
 
     -- | test for root node (element with name \"\/\")
     isRoot		:: a XmlTree XmlTree
-    isRoot		= isElem >>> hasName XD.t_root
+    isRoot		= isA XN.isRoot
 
     -- | test for text nodes with text, for which a predicate holds
     --
@@ -253,7 +255,7 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
 
     -- | construction of an element node with name \"\/\" for document roots
     root		::           [a n XmlTree] -> [a n XmlTree] -> a n XmlTree
-    root		= mkelem XD.t_root
+    root		= mkelem t_root
 
     -- | alias for 'mkAttr'
     qattr		:: QName -> a n XmlTree -> a n XmlTree
@@ -552,7 +554,7 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
 
     -- | apply an arrow to the input and convert the resulting XML trees into a string representation
     xshow		:: a n XmlTree -> a n String
-    xshow f		= f >. XD.xshow
+    xshow f		= f >. XS.xshow
 
 {- | Document Type Definition arrows
 

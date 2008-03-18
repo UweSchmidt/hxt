@@ -21,7 +21,14 @@ module Text.XML.HXT.Parser.XmlDTDTokenParser where
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Pos
 
-import           Text.XML.HXT.DOM.XmlTree		hiding (choice)
+-- import           Text.XML.HXT.DOM.XmlTree		hiding (choice)
+
+import Text.XML.HXT.DOM.Interface
+
+import Text.XML.HXT.DOM.XmlNode
+    ( mkDTDElem
+    , mkText
+    )
 import qualified Text.XML.HXT.Parser.XmlTokenParser	as XT
 
 -- ------------------------------------------------------------
@@ -34,7 +41,7 @@ dtdDeclTokenizer
       (dcl, al) <- dtdDeclStart
       content <- many1 dtdToken
       dtdDeclEnd
-      return (NTree (XDTD dcl al) content)
+      return $! mkDTDElem dcl al content
 
 dtdDeclStart :: GenParser Char state (DTDElem, Attributes)
 dtdDeclStart
@@ -80,24 +87,24 @@ peReference	:: GenParser Char state XmlTree
 peReference
     = do
       r <- XT.peReference
-      return (mkXPERefTree r)
+      return $! (mkDTDElem PEREF [(a_peref, r)] [])
 
 attrValue	:: GenParser Char state XmlTree
 attrValue
     = do
       v <- XT.attrValue
-      return (mkXTextTree v)
+      return $! mkText v
 
 dtdChars	:: GenParser Char state XmlTree
 dtdChars
     = do
       v <- many1 (XT.singleChar "%\"'<>[]")		-- everything except string constants, < and >, [ and ] (for cond sections)
-      return (mkXTextTree v)				-- all illegal chars will be detected later during declaration parsing
+      return $! mkText v				-- all illegal chars will be detected later during declaration parsing
 
 percent		:: GenParser Char state XmlTree
 percent
     = do
       c <- char '%'
-      return (mkXTextTree [c])
+      return $! mkText [c]
 
 -- ------------------------------------------------------------

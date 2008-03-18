@@ -81,9 +81,13 @@ where
 
 import Text.ParserCombinators.Parsec
 
+import Text.XML.HXT.DOM.Interface
 
-import Text.XML.HXT.DOM.XmlTree hiding
-    ( choice
+import Text.XML.HXT.DOM.XmlNode
+    ( mkDTDElem
+    , mkText
+    , mkCharRef
+    , mkEntityRef
     )
 
 import Text.XML.HXT.DOM.Unicode
@@ -453,13 +457,13 @@ nameT		:: GenParser Char state XmlTree
 nameT
     = do
       n <- name
-      return (mkXDTDTree NAME [(a_name, n)] [])
+      return (mkDTDElem NAME [(a_name, n)] [])
 
 nmtokenT	:: GenParser Char state XmlTree
 nmtokenT
     = do
       n <- nmtoken
-      return (mkXDTDTree NAME [(a_name, n)] [])
+      return (mkDTDElem NAME [(a_name, n)] [])
 
 
 entityValueT	:: GenParser Char state XmlTrees
@@ -487,7 +491,7 @@ entityCharT notAllowed
       <|>
       ( do
 	cs <- many1 (singleChar notAllowed)
-	return (mkXTextTree cs)
+	return (mkText cs)
       )
 
 attrValueT	:: GenParser Char state XmlTrees
@@ -505,7 +509,7 @@ singleCharsT	:: String -> GenParser Char state XmlTree
 singleCharsT notAllowed
     = do
       cs <- singleChars notAllowed
-      return (mkXTextTree cs)
+      return (mkText cs)
 
 -- ------------------------------------------------------------
 --
@@ -521,25 +525,25 @@ charRefT	:: GenParser Char state XmlTree
 charRefT
     = do
       i <- charRef
-      return (mkXCharRefTree $! i)
+      return $! (mkCharRef $! i)
 
 entityRefT	:: GenParser Char state XmlTree
 entityRefT
     = do
       n <- entityRef
-      return (mkXEntityRefTree $! n)
+      return $! (mkEntityRef $! n)
 
 bypassedEntityRefT	:: GenParser Char state XmlTree
 bypassedEntityRefT
     = do
       n <- entityRef
-      return (mkXTextTree ("&" ++ n ++ ";"))
+      return $! (mkText ("&" ++ n ++ ";"))
 
 peReferenceT	:: GenParser Char state XmlTree
 peReferenceT
     = do
       r <- peReference
-      return (mkXPERefTree r)
+      return $! (mkDTDElem PEREF [(a_peref, r)] [])
 
 -- ------------------------------------------------------------
 

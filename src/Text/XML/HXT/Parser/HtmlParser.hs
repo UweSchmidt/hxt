@@ -24,6 +24,7 @@ module Text.XML.HXT.Parser.HtmlParser
     ( getHtmlDoc
     , parseHtmlDoc
     , runHtmlParser
+    , substHtmlEntities
     , module Text.XML.HXT.Parser.HtmlParsec
     )
 
@@ -41,6 +42,10 @@ import Text.XML.HXT.Parser.XmlOutput
     ( traceTree
     , traceSource
     , traceMsg
+    )
+
+import Text.XML.HXT.Parser.XhtmlEntities
+    ( xhtmlEntities
     )
 
 -- ------------------------------------------------------------
@@ -138,5 +143,28 @@ runHtmlParser t
       errs = isXError .> neg isWarning $$ res
       loc  = valueOf a_source t
 
+
+-- ------------------------------------------------------------
+--
+-- XHTML entities
+
+substHtmlEntities	:: XmlTree -> XmlTrees
+substHtmlEntities
+    = choice [ isXEntityRef	:-> substEntity
+	     , isXTag		:-> processAttr (processChildren substHtmlEntities)
+	     , this		:-> this
+	     ]
+      where
+      substEntity t'@(NTree (XEntityRef en) _)
+	  = case (lookup en xhtmlEntities) of
+	    Just i
+		-> [mkXCharRefTree i]
+	    Nothing
+		-> xwarn ("no XHTML entity found for reference: \"&" ++ en ++ ";\"")
+		   ++
+		   (xmlTreesToText [t'])
+
+      substEntity _
+	  = error "substHtmlEntities: illegal argument"
 
 -- ------------------------------------------------------------
