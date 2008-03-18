@@ -8,7 +8,6 @@
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: XmlDTDParser.hs,v 1.6 2005/09/02 17:09:39 hxml Exp $
 
    Parsec parser for DTD declarations for ELEMENT, ATTLIST, ENTITY and NOTATION declarations
 

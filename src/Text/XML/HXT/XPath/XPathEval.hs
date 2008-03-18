@@ -48,15 +48,31 @@ import Text.XML.HXT.XPath.XPathToNodeSet
     , emptyNodeSet
     )
 
-import Text.XML.HXT.DOM.XmlTree
-import Text.XML.HXT.DOM.EditFilters
-    ( canonicalizeForXPath )
-
 import Text.ParserCombinators.Parsec
     ( runParser )
 
 import Data.Maybe
     ( fromJust )
+
+-- ----------------------------------------
+
+-- the DOM functions
+
+import           Text.XML.HXT.DOM.Interface
+import qualified Text.XML.HXT.DOM.XmlNode as XN
+
+-- ----------------------------------------
+
+-- the list arrow functions
+
+import Control.Arrow			( (>>>), (>>^) )
+import Control.Arrow.ArrowList		( arrL, isA )
+import Control.Arrow.ArrowIf    	( filterA )
+import Control.Arrow.ListArrow		( runLA )
+import qualified
+       Control.Arrow.ArrowTree		as AT
+import Text.XML.HXT.Arrow.XmlArrow	( ArrowDTD, isDTD, getDTDAttrl )
+import Text.XML.HXT.Arrow.Edit		( canonicalizeForXPath )
 
 -- -----------------------------------------------------------------------------
 
@@ -70,7 +86,7 @@ import Data.Maybe
 -- XPath values other than XmlTrees (numbers, attributes, tagnames, ...)
 -- are convertet to text nodes.
 
-getXPath		:: String -> XmlFilter
+getXPath		:: String -> XmlTree -> XmlTrees
 getXPath		= getXPathWithNsEnv []
 
 -- |
@@ -79,8 +95,11 @@ getXPath		= getXPathWithNsEnv []
 -- Works like 'getXPath' but the prefix:localpart names in the XPath expression
 -- are interpreted with respect to the given namespace environment
 
-getXPathWithNsEnv	:: NsEnv -> String -> XmlFilter
-getXPathWithNsEnv env s	= canonicalizeForXPath .> getXPathValues xPValue2XmlTrees xPathErr env s
+getXPathWithNsEnv	:: NsEnv -> String -> XmlTree -> XmlTrees
+getXPathWithNsEnv env s	= runLA ( canonicalizeForXPath
+				  >>>
+				  arrL (getXPathValues xPValue2XmlTrees xPathErr env s)
+				)
 
 -- |
 -- Select parts of an XML tree by a XPath expression.
@@ -95,12 +114,12 @@ getXPathWithNsEnv env s	= canonicalizeForXPath .> getXPathValues xPValue2XmlTree
 -- XPath values other than XmlTrees (numbers, attributes, tagnames, ...)
 -- are convertet to text nodes.
 
-getXPathSubTrees	:: String -> XmlFilter
+getXPathSubTrees	:: String -> XmlTree -> XmlTrees
 getXPathSubTrees	= getXPathSubTreesWithNsEnv []
 
 -- | Same as 'getXPathSubTrees' but with namespace aware XPath expression
 
-getXPathSubTreesWithNsEnv	:: NsEnv -> String -> XmlFilter
+getXPathSubTreesWithNsEnv	:: NsEnv -> String -> XmlTree -> XmlTrees
 getXPathSubTreesWithNsEnv nsEnv xpStr
     = getXPathValues xPValue2XmlTrees xPathErr nsEnv xpStr
 
@@ -128,23 +147,23 @@ getXPathValues cvRes cvErr nsEnv xpStr t
     evalXP xpe
 	= cvRes xpRes
 	where
-	t'      = head . addRoot $ t			-- we need a root node for starting xpath eval
+	t'      = addRoot t				-- we need a root node for starting xpath eval
 	idAttr	= ( ("", "idAttr")			-- id attributes from DTD (if there)
 		  , idAttributesToXPathValue . getIdAttributes $ t'
 		  )
 	navTD	= ntree t'
 	xpRes	= evalExpr (idAttr:(getVarTab varEnv),[]) (1, 1, navTD) xpe (XPVNode [navTD])
 
-addRoot	:: XmlFilter
+addRoot	:: XmlTree -> XmlTree
 addRoot t
-    | null . isRoot $ t
-	= rootTag [] [this] $ t
+    | XN.isRoot t
+	= t
     | otherwise
-	= this t
+	= XN.mkRoot [] [t]
 
 xPathErr	:: String -> String -> [XmlTree]
 xPathErr xpStr parseError
-    = xerr ("Syntax error in XPath expression " ++ show xpStr ++ ": " ++ show parseError)
+    = [XN.mkError c_err ("Syntax error in XPath expression " ++ show xpStr ++ ": " ++ show parseError)]
 
 -- |
 -- The main evaluation entry point. 
@@ -504,7 +523,10 @@ nodeTest (NameTest q)
       where
       isWildcardTest = localPart q == "*"
 
-nodeTest (PI s)                         = filterNodes (isPiNode s)
+nodeTest (PI n)                         = filterNodes isPiNode
+					  where
+					  isPiNode = maybe False ((== n) . qualifiedName) . XN.getPiName
+
 nodeTest (TypeTest t)                   = typeTest t
 
 nameTest	:: QName -> XNode -> Bool
@@ -533,27 +555,15 @@ wildcardTest xpName (XTag elemName _)
     prefixMatch    = not . null . namePrefix   $ xpName
 
 wildcardTest _ _ = False
-  
-{- old stuff
-
-filterd :: String -> XNode -> Bool
-filterd uri (XTag a _) = uri == namespaceUri a
-filterd _   _          = False
-
-isOfTagNode1 :: QName -> XNode -> Bool
-isOfTagNode1 (QN _prefix local uri) (XTag (QN _prefix1 local1 uri1) _) = local == local1 && uri1 == uri -- is this the better variant?:  prefix == prefix1 && local == local1
-isOfTagNode1 _                      _                                  = False
--}
 
 -- |
 -- tests whether a node is of a special type
 --
 typeTest :: XPathNode -> XPathFilter
 typeTest XPNode         = id
-typeTest XPCommentNode  = filterNodes isXCmtNode
-typeTest XPPINode       = filterNodes isXPiNode
-typeTest XPTextNode     = filterNodes isXTextNode
-
+typeTest XPCommentNode  = filterNodes XN.isCmt
+typeTest XPPINode       = filterNodes XN.isPi
+typeTest XPTextNode     = filterNodes XN.isText
 
 -- |
 -- the filter selects the NTree part of a navigable tree and
@@ -566,8 +576,6 @@ filterNodes fct (XPVNode ns)
     = XPVNode ([n | n@(NT (NTree node _) _ _ _) <- ns , fct node])
 filterNodes _ _
     = XPVError "Call to filterNodes without a nodeset"
-
-
 
 -- |
 -- evaluates a boolean expression, the evaluation is non-strict
@@ -624,18 +632,31 @@ numEval f op = foldl1 (f op)
 
 idAttributesToXPathValue	:: XmlTrees -> XPathValue
 idAttributesToXPathValue ts
-    = XPVString (foldr (\ n -> ( (valueOfDTD "value" n ++ " ") ++)) [] ts)
+    = XPVString (foldr (\ n -> ( (valueOfDTD a_value n ++ " ") ++)) [] ts)
 
 -- |
 -- Extracts all ID-attributes from the document type definition (DTD).
 --
 
-getIdAttributes	:: XmlFilter
+getIdAttributes	:: XmlTree -> XmlTrees
 getIdAttributes
-    = getChildren
-      .>
-      isXDTD
-      .>
-      deep (isIdAttrType)
+    = runLA $
+      AT.getChildren
+      >>>
+      isDTD
+      >>>
+      AT.deep (isIdAttrType)
 
 -- ----------------------------------------
+
+isIdAttrType		:: ArrowDTD a => a XmlTree XmlTree
+isIdAttrType		= hasDTDAttrValue a_type (== k_id)
+
+valueOfDTD		:: String -> XmlTree -> String
+valueOfDTD n		= concat . runLA ( getDTDAttrl >>^ lookup1 n )
+
+hasDTDAttrValue		:: ArrowDTD a => String -> (String -> Bool) -> a XmlTree XmlTree
+hasDTDAttrValue	an p	= filterA $
+			  getDTDAttrl >>> isA (p . lookup1 an)
+
+-- ------------------------------------------------------------

@@ -1,9 +1,21 @@
--- |
--- The core data types of XPath.
--- The Type NodeSet is based on the module "NavTree" which was adapted from
--- HXML (<http://www.flightlab.com/~joe/hxml/>)
---
+-- ------------------------------------------------------------
 
+{- |
+   Module     : Text.XML.HXT.XPath.XPathDataTypes
+   Copyright  : Copyright (C) 2006 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : experimental
+   Portability: portable
+
+   The core data types of XPath.
+   The Type NodeSet is based on the module "NavTree" which was adapted from
+   HXML (<http://www.flightlab.com/~joe/hxml/>)
+
+-}
+
+-- ------------------------------------------------------------
 
 module Text.XML.HXT.XPath.XPathDataTypes
     ( module Text.XML.HXT.XPath.XPathDataTypes
@@ -12,7 +24,7 @@ module Text.XML.HXT.XPath.XPathDataTypes
 where
 
 import Text.XML.HXT.XPath.NavTree
-import Text.XML.HXT.DOM.XmlTree
+import Text.XML.HXT.DOM.Interface
 
 -- -----------------------------------------------------------------------------
 --

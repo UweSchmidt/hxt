@@ -43,13 +43,16 @@ $(prog5)	: $(prog)
 # the size of the XML file for i=20 is about 36Mb
 # these tests have run on a box with 1Gb memory
 
-tests		= 2 3 10 11 12 13 14 15 16 17 18 19 20
+tests		= 2 3 10 11 12
 
 test		: $(prog)
-		$(MAKE) genfiles
-		$(MAKE) readfiles
-		$(MAKE) pruneright
-		$(MAKE) pruneleft
+		$(MAKE) genfiles   tests="$(tests)"
+		$(MAKE) readfiles  tests="$(tests)"
+		$(MAKE) pruneright tests="$(tests)"
+		$(MAKE) pruneleft  tests="$(tests)"
+
+perftest	: $(prog)
+		$(MAKE) test tests="2 3 10 11 12 13 14 15 16 17 18 19 20"
 
 genfiles	:
 		@for i in $(tests) ; \

@@ -32,6 +32,7 @@ where
 import Control.Monad
 
 import Data.Tree.NTree.TypeDefs
+
 import Data.Maybe
 
 import Text.XML.HXT.DOM.Interface

@@ -1,7 +1,19 @@
--- |
--- Format an expression or value in tree- or string-representation
---
+-- ------------------------------------------------------------
 
+{- |
+   Module     : Text.XML.HXT.XPath.XPathToString
+   Copyright  : Copyright (C) 2008 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : experimental
+   Portability: portable
+
+   Format an expression or value in tree- or string-representation
+
+-}
+
+-- ------------------------------------------------------------
 
 module Text.XML.HXT.XPath.XPathToString
     ( expr2XPathTree
@@ -13,7 +25,13 @@ module Text.XML.HXT.XPath.XPathToString
     )
 where
 
-import Text.XML.HXT.DOM.XmlTree
+-- import Text.XML.HXT.DOM.XmlTree
+
+import Text.XML.HXT.DOM.Interface
+import Text.XML.HXT.DOM.XmlNode
+    ( mkText
+    , mkError
+    )
 import Text.XML.HXT.DOM.FormatXmlTree
     ( formatXmlTree )
 
@@ -33,8 +51,6 @@ type XPathTree = NTree String
 --
 toXPathTree			:: [NavTree a] -> [NTree a]
 toXPathTree xs			= foldr (\ x -> (subtreeNT x :)) [] xs
-
-
 
 -- -----------------------------------------------------------------------------
 -- |
@@ -65,6 +81,9 @@ xPValue2XmlTrees (XPVNumber s)		= xtext (show s)
 xPValue2XmlTrees (XPVString s)		= xtext s
 xPValue2XmlTrees (XPVError  s)		= xerr s
 
+xtext, xerr	:: String -> XmlTrees
+xtext = (:[]) . mkText
+xerr  = (:[]) . mkError c_err
 
 
 -- -----------------------------------------------------------------------------
@@ -113,3 +132,5 @@ typeTest2String XPNode 		= "node()"
 typeTest2String XPCommentNode	= "comment()"
 typeTest2String XPPINode 	= "processing-instruction()"
 typeTest2String XPTextNode 	= "text()"
+
+-- ------------------------------------------------------------
