@@ -31,12 +31,28 @@ import Data.Maybe
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Pos
 
-import           Text.XML.HXT.DOM.XmlTree              hiding (choice)
-import           Text.XML.HXT.DOM.Util                (stringToUpper)
-
+import Text.XML.HXT.DOM.Interface	-- XmlTree              hiding (choice)
+import Text.XML.HXT.DOM.Util
+    ( stringToUpper
+    )
+import Text.XML.HXT.DOM.ShowXml
+    ( xshow
+    )
+import Text.XML.HXT.DOM.XmlNode
+    ( mkDTDElem
+    , mkText
+    , mkError
+    , isText
+    , isDTD
+    , getText
+    , getDTDPart
+    , getDTDAttrl
+    , getChildren
+    , setChildren
+    )
 import qualified Text.XML.HXT.Parser.XmlTokenParser    as XT
-import qualified Text.XML.HXT.Parser.XmlCharParser     as XC(xmlSpaceChar)
-import qualified Text.XML.HXT.Parser.XmlDTDTokenParser as XD(dtdToken)
+import qualified Text.XML.HXT.Parser.XmlCharParser     as XC ( xmlSpaceChar )
+import qualified Text.XML.HXT.Parser.XmlDTDTokenParser as XD ( dtdToken )
 
 -----------------------------------------------------------
 --
@@ -139,13 +155,13 @@ name		:: SParser XmlTree
 name
     = do
       n <- XT.name
-      return (mkXDTDTree NAME [(a_name, n)] [])
+      return (mkDTDElem NAME [(a_name, n)] [])
 
 nmtoken		:: SParser XmlTree
 nmtoken
     = do
       n <- XT.nmtoken
-      return (mkXDTDTree NAME [(a_name, n)] [])
+      return (mkDTDElem NAME [(a_name, n)] [])
 
 -- ------------------------------------------------------------
 --
@@ -163,7 +179,7 @@ elementDeclBody
       skipS
       (al, cl) <- contentspec
       skipS0
-      return [mkXDTDTree ELEMENT ((a_name, n) : al) cl]
+      return [mkDTDElem ELEMENT ((a_name, n) : al) cl]
 
 contentspec	:: SParser (Attributes, XmlTrees)
 contentspec
@@ -190,7 +206,7 @@ children
     = ( do
 	(al, cl) <- choiceOrSeq
 	modifier <- optOrRep
-	return ([(a_type, v_children)], [mkXDTDTree CONTENT (modifier ++ al) cl])
+	return ([(a_type, v_children)], [mkDTDElem CONTENT (modifier ++ al) cl])
       )
       <?> "element content"
 
@@ -245,14 +261,14 @@ cp
 	m <- optOrRep
 	return ( case m of
 		 [(_, "")] -> n
-		 _         -> mkXDTDTree CONTENT (m ++ [(a_kind, v_seq)]) [n]
+		 _         -> mkDTDElem CONTENT (m ++ [(a_kind, v_seq)]) [n]
 	       )
       )
       <|>
       ( do
 	(al, cl) <- choiceOrSeq
 	m <- optOrRep
-	return (mkXDTDTree CONTENT (m ++ al) cl)
+	return (mkDTDElem CONTENT (m ++ al) cl)
       )
 
 -- ------------------------------------------------------------
@@ -280,7 +296,7 @@ mixed
 	  else do
 	       char '*' <?> "closing parent for mixed content (\")*\")"
 	       return ( [ (a_type, v_mixed) ]
-		      , [ mkXDTDTree CONTENT [ (a_modifier, "*")
+		      , [ mkDTDElem CONTENT [ (a_modifier, "*")
 					     , (a_kind, v_choice)
 					     ] nl
 			]
@@ -306,7 +322,7 @@ attlistDeclBody
       return (map (mkDTree n) al)
     where
     mkDTree n' (al, cl)
-	= mkXDTDTree ATTLIST ((a_name, n') : al) cl
+	= mkDTDElem ATTLIST ((a_name, n') : al) cl
     
 attDef		:: SParser (Attributes, XmlTrees)
 attDef
@@ -410,7 +426,7 @@ geDecl
       skipS
       (al, cl) <- entityDef
       skipS0
-      return [mkXDTDTree ENTITY ((a_name, n) : al) cl]
+      return [mkDTDElem ENTITY ((a_name, n) : al) cl]
 
 entityDef		:: SParser (Attributes, XmlTrees)
 entityDef
@@ -434,7 +450,7 @@ peDecl
       skipS
       (al, cs) <- peDef
       skipS0
-      return [mkXDTDTree PENTITY ((a_name, n) : al) cs]
+      return [mkDTDElem PENTITY ((a_name, n) : al) cs]
 
 peDef			:: SParser (Attributes, XmlTrees)
 peDef
@@ -504,7 +520,7 @@ notationDeclBody
 	       publicID
 	     )
       skipS0
-      return [mkXDTDTree NOTATION ((a_name, n) : eid) []]
+      return [mkDTDElem NOTATION ((a_name, n) : eid) []]
 
 publicID		:: SParser Attributes
 publicID
@@ -524,7 +540,7 @@ condSectCondBody
       skipS0
       let n' = stringToUpper n
       if n' `elem` [k_include, k_ignore]
-	 then return (xtext  n')
+	 then return [mkText  n']
 	 else fail $ "INCLUDE or IGNORE expected in conditional section"
 
 -- ------------------------------------------------------------
@@ -559,41 +575,57 @@ rpar
 
 -- ------------------------------------------------------------
 
-parseXmlDTDEntityValue	:: XmlFilter
-parseXmlDTDEntityValue (NTree (XDTD PEREF al) cl)
-    = ( either (xerr . (++ "\n") . show)
-	       (\cl' -> if null cl'
-                        then [mkXTextTree ""]
-                        else cl'
-	       )
-	.
-	parse parser source
-      ) input
+parseXmlDTDEntityValue	:: XmlTree -> XmlTrees
+parseXmlDTDEntityValue t	-- (NTree (XDTD PEREF al) cl)
+    | isDTDPEref t
+	= ( either
+	    ( (:[]) . mkError c_err . (++ "\n") . show )
+	    ( \cl' -> if null cl'
+                         then [mkText ""]
+                         else cl'
+	    )
+	    .
+	    parse parser source
+	  ) input
+    | otherwise
+	= []
     where
+    al     = fromMaybe [] . getDTDAttrl $ t
+    cl     = getChildren t
     parser = XT.entityTokensT "%&"
     source = "value of parameter entity " ++ lookupDef "" a_peref al
     input  = xshow cl
 
+{-
 parseXmlDTDEntityValue n
     = error ("parseXmlDTDEntityValue: illegal argument: " ++ show n)
-
+-}
 -- ------------------------------------------------------------
 
-parseXmlDTDdeclPart	:: XmlFilter
-parseXmlDTDdeclPart n@(NTree (XDTD PEREF al) cl)
-    = ( either (xerr . (++ "\n") . show)
-	       (\cl' -> replaceChildren cl' n)
-	.
-	parse parser source
-      ) input
+parseXmlDTDdeclPart	:: XmlTree -> XmlTrees
+parseXmlDTDdeclPart t		-- @(NTree (XDTD PEREF al) cl)
+    | isDTDPEref t
+	= ( (:[])
+	    .
+	    either
+	       ( mkError c_err . (++ "\n") . show )
+	       ( flip setChildren $ t ) -- \ cl' -> setChildren cl' t)
+	    .
+	    parse parser source
+	  ) input
+    | otherwise
+	= []
     where
+    al     = fromMaybe [] . getDTDAttrl $ t
+    cl     = getChildren t
     parser = many XD.dtdToken
     source = "value of parameter entity " ++ lookupDef "" a_peref al
     input  = xshow cl
 
+{-
 parseXmlDTDdeclPart n
     = error ("parseXmlDTDdeclPart: illegal argument: " ++ show n)
-
+-}
 -- ------------------------------------------------------------
 --
 -- the main entry point
@@ -605,13 +637,19 @@ parseXmlDTDdeclPart n
 -- substitution.
 -- Output is again a DTD declaration node, but this time completely parsed and ready for further DTD processing
 
-parseXmlDTDdecl	:: XmlFilter
-parseXmlDTDdecl (NTree (XDTD dtdElem al) cl)
-    = ( either (xerr . (++ "\n") . show) id
-	.
-	runParser parser (initialLocalState pos) source
-      ) input
+parseXmlDTDdecl	:: XmlTree -> XmlTrees
+parseXmlDTDdecl t	-- (NTree (XDTD dtdElem al) cl)
+    | isDTD t
+	= ( either ((:[]) . mkError c_err . (++ "\n") . show) id
+	    .
+	    runParser parser (initialLocalState pos) source
+	  ) input
+    | otherwise
+	= []
     where
+    dtdElem = fromJust     . getDTDPart  $ t
+    al      = fromMaybe [] . getDTDAttrl $ t
+    cl      = getChildren t
     dtdParsers
 	= [ (ELEMENT,  elementDeclBody)
 	  , (ATTLIST,  attlistDeclBody)
@@ -629,16 +667,31 @@ parseXmlDTDdecl (NTree (XDTD dtdElem al) cl)
 	     eof
 	     return res
     input  = concatMap collectText cl
-
+{-
 parseXmlDTDdecl _
     = []
-
+-}
 
 -- | collect the tokens of a DTD declaration body and build
 -- a string ready for parsing. The structure of the parameter entity values
 -- is stll stored in this string for checking the scope of the parameter values
 
 collectText	:: XmlTree -> String
+
+collectText t
+    | isText t
+	= fromMaybe "" . getText $ t
+    | isDTDPEref t
+	= prefixPe ++ concatMap collectText (getChildren t) ++ suffixPe
+    | otherwise
+	= ""
+    where
+    al       = fromMaybe [] . getDTDAttrl $ t
+    delPe    = "\0"
+    prefixPe = delPe ++ lookupDef "???" a_peref al ++ delPe
+    suffixPe = delPe ++ delPe
+
+{-
 
 collectText (NTree n _)
     | isXTextNode n
@@ -653,5 +706,10 @@ collectText (NTree (XDTD PEREF al) cl)
 
 collectText _
     = ""
+-}
+
+isDTDPEref	:: XmlTree -> Bool
+isDTDPEref
+    = maybe False (== PEREF) . getDTDPart
 
 -- ------------------------------------------------------------

@@ -1,7 +1,7 @@
 module Main
 where
 
-import Data.List ( sort )
+import Data.List
 import System.Environment
 
 part1	:: [String]
@@ -99,6 +99,8 @@ cabalFile vers cabal installdir modules
     where
     isCabal = cabal == "cabal"
     ml = foldr1 (\ x y -> x ++ ",\n" ++ y) . sort . map editPath
-    editPath = ("  " ++) . map slash2dot . reverse . drop 1 . dropWhile (/= '.') . reverse . drop 2
+    editPath = ("  " ++) . map slash2dot . reverse . drop 1 . dropWhile (/= '.') . reverse . removeLeadingDot
     slash2dot '/' = '.'
     slash2dot c   = c
+    removeLeadingDot ('.':'/':path)	= path
+    removeLeadingDot path		= path

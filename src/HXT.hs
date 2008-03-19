@@ -7,7 +7,6 @@ module HXT {-
     ) -}
 where
 
-import Text.XML.HXT.Parser as Parser
-import Text.XML.HXT.XPath as XPath
-import Text.XML.HXT.Arrow as Arrow
-import Text.XML.HXT.RelaxNG as Relax
+import Text.XML.HXT.XPath as XPath()
+import Text.XML.HXT.Arrow as Arrow()
+import Text.XML.HXT.RelaxNG as Relax()

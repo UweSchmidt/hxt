@@ -10,7 +10,7 @@ where
 import Text.XML.HXT.RelaxNG.Validator
 import Text.XML.HXT.RelaxNG.Schema
 import Text.XML.HXT.Arrow 
-import Text.XML.HXT.Parser	( formatXmlTree )   
+import Text.XML.HXT.DOM.FormatXmlTree
 
 import Test.HUnit
 import Data.List 

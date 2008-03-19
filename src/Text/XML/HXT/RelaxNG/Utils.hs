@@ -33,7 +33,7 @@ where
 
 import Text.ParserCombinators.Parsec
 
-import Text.XML.HXT.Parser.XmlParser
+import Text.XML.HXT.Parser.XmlTokenParser
     ( skipS0
     , nmtoken
     , name

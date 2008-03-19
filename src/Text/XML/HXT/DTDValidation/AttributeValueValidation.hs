@@ -33,7 +33,7 @@ module Text.XML.HXT.DTDValidation.AttributeValueValidation
     )
 where
 
-import Text.XML.HXT.Parser.XmlParser
+import Text.XML.HXT.Parser.XmlParsec
     ( parseNMToken
     , parseName
     )

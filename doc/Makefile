@@ -1,5 +1,7 @@
 # $Id: Makefile,v 1.5 2006/11/11 15:36:03 hxml Exp $
 
+include ../Version.mk
+
 HXT_HOME	= ..
 
 all		:
@@ -7,10 +9,10 @@ all		:
 
 test		:
 
-DIST		= $(HXT_HOME)/dist
+DIST		= ../$(DIST_NAME)
 DIST_DIR	= $(DIST)/doc
 DIST_FILES	= Makefile \
-		  hdoc hdoc_filter hdoc_arrow \
+		  hdoc \
 		  hvalidator/thesis \
 		  $(wildcard hxpath/*.pdf) \
 		  relaxng/thesis.pdf \
@@ -23,6 +25,6 @@ dist		:
 		cp hvalidator/thesis.pdf $(DIST_DIR)
 
 clean		:
-		rm -rf hdoc/* hdoc_arrow/* hdoc_filter/*
+		rm -rf hdoc
 
 .PHONY		: all test dist clean

@@ -31,7 +31,7 @@ import Text.XML.HXT.DOM.TypeDefs
 import Text.XML.HXT.XPath.XPathKeywords
 import Text.XML.HXT.XPath.XPathDataTypes
 
-import Text.XML.HXT.Parser.XmlParser
+import Text.XML.HXT.Parser.XmlTokenParser
     ( separator
     , systemLiteral
     , skipS0

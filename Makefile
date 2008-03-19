@@ -1,21 +1,19 @@
 # $Id: Makefile,v 1.93 2006/11/24 07:41:37 hxml Exp $
 
+include Version.mk
+
 HXT_HOME	= .
 
-software	= hxt
-VERSION		= 7.5
-dist		= $(software)-$(VERSION)
-DIST		= $(software)-$(VERSION)
+DIST		= $(DIST_NAME)
+DIST_TAR	= $(DIST_NAME).tar.gz
 DIST_FILES	= Makefile README LICENCE Setup.lhs hxt.cabal
-DIST_TAR	= $(dist).tar.gz
 
 SETUP		= Setup.lhs
 
-VERSIONTAG	= $(software)-7-05				# use: make tag for creating darcs tag
-LASTVERSION	= 7.4
+VERSIONTAG	= $(DIST_NAME)
 PUBDATE		:= $(shell date +%Y-%m-%d)
 
-EDIT_VERSION	= sed 's/%DISTFILE%/$(DIST)/g' \
+EDIT_VERSION	= sed 's/%DISTFILE%/$(DIST_NAME)/g' \
 		| sed 's/%VERSION%/$(VERSION)/g' \
 		| sed 's/%PUBDATE%/$(PUBDATE)/g'
 
@@ -25,14 +23,15 @@ HSCOLOUR_CSS	= doc/hscolour.css
 # --------------------------------------------------
 
 all		:
-		$(MAKE) -C src      all VERSION=$(VERSION)
-		$(MAKE) allexamples
+		$(MAKE) -C src all
+		$(MAKE)        hxt.cabal
+		$(MAKE)        allexamples
 
 allexamples	:
-		$(MAKE) -C examples all VERSION=$(VERSION)
+		$(MAKE) -C examples all
 
 test		:
-		$(MAKE) -C examples test VERSION=$(VERSION) LASTVERSION=$(LASTVERSION)
+		$(MAKE) -C examples test
 
 # ------------------------------------------------------------
 
@@ -56,18 +55,20 @@ cabal_install	:
 # ------------------------------------------------------------
 
 hxt.cabal	: src/hxt-package.hs src/Makefile Makefile
-		$(MAKE) -C src ../hxt.cabal VERSION=$(VERSION)
+		$(MAKE) -C src ../hxt.cabal
 
-doc		:
-		$(MAKE) -C src doc        VERSION=$(VERSION)
-		$(MAKE) -C src doc_filter VERSION=$(VERSION)
-		$(MAKE) -C src doc_arrow  VERSION=$(VERSION)
+DOC_HXT		= $(DIST)/doc/hdoc
 
-dist		: all doc hxt.cabal
+doc		: hxt.cabal
+		$(MAKE) cabal_configure cabal_doc
+		[ -d $(DOC_HXT) ] || mkdir -p $(DOC_HXT)
+		( cd dist/doc/html/hxt ; tar cf - . ) | ( cd $(DOC_HXT) ; tar xf - )
+
+dist		: all doc
 		[ -d $(DIST) ] || mkdir -p $(DIST)
-		$(MAKE) -C src      dist DIST=../$(DIST)
-		$(MAKE) -C examples dist DIST=../$(DIST)
-		$(MAKE) -C doc      dist DIST=../$(DIST)
+		$(MAKE) -C src      dist
+		$(MAKE) -C examples dist
+		$(MAKE) -C doc      dist
 		cat doc/index.html | $(EDIT_VERSION) > $(DIST)/doc/index.html
 		cp $(DIST_FILES) $(DIST)
 
@@ -93,10 +94,10 @@ install		:
 uninstall		:
 		$(MAKE) -C src uninstall
 
-distdate	= $(shell date -r $(DIST_TAR) +%Y-%m-%d.%R)
+DISTDATE	= $(shell date -r $(DIST_TAR) +%Y-%m-%d.%R)
 
 distcopy	: $(DIST_TAR)
-		scp $(DIST_TAR) hxt@darcs.fh-wedel.de:/home/hxt/hxt/hxt-head-$(distdate).tar.gz
+		scp $(DIST_TAR) hxt@darcs.fh-wedel.de:/home/hxt/hxt/hxt-head-$(DISTDATE).tar.gz
 
 # --------------------------------------------------
 

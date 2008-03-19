@@ -3,13 +3,13 @@
 # Example Applications
 #
 
-HXT_HOME	= ..
-VERSION		= 7.5
-LASTVERSION	= 7.4
+include ../Version.mk
 
-EXAMPLES	= mini hparser hxpath hfilter hunit hsvg dtd2haskell arrows
-MORE_SAMPLES	= w3ctest blutgraetsche photoalbum
-DIST		= $(HXT_HOME)/dist
+HXT_HOME	= ..
+
+EXAMPLES	= arrows
+MORE_SAMPLES	= 
+DIST		= ../$(DIST_NAME)
 DIST_DIR	= $(DIST)/examples
 
 all		:
@@ -19,7 +19,7 @@ all		:
 		fi 
 
 alllocal		:
-		$(foreach i,$(EXAMPLES),$(MAKE) -C $i PKGFLAGS="-ignore-package hxt-$(LASTVERSION) -package-conf `pwd`/$(HXT_HOME)/lib/hxt/package.conf -package hxt" all ;)
+		$(foreach i,$(EXAMPLES),$(MAKE) -C $i PKGFLAGS="-package-conf `pwd`/$(HXT_HOME)/lib/hxt/package.conf -package hxt-$(VERSION)" all ;)
 alldist		:
 		$(foreach i,$(EXAMPLES),$(MAKE) -C $i all ;)
 
@@ -36,13 +36,10 @@ dist		:
 clean		:
 		$(foreach i,$(EXAMPLES),$(MAKE) -C $i $@ ;)
 
-RunTestCases	:
-		$(MAKE) -C w3ctest $@
-
 # under construction
 
 hxslt/runXslt	: hxslt/runXslt.hs
 		$(GHC) --make -o $@ $<
 
-.PHONY		: all clean test dist RunTestCases
+.PHONY		: all alllocal alldist test dist clean
 

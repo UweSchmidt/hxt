@@ -2,7 +2,8 @@
 #
 # global names and dirs
 
-VERSION		= 7.5
+include ../Version.mk
+
 HXT_HOME	= ..
 HXT_HOME_PATH	= $(shell cd $(HXT_HOME) ; pwd)
 PACKAGE_DIR	= $(HXT_HOME_PATH)/lib/hxt
@@ -51,71 +52,118 @@ packagename	:
 #
 # hxt package variables and rules
 
-HXT_SRC		= $(wildcard ./Data/*.hs) \
-		  $(wildcard ./Data/Char/*.hs) \
-		  $(wildcard ./Data/Tree/*.hs) \
-		  $(wildcard ./Data/Tree/NTree/*.hs) \
-		  $(wildcard ./Control/Arrow/*.hs) \
-		  $(wildcard ./Control/Monad/*.hs) \
-		  $(wildcard ./Control/Strategies/*.hs) \
-		  $(wildcard ./System/*.hs) \
-		  $(wildcard ./Text/XML/HXT/[DPX]*.hs) \
-		  $(wildcard ./Text/XML/HXT/DOM/*.hs) \
-		  $(wildcard ./Text/XML/HXT/Parser/*.hs) \
-		  $(wildcard ./Text/XML/HXT/Validator/*.hs) \
-		  $(wildcard ./Text/XML/HXT/DTDValidation/*.hs) \
-		  $(wildcard ./Text/XML/HXT/XPath/*.hs) \
-		  $(wildcard ./Text/XML/HXT/Arrow.hs) \
-		  $(wildcard ./Text/XML/HXT/Arrow/[DEGNPRWX]*.hs) \
-		  $(wildcard ./Text/XML/HXT/Arrow/Pickle/*.hs) \
-		  $(wildcard ./Text/XML/HXT/IO/*.hs) \
-		  $(wildcard ./Text/XML/HXT/RelaxNG.hs) \
-		  $(wildcard ./Text/XML/HXT/RelaxNG/*.hs) \
-		  $(wildcard ./Text/XML/HXT/RelaxNG/Unicode/[BC]*.hs) \
-		  $(wildcard ./Text/XML/HXT/RelaxNG/XmlSchema/*.hs) \
-		  $(wildcard ./Text/XML/HXT/XSLT/[ACNX]*.hs)
-
-HXT_SRC_FILTER	= $(wildcard ./Data/*.hs) \
-		  $(wildcard ./Data/Char/*.hs) \
-		  $(wildcard ./Data/Tree/*.hs) \
-		  $(wildcard ./Data/Tree/NTree/*.hs) \
-		  $(wildcard ./Control/Monad/*.hs) \
-		  $(wildcard ./Control/Strategies/*.hs) \
-		  $(wildcard ./System/*.hs) \
-		  $(wildcard ./Text/XML/HXT/[DIPX]*.hs) \
-		  $(wildcard ./Text/XML/HXT/DOM/*.hs) \
-		  $(wildcard ./Text/XML/HXT/Parser/*.hs) \
-		  $(wildcard ./Text/XML/HXT/Validator/*.hs) \
-		  $(wildcard ./Text/XML/HXT/XPath/*.hs) \
-
-HXT_SRC_ARROW	= $(wildcard ./Data/*.hs) \
-		  $(wildcard ./Data/Char/*.hs) \
-		  $(wildcard ./Data/Tree/*.hs) \
-		  $(wildcard ./Data/Tree/NTree/T*.hs) \
-		  $(wildcard ./Control/Arrow/*.hs) \
-		  $(wildcard ./Control/Monad/*.hs) \
-		  $(wildcard ./Control/Strategies/*.hs) \
-		  $(wildcard ./Text/XML/HXT/[A]*.hs) \
-		  $(wildcard ./Text/XML/HXT/DOM/NamespacePredicates.hs) \
-		  $(wildcard ./Text/XML/HXT/DOM/[QTU]*.hs) \
-		  $(wildcard ./Text/XML/HXT/DOM/Interface.hs) \
-		  $(wildcard ./Text/XML/HXT/DOM/Iso*.hs) \
-		  $(wildcard ./Text/XML/HXT/DOM/ShowXml.hs) \
-		  $(wildcard ./Text/XML/HXT/DOM/XmlKeywords.hs) \
-		  $(wildcard ./Text/XML/HXT/DOM/XmlNode.hs) \
-		  $(wildcard ./Text/XML/HXT/Parser/XmlOptions.hs) \
-		  $(wildcard ./Text/XML/HXT/Arrow.hs) \
-		  $(wildcard ./Text/XML/HXT/Arrow/[DEGNPRWX]*.hs) \
-		  $(wildcard ./Text/XML/HXT/Arrow/Pickle/*.hs) \
-		  $(wildcard ./Text/XML/HXT/DTDValidation/*.hs) \
-		  $(wildcard ./Text/XML/HXT/RelaxNG/[DSV]*.hs) \
-		  $(wildcard ./Text/XML/HXT/RelaxNG/Unicode/[BC]*.hs) \
-		  $(wildcard ./Text/XML/HXT/RelaxNG/XmlSchema/*.hs) \
-		  $(wildcard ./Text/XML/HXT/XSLT/[ACNX]*.hs)
-
-
-# HXT_OBJ		= $(patsubst %.lhs,%.o,$(patsubst %.hs,%.o,$(HXT_SRC)))		# no .lhs sources
-# HXT_HI		= $(patsubst %.lhs,%.hi,$(patsubst %.hs,%.hi,$(HXT_SRC)))
+HXT_SRC	= \
+	Control/Arrow/ArrowIf.hs \
+	Control/Arrow/ArrowIO.hs \
+	Control/Arrow/ArrowList.hs \
+	Control/Arrow/ArrowState.hs \
+	Control/Arrow/ArrowStrict.hs \
+	Control/Arrow/ArrowTree.hs \
+	Control/Arrow/IOListArrow.hs \
+	Control/Arrow/IOStateListArrow.hs \
+	Control/Arrow/ListArrow.hs \
+	Control/Arrow/ListArrows.hs \
+	Control/Arrow/StateListArrow.hs \
+	Control/Strategies/DeepSeq.hs \
+	Data/AssocList.hs \
+	Data/Char/UTF8.hs \
+	Data/NavTree.hs \
+	Data/Tree/Class.hs \
+	Data/Tree/NTree/Filter.hs \
+	Data/Tree/NTree/TypeDefs.hs \
+	System/PipeOpen.hs \
+	Text/XML/HXT/Arrow/DocumentInput.hs \
+	Text/XML/HXT/Arrow/DocumentOutput.hs \
+	Text/XML/HXT/Arrow/DTDProcessing.hs \
+	Text/XML/HXT/Arrow/Edit.hs \
+	Text/XML/HXT/Arrow/GeneralEntitySubstitution.hs \
+	Text/XML/HXT/Arrow.hs \
+	Text/XML/HXT/Arrow/Namespace.hs \
+	Text/XML/HXT/Arrow/ParserInterface.hs \
+	Text/XML/HXT/Arrow/Pickle/DTD.hs \
+	Text/XML/HXT/Arrow/Pickle.hs \
+	Text/XML/HXT/Arrow/Pickle/Schema.hs \
+	Text/XML/HXT/Arrow/Pickle/Xml.hs \
+	Text/XML/HXT/Arrow/ProcessDocument.hs \
+	Text/XML/HXT/Arrow/ReadDocument.hs \
+	Text/XML/HXT/Arrow/WriteDocument.hs \
+	Text/XML/HXT/Arrow/XmlArrow.hs \
+	Text/XML/HXT/Arrow/XmlIOStateArrow.hs \
+	Text/XML/HXT/Arrow/XmlRegex.hs \
+	Text/XML/HXT/Arrow/XPath.hs \
+	Text/XML/HXT/Arrow/XPathSimple.hs \
+	Text/XML/HXT/DOM/FormatXmlTree.hs \
+	Text/XML/HXT/DOM/Interface.hs \
+	Text/XML/HXT/DOM/IsoLatinTables.hs \
+	Text/XML/HXT/DOM/NamespacePredicates.hs \
+	Text/XML/HXT/DOM/QualifiedName.hs \
+	Text/XML/HXT/DOM/ShowXml.hs \
+	Text/XML/HXT/DOM/TypeDefs.hs \
+	Text/XML/HXT/DOM/Unicode.hs \
+	Text/XML/HXT/DOM/UTF8Decoding.hs \
+	Text/XML/HXT/DOM/Util.hs \
+	Text/XML/HXT/DOM/XmlKeywords.hs \
+	Text/XML/HXT/DOM/XmlNode.hs \
+	Text/XML/HXT/DOM/XmlOptions.hs \
+	Text/XML/HXT/DOM/XmlTreeTypes.hs \
+	Text/XML/HXT/DTDValidation/AttributeValueValidation.hs \
+	Text/XML/HXT/DTDValidation/DocTransformation.hs \
+	Text/XML/HXT/DTDValidation/DocValidation.hs \
+	Text/XML/HXT/DTDValidation/DTDValidation.hs \
+	Text/XML/HXT/DTDValidation/IdValidation.hs \
+	Text/XML/HXT/DTDValidation/RE.hs \
+	Text/XML/HXT/DTDValidation/TypeDefs.hs \
+	Text/XML/HXT/DTDValidation/Validation.hs \
+	Text/XML/HXT/DTDValidation/XmlRE.hs \
+	Text/XML/HXT/IO/GetFILE.hs \
+	Text/XML/HXT/IO/GetHTTPCurl.hs \
+	Text/XML/HXT/IO/GetHTTPNative.hs \
+	Text/XML/HXT/Parser/HtmlParsec.hs \
+	Text/XML/HXT/Parser/ProtocolHandlerUtil.hs \
+	Text/XML/HXT/Parser/TagSoup.hs \
+	Text/XML/HXT/Parser/XhtmlEntities.hs \
+	Text/XML/HXT/Parser/XmlCharParser.hs \
+	Text/XML/HXT/Parser/XmlDTDParser.hs \
+	Text/XML/HXT/Parser/XmlDTDTokenParser.hs \
+	Text/XML/HXT/Parser/XmlEntities.hs \
+	Text/XML/HXT/Parser/XmlParsec.hs \
+	Text/XML/HXT/Parser/XmlTokenParser.hs \
+	Text/XML/HXT/RelaxNG/BasicArrows.hs \
+	Text/XML/HXT/RelaxNG/CreatePattern.hs \
+	Text/XML/HXT/RelaxNG/DataTypeLibMysql.hs \
+	Text/XML/HXT/RelaxNG/DataTypeLibraries.hs \
+	Text/XML/HXT/RelaxNG/DataTypeLibUtils.hs \
+	Text/XML/HXT/RelaxNG/DataTypes.hs \
+	Text/XML/HXT/RelaxNG.hs \
+	Text/XML/HXT/RelaxNG/PatternFunctions.hs \
+	Text/XML/HXT/RelaxNG/PatternToString.hs \
+	Text/XML/HXT/RelaxNG/SchemaGrammar.hs \
+	Text/XML/HXT/RelaxNG/Schema.hs \
+	Text/XML/HXT/RelaxNG/Simplification.hs \
+	Text/XML/HXT/RelaxNG/Unicode/Blocks.hs \
+	Text/XML/HXT/RelaxNG/Unicode/CharProps.hs \
+	Text/XML/HXT/RelaxNG/Utils.hs \
+	Text/XML/HXT/RelaxNG/Validation.hs \
+	Text/XML/HXT/RelaxNG/Validator.hs \
+	Text/XML/HXT/RelaxNG/XmlSchema/DataTypeLibW3C.hs \
+	Text/XML/HXT/RelaxNG/XmlSchema/Regex.hs \
+	Text/XML/HXT/RelaxNG/XmlSchema/RegexParser.hs \
+	Text/XML/HXT/XPath.hs \
+	Text/XML/HXT/XPath/NavTree.hs \
+	Text/XML/HXT/XPath/XPathArithmetic.hs \
+	Text/XML/HXT/XPath/XPathDataTypes.hs \
+	Text/XML/HXT/XPath/XPathEval.hs \
+	Text/XML/HXT/XPath/XPathFct.hs \
+	Text/XML/HXT/XPath/XPathKeywords.hs \
+	Text/XML/HXT/XPath/XPathParser.hs \
+	Text/XML/HXT/XPath/XPathToNodeSet.hs \
+	Text/XML/HXT/XPath/XPathToString.hs \
+	Text/XML/HXT/XSLT/Application.hs \
+	Text/XML/HXT/XSLT/Common.hs \
+	Text/XML/HXT/XSLT/Compilation.hs \
+	Text/XML/HXT/XSLT/CompiledStylesheet.hs \
+	Text/XML/HXT/XSLT/Names.hs \
+	Text/XML/HXT/XSLT/XsltArrows.hs
 
 HXT_OBJ		= $(HXT_SRC:.hs=.o)
 HXT_HI		= $(HXT_SRC:.hs=.hi)
@@ -217,18 +265,6 @@ uninstall_packages	:
 clean_packages	:
 		$(MAKE) clean_$(HXT_PACKAGE)
 
-doc		: $(HXT_SRC)
-		[ -d $(HDOC_DIR) ] || mkdir -p $(HDOC_DIR)
-		$(HDOC) -t "Haskell Xml Toolbox $(VERSION): The complete API" -o $(HDOC_DIR) $(HXT_SRC)
-
-doc_arrow	: $(HXT_SRC_ARROW)
-		[ -d $(HDOC_DIR_ARROW) ] || mkdir -p $(HDOC_DIR_ARROW)
-		$(HDOC) -t "Haskell Xml Toolbox $(VERSION): The Arrow API" -o $(HDOC_DIR_ARROW) $(HXT_SRC_ARROW)
-
-doc_filter	: $(HXT_SRC_FILTER)
-		[ -d $(HDOC_DIR_FILTER) ] || mkdir -p $(HDOC_DIR_FILTER)
-		$(HDOC) -t "Haskell Xml Toolbox $(VERSION): The Filter API" -o $(HDOC_DIR_FILTER) $(HXT_SRC_FILTER)
-
 clean		:
 		$(MAKE) clean_packages
 		$(MAKE) -C ./Text/XML/HXT/ProtocolHandler clean
@@ -239,11 +275,12 @@ clean_$(HXT_PACKAGE)	:
 
 # ------------------------------------------------------------
 
-DIST		= $(HXT_HOME)/dist
+DIST		= ../$(DIST_NAME)
 DIST_DIR	= $(DIST)/src
 DIST_FILES	= Makefile \
 		  $(HXT_SRC) $(HXT_DRIVER:.o=.hs) hxt-package.hs \
-		  ./Text/XML/HXT/ProtocolHandler/ProtocolHandler.hs ./Text/XML/HXT/ProtocolHandler/Makefile \
+		  ./Text/XML/HXT/ProtocolHandler/ProtocolHandler.hs \
+		  ./Text/XML/HXT/ProtocolHandler/Makefile \
 		  $(wildcard ./Text/XML/HXT/RelaxNG/Unicode/G*.hs) \
 		  $(wildcard ./Text/XML/HXT/RelaxNG/Unicode/Makefile) \
 		  $(wildcard ./Text/XML/HXT/RelaxNG/Unicode/*.txt)

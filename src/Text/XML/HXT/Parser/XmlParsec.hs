@@ -75,7 +75,9 @@ import Text.ParserCombinators.Parsec
     , sourceName
     )
 
-import Text.XML.HXT.DOM.XmlTreeFunctions(xshow)
+import Text.XML.HXT.DOM.ShowXml
+    ( xshow
+    )
 
 import Text.XML.HXT.DOM.Interface
 
