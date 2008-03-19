@@ -6,7 +6,7 @@ HXT_HOME	= .
 
 DIST		= $(DIST_NAME)
 DIST_TAR	= $(DIST_NAME).tar.gz
-DIST_FILES	= Makefile README LICENCE Setup.lhs hxt.cabal
+DIST_FILES	= Makefile Version.mk README LICENCE Setup.lhs hxt.cabal
 
 SETUP		= Setup.lhs
 
