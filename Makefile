@@ -48,14 +48,14 @@ cabal_build	:
 		runhaskell $(SETUP) build
 
 cabal_install	:
-		sudo runhaskell $(SETUP) build
+		sudo runhaskell $(SETUP) install
 
 # ------------------------------------------------------------
 
 $(SOFTWARE).cabal	: src/$(SOFTWARE)-package.hs src/Makefile Makefile
 		$(MAKE) -C src ../$(SOFTWARE).cabal
 
-DOC_HXT		= $(DIST)/doc/hdoc
+DOC_HXT		= $(DIST)/doc/$(SOFTWARE)
 
 doc		: $(SOFTWARE).cabal
 		$(MAKE) cabal_configure cabal_doc
@@ -78,7 +78,7 @@ clean		:
 		$(MAKE) -C src      clean
 		$(MAKE) -C examples clean
 		$(MAKE) -C doc      clean
-		rm -rf $(DIST) $(DIST_TAR) hxt.cabal setup .setup-config .installed-pkg-config dist
+		rm -rf $(DIST) $(DIST_TAR) $(SOFTWARE).cabal setup .setup-config .installed-pkg-config dist
 
 # ------------------------------------------------------------
 
@@ -94,7 +94,7 @@ uninstall		:
 DISTDATE	= $(shell date -r $(DIST_TAR) +%Y-%m-%d.%R)
 
 distcopy	: $(DIST_TAR)
-		scp $(DIST_TAR) hxt@darcs.fh-wedel.de:/home/hxt/hxt/hxt-head-$(DISTDATE).tar.gz
+		scp $(DIST_TAR) hxt@darcs.fh-wedel.de:/home/hxt/$(SOFTWARE)/$(SOFTWARE)-head-$(DISTDATE).tar.gz
 
 # --------------------------------------------------
 
@@ -105,37 +105,6 @@ distcopy	: $(DIST_TAR)
 # Create webpage directory for distribution
 
 WEBHOME		= ../../../fh/public_html/HXmlToolbox
-
-webpage		: tarball
-		[ ! -d $(WEBHOME) ] || echo "please clean $(WEBHOME) first: make cleanwebpage"
-		mkdir -p $(WEBHOME)
-		cp -r doc/hdoc doc/hdoc_filter doc/hdoc_arrow $(WEBHOME)/
-		cp -r doc/hvalidator/thesis $(WEBHOME)/thesis
-		cp -f doc/hvalidator/thesis.ps doc/hvalidator/thesis.pdf $(WEBHOME) || true
-		[ -d $(WEBHOME)/hxpath ] || mkdir -p $(WEBHOME)/hxpath
-		cp -f doc/hxpath/diplomarbeit.pdf $(WEBHOME)/hxpath
-		[ -d $(WEBHOME)/relaxng ] || mkdir -p $(WEBHOME)/relaxng
-		cp -f doc/relaxng/thesis.pdf $(WEBHOME)/relaxng
-		[ -d $(WEBHOME)/cookbook ] || mkdir -p $(WEBHOME)/cookbook
-		[ -d $(WEBHOME)/cookbook/doc ] || mkdir -p $(WEBHOME)/cookbook/doc
-		cp -f doc/cookbook/doc/thesis.pdf $(WEBHOME)/cookbook/doc
-		[ -d $(WEBHOME)/xslt ] || mkdir -p $(WEBHOME)/xslt
-		cp -f doc/xslt/thesis.pdf $(WEBHOME)/xslt
-		[ -d $(WEBHOME)/examples ] || mkdir -p $(WEBHOME)/examples
-		cp -f examples/hsvg/*.html.jpg $(WEBHOME)/examples
-		cp -f examples/hsvg/*.html.svg $(WEBHOME)/examples
-		cp -f examples/hfilter/FilterExample.hs examples/hunit/HUnitExample.hs examples/hsvg/TreeVisualisation.hs $(WEBHOME)/examples
-		cp -f examples/arrows/AGentleIntroductionToHXT/SimpleExamples.hs $(WEBHOME)/examples
-		cat doc/index.html | $(EDIT_VERSION) > $(WEBHOME)/index.html
-		cp $(DIST_TAR) $(WEBHOME)
-		( echo "AddType text/html .html" \
-		; echo "allow from all" \
-		) > $(WEBHOME)/.htaccess
-
-
-cleanwebpage	:
-		rm -rf $(WEBHOME)
-
 
 # --------------------------------------------------
 #
