@@ -6,7 +6,7 @@ HXT_HOME	= .
 
 DIST		= $(DIST_NAME)
 DIST_TAR	= $(DIST_NAME).tar.gz
-DIST_FILES	= Makefile Version.mk README LICENCE Setup.lhs hxt.cabal
+DIST_FILES	= Makefile Version.mk README LICENCE Setup.lhs $(SOFTWARE).cabal
 
 SETUP		= Setup.lhs
 
@@ -24,7 +24,7 @@ HSCOLOUR_CSS	= doc/hscolour.css
 
 all		:
 		$(MAKE) -C src all
-		$(MAKE)        hxt.cabal
+		$(MAKE)        $(SOFTWARE).cabal
 		$(MAKE)        allexamples
 
 allexamples	:
@@ -54,15 +54,15 @@ cabal_install	:
 
 # ------------------------------------------------------------
 
-hxt.cabal	: src/hxt-package.hs src/Makefile Makefile
-		$(MAKE) -C src ../hxt.cabal
+$(SOFTWARE).cabal	: src/$(SOFTWARE)-package.hs src/Makefile Makefile
+		$(MAKE) -C src ../$(SOFTWARE).cabal
 
 DOC_HXT		= $(DIST)/doc/hdoc
 
-doc		: hxt.cabal
+doc		: $(SOFTWARE).cabal
 		$(MAKE) cabal_configure cabal_doc
 		[ -d $(DOC_HXT) ] || mkdir -p $(DOC_HXT)
-		( cd dist/doc/html/hxt ; tar cf - . ) | ( cd $(DOC_HXT) ; tar xf - )
+		( cd dist/doc/html/$(SOFTWARE) ; tar cf - . ) | ( cd $(DOC_HXT) ; tar xf - )
 
 dist		: all doc
 		[ -d $(DIST) ] || mkdir -p $(DIST)
@@ -81,7 +81,7 @@ clean		:
 		$(MAKE) -C src      clean
 		$(MAKE) -C examples clean
 		$(MAKE) -C doc      clean
-		rm -rf $(DIST) $(DIST_TAR) hxt.cabal setup .setup-config .installed-pkg-config dist
+		rm -rf $(DIST) $(DIST_TAR) $(SOFTWARE).cabal setup .setup-config .installed-pkg-config dist
 
 # ------------------------------------------------------------
 
@@ -97,7 +97,7 @@ uninstall		:
 DISTDATE	= $(shell date -r $(DIST_TAR) +%Y-%m-%d.%R)
 
 distcopy	: $(DIST_TAR)
-		scp $(DIST_TAR) hxt@darcs.fh-wedel.de:/home/hxt/hxt/hxt-head-$(DISTDATE).tar.gz
+		scp $(DIST_TAR) hxt@darcs.fh-wedel.de:/home/hxt/$(SOFTWARE)/$(SOFTWARE)-head-$(DISTDATE).tar.gz
 
 # --------------------------------------------------
 
@@ -113,7 +113,7 @@ webpage		: tarball
 		[ ! -d $(WEBHOME) ] || echo "please clean $(WEBHOME) first: make cleanwebpage"
 		[ -d $(WEBHOME) ] || mkdir -p $(WEBHOME)
 		[ -d $(WEBHOME)/hdoc ] || mkdir -p $(WEBHOME)/hdoc
-		cp -r dist/doc/html/hxt/* $(WEBHOME)/hdoc
+		cp -r dist/doc/html/$(SOFTWARE)/* $(WEBHOME)/hdoc
 		cp -r doc/hvalidator/thesis $(WEBHOME)/thesis
 		cp -f doc/hvalidator/thesis.ps doc/hvalidator/thesis.pdf $(WEBHOME) || true
 		[ -d $(WEBHOME)/hxpath ] || mkdir -p $(WEBHOME)/hxpath
@@ -137,6 +137,29 @@ webpage		: tarball
 cleanwebpage	:
 		rm -rf $(WEBHOME)
 
+
+# --------------------------------------------------
+
+# make a clean installation from distribution tar
+
+PROD_DIR	= ~/tmp
+INSTALL		= echo now run: "(" cd $(PROD_DIR)/$(DIST) ";" 
+INSTEND		= ")"
+
+distbuild	: tarball
+		( [ -f $(DIST_TAR) ] || exit 1 \
+		; cp -f $(DIST_TAR) $(PROD_DIR) || exit 1 \
+		; cd $(PROD_DIR) || exit 1 \
+		; rm -rf $(DIST) \
+		; tar xvzf $(DIST_TAR) \
+		; cd $(DIST) || exit 1 \
+		; runhaskell $(SETUP) configure || exit 1 \
+		; runhaskell $(SETUP) build || exit 1 \
+		; $(INSTALL) sudo runhaskell $(SETUP) install $(INSTEND) \
+		)
+
+distinstall	:
+		$(MAKE) distbuild INSTALL="" INSTEND=""
 
 # --------------------------------------------------
 #
