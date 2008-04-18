@@ -12,7 +12,6 @@ test		:
 DIST		= ../$(DIST_NAME)
 DIST_DIR	= $(DIST)/doc
 DIST_FILES	= Makefile \
-		  hdoc \
 		  hvalidator/thesis \
 		  $(wildcard hxpath/*.pdf) \
 		  relaxng/thesis.pdf \

@@ -19,6 +19,7 @@
       <li><a href="#change">Change history</a></li>
       <li><a href="#limit">Known problems and limitations</a></li>
       <li><a href="#port">Portability</a></li>
+      <li><a href="#filter">HXT with Filters</a>
       <li><a href="#rel">Related Work</a></li>
       <li><a href="#feed">Feedback</a></li>
     </ul>
@@ -34,14 +35,23 @@
       It is itself purely written in Haskell.
       The <i>Haskell XML Toolbox</i> is a project of the
       <a href="http://www.fh-wedel.de">University of Applied Sciences Wedel</a>,
-      initiated by
-      <a href="http://www.fh-wedel.de/~si/">Uwe Schmidt</a>.
-	 </p>
+    </p>
 
-	 <p>
-	 The core component of the <i>Haskell XML Toolbox</i>
-	 is a validating XML-Parser that supports almost fully the
-	 <a href="http://www.w3.org/TR/REC-xml">Extensible Markup Language (XML) 1.0 (Second Edition)</a>.
+    <p>
+      The main design goal of the <i>Haskell XML Toolbox</i>
+      is the support of various XML standards including
+      <a href="http://www.w3.org/TR/REC-xml">Extensible Markup
+	Language (XML) 1.0 (Second Edition)</a> with DTD
+      processing and Validation,
+      <a href="http://www.w3.org/TR/REC-xml-names/">Namespaces in XML
+	1.0 (Second Edition)</a>,
+      <a href="http://www.w3.org/TR/xpath">XML Path Language
+	(XPath)</a>,
+      <a href="http://www.w3.org/TR/xslt">XSL Transformations
+	(XSLT)</a>,
+      <a
+	href="http://www.oasis-open.org/committees/relax-ng/spec-20011203.html">RELAX NG Specification</a>,
+      as well as HTML/XHTML processing.
     </p>
 
     <a name="descr"></a>
@@ -50,21 +60,25 @@
       The <i>Haskell XML Toolbox</i> bases on the ideas of
       <a href="http://www.cs.york.ac.uk/fp/HaXml/">HaXml</a> and
       <a href="http://www.flightlab.com/~joe/hxml/">HXML</a>,
-      but introduces a more general approach for processing XML with
+      but introduces a more general and flexible approach for processing XML with
       Haskell.
       The <i>Haskell XML Toolbox</i> uses a generic data model for
       representing XML documents,
       including the DTD subset and the document subset, in Haskell.
       This data model makes it possible to use filter functions
       as a uniform design of XML processing applications.
-      The whole XML parser including the validator parts
-      was implemented using this design.
-      Libraries with filters and combinators are provided for processing the generic data model.
+      The processing filters are implemented as
+      <a href="http://www.haskell.org/haskellwiki/Arrow">arrows</a>.
+      This is more flexible than the filter approach from HXML and
+      HaXml,
+      but all filter applications can easily be transformed into
+      arrows.
     </p>
 
     <p>
-      An new more flexible and typesaver API based on arrows instead
-      of filters is included since version 5.2.
+      Since version 5.2 HXT works with arrows instead of filters.
+      The filter part has been separated from this library and is
+      available in an extra package (see <a href="#filter">HXT with Filters</a>)
       There is a <em>cookbook</em> for using this arrow interface
       to build (nontrivial) applications. Manuel Ohlendorf
       has developed examples for processing RDF and has documented the
@@ -94,6 +108,11 @@
 
     <a name="docu"></a>
     <h3>Documentation</h3>
+
+    <p>
+      The <em><a href="./hdoc/index.html">HXT API Documentation</a></em> generated
+      with <a href="http://www.haskell.org/haddock/">Haddock</a>.
+    </p>
 
     <p>
       A (somewhat) gentle introduction to HXT is avalable in the
@@ -148,13 +167,6 @@
 	Toolbox</em> (<a href="./relaxng/thesis.pdf">PDF-document</a>).
     </p>
 
-    <p>
-      The <em><a href="./hdoc_filter/index.html">Filter API Documentation</a></em> generated
-      with <a href="http://www.haskell.org/haddock/">Haddock</a>.
-      For the new arrow interface there is a more user friendly <em><a href="./hdoc_arrow/index.html">Arrow API Documentation</a></em>
-      including only the basic types and the arrow descriptions.
-    </p>
-
     <a name="req"></a>
     <h3>Requirements</h3>
     <ul>
@@ -164,6 +176,10 @@
       <li><a href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/tagsoup">tagsoup package</a></li>
       <li>Cabal of GNU make</li>
     </ul>
+    <p>
+      It is recommended to install the versions available from
+      <a href="http://hackage.haskell.org/packages/hackage.html">Hackage</a>.
+    </p>
 
     <a name="down"></a>
     <h3>Downloads</h3>
@@ -174,6 +190,11 @@
     <ul>
       <li>This version works with ghc 6.8 and ghc 6.6 with cabal
 	1.2. For ghc 6.6 and cabal < 1.2 please use HXT 7.3.</li>
+      <li>This version does not contain the filter part of hxt any
+	more.
+	That functionality is separated into a package <a
+	  href="#filter">hxt-filter</a>.
+      </li>
       <li>Includes sources for building a ghc package
 	<code>hxt</code> with Cabal or make.
 	This package contains a Haskell DOM, an XML parser, a HTML parser based on parsec,
@@ -187,26 +208,18 @@
 	or with an external program <code>curl</code>
 	The HTTP module must be installed before installing the
 	toolbox.
-	In the past the installation procedure for HTTP was a bit clumsy because of further
-	dependencies on <a href="http://www.haskell.org/crypto/">The Haskell Cryptographic Library</a>
-	and <a href="http://www.n-heptane.com/nhlab/">NewBinary package</a>. The latest <a href="http://www.haskell.org/http/">HTTP module</a>
-	from 2006-07-07 has removed these dependencies and consists only of one HTTP module (not HTTP and Browser).
-	So there has only one package HTTP to be installed before installing HXT.
       </li>
       <li>Includes various examples, e.g. in example dir
 	<tt>examples/arrows/hparser/</tt>
 	a validating parser, which can be used as a starting point for
 	a HXT command line application.
       </li>
-      <li>Provides a HUnit test <code>HUnitTest</code> for testing
-	and demonstration of the available set of filters.
-      </li>
       <li>Includes an <a href="http://www.haskell.org/arrows/">arrow interface</a> with type classes and
 	overloading for a more flexible use of the filter technique.
       </li>
     </ul>
     <p>
-      A darcs repository is available under <a href="http://darcs.fh-wedel.de/hxt">http://darcs.fh-wedel.de/hxt</a>.
+      A darcs repository is available under <a href="http://darcs.fh-wedel.de/hxt/">http://darcs.fh-wedel.de/hxt</a>.
     </p>
     <a name="install"></a>
     <h3>Installation</h3>
@@ -244,11 +257,14 @@
       <li>In <a href="hxt-8.0.0.tar.gz">Version 8.0.0</a>
 	<ul>
 	  <li>
-	    Old filter interface separated from hxt package and moved
-	    to an extra package <tt>hxt-filter</tt>.
+	    Old filter interface separated from the hxt package and moved
+	    to an extra package <a href="#filter">hxt-filter</a>.
 	  </li>
 	  <li>
-	    DTD validation refactored to work with arrows instead of
+	    Version numbers added in hxt.cabal for required package versions.
+	  </li>
+	  <li>
+	    DTD validation and XPath modules refactored to work with arrows instead of
 	    filters.
 	    This is done for separating the old hxt filter library
 	    from the actively developed and maintained arrow part.
@@ -432,6 +448,19 @@
 	<a href="http://www.haskell.org/http/">HTTP and Browser Modules</a>
       </li>
     </ul>
+
+    <a name="filter"></a>
+    <h3>HXT with Filters</h3>
+    <p>
+      For older applications using the filter functionality,
+      there is an extra package <a
+	href="hxt-filter-8.0.0.tar.gz">hxt-filter</a>.
+      This package must be installed on top of hxt.
+      The filter package will not be actively developped any more.
+      Please move to the arrow version for long term projects.
+      Installation works with cabal in the usual way.
+      A darcs repository is available under <a href="http://darcs.fh-wedel.de/hxt-filter/">http://darcs.fh-wedel.de/hxt-filter</a>.
+    </p>
 
     <a name="rel"></a>
     <h3>Related work</h3>

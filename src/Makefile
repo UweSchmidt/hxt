@@ -267,7 +267,6 @@ clean_packages	:
 
 clean		:
 		$(MAKE) clean_packages
-		$(MAKE) -C ./Text/XML/HXT/ProtocolHandler clean
 		rm -rf $(LOCAL_INSTALL_DIR) hxt-package.conf ../hxt.cabal
 
 clean_$(HXT_PACKAGE)	:
@@ -279,8 +278,6 @@ DIST		= ../$(DIST_NAME)
 DIST_DIR	= $(DIST)/src
 DIST_FILES	= Makefile \
 		  $(HXT_SRC) $(HXT_DRIVER:.o=.hs) hxt-package.hs \
-		  ./Text/XML/HXT/ProtocolHandler/ProtocolHandler.hs \
-		  ./Text/XML/HXT/ProtocolHandler/Makefile \
 		  $(wildcard ./Text/XML/HXT/RelaxNG/Unicode/G*.hs) \
 		  $(wildcard ./Text/XML/HXT/RelaxNG/Unicode/Makefile) \
 		  $(wildcard ./Text/XML/HXT/RelaxNG/Unicode/*.txt)

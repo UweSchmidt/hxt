@@ -111,8 +111,9 @@ WEBHOME		= ../../../fh/public_html/HXmlToolbox
 
 webpage		: tarball
 		[ ! -d $(WEBHOME) ] || echo "please clean $(WEBHOME) first: make cleanwebpage"
-		mkdir -p $(WEBHOME)
-		cp -r doc/hdoc doc/hdoc_filter doc/hdoc_arrow $(WEBHOME)/
+		[ -d $(WEBHOME) ] || mkdir -p $(WEBHOME)
+		[ -d $(WEBHOME)/hdoc ] || mkdir -p $(WEBHOME)/hdoc
+		cp -r dist/doc/html/hxt/* $(WEBHOME)/hdoc
 		cp -r doc/hvalidator/thesis $(WEBHOME)/thesis
 		cp -f doc/hvalidator/thesis.ps doc/hvalidator/thesis.pdf $(WEBHOME) || true
 		[ -d $(WEBHOME)/hxpath ] || mkdir -p $(WEBHOME)/hxpath
@@ -125,9 +126,6 @@ webpage		: tarball
 		[ -d $(WEBHOME)/xslt ] || mkdir -p $(WEBHOME)/xslt
 		cp -f doc/xslt/thesis.pdf $(WEBHOME)/xslt
 		[ -d $(WEBHOME)/examples ] || mkdir -p $(WEBHOME)/examples
-		cp -f examples/hsvg/*.html.jpg $(WEBHOME)/examples
-		cp -f examples/hsvg/*.html.svg $(WEBHOME)/examples
-		cp -f examples/hfilter/FilterExample.hs examples/hunit/HUnitExample.hs examples/hsvg/TreeVisualisation.hs $(WEBHOME)/examples
 		cp -f examples/arrows/AGentleIntroductionToHXT/SimpleExamples.hs $(WEBHOME)/examples
 		cat doc/index.html | $(EDIT_VERSION) > $(WEBHOME)/index.html
 		cp $(DIST_TAR) $(WEBHOME)
