@@ -1,5 +1,5 @@
 # Version.mk
-# Version numbering for HXT
+# Version numbering for HXT filter package
 
 SOFTWARE	= hxt-filter
 VERSION		= 8.0.0

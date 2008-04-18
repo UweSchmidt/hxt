@@ -77,8 +77,7 @@ tarball		: dist
 clean		:
 		$(MAKE) -C src      clean
 		$(MAKE) -C examples clean
-		$(MAKE) -C doc      clean
-		rm -rf $(DIST) $(DIST_TAR) $(SOFTWARE).cabal setup .setup-config .installed-pkg-config dist
+		rm -rf $(DIST) $(DIST_TAR) $(SOFTWARE).cabal .setup-config .installed-pkg-config dist
 
 # ------------------------------------------------------------
 

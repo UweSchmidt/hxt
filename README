@@ -9,12 +9,13 @@ The Haskell XML Toolbox is available from:
 Detailed information about the features, changes, requirements, installation and documentation
 is available from that web page.
 
-This is the "old" approach with the
-filters like in HaXmL. For
-new projects we strongly recomend the
-library based on arrows
+This is the "old" approach with the filters like in HaXmL.
+The package name for these modules is "hxt-filter".
+It requires the "hxt" package to be installed.
+For new projects we strongly recomend the
+library based on arrows (package "hxt").
 
-good luck
+Good luck,
 
 Uwe Schmidt
 
