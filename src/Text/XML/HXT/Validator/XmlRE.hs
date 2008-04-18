@@ -5,8 +5,6 @@
 --
 -- Author .\\artin Schmidt
 
--- Version : $Id: XmlRE.hs,v 1.1 2004/09/02 19:12:03 hxml Exp $
-
 module Text.XML.HXT.Validator.XmlRE
     ( RE
 

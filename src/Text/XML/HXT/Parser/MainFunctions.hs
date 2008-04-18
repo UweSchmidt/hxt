@@ -1,9 +1,6 @@
 -- |
 -- Simple parse functions.
 --
--- Version : $Id: MainFunctions.hs,v 1.2 2004/11/20 16:53:15 hxml Exp $
---
---
 -- the main building blocks for an application.
 -- this module exports complex filters and functions for
 -- common tasks for input and parsing, output and option handling.

@@ -2,8 +2,6 @@
 --
 -- input functions
 -- implemented as filer
---
--- Version : $Id: XmlInput.hs,v 1.9 2006/03/03 14:20:17 hxml Exp $
 
 module Text.XML.HXT.Parser.XmlInput
     ( getXmlContents

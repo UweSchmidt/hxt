@@ -1,9 +1,6 @@
 -- |
 -- Simple parse functions.
 --
--- Version : $Id: Parser.hs,v 1.2 2006/11/09 20:27:42 hxml Exp $
---
---
 -- the "main" building blocks for an application.
 -- this module exports all important functions for parsing, validating and transforming XML.
 -- it also exports all basic datatypes and functions of the toolbox.

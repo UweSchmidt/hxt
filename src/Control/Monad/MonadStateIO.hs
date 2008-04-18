@@ -1,7 +1,10 @@
 -- |
 -- general usefull state monad for a local state and IO
 --
--- Version : $Id: MonadStateIO.hs,v 1.1 2004/09/02 19:11:55 hxml Exp $
+-- This module is used for threading a state and io actions
+-- through a computation.
+-- Here the monad is constructed by hand.
+-- It could easily be refactored with the use of the monad transformer library.
 
 
 module Control.Monad.MonadStateIO

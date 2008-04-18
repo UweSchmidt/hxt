@@ -66,7 +66,6 @@ dist		: all doc
 		[ -d $(DIST) ] || mkdir -p $(DIST)
 		$(MAKE) -C src      dist
 		$(MAKE) -C examples dist
-		$(MAKE) -C doc      dist
 		cp $(DIST_FILES) $(DIST)
 
 tarball		: dist
@@ -104,6 +103,35 @@ distcopy	: $(DIST_TAR)
 # Create webpage directory for distribution
 
 WEBHOME		= ../../../fh/public_html/HXmlToolbox
+
+webpage		: tarball
+		[ -d $(WEBHOME) ] || exit 1
+		[ -d $(WEBHOME)/hdoc-filter ] || mkdir -p $(WEBHOME)/hdoc-filter
+		cp -r dist/doc/html/$(SOFTWARE)/* $(WEBHOME)/hdoc-filter
+		cp $(DIST_TAR) $(WEBHOME)
+
+# --------------------------------------------------
+
+# make a clean installation from distribution tar
+
+PROD_DIR	= ~/tmp
+INSTALL		= echo now run: "(" cd $(PROD_DIR)/$(DIST) ";" 
+INSTEND		= ")"
+
+distbuild	: tarball
+		( [ -f $(DIST_TAR) ] || exit 1 \
+		; cp -f $(DIST_TAR) $(PROD_DIR) || exit 1 \
+		; cd $(PROD_DIR) || exit 1 \
+		; rm -rf $(DIST) \
+		; tar xvzf $(DIST_TAR) \
+		; cd $(DIST) || exit 1 \
+		; runhaskell $(SETUP) configure || exit 1 \
+		; runhaskell $(SETUP) build || exit 1 \
+		; $(INSTALL) sudo runhaskell $(SETUP) install $(INSTEND) \
+		)
+
+distinstall	:
+		$(MAKE) distbuild INSTALL="" INSTEND=""
 
 # --------------------------------------------------
 #

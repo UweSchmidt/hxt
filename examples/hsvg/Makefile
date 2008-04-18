@@ -61,9 +61,9 @@ test		:
 
 DIST		= $(HXT_HOME)/dist/examples
 DIST_DIR	= $(DIST)/hsvg
-DIST_FILES	= $(JPGS) $(prog).hs Makefile .ghci
+DIST_FILES	= $(prog).hs Makefile .ghci
 
-dist		: vtree
+dist		:
 		[ -d $(DIST_DIR) ] || mkdir -p $(DIST_DIR)
 		cp $(DIST_FILES) $(DIST_DIR)
 

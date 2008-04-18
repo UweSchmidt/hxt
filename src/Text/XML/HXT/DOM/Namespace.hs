@@ -1,8 +1,6 @@
 -- |
 -- main namespace filter for propagation, checking, tracing and error handling
---
--- $Id: Namespace.hs,v 1.3 2005/01/06 10:48:07 hxml Exp $
---
+
 module Text.XML.HXT.DOM.Namespace
     ( module Text.XML.HXT.DOM.Namespace
     , module Text.XML.HXT.DOM.NamespaceFilter

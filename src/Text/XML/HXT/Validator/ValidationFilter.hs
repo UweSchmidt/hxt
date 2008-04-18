@@ -12,7 +12,6 @@
 
 --
 -- Author : .\\artin Schmidt
--- Version : $Id: ValidationFilter.hs,v 1.1 2004/11/23 15:50:23 hxml Exp $
 
 module Text.XML.HXT.Validator.ValidationFilter
     ( getDTDSubset

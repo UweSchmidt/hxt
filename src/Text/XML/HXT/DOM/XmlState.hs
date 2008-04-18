@@ -10,8 +10,6 @@
 -- and for lifting i\/o commands and XmlFilter to monad filters.
 --
 -- Error reporting functions are also located in this module.
---
--- Version : $Id: XmlState.hs,v 1.3 2005/05/27 13:15:23 hxml Exp $
 
 module Text.XML.HXT.DOM.XmlState
     ( module Text.XML.HXT.DOM.XmlState

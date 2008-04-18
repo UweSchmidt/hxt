@@ -7,7 +7,7 @@ HXT_HOME	= ..
 
 EXAMPLES	= mini hparser hfilter hunit hsvg dtd2haskell
 MORE_SAMPLES	= blutgraetsche photoalbum
-DIST		= $(HXT_HOME)/dist
+DIST		= ../$(DIST_NAME)
 DIST_DIR	= $(DIST)/examples
 
 all		:
@@ -27,7 +27,7 @@ test		:
 
 dist		:
 		[ -d $(DIST_DIR) ] || mkdir -p $(DIST_DIR)
-		$(foreach i,$(EXAMPLES),$(MAKE) -C $i dist DIST=../$(DIST_DIR) ;)
+		$(foreach i,$(EXAMPLES),$(MAKE) -C $i dist DIST=../$(DIST_DIR);)
 		[ -d $(DIST_DIR)/xhtml ] || mkdir -p $(DIST_DIR)/xhtml
 		cp xhtml/xhtml*.dtd xhtml/xhtml*.ent xhtml/xhtml*.xml $(DIST_DIR)/xhtml
 		cp Makefile $(DIST_DIR)

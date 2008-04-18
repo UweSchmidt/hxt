@@ -14,8 +14,8 @@
 --
 --	Regular Expression Package. Posted to comp.compilers, 1994.
 --      Available per FTP at <ftp://iecc.com/pub/file/regex.tar.gz>.
---
--- Version : $Id: RE.hs,v 1.1 2004/09/02 19:12:03 hxml Exp $
+
+
 
 module Text.XML.HXT.Validator.RE
     ( RE(..)

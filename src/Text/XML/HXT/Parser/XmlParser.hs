@@ -1,8 +1,5 @@
 -- |
 -- Xml Parser: the main parse filter 
---
--- Version : $Id: XmlParser.hs,v 1.5 2005/06/06 15:57:19 hxml Exp $
-
 
 module Text.XML.HXT.Parser.XmlParser
     ( module Text.XML.HXT.Parser.XmlParsec

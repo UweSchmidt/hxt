@@ -1,11 +1,7 @@
 -- |
 -- DOM data types and functions
 --
--- Version : $Id: DOM.hs,v 1.2 2006/11/12 14:52:59 hxml Exp $
---
---
 -- export of all basic datatypes and functions of the toolbox DOM.
---
 
 module Text.XML.HXT.DOM
     ( module Text.XML.HXT.DOM.XmlTree

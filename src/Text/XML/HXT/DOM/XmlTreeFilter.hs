@@ -1,7 +1,5 @@
 -- |
 -- basic XmlTree filter
---
--- Version : $Id: XmlTreeFilter.hs,v 1.4 2006/11/12 14:53:00 hxml Exp $
 
 module Text.XML.HXT.DOM.XmlTreeFilter
     ( module Text.XML.HXT.DOM.XmlTreeFilter

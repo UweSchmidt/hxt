@@ -1,8 +1,6 @@
 -- ------------------------------------------------------------
 --
 -- protocol handler functions for native http access
---
--- Version : $Id: ProtocolHandlerHttpNativeOrCurl.hs,v 1.1 2004/09/02 19:12:01 hxml Exp $
 
 module Text.XML.HXT.Parser.ProtocolHandlerHttpNativeOrCurl
     ( getHttpContentsNativeOrWithCurl

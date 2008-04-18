@@ -3,8 +3,6 @@
 -- defaut uri computation
 -- this routine is platform dependent
 -- and must be exchanged when porting the toolbox e.g. to windows
---
--- Version : $Id: DefaultURI.hs,v 1.4 2006/03/02 10:13:57 hxml Exp $
 
 module Text.XML.HXT.Parser.DefaultURI
     ( setDefaultURI

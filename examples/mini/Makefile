@@ -2,7 +2,7 @@
 
 HXT_HOME	= ../..
 PKGFLAGS	=
-GHCFLAGS	= -Wall -O2 -v
+GHCFLAGS	= -Wall -O2
 GHC		= ghc $(GHCFLAGS) $(PKGFLAGS)
 
 prog		= ./ParseExample

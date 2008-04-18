@@ -3,8 +3,6 @@
 -- protocol handler functions
 -- configuration file
 -- real handler is generated with cpp
---
--- Version : $Id: ProtocolHandler.hs,v 1.2 2006/03/03 10:06:24 hxml Exp $
 
 module Text.XML.HXT.Parser.ProtocolHandler
     ( getProtocolHandler

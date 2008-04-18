@@ -1,10 +1,9 @@
+{-# LINE 1 "ProtocolHandler.hs" #-}
 -- ------------------------------------------------------------
 --
 -- protocol handler functions
 -- configuration file
 -- real handler is generated with cpp
---
--- Version : $Id: ProtocolHandler.hs,v 1.4 2006/03/03 14:20:17 hxml Exp $
 
 module Text.XML.HXT.Parser.ProtocolHandler
     ( getProtocolHandler
@@ -30,22 +29,6 @@ import Network.URI
 import Text.XML.HXT.Parser.ProtocolHandlerFile
     ( getFileContents
     )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 import Text.XML.HXT.Parser.ProtocolHandlerHttpNativeOrCurl
@@ -85,21 +68,6 @@ protocolHandler	:: [(String, URI -> XmlStateFilter a)]
 protocolHandler
     = [ ("file", getFileContents)
       , ("http",
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 	 getHttpContentsNativeOrWithCurl

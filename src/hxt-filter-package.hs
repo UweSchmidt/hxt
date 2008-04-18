@@ -23,7 +23,7 @@ part2
       , "category: XML"
       , "synopsis: A collection of tools for processing XML with Haskell (Filter variant). "
       , "description:  The Haskell XML Toolbox bases on the ideas of HaXml and HXML." ++
-	" This package is a compatibitlity package for old software working with the filter approach like in HaXml" ++
+	" This package is a compatibitlity package for old software working with the filter approach like in HaXml." ++
 	" For new projects it's recomended to use the arrow based library (hxt)."
       , "homepage: http://www.fh-wedel.de/~si/HXmlToolbox/index.html"
       , "copyright: Copyright (c) 2005-8 Uwe Schmidt"

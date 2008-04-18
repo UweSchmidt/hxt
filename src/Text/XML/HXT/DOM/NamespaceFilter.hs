@@ -1,8 +1,6 @@
 -- |
 -- Namespace filter
 --
--- $Id: NamespaceFilter.hs,v 1.4 2006/11/12 14:53:00 hxml Exp $
---
 -- Namespaces are processed with two main filter, 'propagateNamespaces'
 -- and 'validateNamespaces'.
 --

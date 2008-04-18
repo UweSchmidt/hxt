@@ -4,7 +4,6 @@
 -- The real validation is done with pure filters from module 'Text.XML.HXT.Validator.ValidationFilter'
 --
 -- Author : .\\artin Schmidt
--- Version : $Id: Validation.hs,v 1.2 2004/11/23 15:50:23 hxml Exp $
 
 module Text.XML.HXT.Validator.Validation
     ( getValidatedDoc

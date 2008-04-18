@@ -2,8 +2,6 @@
 --
 -- protocol handler function for file protocol
 -- implemented as filer
---
--- Version : $Id: ProtocolHandlerFile.hs,v 1.5 2006/03/03 14:20:17 hxml Exp $
 
 module Text.XML.HXT.Parser.ProtocolHandlerFile
     ( getFileContents

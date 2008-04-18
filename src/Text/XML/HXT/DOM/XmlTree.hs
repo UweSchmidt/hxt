@@ -1,8 +1,6 @@
 -- |
 -- This helper module exports elements from the basic libraries:
 -- XmlTreeTypes, XmlKeywords, XNodeFunctions, XmlTreeFunctions and XmlTreeFilter
---
--- Version : $Id: XmlTree.hs,v 1.1 2004/09/02 19:11:58 hxml Exp $
 
 module Text.XML.HXT.DOM.XmlTree
     ( module Text.XML.HXT.DOM.XmlTreeTypes

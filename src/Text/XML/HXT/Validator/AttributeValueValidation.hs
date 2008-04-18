@@ -14,8 +14,7 @@
 --
 --  - n  - XTag node
 --
--- Version : $Id: AttributeValueValidation.hs,v 1.1 2004/09/02 19:12:02 hxml Exp $
---
+
 module Text.XML.HXT.Validator.AttributeValueValidation
     ( checkAttributeValue
     , normalizeAttributeValue
