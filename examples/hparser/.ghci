@@ -1,3 +1,0 @@
-:set -i../../src
-:set -Wall -fglasgow-exts
-:load HXmlParser
