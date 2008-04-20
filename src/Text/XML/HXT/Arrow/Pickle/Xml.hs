@@ -256,6 +256,15 @@ xp5Tuple pa pb pc pd pe
     toQuint   ~(a, ~(b, ~(c, ~(d, e)))) = (a,  b,  c,  d, e   )
     fromQuint ~(a,   b,   c,   d, e   ) = (a, (b, (c, (d, e))))
 
+-- | Like 'xpPair' and 'xpTriple' but for 6-tuples
+
+xp6Tuple	:: PU a -> PU b -> PU c -> PU d -> PU e -> PU f -> PU (a, b, c, d, e, f)
+xp6Tuple pa pb pc pd pe pf
+    = xpWrap (toSix, fromSix) (xpPair pa (xpPair pb (xpPair pc (xpPair pd (xpPair pe pf)))))
+    where
+    toSix   ~(a, ~(b, ~(c, ~(d, ~(e, f))))) = (a,  b,  c,  d,  e, f    )
+    fromSix ~(a,   b,   c,   d,   e, f)     = (a, (b, (c, (d, (e, f)))))
+
 -- | Pickle a string into an XML text node
 --
 -- One of the most often used primitive picklers. Attention:
@@ -310,7 +319,7 @@ xpText0DT sc
 -- | Pickle an arbitrary value by applyling show during pickling
 -- and read during unpickling.
 --
--- Real pickling is then done with 'xpString'.
+-- Real pickling is then done with 'xpText'.
 -- One of the most often used pimitive picklers. Applicable for all
 -- types which are instances of @Read@ and @Show@
 

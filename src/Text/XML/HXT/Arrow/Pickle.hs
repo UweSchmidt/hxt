@@ -114,12 +114,14 @@ import           Text.XML.HXT.Arrow.Pickle.DTD
 -- The pickler converts a value into an XML tree, this is written out with
 -- 'Text.XML.HXT.Arrow.writeDocument'. The option list is passed to 'Text.XML.HXT.Arrow.writeDocument'
 --
--- An options evaluated by this arrow is 'a_addDTD'.
+-- An option evaluated by this arrow is 'a_addDTD'.
 -- If 'a_addDTD' is set ('v_1'), the pickler DTD is added as an inline DTD into the document.
 
 xpickleDocument		:: PU a -> Attributes -> String -> IOStateArrow s a XmlTree
 xpickleDocument xp al dest
     = xpickleVal xp
+      >>>
+      traceMsg 1 "xpickleVal applied"
       >>>
       ( if lookup1 a_addDTD al == v_1
 	then replaceChildren ( (constA undefined >>> xpickleDTD xp >>> getChildren)
@@ -150,7 +152,11 @@ xunpickleDocument	:: PU a -> Attributes -> String -> IOStateArrow s b a
 xunpickleDocument xp al src
 			= readDocument al src
 			  >>>
+			  traceMsg 1 ("xunpickleVal for " ++ show src ++ " started")
+			  >>>
 			  xunpickleVal xp
+			  >>>
+			  traceMsg 1 ("xunpickleVal for " ++ show src ++ " finished")
 
 -- | Write out the DTD generated out of a pickler. Calls 'xpicklerDTD'
 
