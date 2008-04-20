@@ -2,6 +2,8 @@
 #
 # hello world application of Haskell XML Toolbox
 
+EXAMPLES	= PicklerExample
+
 HXT_HOME	= ../../..
 PKGFLAGS	= 
 GHCFLAGS	= -W -O2
@@ -29,22 +31,24 @@ tests		= \
 		toAbsRefs \
 		toAbsRefs1
 
-all		: $(prog)
+all		:
+		$(MAKE) $(prog)
+		$(foreach i,$(EXAMPLES),$(MAKE) -C $i PKGFLAGS="$(PKGFLAGS)" $@ ;)
 
 force		:
 		$(MAKE) distclean all
 
 test		: $(prog)
-		for op in $(tests) ; \
-		do \
-			$(prog) $$op "http://www.haskell.org/" "-" ; \
-		done
+		$(foreach op,$(tests),$(prog) $(op) "http://www.haskell.org/" "-" ;)
+		$(foreach i,$(EXAMPLES),$(MAKE) -C $i $@ ;)
 
 dist		:
 		[ -d $(DIST_DIR) ] || mkdir -p $(DIST_DIR)
+		$(foreach i,$(EXAMPLES),$(MAKE) -C $i dist DIST=../$(DIST_DIR) ;)
 		cp $(src) Makefile $(DIST_DIR)
 
 clean		:
+		$(foreach i,$(EXAMPLES),$(MAKE) -C $i $@ ;)
 		rm -f *.o *.hi
 
 distclean	:

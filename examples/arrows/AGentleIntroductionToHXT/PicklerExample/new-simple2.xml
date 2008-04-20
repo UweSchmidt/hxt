@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SEASON YEAR="1998">
+  <LEAGUE NAME="American League">
+    <DIVISION NAME="Central">
+      <TEAM NAME="White Sox" CITY="Chicago"/>
+      <TEAM NAME="Royals" CITY="Kansas City"/>
+      <TEAM NAME="Tigers" CITY="Detroit"/>
+      <TEAM NAME="Indians" CITY="Cleveland"/>
+      <TEAM NAME="Twins" CITY="Minnesota"/>
+    </DIVISION>
+    <DIVISION NAME="East">
+      <TEAM NAME="Orioles" CITY="Baltimore"/>
+      <TEAM NAME="Red Sox" CITY="Boston"/>
+      <TEAM NAME="Yankees" CITY="New York"/>
+      <TEAM NAME="Devil Rays" CITY="Tampa Bay"/>
+      <TEAM NAME="Blue Jays" CITY="Toronto"/>
+    </DIVISION>
+    <DIVISION NAME="West">
+      <TEAM NAME="Angels" CITY="Anaheim"/>
+      <TEAM NAME="Athletics" CITY="Oakland"/>
+      <TEAM NAME="Mariners" CITY="Seattle"/>
+      <TEAM NAME="Rangers" CITY="Texas"/>
+    </DIVISION>
+  </LEAGUE>
+  <LEAGUE NAME="National League">
+    <DIVISION NAME="Central">
+      <TEAM NAME="Cubs" CITY="Chicago"/>
+      <TEAM NAME="Reds" CITY="Cincinnati"/>
+      <TEAM NAME="Astros" CITY="Houston"/>
+      <TEAM NAME="Brewers" CITY="Milwaukee"/>
+      <TEAM NAME="Pirates" CITY="Pittsburgh"/>
+      <TEAM NAME="Cardinals" CITY="St. Louis"/>
+    </DIVISION>
+    <DIVISION NAME="East">
+      <TEAM NAME="Braves" CITY="Atlanta">
+        <PLAYER GIVEN_NAME="Marty" SURNAME="Malloy" POSITION="Second Base" AT_BATS="28" HITS="5"/>
+        <PLAYER GIVEN_NAME="Ozzie" SURNAME="Guillen" POSITION="Shortstop" AT_BATS="264" HITS="73"/>
+        <PLAYER GIVEN_NAME="Danny" SURNAME="Bautista" POSITION="Outfield" AT_BATS="144" HITS="36"/>
+        <PLAYER GIVEN_NAME="Gerald" SURNAME="Williams" POSITION="Outfield" AT_BATS="266" HITS="81"/>
+        <PLAYER GIVEN_NAME="Tom" SURNAME="Glavine" POSITION="Starting Pitcher" ERA="2.47"/>
+        <PLAYER GIVEN_NAME="Javier" SURNAME="Lopez" POSITION="Catcher" AT_BATS="489" HITS="139"/>
+        <PLAYER GIVEN_NAME="Ryan" SURNAME="Klesko" POSITION="Outfield" AT_BATS="427" HITS="117"/>
+        <PLAYER GIVEN_NAME="Andres" SURNAME="Galarraga" POSITION="First Base" AT_BATS="555" HITS="169"/>
+        <PLAYER GIVEN_NAME="Wes" SURNAME="Helms" POSITION="Third Base" AT_BATS="13" HITS="4"/>
+      </TEAM>
+      <TEAM NAME="Marlins" CITY="Florida"/>
+      <TEAM NAME="Expos" CITY="Montreal"/>
+      <TEAM NAME="Mets" CITY="New York"/>
+      <TEAM NAME="Phillies" CITY="Philadelphia"/>
+    </DIVISION>
+    <DIVISION NAME="West">
+      <TEAM NAME="Diamondbacks" CITY="Arizona"/>
+      <TEAM NAME="Rockies" CITY="Colorado"/>
+      <TEAM NAME="Dodgers" CITY="Los Angeles"/>
+      <TEAM NAME="Padres" CITY="San Diego"/>
+      <TEAM NAME="Giants" CITY="San Francisco"/>
+    </DIVISION>
+  </LEAGUE>
+</SEASON>
+
