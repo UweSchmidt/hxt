@@ -10,8 +10,8 @@ GHC		= ghc $(GHCFLAGS) $(PKGFLAGS)
 DIST		= $(HXT_HOME)/dist/examples/arrows/AGentleIntroductionToHXT/
 DIST_DIR	= $(DIST)/AGentleIntroductionToHXT/PicklerExample/
 
-src		= Football.hs
-prog		= ./Football
+src		= Baseball.hs
+prog		= ./Baseball
 
 all		:
 		$(MAKE) $(prog)
