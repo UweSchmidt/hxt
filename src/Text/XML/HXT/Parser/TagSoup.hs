@@ -302,9 +302,9 @@ parseHtmlTagSoup withNamespaces withWarnings withComment removeWhiteSpace asHtml
 	    then canonicalizeTags
 	    else id
 	  )
-	. parseTagsOptions (options { optTagWarning   = withWarnings
-				    , optLookupEntity = lookupEntity withWarnings asHtml
-				    }
+	. parseTagsOptions (parseOptions { optTagWarning   = withWarnings
+					 , optLookupEntity = lookupEntity withWarnings asHtml
+					 }
 			   )
       )
     where
