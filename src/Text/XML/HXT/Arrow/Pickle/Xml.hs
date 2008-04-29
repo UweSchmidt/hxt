@@ -40,6 +40,8 @@ module Text.XML.HXT.Arrow.Pickle.Xml
 where
 
 import           Data.Maybe
+import		 Data.Map (Map)
+import qualified Data.Map as M
 
 import           Text.XML.HXT.DOM.Interface
 import qualified Text.XML.HXT.DOM.XmlNode as XN
@@ -368,6 +370,8 @@ xpOption pa
          , theSchema   = scOption (theSchema pa)
 	 }
 
+-- ------------------------------------------------------------
+
 -- | Encoding of list values by pickling all list elements sequentially.
 --
 -- Unpickler relies on failure for detecting the end of the list.
@@ -405,6 +409,27 @@ xpList1 pa
 	xpPair pa (xpList pa)
       ) { theSchema = scList1 (theSchema pa) }
 
+-- ------------------------------------------------------------
+
+-- | Standard pickler for maps
+--
+-- This pickler converts a map into a list of pairs.
+-- All key value pairs are mapped to an element with name (1.arg),
+-- the key is encoded as an attribute named by the 2. argument,
+-- the 3. arg is the pickler for the keys, the last one for the values
+
+xpMap	:: Ord k => String -> String -> PU k -> PU v -> PU (Map k v)
+xpMap en an xpk xpv
+    = xpWrap ( M.fromList
+	     , M.toList
+	     ) $
+      xpList $
+      xpElem en $
+      xpPair ( xpAttr an $ xpk ) xpv
+
+
+-- ------------------------------------------------------------
+
 -- | Pickler for sum data types.
 --
 -- Every constructor is mapped to an index into the list of picklers.
@@ -425,6 +450,8 @@ xpAlt tag ps
 			 )
 	 , theSchema   = scAlts (map theSchema ps)
 	 }
+
+-- ------------------------------------------------------------
 
 -- | Pickler for wrapping\/unwrapping data into an XML element
 --
@@ -454,6 +481,8 @@ xpElem name pa
 		    al <- XN.getAttrl t
 		    res <- fst . appUnPickle pa $ St {attributes = al, contents = cs}
 		    return (Just res, dropCont st)
+
+-- ------------------------------------------------------------
 
 -- | Pickler for storing\/retreiving data into\/from an attribute value
 --

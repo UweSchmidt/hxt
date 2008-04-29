@@ -69,6 +69,7 @@ module Text.XML.HXT.Arrow.Pickle
     , xpLiftMaybe
     , xpList
     , xpList1
+    , xpMap
     , xpOption
     , xpPair
     , xpPrim
