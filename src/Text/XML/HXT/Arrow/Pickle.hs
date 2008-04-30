@@ -64,6 +64,7 @@ module Text.XML.HXT.Arrow.Pickle
     , xpChoice
     , xpCondSeq
     , xpElem
+    , xpElemWithAttrValue
     , xpickle
     , xpLift
     , xpLiftMaybe
@@ -79,10 +80,12 @@ module Text.XML.HXT.Arrow.Pickle
     , xpTextDT
     , xpText0DT
     , xpTree
+    , xpTrees
     , xpTriple
     , xpUnit
     , xpWrap
     , xpWrapMaybe
+    , xpXmlText
     , xpZero
 
       -- from Text.XML.HXT.Arrow.Pickle.Schema

@@ -49,6 +49,7 @@ import qualified Text.XML.HXT.DOM.XmlNode as XN
 import           Control.Arrow.ListArrows
 import           Text.XML.HXT.Arrow.XmlArrow
 import           Text.XML.HXT.Arrow.Pickle.Schema
+import           Text.XML.HXT.Arrow.ReadDocument (xread)
 
 -- ------------------------------------------------------------
 
@@ -114,7 +115,7 @@ unpickleDoc p t
 				   , contents   =            XN.getChildren t
 				   }
     | otherwise
-	= Nothing
+	= unpickleDoc p (XN.mkRoot [] [t])
 
 -- ------------------------------------------------------------
 
@@ -336,6 +337,8 @@ xpPrim
 	val [(x,"")] = Just x
 	val _        = Nothing
 
+-- ------------------------------------------------------------
+
 -- | Pickle an XmlTree by just adding it
 --
 -- Usefull for components of type XmlTree in other data structures
@@ -350,6 +353,28 @@ xpTree	= PU { appPickle   = \ (s, st) -> addCont s st
 	= do
 	  t <- getCont st
 	  return (Just t, dropCont st)
+
+-- | Pickle a whole list of XmlTrees by just adding the list, unpickle is done by taking all element contens.
+--
+-- This pickler should always combined with 'xpElem' for taking the whole contents of an element.
+
+xpTrees	:: PU [XmlTree]
+xpTrees	= (xpList xpTree) { theSchema = Any }
+
+-- | Pickle a string representing XML contents by inserting the tree representation into the XML document.
+--
+-- Unpickling is done by converting the contents with
+-- 'Text.XML.HXT.Arrow.XmlArrow.xshow' into a string,
+-- pickling is done with 'Text.XML.HXT.Arrow.ReadDocument.xread'
+
+xpXmlText	:: PU String
+xpXmlText
+    = xpWrap ( showXML, readXML ) $ xpTrees
+    where
+    showXML = concat . runLA ( xshow unlistA )
+    readXML = runLA xread
+
+-- ------------------------------------------------------------
 
 -- | Encoding of optional data by ignoring the Nothing case during pickling
 -- and relying on failure during unpickling to recompute the Nothing case
@@ -457,6 +482,14 @@ xpAlt tag ps
 --
 -- Extra parameter is the element name. THE pickler for constructing
 -- nested structures
+--
+-- Example:
+--
+-- > xpElem "number" $ xpickle
+--
+-- will map an (42::Int) onto
+--
+-- > <number>42</number>
 
 xpElem	:: String -> PU a -> PU a
 xpElem name pa
@@ -476,6 +509,61 @@ xpElem name pa
 	    n <- XN.getElemName t
 	    if qualifiedName n /= name
 	       then fail "element name does not match"
+	       else do
+		    let cs = XN.getChildren t
+		    al <- XN.getAttrl t
+		    res <- fst . appUnPickle pa $ St {attributes = al, contents = cs}
+		    return (Just res, dropCont st)
+
+-- ------------------------------------------------------------
+
+-- | Pickler for wrapping\/unwrapping data into an XML element with an attribute with given value
+--
+-- To make XML structures flexible but limit the number of different elements, it's sometimes
+-- useful to use a kind of generic element with a key value structure
+--
+-- Example:
+--
+-- > <attr name="key1">value1</attr>
+-- > <attr name="key2">value2</attr>
+-- > <attr name="key3">value3</attr>
+--
+-- the Haskell datatype may look like this
+--
+-- > type T = T { key1 :: Int ; key2 :: String ; key3 :: Double }
+--
+-- Then the picker for that type looks like this
+--
+-- > xpT :: PU T
+-- > xpT = xpWrap ( uncurry3 T, \ t -> (key1 t, key2 t, key3 t) ) $
+-- >       xpTriple (xpElemWithAttrValue "attr" "name" "key1" $ xpickle)
+-- >                (xpElemWithAttrValue "attr" "name" "key2" $ xpText0)
+-- >                (xpElemWithAttrValue "attr" "name" "key3" $ xpickle)
+
+xpElemWithAttrValue	:: String -> String -> String -> PU a -> PU a
+xpElemWithAttrValue name an av pa
+    = PU { appPickle   = ( \ (a, st) ->
+			   let
+	                   st' = appPickle pa' (a, emptySt)
+			   in
+			   addCont (XN.mkElement (mkName name) (attributes st') (contents st')) st
+			 )
+	 , appUnPickle = \ st -> fromMaybe (Nothing, st) (unpickleElement st)
+	 , theSchema   = scElem name (theSchema pa')
+	 }
+      where
+      pa' = xpAddFixedAttr an av $ pa
+      noMatch = null . runLA ( isElem
+			       >>>
+			       hasName name
+			       >>>
+			       hasAttrValue an (==av)
+			     )
+      unpickleElement st
+	  = do
+	    t <- getCont st
+	    if noMatch t
+	       then fail "element name or attr value does not match"
 	       else do
 		    let cs = XN.getChildren t
 		    al <- XN.getAttrl t
