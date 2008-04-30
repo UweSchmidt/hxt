@@ -199,7 +199,7 @@ xpSeq	= xpCondSeq xpZero
 -- Run two picklers in sequence like with xpSeq.
 -- When during unpickling the first one fails,
 -- an alternative pickler (first argument) is applied.
--- This pickler only is used as combinator for unpickling.
+-- This pickler is only used as combinator for unpickling.
  
 xpChoice		:: PU b -> PU a -> (a -> PU b) -> PU b
 xpChoice pb	= xpCondSeq pb undefined
@@ -394,6 +394,18 @@ xpOption pa
 
          , theSchema   = scOption (theSchema pa)
 	 }
+
+-- | Optional conversion with default value
+--
+-- The default value is not encoded in the XML document,
+-- during unpickling the default value is inserted if the pickler fails
+
+xpDefault	:: (Eq a) => a -> PU a -> PU a
+xpDefault df
+    = xpWrap ( fromMaybe df
+	     , \ x -> if x == df then Nothing else Just x
+	     ) .
+      xpOption
 
 -- ------------------------------------------------------------
 

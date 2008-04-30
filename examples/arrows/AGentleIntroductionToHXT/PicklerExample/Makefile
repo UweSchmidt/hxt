@@ -24,7 +24,7 @@ test		: $(prog)
 
 dist		:
 		[ -d $(DIST_DIR) ] || mkdir -p $(DIST_DIR)
-		cp $(src) simple2.xm new-simple2.xm Makefile $(DIST_DIR)
+		cp $(src) simple2.xml new-simple2.xml Makefile $(DIST_DIR)
 
 clean		:
 		rm -f *.o *.hi

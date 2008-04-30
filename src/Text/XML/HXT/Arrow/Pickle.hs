@@ -63,6 +63,7 @@ module Text.XML.HXT.Arrow.Pickle
     , xpAttrImplied
     , xpChoice
     , xpCondSeq
+    , xpDefault
     , xpElem
     , xpElemWithAttrValue
     , xpickle
