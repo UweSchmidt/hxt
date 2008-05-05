@@ -56,6 +56,7 @@ module Text.XML.HXT.Arrow.Pickle
 
     , xp4Tuple
     , xp5Tuple
+    , xp6Tuple
     , xpAddFixedAttr
     , xpAlt
     , xpAttr
