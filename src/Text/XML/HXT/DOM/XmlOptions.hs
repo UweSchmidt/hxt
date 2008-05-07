@@ -16,6 +16,7 @@ module Text.XML.HXT.DOM.XmlOptions
     , selectOptions
     , removeOptions
     , optionIsSet
+    , isTrueValue
     )
 where
 
@@ -51,6 +52,7 @@ inputOptions
       , Option "e"	[a_encoding]			(ReqArg (att a_encoding)    "CHARSET")	( "default document encoding (" ++ utf8 ++ ", " ++ isoLatin1 ++ ", " ++ usAscii ++ ", ...)" )
       , Option ""	[a_issue_errors]		(NoArg	(att a_issue_errors      v_1))	"issue all errorr messages on stderr (default)"
       , Option ""	[a_do_not_issue_errors]		(NoArg	(att a_issue_errors      v_0))	"ignore all error messages"
+      , Option ""	[a_ignore_encoding_errors]	(NoArg  (att a_ignore_encoding_errors v_1))  "ignore encoding errors"
       , Option "H"	[a_parse_html]			(NoArg	(att a_parse_html        v_1))	"parse input as HTML, try to interprete everything as HTML, no validation"
       , Option "M"	[a_parse_by_mimetype]		(NoArg  (att a_parse_by_mimetype v_1))	"parse dependent on mime type: text/html as HTML, text/xml and text/xhtml as XML, else no parse"
       , Option "T"	[a_tagsoup]			(NoArg	(att a_tagsoup           v_1))	"lasy tagsoup parser, for HTML and XML, no DTD, no validation, no PIs, only XHTML entityrefs"
@@ -161,7 +163,15 @@ removeOptions ol os
 -- as true: \"1\", \"True\", \"true\", \"yes\", \"Yes\".
 
 optionIsSet	:: String -> Attributes -> Bool
-optionIsSet n
-    = (`elem` ["1", "True", "true", "Yes", "yes"]) . lookupDef "" n
+optionIsSet n	= isTrueValue . lookupDef "" n
+
+-- | check whether a string represents True
+--
+-- definition:
+--
+-- > isTrueValue	= (`elem` ["1", "True", "true", "Yes", "yes"])
+
+isTrueValue	:: String -> Bool
+isTrueValue	= (`elem` ["1", "True", "true", "Yes", "yes"])
 
 -- ------------------------------------------------------------

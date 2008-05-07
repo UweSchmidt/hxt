@@ -337,7 +337,7 @@ decodeDocument
 	found df
 	    = traceMsg 2 ("decodeDocument: encoding is " ++ show enc)
 	      >>>
-	      processChildren (decodeText df)
+	      ( decodeText df $< getAttrValue a_ignore_encoding_errors )
 	      >>>
 	      addAttr transferEncoding enc
 
@@ -346,19 +346,25 @@ decodeDocument
 	      >>>
 	      setDocumentStatusFromSystemState "decoding document"
 
-	decodeText df
-	    = getText
-	      >>> arr df					-- result is (string, [errMsg])
-	      >>> ( ( (normalizeNL . fst) ^>> mkText )		-- take string, normalize newline and build text node
-		    <+>
-		    ( arrL snd					-- take the error messages
-		      >>>
-		      arr ((enc ++) . (" encoding error" ++))	-- prefix with enc error
-		      >>>
-		      applyA (arr issueErr)			-- build issueErr arrow and apply
-		      >>>
-		      none					-- neccessary for type match with <+>
+	decodeText df ignoreErrs
+	    = processChildren
+	      ( getText							-- get the document content
+		>>> arr df						-- decode the text, result is (string, [errMsg])
+		>>> ( ( (normalizeNL . fst) ^>> mkText )		-- take decoded string, normalize newline and build text node
+		      <+>
+		      ( if isTrueValue ignoreErrs
+			then none					-- encoding errors are ignored
+			else
+			( arrL snd					-- take the error messages
+			  >>>
+			  arr ((enc ++) . (" encoding error" ++))	-- prefix with enc error
+			  >>>
+			  applyA (arr issueErr)				-- build issueErr arrow and apply
+			  >>>
+			  none						-- neccessary for type match with <+>
+			)
+		      )
 		    )
-		  )
+	      )
       
 -- ------------------------------------------------------------

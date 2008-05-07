@@ -95,7 +95,9 @@ available options:
 
 - 'a_issue_warnings' : issue warnings, when parsing HTML (default), else ignore HTML parser warnings
 
-- 'a_issue_errors' : issue all error messages on stderr (default), or ignore all error messages (default)
+- 'a_issue_errors' : issue all error messages on stderr (default), or ignore all error messages
+
+- 'a_ignore_encoding_errors': ignore all encoding errors, default is issue all encoding errors
 
 - 'a_trace' : trace level: values: 0 - 4
 
@@ -181,13 +183,14 @@ readDocument userOptions src
 	  , ( a_preserve_comment,	v_0 )
 	  , ( a_remove_whitespace,	v_0 )
 	  , ( a_parse_by_mimetype,	v_0 )
+	  , ( a_ignore_encoding_errors, v_0 )
 	  ]
 
     httpOptions
 	= [a_proxy, a_use_curl, a_options_curl]
 
     remainingOptions
-	 = filter (not . flip hasEntry defaultOptions . fst) options
+	 = options -- filter (not . flip hasEntry defaultOptions . fst) options
 
     traceLevel
 	= maybe this (setTraceLevel . read) . lookup a_trace $ options

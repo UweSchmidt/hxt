@@ -8,7 +8,6 @@
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: XmlKeywords.hs,v 1.10 2006/11/02 09:34:09 hxml Exp $
 
    Constants for XML keywords, for special attribute names
    and special attribute values
@@ -50,6 +49,7 @@ a_canonicalize,
  a_error,
  a_error_log,
  a_help,
+ a_ignore_encoding_errors,
  a_indent,
  a_issue_errors,
  a_issue_warnings,
@@ -153,6 +153,7 @@ a_encoding			= "encoding"
 a_error				= "error"
 a_error_log			= "errorLog"
 a_help				= "help"
+a_ignore_encoding_errors	= "ignore-encoding-errors"
 a_indent			= "indent"
 a_issue_warnings		= "issue-warnings"
 a_issue_errors			= "issue-errors"

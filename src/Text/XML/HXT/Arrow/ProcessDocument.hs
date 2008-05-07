@@ -243,9 +243,7 @@ propagateAndValidateNamespaces
 	>>>
 	propagateNamespaces
 	>>>
-	traceTree
-	>>>
-	traceSource
+	traceDoc "propagating namespaces done"
 	>>>
 	traceMsg 1 "validating namespaces"
 	>>>
