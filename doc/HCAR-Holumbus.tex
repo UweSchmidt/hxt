@@ -1,0 +1,49 @@
+\begin{hcarentry}{Holumbus Search Engine Framework}
+\label{holumbus}
+\report{Uwe Schmidt}
+\status{first beta release}
+\participants{Timo~B.~Hübel, Sebastian Schlatt, Stefan Schmidt}
+\entry{new}
+\makeheader
+
+\subsubsection*{Description}
+
+The Holumbus framework consists of a set of modules and tools
+for creating fast, flexible and highly customizable search engines with Haskell.
+The framework consists of two main parts. The first part is the indexer for extracting the data
+of a given type of documents, e.g. documents of a web site, and store it in an appropriate index.
+The second part is the search engine for quering the index.
+
+An instance of the Holumbus framework is the Haskell API search engine Hayoo!
+(\uri{http://holumbus.fh-wedel.de/hayoo/}. The web interface for Hayoo! is
+implemented with the Janus web server, written in Haskell and based on HXT~\cref{hxt}.
+
+\subsubsection*{Features}
+
+\begin{compactitem}
+\item Hightly configurable crawler module for flexible indexing of structured data
+\item Customizable index structure for ann effective search
+\item {\em find as you type} search
+\item Suggestions
+\item Fuzzy queries
+\item Custmizable result ranking
+\item Index structure designed for distributed serch
+\item darcs repository with current development version under
+  \url{http://darcs.fh-wedel.de/holumbus}
+\end{compactitem}
+
+\subsubsection*{Current Work}
+
+???
+
+\FurtherReading
+
+The Holumbus web page
+(\url{http://holumbus.fh-wedel.de/)
+includes downloads, darcs web interface, current status, requirements
+and documentation.
+Timo Hübels Master Thesis describing the Holumbus index structure and
+the search engine is avaliable at
+\url{http://holumbus.fh-wedel.de/branches/develop/doc/thesis-searching.pdf}.
+
+\end{hcarentry}

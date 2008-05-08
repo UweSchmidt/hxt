@@ -1,8 +1,9 @@
-\begin{hcarentry}[updated]{Haskell XML Toolbox}
+\begin{hcarentry}{Haskell XML Toolbox}
 \label{hxt}
 \report{Uwe Schmidt}
-\status{sixed major release (current release: 7.1)}
-\entry{updated}% done, 30.4.2007
+\status{seventh major release (current release: 8.0.0)}
+\participants{(Christial Uhlig)}
+\entry{changed}
 \makeheader
 
 \subsubsection*{Description}
@@ -11,61 +12,53 @@ The Haskell XML Toolbox is a collection of tools for processing XML with
 Haskell. It is itself purely written in Haskell 98. The core component of the
 Haskell XML Toolbox is a validating XML-Parser that supports
 almost fully the Extensible Markup Language (XML) 1.0 (Second Edition),
-There is a validator based on DTDs and a new more powerful validator for
+There is a validator based on DTDs and a new more powerful one for
 Relax NG schemas.
 
 The Haskell XML Toolbox bases on the ideas of HaXml~\cref{haxml} and HXML,
 but introduces a more general approach for processing XML with Haskell.
-Since release 5.1 there is a new arrow interface similar to the approach
-taken by HXML. This interface is more flexible than the old filter approach.
+The processing model is based on arrows. The arrow interface is more flexible
+than the filter approach taken in the earlier HXT versions and in HaXml.
 It is also safer, type checking of combinators becomes possible with the arrow
-interface.
+approach.
 
 \subsubsection*{Features}
 
 \begin{compactitem}
 \item Validating XML parser
 \item Very liberal HTML parser
+\item Lightweight lazy parser for XML/HTML based on Tagsoup
+\item Easy de-/serialization between native Haskell data and XML by pickler and pickler combinators
 \item XPath support
 \item Full Unicode support
 \item Support for XML namespaces
-\item Flexible arrow interface with type classes for XML filter
-\item Package support for ghc
+\item Cabal package support for ghc
 \item Native Haskell support of HTTP 1.1 and FILE protocol
 \item HTTP and access via other protocols via external program curl
 \item Tested with W3C XML validation suite
-\item Example programs for filter and arrow interface
-\item Relax NG schema validator based on the arrows interface
+\item Example programs
+\item Relax NG schema validator
 \item A HXT Cookbook for using the toolbox and the arrow interface
 \item Basic XSLT support
-\item darcs repository with current development version (7.2) under {\tt http://darcs.fh-wedel.de/hxt}
+\item darcs repository with current development version (8.0.1) under
+  \url{http://darcs.fh-wedel.de/hxt}
 \end{compactitem}
 
 \subsubsection*{Current Work}
 
-A master thesis has been finished developing an XSLT
-system. The result is a rather complete implementation of
-an XSLT transformer system. Only minor features are missing.
-The implementation consists of about only 2000 lines of Haskell code.
-The XSLT module is included since the HXT 7.0 release.
-
-A second master students project, the development of a web server called Janus,
-has been finished in October of 2006.
-The title is {\em A Dynamic Webserver with Servlet Functionality in
+In a master student's project done by Christian Uhlig, the development of a web server called Janus,
+has been finished.
+The title is \emph{A Dynamic Webserver with Servlet Functionality in
   Haskell Representing all Internal Data by Means of XML}.
-HXT with the arrows interface has been used for processing all internal data of this web server.
+HXT has been used for processing all internal data of this web server.
 The Janus server is highly configurable and can be used not only as HTTP server, but for
 various other server like tasks.
-The results of this work will be available via a darcs repository in June 2007.
+This server is used and will be further developed and extended within another
+project called Holumbus (\url{http://holumbus.fh-wedel.de/}.
+Holumbus is a framework for developing specialized
+search engines.
+The Janus system is available via \url{http://darcs.fh-wedel.de/janus}.
 Current activity consists of testing, example applications, demos and documentation.
-
-A new project, an application for HXT and Janus will start in summer 2007:
-Two master students will construct an index and search engine for specialized
-search tasks. This system will be highly configurable, such that tasks like
-searching within a web site, search of articles within a book store or
-search within a newspaper archive becomes possible. Distribution of the index
-and search engines within a network architecture will be an additional aspect
-of this project.
 
 \FurtherReading
 
@@ -75,5 +68,6 @@ includes downloads, online API documentation, a cookbook with nontrivial example
 of XML processing using arrows and RDF documents, and master thesises describing the
 design of the toolbox, the DTD validator, the arrow based Relax NG
 validator and the XSLT system.
-A getting started tutorial about HXT is avaliable in the Haskell Wiki (\url{http://www.haskell.org/haskellwiki/HXT}).
+A getting started tutorial about HXT is avaliable in the Haskell Wiki (\url{http://www.haskell.org/haskellwiki/HXT}
+).
 \end{hcarentry}
