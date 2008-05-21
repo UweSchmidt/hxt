@@ -42,6 +42,16 @@ infixl 5 />, </
 
 class (ArrowPlus a, ArrowIf a) => ArrowTree a where
 
+    -- | construct a leaf
+
+    mkLeaf		:: Tree t => b -> a c (t b)
+    mkLeaf		= constA . T.mkLeaf
+
+    -- | construct an inner node
+
+    mkTree		:: Tree t => b -> [t b] -> a c (t b)
+    mkTree n		= constA . T.mkTree n
+
     -- | select the children of the root of a tree
 
     getChildren		:: Tree t => a (t b) (t b)
