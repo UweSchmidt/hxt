@@ -201,6 +201,9 @@ _shader_config_rootState	= jp "/shader/config/@root_state"
 _shader_config_scope		:: JanusPath
 _shader_config_scope		= jp "/shader/config/@scope"
 
+_shader_config_serverroot    :: JanusPath
+_shader_config_serverroot    = jp "/shader/config/@serverroot"
+
 _shader_config_state		:: JanusPath
 _shader_config_state		= jp "/shader/config/@state"
 

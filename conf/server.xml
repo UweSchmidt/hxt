@@ -5,6 +5,8 @@
 
   <block>
   
+    <shader type="system.changeroot" serverroot="/root/janus/build"/>
+    
     <block id="global_declarations">
       <!-- load handler creator -->
       <loadhandler reference="tcpHandler" object="tcpHandler" module="Network.Server.Janus.Handler.TCPHandler"/>

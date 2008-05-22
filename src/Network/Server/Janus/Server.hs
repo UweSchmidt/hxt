@@ -35,10 +35,12 @@ import Network.Server.Janus.Transaction as TA
 import Network.Server.Janus.XmlHelper
 import Network.Server.Janus.JanusPaths
 
+import System.Directory
+
 -- ------------------------------------------------------------
 
 build_version   :: String
-build_version   = "200704291"
+build_version   = "200804121"
 
 main_version    :: Int
 main_version    = 1
@@ -85,7 +87,9 @@ serverArrow conf_file =
         swapConfig                                                                              -<  cfg
         addScope "global"                                                                       -<  ()
         addScope "local"                                                                        -<  ()
-        "/global/system/version" <-! full_release                                               -<  ()
+        "/global/system/version"    <-! full_release                                            -<  ()
+        currentdir  <- exceptZeroA_ $ getCurrentDirectory                                       -<  ()
+        "/global/system/serverroot" <-! currentdir                                              -<< ()
         "global"    <-@ mkPlainMsg $ "done\n"                                                   -<  ()
 
         -- registering Server-Context
@@ -102,6 +106,8 @@ serverArrow conf_file =
         addShaderCreator "system.loadhandlercreator" loadHandlerCreator                         -<< ()
         "global"    <-@ mkPlainMsg $ "system.loadhandler "                                      -<< ()
         addShaderCreator "system.loadhandler" loadHandler                                       -<< ()
+        "global"    <-@ mkPlainMsg $ "system.changeroot "                                       -<< ()
+        addShaderCreator "system.changeroot" changeServerRoot                                   -<< ()
 
         "global"    <-@ mkPlainMsg $ "control.seq "                                             -<< ()
         addShaderCreator "control.seq" seqControl                                               -<< ()

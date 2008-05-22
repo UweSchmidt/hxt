@@ -23,7 +23,8 @@
 
 module Network.Server.Janus.Shader.SystemShader
     (
-      loadShaderCreator
+      changeServerRoot
+    , loadShaderCreator
     , loadHandlerCreator
     , loadStateHandler
     , loadHandler
@@ -41,6 +42,35 @@ import Network.Server.Janus.DynamicLoader
 import Network.Server.Janus.Messaging
 import Network.Server.Janus.XmlHelper
 import Network.Server.Janus.JanusPaths
+
+import System.Directory
+
+{- |
+TODO
+-}
+changeServerRoot :: ShaderCreator
+changeServerRoot =
+    mkDynamicCreator $ proc (conf, _) -> do
+        (SimpleVal oldroot ) <- getSV ("/global/system/serverroot")                  -<< ()
+        newroot     <- getVal _shader_config_serverroot                     -<  conf
+        currentdir  <- exceptZeroA_ getCurrentDirectory
+                <+!> ("SystemShader.hs:changeServerRoot", GenericMessage, "Failed to get current directory.", [])
+                                                                            -<  ()
+
+        "global"    <-@ mkPlainMsg $ "changing server root path to '" ++
+                            newroot ++ "')... "                             -<< ()
+        (if currentdir /= oldroot
+          then ("global" <-@ mkPlainMsg $ "Warning: System root variable differs from actual current directory.")
+          else this)                                                        -<<  ()
+
+        (exceptZeroA $ setCurrentDirectory)
+                <+!> ("SystemShader.hs:changeServerRoot", GenericMessage, "Failed to set new directory '" ++
+                      newroot ++ "'.", [])                                  -<< newroot
+        "/global/system/serverroot" <-! newroot                             -<< ()
+
+        "global"    <-@ mkPlainMsg $ "done\n"                               -<< ()
+
+        returnA                                                             -<  this
 
 {- |
 TODO
