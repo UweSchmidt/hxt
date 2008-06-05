@@ -227,7 +227,7 @@ getURIContents
     getCont
 	= applyA ( getBaseURI				-- compute the handler and call it
 		   >>>
-		   traceString 2 (("getURIContents: reading" ++) . show)
+		   traceString 2 (("getURIContents: reading " ++) . show)
 		   >>>
 		   getSchemeFromURI
 		   >>>
