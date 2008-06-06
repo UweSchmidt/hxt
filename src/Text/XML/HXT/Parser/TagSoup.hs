@@ -23,9 +23,10 @@ where
 
 -- ------------------------------------------------------------
 
--- The table contains the id map. All element and attribute names are stored
--- the first time they are ecountered, and later always this name is used,
--- not a string built by the parser.
+import           Data.Char (toLower)
+import           Data.Maybe
+import qualified Data.Map as M
+
 
 import Text.HTML.TagSoup
 import Text.HTML.TagSoup.Entity
@@ -77,11 +78,11 @@ import Text.XML.HXT.DOM.XmlNode
     , mkAttr
     )
 
-import Data.Maybe
-
-import qualified Data.Map as M
-
 -- ---------------------------------------- 
+
+-- The name table contains the id map. All element and attribute names are stored
+-- the first time they are ecountered, and later always this name is used,
+-- not a string built by the parser.
 
 type Tags	= [Tag]
 
@@ -292,6 +293,24 @@ lookupEntity withWarnings asHtml e
 	| otherwise = xhtmlEntities -- xmlEntities (TODO: xhtml is xml and html)
 
 -- ----------------------------------------
+
+-- |
+-- Turns all element and attribute names to lower case
+-- even !DOCTYPE stuff. But this is discarded when parsing the tagsoup
+
+lowerCaseNames :: [Tag] -> [Tag]
+lowerCaseNames
+    = map f
+    where
+    f (TagOpen name attrs)
+        = TagOpen (nameToLower name) (map attrToLower attrs)
+    f (TagClose name)
+	= TagClose (nameToLower name)
+    f a = a
+    nameToLower          = map toLower
+    attrToLower (an, av) = (nameToLower an, av)
+
+-- ----------------------------------------
 -- the main parser
 
 parseHtmlTagSoup	:: Bool -> Bool -> Bool -> Bool -> Bool -> String -> String -> XmlTrees
@@ -299,7 +318,7 @@ parseHtmlTagSoup withNamespaces withWarnings withComment removeWhiteSpace asHtml
     = ( docRootElem
 	. runParser (buildCont initContext)
 	. ( if asHtml
-	    then canonicalizeTags
+	    then lowerCaseNames
 	    else id
 	  )
 	. parseTagsOptions (parseOptions { optTagWarning   = withWarnings
