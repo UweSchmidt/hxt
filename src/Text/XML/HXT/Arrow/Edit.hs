@@ -737,10 +737,11 @@ addDoctypeDecl	:: ArrowXml a => String -> String -> String -> a XmlTree XmlTree
 addDoctypeDecl rootElem public system
     = fromLA $
       replaceChildren
-      ( mkDTDDoctype [ (a_name, rootElem)
-		     , (k_public, public)
-		     , (k_system, system)
-		     ] none
+      ( mkDTDDoctype ( ( if null public then id else ( (k_public, public) : ) )
+		       .
+		       ( if null system then id else ( (k_system, system) : ) )
+		       $  [ (a_name, rootElem) ]
+		     ) none
 	<+>
 	txt "\n"
 	<+>
