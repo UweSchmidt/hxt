@@ -117,7 +117,11 @@ module Text.XML.HXT.Arrow.XmlIOStateArrow
       getQueryFromURI,
       getRegNameFromURI,
       getSchemeFromURI,
-      getUserInfoFromURI
+      getUserInfoFromURI,
+
+      -- * Mime Type Handling
+      setMimeTypeTable
+
       )
 where
 
@@ -137,6 +141,10 @@ import Text.XML.HXT.Arrow.Edit
     ( addHeadlineToXmlDoc
     , treeRepOfXmlDoc
     , indentDoc
+    )
+
+import Data.Map
+    ( fromList
     )
 
 import Data.Maybe
@@ -184,11 +192,12 @@ data XIOSysState	= XIOSys  { xio_trace			:: ! Int
 				  , xio_baseURI			:: ! String
 				  , xio_defaultBaseURI		:: ! String
 				  , xio_attrList		:: ! (AssocList String XmlTrees)
+				  , xio_mimeTypes		::   MimeTypeTable
 				  }
 
 instance DeepSeq XIOSysState where
-    deepSeq (XIOSys tr es em emh emc eml bu du al) y
-	= deepSeq tr $ deepSeq es $ deepSeq em $ deepSeq emh $ deepSeq emc $ deepSeq eml $ deepSeq bu $ deepSeq du $ deepSeq al y
+    deepSeq (XIOSys tr es em _emh emc eml bu du al _mt) y
+	= deepSeq tr $ deepSeq es $ deepSeq em $ deepSeq emc $ deepSeq eml $ deepSeq bu $ deepSeq du $ deepSeq al y
 
 -- |
 -- state datatype consists of a system state and a user state
@@ -232,6 +241,7 @@ initialSysState	= XIOSys { xio_trace		= 0
 			 , xio_baseURI		= ""
 			 , xio_defaultBaseURI	= ""
 			 , xio_attrList		= []
+			 , xio_mimeTypes	= defaultMimeTypeTable
 			 }
 
 -- ------------------------------------------------------------
@@ -898,5 +908,16 @@ getPartFromURI sel
       getPart s = do
 		  uri <- parseURIReference s
 		  return (sel uri)
+
+-- ------------------------------------------------------------
+
+-- | set the table mapping of file extensions to mime types in the system state
+--
+-- Default table is defined in 'Text.XML.HXT.DOM.MimeTypeDefaults'.
+-- This table is used when reading loacl files, (file: protocol) to determine the mime type
+
+setMimeTypeTable	:: AssocList String String -> IOStateArrow s b b
+setMimeTypeTable mtt
+    = changeSysParam (\ _ s -> s {xio_mimeTypes = fromList mtt})
 
 -- ------------------------------------------------------------

@@ -60,6 +60,9 @@ import Data.Char
 
 import Data.Maybe
 
+import System.FilePath
+    ( takeExtension )
+
 -- ----------------------------------------------------------
 
 protocolHandlers	:: AssocList String (IOStateArrow s XmlTree XmlTree)
@@ -116,9 +119,11 @@ getFileContents
 	       >>>
 	       ( arr addError		-- io error occured
 		 |||
-		 arr addTxtContent		-- content read
+		 arr addTxtContent	-- content read
 	       )
 	     )
+      >>>
+      addMimeType
 
 getStdinContents		:: IOStateArrow s XmlTree XmlTree
 getStdinContents
@@ -126,7 +131,7 @@ getStdinContents
 	       >>>
 	       ( arr addError		-- io error occured
 		 |||
-		 arr addTxtContent		-- content read
+		 arr addTxtContent	-- content read
 	       )
 	     )
 
@@ -135,6 +140,18 @@ addError e
     = issueFatal e
       >>>
       setDocumentStatusFromSystemState "accessing documents"
+
+addMimeType	:: IOStateArrow s XmlTree XmlTree
+addMimeType
+    = addMime $< ( getAttrValue transferURI
+		   >>>
+		   ( uriToMime $< getSysParam xio_mimeTypes )
+		 )
+    where
+    addMime mt
+	= addAttr transferMimeType mt
+    uriToMime mtt
+	= arr $ ( \ uri -> extensionToMimeType (drop 1 . takeExtension $ uri) mtt )
 
 addTxtContent	:: String -> IOStateArrow s XmlTree XmlTree
 addTxtContent c

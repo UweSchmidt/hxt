@@ -258,15 +258,17 @@ readDocument userOptions src
 	validateWithRelax	= hasEntry a_relax_schema options
 	relaxSchema		= lookup1 a_relax_schema options
 	parseHtml		= hasOption a_parse_html
-	parseXml		= hasOption a_parse_xml
 	isHtml			= parseHtml				-- force HTML
 				  ||
-				  mimeTypeIsHtml
-	isXml			= parseXml				-- force XML parsing
+				  ( parseByMimeType && isHtmlMimeType mimeType )
+	isXml			= ( not parseByMimeType && not parseHtml )
 				  ||
-				  ( not parseHtml
+				  ( parseByMimeType
 				    &&
-				    ( mimeTypeIsXml || null mimeType )	-- mime type is XML or not there
+				    ( isXmlMimeType  mimeType
+				      ||
+				      null mimeType
+				    )					-- mime type is XML or not known
 				  )
 	isXmlOrHtml	= isHtml || isXml
 	parseByMimeType	= hasOption a_parse_by_mimetype
@@ -276,8 +278,6 @@ readDocument userOptions src
 	issueW		= hasOption a_issue_warnings
 	removeWS	= hasOption a_remove_whitespace
 	preserveCmt	= hasOption a_preserve_comment
-	mimeTypeIsHtml	= parseByMimeType && isHtmlMimeType mimeType
-	mimeTypeIsXml	= parseByMimeType && isXmlMimeType  mimeType
 	hasOption n	= optionIsSet n options
 
 -- ------------------------------------------------------------

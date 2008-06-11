@@ -95,6 +95,8 @@ HXT_SRC	= \
 	Text/XML/HXT/DOM/FormatXmlTree.hs \
 	Text/XML/HXT/DOM/Interface.hs \
 	Text/XML/HXT/DOM/IsoLatinTables.hs \
+	Text/XML/HXT/DOM/MimeTypeDefaults.hs \
+	Text/XML/HXT/DOM/MimeTypes.hs \
 	Text/XML/HXT/DOM/NamespacePredicates.hs \
 	Text/XML/HXT/DOM/QualifiedName.hs \
 	Text/XML/HXT/DOM/ShowXml.hs \
