@@ -381,12 +381,12 @@ isHtmlMimeType t
 isXmlMimeType	:: String -> Bool
 isXmlMimeType t
     = ( t `elem` [ application_xhtml
-		, application_xml
-		, application_xml_external_parsed_entity
-		, application_xml_dtd
-		, text_xml
-		, text_xml_external_parsed_entity
-		]
+		 , application_xml
+		 , application_xml_external_parsed_entity
+		 , application_xml_dtd
+		 , text_xml
+		 , text_xml_external_parsed_entity
+		 ]
 	||
 	"+xml" `isSuffixOf` t		-- application/mathml+xml
       )					-- or image/svg+xml
