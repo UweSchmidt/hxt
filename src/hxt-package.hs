@@ -70,7 +70,7 @@ part4b
       , ""
       , " build-depends: base, haskell98 >= 1, parsec >= 2.1 && < 3, HTTP >= 3001.0.4, HUnit >= 1.2, network >= 2.1, tagsoup >= 0.6"
       , " if flag(splitBase)"
-      , "   build-depends: base >= 3, containers >= 0.1, directory >= 1, process >= 1"
+      , "   build-depends: base >= 3, containers >= 0.1, directory >= 1, process >= 1, filepath >= 1"
       , " else"
       , "   build-depends: base < 3"
       ]
