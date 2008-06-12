@@ -25,6 +25,8 @@ import           Data.List
 import qualified Data.Map as M
 import           Data.Maybe
 
+import           System.IO
+
 import           Text.XML.HXT.DOM.MimeTypeDefaults
 
 -- ------------------------------------------------------------
@@ -85,5 +87,27 @@ extensionToMimeType e
 	  M.lookup (map toLower e) t	-- else try lowercase match
           `mplus`
 	  M.lookup (map toUpper e) t	-- else try uppercase match
+
+-- ------------------------------------------------------------
+
+readMimeTypeTable	:: FilePath -> IO MimeTypeTable
+readMimeTypeTable inp
+    = do
+      h <- openFile inp ReadMode
+      c <- hGetContents h
+      return . M.fromList . parseMimeTypeTable $ c
+
+parseMimeTypeTable	:: String -> [(String, String)]
+parseMimeTypeTable
+    = concat
+      . map buildPairs
+      . map words
+      . filter (not . ("#" `isPrefixOf`))
+      . filter (not . all (isSpace))
+      . lines
+    where
+    buildPairs	:: [String] -> [(String, String)]
+    buildPairs	[] = []
+    buildPairs	(mt:exts) = map (\ x -> (x, mt)) $ exts
 
 -- ------------------------------------------------------------

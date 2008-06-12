@@ -120,8 +120,8 @@ module Text.XML.HXT.Arrow.XmlIOStateArrow
       getUserInfoFromURI,
 
       -- * Mime Type Handling
-      setMimeTypeTable
-
+      setMimeTypeTable,
+      setMimeTypeTableFromFile
       )
 where
 
@@ -141,10 +141,6 @@ import Text.XML.HXT.Arrow.Edit
     ( addHeadlineToXmlDoc
     , treeRepOfXmlDoc
     , indentDoc
-    )
-
-import Data.Map
-    ( fromList
     )
 
 import Data.Maybe
@@ -916,8 +912,20 @@ getPartFromURI sel
 -- Default table is defined in 'Text.XML.HXT.DOM.MimeTypeDefaults'.
 -- This table is used when reading loacl files, (file: protocol) to determine the mime type
 
-setMimeTypeTable	:: AssocList String String -> IOStateArrow s b b
+setMimeTypeTable	:: MimeTypeTable -> IOStateArrow s b b
 setMimeTypeTable mtt
-    = changeSysParam (\ _ s -> s {xio_mimeTypes = fromList mtt})
+    = changeSysParam (\ _ s -> s {xio_mimeTypes = mtt})
+
+-- | set the table mapping of file extensions to mime types by an external config file
+--
+-- The config file must follow the conventions of /etc/mime.types on a debian linux system,
+-- that means all empty lines and all lines starting with a # are ignored. The other lines
+-- must consist of a mime type followed by a possible empty list of extensions.
+-- The list of extenstions and mime types overwrites the default list in the system state
+-- of the IOStateArrow
+
+setMimeTypeTableFromFile	:: FilePath -> IOStateArrow s b b
+setMimeTypeTableFromFile file
+    = setMimeTypeTable $< arrIO0 ( readMimeTypeTable file)
 
 -- ------------------------------------------------------------
