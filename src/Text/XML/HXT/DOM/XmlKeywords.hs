@@ -51,6 +51,7 @@ a_canonicalize,
  a_issue_warnings,
  a_kind,
  a_line,
+ a_mime_types,
  a_module,
  a_modifier,
  a_name,
@@ -155,6 +156,7 @@ a_issue_warnings		= "issue-warnings"
 a_issue_errors			= "issue-errors"
 a_kind				= "kind"
 a_line				= "line"
+a_mime_types			= "mimetypes"
 a_module			= "module"
 a_modifier			= "modifier"
 a_name				= "name"

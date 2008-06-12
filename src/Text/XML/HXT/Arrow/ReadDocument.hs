@@ -109,6 +109,8 @@ available options:
 
 - 'a_encoding' : default document encoding ('utf8', 'isoLatin1', 'usAscii', 'iso8859_2', ... , 'iso8859_16', ...)
 
+- 'a_mime_types' : set the mime type table for file input with given file. The format of this config file must be in the syntax of a debian linux \"mime.types\" config file
+
 All attributes not evaluated by readDocument are stored in the created document root node for easy access of the various
 options in e.g. the input\/output modules
 
@@ -122,18 +124,26 @@ reads and validates a document \"test.xml\", no namespace propagation, only cano
 
 > readDocument [ (a_validate, "0")
 >              , (a_encoding, isoLatin1)
->              ] "test.xml"
+>              , (a_parse_by_mimetype, "1")
+>              ] "http://localhost/test.php"
 
-reads document \"test.xml\" without validation, default encoding 'isoLatin1'.
+reads document \"test.php\", parses it as HTML or XML depending on the mimetype given from the server, but without validation, default encoding 'isoLatin1'.
 
 
 > readDocument [ (a_parse_html, "1")
 >              , (a_encoding, isoLatin1)
->              , (a_tagsoup,    "1")
 >              ] ""
 
 reads a HTML document from standard input, no validation is done when parsing HTML, default encoding is 'isoLatin1',
 parsing is done with tagsoup parser
+
+> readDocument [ (a_encoding, isoLatin1)
+>              , (a_mime_type,    "/etc/mime.types")
+>              , (a_tagsoup,    "1")
+>              ] "test.svg"
+
+reads an SVG document from standard input, sets the mime type by looking in the system mimetype config file, default encoding is 'isoLatin1',
+parsing is done with the lightweight tagsoup parser, which implies no validation.
 
 > readDocument [ (a_parse_html,     "1")
 >              , (a_proxy,          "www-cache:3128")
@@ -187,7 +197,7 @@ readDocument userOptions src
 	  ]
 
     httpOptions
-	= [a_proxy, a_use_curl, a_options_curl]
+	= [a_proxy, a_use_curl, a_options_curl, a_mime_types]
 
     remainingOptions
 	 = options -- filter (not . flip hasEntry defaultOptions . fst) options
@@ -197,9 +207,13 @@ readDocument userOptions src
 
     addInputOptionsToSystemState
 	= addSysOptions (filter ((`elem` httpOptions) . fst) remainingOptions)
+	  >>>
+	  loadMineTypes (lookup1 a_mime_types userOptions)
 	  where
 	  addSysOptions
 	      = seqA . map (uncurry setParamString)
+	  loadMineTypes ""	= this
+	  loadMineTypes f	= setMimeTypeTableFromFile f
 
     getMimeType
 	= getAttrValue transferMimeType >>^ map toLower

@@ -50,6 +50,7 @@ inputOptions
       , Option ""	[a_options_curl]		(ReqArg (att a_options_curl)    "STR")	"additional curl options, e.g. for timeout, ..."
       , Option ""	[a_default_baseuri]		(ReqArg (att transferURI) 	"URI")	"default base URI, default: \"file:///<cwd>/\""
       , Option "e"	[a_encoding]			(ReqArg (att a_encoding)    "CHARSET")	( "default document encoding (" ++ utf8 ++ ", " ++ isoLatin1 ++ ", " ++ usAscii ++ ", ...)" )
+      , Option ""       [a_mime_types]                  (ReqArg (att a_mime_types)     "FILE")  "set mime type configuration file, e.g. \"/etc/mime.types\""
       , Option ""	[a_issue_errors]		(NoArg	(att a_issue_errors      v_1))	"issue all errorr messages on stderr (default)"
       , Option ""	[a_do_not_issue_errors]		(NoArg	(att a_issue_errors      v_0))	"ignore all error messages"
       , Option ""	[a_ignore_encoding_errors]	(NoArg  (att a_ignore_encoding_errors v_1))  "ignore encoding errors"
