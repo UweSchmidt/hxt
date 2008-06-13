@@ -99,9 +99,9 @@ available options:
 
 - 'a_ignore_encoding_errors': ignore all encoding errors, default is issue all encoding errors
 
-- 'a_ignore_none_xml_contents': ignore document contents of none XML/HTML documents.
-  This option can be useful for implementing crawler like applications, e.g. an URL checker.
-  In those cases net traffic can be reduced.
+- 'a_ignore_none_xml_contents': ignore document contents of none XML\/HTML documents.
+                                This option can be useful for implementing crawler like applications, e.g. an URL checker.
+                                In those cases net traffic can be reduced.
 
 - 'a_trace' : trace level: values: 0 - 4
 
@@ -112,7 +112,7 @@ available options:
 - 'a_options_curl' : more options for external program curl
 
 - 'a_encoding' : default document encoding ('utf8', 'isoLatin1', 'usAscii', 'iso8859_2', ... , 'iso8859_16', ...).
-  Only XML and HTML documents are decoded, documents with none XML\/HTML mime types are not decoded. The whole content is returned in a single text node
+                 Only XML and HTML documents are decoded, documents with none XML\/HTML mime types are not decoded. The whole content is returned in a single text node
 
 - 'a_mime_types' : set the mime type table for file input with given file. The format of this config file must be in the syntax of a debian linux \"mime.types\" config file
 
