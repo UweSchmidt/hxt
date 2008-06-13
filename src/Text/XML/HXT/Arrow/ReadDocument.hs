@@ -99,6 +99,10 @@ available options:
 
 - 'a_ignore_encoding_errors': ignore all encoding errors, default is issue all encoding errors
 
+- 'a_ignore_none_xml_contents': ignore document contents of none XML/HTML documents.
+  This option can be useful for implementing crawler like applications, e.g. an URL checker.
+  In those cases net traffic can be reduced.
+
 - 'a_trace' : trace level: values: 0 - 4
 
 - 'a_proxy' : proxy for http access, e.g. www-cache:3128
@@ -107,7 +111,8 @@ available options:
 
 - 'a_options_curl' : more options for external program curl
 
-- 'a_encoding' : default document encoding ('utf8', 'isoLatin1', 'usAscii', 'iso8859_2', ... , 'iso8859_16', ...)
+- 'a_encoding' : default document encoding ('utf8', 'isoLatin1', 'usAscii', 'iso8859_2', ... , 'iso8859_16', ...).
+  Only XML and HTML documents are decoded, documents with none XML\/HTML mime types are not decoded. The whole content is returned in a single text node
 
 - 'a_mime_types' : set the mime type table for file input with given file. The format of this config file must be in the syntax of a debian linux \"mime.types\" config file
 
@@ -184,16 +189,17 @@ readDocument userOptions src
  	= addEntries userOptions defaultOptions
 
     defaultOptions
-	= [ ( a_parse_html,		v_0 )
-	  , ( a_tagsoup,		v_0 )
-	  , ( a_validate,		v_1 )
-	  , ( a_issue_warnings,		v_1 )
-	  , ( a_check_namespaces,	v_0 )
-	  , ( a_canonicalize,		v_1 )
-	  , ( a_preserve_comment,	v_0 )
-	  , ( a_remove_whitespace,	v_0 )
-	  , ( a_parse_by_mimetype,	v_0 )
-	  , ( a_ignore_encoding_errors, v_0 )
+	= [ ( a_parse_html,		  v_0 )
+	  , ( a_tagsoup,		  v_0 )
+	  , ( a_validate,		  v_1 )
+	  , ( a_issue_warnings,		  v_1 )
+	  , ( a_check_namespaces,	  v_0 )
+	  , ( a_canonicalize,		  v_1 )
+	  , ( a_preserve_comment,	  v_0 )
+	  , ( a_remove_whitespace,	  v_0 )
+	  , ( a_parse_by_mimetype,	  v_0 )
+	  , ( a_ignore_encoding_errors,   v_0 )
+	  , ( a_ignore_none_xml_contents, v_0 )
 	  ]
 
     httpOptions
@@ -247,7 +253,8 @@ readDocument userOptions src
 					  isHtml
 	    | validateWithRelax		= parseXmlDocument False		-- for Relax NG use XML parser without validation
 	    | isXml			= parseXmlDocument validate		-- parse as XML
-	    | otherwise			= this					-- don't parse, mime type is not XML nor HTML
+	    | removeNoneXml		= replaceChildren none			-- don't parse, if mime type is not XML nore HTML
+	    | otherwise			= this					-- but remove contents when option is set
 	checknamespaces
 	    | (withNamespaces && not withTagSoup)
 	      ||
@@ -279,7 +286,7 @@ readDocument userOptions src
 				  ||
 				  ( parseByMimeType
 				    &&
-				    ( isXmlMimeType  mimeType
+				    ( isXmlMimeType mimeType
 				      ||
 				      null mimeType
 				    )					-- mime type is XML or not known
@@ -292,6 +299,7 @@ readDocument userOptions src
 	issueW		= hasOption a_issue_warnings
 	removeWS	= hasOption a_remove_whitespace
 	preserveCmt	= hasOption a_preserve_comment
+	removeNoneXml	= hasOption a_ignore_none_xml_contents
 	hasOption n	= optionIsSet n options
 
 -- ------------------------------------------------------------

@@ -46,6 +46,7 @@ a_canonicalize,
  a_error_log,
  a_help,
  a_ignore_encoding_errors,
+ a_ignore_none_xml_contents,
  a_indent,
  a_issue_errors,
  a_issue_warnings,
@@ -151,6 +152,7 @@ a_error				= "error"
 a_error_log			= "errorLog"
 a_help				= "help"
 a_ignore_encoding_errors	= "ignore-encoding-errors"
+a_ignore_none_xml_contents	= "ignore-none-xml-contents"
 a_indent			= "indent"
 a_issue_warnings		= "issue-warnings"
 a_issue_errors			= "issue-errors"

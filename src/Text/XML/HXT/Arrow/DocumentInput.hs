@@ -303,11 +303,15 @@ getXmlContents'		:: IOStateArrow s XmlTree XmlTree -> IOStateArrow s XmlTree Xml
 getXmlContents' parseEncodingSpec
     = ( getURIContents
 	>>>
-	parseEncodingSpec
-	>>>
-	filterErrorMsg
-	>>>
-	decodeDocument
+	( ( parseEncodingSpec
+	    >>>
+	    filterErrorMsg
+	    >>>
+	    decodeDocument
+	  )
+	  `when`
+	  isXmlHtml
+	)
 	>>>
 	perform ( getAttrValue transferURI
 		  >>>
@@ -320,6 +324,11 @@ getXmlContents' parseEncodingSpec
       )
       `when`
       isRoot
+    where
+    isXmlHtml
+	= getAttrValue transferMimeType
+	  >>>
+	  arr (\ mt -> isHtmlMimeType mt || isXmlMimeType mt)
 
 -- ------------------------------------------------------------
 
