@@ -82,12 +82,48 @@ getCont options uri -- curlOptions uri proxy
     = do
       initCurl
       resp <- curlGetResponse uri curlOptions
-      return (Left "http request with libcurl not yet implemented")
+      return $ evalResponse resp
     where
     curlOptions = concatMap (uncurry copt) options ++ defaultOptions
     defaultOptions
 	= [ CurlFailOnError False
+	  , CurlHeader True
+	  , CurlNoProgress True
 	  ]
+    evalResponse r
+	| rc /= CurlOK
+	    = Left ( "http error when requesting URI "
+		     ++ show uri
+		     ++ ": (curl return code=" ++ show rc ++ ") "
+		   )
+	| rs < 200 && rs >= 300
+	    = Left ( "http error when accessing URI "
+		     ++ show uri
+		     ++ ": "
+		     ++ show rsl
+		   )
+	| otherwise
+	    = Right ( headers, respBody r
+		    )
+	where
+	headers
+	    = map (\ (k, v) -> (httpPrefix ++ k, v)) rsh
+	      ++ statusLine (words rsl)
+
+	statusLine (vers : code : msg)
+	    = [ (transferVersion, vers)
+	      , (transferMessage, unwords msg)
+	      , (transferStatus, code)
+	      ]
+        statusLine _
+	    = []
+
+	rc  = respCurlCode    r
+	rs  = respStatus      r
+	rsl = respStatusLine  r
+	rsh = respHeaders     r
+
+-- ------------------------------------------------------------
 
 copt	:: String -> String -> [CurlOption]
 copt k v
