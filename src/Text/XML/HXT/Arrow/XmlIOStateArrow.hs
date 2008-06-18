@@ -59,6 +59,7 @@ module Text.XML.HXT.Arrow.XmlIOStateArrow
       unsetParam,
       getParam,
       getAllParams,
+      getAllParamsString,
       setParamString,
       getParamString,
       setParamInt,
@@ -385,6 +386,18 @@ getParam n
 getAllParams	:: IOStateArrow s b (AssocList String XmlTrees)
 getAllParams
     = getSysParam xio_attrList
+
+-- | read all attributes from global state
+-- and convert the values to strings
+
+getAllParamsString	:: IOStateArrow s b (AssocList String String)
+getAllParamsString
+    = getAllParams
+      >>>
+      listA ( unlistA
+	      >>>
+	      second (xshow unlistA)
+	    )
 
 setParamString	:: String -> String -> IOStateArrow s b b
 setParamString n v
