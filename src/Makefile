@@ -119,6 +119,7 @@ HXT_SRC	= \
 	Text/XML/HXT/DTDValidation/XmlRE.hs \
 	Text/XML/HXT/IO/GetFILE.hs \
 	Text/XML/HXT/IO/GetHTTPCurl.hs \
+	Text/XML/HXT/IO/GetHTTPLibCurl.hs \
 	Text/XML/HXT/IO/GetHTTPNative.hs \
 	Text/XML/HXT/Parser/HtmlParsec.hs \
 	Text/XML/HXT/Parser/ProtocolHandlerUtil.hs \

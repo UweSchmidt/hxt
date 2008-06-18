@@ -39,6 +39,7 @@ import Text.XML.HXT.DOM.Unicode
 import qualified Text.XML.HXT.IO.GetFILE	as FILE
 import qualified Text.XML.HXT.IO.GetHTTPNative	as HTTP
 import qualified Text.XML.HXT.IO.GetHTTPCurl	as CURL
+import qualified Text.XML.HXT.IO.GetHTTPLibCurl	as LibCURL
 
 import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlArrow
@@ -180,14 +181,15 @@ getHttpContents
 			  xshow getChildren
 			)
 		  )
-{-
-      getOpt opt
-	  = getAttrValue0 opt
-	    `orElse`
-	    getParamString opt
--}
-      getCont uri options -- proxy curl curlOpt
-	  = applyA ( ( if curl == v_1
+
+      getCont uri options
+	  = applyA ( ( if curl == "2"	-- not yet active
+		       then ( traceMsg 2 ( "get HTTP via libcurl, uri=" ++ show uri ++ " options=" ++ show options )
+			      >>>
+			      arrIO0 ( LibCURL.getCont options uri )
+			    )
+		       else
+		       if curl == v_1
 		       then ( traceMsg 2 ( "get HTTP via "
 					   ++ show ( "curl "
 						     ++ (if null proxy then "" else "--proxy " ++ proxy)
