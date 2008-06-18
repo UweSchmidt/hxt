@@ -163,21 +163,30 @@ addTxtContent c
 
 getHttpContents		:: IOStateArrow s XmlTree XmlTree
 getHttpContents
-    = getCont $<<<< ( getAttrValue transferURI
-		      &&&
-		      getOpt a_proxy
-		      &&&
-		      getOpt a_use_curl
-		      &&&
-		      getOpt a_options_curl
+    = getCont $<< ( getAttrValue transferURI
+		    &&&
+		    ( ( getAttrlAsAssoc	-- get all attributes of root node
+			&&&
+			getAllParamsString	-- get all system params
+		      )
+		      >>^ uncurry addEntries	-- merge them, attributes overwrite system params
 		    )
+		  )
       where
+      getAttrlAsAssoc				-- get the attributes as assoc list
+	  = listA ( getAttrl
+		    >>> ( getName
+			  &&&
+			  xshow getChildren
+			)
+		  )
+{-
       getOpt opt
 	  = getAttrValue0 opt
 	    `orElse`
 	    getParamString opt
-
-      getCont uri proxy curl curlOpt
+-}
+      getCont uri options -- proxy curl curlOpt
 	  = applyA ( ( if curl == v_1
 		       then ( traceMsg 2 ( "get HTTP via "
 					   ++ show ( "curl "
@@ -197,6 +206,10 @@ getHttpContents
 		       arr addContent
 		     )
 		   )
+	    where
+	    proxy   = lookup1 a_proxy        options
+	    curl    = lookup1 a_use_curl     options
+	    curlOpt = lookup1 a_options_curl options
 
       addContent	:: (AssocList String String, String) -> IOStateArrow s XmlTree XmlTree
       addContent (al, c)
