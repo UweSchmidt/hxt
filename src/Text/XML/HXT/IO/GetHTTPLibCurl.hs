@@ -9,12 +9,16 @@ module Text.XML.HXT.IO.GetHTTPLibCurl
     )
 
 where
+
+import Control.Arrow
+    ( first )
 import Control.Concurrent.MVar
 import Control.Monad
     ( when )
 
 import Data.Char
     ( isDigit
+    , toLower
     )
 import Data.List
     ( isPrefixOf
@@ -27,6 +31,9 @@ import System.IO.Unsafe
     ( unsafePerformIO
     )
 
+import Text.ParserCombinators.Parsec
+    ( parse
+    )
 import Text.XML.HXT.DOM.XmlKeywords
 import Text.XML.HXT.DOM.XmlOptions
     ( isTrueValue
@@ -34,27 +41,6 @@ import Text.XML.HXT.DOM.XmlOptions
 import Text.XML.HXT.Parser.ProtocolHandlerUtil
     ( parseContentType
     )
-{-
-import Text.ParserCombinators.Parsec
-    ( Parser
-    , parse
-    , anyChar
-    , char
-    , digit
-    , getInput
-    , many1
-    , manyTill
-    , spaces
-    , string
-    , (<|>)
-    )
-
-import qualified Text.ParserCombinators.Parsec as Parsec (try)	-- try
-
-import System.PipeOpen
-    ( popen
-    )
--}
 
 -- ------------------------------------------------------------
 --
@@ -75,7 +61,19 @@ initCurl
 
 -- ------------------------------------------------------------
 --
--- the http protocol handler implemented by calling external program curl
+-- the http protocol handler implemented by calling libcurl
+-- (<http://curl.haxx.se/>)
+-- via the curl binding
+-- <http://hackage.haskell.org/cgi-bin/hackage-scripts/package/curl>
+-- This function tries to support mostly all curl options concerning HTTP requests.
+-- The naming convetion is as follows: A curl option must be prefixed by the string
+-- \"curl\" and then written exactly as described in the curl man page
+-- (<http://curl.haxx.se/docs/manpage.html>).
+-- Example:
+--
+-- > getCont [("curl--user-agent","My first HXT app"),("curl-e","http://the.referer.url/")] "http://..."
+--
+-- will set the user agent and the referer URL for this request.
 
 getCont		:: [(String, String)] -> String -> IO (Either String ([(String, String)], String))
 getCont options uri -- curlOptions uri proxy
@@ -89,6 +87,7 @@ getCont options uri -- curlOptions uri proxy
 	= [ CurlFailOnError False
 	  , CurlHeader True
 	  , CurlNoProgress True
+	  , CurlFollowLocation True
 	  ]
     evalResponse r
 	| rc /= CurlOK
@@ -103,12 +102,23 @@ getCont options uri -- curlOptions uri proxy
 		     ++ show rsl
 		   )
 	| otherwise
-	    = Right ( headers, respBody r
+	    = Right ( contentT ++ headers, respBody r
 		    )
 	where
 	headers
 	    = map (\ (k, v) -> (httpPrefix ++ k, v)) rsh
 	      ++ statusLine (words rsl)
+
+	contentT
+	    = concat
+	      . map ( either (const []) id
+		      . parse parseContentType ""
+		    )
+	      . map snd
+	      . take 1
+              . filter ((== "content-type") . fst)
+              . map (first (map toLower))
+              $ rsh
 
 	statusLine (vers : code : msg)
 	    = [ (transferVersion, vers)
@@ -131,20 +141,13 @@ copt k v
 	= opt2copt (drop 4 k) v
 
     | k == a_proxy
-	= ( if isIntArg v
-	    then [CurlProxyPort $ read pp]
-	    else []
-	  )
-          ++ [CurlProxy ph]
+	= opt2copt k v
 
     | k == a_options_curl
 	= curlOptionString v
 
     | otherwise
 	= []
-    where
-    (ph,pp') = span (/=':') v
-    pp       = drop 1 pp'
 
 opt2copt	:: String -> String -> [CurlOption]
 opt2copt k v
@@ -152,15 +155,64 @@ opt2copt k v
     | k `elem` ["-b", "--cookie"]	= [CurlCookie v]
     | k == "--connect-timeout"
       &&
-      isIntArg v			= [CurlConnectTimeout (read v)]
-    | k == "--crlf"			= [CurlCRLF $ isTrue v]
-    | k `elem` ["-d", "--data"]		= [CurlPostFields [v]]
-    | k `elem` ["-e", "--referer"]	= [CurlReferer v]
-    | k `elem` ["-H", "--header"]	= [CurlHttpHeaders [v]]
-    | k == "--ignore-content-length"	= [CurlIgnoreContentLength $ isTrue v]
-    | k `elem` ["-I", "--head"]		= [CurlNoBody $ isTrue v]
+      isIntArg v			= [CurlConnectTimeout      $ read    v]
+    | k == "--crlf"			= [CurlCRLF                $ isTrue  v]
+    | k `elem` ["-d", "--data"]		= [CurlPostFields          $ lines   v]
+    | k `elem` ["-e", "--referer"]	= [CurlReferer                       v]
+    | k `elem` ["-H", "--header"]	= [CurlHttpHeaders         $ lines   v]
+    | k == "--ignore-content-length"	= [CurlIgnoreContentLength $ isTrue  v]
+    | k `elem` ["-I", "--head"]		= [CurlNoBody              $ isTrue  v]
+    | k `elem` ["-L", "--location"]	= [CurlFollowLocation      $ isTrue  v]
+    | k == "--max-filesize"
+      &&
+      isIntArg v			= [CurlMaxFileSizeLarge    $ read    v]
+    | k `elem` ["-m", "--max-time"]
+      &&
+      isIntArg v			= [CurlTimeoutMS           $ read    v]
+    | k `elem` ["-n", "--netrc"]	= [CurlNetrcFile                     v]
+    | k `elem` ["-R", "--remote-time"]  = [CurlFiletime            $ isTrue  v]
+    | k `elem` ["-u", "--user"]		= [CurlUserPwd                       v]
+    | k `elem` ["-U", "--proxy-user"]	= [CurlProxyUserPwd                  v]
+    | k `elem` ["-x", "--proxy"]        =  proxyOptions
+    | k `elem` ["-X", "--request"]      = [CurlCustomRequest                 v]
+    | k `elem` ["-y", "--speed-time"]
+      &&
+      isIntArg v                        = [CurlLowSpeedTime        $ read    v]
+    | k `elem` ["-Y", "--speed-limit"]
+      &&
+      isIntArg v			= [CurlLowSpeed            $ read    v]
+    | k `elem` ["-z", "--time-cond"]	=  ifModifiedOptions
+    | k == "--max-redirs"
+      &&
+      isIntArg v			= [CurlMaxRedirs           $ read    v]
+    | k `elem` ["-0", "--http1.0"]	= [CurlHttpVersion       HttpVersion10]
     | otherwise				= []
     where
+    ifModifiedOptions
+	| "-" `isPrefixOf` v
+	  &&
+	  isIntArg v'			= [CurlTimeCondition TimeCondIfUnmodSince
+					  ,CurlTimeValue           $ read   v'
+					  ]
+	| isIntArg v			= [CurlTimeCondition TimeCondIfModSince
+					  ,CurlTimeValue           $ read   v'
+					  ]
+	| otherwise			= []
+	where
+	v' = tail v
+
+    proxyOptions
+	= [ CurlProxyPort pport
+	  , CurlProxy     phost
+	  ]
+	where
+	pport
+	    | isIntArg ppp	= read v
+	    | otherwise		= 1080
+	(phost, pp) 		= span (/=':') v
+	ppp      		= drop 1 pp
+
+
 
 isTrue		:: String -> Bool
 isTrue s  	= null s || isTrueValue s
@@ -182,122 +234,4 @@ curlOptionString
 	(k:l1) = l
 	(v:l2) = l1
 
-{-
-      (res, errs, rc) <- popen cmd allArgs
-      if rc /= 0
-	 then return $ Left ( "http error when requesting URI "
-			      ++ show uri
-			      ++ ": (rc=" ++ show rc ++ ") "
-			      ++ errs
-			    )
-	 else let
-	      (st, al, contents) = parseResponse res
-	      in
-	      if st >= 200 && st < 300
-		 then return $ Right (al, contents)
-		 else return $ Left ( "http error when accessing URI "
-				      ++ show uri
-				      ++ ": "
-				      ++ show st
-				    )
-    where
-    cmd		= "curl"
-
-    allArgs	= args
-		  ++ proxyArgs proxy
-		  ++ words curlOptions
-
-    args 	= [ "--silent"
-		  , "--show-error"
-		  , "--dump-header", "-"
-		  , uri
-		  ]
-    proxyArgs ""
-		= []
-    proxyArgs prx
-		= [ "--proxy", prx ]
-
-parseResponse	:: String -> (Int, [(String, String)], String)
-parseResponse inp
-    = ( either
-          ( const (999, [(transferMessage, "illegal HTTP response")], inp))
-          id
-	.
-	parse parseHttpResponse "HTTP Header"
-      ) inp
-
--- ------------------------------------------------------------
-
-parseHttpResponse		:: Parser (Int, [(String, String)], String)
-parseHttpResponse
-    = do
-      allResponses <- many1 parse1Response
-      let (rc, rh, rhs) = last allResponses
-      content <- getInput
-      return (rc, rh ++ rhs, content)
-    where
-
-    parse1Response
-	= do
-	  (rc, rh) <- parseResp
-	  rhs      <- parseHeaders
-	  return (rc, rh, rhs)
-
-    crlf		:: Parser ()
-    crlf
-	= do
-	  ( Parsec.try (string "\r\n") <|> string "\n" )
-	  return ()
-
-    parseResp		:: Parser (Int, [(String, String)])
-    parseResp
-	= do
-	  vers <- ( do
-		    http <- string "HTTP/"
-		    mav <- many1 digit
-		    char '.'
-		    miv <- many1 digit
-		    return (http ++ mav ++ "." ++ miv)
-		  )
-	  spaces
-	  ds <- many1 digit
-	  spaces
-	  reason <- manyTill anyChar crlf
-	  return ( read ds,
-		   [(transferMessage, reason), (transferVersion, vers)]
-		 )
-
-    parseHeaders	:: Parser [(String, String)]
-    parseHeaders
-	= ( do
-	    crlf
-	    return []
-	  )
-	  <|>
-	  ( do
-	    header1 <- parse1Header
-	    rest    <- parseHeaders
-	    return (header1 ++ rest)
-	  )
-	  <|>
-	  ( do
-	    return [(httpPrefix ++ "IllegalHeaders", "")]
-	  )
-
-    parse1Header	:: Parser [(String, String)]
-    parse1Header
-	= do
-	  header <- manyTill anyChar (char ':')
-	  spaces
-	  value  <- manyTill anyChar crlf
-	  let ct = parseCT header value
-	  return $ ct ++ [(httpPrefix ++ header, value)]
-	where
-	parseCT	:: String -> String -> [(String, String)]
-	parseCT h v
-	    | map toLower h == "content-type"
-		= either (const []) id . parse parseContentType h $ v
-	    | otherwise
-		= []
--}
 -- ------------------------------------------------------------
