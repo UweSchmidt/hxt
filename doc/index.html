@@ -256,8 +256,19 @@
     <a name="change"></a>
     <h3>Change History</h3>
     <ul>
-      <li>In <a href="hxt-8.0.1.tar.gz">Version 8.0.1</a>
+      <li>In <a href="hxt-8.1.0.tar.gz">Version 8.0.1</a>
 	<ul>
+	  <li>
+	    HTTP interface changed to work with libcurl
+	    via curl bindings with package <a href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/curl">curl</a>.
+	    So the HTTP package is not longer needed, also the old
+	    and somewhat inefficent interface to curl by starting an external process and
+	    communicate via a pipe is not longer needed.
+	    When installing the curl bindings, be aware that the
+	    libcurl development packages including the C header files
+	    must be installed. Otherwise the Setup.hs will complain of
+	    missing files.
+	  </li>
 	  <li>
 	    New input option for ignoring none XML/HTML contents
 	    when reading documents (useful for crawler like applications).

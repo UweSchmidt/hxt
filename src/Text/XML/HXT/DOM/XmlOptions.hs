@@ -45,8 +45,8 @@ inputOptions 	:: [OptDescr (String, String)]
 inputOptions
     = [ Option "t"	[a_trace]			(OptArg trc "LEVEL")			"trace level (0-4), default 1"
       , Option "p"	[a_proxy]			(ReqArg (att a_proxy)         "PROXY")	"proxy for http access (e.g. \"www-cache:3128\")"
-      , Option ""	[a_use_curl]			(NoArg  (att a_use_curl          v_1))	"HTTP access via external program \"curl\", more functionality, supports HTTP/1.0, less efficient"
-      , Option ""	[a_do_not_use_curl]		(NoArg  (att a_use_curl          v_0))	"HTTP access via built in HTTP/1.1 module (default)"
+      , Option ""	[a_use_curl]			(NoArg  (att a_use_curl          v_1))	"obsolete, since hxt-8.1 HTTP access is always done with curl bindings"
+      , Option ""	[a_do_not_use_curl]		(NoArg  (att a_use_curl          v_0))	"obsolete, since hxt-8.1 HTTP access is always done with curl bindings"
       , Option ""	[a_options_curl]		(ReqArg (att a_options_curl)    "STR")	"additional curl options, e.g. for timeout, ..."
       , Option ""	[a_default_baseuri]		(ReqArg (att transferURI) 	"URI")	"default base URI, default: \"file:///<cwd>/\""
       , Option "e"	[a_encoding]			(ReqArg (att a_encoding)    "CHARSET")	( "default document encoding (" ++ utf8 ++ ", " ++ isoLatin1 ++ ", " ++ usAscii ++ ", ...)" )

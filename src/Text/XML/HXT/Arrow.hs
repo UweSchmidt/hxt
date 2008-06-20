@@ -40,6 +40,8 @@ module Text.XML.HXT.Arrow
     , module Text.XML.HXT.Arrow.Pickle
 
     , module Text.XML.HXT.XSLT.XsltArrows
+
+    , module Text.XML.HXT.Version
     )
 where
 
@@ -63,5 +65,7 @@ import qualified				-- just for adding the module to the lib
        Text.XML.HXT.Arrow.XPathSimple as XPS ()
 
 import Text.XML.HXT.XSLT.XsltArrows
+
+import Text.XML.HXT.Version
 
 -- ------------------------------------------------------------

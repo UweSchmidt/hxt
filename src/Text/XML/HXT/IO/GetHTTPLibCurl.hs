@@ -41,6 +41,7 @@ import Text.XML.HXT.DOM.XmlOptions
 import Text.XML.HXT.Parser.ProtocolHandlerUtil
     ( parseContentType
     )
+import Text.XML.HXT.Version
 
 -- ------------------------------------------------------------
 --
@@ -88,6 +89,7 @@ getCont options uri -- curlOptions uri proxy
 	  , CurlHeader True
 	  , CurlNoProgress True
 	  , CurlFollowLocation True
+	  , CurlUserAgent ("hxt/" ++ hxt_version ++ " via libcurl")
 	  ]
     evalResponse r
 	| rc /= CurlOK

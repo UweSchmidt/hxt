@@ -7,8 +7,8 @@ PKGFLAGS	=
 GHCFLAGS	= -W -O2
 GHC		= ghc $(GHCFLAGS) $(PKGFLAGS)
 
-DIST		= $(HXT_HOME)/dist/examples/arrows/AGentleIntroductionToHXT/
-DIST_DIR	= $(DIST)/AGentleIntroductionToHXT/PicklerExample/
+DIST		= $(HXT_HOME)/dist/examples/arrows/AGentleIntroductionToHXT
+DIST_DIR	= $(DIST)/PicklerExample
 
 src		= Baseball.hs
 prog		= ./Baseball

@@ -30,6 +30,17 @@ import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
 import Control.Arrow.ArrowIO
 
+import Data.Char
+    ( toLower
+    )
+import Data.List
+    ( isPrefixOf
+    )
+import Data.Maybe
+
+import System.FilePath
+    ( takeExtension )
+
 import Text.XML.HXT.DOM.Unicode
     ( getDecodingFct
     , guessEncoding
@@ -37,32 +48,22 @@ import Text.XML.HXT.DOM.Unicode
     )
 
 import qualified Text.XML.HXT.IO.GetFILE	as FILE
-import qualified Text.XML.HXT.IO.GetHTTPNative	as HTTP
-import qualified Text.XML.HXT.IO.GetHTTPCurl	as CURL
 import qualified Text.XML.HXT.IO.GetHTTPLibCurl	as LibCURL
 
+{- not longer needed, libcurl is used
+import qualified Text.XML.HXT.IO.GetHTTPNative	as HTTP
+import qualified Text.XML.HXT.IO.GetHTTPCurl	as CURL
+-}
+
 import Text.XML.HXT.DOM.Interface
+
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlIOStateArrow
-
 import Text.XML.HXT.Arrow.ParserInterface
     ( parseXmlDocEncodingSpec
     , parseXmlEntityEncodingSpec
     , removeEncodingSpec
     )
-
-import Data.List
-    ( isPrefixOf
-    )
-
-import Data.Char
-    ( toLower
-    )
-
-import Data.Maybe
-
-import System.FilePath
-    ( takeExtension )
 
 -- ----------------------------------------------------------
 
@@ -183,13 +184,19 @@ getHttpContents
 		  )
 
       getCont uri options
-	  = applyA ( ( if curl == "2"	-- not yet active
-		       then ( traceMsg 2 ( "get HTTP via libcurl, uri=" ++ show uri ++ " options=" ++ show options )
-			      >>>
-			      arrIO0 ( LibCURL.getCont options uri )
-			    )
-		       else
-		       if curl == v_1
+	  = applyA ( ( traceMsg 2 ( "get HTTP via libcurl, uri=" ++ show uri ++ " options=" ++ show options )
+		       >>>
+		       arrIO0 ( LibCURL.getCont options uri )
+		     )
+		     >>>
+		     ( arr addError
+		       |||
+		       arr addContent
+		     )
+		   )
+		    
+{- old stuff
+	  = applyA ( ( if curl == v_1
 		       then ( traceMsg 2 ( "get HTTP via "
 					   ++ show ( "curl "
 						     ++ (if null proxy then "" else "--proxy " ++ proxy)
@@ -212,6 +219,7 @@ getHttpContents
 	    proxy   = lookup1 a_proxy        options
 	    curl    = lookup1 a_use_curl     options
 	    curlOpt = lookup1 a_options_curl options
+-}
 
       addContent	:: (AssocList String String, String) -> IOStateArrow s XmlTree XmlTree
       addContent (al, c)

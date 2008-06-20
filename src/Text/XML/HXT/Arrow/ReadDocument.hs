@@ -107,14 +107,21 @@ available options:
 
 - 'a_proxy' : proxy for http access, e.g. www-cache:3128
 
-- 'a_use_curl' : for http access via external programm curl, default is native HTTP access
+- 'a_use_curl' : obsolete and ignored, HTTP acccess is always done with curl bindings for libcurl
 
-- 'a_options_curl' : more options for external program curl
+- 'a_options_curl' : deprecated but for compatibility reasons still supported.
+                     More options passed to the curl binding.
+                     Instead of using this option to set a whole bunch of options at once for curl
+                     it is recomended to use the @curl-.*@ options syntax described below.
 
 - 'a_encoding' : default document encoding ('utf8', 'isoLatin1', 'usAscii', 'iso8859_2', ... , 'iso8859_16', ...).
                  Only XML and HTML documents are decoded, documents with none XML\/HTML mime types are not decoded. The whole content is returned in a single text node
 
 - 'a_mime_types' : set the mime type table for file input with given file. The format of this config file must be in the syntax of a debian linux \"mime.types\" config file
+
+- curl options : the HTTP interface with libcurl can be configured with a lot of options. To support these options in an easy way, there is a naming convetion:
+                 Every option, which has the prefix @curl@ and the rest of the name forms an option as described in the curl man page, is passed to the curl binding lib.
+                 See 'Text.XML.HXT.IO.GetHTTPLibCurl.getCont' for examples. Currently most of the options concerning HTTP requests are implemented.
 
 All attributes not evaluated by readDocument are stored in the created document root node for easy access of the various
 options in e.g. the input\/output modules

@@ -71,7 +71,6 @@ HXT_SRC	= \
 	Data/Tree/Class.hs \
 	Data/Tree/NTree/Filter.hs \
 	Data/Tree/NTree/TypeDefs.hs \
-	System/PipeOpen.hs \
 	Text/XML/HXT/Arrow/DocumentInput.hs \
 	Text/XML/HXT/Arrow/DocumentOutput.hs \
 	Text/XML/HXT/Arrow/DTDProcessing.hs \
@@ -118,9 +117,7 @@ HXT_SRC	= \
 	Text/XML/HXT/DTDValidation/Validation.hs \
 	Text/XML/HXT/DTDValidation/XmlRE.hs \
 	Text/XML/HXT/IO/GetFILE.hs \
-	Text/XML/HXT/IO/GetHTTPCurl.hs \
 	Text/XML/HXT/IO/GetHTTPLibCurl.hs \
-	Text/XML/HXT/IO/GetHTTPNative.hs \
 	Text/XML/HXT/Parser/HtmlParsec.hs \
 	Text/XML/HXT/Parser/ProtocolHandlerUtil.hs \
 	Text/XML/HXT/Parser/TagSoup.hs \
@@ -151,6 +148,7 @@ HXT_SRC	= \
 	Text/XML/HXT/RelaxNG/XmlSchema/DataTypeLibW3C.hs \
 	Text/XML/HXT/RelaxNG/XmlSchema/Regex.hs \
 	Text/XML/HXT/RelaxNG/XmlSchema/RegexParser.hs \
+	Text/XML/HXT/Version.hs \
 	Text/XML/HXT/XPath.hs \
 	Text/XML/HXT/XPath/NavTree.hs \
 	Text/XML/HXT/XPath/XPathArithmetic.hs \
@@ -167,6 +165,17 @@ HXT_SRC	= \
 	Text/XML/HXT/XSLT/CompiledStylesheet.hs \
 	Text/XML/HXT/XSLT/Names.hs \
 	Text/XML/HXT/XSLT/XsltArrows.hs
+
+# no longer in use	System/PipeOpen.hs
+# no longer in use	Text/XML/HXT/IO/GetHTTPNative.hs
+# no longer in use	Text/XML/HXT/IO/GetHTTPCurl.hs
+
+Text/XML/HXT/Version.hs	: ../Version.mk Makefile
+		( echo "module Text.XML.HXT.Version" \
+		; echo "where" \
+		; echo "hxt_version :: String" \
+		; echo "hxt_version = \"$(VERSION)\"" \
+		) > $@
 
 HXT_OBJ		= $(HXT_SRC:.hs=.o)
 HXT_HI		= $(HXT_SRC:.hs=.hi)
