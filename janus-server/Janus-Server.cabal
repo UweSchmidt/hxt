@@ -1,5 +1,5 @@
 name:          Janus-Server
-version:       0.1
+version:       0.1.0
 license:       OtherLicense
 license-file:  LICENSE
 author:        Christian Uhlig
@@ -20,7 +20,7 @@ executable janus
   main-is:
     Network/Server/Janus/Janus.hs
   build-depends: base >= 3
-               , haskell98
-               , janus-library
+               , haskell98 >= 1.0
+               , janus-library >= 0.1.0
   hs-source-dirs: source
   ghc-options: -Wall

@@ -5,14 +5,16 @@
 
   <block>
   
+    <!-- shader type="system.changeroot" serverroot="/root/janus/build"/ -->
+    
     <block id="global_declarations">
       <!-- load handler creator -->
       <loadhandler reference="tcpHandler" object="tcpHandler" module="Network.Server.Janus.Handler.TCPHandler"/>
-      <loadhandler reference="daemonHandler" object="daemonHandler" module="Network.Server.Janus.Core"/>
+      <loadhandler reference="daemonHandler" object="daemonHandler" module="Network.Server.Janus.Handler.SystemHandler"/>
       <loadhandler reference="ttyHandler" object="ttyHandler" module="Network.Server.Janus.Handler.ConsoleHandler"/>
 
       <!-- basic shaders -->
-      <loadshader reference="inline" object="dynShader" module="Network.Server.Janus.Core"/>
+<!--      <loadshader reference="inline" object="dynShader" module="Network.Server.Janus.Core"/> -->
       <loadshader reference="local_echo" object="localEchoShader" module="Network.Server.Janus.Shader.ShaderLib"/>
       <loadshader reference="request_shader" object="requestShader" module="Network.Server.Janus.Shader.HTTPShader"/>
       <loadshader reference="file_shader" object="fileShader" module="Network.Server.Janus.Shader.HTTPShader"/>
