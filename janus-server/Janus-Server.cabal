@@ -1,0 +1,26 @@
+name:          Janus-Server
+version:       0.1
+license:       OtherLicense
+license-file:  LICENSE
+author:        Christian Uhlig
+copyright:     Copyright (c) 2006 Christian Uhlig
+maintainer:    Christian Uhlig <uhl@fh-wedel.de>
+stability:     experimental
+category:      Server, Network
+synopsis:      A flexible Haskell application server.
+homepage:      http://holumbus.fh-wedel.de/janus
+description:   A flexible Haskell application server.
+
+cabal-version: >=1.2
+
+flag splitBase
+  description: Choose the new smaller, split-up base package.
+
+executable janus
+  main-is:
+    Network/Server/Janus/Janus.hs
+  build-depends: base >= 3
+               , haskell98
+               , janus-library
+  hs-source-dirs: source
+  ghc-options: -Wall

@@ -1,0 +1,52 @@
+name:          janus-library
+version:       0.1
+license:       OtherLicense
+license-file:  LICENSE
+author:        Christian Uhlig
+copyright:     Copyright (c) 2006 Christian Uhlig
+maintainer:    Christian Uhlig <uhl@fh-wedel.de>
+stability:     experimental
+category:      Server, Network
+synopsis:      A flexible Haskell application server.
+homepage:      http://holumbus.fh-wedel.de/janus
+description:   A flexible Haskell application server.
+
+cabal-version: >=1.2
+
+flag splitBase
+  description: Choose the new smaller, split-up base package.
+
+library
+  build-depends: base >= 3
+               , haskell98
+               , containers
+               , old-time
+               , directory
+               , parsec
+               , network
+               , regex-compat
+               , html
+               , plugins
+               , hxt
+
+  exposed-modules:
+    Network.Server.Janus.Core
+    Network.Server.Janus.Server
+    Network.Server.Janus.JanusPaths
+    Network.Server.Janus.XmlHelper
+    Network.Server.Janus.Transaction
+    Network.Server.Janus.Messaging
+    Network.Server.Janus.DynamicLoader
+    Network.Server.Janus.HTMLBuilder
+    Network.Server.Janus.Shader.SystemShader
+    Network.Server.Janus.Shader.ControlShader
+    Network.Server.HWS.Util
+    Network.Server.HWS.Request
+    Network.Server.HWS.Response
+  other-modules:
+    Network.Server.HWS.Config
+    Network.Server.HWS.MimeTypes
+    Network.Server.HWS.ParseError
+    Network.Server.HWS.Parser
+  hs-source-dirs: source
+  ghc-options: -Wall
