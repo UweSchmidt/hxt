@@ -1,3 +1,7 @@
+SOFTWARE	= janus
+VERSION		= 1.1.0
+VERSIONTAG	= $(SOFTWARE)-$(VERSION)
+
 HADDOCK		= haddock
 HC      	= ghc
 HC_OPTS 	= -Wall -fglasgow-exts \
@@ -88,6 +92,8 @@ depend:
 clean:
 		rm -f build -r
 
+tag		:
+		darcs tag $(VERSIONTAG) .
 
 # DO NOT DELETE: Beginning of Haskell dependencies
 build/Network/Server/HWS/Util.o : src/Network/Server/HWS/Util.hs
