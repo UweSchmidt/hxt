@@ -1,5 +1,5 @@
 name:          janus-library
-version:       0.1.0
+version:	0.1.1
 license:       OtherLicense
 license-file:  LICENSE
 author:        Christian Uhlig
@@ -32,6 +32,7 @@ library
   exposed-modules:
     Network.Server.Janus.Core
     Network.Server.Janus.Server
+    Network.Server.Janus.ServerVersion
     Network.Server.Janus.JanusPaths
     Network.Server.Janus.XmlHelper
     Network.Server.Janus.Transaction

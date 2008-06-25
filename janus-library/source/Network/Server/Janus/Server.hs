@@ -34,22 +34,14 @@ import Network.Server.Janus.Shader.ControlShader
 import Network.Server.Janus.Transaction as TA
 import Network.Server.Janus.XmlHelper
 import Network.Server.Janus.JanusPaths
+import Network.Server.Janus.ServerVersion
 
 import System.Directory
 
 -- ------------------------------------------------------------
 
-build_version   :: String
-build_version   = "200804121"
-
-main_version    :: Int
-main_version    = 1
-
-sub_version     :: Int
-sub_version     = 1
-
 full_release    :: String
-full_release    = (show main_version) ++ "." ++ (show sub_version) ++ " Build " ++ build_version
+full_release    = build_version ++ " build " ++ build_date
 
 {- |
 The primary Arrow of Janus.
@@ -63,8 +55,8 @@ serverArrow conf_file =
         addChannel "local"                                                                      -<  ()
         addChannel "control"                                                                    -<  ()
         let myhandler = filterHandler (getMsgLevelFilter l_error) >>> consoleHandler
-        changeHandler "global" (\_ -> myhandler)                                                -<< ()
-        changeHandler "local" (\_ -> consoleHandler)                                            -<  ()
+        changeHandler "global"  (\_ -> myhandler)                                               -<< ()
+        changeHandler "local"   (\_ -> consoleHandler)                                          -<  ()
         changeHandler "control" (\_ -> invokeHandler)                                           -<  ()
 
         -- start-message

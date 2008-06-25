@@ -1,6 +1,5 @@
-SOFTWARE	= janus
-VERSION		= 1.1.1
-VERSIONTAG	= $(SOFTWARE)-$(VERSION)
+
+include Version.mk
 
 # ------------------------------------------------------------
 
@@ -8,29 +7,13 @@ PLUGINDIR	= janus-plugins
 LIBDIR		= janus-library
 SRVDIR		= janus-server
 TESTDIR		= test
+VERSIONTAG	= $(SOFTWARE)-$(VERSION)
 
 all		:
-		$(MAKE) janus-lib
-		$(MAKE) janus-srv
-		$(MAKE) janus-plug
+		$(MAKE) -C $(LIBDIR)    all
+		$(MAKE) -C $(SRVDIR)    all
+		$(MAKE) -C $(PLUGINDIR) all
 		$(MAKE) test-install
-
-janus-lib	:
-		( cd $(LIBDIR) \
-		; runhaskell Setup.hs configure \
-		; runhaskell Setup.hs build \
-		; sudo runhaskell Setup.hs install \
-		)
-
-janus-srv	:
-		( cd $(SRVDIR) \
-		; runhaskell Setup.hs configure \
-		; runhaskell Setup.hs build \
-		; sudo runhaskell Setup.hs install \
-		)
-
-janus-plug	:
-		make -C $(PLUGINDIR) all
 
 test-install	:
 		[ -d "$(TESTDIR)" ] || mkdir   $(TESTDIR)
@@ -48,7 +31,18 @@ clean		:
 		make -C $(PLUGINDIR) clean
 		rm -rf $(TESTDIR)
 
+dist		:
+		$(MAKE) version
+		$(MAKE) all
+version		:
+		$(MAKE) -C $(LIBDIR)    version
+		$(MAKE) -C $(SRVDIR)    version
+		$(MAKE) -C $(PLUGINDIR) version
+
 tag		:
 		darcs tag $(VERSIONTAG) .
+
+echo		:
+		echo $(DATE)
 
 # ------------------------------------------------------------
