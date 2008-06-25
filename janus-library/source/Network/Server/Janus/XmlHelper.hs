@@ -91,7 +91,6 @@ import Data.Maybe
 import System.Time
 
 import Text.XML.HXT.Arrow
-import Text.XML.HXT.DOM.XmlTree (XmlTree)
 
 import Network.Server.Janus.JanusPaths
 

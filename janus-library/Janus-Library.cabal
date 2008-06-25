@@ -1,5 +1,5 @@
 name:          janus-library
-version:       0.1
+version:       0.1.0
 license:       OtherLicense
 license-file:  LICENSE
 author:        Christian Uhlig
@@ -18,16 +18,16 @@ flag splitBase
 
 library
   build-depends: base >= 3
-               , haskell98
-               , containers
-               , old-time
-               , directory
-               , parsec
-               , network
-               , regex-compat
-               , html
-               , plugins
-               , hxt
+               , haskell98 >= 1.0
+               , containers >= 0.1
+               , old-time >= 1.0
+               , directory >= 1.0
+               , parsec >= 2.1 && < 3
+               , network >= 2.1
+               , regex-compat >= 0.71
+               , html >= 1.0
+               , plugins >= 1.1
+               , hxt >= 8.0
 
   exposed-modules:
     Network.Server.Janus.Core
