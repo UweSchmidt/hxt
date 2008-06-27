@@ -180,7 +180,7 @@ responseShader =
          }
       date <- arrIO0 $ dateHeader                                                      -<  ()
 
-      "global" <-@ mkSimpleLog "HTTPShader.hs:responseShader" ("responseShader generated: " ++ (generateResponse response date)) l_debug -<< ()
+      chGlobal <-@ mkSimpleLog "HTTPShader.hs:responseShader" ("responseShader generated: " ++ (generateResponse response date)) l_debug -<< ()
 
       setVal _transaction_responseFragment (generateResponse response date)            -<< in_ta
 
@@ -217,7 +217,7 @@ fileShader =
       let filename   = mapsto ++ (show $ relativeFrom targetURL baseURL)
       in_ta'   <- setVal _transaction_http_request_uriPath target'                         -<< in_ta
 
-      "global" <-@ mkSimpleLog "HTTPShader.hs:fileShader" ("fileShader requested file: " ++ filename) l_info -<< ()
+      chGlobal <-@ mkSimpleLog "HTTPShader.hs:fileShader" ("fileShader requested file: " ++ filename) l_info -<< ()
 
       (proc x -> do
          uid   <- getUID (-1)                                                          -<  ()
@@ -307,7 +307,7 @@ mimeShader =
                         `orElse`
                         getValDef (_shader_config_types_ (extension name)) defaultType  -<< conf
 
-      "global"       <-@ mkSimpleLog "HTTPShader.hs:mimeShader" ("mimeShader selected: " ++ mimeType) l_info -<< ()
+      chGlobal       <-@ mkSimpleLog "HTTPShader.hs:mimeShader" ("mimeShader selected: " ++ mimeType) l_info -<< ()
 
       setVal _transaction_http_response_mime mimeType                                   -<< in_ta
    where
@@ -374,7 +374,7 @@ cgiShader =
       method <- getValDef _transaction_http_request_method "GET"                       -<  in_ta
       params <- cgiParams method                                                       -<< in_ta
 
-      "global" <-@ mkSimpleLog "HTTPShader.hs:cgiShader" ("cgiShader detected: " ++ show params) l_info -<< ()
+      chGlobal <-@ mkSimpleLog "HTTPShader.hs:cgiShader" ("cgiShader detected: " ++ show params) l_info -<< ()
 
       ta2   <- insEmptyTree _transaction_http_request_cgi                              -<  in_ta
       ta3   <- (seqA . map (uncurry insertParam)) params                               -<< ta2
@@ -455,7 +455,7 @@ htmlStatusShader =
       defaultStatus     <- getValDef _shader_config_default "200"                                   -<  conf
       (status :: Int)   <- getValDef _transaction_http_response_status defaultStatus >>> parseA     -<< in_ta
 
-      "global" <-@ mkSimpleLog "HTTPShader.hs:htmlStatusShader" ("status code found: " ++ show status) l_info -<< ()
+      chGlobal <-@ mkSimpleLog "HTTPShader.hs:htmlStatusShader" ("status code found: " ++ show status) l_info -<< ()
 
       (if status >= 400
          then proc ta -> do

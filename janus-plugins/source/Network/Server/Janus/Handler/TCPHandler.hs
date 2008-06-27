@@ -124,12 +124,12 @@ tcpHandler' port shader =
                                       (concat $ (concat req):[body'])           -<< ta3
                 ta_str      <- xshow (constA ta4)                               -<< ta4
 
-                "global"    <-@ mkSimpleLog "TCPHandler:newHandler" ("initial transaction is: " ++ ta_str) l_debug -<< ()
+                chGlobal    <-@ mkSimpleLog "TCPHandler:newHandler" ("initial transaction is: " ++ ta_str) l_debug -<< ()
                 ta5         <- TA.setTAState Processing                         -<  ta4
                 ta6         <- shader'                                          -<  ta5
                 response    <- getValDef _transaction_responseFragment ""       -<  ta6
                 ta_str'     <- xshow (constA ta6)                               -<< ()
-                "global"    <-@ mkSimpleLog "TCPHandler:newHandler" ("final transaction is: " ++ ta_str') l_debug -<< ()
+                chGlobal    <-@ mkSimpleLog "TCPHandler:newHandler" ("final transaction is: " ++ ta_str') l_debug -<< ()
 
                 filehdl     <-
                     (single $ proc in_ta -> do
@@ -170,8 +170,8 @@ tcpHandler' port shader =
                                        getMsgValue                              -<  ta8
 
                 (if null hMsgs
-                  then ("global" <-@ mkPlainMsg $ "OK. Took " ++ (show runtime) ++ " ms\n")
-                  else ("global" <-@ mkPlainMsg $ "Failed. Took " ++ (show runtime) ++ " ms. Reasons: \n" ++ (show hMsgs) ++ "\n")
+                  then (chGlobal <-@ mkPlainMsg $ "OK. Took " ++ (show runtime) ++ " ms\n")
+                  else (chGlobal <-@ mkPlainMsg $ "Failed. Took " ++ (show runtime) ++ " ms. Reasons: \n" ++ (show hMsgs) ++ "\n")
                   )                                                             -<< ()
                 returnA                                                         -<  ()
         processRequest _ _ _ _ _ = zeroArrow
@@ -298,7 +298,7 @@ newHandler port shader =
                     process sockinfo handle shader'                                 -<  req
             process (SockAddrInet port' haddr) handle shader' =
                 proc (req, body) -> do
-                    -- "global" <-@ mkPlainMsg $ "processing request..."            -<< ()
+                    -- chGlobal <-@ mkPlainMsg $ "processing request..."            -<< ()
                     addr        <- arrIO $ inet_ntoa                                -<  haddr
                     ta      <- createTA 1 Init                                      -<  ()
                     ta2     <- setVal _transaction_handler "TCPHandler"
@@ -313,13 +313,13 @@ newHandler port shader =
                                           (concat $ (concat req):[body'])           -<< ta3
                     ta_str      <- xshow (constA ta4)                               -<< ta4
 
-                    "global"    <-@ mkSimpleLog "TCPHandler:newHandler" ("initial transaction is: " ++ ta_str) l_debug -<< ()
+                    chGlobal    <-@ mkSimpleLog "TCPHandler:newHandler" ("initial transaction is: " ++ ta_str) l_debug -<< ()
                     ta5         <- TA.setTAState Processing                         -<  ta4
                     ta6         <- shader'                                          -<  ta5
                     response    <- getValDef _transaction_responseFragment ""       -<  ta6
                     ta_str'     <- xshow (constA ta6)                               -<< ()
 
-                    "global"    <-@ mkSimpleLog "TCPHandler:newHandler" ("final transaction is: " ++ ta_str') l_debug -<< ()
+                    chGlobal    <-@ mkSimpleLog "TCPHandler:newHandler" ("final transaction is: " ++ ta_str') l_debug -<< ()
                     arrIO $ hPutStr handle                                          -<< response
 
                     (listA $ proc in_ta -> do
@@ -332,7 +332,7 @@ newHandler port shader =
                     ta7         <- setTAEnd ts_end                                  -<< ta6
                     runtime     <- getTARunTime                                     -<  ta7
 
-                    "global"    <-@ mkPlainMsg $ "OK. Took " ++
+                    chGlobal    <-@ mkPlainMsg $ "OK. Took " ++
                                         (show runtime) ++ " ms\n"                   -<< ()
                     returnA                                                         -<  ()
             process _ _ _ = zeroArrow

@@ -60,7 +60,7 @@ daemonHandler :: HandlerCreator
 daemonHandler = proc (_, shader) -> do
     let handler = proc _ -> do
         ta    <- createTA 0 Processing                        -<  ()
-        "global" <-@ mkPlainMsg "starting daemon handler..."  -<< ()
+        chGlobal <-@ mkPlainMsg "starting daemon handler..."  -<< ()
         shader                                                -<  ta
-        "global" <-@ mkPlainMsg "daemon handler completed"    -<< ()
+        chGlobal <-@ mkPlainMsg "daemon handler completed"    -<< ()
     returnA                                                   -< handler

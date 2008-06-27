@@ -178,7 +178,7 @@ ttyExitShader =
         (case argc of
             0   ->
                 proc in_ta' -> do
-                    "control"   <-@ mkControlMsg [] Terminate               -<  ()
+                    chControl   <-@ mkControlMsg [] Terminate               -<  ()
                     returnA                                                 -< in_ta'
             _   ->
                 returnA

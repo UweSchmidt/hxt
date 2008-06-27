@@ -68,7 +68,7 @@ localEchoShader =
         request     <- getValDef _transaction_requestFragment ""                    -<  in_ta
         let request_list    = (removeEmpty . splitRegex (mkRegex "\r")) request
         let output          = foldr (\str current -> str ++ "\n" ++ current) "" request_list
-        "global" <-@ mkPlainMsg output                                              -<< ()
+        chGlobal <-@ mkPlainMsg output                                              -<< ()
         returnA                                                                     -<  in_ta
 
 {- |
@@ -109,7 +109,7 @@ sessionReadShader =
 
         ta''    <- insTree _transaction_session   (constA s_state)                  -<< ta'
 
-        "global" <-@ mkSimpleLog "Lib_Shader:sessionReadShader" ("sessionReadShader read session: " ++ show sid) l_info -<< ()
+        chGlobal <-@ mkSimpleLog "Lib_Shader:sessionReadShader" ("sessionReadShader read session: " ++ show sid) l_info -<< ()
         returnA                                                                     -<  ta''
 
 {- |
@@ -121,14 +121,14 @@ sessionWriteShader =
     mkStaticCreator $
     proc in_ta -> do
         sid     <- getVal _transaction_session_sessionid
-                   <!> ( "global"
+                   <!> ( chGlobal
 		       , "sessionWriteShader"
 		       , TAValueNotFound
 		       , ""
 		       , [("value", show _transaction_session_sessionid)]
 		       )                                                            -<  in_ta
         state   <- getTree _transaction_session_state
-                   <!> ( "global"
+                   <!> ( chGlobal
 		       , "sessionWriteShader"
 		       , TAValueNotFound
 		       , ""
@@ -137,7 +137,7 @@ sessionWriteShader =
         let stateVal    = XmlVal state
         ("/global/session/_" ++ sid) <$! stateVal                                   -<< ()
 
-        "global" <-@ mkSimpleLog "Lib_Shader:sessionWriteShader" ("sessionWriteShader updated session: " ++ sid) l_info -<< ()
+        chGlobal <-@ mkSimpleLog "Lib_Shader:sessionWriteShader" ("sessionWriteShader updated session: " ++ sid) l_info -<< ()
         returnA                                                                     -<  in_ta
 
 {- |
@@ -161,21 +161,21 @@ authShader =
             userdb      <- getValDef _shader_config_userdb "/userdb"                -<  conf
             authuser    <- listA $ getVal _transaction_session_state_authuser       -<  in_ta
             username    <- getVal _transaction_session_username
-                           <!> ( "global"
+                           <!> ( chGlobal
 			       , "authShader"
 			       , TAValueNotFound
 			       , ""
 			       , [("value", show _transaction_session_username)]
 			       )                                                    -<  in_ta
             userpass    <- getVal _transaction_session_userpass
-                           <!> ( "global"
+                           <!> ( chGlobal
 			       , "authShader"
 			       , TAValueNotFound
 			       , ""
 			       , [("value", show _transaction_session_userpass)]
 			       )                                                    -<  in_ta
             dbpass      <- (getSVS (userdb ++ "/" ++ username ++ "/password"))
-                           <!> ( "global"
+                           <!> ( chGlobal
 			       , "authShader"
 			       , ValueNotFound
 			       , ""
@@ -396,7 +396,7 @@ traceShader =
     mkDynamicCreator $ arr $ \(conf, _) ->
     proc in_ta -> do
         message     <- getVal _shader_config            -<  conf
-        "global"    <-@ mkPlainMsg message              -<< ()
+        chGlobal    <-@ mkPlainMsg message              -<< ()
         returnA                                         -<  in_ta
 
 {- |
@@ -408,7 +408,7 @@ traceTAShader =
     mkStaticCreator $
     proc in_ta -> do
         message     <- xshow (constA in_ta)             -<< ()
-        "global"    <-@ mkPlainMsg message              -<< ()
+        chGlobal    <-@ mkPlainMsg message              -<< ()
         returnA                                         -<  in_ta
 
 {- |
@@ -428,7 +428,7 @@ registerChannel =
 			    , "No channel specified."
 			    , [("value", show _shader_config_channel)]
 			    )                                   -<  conf
-        addChannel reg_name                                     -<< ()
+        addChannel (mkChannelId reg_name)                       -<< ()
         returnA                                                 -<  through
 
 {- |

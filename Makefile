@@ -34,6 +34,7 @@ clean		:
 dist		:
 		$(MAKE) version
 		$(MAKE) all
+
 version		:
 		$(MAKE) -C $(LIBDIR)    version
 		$(MAKE) -C $(SRVDIR)    version

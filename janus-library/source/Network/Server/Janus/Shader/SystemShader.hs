@@ -57,10 +57,10 @@ changeServerRoot =
                 <+!> ("SystemShader.hs:changeServerRoot", GenericMessage, "Failed to get current directory.", [])
                                                                             -<  ()
 
-        "global"    <-@ mkPlainMsg $ "changing server root path to '" ++
+        chGlobal    <-@ mkPlainMsg $ "changing server root path to '" ++
                             newroot ++ "')... "                             -<< ()
         (if currentdir /= oldroot
-          then ("global" <-@ mkPlainMsg $ "Warning: System root variable differs from actual current directory.")
+          then (chGlobal <-@ mkPlainMsg $ "Warning: System root variable differs from actual current directory.")
           else this)                                                        -<<  ()
 
         (exceptZeroA $ setCurrentDirectory)
@@ -68,7 +68,7 @@ changeServerRoot =
                       newroot ++ "'.", [])                                  -<< newroot
         "/global/system/serverroot" <-! newroot                             -<< ()
 
-        "global"    <-@ mkPlainMsg $ "done\n"                               -<< ()
+        chGlobal    <-@ mkPlainMsg $ "done\n"                               -<< ()
 
         returnA                                                             -<  this
 
@@ -81,7 +81,7 @@ loadShaderCreator =
         ref         <- getVal _shader_config_reference                      -<  conf
         obj         <- getVal _shader_config_object                         -<  conf
         file        <- getVal _shader_config_module                         -<  conf
-        "global"    <-@ mkPlainMsg $ "loading shader creator '" ++
+        chGlobal    <-@ mkPlainMsg $ "loading shader creator '" ++
                             ref ++ "' (object '" ++ obj ++
                             "' in module '" ++ file ++ "')... "             -<< ()
         sRep        <- getShaderCreators                                    -<  ()
@@ -90,7 +90,7 @@ loadShaderCreator =
                 <+!> ("SystemShader.hs:loadShaderCreator", GenericMessage, "Failed to load object " ++ ref ++ ".", [("object", ref)])
                 )                                                           -<< sRep
         swapShaderCreators                                                  -<  sRep'
-        "global"    <-@ mkPlainMsg $ "done\n"                               -<< ()
+        chGlobal    <-@ mkPlainMsg $ "done\n"                               -<< ()
         returnA                                                             -<  this
 
 {- |
@@ -102,7 +102,7 @@ loadHandlerCreator =
         ref     <- getVal _shader_config_reference                          -<  conf
         obj     <- getVal _shader_config_object                             -<  conf
         file    <- getVal _shader_config_module                             -<  conf
-        "global"    <-@ mkPlainMsg $ "loading handler creator '" ++
+        chGlobal    <-@ mkPlainMsg $ "loading handler creator '" ++
                             ref ++ "' (object '" ++ obj ++
                             "' in module '" ++ file ++ "')... "             -<< ()
         hRep    <- getHandlerCreators                                       -<  ()
@@ -111,7 +111,7 @@ loadHandlerCreator =
                 <+!> ("SystemShader.hs:loadHandlerCreator", GenericMessage, "Failed to load object " ++ ref ++ ".", [("object", ref)])
                 )                                                           -<< hRep
         swapHandlerCreators                                                 -<  hRep'
-        "global"    <-@ mkPlainMsg $ "done\n"                               -<< ()
+        chGlobal    <-@ mkPlainMsg $ "done\n"                               -<< ()
         returnA                                                             -<  this
 
 {- |
@@ -122,13 +122,13 @@ loadHandler =
     proc conf -> do
         hConf       <- getTree _shader_config_handler_config            -<  conf
         hId         <- getVal _config_id                                -<  hConf
-        "global"    <-@ mkPlainMsg $ "constructing handler '" ++
+        chGlobal    <-@ mkPlainMsg $ "constructing handler '" ++
                             hId ++ "'... "                              -<< ()
         hType       <- getVal _config_type                              -<  hConf
         let shader = createThread "/global/threads" hId (proc in_ta -> do
-            "global"    <-@ mkPlainMsg $ "starting handler '" ++
+            chGlobal    <-@ mkPlainMsg $ "starting handler '" ++
                             hId ++ "'...\n"                         -<  ()
-            swapChannel "local"                                     -<  ()
+            swapChannel chLocal                                     -<  ()
             swapScope "local"                                       -<  ()
             context     <- getContext                               -<  ()
             ("/global/consoles/handlers/" ++ hId)
@@ -142,7 +142,7 @@ loadHandler =
             creator                                                 -<< conf
             returnA                                                 -<  in_ta
             )
-        "global"    <-@ mkPlainMsg $ "done\n"                           -<< ()
+        chGlobal    <-@ mkPlainMsg $ "done\n"                           -<< ()
         returnA                                                         -<  shader
 
 {- |
@@ -180,9 +180,9 @@ mod     <- listA
 add tupels                                                          -<< rep
     where
         add ((ref, name, modstr):xs) =
-            forwardError "global" (add xs)
+            forwardError chGlobal (add xs)
             >>>
-            ("global" <-@ mkPlainMsg $ "Loading object '" ++ ref ++ "' (value '" ++ name ++ "' in module '" ++ modstr ++ "')")
+            (chGlobal <-@ mkPlainMsg $ "Loading object '" ++ ref ++ "' (value '" ++ name ++ "' in module '" ++ modstr ++ "')")
             >>>
             (loadComponent ref modstr name
                 <+!> ("Server.hs:buildRepository", GenericMessage, "Failed to load object " ++ ref ++ ".", [("object", ref)])

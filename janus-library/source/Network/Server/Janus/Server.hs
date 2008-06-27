@@ -8,7 +8,6 @@
    Maintainer : Christian Uhlig (uhl\@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: Server.hs, v1.1 2007/03/27 00:00:00 janus Exp $
 
    Janus Server Module
 
@@ -19,8 +18,7 @@
 {-# OPTIONS -fglasgow-exts -farrows #-}
 
 module Network.Server.Janus.Server
-    (
-      serverArrow
+    ( serverArrow
     , normalizeConfig
     )
 where
@@ -51,84 +49,84 @@ serverArrow conf_file =
     proc _ -> do
 
         -- define channels and startup message-handlers
-        addChannel "global"                                                                     -<  ()
-        addChannel "local"                                                                      -<  ()
-        addChannel "control"                                                                    -<  ()
+        addChannel chGlobal                                                                     -<  ()
+        addChannel chLocal                                                                      -<  ()
+        addChannel chControl                                                                    -<  ()
         let myhandler = filterHandler (getMsgLevelFilter l_error) >>> consoleHandler
-        changeHandler "global"  (\_ -> myhandler)                                               -<< ()
-        changeHandler "local"   (\_ -> consoleHandler)                                          -<  ()
-        changeHandler "control" (\_ -> invokeHandler)                                           -<  ()
+        changeHandler chGlobal  (\_ -> myhandler)                                               -<< ()
+        changeHandler chLocal   (\_ -> consoleHandler)                                          -<  ()
+        changeHandler chControl (\_ -> invokeHandler)                                           -<  ()
 
         -- start-message
-        "global"    <-@ mkPlainMsg $ "Janus Server " ++ full_release ++ " starting up...\n"     -<  ()
-        "global"    <-@ mkPlainMsg $ "-----------------------------------------------\n"        -<  ()
-        "global"    <-@ mkPlainMsg $ ""                                                         -<  ()
+        chGlobal    <-@ mkPlainMsg $ "Janus Server " ++ full_release ++ " starting up...\n"     -<  ()
+        chGlobal    <-@ mkPlainMsg $ "-----------------------------------------------\n"        -<  ()
+        chGlobal    <-@ mkPlainMsg $ ""                                                         -<  ()
 
         -- load server configuration
-        "global" <-@ mkPlainMsg $ "loading and normalizing server config (" ++ conf_file ++ ")... " -< ()
+        chGlobal <-@ mkPlainMsg $ "loading and normalizing server config (" ++ conf_file ++ ")... " -< ()
         cfg         <-
                     fileSource conf_file
                     >>>
                     normalizeConfig
                     >>>
                     getTree _janus                                                              -<  ()
-        "global"    <-@ mkPlainMsg $ "done\n"                                                   -<  ()
+        chGlobal    <-@ mkPlainMsg $ "done\n"                                                   -<  ()
 
         -- initialize Context
-        "global"    <-@ mkPlainMsg $ "updating context (adding global and local scopes)... "    -<  ()
+        chGlobal    <-@ mkPlainMsg $ "updating context (adding global and local scopes)... "    -<  ()
         swapConfig                                                                              -<  cfg
         addScope "global"                                                                       -<  ()
         addScope "local"                                                                        -<  ()
         "/global/system/version"    <-! full_release                                            -<  ()
         currentdir  <- exceptZeroA_ $ getCurrentDirectory                                       -<  ()
         "/global/system/serverroot" <-! currentdir                                              -<< ()
-        "global"    <-@ mkPlainMsg $ "done\n"                                                   -<  ()
+        chGlobal    <-@ mkPlainMsg $ "done\n"                                                   -<  ()
 
         -- registering Server-Context
-        "global"    <-@ mkPlainMsg $ "registering server context... "                           -<< ()
+        chGlobal    <-@ mkPlainMsg $ "registering server context... "                           -<< ()
         context     <- getContext                                                               -<  ()
         "/global/consoles/server" <$! (ContextVal context)                                      -<< ()
-        "global"    <-@ mkPlainMsg $ "done\n"                                                   -<< ()
+        chGlobal    <-@ mkPlainMsg $ "done\n"                                                   -<< ()
 
         -- load core Shaders
-        "global"    <-@ mkPlainMsg $ "loading core shaders... "                                 -<< ()
-        "global"    <-@ mkPlainMsg $ "system.loadshadercreator "                                -<< ()
+        chGlobal    <-@ mkPlainMsg $ "loading core shaders... "                                 -<< ()
+        chGlobal    <-@ mkPlainMsg $ "system.loadshadercreator "                                -<< ()
         addShaderCreator "system.loadshadercreator" loadShaderCreator                           -<< ()
-        "global"    <-@ mkPlainMsg $ "system.loadhandlercreator "                               -<< ()
+        chGlobal    <-@ mkPlainMsg $ "system.loadhandlercreator "                               -<< ()
         addShaderCreator "system.loadhandlercreator" loadHandlerCreator                         -<< ()
-        "global"    <-@ mkPlainMsg $ "system.loadhandler "                                      -<< ()
+        chGlobal    <-@ mkPlainMsg $ "system.loadhandler "                                      -<< ()
         addShaderCreator "system.loadhandler" loadHandler                                       -<< ()
-        "global"    <-@ mkPlainMsg $ "system.changeroot "                                       -<< ()
+        chGlobal    <-@ mkPlainMsg $ "system.changeroot "                                       -<< ()
         addShaderCreator "system.changeroot" changeServerRoot                                   -<< ()
 
-        "global"    <-@ mkPlainMsg $ "control.seq "                                             -<< ()
+        chGlobal    <-@ mkPlainMsg $ "control.seq "                                             -<< ()
         addShaderCreator "control.seq" seqControl                                               -<< ()
-        "global"    <-@ mkPlainMsg $ "control.like "                                            -<< ()
+        chGlobal    <-@ mkPlainMsg $ "control.like "                                            -<< ()
         addShaderCreator "control.like" likeControl                                             -<< ()
-        "global"    <-@ mkPlainMsg $ "control.select "                                          -<< ()
+        chGlobal    <-@ mkPlainMsg $ "control.select "                                          -<< ()
         addShaderCreator "control.select" selectControl                                         -<< ()
-        "global"    <-@ mkPlainMsg $ "control.loopuntil "                                       -<< ()
+        chGlobal    <-@ mkPlainMsg $ "control.loopuntil "                                       -<< ()
         addShaderCreator "control.loopuntil" loopUntilControl                                   -<< ()
-        "global"    <-@ mkPlainMsg $ "control.loopwhile "                                       -<< ()
+        chGlobal    <-@ mkPlainMsg $ "control.loopwhile "                                       -<< ()
         addShaderCreator "control.loopwhile" loopWhileControl                                   -<< ()
-        "global"    <-@ mkPlainMsg $ "control.if "                                              -<< ()
+        chGlobal    <-@ mkPlainMsg $ "control.if "                                              -<< ()
         addShaderCreator "control.if" ifThenElseControl                                         -<< ()
-        "global"    <-@ mkPlainMsg $ "done\n"                                                   -<< ()
+        chGlobal    <-@ mkPlainMsg $ "done\n"                                                   -<< ()
 
         -- load handler trees
-        "global"    <-@ mkPlainMsg $ "loading system shader from configuration file... "        -<  ()
+        chGlobal    <-@ mkPlainMsg $ "loading system shader from configuration file... "        -<  ()
         rootTree    <- single $ staticSource cfg >>> getTree _janus_shader                      -<< ()
-        "global"    <-@ mkPlainMsg $ "done\n"                                                   -<< ()
-        "global"    <-@ mkPlainMsg $ "constructing system shader...\n"                          -<  ()
+        chGlobal    <-@ mkPlainMsg $ "done\n"                                                   -<< ()
+        chGlobal    <-@ mkPlainMsg $ "constructing system shader...\n"                          -<  ()
         (_, shader) <- loadShader                                                               -<  rootTree
-        "global"    <-@ mkPlainMsg $ "done: constructing system shader\n"                       -<< ()
-        "global"    <-@ mkPlainMsg $ "executing system shader...\n"                             -<  ()
+        chGlobal    <-@ mkPlainMsg $ "done: constructing system shader\n"                       -<< ()
+        chGlobal    <-@ mkPlainMsg $ "executing system shader...\n"                             -<  ()
         executeShader shader                                                                    -<< ()
-        "global"    <-@ mkPlainMsg $ "done: executing system shader\n"                          -<< ()
+        chGlobal    <-@ mkPlainMsg $ "done: executing system shader\n"                          -<< ()
 
-        "global"    <-@ mkPlainMsg $ "server running...\n"                                      -<  ()
+        chGlobal    <-@ mkPlainMsg $ "server running...\n"                                      -<  ()
 
-        listenChannel "control"                                                                 -<  ()
+        listenChannel chControl                                                                 -<  ()
         returnA                                                                                 -<  ()
 
 {-

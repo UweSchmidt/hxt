@@ -54,22 +54,22 @@ daemonCreator daemonArrow =
         returnA                                                     -<  shader
 
 {- |
-Creates a Daemon forwarding the messages stored in the channel "local" to the channel "global" on the l_debug level every second.
+Creates a Daemon forwarding the messages stored in the channel chLocal to the channel chGlobal on the l_debug level every second.
 -}
 testDaemon :: ShaderCreator
 testDaemon =
     daemonCreator thedaemon
     where
         thedaemon = proc _ -> do
-            "global" <-@ mkSimpleLog "DaemonShader.hs:testDaemon" ("testDaemon invoked...") l_debug     -< ()
+            chGlobal <-@ mkSimpleLog "DaemonShader.hs:testDaemon" ("testDaemon invoked...") l_debug     -< ()
             arrIO $ threadDelay                                                                         -< 1000000
-            msg <- listA $ getMsg "local" >>> showMsg                                                   -< ()
-            "global" <-@ mkSimpleLog "DaemonShader.hs:testDaemon" ("local messages: " ++ (show msg)) l_debug -<< ()
+            msg <- listA $ getMsg chLocal >>> showMsg                                                   -< ()
+            chGlobal <-@ mkSimpleLog "DaemonShader.hs:testDaemon" ("local messages: " ++ (show msg)) l_debug -<< ()
             thedaemon                                                                                   -< ()
 
 {- |
 Creates a Daemon blocking on channel \"control\" for arriving messages. When a message arrives it is processed if it is a Control Message. In this
-case the \"messagelevel\" state attribute is read and used to reset the message handler of channel "global" with a filter based on the message level.
+case the \"messagelevel\" state attribute is read and used to reset the message handler of channel chGlobal with a filter based on the message level.
 Afterwards all Control Messages are removed from the \"control\" channel.
 This Daemon allows changing the message level the \"global\" message channel forwards to the console. This is utilized by the current Janus Console.
 Of course more simple implementation were possible - this is only to demonstrate the work of Daemons and Control Messages.
@@ -79,9 +79,9 @@ logControlDaemon =
     daemonCreator thedaemon
     where
         thedaemon = proc _ -> do
-            msg     <- listA $ listenChannel "control"                                                  -<  ()
+            msg     <- listA $ listenChannel chControl                                                  -<  ()
             msg'    <- listA $ constL msg >>> showMsg                                                   -<< ()
-            "global" <-@ mkSimpleLog "DaemonShader.hs:logControlDaemon" ("logControlDaemon invoked...") l_debug -< ()
+            chGlobal <-@ mkSimpleLog "DaemonShader.hs:logControlDaemon" ("logControlDaemon invoked...") l_debug -< ()
             level   <- listA $
                         constL msg
                         >>>
@@ -92,11 +92,11 @@ logControlDaemon =
                 []     -> this                                                                  -<  ()
                 (x:_)  ->
                     (proc _ -> do
-                        "global" <-@ mkSimpleLog "DaemonShader.hs:logControlDaemon" ("control message detected: " ++ x) l_info -< ()
+                        chGlobal <-@ mkSimpleLog "DaemonShader.hs:logControlDaemon" ("control message detected: " ++ x) l_info -< ()
                         let myhandler   = (filterHandler (getMsgLevelFilter (read $ head level)) >>> consoleHandler)
-                        changeHandler "global" (\_ -> myhandler) -<< ()
+                        changeHandler chGlobal (\_ -> myhandler) -<< ()
                         )                                                                       -<< ()
-            filterMsg "control" (neg $ getMsgTypeFilter ControlMsg)                                     -<  ()
+            filterMsg chControl (neg $ getMsgTypeFilter ControlMsg)                                     -<  ()
             thedaemon                                                                                   -<  ()
 
 {- |
@@ -116,7 +116,7 @@ sessionDaemon =
     where
         thedaemon validTime =
             proc _ -> do
-                "global" <-@ mkSimpleLog "sessionDaemon" ("sessionDaemon invoked...") l_debug           -<  ()
+                chGlobal <-@ mkSimpleLog "sessionDaemon" ("sessionDaemon invoked...") l_debug           -<  ()
                 arrIO $ threadDelay                                                                     -<  10000000
                 (
                     (proc _ -> do
@@ -126,7 +126,7 @@ sessionDaemon =
                     `orElse`
                     this
                     )                                                                                   -<  ()
-                "global" <-@ mkSimpleLog "sessionDaemon" ("sessionDaemon completed...") l_debug         -<  ()
+                chGlobal <-@ mkSimpleLog "sessionDaemon" ("sessionDaemon completed...") l_debug         -<  ()
                 thedaemon validTime                                                                     -<  ()
         checkSessions [] _    = this
         checkSessions (x:xs) validTime =
@@ -134,8 +134,8 @@ sessionDaemon =
                 current_ts  <- getCurrentTS                                                             -<  ()
                 session_ts  <- getSC ("/global/session/" ++ x) >>> getCellTS                            -<  ()
                 let diff_ts = current_ts - session_ts
-                "global" <-@ mkSimpleLog "sessionDaemon" ("Session " ++ x ++ " inactive for " ++ (show diff_ts) ++ " ms.") l_info -<< ()
-                ("global" <-@ mkSimpleLog "sessionDaemon" ("Removing session " ++ x) l_info
+                chGlobal <-@ mkSimpleLog "sessionDaemon" ("Session " ++ x ++ " inactive for " ++ (show diff_ts) ++ " ms.") l_info -<< ()
+                (chGlobal <-@ mkSimpleLog "sessionDaemon" ("Removing session " ++ x) l_info
                     >>>
                     delStateTree  ("/global/session/" ++ x)
                     )

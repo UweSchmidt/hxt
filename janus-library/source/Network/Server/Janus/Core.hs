@@ -35,6 +35,7 @@ module Network.Server.Janus.Core
     , StateHandler (..)
     , StateValue (..)
     , StateOperation (..)
+    , ChannelId
     , UID
 
     -- state handling (persistence layer configuration)
@@ -139,7 +140,12 @@ module Network.Server.Janus.Core
     , getUID
     , getQualifiedUID
 
-    -- Operations on message channels
+    -- Operations concerning channel ids and message channels
+    , mkChannelId
+    , chGlobal
+    , chLocal
+    , chConsole
+    , chControl
     , listChannels
     , addChannel
     , swapChannel
@@ -183,26 +189,41 @@ module Network.Server.Janus.Core
     )
 where
 
+-- ------------------------------------------------------------
+
 import Control.Concurrent
+
 import Data.Char
 import Data.Dynamic
 import Data.Either
 import Data.Map
 import Data.Maybe
 import Data.Typeable
-import System.IO
-import System.Eval (unsafeEval)
-import System.Time
-import Text.ParserCombinators.Parsec
-import Text.XML.HXT.Arrow
-import Text.XML.HXT.XPath
-import Text.XML.HXT.XPath.XPathDataTypes (Expr (..), LocationPath (..), Path (..), AxisSpec (..), NodeTest (..), XStep (..))
 
 import Network.Server.Janus.DynamicLoader
 import Network.Server.Janus.Messaging
 import Network.Server.Janus.Transaction as TA
 import Network.Server.Janus.XmlHelper
 import Network.Server.Janus.JanusPaths
+
+import System.IO
+import System.Eval (unsafeEval)
+import System.Time
+
+import Text.ParserCombinators.Parsec
+
+import Text.XML.HXT.Arrow
+import Text.XML.HXT.XPath
+import Text.XML.HXT.XPath.XPathDataTypes
+       ( Expr (..)
+       , LocationPath (..)
+       , Path (..)
+       , AxisSpec (..)
+       , NodeTest (..)
+       , XStep (..)
+       )
+
+-- ------------------------------------------------------------
 
 infixr 0  <-@, <-!
 
@@ -231,25 +252,50 @@ defHandler _ cell =
                     returnA -< undefined
     }
 
+-- ------------------------------------------------------------
+
 type Shader             = XmlTransform Context
 type ShaderCreator      = JanusArrow Context XmlTree Shader
+
 data Associations       = Assoc ([Shader], Map String Shader)
-data Context            = Context {
-    c_cfg       :: ConfigArrow,
-    c_threads   :: MVar (Map String ThreadId),
-    c_sRep      :: Repository ShaderCreator,
-    c_hRep      :: Repository HandlerCreator,
-    -- c_stRep     :: Repository StateHandlerCreator,
-    c_scopes    :: Map String SharedScope,
-    c_channels  :: Map String SharedChannel,
-    c_shadow    :: Shader,
-    c_cursor    :: StateIdentifier,
-    c_msgbuf    :: Messages
-}
-    deriving Typeable
+
+data Context            = Context { c_cfg       :: ConfigArrow
+				  , c_threads   :: MVar (Map String ThreadId)
+				  , c_sRep      :: Repository ShaderCreator
+				  , c_hRep      :: Repository HandlerCreator
+				  -- , c_stRep     :: Repository StateHandlerCreator
+				  , c_scopes    :: Map String SharedScope
+				  , c_channels  :: Map ChannelId SharedChannel
+				  , c_shadow    :: Shader
+				  , c_cursor    :: StateIdentifier
+				  , c_msgbuf    :: Messages
+				  }
+			  deriving Typeable
+
+-- ------------------------------------------------------------
 
 type MessageHandler     = JanusArrow Context (Channel, Messages) (Channel, Messages)
 type ConfigArrow        = XmlConstSource Context
+
+-- ------------------------------------------------------------
+
+newtype ChannelId	= CId { ch_id :: String
+			      }
+                          deriving (Eq, Ord)
+
+instance Show ChannelId where show = ch_id
+
+mkChannelId		:: String -> ChannelId
+mkChannelId		= CId . (Prelude.map toLower)
+
+chGlobal
+  , chLocal
+  , chConsole
+  , chControl		:: ChannelId
+chGlobal		= mkChannelId "global"
+chLocal			= mkChannelId "local"
+chControl		= mkChannelId "control"
+chConsole		= mkChannelId "console"
 
 newtype Channel         = Ch (Messages, MessageHandler, [ChannelListener])
 type SharedChannel      = MVar Channel
@@ -260,6 +306,8 @@ type SharedTree         = MVar StateTree
 -- type SharedCell      = MVar StateCell
 type StateIdentifier    = [XStep]
 type StateListener      = MVar StateOperation
+
+-- ------------------------------------------------------------
 
 type UID                = Int
 
@@ -272,7 +320,6 @@ data StateOperation
 data StateTree          = StateTree {
     t_id        :: String,
     t_cell      :: StateCell,
-    -- t_cell   ::
     t_ts        :: JanusTimestamp,
     t_children  :: Map String SharedTree,
     t_listeners :: [StateListener]
@@ -315,8 +362,7 @@ instance Show StateValue where
     show (ContextVal _)     = "{Context}"
     show (ThreadVal tid)     = "{" ++ (show tid) ++ "}"
 
-
-
+-- ------------------------------------------------------------
 
 -- Associations
 
@@ -483,7 +529,7 @@ mkCreator errorhandling creator =
         ident           <- getVal _shader_config_id                  -<  conf
         state           <- getVal _shader_config_state               -<  conf
 
-        "global"        <-@ mkPlainMsg $ "loading init shader for shader '" ++
+        chGlobal        <-@ mkPlainMsg $ "loading init shader for shader '" ++
                                 ident ++ "'... "                        -<< ()
         iShader         <- ((single $ getTree _shader_init_shader)
                                 >>>
@@ -491,11 +537,11 @@ mkCreator errorhandling creator =
                                 >>>
                                 (arr snd)
                                 ) `orElse` (constA this)                -<  conf
-        "global"        <-@ mkPlainMsg $ "done\n"                       -<< ()
-        "global"        <-@ mkPlainMsg $ "executing init shader for shader '" ++
+        chGlobal        <-@ mkPlainMsg $ "done\n"                       -<< ()
+        chGlobal        <-@ mkPlainMsg $ "executing init shader for shader '" ++
                                 ident ++ "'... "                        -<< ()
-        (executeShader iShader) >>> ("global"        <-@ mkPlainMsg $ "done\n")
-            <*> ("global", mkErr "Core.hs:mkCreator" GenericMessage ("Init shader failed for shader '" ++ ident ++ "'") [])
+        (executeShader iShader) >>> (chGlobal        <-@ mkPlainMsg $ "done\n")
+            <*> (chGlobal, mkErr "Core.hs:mkCreator" GenericMessage ("Init shader failed for shader '" ++ ident ++ "'") [])
                                                                         -<< ()
 
         associations    <- loadAssocs                                   -<  conf
@@ -508,7 +554,7 @@ mkCreator errorhandling creator =
         (state <$! NullVal)                                             -<< ()
 
         shader      <- root_cursor' >>> creator
-            <*> ("global", mkErr "Core.hs:mkCreator" GenericMessage ("Shader creator failed for shader '" ++ ident ++ "'") [])
+            <*> (chGlobal, mkErr "Core.hs:mkCreator" GenericMessage ("Shader creator failed for shader '" ++ ident ++ "'") [])
                                                                         -<< (conf, associations)
         let shader' = (proc in_ta -> do
                 accepts     <- getVal _shader_config_accepts
@@ -517,13 +563,13 @@ mkCreator errorhandling creator =
                 ta_state    <- TA.getTAState                    -<  in_ta
                 (if elem ta_state accepts
                     then
-                        ("global"  <-@ mkSimpleLog ident (ident ++ " invoked.\n") l_debug)
+                        (chGlobal  <-@ mkSimpleLog ident (ident ++ " invoked.\n") l_debug)
                             >>>
                             root_cursor'
                             >>>
                             shader
                             >>>
-                            ("global"  <-@ mkSimpleLog ident (ident ++ " completed.\n") l_debug)
+                            (chGlobal  <-@ mkSimpleLog ident (ident ++ " completed.\n") l_debug)
                     else this)                                  -<< in_ta
                     )
         let shader'' = if errorhandling
@@ -538,7 +584,7 @@ mkCreator errorhandling creator =
                                         )                       -<< ta
                                     )
                                 `orElse`
-                                    ("global" <-@ mkErr "mkCreator" ShaderFailed "shader failed." [])
+                                    (chGlobal <-@ mkErr "mkCreator" ShaderFailed "shader failed." [])
                                 )
                         else
                             shader'
@@ -585,7 +631,7 @@ Equals the identity Shader, but sends a fix error message to the \"global\" mess
 idErrorShader :: String -> Shader
 idErrorShader _ =
     proc ta -> do
-        "global" <-@ (mkErr "Core.hs:idErrorShader " LoaderError ("idErrorShader invoked.") []) -< ()
+        chGlobal <-@ (mkErr "Core.hs:idErrorShader " LoaderError ("idErrorShader invoked.") []) -< ()
         returnA -< ta
 
 {- |
@@ -606,10 +652,10 @@ loadShader =
         sType           <- getVal _config_type
                            `orElse`
                            (constA ""
-                                >>> ("global" <-@ mkErr "Core.hs:loadShader" GenericMessage ("Type undefined for shader '" ++ ident ++ "'") [])
+                                >>> (chGlobal <-@ mkErr "Core.hs:loadShader" GenericMessage ("Type undefined for shader '" ++ ident ++ "'") [])
                                 )                                       -<< sConf
 
-        "global" <-@ mkSimpleLog "Core.hs:loadShader" ("Loading shader " ++ ident ++ " of type " ++ sType) l_debug -<< ()
+        chGlobal <-@ mkSimpleLog "Core.hs:loadShader" ("Loading shader " ++ ident ++ " of type " ++ sType) l_debug -<< ()
 
         creator     <- getShaderCreator sType                           -<< ()
         shader      <- creator                                          -<< sTree
@@ -627,7 +673,7 @@ loadAssocs =
             proc sTree' -> do
                 ssTree              <- getTree _shader_shader       -<  sTree'
                 (ident', shader')   <- loadShader                   -<  ssTree
-                "global" <-@ mkSimpleLog "Core.hs:loadAssocs"
+                chGlobal <-@ mkSimpleLog "Core.hs:loadAssocs"
                              ("Associated shader '" ++ ident' ++ "' to parent shader '" ++ ident ++ "'")
                              l_debug                                -<< ()
                 returnA                                             -<  (ident', shader')
@@ -1881,104 +1927,100 @@ newChannel =
 {- |
 Returns a channel denoted by its name from the Context.
 -}
-getChannel :: String -> JanusArrow Context a SharedChannel
+getChannel :: ChannelId -> JanusArrow Context a SharedChannel
 getChannel channel =
     proc _ -> do
-        let id' = Prelude.map toLower channel
         context     <- getContext                   -<  ()
         let channels = c_channels context
-        if member id' channels
-            then returnA                            -<  channels ! id'
-            else zeroArrow                      -<  ()
+        if channel `member` channels
+            then returnA                            -<  channels ! channel
+            else zeroArrow                          -<  ()
 
 {- |
 Lists the names of all channels present in the Context.
 -}
-listChannels :: JanusArrow Context a String
+listChannels :: JanusArrow Context a ChannelId
 listChannels =
     proc _ -> do
         context     <- getContext                   -<  ()
         let channels = c_channels context
-        constL (keys channels)                  -<< ()
+        constL (keys channels)                      -<< ()
 
 {- |
 Adds a new channel denoted by its name to the Context.
 -}
-addChannel :: String -> JanusArrow Context a a
+addChannel :: ChannelId -> JanusArrow Context a a
 addChannel channel =
     proc through -> do
-        new_channel     <- newChannel           -<  ()
-        let id' = Prelude.map toLower channel
+        new_channel <- newChannel                   -<  ()
         context     <- getContext                   -<  ()
         let channels = c_channels context
-        if member id' channels
+        if channel `member` channels
             then (zeroArrow)                        -< channels
             else (proc ch_map -> do
                 let new_context = context { c_channels = ch_map }
-                setContext new_context          -<< ()
-                returnA -< through)                 -<< insert id' new_channel channels
+                setContext new_context              -<< ()
+                returnA -< through)                 -<< insert channel new_channel channels
 
 {- |
 Replaces an existing channel denoted by its name in the Context by a new one.
 -}
-swapChannel :: String -> JanusArrow Context a a
+swapChannel :: ChannelId -> JanusArrow Context a a
 swapChannel channel =
     proc through -> do
-        new_channel     <- newChannel               -<  ()
-        let id' = Prelude.map toLower channel
-        context     <- getContext                       -<  ()
+        new_channel <- newChannel                   -<  ()
+        context     <- getContext                   -<  ()
         let channels = c_channels context
-        if member id' channels
+        if channel `member` channels
             then (proc ch_map -> do
                 -- let old_channel = channels ! id'
                 let new_context = context { c_channels = ch_map }
-                setContext new_context          -<< ()
-                returnA -< through) -<< insert id' new_channel channels
-            else (zeroArrow)                            -<  ()
+                setContext new_context              -<< ()
+                returnA -< through)                 -<< insert channel new_channel channels
+            else (zeroArrow)                        -<  ()
 
 {- |
 Removes a channel denoted by its name from the Context.
 -}
-delChannel :: String -> JanusArrow Context a a
+delChannel :: ChannelId -> JanusArrow Context a a
 delChannel channel =
     proc through -> do
-        let id' = Prelude.map toLower channel
         context     <- getContext                   -<  ()
         let channels = c_channels context
-        if member id' channels
+        if channel `member` channels
             then (proc ch_map -> do
                 -- let old_channel = channels ! id'
                 let new_context = context { c_channels = ch_map }
-                setContext new_context          -<< ()
-                returnA -< through)                 -<< delete id' channels
+                setContext new_context              -<< ()
+                returnA -< through)                 -<< delete channel channels
             else (zeroArrow)                        -<  ()
 
 {- |
 Blocks over a channel denoted by its name in the Context. The unlocking messages are returned.
 -}
-listenChannel :: String -> JanusArrow Context a Message
+listenChannel :: ChannelId -> JanusArrow Context a Message
 listenChannel channel =
     proc _ -> do
         mvar_channel    <- getChannel channel           -<  ()
         listener <- arrIO0 $ newEmptyMVar               -<  ()
         Ch (msgs, hdl, lst) <- arrIO $ takeMVar         -<  mvar_channel
         let new_channel = Ch (msgs, hdl, listener:lst)
-        arrIO $ putMVar mvar_channel                        -<< new_channel
-        msg         <- arrIO $ takeMVar                         -<  listener
-        constL msg                                              -<< ()
+        arrIO $ putMVar mvar_channel                    -<< new_channel
+        msg         <- arrIO $ takeMVar                 -<  listener
+        constL msg                                      -<< ()
 
 {- |
 Invokes all listeners of a channel denoted by its name in the Context with a list of messages.
 -}
-invokeChannel :: String -> [Message] -> JanusArrow Context a a
+invokeChannel :: ChannelId -> [Message] -> JanusArrow Context a a
 invokeChannel channel msg =
     proc through -> do
         mvar_channel    <- getChannel channel               -<  ()
         Ch (msgs, hdl, lsts) <- arrIO $ takeMVar            -<  mvar_channel
-        arrIO $ invoke                                          -<  lsts
+        arrIO $ invoke                                      -<  lsts
         let new_channel = Ch (msgs, hdl, [])
-        arrIO $ putMVar mvar_channel                            -<< new_channel
-        returnA                                                         -<  through
+        arrIO $ putMVar mvar_channel                        -<< new_channel
+        returnA                                             -<  through
     where
         invoke (x:xs) = putMVar x msg >> invoke xs
         invoke [] = return ()
@@ -1986,27 +2028,27 @@ invokeChannel channel msg =
 {- |
 Transforms the Handler of a channel denoted by its name in the Context.
 -}
-changeHandler :: String -> (MessageHandler -> MessageHandler) -> JanusArrow Context a a
+changeHandler :: ChannelId -> (MessageHandler -> MessageHandler) -> JanusArrow Context a a
 changeHandler channel transform =
     proc through -> do
         mvar_channel    <- getChannel channel               -<  ()
         Ch (msgs, hdl, lsts) <- arrIO $ takeMVar            -<  mvar_channel
         let hdl' = transform hdl
         let new_channel = Ch (msgs, hdl', lsts)
-        arrIO $ putMVar mvar_channel                            -<< new_channel
-        returnA                                                         -<  through
+        arrIO $ putMVar mvar_channel                        -<< new_channel
+        returnA                                             -<  through
 
 {- |
 Appends a Handler to a channel's existing Handler.
 -}
-addHandler :: String -> MessageHandler -> JanusArrow Context a a
+addHandler :: ChannelId -> MessageHandler -> JanusArrow Context a a
 addHandler channel handler =
     changeHandler channel (\current -> current >>> handler)
 
 {- |
 Replaces a channel's existing Handler by the defaultHandler.
 -}
-clearHandler :: String -> JanusArrow Context a a
+clearHandler :: ChannelId -> JanusArrow Context a a
 clearHandler channel =
     changeHandler channel (\_ -> defaultHandler)
 
@@ -2017,7 +2059,7 @@ clearHandler channel =
 {- |
 Sends a message denoted by a MessageArrow to a channel denoted by its name.
 -}
-(<-@) :: String -> MessageArrow Context -> JanusArrow Context a a
+(<-@) :: ChannelId -> MessageArrow Context -> JanusArrow Context a a
 (<-@) channel msg =
     sendMsg channel msg
 
@@ -2025,7 +2067,7 @@ Sends a message denoted by a MessageArrow to a channel denoted by its name.
 Sends a message denoted by a MessageArrow to a channel denoted by its name if the first argument Arrow fails.
 However, in this case the whole Arrow still fails.
 -}
-(<*>) :: JanusArrow Context a b -> (String, MessageArrow Context) -> JanusArrow Context a b
+(<*>) :: JanusArrow Context a b -> (ChannelId, MessageArrow Context) -> JanusArrow Context a b
 (<*>) op (channel, msg) =
     op
     `orElse`
@@ -2038,14 +2080,14 @@ However, in this case the whole Arrow still fails.
 Sends an error message denoted by a its components (source, code, text, state) to a channel denoted by its name if the
 first argument Arrow fails. However, in this case the whole Arrow still fails.
 -}
-(<!>) :: JanusArrow Context a b -> (String, MessageSource, MessageCode, MessageValue, [(String, String)]) -> JanusArrow Context a b
+(<!>) :: JanusArrow Context a b -> (ChannelId, MessageSource, MessageCode, MessageValue, [(String, String)]) -> JanusArrow Context a b
 (<!>) op (channel, source, code, text, state) =
     op <*> (channel, mkErr source code text state)
 
 {- |
 Equivalent to <-\@: Sends a message denoted by a MessageArrow to a channel denoted by its name.
 -}
-sendMsg :: String -> XmlConstSource Context -> JanusArrow Context a a
+sendMsg :: ChannelId -> XmlConstSource Context -> JanusArrow Context a a
 sendMsg channel msg =
     proc through -> do
         mvar_channel <- getChannel channel          -<  ()
@@ -2058,7 +2100,7 @@ sendMsg channel msg =
 {- |
 Returns all messages buffered in a channel denoted by its name.
 -}
-getMsg :: String -> JanusArrow Context a Message
+getMsg :: ChannelId -> JanusArrow Context a Message
 getMsg channel =
     proc _ -> do
         mvar_channel <- getChannel channel          -<  ()
@@ -2068,7 +2110,7 @@ getMsg channel =
 {- |
 Applies a MessageFilter value to all messages buffered in a channel denoted by its name.
 -}
-filterMsg :: String -> MessageFilter Context -> JanusArrow Context a a
+filterMsg :: ChannelId -> MessageFilter Context -> JanusArrow Context a a
 filterMsg channel transform =
     proc through -> do
         mvar_channel    <- getChannel channel       -<  ()
@@ -2081,7 +2123,7 @@ filterMsg channel transform =
 {- |
 Removes all messages buffered in a channel denoted by its name.
 -}
-clearMsg :: String -> JanusArrow Context a a
+clearMsg :: ChannelId -> JanusArrow Context a a
 clearMsg channel =
     filterMsg channel zeroArrow
 
@@ -2183,7 +2225,7 @@ bufferMsg msg =
 {- |
 Forwards all messages contained in the Context message buffer to a channel denoted by its name.
 -}
-forwardMsgBuf :: String -> JanusArrow Context a a
+forwardMsgBuf :: ChannelId -> JanusArrow Context a a
 forwardMsgBuf channel =
     proc through -> do
         context     <- getContext                       -<  ()
@@ -2195,14 +2237,14 @@ forwardMsgBuf channel =
 {- |
 TODO
 -}
-forwardError :: String -> JanusArrow Context a b -> JanusArrow Context a b
+forwardError :: ChannelId -> JanusArrow Context a b -> JanusArrow Context a b
 forwardError channel op =
     op `orElse` (forwardMsgBuf channel >>> zeroArrow)
 
 {- |
 TODO
 -}
-maskError :: String -> b -> JanusArrow Context a b -> JanusArrow Context a b
+maskError :: ChannelId -> b -> JanusArrow Context a b -> JanusArrow Context a b
 maskError channel def op =
     op `orElse` (forwardMsgBuf channel >>> constA def)
 
@@ -2258,12 +2300,12 @@ Arrow fails. In this case, the whole Arrow still fails.
 -- Handler
 
 {- |
-The null Handler writes a log message to the "global" scope on l_debug level and terminates immediately.
+The null Handler writes a log message to the chGlobal scope on l_debug level and terminates immediately.
 -}
 nullHandler :: Handler
 nullHandler =
    proc _ -> do
-      "global" <-@ mkSimpleLog "Core.hs:nullHandler" ("NullHandler") l_debug -<< ()
+      chGlobal <-@ mkSimpleLog "Core.hs:nullHandler" ("NullHandler") l_debug -<< ()
       returnA  -< ()
 
 {- |
@@ -2273,10 +2315,10 @@ createThread :: String -> String -> JanusArrow Context a b -> JanusArrow Context
 createThread node name thread =
     proc in_val -> do
         threadid    <- processA thread'                     -<  in_val
-        "global"    <-@ mkPlainMsg $ "started thread '" ++
+        chGlobal    <-@ mkPlainMsg $ "started thread '" ++
                         name ++ "'...\n"                    -<  ()
         (node ++ "/" ++ name) <$! (ThreadVal threadid)      -<< ()
         arrIO $ putStrLn -< "created thread"
         returnA                                             -<  in_val
     where
-        thread' = thread >>> ("global" <-@ mkPlainMsg $ "stopped thread '" ++ name ++ "'...\n") >>> (delStateTree (node ++ "/" ++ name))
+        thread' = thread >>> (chGlobal <-@ mkPlainMsg $ "stopped thread '" ++ name ++ "'...\n") >>> (delStateTree (node ++ "/" ++ name))
