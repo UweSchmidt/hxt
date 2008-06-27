@@ -59,11 +59,11 @@ import Network.Server.HWS.Request as HWSRequest
 import Network.Server.HWS.Response as HWSResponse
 import Network.Server.HWS.Util as HWSUtil hiding (emptyLine, accept)
 
--- getParams :: JanusArrow Context XmlTree (String, String)
--- getParam :: String -> JanusArrow Context XmlTree String
--- setStatus :: Int -> JanusArrow Context XmlTree XmlTree
--- setBody :: String -> JanusArrow Context XmlTree XmlTree
--- setMIME :: String -> JanusArrow Context XmlTree XmlTree
+-- getParams :: JanusStateArrow XmlTree (String, String)
+-- getParam :: String -> JanusStateArrow XmlTree String
+-- setStatus :: Int -> JanusStateArrow XmlTree XmlTree
+-- setBody :: String -> JanusStateArrow XmlTree XmlTree
+-- setMIME :: String -> JanusStateArrow XmlTree XmlTree
 -- ...
 
 {- |

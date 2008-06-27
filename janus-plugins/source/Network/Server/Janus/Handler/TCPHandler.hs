@@ -170,8 +170,8 @@ tcpHandler' port shader =
                                        getMsgValue                              -<  ta8
 
                 (if null hMsgs
-                  then (chGlobal <-@ mkPlainMsg $ "OK. Took " ++ (show runtime) ++ " ms\n")
-                  else (chGlobal <-@ mkPlainMsg $ "Failed. Took " ++ (show runtime) ++ " ms. Reasons: \n" ++ (show hMsgs) ++ "\n")
+                  then (globalMsg $ "OK. Took " ++ (show runtime) ++ " ms\n")
+                  else (globalMsg $ "Failed. Took " ++ (show runtime) ++ " ms. Reasons: \n" ++ (show hMsgs) ++ "\n")
                   )                                                             -<< ()
                 returnA                                                         -<  ()
         processRequest _ _ _ _ _ = zeroArrow
@@ -298,7 +298,7 @@ newHandler port shader =
                     process sockinfo handle shader'                                 -<  req
             process (SockAddrInet port' haddr) handle shader' =
                 proc (req, body) -> do
-                    -- chGlobal <-@ mkPlainMsg $ "processing request..."            -<< ()
+                    -- globalMsg $ "processing request..."            -<< ()
                     addr        <- arrIO $ inet_ntoa                                -<  haddr
                     ta      <- createTA 1 Init                                      -<  ()
                     ta2     <- setVal _transaction_handler "TCPHandler"
@@ -332,7 +332,7 @@ newHandler port shader =
                     ta7         <- setTAEnd ts_end                                  -<< ta6
                     runtime     <- getTARunTime                                     -<  ta7
 
-                    chGlobal    <-@ mkPlainMsg $ "OK. Took " ++
+                    globalMsg $ "OK. Took " ++
                                         (show runtime) ++ " ms\n"                   -<< ()
                     returnA                                                         -<  ()
             process _ _ _ = zeroArrow

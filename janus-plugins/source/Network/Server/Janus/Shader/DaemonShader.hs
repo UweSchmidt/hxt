@@ -44,7 +44,7 @@ import Network.Server.Janus.JanusPaths
 Creates a Daemon Shader executing an arbitrary Arrow based on the Context state if invoked. The Arrow does not need to depend on an input and
 does not need to deliver an output.
 -}
-daemonCreator :: JanusArrow Context () () -> ShaderCreator
+daemonCreator :: JanusStateArrow () () -> ShaderCreator
 daemonCreator daemonArrow =
     mkDynamicCreator $ proc (conf, _) -> do
         ident   <- getVal _shader_config_id                     -<  conf

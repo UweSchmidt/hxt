@@ -70,7 +70,7 @@ data HttpServletResponse = HSRES {
 Returns a ShaderCreator based on a function, which takes a servlet context, a servlet request and a servlet response and infers an Arrow
 delivering a servlet response.
 -}
-hostServlet :: (HttpServletContext -> HttpServletRequest -> HttpServletResponse -> JanusArrow Context a HttpServletResponse) -> ShaderCreator
+hostServlet :: (HttpServletContext -> HttpServletRequest -> HttpServletResponse -> JanusStateArrow a HttpServletResponse) -> ShaderCreator
 hostServlet servlet =
     mkDynamicCreator $ arr $ \(conf, _) ->
     proc in_ta -> do

@@ -29,7 +29,6 @@ import System.Eval (unsafeEval)
 import Text.XML.HXT.Arrow
 
 import Network.Server.Janus.Core
-import Network.Server.Janus.Messaging
 import Network.Server.Janus.Transaction as TA
 import Network.Server.Janus.XmlHelper
 import Network.Server.Janus.JanusPaths
@@ -60,7 +59,7 @@ daemonHandler :: HandlerCreator
 daemonHandler = proc (_, shader) -> do
     let handler = proc _ -> do
         ta    <- createTA 0 Processing                        -<  ()
-        chGlobal <-@ mkPlainMsg "starting daemon handler..."  -<< ()
+        globalMsg "starting daemon handler..."                -<< ()
         shader                                                -<  ta
-        chGlobal <-@ mkPlainMsg "daemon handler completed"    -<< ()
+        globalMsg "daemon handler completed"                  -<< ()
     returnA                                                   -< handler

@@ -68,7 +68,7 @@ localEchoShader =
         request     <- getValDef _transaction_requestFragment ""                    -<  in_ta
         let request_list    = (removeEmpty . splitRegex (mkRegex "\r")) request
         let output          = foldr (\str current -> str ++ "\n" ++ current) "" request_list
-        chGlobal <-@ mkPlainMsg output                                              -<< ()
+        globalMsg output                                                            -<< ()
         returnA                                                                     -<  in_ta
 
 {- |
@@ -396,7 +396,7 @@ traceShader =
     mkDynamicCreator $ arr $ \(conf, _) ->
     proc in_ta -> do
         message     <- getVal _shader_config            -<  conf
-        chGlobal    <-@ mkPlainMsg message              -<< ()
+        globalMsg message                               -<< ()
         returnA                                         -<  in_ta
 
 {- |
@@ -408,7 +408,7 @@ traceTAShader =
     mkStaticCreator $
     proc in_ta -> do
         message     <- xshow (constA in_ta)             -<< ()
-        chGlobal    <-@ mkPlainMsg message              -<< ()
+        globalMsg message                               -<< ()
         returnA                                         -<  in_ta
 
 {- |

@@ -24,7 +24,9 @@
 module Network.Server.Janus.Core
     (
     -- data types
-      Handler
+      JanusArrow
+    , JanusStateArrow
+    , Handler
     , HandlerCreator
     , Associations
     , ConfigArrow
@@ -144,7 +146,6 @@ module Network.Server.Janus.Core
     , mkChannelId
     , chGlobal
     , chLocal
-    , chConsole
     , chControl
     , listChannels
     , addChannel
@@ -158,6 +159,10 @@ module Network.Server.Janus.Core
     , addHandler
     , clearHandler
     , sendMsg
+    , sendPlain
+    , globalMsg
+    , localMsg
+    , controlMsg
     , (<-@)
     , getMsg
     , filterMsg
@@ -227,16 +232,18 @@ import Text.XML.HXT.XPath.XPathDataTypes
 
 infixr 0  <-@, <-!
 
-type Handler         = JanusArrow Context () ()
-type HandlerCreator  = JanusArrow Context (XmlTree, Shader) Handler
+type JanusArrow    s b c	= IOStateArrow     s b c
+type JanusStateArrow b c	= JanusArrow Context b c
+type Handler			= JanusStateArrow () ()
+type HandlerCreator		= JanusStateArrow (XmlTree, Shader) Handler
 
 -- TODO
--- type StateHandler       = (JanusArrow Context String String, JanusArrow Context String String)
+-- type StateHandler       = (JanusStateArrow String String, JanusStateArrow String String)
 data StateHandler       = StateHandler {
-    sh_load     :: JanusArrow Context StateIdentifier (StateHandler, StateCell),
-    sh_store    :: JanusArrow Context (StateIdentifier, StateCell) StateHandler,
-    sh_traverse :: JanusArrow Context StateIdentifier StateTree,
-    sh_create   :: JanusArrow Context (StateIdentifier, StateCell) StateHandler
+    sh_load     :: JanusStateArrow StateIdentifier (StateHandler, StateCell),
+    sh_store    :: JanusStateArrow (StateIdentifier, StateCell) StateHandler,
+    sh_traverse :: JanusStateArrow StateIdentifier StateTree,
+    sh_create   :: JanusStateArrow (StateIdentifier, StateCell) StateHandler
 }
 
 defHandler :: StateIdentifier -> StateCell -> StateHandler
@@ -254,8 +261,8 @@ defHandler _ cell =
 
 -- ------------------------------------------------------------
 
-type Shader             = XmlTransform Context
-type ShaderCreator      = JanusArrow Context XmlTree Shader
+type Shader             = JanusStateArrow XmlTree XmlTree
+type ShaderCreator      = JanusStateArrow XmlTree Shader
 
 data Associations       = Assoc ([Shader], Map String Shader)
 
@@ -274,10 +281,16 @@ data Context            = Context { c_cfg       :: ConfigArrow
 
 -- ------------------------------------------------------------
 
-type MessageHandler     = JanusArrow Context (Channel, Messages) (Channel, Messages)
-type ConfigArrow        = XmlConstSource Context
+type MessageHandler     = JanusStateArrow (Channel, Messages) (Channel, Messages)
+type ConfigArrow        = JanusStateArrow () XmlTree -- XmlConstSource Context
 
 -- ------------------------------------------------------------
+
+newtype Channel         = Ch (Messages, MessageHandler, [ChannelListener])
+
+type SharedChannel      = MVar Channel
+
+type ChannelListener    = MVar Messages
 
 newtype ChannelId	= CId { ch_id :: String
 			      }
@@ -290,16 +303,12 @@ mkChannelId		= CId . (Prelude.map toLower)
 
 chGlobal
   , chLocal
-  , chConsole
   , chControl		:: ChannelId
 chGlobal		= mkChannelId "global"
 chLocal			= mkChannelId "local"
 chControl		= mkChannelId "control"
-chConsole		= mkChannelId "console"
 
-newtype Channel         = Ch (Messages, MessageHandler, [ChannelListener])
-type SharedChannel      = MVar Channel
-type ChannelListener    = MVar Messages
+-- ------------------------------------------------------------
 
 type SharedScope        = SharedTree
 type SharedTree         = MVar StateTree
@@ -429,7 +438,7 @@ lookupShader key def (Assoc (_, assocMap)) =
 {- |
 TODO
 -}
-addThread :: String -> ThreadId -> JanusArrow Context a a
+addThread :: String -> ThreadId -> JanusStateArrow a a
 addThread name ident =
     proc through -> do
         context     <- getContext               -<  ()
@@ -442,7 +451,7 @@ addThread name ident =
 {- |
 TODO
 -}
-delThread :: String -> JanusArrow Context a a
+delThread :: String -> JanusStateArrow a a
 delThread name =
     proc through -> do
         context     <- getContext               -<  ()
@@ -455,7 +464,7 @@ delThread name =
 {- |
 TODO
 -}
-listThreads :: JanusArrow Context a String
+listThreads :: JanusStateArrow a String
 listThreads =
     proc _ -> do
         context     <- getContext               -<  ()
@@ -466,7 +475,7 @@ listThreads =
 {- |
 TODO
 -}
-listThreadPairs :: JanusArrow Context a (String, ThreadId)
+listThreadPairs :: JanusStateArrow a (String, ThreadId)
 listThreadPairs =
     proc _ -> do
         context     <- getContext               -<  ()
@@ -477,7 +486,7 @@ listThreadPairs =
 {- |
 TODO
 -}
-stopThread :: String -> JanusArrow Context a a
+stopThread :: String -> JanusStateArrow a a
 stopThread name =
     proc through -> do
         context     <- getContext               -<  ()
@@ -507,14 +516,14 @@ TODO
 A wrapper for a ShaderCreator. This wrapper adds error handling by means of zeroArrow to a ShaderCreator. It removes messages from
 the Context message buffer (where some operations may store Transaction messages before failing) to put them in to Transaction.
 -}
-mkDynamicCreator :: JanusArrow Context (XmlTree, Associations) Shader -> ShaderCreator
+mkDynamicCreator :: JanusStateArrow (XmlTree, Associations) Shader -> ShaderCreator
 mkDynamicCreator creator =
     mkCreator True creator
 
 {- |
 TODO
 -}
-mkFallibleCreator :: JanusArrow Context (XmlTree, Associations) Shader -> ShaderCreator
+mkFallibleCreator :: JanusStateArrow (XmlTree, Associations) Shader -> ShaderCreator
 mkFallibleCreator creator =
     mkCreator False creator
 
@@ -523,13 +532,13 @@ TODO
 -- mapping erzeugen
 -- debugging optionen
 -}
-mkCreator :: Bool -> JanusArrow Context (XmlTree, Associations) Shader -> ShaderCreator
+mkCreator :: Bool -> JanusStateArrow (XmlTree, Associations) Shader -> ShaderCreator
 mkCreator errorhandling creator =
     proc conf -> do
         ident           <- getVal _shader_config_id                  -<  conf
         state           <- getVal _shader_config_state               -<  conf
 
-        chGlobal        <-@ mkPlainMsg $ "loading init shader for shader '" ++
+        globalMsg $ "loading init shader for shader '" ++
                                 ident ++ "'... "                        -<< ()
         iShader         <- ((single $ getTree _shader_init_shader)
                                 >>>
@@ -537,10 +546,10 @@ mkCreator errorhandling creator =
                                 >>>
                                 (arr snd)
                                 ) `orElse` (constA this)                -<  conf
-        chGlobal        <-@ mkPlainMsg $ "done\n"                       -<< ()
-        chGlobal        <-@ mkPlainMsg $ "executing init shader for shader '" ++
+        globalMsg $ "done\n"                       -<< ()
+        globalMsg $ "executing init shader for shader '" ++
                                 ident ++ "'... "                        -<< ()
-        (executeShader iShader) >>> (chGlobal        <-@ mkPlainMsg $ "done\n")
+        (executeShader iShader) >>> (globalMsg $ "done\n")
             <*> (chGlobal, mkErr "Core.hs:mkCreator" GenericMessage ("Init shader failed for shader '" ++ ident ++ "'") [])
                                                                         -<< ()
 
@@ -644,7 +653,7 @@ seqShader associations =
 {- |
 TODO
 -}
-loadShader :: JanusArrow Context XmlTree (String, Shader)
+loadShader :: JanusStateArrow XmlTree (String, Shader)
 loadShader =
     proc sTree -> do
         sConf           <- getTree _shader_config                       -<  sTree
@@ -664,7 +673,7 @@ loadShader =
 {- |
 TODO
 -}
-loadAssocs :: JanusArrow Context XmlTree Associations
+loadAssocs :: JanusStateArrow XmlTree Associations
 loadAssocs =
     proc sTree -> do
         sConf           <- getTree _shader_config                   -<  sTree
@@ -683,7 +692,7 @@ loadAssocs =
 {- |
 TODO
 -}
-executeShader :: Shader -> JanusArrow Context a XmlTree
+executeShader :: Shader -> JanusStateArrow a XmlTree
 executeShader shader =
     proc _ -> do
         createTA 0 Processing >>> shader                                -<< ()
@@ -720,14 +729,14 @@ emptyContext =
 {- |
 Returns the current Context.
 -}
-getContext :: JanusArrow Context a Context
+getContext :: JanusStateArrow a Context
 getContext =
     getUserState
 
 {- |
 Replaces the current Context and returns the input value.
 -}
-setContext :: Context -> JanusArrow Context a a
+setContext :: Context -> JanusStateArrow a a
 setContext context =
     proc through -> do
         setUserState        -<  context
@@ -736,14 +745,14 @@ setContext context =
 {- |
 Returns the current cursor.
 -}
-getCursor :: JanusArrow Context a StateIdentifier
+getCursor :: JanusStateArrow a StateIdentifier
 getCursor =
     getContext >>> (arr c_cursor)
 
 {- |
 Replaces the current cursor and returns the input value.
 -}
-setCursor :: StateIdentifier -> JanusArrow Context a a
+setCursor :: StateIdentifier -> JanusStateArrow a a
 setCursor cursor =
     proc through -> do
         context <-  getContext          -<  ()
@@ -753,7 +762,7 @@ setCursor cursor =
 {- |
 TODO
 -}
-runInContext :: Context -> JanusArrow Context a b -> JanusArrow Context a b
+runInContext :: Context -> JanusStateArrow a b -> JanusStateArrow a b
 runInContext ctx arrow =
     proc in_val -> do
         prev_ctx    <- getContext               -<  ()
@@ -796,7 +805,7 @@ toScopeId ident =
 {- |
 TODO
 -}
-identArrow :: JanusArrow Context String (String, StateIdentifier)
+identArrow :: JanusStateArrow String (String, StateIdentifier)
 identArrow =
     proc st_id -> do
         cursor      <- getCursor            -<  ()
@@ -856,7 +865,7 @@ swapConfig =
 {- |
 Returns a repository from the Context by means of a selector function.
 -}
-getRepository :: (Context -> Repository a) -> JanusArrow Context b (Repository a)
+getRepository :: (Context -> Repository a) -> JanusStateArrow b (Repository a)
 getRepository selector =
     proc _ -> do
         context     <- getContext               -<  ()
@@ -866,7 +875,7 @@ getRepository selector =
 {- |
 Replaces a repository by the input of the delivered Arrow. The previous repository is returned.
 -}
-swapRepository :: (Context -> Repository a) -> ((Context, Repository a) -> Context) -> JanusArrow Context (Repository a) (Repository a)
+swapRepository :: (Context -> Repository a) -> ((Context, Repository a) -> Context) -> JanusStateArrow (Repository a) (Repository a)
 swapRepository selector swapper =
     proc new_rep -> do
         context     <- getContext               -<  ()
@@ -878,7 +887,7 @@ swapRepository selector swapper =
 {- |
 Removes all values from a Context repository by inserting a new empty repository.
 -}
-delRepository :: String -> JanusArrow Context (Repository a) (Repository a) -> JanusArrow Context b b
+delRepository :: String -> JanusStateArrow (Repository a) (Repository a) -> JanusStateArrow b b
 delRepository rep_type swapper =
     proc through -> do
         (newRepositoryA rep_type
@@ -889,7 +898,7 @@ delRepository rep_type swapper =
 {- |
 TODO
 -}
-getRepositoryValue :: String -> JanusArrow Context a (Repository b) -> b -> JanusArrow Context a b
+getRepositoryValue :: String -> JanusStateArrow a (Repository b) -> b -> JanusStateArrow a b
 getRepositoryValue name getter def =
         getter
         >>>
@@ -898,7 +907,7 @@ getRepositoryValue name getter def =
 {- |
 TODO
 -}
-addRepositoryValue :: JanusArrow Context a (Repository b) -> JanusArrow Context (Repository b) (Repository b) -> String -> b -> JanusArrow Context c c
+addRepositoryValue :: JanusStateArrow a (Repository b) -> JanusStateArrow (Repository b) (Repository b) -> String -> b -> JanusStateArrow c c
 addRepositoryValue getter swapper name value =
     proc through -> do
         rep         <- getter                   -<  undefined
@@ -909,63 +918,63 @@ addRepositoryValue getter swapper name value =
 {- |
 Returns the ShaderCreator repository from the Context.
 -}
-getShaderCreators :: JanusArrow Context a (Repository ShaderCreator)
+getShaderCreators :: JanusStateArrow a (Repository ShaderCreator)
 getShaderCreators = getRepository c_sRep
 
 {- |
 Replaces the ShaderCreator repository by the input of the delivered Arrow. The previous repository is returned.
 -}
-swapShaderCreators :: JanusArrow Context (Repository ShaderCreator) (Repository ShaderCreator)
+swapShaderCreators :: JanusStateArrow (Repository ShaderCreator) (Repository ShaderCreator)
 swapShaderCreators = swapRepository c_sRep (\(context, new_rep) -> context { c_sRep = new_rep })
 
 {- |
 Removes all ShaderCreators from the Context's according repository (by inserting a new empty repository).
 -}
-delShaderCreators :: JanusArrow Context a a
+delShaderCreators :: JanusStateArrow a a
 delShaderCreators = delRepository "Shader.ShaderCreator" swapShaderCreators
 
 {- |
 Returns a particular ShaderCreator from the Context's repository by its reference identifier.
 -}
-getShaderCreator :: String -> JanusArrow Context a ShaderCreator
+getShaderCreator :: String -> JanusStateArrow a ShaderCreator
 getShaderCreator name = getRepositoryValue name getShaderCreators (mkStaticCreator $ idShader)
 
 {- |
 Adds a ShaderCreator to the Context's repository by a reference identifier.
 -}
-addShaderCreator :: String -> ShaderCreator -> JanusArrow Context a a
+addShaderCreator :: String -> ShaderCreator -> JanusStateArrow a a
 addShaderCreator name shader = addRepositoryValue getShaderCreators swapShaderCreators name shader
 
 {- |
 Returns the HandlerCreator repository from the Context.
 -}
-getHandlerCreators :: JanusArrow Context a (Repository HandlerCreator)
+getHandlerCreators :: JanusStateArrow a (Repository HandlerCreator)
 getHandlerCreators = getRepository c_hRep
 
 
 {- |
 Replaces the HandlerCreator repository by the input of the delivered Arrow. The previous repository is returned.
 -}
-swapHandlerCreators :: JanusArrow Context (Repository HandlerCreator) (Repository HandlerCreator)
+swapHandlerCreators :: JanusStateArrow (Repository HandlerCreator) (Repository HandlerCreator)
 swapHandlerCreators = swapRepository c_hRep (\(context, new_rep) -> context { c_hRep = new_rep })
 
 {- |
 Removes all ShaderCreators from the Context's according repository (by inserting a new empty repository).
 -}
-delHandlerCreators :: JanusArrow Context a a
+delHandlerCreators :: JanusStateArrow a a
 delHandlerCreators = delRepository "Shader.HandlerCreator" swapHandlerCreators
 
 
 {- |
 Returns a particular ShaderCreator from the Context's repository by its reference identifier.
 -}
-getHandlerCreator :: String -> JanusArrow Context a HandlerCreator
+getHandlerCreator :: String -> JanusStateArrow a HandlerCreator
 getHandlerCreator name = getRepositoryValue name getHandlerCreators (constA nullHandler)
 
 {- |
 Adds a HandlerCreator to the Context's repository by a reference identifier.
 -}
-addHandlerCreator :: String -> HandlerCreator -> JanusArrow Context a a
+addHandlerCreator :: String -> HandlerCreator -> JanusStateArrow a a
 addHandlerCreator name handler = addRepositoryValue getHandlerCreators swapHandlerCreators name handler
 
 
@@ -974,7 +983,7 @@ addHandlerCreator name handler = addRepositoryValue getHandlerCreators swapHandl
 {- |
 Returns the current Context shadow.
 -}
-getShadow :: JanusArrow Context a Shader
+getShadow :: JanusStateArrow a Shader
 getShadow =
     proc _ -> do
         context     <- getContext               -<  ()
@@ -984,7 +993,7 @@ getShadow =
 {- |
 Replaces the current Context shadow by a new Shader. The resulting Arrow returns the previous shadow.
 -}
-swapShadow :: Shader -> JanusArrow Context a Shader
+swapShadow :: Shader -> JanusStateArrow a Shader
 swapShadow shadow =
     proc _ -> do
         context     <- getContext               -<  ()
@@ -996,7 +1005,7 @@ swapShadow shadow =
 {- |
 Extends the current Context shadow by a new Shader. The new Shader is added behind the current shadow.
 -}
-extendShadow :: Shader -> JanusArrow Context a a
+extendShadow :: Shader -> JanusStateArrow a a
 extendShadow extension =
     proc through -> do
         context     <- getContext               -<  ()
@@ -1014,7 +1023,7 @@ extendShadow extension =
 {- |
 Creates a new scope with the argument as its name and returns it.
 -}
-newScope :: String -> JanusArrow Context a SharedScope
+newScope :: String -> JanusStateArrow a SharedScope
 newScope ident =
     proc _ -> do
         component   <- newStateTree ident       -<  ()
@@ -1023,7 +1032,7 @@ newScope ident =
 {- |
 Delivers a scope from the Context, denoted by its name.
 -}
-getScope :: String -> JanusArrow Context a SharedScope
+getScope :: String -> JanusStateArrow a SharedScope
 getScope ident =
     proc _ -> do
         let ident' = Prelude.map toLower ident
@@ -1036,7 +1045,7 @@ getScope ident =
 {- |
 Lists the names of all scopes present in the Context. This Arrow is a non-deterministic one.
 -}
-listScopes :: JanusArrow Context a String
+listScopes :: JanusStateArrow a String
 listScopes =
     proc _ -> do
         context <- getContext                   -<  ()
@@ -1046,7 +1055,7 @@ listScopes =
 {- |
 Creates a new scope in the Context, referenced by a name.
 -}
-addScope :: String -> JanusArrow Context a a
+addScope :: String -> JanusStateArrow a a
 addScope ident =
     proc through -> do
         new_scope   <- newScope ident           -< ()
@@ -1063,7 +1072,7 @@ addScope ident =
 {- |
 Replaces an existing scope in the Context by a new one.
 -}
-swapScope :: String -> JanusArrow Context a a
+swapScope :: String -> JanusStateArrow a a
 swapScope ident =
     proc through -> do
         new_scope   <- newScope ident             -< ()
@@ -1081,7 +1090,7 @@ swapScope ident =
 {- |
 Removes a scope from the Context
 -}
-delScope :: String -> JanusArrow Context a a
+delScope :: String -> JanusStateArrow a a
 delScope ident =
     proc through -> do
         let ident' = Prelude.map toLower ident
@@ -1103,28 +1112,28 @@ delScope ident =
 {- |
 Returns an empty StateCell (with timestamp 0).
 -}
-newNullCell :: JanusArrow Context a StateCell
+newNullCell :: JanusStateArrow a StateCell
 newNullCell =
     constA NullVal >>> newCell >>> setCellTS 0
 
 {- |
 Returns a new StateCell based on the string input of the Arrow.
 -}
-newCellS :: JanusArrow Context String StateCell
+newCellS :: JanusStateArrow String StateCell
 newCellS =
     arr (\str -> SimpleVal $ str) >>> newCell
 
 {- |
 Returns a new StateCell based on the polymorphic input of the Arrow.
 -}
-newCellP :: Typeable a => JanusArrow Context a StateCell
+newCellP :: Typeable a => JanusStateArrow a StateCell
 newCellP =
     arr (\val -> PolyVal $ toDyn val) >>> newCell
 
 {- |
 Returns a new StateCell based on a StateValue content.
 -}
-newCell :: JanusArrow Context StateValue StateCell
+newCell :: JanusStateArrow StateValue StateCell
 newCell =
     proc val -> do
         ts  <-  getCurrentTS                    -< ()
@@ -1133,14 +1142,14 @@ newCell =
 {- |
 Returns the StateValue from a StateCell.
 -}
-getCellVal :: JanusArrow Context StateCell StateValue
+getCellVal :: JanusStateArrow StateCell StateValue
 getCellVal =
     arr c_val
 
 {- |
 Returns the string representation from a StateCell's StateValue.
 -}
-getCellVS :: JanusArrow Context StateCell String
+getCellVS :: JanusStateArrow StateCell String
 getCellVS =
     proc cell -> do
         let val = c_val cell
@@ -1151,7 +1160,7 @@ getCellVS =
 {- |
 Returns a polymorphic representation from a StateCell's StateValue.
 -}
-getCellVP :: Typeable a => JanusArrow Context StateCell a
+getCellVP :: Typeable a => JanusStateArrow StateCell a
 getCellVP =
     proc cell -> do
         let val     = c_val cell
@@ -1166,14 +1175,14 @@ getCellVP =
 {- |
 Returns a StateCell's timestamp.
 -}
-getCellTS :: JanusArrow Context StateCell JanusTimestamp
+getCellTS :: JanusStateArrow StateCell JanusTimestamp
 getCellTS =
     arr c_ts
 
 {- |
 Replaces a StateCell's StateValue.
 -}
-setCellVal :: StateValue -> JanusArrow Context StateCell StateCell
+setCellVal :: StateValue -> JanusStateArrow StateCell StateCell
 setCellVal val =
     getCurrentTS
     >>>
@@ -1182,7 +1191,7 @@ setCellVal val =
 {- |
 Replaces a StateCell's StateValue string representation.
 -}
-setCellVS :: String -> JanusArrow Context StateCell StateCell
+setCellVS :: String -> JanusStateArrow StateCell StateCell
 setCellVS strval =
     getCurrentTS
     >>>
@@ -1191,7 +1200,7 @@ setCellVS strval =
 {- |
 Replaces a StateCell's StateValue polymorphic representation.
 -}
-setCellVP :: Typeable a => a -> JanusArrow Context StateCell StateCell
+setCellVP :: Typeable a => a -> JanusStateArrow StateCell StateCell
 setCellVP val =
     getCurrentTS
     >>>
@@ -1200,7 +1209,7 @@ setCellVP val =
 {- |
 Sets the timestamp of a StateCell.
 -}
-setCellTS :: JanusTimestamp -> JanusArrow Context StateCell StateCell
+setCellTS :: JanusTimestamp -> JanusStateArrow StateCell StateCell
 setCellTS ts =
     (arr $ \cell -> cell { c_ts = ts })
 
@@ -1213,7 +1222,7 @@ setCellTS ts =
 Delivers a StateCell from the Context. The argument denotes the node in question (by an XPath expression), including the
 scope as its first branch.
 -}
-getSC :: String -> JanusArrow Context a StateCell
+getSC :: String -> JanusStateArrow a StateCell
 getSC st_id =
     getStateCell st_id
 
@@ -1221,7 +1230,7 @@ getSC st_id =
 Delivers a StateValue from the Context. The argument denotes the node in question (by an XPath expression), including the
 scope as its first branch.
 -}
-getSV :: String -> JanusArrow Context a StateValue
+getSV :: String -> JanusStateArrow a StateValue
 getSV st_id =
     getStateCell st_id >>> getCellVal
 
@@ -1229,7 +1238,7 @@ getSV st_id =
 Delivers the polymorphic representation of a StateValue from the Context. The argument denotes the node in question (by an
 XPath expression), including the scope as its first branch.
 -}
-getSVP :: Typeable b => String -> JanusArrow Context a b
+getSVP :: Typeable b => String -> JanusStateArrow a b
 getSVP st_id =
     getStateCell st_id >>> getCellVP
 
@@ -1237,7 +1246,7 @@ getSVP st_id =
 Delivers the string representation of a StateValue from the Context. The argument denotes the node in question (by an XPath
 expression), including the scope as its first branch.
 -}
-getSVS :: String -> JanusArrow Context a String
+getSVS :: String -> JanusStateArrow a String
 getSVS st_id =
     getStateCell st_id >>> getCellVS
 
@@ -1245,7 +1254,7 @@ getSVS st_id =
 Delivers a StateCell from the Context. The argument denotes the node in question (by an XPath expression), including the
 scope as its first branch.
 -}
-getStateCell :: String -> JanusArrow Context a StateCell
+getStateCell :: String -> JanusStateArrow a StateCell
 getStateCell st_id =
     proc _ -> do
         (scope, st_id')     <- identArrow                           -<  st_id
@@ -1255,7 +1264,7 @@ getStateCell st_id =
 Equivalent to getStateCell, but operating on a SharedTree value as its input and using a StateIdentifier instead of an XPath
 string representation.
 -}
-getStateCell' :: StateIdentifier -> JanusArrow Context SharedTree StateCell
+getStateCell' :: StateIdentifier -> JanusStateArrow SharedTree StateCell
 getStateCell' st_id =
     mutateTree st_id zeroArrow (queryCell this) zeroArrow
 
@@ -1263,7 +1272,7 @@ getStateCell' st_id =
 Delivers the structural timestamp of a node from the Context. The argument denotes the node in question (by an XPath expression),
 including the scope as its first branch.
 -}
-getStateTreeTS :: String -> JanusArrow Context a JanusTimestamp
+getStateTreeTS :: String -> JanusStateArrow a JanusTimestamp
 getStateTreeTS st_id =
     proc _ -> do
         (scope, st_id')     <- identArrow                           -<  st_id
@@ -1273,7 +1282,7 @@ getStateTreeTS st_id =
 Equivalent to getStateCellTS, but operating on a SharedTree value as its input and using a StateIdentifier instead of an XPath
 string representation.
 -}
-getStateTreeTS' :: StateIdentifier -> JanusArrow Context SharedTree JanusTimestamp
+getStateTreeTS' :: StateIdentifier -> JanusStateArrow SharedTree JanusTimestamp
 getStateTreeTS' st_id =
     mutateTree st_id zeroArrow (arr $ \tree -> (tree, [t_ts tree])) zeroArrow
 
@@ -1281,7 +1290,7 @@ getStateTreeTS' st_id =
 Returns the names of all child nodes of a node from the Context. The argument denotes the node in question (by an XPath expression),
 including the scope as its first branch.
 -}
-listStateTrees :: String -> JanusArrow Context a String
+listStateTrees :: String -> JanusStateArrow a String
 listStateTrees st_id =
     proc _ -> do
         (scope, st_id')     <- identArrow                           -<  st_id
@@ -1291,7 +1300,7 @@ listStateTrees st_id =
 Equivalent to listStateTrees, but operating on a SharedTree value as its input and using a StateIdentifier instead of an XPath
 string representation.
 -}
-listStateTrees' :: StateIdentifier -> JanusArrow Context SharedTree String
+listStateTrees' :: StateIdentifier -> JanusStateArrow SharedTree String
 listStateTrees' st_id =
     mutateTree st_id
         (zeroArrow)
@@ -1305,7 +1314,7 @@ listStateTrees' st_id =
 Pairwise returns the names and according string values of all child nodes of a node from the Context. The argument denotes the node in
 question (by an XPath expression), including the scope as its first branch.
 -}
-listStatePairsStr :: String -> JanusArrow Context a (String, String)
+listStatePairsStr :: String -> JanusStateArrow a (String, String)
 listStatePairsStr st_id =
     listStatePairs st_id
     >>>
@@ -1315,7 +1324,7 @@ listStatePairsStr st_id =
 Pairwise returns the names and according StateCell values of all child nodes of a node from the Context. The argument denotes the node in
 question (by an XPath expression), including the scope as its first branch.
 -}
-listStatePairs :: String -> JanusArrow Context a (String, StateCell)
+listStatePairs :: String -> JanusStateArrow a (String, StateCell)
 listStatePairs st_id =
     proc _ -> do
         (scope, st_id')     <- identArrow                           -<  st_id
@@ -1325,7 +1334,7 @@ listStatePairs st_id =
 Equivalent to listStatePairs, but operating on a SharedTree value as its input and using a StateIdentifier instead of an XPath
 string representation.
 -}
-listStatePairs' :: StateIdentifier -> JanusArrow Context SharedTree (String, StateCell)
+listStatePairs' :: StateIdentifier -> JanusStateArrow SharedTree (String, StateCell)
 listStatePairs' st_id =
     mutateTree st_id
         (zeroArrow)
@@ -1346,7 +1355,7 @@ including the scope as its first branch. The second argument denotes the old and
 the actual one to decide if the operation is based on a correct previous version of the StateCell. The operation fails if the given
 old StateCell and the actual one do not match.
 -}
-(<#!) :: String -> (StateCell, StateCell) -> JanusArrow Context a a
+(<#!) :: String -> (StateCell, StateCell) -> JanusStateArrow a a
 (<#!) st_id (cell, ref_cell) =
     setStateCellSafe st_id cell ref_cell
 
@@ -1354,7 +1363,7 @@ old StateCell and the actual one do not match.
 Replaces a StateCell in the Context by a new one. The first argument denotes the node in question (by an XPath expression),
 including the scope as its first branch. The second argument denotes the new StateCell.
 -}
-(<=!) ::  String -> StateCell -> JanusArrow Context a a
+(<=!) ::  String -> StateCell -> JanusStateArrow a a
 (<=!) st_id cell =
     setStateCell st_id cell
 
@@ -1362,7 +1371,7 @@ including the scope as its first branch. The second argument denotes the new Sta
 Replaces a StateValue in the Context by a new one. The first argument denotes the node in question (by an XPath expression),
 including the scope as its first branch. The second argument denotes the new StateValue.
 -}
-(<$!) ::  String -> StateValue -> JanusArrow Context a a
+(<$!) ::  String -> StateValue -> JanusStateArrow a a
 (<$!) st_id val =
     proc through -> do
         cell    <- newCell                  -<  val
@@ -1372,7 +1381,7 @@ including the scope as its first branch. The second argument denotes the new Sta
 Replaces a polymorphic representation in the Context by a new one. The first argument denotes the node in question (by an XPath expression),
 including the scope as its first branch. The second argument denotes the new value.
 -}
-(<*!) ::  Typeable b => String -> b -> JanusArrow Context a a
+(<*!) ::  Typeable b => String -> b -> JanusStateArrow a a
 (<*!) st_id val =
     proc through -> do
         cell    <- newCellP                             -<  val
@@ -1382,7 +1391,7 @@ including the scope as its first branch. The second argument denotes the new val
 Replaces a string representation in the Context by a new one. The first argument denotes the node in question (by an XPath expression),
 including the scope as its first branch. The second argument denotes the new string.
 -}
-(<-!) ::  String -> String -> JanusArrow Context a a
+(<-!) ::  String -> String -> JanusStateArrow a a
 (<-!) st_id str =
     proc through -> do
         cell    <- newCellS                             -<  str
@@ -1392,7 +1401,7 @@ including the scope as its first branch. The second argument denotes the new str
 Replaces a StateCell in the Context by a new one. The first argument denotes the node in question (by an XPath expression), including the
 scope as its first branch. The second argument denotes the new StateCell.
 -}
-setStateCell :: String -> StateCell -> JanusArrow Context a a
+setStateCell :: String -> StateCell -> JanusStateArrow a a
 setStateCell st_id st_cell =
     proc through -> do
         (scope, st_id')     <- identArrow                           -<  st_id
@@ -1405,7 +1414,7 @@ including the scope as its first branch. The second argument denotes the old and
 the actual one to decide if the operation is based on a correct previous version of the StateCell. The operation fails if the given
 old StateCell and the actual one do not match.
 -}
-setStateCellSafe :: String -> StateCell -> StateCell -> JanusArrow Context a a
+setStateCellSafe :: String -> StateCell -> StateCell -> JanusStateArrow a a
 setStateCellSafe st_id st_cell ref_cell =
     proc through -> do
         (scope, st_id')     <- identArrow                           -<  st_id
@@ -1416,7 +1425,7 @@ setStateCellSafe st_id st_cell ref_cell =
 Equivalent to setStateCellSafe, but operating on a SharedTree value as its input and using a StateIdentifier instead of an XPath
 string representation.
 -}
-setStateCell' :: StateIdentifier -> StateCell -> StateCell -> JanusArrow Context SharedTree SharedTree
+setStateCell' :: StateIdentifier -> StateCell -> StateCell -> JanusStateArrow SharedTree SharedTree
 setStateCell' st_id st_cell ref_cell =
     proc through -> do
         mutateTree st_id
@@ -1434,7 +1443,7 @@ setStateCell' st_id st_cell ref_cell =
 Removes a node including all subtrees from the Context. The argument denotes the node in question (by an XPath expression), including the
 scope as its first branch.
 -}
-delStateTree :: String -> JanusArrow Context a a
+delStateTree :: String -> JanusStateArrow a a
 delStateTree st_id =
     proc through -> do
         (scope, st_id')     <- identArrow                           -<  st_id
@@ -1445,7 +1454,7 @@ delStateTree st_id =
 Equivalent to delStateTree, but operating on a SharedTree value as its input and using a StateIdentifier instead of an XPath
 string representation.
 -}
-delStateTree' :: StateIdentifier -> JanusArrow Context SharedTree SharedTree
+delStateTree' :: StateIdentifier -> JanusStateArrow SharedTree SharedTree
 delStateTree' st_id =
     proc through -> do
         mutateTree (father st_id)
@@ -1460,7 +1469,7 @@ delStateTree' st_id =
 Replaces a node value in the Context by a string representation. The first argument denotes the node in question (by an XPath expression),
 including the scope as its first branch. The second argument denotes the new string value.
 -}
-swapStateStr :: String -> String -> JanusArrow Context a String
+swapStateStr :: String -> String -> JanusStateArrow a String
 swapStateStr st_id str =
     proc _ -> do
         cell        <- newCellS                                         -<  str
@@ -1471,7 +1480,7 @@ swapStateStr st_id str =
 Replaces a node value in the Context by a new StateCell. The first argument denotes the node in question (by an XPath expression),
 including the scope as its first branch. The second argument denotes the new StateCell value.
 -}
-swapStateCell :: String -> StateCell -> JanusArrow Context a StateCell
+swapStateCell :: String -> StateCell -> JanusStateArrow a StateCell
 swapStateCell st_id st_cell =
     proc _ -> do
         (scope, st_id')     <- identArrow                           -<  st_id
@@ -1483,7 +1492,7 @@ including the scope as its first branch. The second argument denotes the new Sta
 denotes the old StateCell. The old StateCell is compared with the actual one to decide if the operation is based on a correct previous
 version of the StateCell. The operation fails if the given old StateCell and the actual one do not match.
 -}
-swapStateCellSafe :: String -> StateCell -> StateCell -> JanusArrow Context a StateCell
+swapStateCellSafe :: String -> StateCell -> StateCell -> JanusStateArrow a StateCell
 swapStateCellSafe st_id st_cell ref_cell =
     proc _ -> do
         (scope, st_id')     <- identArrow                           -<  st_id
@@ -1493,7 +1502,7 @@ swapStateCellSafe st_id st_cell ref_cell =
 Equivalent to swapStateCell, but operating on a SharedTree value as its input and using a StateIdentifier instead of an XPath
 string representation.
 -}
-swapStateCell' :: StateIdentifier -> StateCell -> StateCell -> JanusArrow Context SharedTree StateCell
+swapStateCell' :: StateIdentifier -> StateCell -> StateCell -> JanusStateArrow SharedTree StateCell
 swapStateCell' st_id st_cell ref_cell =
     proc through -> do
         mutateTree st_id
@@ -1511,7 +1520,7 @@ swapStateCell' st_id st_cell ref_cell =
 Applies a StateCell transformation Arrow to a node in the Context. The first argument denotes the node in question (by an XPath expression),
 including the scope as its first branch. The second argument denotes the transformation Arrow.
 -}
-(<=!>) :: String -> JanusArrow Context StateCell StateCell -> JanusArrow Context a StateCell
+(<=!>) :: String -> JanusStateArrow StateCell StateCell -> JanusStateArrow a StateCell
 (<=!>) st_id cell_mapper =
     mapStateCell st_id cell_mapper
 
@@ -1519,7 +1528,7 @@ including the scope as its first branch. The second argument denotes the transfo
 Applies a StateValue transformation Arrow to a node in the Context. The first argument denotes the node in question (by an XPath expression),
 including the scope as its first branch. The second argument denotes the transformation Arrow.
 -}
-(<$!>) ::  String -> JanusArrow Context StateValue StateValue -> JanusArrow Context a StateValue
+(<$!>) ::  String -> JanusStateArrow StateValue StateValue -> JanusStateArrow a StateValue
 (<$!>) st_id val_mapper =
     let cell_mapper = proc cell -> do
                         ts  <- getCurrentTS                  -<  ()
@@ -1533,7 +1542,7 @@ including the scope as its first branch. The second argument denotes the transfo
 Applies a polymorphic transformation Arrow to a node in the Context. The first argument denotes the node in question (by an XPath expression),
 including the scope as its first branch. The second argument denotes the transformation Arrow.
 -}
-(<*!>) :: Typeable b => String -> JanusArrow Context b b -> JanusArrow Context a b
+(<*!>) :: Typeable b => String -> JanusStateArrow b b -> JanusStateArrow a b
 (<*!>) st_id val_mapper =
     let cell_mapper = proc cell -> do
                         ts  <- getCurrentTS                 -<  ()
@@ -1547,7 +1556,7 @@ including the scope as its first branch. The second argument denotes the transfo
 Applies a string transformation Arrow to a node in the Context. The first argument denotes the node in question (by an XPath expression),
 including the scope as its first branch. The second argument denotes the transformation Arrow.
 -}
-(<-!>) ::  String -> JanusArrow Context String String -> JanusArrow Context a String
+(<-!>) ::  String -> JanusStateArrow String String -> JanusStateArrow a String
 (<-!>) st_id str_mapper =
     let cell_mapper = proc cell -> do
                         ts  <- getCurrentTS                 -<  ()
@@ -1561,7 +1570,7 @@ including the scope as its first branch. The second argument denotes the transfo
 Equivalent to <=!>: Applies a StateCell transformation Arrow to a node in the Context. The first argument denotes the node in question
 (by an XPath expression), including the scope as its first branch. The second argument denotes the transformation Arrow.
 -}
-mapStateCell :: String -> JanusArrow Context StateCell StateCell -> JanusArrow Context a StateCell
+mapStateCell :: String -> JanusStateArrow StateCell StateCell -> JanusStateArrow a StateCell
 mapStateCell st_id op =
     proc _ -> do
         (scope, st_id')     <- identArrow                           -<  st_id
@@ -1571,7 +1580,7 @@ mapStateCell st_id op =
 Equivalent to mapStateCell, but operating on a SharedTree value as its input and using a StateIdentifier instead of an XPath
 string representation.
 -}
-mapStateCell' :: StateIdentifier -> JanusArrow Context StateCell StateCell -> JanusArrow Context SharedTree StateCell
+mapStateCell' :: StateIdentifier -> JanusStateArrow StateCell StateCell -> JanusStateArrow SharedTree StateCell
 mapStateCell' st_id operation =
     proc through -> do
         mutateTree st_id
@@ -1588,7 +1597,7 @@ mapStateCell' st_id operation =
 Blocks over a node in the Context until a StateOperation occurs. The argument denotes the node in question (by an XPath expression),
 including the scope as its first branch.
 -}
-listenStateTree :: String -> JanusArrow Context a a
+listenStateTree :: String -> JanusStateArrow a a
 listenStateTree st_id =
     proc through -> do
         (scope, st_id')     <- identArrow                           -<  st_id
@@ -1599,7 +1608,7 @@ listenStateTree st_id =
 Equivalent to listenStateTree, but operating on a SharedTree value as its input and using a StateIdentifier instead of an XPath
 string representation. Furthermore this function returns the StateOperation which occured.
 -}
-listenStateTree' :: StateIdentifier -> JanusArrow Context SharedTree StateOperation
+listenStateTree' :: StateIdentifier -> JanusStateArrow SharedTree StateOperation
 listenStateTree' st_id =
     proc mvar_tree -> do
         listener <-
@@ -1618,7 +1627,7 @@ listenStateTree' st_id =
 Wakes up all listeners blocking over a node in the Context with a given StateOperation. The first argument denotes the node in
 question (by an XPath expression), including the scope as its first branch. The second argument denotes the StateOperation to send.
 -}
-invokeStateTree :: String -> StateOperation -> JanusArrow Context a a
+invokeStateTree :: String -> StateOperation -> JanusStateArrow a a
 invokeStateTree st_id op =
     proc through -> do
         (scope, st_id')     <- identArrow                           -<  st_id
@@ -1629,7 +1638,7 @@ invokeStateTree st_id op =
 Equivalent to invokeStateTree, but operating on a SharedTree value as its input and using a StateIdentifier instead of an XPath
 string representation.
 -}
-invokeStateTree' :: StateIdentifier -> StateOperation -> JanusArrow Context SharedTree SharedTree
+invokeStateTree' :: StateIdentifier -> StateOperation -> JanusStateArrow SharedTree SharedTree
 invokeStateTree' st_id op =
     proc through -> do
         mutateTree st_id
@@ -1649,7 +1658,7 @@ invokeStateTree' st_id op =
 Returns a new unique identifier from the \"general\" UID space. If no UID has been issued so far, the default value supplied is returned and
 stored in the UID state.
 -}
-getUID :: UID -> JanusArrow Context a UID
+getUID :: UID -> JanusStateArrow a UID
 getUID def =
     getQualifiedUID "general" def
 
@@ -1658,7 +1667,7 @@ Returns a new unique identifier from a given UID space. There exists a \"uid\" s
 distinct UID spaces. If no UID has been issued so far from the space in question, the default value supplied is returned and
 stored in the UID state.
 -}
-getQualifiedUID :: String -> UID -> JanusArrow Context a UID
+getQualifiedUID :: String -> UID -> JanusStateArrow a UID
 getQualifiedUID uid_scope def =
     proc _ -> do
         (UIDVal uid) <- ("/uid/" ++ Prelude.map toLower uid_scope)
@@ -1676,8 +1685,8 @@ getQualifiedUID uid_scope def =
 -- internal state operations
 {-
 Lifts an Arrow transforming a StateValue and delivering a polymorphic result list to an Arrow operating on StateTrees.
-mutateVal :: JanusArrow Context StateValue (StateValue, [a])
-             -> JanusArrow Context StateTree (StateTree, [a])
+mutateVal :: JanusStateArrow StateValue (StateValue, [a])
+             -> JanusStateArrow StateTree (StateTree, [a])
 mutateVal mutate =
     mutateCell
         (proc cell -> do
@@ -1692,8 +1701,8 @@ mutateVal mutate =
 {- |
 Lifts an Arrow transforming a StateCell and delivering a polymorphic result list to an Arrow operating on StateTrees.
 -}
-mutateCell :: JanusArrow Context StateCell (StateCell, [a])
-             -> JanusArrow Context StateTree (StateTree, [a])
+mutateCell :: JanusStateArrow StateCell (StateCell, [a])
+             -> JanusStateArrow StateTree (StateTree, [a])
 mutateCell mutate =
     proc tree -> do
         let cell    = t_cell tree
@@ -1704,8 +1713,8 @@ mutateCell mutate =
 
 {-
 Lifts an Arrow accessing a StateValue and delivering a polymorphic result to an Arrow operating on StateTrees.
-queryVal :: JanusArrow Context StateValue a
-             -> JanusArrow Context StateTree (StateTree, [a])
+queryVal :: JanusStateArrow StateValue a
+             -> JanusStateArrow StateTree (StateTree, [a])
 queryVal query =
         queryCell
             (proc cell -> do
@@ -1718,8 +1727,8 @@ queryVal query =
 {- |
 Lifts an Arrow accessing a StateCell and delivering a polymorphic result to an Arrow operating on StateTrees.
 -}
-queryCell :: JanusArrow Context StateCell a
-             -> JanusArrow Context StateTree (StateTree, [a])
+queryCell :: JanusStateArrow StateCell a
+             -> JanusStateArrow StateTree (StateTree, [a])
 queryCell query =
     proc tree -> do
         let cell    = t_cell tree
@@ -1732,10 +1741,10 @@ a StateIdentifier, an Arrow to react to a missing intermediate node misses, an A
 an Arrow denoting a StateOperation independent of the input.
 -}
 mutateTree :: StateIdentifier
-             -> JanusArrow Context StateIdentifier StateTree
-             -> JanusArrow Context StateTree (StateTree, [b])
-             -> JanusArrow Context a StateOperation
-             -> JanusArrow Context SharedTree b
+             -> JanusStateArrow StateIdentifier StateTree
+             -> JanusStateArrow StateTree (StateTree, [b])
+             -> JanusStateArrow a StateOperation
+             -> JanusStateArrow SharedTree b
 mutateTree st_id@((Step Child (NameTest next) []):xs) miss_op found_op invoke =
     proc mvar_tree -> do
         let next' = qualifiedName next
@@ -1785,7 +1794,7 @@ mutateTree _ _ _ _ =
 {- |
 Creates a new empty StateTree value of a given name.
 -}
-newStateTree :: String -> JanusArrow Context a StateTree
+newStateTree :: String -> JanusStateArrow a StateTree
 newStateTree name =
     proc _ -> do
         ts  <- getCurrentTS                 -< ()
@@ -1927,7 +1936,7 @@ newChannel =
 {- |
 Returns a channel denoted by its name from the Context.
 -}
-getChannel :: ChannelId -> JanusArrow Context a SharedChannel
+getChannel :: ChannelId -> JanusStateArrow a SharedChannel
 getChannel channel =
     proc _ -> do
         context     <- getContext                   -<  ()
@@ -1939,7 +1948,7 @@ getChannel channel =
 {- |
 Lists the names of all channels present in the Context.
 -}
-listChannels :: JanusArrow Context a ChannelId
+listChannels :: JanusStateArrow a ChannelId
 listChannels =
     proc _ -> do
         context     <- getContext                   -<  ()
@@ -1949,7 +1958,7 @@ listChannels =
 {- |
 Adds a new channel denoted by its name to the Context.
 -}
-addChannel :: ChannelId -> JanusArrow Context a a
+addChannel :: ChannelId -> JanusStateArrow a a
 addChannel channel =
     proc through -> do
         new_channel <- newChannel                   -<  ()
@@ -1965,7 +1974,7 @@ addChannel channel =
 {- |
 Replaces an existing channel denoted by its name in the Context by a new one.
 -}
-swapChannel :: ChannelId -> JanusArrow Context a a
+swapChannel :: ChannelId -> JanusStateArrow a a
 swapChannel channel =
     proc through -> do
         new_channel <- newChannel                   -<  ()
@@ -1982,7 +1991,7 @@ swapChannel channel =
 {- |
 Removes a channel denoted by its name from the Context.
 -}
-delChannel :: ChannelId -> JanusArrow Context a a
+delChannel :: ChannelId -> JanusStateArrow a a
 delChannel channel =
     proc through -> do
         context     <- getContext                   -<  ()
@@ -1998,7 +2007,7 @@ delChannel channel =
 {- |
 Blocks over a channel denoted by its name in the Context. The unlocking messages are returned.
 -}
-listenChannel :: ChannelId -> JanusArrow Context a Message
+listenChannel :: ChannelId -> JanusStateArrow a Message
 listenChannel channel =
     proc _ -> do
         mvar_channel    <- getChannel channel           -<  ()
@@ -2012,7 +2021,7 @@ listenChannel channel =
 {- |
 Invokes all listeners of a channel denoted by its name in the Context with a list of messages.
 -}
-invokeChannel :: ChannelId -> [Message] -> JanusArrow Context a a
+invokeChannel :: ChannelId -> [Message] -> JanusStateArrow a a
 invokeChannel channel msg =
     proc through -> do
         mvar_channel    <- getChannel channel               -<  ()
@@ -2028,7 +2037,7 @@ invokeChannel channel msg =
 {- |
 Transforms the Handler of a channel denoted by its name in the Context.
 -}
-changeHandler :: ChannelId -> (MessageHandler -> MessageHandler) -> JanusArrow Context a a
+changeHandler :: ChannelId -> (MessageHandler -> MessageHandler) -> JanusStateArrow a a
 changeHandler channel transform =
     proc through -> do
         mvar_channel    <- getChannel channel               -<  ()
@@ -2041,14 +2050,14 @@ changeHandler channel transform =
 {- |
 Appends a Handler to a channel's existing Handler.
 -}
-addHandler :: ChannelId -> MessageHandler -> JanusArrow Context a a
+addHandler :: ChannelId -> MessageHandler -> JanusStateArrow a a
 addHandler channel handler =
     changeHandler channel (\current -> current >>> handler)
 
 {- |
 Replaces a channel's existing Handler by the defaultHandler.
 -}
-clearHandler :: ChannelId -> JanusArrow Context a a
+clearHandler :: ChannelId -> JanusStateArrow a a
 clearHandler channel =
     changeHandler channel (\_ -> defaultHandler)
 
@@ -2059,15 +2068,31 @@ clearHandler channel =
 {- |
 Sends a message denoted by a MessageArrow to a channel denoted by its name.
 -}
-(<-@) :: ChannelId -> MessageArrow Context -> JanusArrow Context a a
+(<-@) :: ChannelId -> MessageArrow Context -> JanusStateArrow a a
 (<-@) channel msg =
     sendMsg channel msg
+
+{- |
+Sends a plain text to a channell
+-}
+
+sendPlain 		:: ChannelId -> String -> JanusStateArrow a a
+sendPlain channel msg	= channel <-@ mkPlainMsg msg
+
+globalMsg		:: String -> JanusStateArrow a a
+globalMsg		= sendPlain chGlobal
+
+localMsg		:: String -> JanusStateArrow a a
+localMsg		= sendPlain chLocal
+
+controlMsg		:: String -> JanusStateArrow a a
+controlMsg		= sendPlain chControl
 
 {- |
 Sends a message denoted by a MessageArrow to a channel denoted by its name if the first argument Arrow fails.
 However, in this case the whole Arrow still fails.
 -}
-(<*>) :: JanusArrow Context a b -> (ChannelId, MessageArrow Context) -> JanusArrow Context a b
+(<*>) :: JanusStateArrow a b -> (ChannelId, MessageArrow Context) -> JanusStateArrow a b
 (<*>) op (channel, msg) =
     op
     `orElse`
@@ -2080,14 +2105,14 @@ However, in this case the whole Arrow still fails.
 Sends an error message denoted by a its components (source, code, text, state) to a channel denoted by its name if the
 first argument Arrow fails. However, in this case the whole Arrow still fails.
 -}
-(<!>) :: JanusArrow Context a b -> (ChannelId, MessageSource, MessageCode, MessageValue, [(String, String)]) -> JanusArrow Context a b
+(<!>) :: JanusStateArrow a b -> (ChannelId, MessageSource, MessageCode, MessageValue, [(String, String)]) -> JanusStateArrow a b
 (<!>) op (channel, source, code, text, state) =
     op <*> (channel, mkErr source code text state)
 
 {- |
 Equivalent to <-\@: Sends a message denoted by a MessageArrow to a channel denoted by its name.
 -}
-sendMsg :: ChannelId -> XmlConstSource Context -> JanusArrow Context a a
+sendMsg :: ChannelId -> XmlConstSource Context -> JanusStateArrow a a
 sendMsg channel msg =
     proc through -> do
         mvar_channel <- getChannel channel          -<  ()
@@ -2100,7 +2125,7 @@ sendMsg channel msg =
 {- |
 Returns all messages buffered in a channel denoted by its name.
 -}
-getMsg :: ChannelId -> JanusArrow Context a Message
+getMsg :: ChannelId -> JanusStateArrow a Message
 getMsg channel =
     proc _ -> do
         mvar_channel <- getChannel channel          -<  ()
@@ -2110,7 +2135,7 @@ getMsg channel =
 {- |
 Applies a MessageFilter value to all messages buffered in a channel denoted by its name.
 -}
-filterMsg :: ChannelId -> MessageFilter Context -> JanusArrow Context a a
+filterMsg :: ChannelId -> MessageFilter Context -> JanusStateArrow a a
 filterMsg channel transform =
     proc through -> do
         mvar_channel    <- getChannel channel       -<  ()
@@ -2123,7 +2148,7 @@ filterMsg channel transform =
 {- |
 Removes all messages buffered in a channel denoted by its name.
 -}
-clearMsg :: ChannelId -> JanusArrow Context a a
+clearMsg :: ChannelId -> JanusStateArrow a a
 clearMsg channel =
     filterMsg channel zeroArrow
 
@@ -2205,15 +2230,15 @@ invokeHandler =
         invoke [] _         = return ()
 
 
-
-
--- -- -- Message Buffer Operations
+-- ------------------------------------------------------------
+--
+-- Message Buffer Operations
 
 {- |
 Stores a message denoted by an Arrow in the Context message buffer. This is used to temporarily store Transaction messages in the Context
 before failing the current Shader. The mkCreator ShaderCreator wrapper then removes the buffered messages and adds them to the Transaction.
 -}
-bufferMsg :: XmlConstSource Context -> JanusArrow Context a a
+bufferMsg :: XmlConstSource Context -> JanusStateArrow a a
 bufferMsg msg =
     proc through -> do
         context     <- getContext                       -<  ()
@@ -2225,7 +2250,7 @@ bufferMsg msg =
 {- |
 Forwards all messages contained in the Context message buffer to a channel denoted by its name.
 -}
-forwardMsgBuf :: ChannelId -> JanusArrow Context a a
+forwardMsgBuf :: ChannelId -> JanusStateArrow a a
 forwardMsgBuf channel =
     proc through -> do
         context     <- getContext                       -<  ()
@@ -2237,21 +2262,21 @@ forwardMsgBuf channel =
 {- |
 TODO
 -}
-forwardError :: ChannelId -> JanusArrow Context a b -> JanusArrow Context a b
+forwardError :: ChannelId -> JanusStateArrow a b -> JanusStateArrow a b
 forwardError channel op =
     op `orElse` (forwardMsgBuf channel >>> zeroArrow)
 
 {- |
 TODO
 -}
-maskError :: ChannelId -> b -> JanusArrow Context a b -> JanusArrow Context a b
+maskError :: ChannelId -> b -> JanusStateArrow a b -> JanusStateArrow a b
 maskError channel def op =
     op `orElse` (forwardMsgBuf channel >>> constA def)
 
 {- |
 Returns all messages contained in the Context message buffer.
 -}
-getMsgBuf :: JanusArrow Context a Message
+getMsgBuf :: JanusStateArrow a Message
 getMsgBuf =
     proc _ -> do
         context     <- getContext                       -<  ()
@@ -2260,7 +2285,7 @@ getMsgBuf =
 {- |
 Clears the Context message buffer.
 -}
-clearMsgBuf :: JanusArrow Context a a
+clearMsgBuf :: JanusStateArrow a a
 clearMsgBuf =
     proc through -> do
         context     <- getContext                       -<  ()
@@ -2272,7 +2297,7 @@ clearMsgBuf =
 Adds a message denoted by a MessageArrow to the Context message buffer if the first argument Arrow fails. In this case, the
 whole Arrow still fails.
 -}
-(<+*>) :: JanusArrow Context a b -> MessageArrow Context -> JanusArrow Context a b
+(<+*>) :: JanusStateArrow a b -> MessageArrow Context -> JanusStateArrow a b
 (<+*>) op msg =
     op
     `orElse`
@@ -2285,17 +2310,13 @@ whole Arrow still fails.
 Adds an error message denoted by its components (source, code, value and state) to the Context message buffer if the first argument
 Arrow fails. In this case, the whole Arrow still fails.
 -}
-(<+!>) :: JanusArrow Context a b -> (MessageSource, MessageCode, MessageValue, [(String, String)]) -> JanusArrow Context a b
+(<+!>) :: JanusStateArrow a b -> (MessageSource, MessageCode, MessageValue, [(String, String)]) -> JanusStateArrow a b
 (<+!>) op (source, code, text, state) =
     op <+*> (mkErr source code text state)
 
 
 
-
-
-
--- Handler                                                           -<  handler
-
+-- ------------------------------------------------------------
 
 -- Handler
 
@@ -2311,14 +2332,19 @@ nullHandler =
 {- |
 TODO
 -}
-createThread :: String -> String -> JanusArrow Context a b -> JanusArrow Context a a
+createThread :: String -> String -> JanusStateArrow a b -> JanusStateArrow a a
 createThread node name thread =
     proc in_val -> do
         threadid    <- processA thread'                     -<  in_val
-        chGlobal    <-@ mkPlainMsg $ "started thread '" ++
+        globalMsg $ "started thread '" ++
                         name ++ "'...\n"                    -<  ()
         (node ++ "/" ++ name) <$! (ThreadVal threadid)      -<< ()
         arrIO $ putStrLn -< "created thread"
         returnA                                             -<  in_val
     where
-        thread' = thread >>> (chGlobal <-@ mkPlainMsg $ "stopped thread '" ++ name ++ "'...\n") >>> (delStateTree (node ++ "/" ++ name))
+    thread'
+	= thread
+	  >>> (globalMsg $ "stopped thread '" ++ name ++ "'...\n")
+          >>> delStateTree (node ++ "/" ++ name)
+
+-- ------------------------------------------------------------

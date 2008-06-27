@@ -23,8 +23,7 @@
 module Network.Server.Janus.XmlHelper
     (
     -- data types
-      JanusArrow
-    , JanusTimestamp
+      JanusTimestamp
     , XmlTransform
     , XmlAccess
     , XmlSource
@@ -109,11 +108,11 @@ import Text.XML.HXT.DOM.Util(stringTrim)
 
 -- ------------------------------------------------------------
 
-type JanusArrow s a b   = IOStateArrow s a b
-type XmlTransform s     = JanusArrow s XmlTree XmlTree
-type XmlAccess s a      = JanusArrow s XmlTree a
-type XmlSource s a      = JanusArrow s a XmlTree
+type XmlTransform s     = IOStateArrow s XmlTree XmlTree
+type XmlAccess s a      = IOStateArrow s XmlTree a
+type XmlSource s a      = IOStateArrow s a XmlTree
 type XmlConstSource s   = XmlSource s ()
+
 type JanusTimestamp     = Integer
 
 -- ------------------------------------------------------------
@@ -131,7 +130,7 @@ getTS (TOD sec pico) =
 {- |
 Returns the current time in timestamp representation.
 -}
-getCurrentTS :: JanusArrow s a JanusTimestamp
+getCurrentTS :: IOStateArrow s a JanusTimestamp
 getCurrentTS =
     (arrIO0 $ getClockTime)
     >>>
@@ -141,7 +140,7 @@ getCurrentTS =
 Delivers an Arrow parsing its input string to a polymorphically bound target type (which has to be installed
 in the Read type class). Fails if the parser function throws an exception.
 -}
-parseA :: Read b => JanusArrow s String b
+parseA :: Read b => IOStateArrow s String b
 parseA =
     exceptA readIO zeroArrow
 
@@ -149,28 +148,28 @@ parseA =
 Delivers an Arrow parsing its input string to a polymorphically bound target type (which has to be installed
 in the Read type class). Returns a default value if the parser function throws an exception.
 -}
-parseDefA :: Read a => a -> JanusArrow s String a
+parseDefA :: Read a => a -> IOStateArrow s String a
 parseDefA def =
     exceptA readIO (constA def)
 
 {- |
 TODO
 -}
-toDynA :: Typeable a => JanusArrow s a Dynamic
+toDynA :: Typeable a => IOStateArrow s a Dynamic
 toDynA =
     arr $ toDyn
 
 {- |
 TODO
 -}
-fromDynDefA :: Typeable a => a -> JanusArrow s Dynamic a
+fromDynDefA :: Typeable a => a -> IOStateArrow s Dynamic a
 fromDynDefA def =
     arr $ (\dyn -> fromDyn dyn def)
 
 {- |
 TODO
 -}
-fromDynA :: Typeable a => JanusArrow s Dynamic a
+fromDynA :: Typeable a => IOStateArrow s Dynamic a
 fromDynA =
     maybeA (arr $ fromDynamic)
 
@@ -220,7 +219,7 @@ catchA_ action handler =
 {- |
 Like catchA, but utilizes an Arrow for exception handling.
 -}
-exceptA :: (a -> IO b) -> JanusArrow s Exception b -> JanusArrow s a b
+exceptA :: (a -> IO b) -> IOStateArrow s Exception b -> IOStateArrow s a b
 exceptA f ea =
     proc x -> do
         result <- arrIO $ (\param -> Control.Exception.catch (action param) handler)    -< x
@@ -236,14 +235,14 @@ exceptA f ea =
 {- |
 Like exceptA, but defaulting to a failing Arrow (zeroArrow) for the exception case.
 -}
-exceptionA :: (a -> IO b) -> JanusArrow s a b
+exceptionA :: (a -> IO b) -> IOStateArrow s a b
 exceptionA f =
     exceptA f zeroArrow
 
 {- |
 Like catchA, but without configurable exception handling - an exception is represented by the failing Arrow (zeroArrow).
 -}
-exceptZeroA :: (a -> IO b) -> JanusArrow s a b
+exceptZeroA :: (a -> IO b) -> IOStateArrow s a b
 exceptZeroA f =
     exceptA f zeroArrow
 
@@ -251,7 +250,7 @@ exceptZeroA f =
 Like exceptZeroA, but operates on IO Monad values instead of constructor functions. Therefore the input value of the resulting
 Arrow is ignored.
 -}
-exceptZeroA_ :: IO b -> JanusArrow s a b
+exceptZeroA_ :: IO b -> IOStateArrow s a b
 exceptZeroA_ f =
     exceptionA (\_ -> f)
 
@@ -259,7 +258,7 @@ exceptZeroA_ f =
 Creates a thread to process the argument Arrow, which is started with the input value and current state of the processA Arrow.
 The result value of the multi-threaded Arrow is dropped, as processA immediately returns with the thread id of the newly forked thread.
 -}
-processA :: JanusArrow s a b -> JanusArrow s a ThreadId
+processA :: IOStateArrow s a b -> IOStateArrow s a ThreadId
 processA arrow =
     proc x -> do
         state   <- getUserState         -< ()

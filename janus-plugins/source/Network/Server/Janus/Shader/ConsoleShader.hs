@@ -492,12 +492,12 @@ ttyVersionShader =
             )                                                                   -<< in_ta
 
 {-
-showId :: JanusArrow Context XmlTree (String, String)
+showId :: JanusStateArrow XmlTree (String, String)
 showId =
     proc tree -> do
         showId'     -<  (tree, "", "/janus")
 
-showId' :: JanusArrow Context (XmlTree, String, String) (String, String)
+showId' :: JanusStateArrow (XmlTree, String, String) (String, String)
 showId' =
     proc (tree, ident, xpath) -> do
         name        <- getChildren >>> hasName "config" >>> getAttrValue "id"       -<  tree

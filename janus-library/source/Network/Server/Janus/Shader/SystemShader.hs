@@ -57,10 +57,10 @@ changeServerRoot =
                 <+!> ("SystemShader.hs:changeServerRoot", GenericMessage, "Failed to get current directory.", [])
                                                                             -<  ()
 
-        chGlobal    <-@ mkPlainMsg $ "changing server root path to '" ++
+        globalMsg $ "changing server root path to '" ++
                             newroot ++ "')... "                             -<< ()
         (if currentdir /= oldroot
-          then (chGlobal <-@ mkPlainMsg $ "Warning: System root variable differs from actual current directory.")
+          then (globalMsg $ "Warning: System root variable differs from actual current directory.")
           else this)                                                        -<<  ()
 
         (exceptZeroA $ setCurrentDirectory)
@@ -68,7 +68,7 @@ changeServerRoot =
                       newroot ++ "'.", [])                                  -<< newroot
         "/global/system/serverroot" <-! newroot                             -<< ()
 
-        chGlobal    <-@ mkPlainMsg $ "done\n"                               -<< ()
+        globalMsg $ "done\n"                               -<< ()
 
         returnA                                                             -<  this
 
@@ -81,7 +81,7 @@ loadShaderCreator =
         ref         <- getVal _shader_config_reference                      -<  conf
         obj         <- getVal _shader_config_object                         -<  conf
         file        <- getVal _shader_config_module                         -<  conf
-        chGlobal    <-@ mkPlainMsg $ "loading shader creator '" ++
+        globalMsg $ "loading shader creator '" ++
                             ref ++ "' (object '" ++ obj ++
                             "' in module '" ++ file ++ "')... "             -<< ()
         sRep        <- getShaderCreators                                    -<  ()
@@ -90,7 +90,7 @@ loadShaderCreator =
                 <+!> ("SystemShader.hs:loadShaderCreator", GenericMessage, "Failed to load object " ++ ref ++ ".", [("object", ref)])
                 )                                                           -<< sRep
         swapShaderCreators                                                  -<  sRep'
-        chGlobal    <-@ mkPlainMsg $ "done\n"                               -<< ()
+        globalMsg $ "done\n"                               -<< ()
         returnA                                                             -<  this
 
 {- |
@@ -102,7 +102,7 @@ loadHandlerCreator =
         ref     <- getVal _shader_config_reference                          -<  conf
         obj     <- getVal _shader_config_object                             -<  conf
         file    <- getVal _shader_config_module                             -<  conf
-        chGlobal    <-@ mkPlainMsg $ "loading handler creator '" ++
+        globalMsg $ "loading handler creator '" ++
                             ref ++ "' (object '" ++ obj ++
                             "' in module '" ++ file ++ "')... "             -<< ()
         hRep    <- getHandlerCreators                                       -<  ()
@@ -111,7 +111,7 @@ loadHandlerCreator =
                 <+!> ("SystemShader.hs:loadHandlerCreator", GenericMessage, "Failed to load object " ++ ref ++ ".", [("object", ref)])
                 )                                                           -<< hRep
         swapHandlerCreators                                                 -<  hRep'
-        chGlobal    <-@ mkPlainMsg $ "done\n"                               -<< ()
+        globalMsg $ "done\n"                               -<< ()
         returnA                                                             -<  this
 
 {- |
@@ -122,11 +122,11 @@ loadHandler =
     proc conf -> do
         hConf       <- getTree _shader_config_handler_config            -<  conf
         hId         <- getVal _config_id                                -<  hConf
-        chGlobal    <-@ mkPlainMsg $ "constructing handler '" ++
+        globalMsg $ "constructing handler '" ++
                             hId ++ "'... "                              -<< ()
         hType       <- getVal _config_type                              -<  hConf
         let shader = createThread "/global/threads" hId (proc in_ta -> do
-            chGlobal    <-@ mkPlainMsg $ "starting handler '" ++
+            globalMsg $ "starting handler '" ++
                             hId ++ "'...\n"                         -<  ()
             swapChannel chLocal                                     -<  ()
             swapScope "local"                                       -<  ()
@@ -142,7 +142,7 @@ loadHandler =
             creator                                                 -<< conf
             returnA                                                 -<  in_ta
             )
-        chGlobal    <-@ mkPlainMsg $ "done\n"                           -<< ()
+        globalMsg $ "done\n"                           -<< ()
         returnA                                                         -<  shader
 
 {- |
@@ -182,7 +182,7 @@ add tupels                                                          -<< rep
         add ((ref, name, modstr):xs) =
             forwardError chGlobal (add xs)
             >>>
-            (chGlobal <-@ mkPlainMsg $ "Loading object '" ++ ref ++ "' (value '" ++ name ++ "' in module '" ++ modstr ++ "')")
+            (globalMsg $ "Loading object '" ++ ref ++ "' (value '" ++ name ++ "' in module '" ++ modstr ++ "')")
             >>>
             (loadComponent ref modstr name
                 <+!> ("Server.hs:buildRepository", GenericMessage, "Failed to load object " ++ ref ++ ".", [("object", ref)])

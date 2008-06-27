@@ -58,73 +58,73 @@ serverArrow conf_file =
         changeHandler chControl (\_ -> invokeHandler)                                           -<  ()
 
         -- start-message
-        chGlobal    <-@ mkPlainMsg $ "Janus Server " ++ full_release ++ " starting up...\n"     -<  ()
-        chGlobal    <-@ mkPlainMsg $ "-----------------------------------------------\n"        -<  ()
-        chGlobal    <-@ mkPlainMsg $ ""                                                         -<  ()
+        globalMsg $ "Janus Server " ++ full_release ++ " starting up...\n"     -<  ()
+        globalMsg $ "-----------------------------------------------\n"        -<  ()
+        globalMsg $ ""                                                         -<  ()
 
         -- load server configuration
-        chGlobal <-@ mkPlainMsg $ "loading and normalizing server config (" ++ conf_file ++ ")... " -< ()
+        globalMsg $ "loading and normalizing server config (" ++ conf_file ++ ")... " -< ()
         cfg         <-
                     fileSource conf_file
                     >>>
                     normalizeConfig
                     >>>
                     getTree _janus                                                              -<  ()
-        chGlobal    <-@ mkPlainMsg $ "done\n"                                                   -<  ()
+        globalMsg $ "done\n"                                                   -<  ()
 
         -- initialize Context
-        chGlobal    <-@ mkPlainMsg $ "updating context (adding global and local scopes)... "    -<  ()
+        globalMsg $ "updating context (adding global and local scopes)... "    -<  ()
         swapConfig                                                                              -<  cfg
         addScope "global"                                                                       -<  ()
         addScope "local"                                                                        -<  ()
         "/global/system/version"    <-! full_release                                            -<  ()
         currentdir  <- exceptZeroA_ $ getCurrentDirectory                                       -<  ()
         "/global/system/serverroot" <-! currentdir                                              -<< ()
-        chGlobal    <-@ mkPlainMsg $ "done\n"                                                   -<  ()
+        globalMsg $ "done\n"                                                   -<  ()
 
         -- registering Server-Context
-        chGlobal    <-@ mkPlainMsg $ "registering server context... "                           -<< ()
+        globalMsg $ "registering server context... "                           -<< ()
         context     <- getContext                                                               -<  ()
         "/global/consoles/server" <$! (ContextVal context)                                      -<< ()
-        chGlobal    <-@ mkPlainMsg $ "done\n"                                                   -<< ()
+        globalMsg $ "done\n"                                                   -<< ()
 
         -- load core Shaders
-        chGlobal    <-@ mkPlainMsg $ "loading core shaders... "                                 -<< ()
-        chGlobal    <-@ mkPlainMsg $ "system.loadshadercreator "                                -<< ()
+        globalMsg $ "loading core shaders... "                                 -<< ()
+        globalMsg $ "system.loadshadercreator "                                -<< ()
         addShaderCreator "system.loadshadercreator" loadShaderCreator                           -<< ()
-        chGlobal    <-@ mkPlainMsg $ "system.loadhandlercreator "                               -<< ()
+        globalMsg $ "system.loadhandlercreator "                               -<< ()
         addShaderCreator "system.loadhandlercreator" loadHandlerCreator                         -<< ()
-        chGlobal    <-@ mkPlainMsg $ "system.loadhandler "                                      -<< ()
+        globalMsg $ "system.loadhandler "                                      -<< ()
         addShaderCreator "system.loadhandler" loadHandler                                       -<< ()
-        chGlobal    <-@ mkPlainMsg $ "system.changeroot "                                       -<< ()
+        globalMsg $ "system.changeroot "                                       -<< ()
         addShaderCreator "system.changeroot" changeServerRoot                                   -<< ()
 
-        chGlobal    <-@ mkPlainMsg $ "control.seq "                                             -<< ()
+        globalMsg $ "control.seq "                                             -<< ()
         addShaderCreator "control.seq" seqControl                                               -<< ()
-        chGlobal    <-@ mkPlainMsg $ "control.like "                                            -<< ()
+        globalMsg $ "control.like "                                            -<< ()
         addShaderCreator "control.like" likeControl                                             -<< ()
-        chGlobal    <-@ mkPlainMsg $ "control.select "                                          -<< ()
+        globalMsg $ "control.select "                                          -<< ()
         addShaderCreator "control.select" selectControl                                         -<< ()
-        chGlobal    <-@ mkPlainMsg $ "control.loopuntil "                                       -<< ()
+        globalMsg $ "control.loopuntil "                                       -<< ()
         addShaderCreator "control.loopuntil" loopUntilControl                                   -<< ()
-        chGlobal    <-@ mkPlainMsg $ "control.loopwhile "                                       -<< ()
+        globalMsg $ "control.loopwhile "                                       -<< ()
         addShaderCreator "control.loopwhile" loopWhileControl                                   -<< ()
-        chGlobal    <-@ mkPlainMsg $ "control.if "                                              -<< ()
+        globalMsg $ "control.if "                                              -<< ()
         addShaderCreator "control.if" ifThenElseControl                                         -<< ()
-        chGlobal    <-@ mkPlainMsg $ "done\n"                                                   -<< ()
+        globalMsg $ "done\n"                                                   -<< ()
 
         -- load handler trees
-        chGlobal    <-@ mkPlainMsg $ "loading system shader from configuration file... "        -<  ()
+        globalMsg $ "loading system shader from configuration file... "        -<  ()
         rootTree    <- single $ staticSource cfg >>> getTree _janus_shader                      -<< ()
-        chGlobal    <-@ mkPlainMsg $ "done\n"                                                   -<< ()
-        chGlobal    <-@ mkPlainMsg $ "constructing system shader...\n"                          -<  ()
+        globalMsg $ "done\n"                                                   -<< ()
+        globalMsg $ "constructing system shader...\n"                          -<  ()
         (_, shader) <- loadShader                                                               -<  rootTree
-        chGlobal    <-@ mkPlainMsg $ "done: constructing system shader\n"                       -<< ()
-        chGlobal    <-@ mkPlainMsg $ "executing system shader...\n"                             -<  ()
+        globalMsg $ "done: constructing system shader\n"                       -<< ()
+        globalMsg $ "executing system shader...\n"                             -<  ()
         executeShader shader                                                                    -<< ()
-        chGlobal    <-@ mkPlainMsg $ "done: executing system shader\n"                          -<< ()
+        globalMsg $ "done: executing system shader\n"                          -<< ()
 
-        chGlobal    <-@ mkPlainMsg $ "server running...\n"                                      -<  ()
+        globalMsg $ "server running...\n"                                      -<  ()
 
         listenChannel chControl                                                                 -<  ()
         returnA                                                                                 -<  ()
@@ -135,7 +135,7 @@ Normalize server configuration. Fails with according errors in the context if sy
 Unchecked: semantics, like existence and correctness of type attributes
 translate control structure case
 -}
-normalizeConfig :: JanusArrow Context XmlTree XmlTree
+normalizeConfig :: JanusStateArrow XmlTree XmlTree
 normalizeConfig =
     computeJanusRoot
     >>>
@@ -155,7 +155,7 @@ normalizeConfig =
 Returns the child node \"janus\" as the root of a new XML tree. All other children of the root node are ignored.
 If no \"janus\" node is present, an empty one is created and returned.
 -}
-computeJanusRoot :: JanusArrow Context XmlTree XmlTree
+computeJanusRoot :: JanusStateArrow XmlTree XmlTree
 computeJanusRoot =
     (insertChildrenAt 0 (eelem "janus")) `when` (neg $ getChildren >>> hasName "janus")
     >>>
@@ -172,7 +172,7 @@ and is removed before resolving.
 1 loadshaders -> n loadshader, each attribute represents an reference=object pair, the module attribute represents the module file in question
 and is removed before resolving.
 -}
-resolveHighLevelShortcuts :: JanusArrow Context XmlTree XmlTree
+resolveHighLevelShortcuts :: JanusStateArrow XmlTree XmlTree
 resolveHighLevelShortcuts =
     processXPathTrees (proc node -> do
         node'       <- replaceChildren zeroArrow                            -<  node
@@ -221,7 +221,7 @@ loopuntil -> shader type=\"control.loopuntil\".
 loopwhile -> shader type=\"control.loopwhile\".
 if -> shader type=\"control.if\".
 -}
-resolveLowLevelShortcuts :: JanusArrow Context XmlTree XmlTree
+resolveLowLevelShortcuts :: JanusStateArrow XmlTree XmlTree
 resolveLowLevelShortcuts =
     processXPathTrees (setElemName (mkName "shader") >>> addAttr "type" "system.loadshadercreator") "/janus//loadshader[not(ancestor::config)]"
     >>>
@@ -240,7 +240,7 @@ resolveLowLevelShortcuts =
 {- |
 If no \"shader\" child of the \"janus\" root is present, an empty one is created.
 -}
-computeJanusShader :: JanusArrow Context XmlTree XmlTree
+computeJanusShader :: JanusStateArrow XmlTree XmlTree
 computeJanusShader =
     processXPathTrees ((insertChildrenAt 0 (eelem "shader")) `when` (neg $ getChildren >>> hasName "shader")) "/janus"
 
@@ -251,7 +251,7 @@ any \"apply\" node attribute. After applying an \"apply\" node, the node is repl
 Descendants of \"config\" nodes are ignored, so neither \"apply\" descendants of a \"config\" node are resolved nor \"apply\" attributes get forwarded to
 \"shader\" descendants of \"config\" nodes.
 -}
-propagateApply :: JanusArrow Context XmlTree XmlTree
+propagateApply :: JanusStateArrow XmlTree XmlTree
 propagateApply =
     processXPathTrees (proc node -> do
         attribs     <- listA $ (getAttrl >>> getName)
@@ -278,7 +278,7 @@ If no \"root_state\" attribute is present, it is set to the \"state\" attribute'
 If no \"accepts\" attribute is present or if it cannot be parsed to a TransactionState list, it is set to [Processing].
 \"shader\" descendants of \"config\" nodes are ignored.
 -}
-computeConfigNode :: JanusArrow Context XmlTree XmlTree
+computeConfigNode :: JanusStateArrow XmlTree XmlTree
 computeConfigNode =
     processXPathTrees ((insertChildrenAt 0 (eelem "config")) `when` (neg $ getChildren >>> hasName "config")) "/janus"
     >>>
@@ -324,14 +324,14 @@ computeConfigNode =
 Checks the existence of an \"init\" child node for all \"shader\" nodes. If no one is present, an empty one gets inserted.
 \"shader\" descendants of \"config\" nodes are ignored.
 -}
-computeInitNode :: JanusArrow Context XmlTree XmlTree
+computeInitNode :: JanusStateArrow XmlTree XmlTree
 computeInitNode =
     processXPathTrees ((insertChildrenAt 0 (eelem "init")) `when` (neg $ getChildren >>> hasName "init")) "/janus//shader[not(ancestor::config)]"
 
 {- |
 TODO
 -}
-resolveLike :: JanusArrow Context XmlTree XmlTree
+resolveLike :: JanusStateArrow XmlTree XmlTree
 resolveLike =
     processXPathTrees (proc node -> do
         defaultnode <- (single $ (getChildren >>> hasName "default" >>> setElemName (mkName "block")))
@@ -386,7 +386,7 @@ resolveLike =
 {- |
 TODO
 -}
-resolveSelect :: JanusArrow Context XmlTree XmlTree
+resolveSelect :: JanusStateArrow XmlTree XmlTree
 resolveSelect =
     processXPathTrees (proc node -> do
         defaultnode <- (single $ (getChildren >>> hasName "default" >>> setElemName (mkName "block")))

@@ -43,7 +43,7 @@ import Data.Map
 import System.Plugins
 import Text.XML.HXT.Arrow
 
-import Network.Server.Janus.XmlHelper
+-- ------------------------------------------------------------
 
 type ModuleName     = String
 type ObjectName     = String
@@ -52,6 +52,8 @@ data Repository a   = Rep RepositoryKey (Map RepositoryKey a)
 
 instance Show (Repository a) where
     show (Rep typ mapping) = typ ++ " " ++ show (keys mapping)
+
+-- ------------------------------------------------------------
 
 {- |
 Creates a new Repository. This function is to hide the representation of Repository values.
@@ -63,7 +65,7 @@ newRepository typ =
 {- |
 Creates a new Repository by means of an Arrow. This Arrow is to hide the representation of Repository values.
 -}
-newRepositoryA :: String -> JanusArrow s a (Repository b)
+newRepositoryA :: String -> IOStateArrow s a (Repository b)
 newRepositoryA typ =
     constA (Rep typ empty)
 
@@ -74,7 +76,7 @@ defined by its fully qualified name. The qualified name is internally extended t
 successful, the extended Repository is returned. Otherwise a textual error message is issued and the Arrow fails. If there already
 is a value stored with the given key it is replaced.
 -}
-loadComponent :: RepositoryKey -> ModuleName -> ObjectName -> JanusArrow s (Repository a) (Repository a)
+loadComponent :: RepositoryKey -> ModuleName -> ObjectName -> IOStateArrow s (Repository a) (Repository a)
 loadComponent repkey modname objname =
     proc (Rep typ mapping) -> do
         let modname' = (Prelude.map (\x -> if x == '.' then '/' else x) modname) ++ ".o"
@@ -91,7 +93,7 @@ loadComponent repkey modname objname =
 Adds a value to a Repository and stores it at a given key (first argument). If there already is a value stored with the given key
 it is replaced.
 -}
-addComponent :: RepositoryKey -> a -> JanusArrow s (Repository a) (Repository a)
+addComponent :: RepositoryKey -> a -> IOStateArrow s (Repository a) (Repository a)
 addComponent repkey component =
     proc (Rep typ mapping) -> do
         returnA -< (Rep typ (insert repkey component mapping))
@@ -99,7 +101,7 @@ addComponent repkey component =
 {- |
 Removes a value from a Repository based on a given key.
 -}
-delComponent :: RepositoryKey -> JanusArrow s (Repository a) (Repository a)
+delComponent :: RepositoryKey -> IOStateArrow s (Repository a) (Repository a)
 delComponent repkey =
     proc (Rep typ mapping) -> do
         returnA -< (Rep typ (delete repkey mapping))
@@ -107,7 +109,7 @@ delComponent repkey =
 {- |
 Lists the keys of all values stored in a given Repository. A non-deterministic Arrow is delivered.
 -}
-listComponents :: JanusArrow s (Repository a) String
+listComponents :: IOStateArrow s (Repository a) String
 listComponents =
     proc (Rep _ mapping) -> do
         constL $ keys mapping -<< ()
@@ -115,14 +117,14 @@ listComponents =
 {- |
 TODO
 -}
-countComponents :: JanusArrow s (Repository a) Int
+countComponents :: IOStateArrow s (Repository a) Int
 countComponents =
     (listA listComponents) >>> arr length
 
 {- |
 Returns a value from a Repository based on its key. If the key is not present in the Repository, the Arrow fails.
 -}
-getComponent :: RepositoryKey -> JanusArrow s (Repository a) a
+getComponent :: RepositoryKey -> IOStateArrow s (Repository a) a
 getComponent repkey =
     proc (Rep _ mapping) -> do
         if member repkey mapping
@@ -133,10 +135,12 @@ getComponent repkey =
 Returns a value from a Repository based on its key. If the key is not present in the Repository, a default value (second argument)
 is delivered.
 -}
-getComponentDef :: RepositoryKey -> a -> JanusArrow s (Repository a) a
+getComponentDef :: RepositoryKey -> a -> IOStateArrow s (Repository a) a
 getComponentDef repkey def =
     proc (Rep _ mapping) -> do
         returnA -< (if member repkey mapping
                         then (mapping ! repkey)
                         else (def)
                         )
+
+-- ------------------------------------------------------------
