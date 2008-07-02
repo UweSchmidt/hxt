@@ -8,11 +8,10 @@
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id$
 
    W3C XML Schema Regular Expression Matcher
 
-   Grammar can be found under \"http:\/\/www.w3.org\/TR\/xmlschema11-2\/#regexs\"
+   Grammar can be found under <http://www.w3.org/TR/xmlschema11-2/#regexs>
 
 -}
 
@@ -36,6 +35,7 @@ module Text.XML.HXT.RelaxNG.XmlSchema.Regex
     , mkOpt
     , mkDif
     , mkCompl
+    , isZero
     , nullable
     , delta
     , match
@@ -228,7 +228,11 @@ instance Show Regex where
 
 -- ------------------------------------------------------------
 
-nullable	:: Regex -> Bool
+isZero			:: Regex -> Bool
+isZero (Zero _)		= True
+isZero _		= False
+
+nullable		:: Regex -> Bool
 nullable (Zero _)	= False
 nullable Unit		= True
 nullable (Sym _p)	= False		-- assumption: p holds for at least one char

@@ -147,6 +147,7 @@ HXT_SRC	= \
 	Text/XML/HXT/RelaxNG/Validator.hs \
 	Text/XML/HXT/RelaxNG/XmlSchema/DataTypeLibW3C.hs \
 	Text/XML/HXT/RelaxNG/XmlSchema/Regex.hs \
+        Text/XML/HXT/RelaxNG/XmlSchema/RegexMatch.hs \
 	Text/XML/HXT/RelaxNG/XmlSchema/RegexParser.hs \
 	Text/XML/HXT/Version.hs \
 	Text/XML/HXT/XPath.hs \
@@ -262,10 +263,12 @@ all		:
 		$(MAKE) install_local_$(HXT_PACKAGE)
 
 hxt-package.conf	: hxt-package.hs
-		runghc hxt-package.hs $(VERSION) "ghc" $(LOCAL_INSTALL_DIR) $(HXT_SRC) > $@
+		ghc -o hxt-package hxt-package.hs
+		./hxt-package $(VERSION) "ghc" $(LOCAL_INSTALL_DIR) $(HXT_SRC) > $@
 
 ../hxt.cabal	: hxt-package.hs Makefile ../Makefile
-		runghc hxt-package.hs $(VERSION) "cabal" $(GHC_INSTALL_DIR) $(HXT_SRC) > $@
+		ghc -o hxt-package hxt-package.hs
+		./hxt-package $(VERSION) "cabal" $(GHC_INSTALL_DIR) $(HXT_SRC) > $@
 
 install_packages	:
 		runghc hxt-package.hs $(VERSION) "ghc" $(GHC_INSTALL_DIR) $(HXT_SRC) \
@@ -279,7 +282,7 @@ clean_packages	:
 
 clean		:
 		$(MAKE) clean_packages
-		rm -rf $(LOCAL_INSTALL_DIR) hxt-package.conf ../hxt.cabal
+		rm -rf $(LOCAL_INSTALL_DIR) hxt-package hxt-package.conf ../hxt.cabal
 
 clean_$(HXT_PACKAGE)	:
 		$(RM) $(HXT_DRIVER) $(HXT_DRIVER:.o=.hi) $(HXT_OBJ) $(HXT_HI) $(HXT_LIB)

@@ -2,7 +2,9 @@ module Main
 where
 
 import Data.List
+
 import System.Environment
+import System.IO
 
 part1	:: [String]
 part1
@@ -80,6 +82,7 @@ main
     = do
       vers : cabal : installdir : modules <- getArgs
       putStrLn (cabalFile vers cabal installdir modules)
+      hFlush stdout
 
 cabalFile	:: String -> String -> String -> [String] -> String
 cabalFile vers cabal installdir modules

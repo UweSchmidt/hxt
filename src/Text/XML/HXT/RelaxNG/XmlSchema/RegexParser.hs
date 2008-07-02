@@ -8,11 +8,11 @@
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id$
 
    W3C XML Schema Regular Expression Parser
 
-   Grammar can be found under \"http:\/\/www.w3.org\/TR\/xmlschema11-2\/#regexs\"
+   This parser supports the full W3C standard, the
+   complete grammar can be found under <http://www.w3.org/TR/xmlschema11-2/#regexs>
 
 -}
 
