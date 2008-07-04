@@ -77,19 +77,22 @@ initCurl
 -- will set the user agent and the referer URL for this request.
 
 getCont		:: [(String, String)] -> String -> IO (Either String ([(String, String)], String))
-getCont options uri -- curlOptions uri proxy
+getCont options uri
     = do
       initCurl
       resp <- curlGetResponse uri curlOptions
       return $ evalResponse resp
     where
-    curlOptions = concatMap (uncurry copt) options ++ defaultOptions
+    curlOptions
+	= defaultOptions ++ concatMap (uncurry copt) options ++ standardOptions
     defaultOptions
+	= [ CurlUserAgent ("hxt/" ++ hxt_version ++ " via libcurl")
+	  ]
+    standardOptions
 	= [ CurlFailOnError False
 	  , CurlHeader True
 	  , CurlNoProgress True
 	  , CurlFollowLocation True
-	  , CurlUserAgent ("hxt/" ++ hxt_version ++ " via libcurl")
 	  ]
     evalResponse r
 	| rc /= CurlOK

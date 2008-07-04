@@ -182,7 +182,7 @@ readDocument userOptions src
       >>>
       addInputOptionsToSystemState
       >>>
-      getDocumentContents remainingOptions src
+      getDocumentContents options src
       >>>
       ( processDoc $< getMimeType )
       >>>
@@ -209,17 +209,11 @@ readDocument userOptions src
 	  , ( a_ignore_none_xml_contents, v_0 )
 	  ]
 
-    httpOptions
-	= [a_proxy, a_use_curl, a_options_curl, a_mime_types]
-
-    remainingOptions
-	 = options -- filter (not . flip hasEntry defaultOptions . fst) options
-
     traceLevel
 	= maybe this (setTraceLevel . read) . lookup a_trace $ options
 
     addInputOptionsToSystemState
-	= addSysOptions (filter ((`elem` httpOptions) . fst) remainingOptions)
+	= addSysOptions options
 	  >>>
 	  loadMineTypes (lookup1 a_mime_types userOptions)
 	  where
@@ -276,7 +270,7 @@ readDocument userOptions src
 	    | hasOption a_canonicalize	= canonicalizeAllNodes
 	    | otherwise			= this
 	relax
-	    | validateWithRelax		= validateDocumentWithRelaxSchema remainingOptions relaxSchema
+	    | validateWithRelax		= validateDocumentWithRelaxSchema options relaxSchema
 	    | otherwise			= this
 	whitespace
 	    | removeWS
