@@ -75,10 +75,13 @@ parseHtmlTagSoup withNamespaces withWarnings preserveCmt removeWS asHtml
 
 -- ------------------------------------------------------------
 
-validateDoc
-  , transformDoc		:: ArrowList a => a XmlTree XmlTree
+validateDoc			:: ArrowList a => a XmlTree XmlTree
+validateDoc			= fromLA ( VA.validate
+					   `when`
+					   VA.getDTDSubset	-- validate only when DTD decl is present
+					 )
 
-validateDoc			= fromLA VA.validate
+transformDoc			:: ArrowList a => a XmlTree XmlTree
 transformDoc			= fromLA VA.transform
 
 -- old stuff
