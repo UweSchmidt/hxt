@@ -55,7 +55,7 @@ part4a dir
       , "import-dirs: " ++ dir ++ "/imports"
       , "library-dirs: " ++ dir
       , "hs-libraries: HShxt-filter"
-      , "depends: base, haskell98, parsec, HTTP, HUnit, network, containers, directory, process, hxt-8.0.0"
+      , "depends: base, haskell98, parsec, HTTP, HUnit, network, containers, directory, process, hxt-8.1.1"
       ]
 
 part4b :: [String]
@@ -64,7 +64,7 @@ part4b
       , " ghc-options: -Wall"
       , " extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances"
       , ""
-      , " build-depends: base, haskell98 >= 1, parsec >= 2.1 && < 3, HTTP, HUnit >= 1.2, network >= 2.1, hxt >= 8.0"
+      , " build-depends: base, haskell98 >= 1, parsec >= 2.1 && < 3, HTTP, HUnit >= 1.2, network >= 2.1, hxt >= 8.1"
       , " if flag(splitBase)"
       , "   build-depends: base >= 3, containers >= 0.1, directory >= 1, process >= 1"
       , " else"

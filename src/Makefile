@@ -40,6 +40,7 @@ packagename	:
 
 HXT_SRC	= \
 	$(wildcard Control/Monad/*.hs) \
+        $(wildcard System/*.hs) \
 	$(wildcard Text/XML/HXT/*.hs) \
 	$(wildcard Text/XML/HXT/DOM/*.hs) \
 	$(wildcard Text/XML/HXT/Parser/*.hs) \
@@ -117,10 +118,12 @@ all		:
 		$(MAKE) install_local_$(HXT_PACKAGE)
 
 $(SOFTWARE)-package.conf	: $(SOFTWARE)-package.hs
-		runghc $(SOFTWARE)-package.hs $(VERSION) "ghc" $(LOCAL_INSTALL_DIR) $(HXT_SRC) > $@
+		ghc -o $(SOFTWARE)-package $(SOFTWARE)-package.hs
+		./$(SOFTWARE)-package $(VERSION) "ghc" $(LOCAL_INSTALL_DIR) $(HXT_SRC) > $@
 
 ../$(SOFTWARE).cabal	: $(SOFTWARE)-package.hs Makefile ../Makefile
-		runghc $(SOFTWARE)-package.hs $(VERSION) "cabal" $(GHC_INSTALL_DIR) $(HXT_SRC) > $@
+		ghc -o $(SOFTWARE)-package $(SOFTWARE)-package.hs
+		./$(SOFTWARE)-package $(VERSION) "cabal" $(GHC_INSTALL_DIR) $(HXT_SRC) > $@
 
 install_packages	:
 		runghc $(SOFTWARE)-package.hs $(VERSION) "ghc" $(GHC_INSTALL_DIR) $(HXT_SRC) \
