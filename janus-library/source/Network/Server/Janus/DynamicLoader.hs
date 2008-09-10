@@ -25,6 +25,7 @@ module Network.Server.Janus.DynamicLoader
     (
     -- data types
       Repository
+    , RepositoryType(..)
 
     -- repository interface
     , newRepository
@@ -40,34 +41,41 @@ module Network.Server.Janus.DynamicLoader
 where
 
 import Data.Map
-import System.Plugins
 import Text.XML.HXT.Arrow
+
+# if PLUGINS
+import System.Plugins
+# endif
 
 -- ------------------------------------------------------------
 
-type ModuleName     = String
-type ObjectName     = String
-type RepositoryKey  = String
-data Repository a   = Rep RepositoryKey (Map RepositoryKey a)
+type ModuleName     	= String
+type ObjectName     	= String
+data RepositoryType	= ShaderRepo | HandlerRepo -- | StateHandlerRepo
+type RepositoryKey  	= String
+data Repository a   	= Rep RepositoryType (Map RepositoryKey a)
+
+instance Show RepositoryType where
+    show ShaderRepo		= "Shader.ShaderCreator"
+    show HandlerRepo		= "Shader.HandlerCreator"
+    -- show StateHandlerRepo	= "Shader.StateHandler"
 
 instance Show (Repository a) where
-    show (Rep typ mapping) = typ ++ " " ++ show (keys mapping)
+    show (Rep typ mapping) = show typ ++ " " ++ show (keys mapping)
 
 -- ------------------------------------------------------------
 
 {- |
 Creates a new Repository. This function is to hide the representation of Repository values.
 -}
-newRepository :: String -> Repository a
-newRepository typ =
-    (Rep typ empty)
+newRepository		:: RepositoryType -> Repository a
+newRepository typ	= (Rep typ empty)
 
 {- |
 Creates a new Repository by means of an Arrow. This Arrow is to hide the representation of Repository values.
 -}
-newRepositoryA :: String -> IOStateArrow s a (Repository b)
-newRepositoryA typ =
-    constA (Rep typ empty)
+newRepositoryA		:: RepositoryType -> IOStateArrow s a (Repository b)
+newRepositoryA typ	= constA (Rep typ empty)
 
 {- |
 Loads a new value into a Repository. The first argument denotes the key under which the loaded value shall be stored, the second argument
@@ -75,7 +83,13 @@ denotes the module where the value is defined and the third argument denotes the
 defined by its fully qualified name. The qualified name is internally extended to the object file's name. If the value loading is
 successful, the extended Repository is returned. Otherwise a textual error message is issued and the Arrow fails. If there already
 is a value stored with the given key it is replaced.
+
+This arrow is only active, when compiled with flag PLUGINS set, else dynamic loading is disabled and
+the hsplugins module isn't needed.
 -}
+
+# if PLUGINS
+
 loadComponent :: RepositoryKey -> ModuleName -> ObjectName -> IOStateArrow s (Repository a) (Repository a)
 loadComponent repkey modname objname =
     proc (Rep typ mapping) -> do
@@ -88,6 +102,13 @@ loadComponent repkey modname objname =
                 returnA             -< (Rep typ (insert repkey f mapping))
             LoadFailure _ ->
                 zeroArrow           -< ()
+# else
+
+loadComponent :: RepositoryKey -> ModuleName -> ObjectName -> IOStateArrow s (Repository a) (Repository a)
+loadComponent _repkey _modname _objname =
+    this
+
+# endif
 
 {- |
 Adds a value to a Repository and stores it at a given key (first argument). If there already is a value stored with the given key

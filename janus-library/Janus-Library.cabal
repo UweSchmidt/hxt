@@ -1,5 +1,5 @@
 name:          janus-library
-version:	0.1.2
+version:	0.2.0
 license:       OtherLicense
 license-file:  LICENSE
 author:        Christian Uhlig
@@ -16,6 +16,11 @@ cabal-version: >=1.2
 flag splitBase
   description: Choose the new smaller, split-up base package.
 
+flag withHsPlugins
+  Description: Enable dynamic loading via hsplugins
+  Default:     False
+
+
 library
   build-depends: base >= 3
                , haskell98 >= 1.0
@@ -28,6 +33,9 @@ library
                , html >= 1.0
                , plugins >= 1.1
                , hxt >= 8.0
+
+  if flag(withHsPlugins)
+    build-depends: plugins >= 1.1
 
   exposed-modules:
     Network.Server.Janus.Core
@@ -50,4 +58,8 @@ library
     Network.Server.HWS.ParseError
     Network.Server.HWS.Parser
   hs-source-dirs: source
-  ghc-options: -Wall
+
+  if flag(withHsPlugins)
+    ghc-options: -Wall -cpp -DPLUGINS=1
+  else
+    ghc-options: -Wall -cpp -DPLUGINS=0
