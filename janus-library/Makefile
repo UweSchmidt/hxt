@@ -7,6 +7,14 @@ all		:
 		runhaskell Setup.hs build
 		sudo runhaskell Setup.hs install
 
+# run this target, instead of "all"
+# when using hs-plugins for dynamic loading of shaders and handlers
+
+plugins		:
+		runhaskell Setup.hs configure -fwithHsPlugins
+		runhaskell Setup.hs build
+		sudo runhaskell Setup.hs install
+
 clean		:
 		runhaskell Setup.hs clean
 
