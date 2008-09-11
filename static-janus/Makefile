@@ -15,7 +15,9 @@ JANUSCONF	= janus-conf
 
 # generate the Janus main from server.xml
 
-Janus.hs	: $(JANUSCONF) $(CONF)
+all		: janus
+
+Janus.hs	: $(CONF)
 		$(JANUSCONF) $(CONF)
 
 

@@ -1,37 +1,47 @@
-Installation of the Janus application server v1.0
+Installation of the Janus application server 0.2.0
 =================================================
 
-You may build two parts of the Janus application server: A Haskell library package (janus.a), which integrates basic system modules, and a runnable server
-installation. The library package is a prerequisite to the runnable server. However it may also be used without a binary server installation to develop
-servlet modules. 
+You have to build two parts for a Janus application server: A Haskell library package (janus.a), which integrates all basic system modules, but
+no main application. The library package is a prerequisite for a runnable server.
 
-To build the library package, the following is required:
-
-- GHC 6.6
-- http-bundle 20060707
-- HXT 7.2              or newer
-- fps 0.7 (ByteString) or newer
-- hs-plugins 1.0-rc0   or newer
-
-The four libraries must be installed, before compiling Janus
-
-Order of installation is arbitrary, except for the http-bundle. This library is required to build the HXT package and has to be created and registered
-in advance
+To the library package depends on various other Haskell packages described in "janus-libray/Janus-Library.cabal".
+It does not require the hs-plugins library for dynamic loading of Haskell binaries. This package made a lot of
+trouble in the past, because it is depended on the ghc version and a the bytestring package delivered with ghc.
+It requires GHC >= 6.8
 
 Quick Janus installation:
 =========================
 
-tar xvzf janus-1.0.tar.gz
-cd janus-1.0
+tar xvzf janus-0.2.0.tar.gz
+cd janus-0.2.0
+cd janus-library
 make all
+cd ..
 
-make all compiles all janus sources, copies the server into the build dir
-and copies all example pages to build/wwwpages and build/errorpages.
-All dynamically loaded modules are copied to build/Network/...
-The default janus config file is copied to build/conf/server.xml
+make all is a shortcut for the 3 usual steps with cabal: configure, build and install
 
-Start of Janus:
-===============
+
+A Janus Application:
+====================
+
+There is an example application for a Janus test server under dir "static-janus".
+To build this application perform
+
+cd static-server
+make janus
+./janus
+
+The last line will start the server, which is listening on port 8080.
+To test the server, access "http://localhost:8080/index.html" and hopefully the test server
+home page shows up.
+
+A specific application can be derived from the "static-server" dir.
+There is a "conf" subdir in which the file "server.xml" for the server configuration
+is stored. This XML config file must be tailored th the needs of a specific app.
+
+The application specific source files are usually located in subdir "source" in the
+package Network.Server.Janus.Shader. There the Janus servlets sources are located.
+
 
 cd build
 ./janus
