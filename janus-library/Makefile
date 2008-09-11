@@ -1,8 +1,9 @@
 include ../Version.mk
 
 CF		= Janus-Library.cabal
+VF		= source/Network/Server/Janus/ServerVersion.hs
 
-all		:
+all		: version
 		runhaskell Setup.hs configure
 		runhaskell Setup.hs build
 		sudo runhaskell Setup.hs install
@@ -10,7 +11,7 @@ all		:
 # run this target, instead of "all"
 # when using hs-plugins for dynamic loading of shaders and handlers
 
-plugins		:
+plugins		: version
 		runhaskell Setup.hs configure -fwithHsPlugins
 		runhaskell Setup.hs build
 		sudo runhaskell Setup.hs install
@@ -18,13 +19,18 @@ plugins		:
 clean		:
 		runhaskell Setup.hs clean
 
-version		:
+version		: $(VF)
+
+$(VF)		: ../Version.mk
 		cp $(CF) $(CF)~
 		cat $(CF)~ | sed 's|^version:.*|version:	$(VERSION)|' > $(CF)
 		( echo "module Network.Server.Janus.ServerVersion" \
 		; echo "where" \
+		; echo "" \
 		; echo "build_version :: String" \
 		; echo "build_version = \"$(VERSION)\"" \
-		; echo "build_date    :: String" \
-		; echo "build_date    = \"$(DATE)\"" \
-		) > source/Network/Server/Janus/ServerVersion.hs
+		) > $@
+
+janus-conf	: JanusConf.hs
+		ghc -Wall --make -o $@ $<
+

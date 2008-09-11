@@ -32,30 +32,29 @@ import Network.Server.Janus.Shader.ControlShader
 import Network.Server.Janus.Transaction as TA
 import Network.Server.Janus.XmlHelper
 import Network.Server.Janus.JanusPaths
-import Network.Server.Janus.ServerVersion
+import Network.Server.Janus.ServerVersion	( build_version )
 
 import System.Directory
 
 -- ------------------------------------------------------------
 
-full_release    :: String
-full_release    = build_version ++ " build " ++ build_date
-
 {- |
 The primary Arrow of Janus.
 -}
-serverArrow :: String -> JanusArrow Context () ()
-serverArrow conf_file =
+
+serverArrow	:: String -> String -> JanusArrow Context () ()
+serverArrow build_date
+		= serverArrow' full_release
+                where
+		full_release
+		    | null build_date	= build_version
+		    | otherwise		= build_version ++ " built " ++ build_date
+
+serverArrow' :: String -> String -> JanusArrow Context () ()
+serverArrow' full_release conf_file =
     proc _ -> do
 
-        -- define channels and startup message-handlers
-        addChannel chGlobal                                                                     -<  ()
-        addChannel chLocal                                                                      -<  ()
-        addChannel chControl                                                                    -<  ()
-        let myhandler = filterHandler (getMsgLevelFilter l_error) >>> consoleHandler
-        changeHandler chGlobal  (\_ -> myhandler)                                               -<< ()
-        changeHandler chLocal   (\_ -> consoleHandler)                                          -<  ()
-        changeHandler chControl (\_ -> invokeHandler)                                           -<  ()
+        defineChannelsAndStartupMessageHandlers                                                 -<  ()
 
         -- start-message
         globalMsg $ "Janus Server " ++ full_release ++ " starting up...\n"     -<  ()
@@ -88,30 +87,7 @@ serverArrow conf_file =
         "/global/consoles/server" <$! (ContextVal context)                                      -<< ()
         globalMsg $ "done\n"                                                   -<< ()
 
-        -- load core Shaders
-        globalMsg $ "loading core shaders... "                                 -<< ()
-        globalMsg $ "system.loadshadercreator "                                -<< ()
-        addShaderCreator "system.loadshadercreator" loadShaderCreator                           -<< ()
-        globalMsg $ "system.loadhandlercreator "                               -<< ()
-        addShaderCreator "system.loadhandlercreator" loadHandlerCreator                         -<< ()
-        globalMsg $ "system.loadhandler "                                      -<< ()
-        addShaderCreator "system.loadhandler" loadHandler                                       -<< ()
-        globalMsg $ "system.changeroot "                                       -<< ()
-        addShaderCreator "system.changeroot" changeServerRoot                                   -<< ()
-
-        globalMsg $ "control.seq "                                             -<< ()
-        addShaderCreator "control.seq" seqControl                                               -<< ()
-        globalMsg $ "control.like "                                            -<< ()
-        addShaderCreator "control.like" likeControl                                             -<< ()
-        globalMsg $ "control.select "                                          -<< ()
-        addShaderCreator "control.select" selectControl                                         -<< ()
-        globalMsg $ "control.loopuntil "                                       -<< ()
-        addShaderCreator "control.loopuntil" loopUntilControl                                   -<< ()
-        globalMsg $ "control.loopwhile "                                       -<< ()
-        addShaderCreator "control.loopwhile" loopWhileControl                                   -<< ()
-        globalMsg $ "control.if "                                              -<< ()
-        addShaderCreator "control.if" ifThenElseControl                                         -<< ()
-        globalMsg $ "done\n"                                                   -<< ()
+        loadCoreShaders                                                                          -<< ()
 
         -- load handler trees
         globalMsg $ "loading system shader from configuration file... "        -<  ()
@@ -128,6 +104,39 @@ serverArrow conf_file =
 
         listenChannel chControl                                                                 -<  ()
         returnA                                                                                 -<  ()
+
+defineChannelsAndStartupMessageHandlers	:: JanusStateArrow a a
+defineChannelsAndStartupMessageHandlers
+    = seqA $
+      [ addChannel chGlobal
+      , addChannel chLocal
+      , addChannel chControl
+      , changeHandler chGlobal  (\_ -> myhandler)
+      , changeHandler chLocal   (\_ -> consoleHandler)
+      , changeHandler chControl (\_ -> invokeHandler)
+      ]
+    where
+    myhandler = filterHandler (getMsgLevelFilter l_error) >>> consoleHandler
+
+loadCoreShaders			:: JanusStateArrow a a
+loadCoreShaders
+    = seqA $
+      [ globalMsg "loading core shaders... "
+      , addShaderCreator' "system.loadshadercreator"  loadShaderCreator
+      , addShaderCreator' "system.loadhandlercreator" loadHandlerCreator
+      , addShaderCreator' "system.loadhandler"        loadHandler
+      , addShaderCreator' "system.changeroot"         changeServerRoot
+      , addShaderCreator' "control.seq"               seqControl
+      , addShaderCreator' "control.like"              likeControl
+      , addShaderCreator' "control.select"            selectControl
+      , addShaderCreator' "control.loopuntil"         loopUntilControl
+      , addShaderCreator' "control.loopwhile"         loopWhileControl
+      , addShaderCreator' "control.if"                ifThenElseControl
+      , globalMsg "done\n"
+      ]
+
+addShaderCreator'		:: String -> ShaderCreator -> JanusStateArrow a a
+addShaderCreator' n sc		= globalMsg n >>> addShaderCreator n sc
 
 {-
 TODO

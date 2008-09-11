@@ -28,12 +28,14 @@ module Network.Server.Janus.Core
     , JanusStateArrow
     , Handler
     , HandlerCreator
+    , HandlerRepository
     , Associations
     , ConfigArrow
     , Context
     , MessageHandler
     , Shader
     , ShaderCreator
+    , ShaderRepository
     , StateHandler (..)
     , StateValue (..)
     , StateOperation (..)
@@ -72,11 +74,14 @@ module Network.Server.Janus.Core
     , loadShader
     , loadAssocs
     , executeShader
-    , dynShader
     , nullShader
     , idShader
     , idErrorShader
     , seqShader
+
+# if PLUGINS
+    , dynShader
+# endif
 
     -- Context constructor
     , emptyContext
@@ -212,7 +217,6 @@ import Network.Server.Janus.XmlHelper
 import Network.Server.Janus.JanusPaths
 
 import System.IO
-import System.Eval (unsafeEval)
 import System.Time
 
 import Text.ParserCombinators.Parsec
@@ -227,6 +231,10 @@ import Text.XML.HXT.XPath.XPathDataTypes
        , NodeTest (..)
        , XStep (..)
        )
+
+# if PLUGINS
+import System.Eval (unsafeEval)
+# endif
 
 -- ------------------------------------------------------------
 
@@ -584,6 +592,7 @@ mkCreator errorhandling creator =
         returnA                                                         -<  shader''
 
 
+# if PLUGINS
 {- |
 Creates a ShaderCreator by reading \/config\/haskell from its configuration and compiling the contained string. If reading of \/config\/haskell
 or compiling the value fails, the result equals the identity ShaderCreator. The configuration and Associations of this ShaderCreator are
@@ -603,6 +612,7 @@ dynShader =
                 then fromJust creator                           -<< conf
                 else returnA                                    -<  this
         returnA                                                 -<< shader
+# endif
 
 {- |
 A Shader always failing (equals the zeroArrow).

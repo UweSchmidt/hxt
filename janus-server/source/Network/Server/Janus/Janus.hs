@@ -41,6 +41,6 @@ main = do
    initContext <- emptyContext
    args        <- getArgs
    let conf_file = if length args > 0 then head args else default_conf_file
-   evalXml (proc _ -> serverArrow conf_file -< ()) initContext
+   evalXml (proc _ -> serverArrow "" conf_file -< ()) initContext
    return ()
 

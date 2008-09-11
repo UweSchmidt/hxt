@@ -1,0 +1,248 @@
+-- ------------------------------------------------------------
+
+{- |
+   Module     : JanusConf
+   Copyright  : Copyright (C) 2008 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
+   Stability  : experimental
+   Portability: portable
+
+   Module for generation a Janus Main program from a Janus server configuration
+
+   With the use of this program the hs-plugins package is not required for running Janus.
+   The plugins module was always a source of trouble with ghc versions and bytesting versions.
+   This program collects all modules needed by a configuration, the builtin Janus handlers and shaders
+   and the application specific handlers and shaders and generated a Haskell main prog for a specific
+   application server.
+-}
+
+-- ------------------------------------------------------------
+
+module Main where
+
+import Data.Maybe
+import Data.List
+
+import Network.Server.Janus.ServerVersion
+
+import System.Environment
+import System.Exit
+import System.IO
+import System.Locale	( rfc822DateFormat
+			, defaultTimeLocale
+			)
+import System.Time	( formatCalendarTime
+			, toCalendarTime
+			, getClockTime
+			)
+
+import Text.XML.HXT.Arrow
+
+-- ------------------------------------------------------------
+
+main	:: IO ()
+main	= do
+	  daytime <- getClockTime
+                     >>= toCalendarTime
+                     >>= (return . formatCalendarTime defaultTimeLocale rfc822DateFormat)
+	  args <- getArgs
+	  let confName = fromMaybe "./conf/server.xml" . listToMaybe $ args
+	  let progName = fromMaybe "Janus.hs" . listToMaybe . drop 1 $ args
+	  [rc]  <- runX (processJanusConf confName progName daytime)
+	  exitProg (rc >= c_err)
+
+-- ------------------------------------------------------------
+
+exitProg	:: Bool -> IO a
+exitProg True	= exitWith (ExitFailure (-1))
+exitProg False	= exitWith ExitSuccess
+
+-- ------------------------------------------------------------
+
+processJanusConf	:: String -> String -> String -> IOSArrow b Int
+processJanusConf cn on dt
+    = readDocument [(a_validate, v_0)] cn
+      >>>
+      ( ( traceMsg 1 "start processing janus server configuration"
+	  >>>
+	  fromLA (processChildren (processDocument cn dt))
+	  >>>
+	  traceMsg 1 "processing of server configuration finished"
+	)
+	`when`
+	documentStatusOk
+      )
+      >>>
+      traceSource
+      >>>
+      traceTree
+      >>>
+      writeDocument [ (a_no_xml_pi, v_1)
+		    , (a_output_encoding, isoLatin1)
+		    , (a_output_xml, v_0)
+		    ] on
+      >>>
+      getErrStatus
+
+-- ------------------------------------------------------------
+
+processDocument		:: String -> String -> LA XmlTree XmlTree
+processDocument cn dt
+    = catA $
+      [ txt (part1 cn dt)
+      , importHandler
+      , importShader
+      , handlerRepo
+      , shaderRepo
+      , txt (part2 cn dt)
+      ]
+
+-- ------------------------------------------------------------
+
+importHandler		:: LA XmlTree XmlTree
+importHandler
+    = catA $
+      [ ln "-- required handler modules"
+      , ( getNames "/janus/block//loadhandler/@module/text()"
+	  >>^
+	  ("import " ++)
+	)
+	>>> mkLn
+      , ln ""
+      ]
+
+importShader		:: LA XmlTree XmlTree
+importShader
+    = catA $
+      [ ln "-- required shader modules"
+      , ( getNames "/janus/block//loadshader/@module/text()"
+	  >>^
+	  ("import " ++)
+	)
+	>>> mkLn
+      , ln ""
+      ]
+
+getNames	:: String -> LA XmlTree String
+getNames path
+    = ( getXPathTrees path
+	>>>
+	( getText >>^ stringTrim )
+      )
+      >>. (nub . sort)
+
+handlerRepo		:: LA XmlTree XmlTree
+handlerRepo
+    = catA $
+      [ ln "-- handler repository"
+      , ln "setHandlerRepo\t:: JanusStateArrow a a"
+      , ln "setHandlerRepo"
+      , ln "  = seqA . map (uncurry addHandlerCreator) $"
+      , ( getXPathTrees "/janus/block//loadhandler"
+	  >>>
+	  ( (getAttrValue "reference" >>^ stringTrim)
+	    &&&
+	    (getAttrValue "object"    >>^ stringTrim)
+	    &&&
+	    (getAttrValue "module"    >>^ stringTrim)
+	  )
+	  >>>
+	  arr (\ (r,(o,m)) -> "( " ++ show r ++ ",\t" ++ m ++ "." ++ o ++ "\t )")
+	)
+        >.
+	formatList 4
+	>>>
+	mkText
+      , ln ""
+      ]
+
+shaderRepo		:: LA XmlTree XmlTree
+shaderRepo
+    = catA $
+      [ ln "-- shader repository"
+      , ln "setShaderRepo\t:: JanusStateArrow a a"
+      , ln "setShaderRepo"
+      , ln "  = seqA . map (uncurry addShaderCreator) $"
+      , ( getXPathTrees "/janus/block//loadshader"
+	  >>>
+	  ( (getAttrValue "reference" >>^ stringTrim)
+	    &&&
+	    (getAttrValue "object"    >>^ stringTrim)
+	    &&&
+	    (getAttrValue "module"    >>^ stringTrim)
+	  )
+	  >>>
+	  arr (\ (r,(o,m)) -> "( " ++ show r ++ ",\t" ++ m ++ "." ++ o ++ "\t )")
+	)
+        >.
+	formatList 4
+	>>>
+	mkText
+      , ln ""
+      ]
+
+formatList	:: Int -> [String] -> String
+formatList i
+    = ((indent ++ "[ ") ++) . (++ (indent' ++ "]\n")) . intercalate (indent' ++ ", ")
+    where
+    indent = replicate i ' '
+    indent' = '\n' : indent
+
+-- ------------------------------------------------------------
+
+ln	:: String -> LA b XmlTree
+ln	= txt . (++ "\n")
+
+mkLn	:: LA String XmlTree
+mkLn	= (++ "\n") ^>> mkText
+
+-- ------------------------------------------------------------
+
+part1	:: String -> String -> String
+part1 cf dt
+	= unlines $
+	  [ "{- |"
+	  , "  Janus server main program"
+	  , ""
+	  , "  Do not edit this source,"
+	  , "  it is generated by janus-conf"
+	  , "  from server configuration in file " ++ show cf
+	  , "  at " ++ dt
+	  , ""
+	  , "  Required Janus Library version: " ++ build_version
+	  , ""
+	  , "-}"
+	  , ""
+	  , "module Main where"
+	  , ""
+	  , "import Network.Server.Janus.Core"
+	  , "import Network.Server.Janus.Server    ( serverArrow )"
+	  , "import Network.Server.Janus.XmlHelper ( evalXml )"
+	  , ""
+	  , "import Text.XML.HXT.Arrow"
+	  , ""
+	  ]
+
+part2	:: String -> String -> String
+part2 cf dt
+	= unlines $
+	  [ ""
+	  , "main :: IO ()"
+	  , "main ="
+	  , "  do"
+	  , "  initContext <- emptyContext"
+	  , "  evalXml ( constA ()"
+	  , "            >>>"
+	  , "            setHandlerRepo"
+	  , "            >>>"
+	  , "            setShaderRepo"
+	  , "            >>>"
+	  , "            serverArrow " ++ show dt ++ " "  ++ show cf
+	  , "          ) initContext"
+	  , "  return ()"
+	  , ""
+	  ]
+
+-- ------------------------------------------------------------
