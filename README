@@ -9,6 +9,8 @@ It does not require the hs-plugins library for dynamic loading of Haskell binari
 trouble in the past, because it is depended on the ghc version and a the bytestring package delivered with ghc.
 It requires GHC >= 6.8
 
+Janus 0.2.0 has currently no plugin support, this has to be reworked and reenabled in the future.
+
 Quick Janus installation:
 =========================
 
