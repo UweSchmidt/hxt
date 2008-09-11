@@ -136,7 +136,7 @@ loadCoreShaders
       ]
 
 addShaderCreator'		:: String -> ShaderCreator -> JanusStateArrow a a
-addShaderCreator' n sc		= globalMsg n >>> addShaderCreator n sc
+addShaderCreator' n sc		= globalMsg (n ++ " ") >>> addShaderCreator n sc
 
 {-
 TODO
