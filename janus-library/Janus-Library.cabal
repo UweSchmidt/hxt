@@ -70,6 +70,7 @@ library
     Network.Server.HWS.MimeTypes
     Network.Server.HWS.ParseError
     Network.Server.HWS.Parser
+
   hs-source-dirs: source
 
   if flag(withHsPlugins)
@@ -92,4 +93,4 @@ executable janus-conf
   other-modules:
     Network.Server.Janus.ServerVersion
   hs-source-dirs: source
-  ghc-options: -Wall
+  ghc-options:    -Wall

@@ -65,19 +65,9 @@ processJanusConf	:: String -> String -> String -> IOSArrow b Int
 processJanusConf cn on dt
     = readDocument [(a_validate, v_0)] cn
       >>>
-      ( ( traceMsg 1 "start processing janus server configuration"
-	  >>>
-	  fromLA (processChildren (processDocument cn dt))
-	  >>>
-	  traceMsg 1 "processing of server configuration finished"
-	)
-	`when`
-	documentStatusOk
-      )
+      checkJanusServerConfig
       >>>
-      traceSource
-      >>>
-      traceTree
+      genJanusMain
       >>>
       writeDocument [ (a_no_xml_pi, v_1)
 		    , (a_output_encoding, isoLatin1)
@@ -85,6 +75,52 @@ processJanusConf cn on dt
 		    ] on
       >>>
       getErrStatus
+    where
+
+    checkJanusServerConfig	:: IOSArrow XmlTree XmlTree
+    checkJanusServerConfig
+	= ( perform ( checkHandlersUsed
+		      <+>
+		      checkShadersUsed
+		    )
+	    >>>
+	    setDocumentStatusFromSystemState "check Janus server configuration"
+	  )
+          `when` documentStatusOk
+
+    genJanusMain		:: IOSArrow XmlTree XmlTree
+    genJanusMain
+	= fromLA (processChildren (processDocument cn dt))
+	  `when`
+	  documentStatusOk
+
+    checkUsed		:: String -> String -> String -> IOSArrow XmlTree XmlTree
+    checkUsed def use emsg
+	= chk $< listA (getNames def)
+	where
+	chk dhl
+	    = getNames use
+	      >>>
+	      isA (not . (`elem` dhl))
+	      >>>
+	      arr ((emsg ++) . show)
+	      >>>
+	      errMsg
+	      
+    checkHandlersUsed		:: IOSArrow XmlTree XmlTree
+    checkHandlersUsed
+	= checkUsed "/janus/block//loadhandler/@reference/text()"
+                    "/janus//handler/config/handler/config/@type/text()"
+	            "handler type in a handler element without a corresponding loadhandler element "
+	      
+    checkShadersUsed		:: IOSArrow XmlTree XmlTree
+    checkShadersUsed
+	= checkUsed "/janus/block//loadshader/@reference/text()"
+                    "/janus//shader/@type/text()"
+                    "shader type in a shader element without a corresponding loadshader element "
+
+errMsg		:: IOSArrow String a
+errMsg		= ( (\ s -> issueErr s) $< this ) >>> none
 
 -- ------------------------------------------------------------
 
@@ -125,9 +161,10 @@ importShader
       , ln ""
       ]
 
-getNames	:: String -> LA XmlTree String
+getNames	:: ArrowXml a => String -> a XmlTree String
 getNames path
-    = ( getXPathTrees path
+    = fromLA $
+      ( getXPathTrees path
 	>>>
 	( getText >>^ stringTrim )
       )
@@ -142,11 +179,11 @@ handlerRepo
       , ln "  = seqA . map (uncurry addHandlerCreator) $"
       , ( getXPathTrees "/janus/block//loadhandler"
 	  >>>
-	  ( (getAttrValue "reference" >>^ stringTrim)
+	  ( getAttrValue' "reference"
 	    &&&
-	    (getAttrValue "object"    >>^ stringTrim)
+	    getAttrValue' "object"
 	    &&&
-	    (getAttrValue "module"    >>^ stringTrim)
+	    getAttrValue' "module"
 	  )
 	  >>>
 	  arr (\ (r,(o,m)) -> "( " ++ show r ++ ",\t" ++ m ++ "." ++ o ++ "\t )")
@@ -167,11 +204,11 @@ shaderRepo
       , ln "  = seqA . map (uncurry addShaderCreator) $"
       , ( getXPathTrees "/janus/block//loadshader"
 	  >>>
-	  ( (getAttrValue "reference" >>^ stringTrim)
+	  ( getAttrValue' "reference"
 	    &&&
-	    (getAttrValue "object"    >>^ stringTrim)
+	    getAttrValue' "object"
 	    &&&
-	    (getAttrValue "module"    >>^ stringTrim)
+	    getAttrValue' "module"
 	  )
 	  >>>
 	  arr (\ (r,(o,m)) -> "( " ++ show r ++ ",\t" ++ m ++ "." ++ o ++ "\t )")
@@ -189,6 +226,10 @@ formatList i
     where
     indent = replicate i ' '
     indent' = '\n' : indent
+
+
+getAttrValue'		:: String -> LA XmlTree String
+getAttrValue' an	= getAttrValue an >>^ stringTrim
 
 -- ------------------------------------------------------------
 
