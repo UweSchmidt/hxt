@@ -38,7 +38,7 @@ module Text.XML.HXT.RelaxNG.XmlSchema.Regex
     , isZero
     , nullable
     , delta
-    , match
+    , matchWithRE
     )
 where
 
@@ -283,8 +283,8 @@ delta (Dif e1 e2) c	= mkDif (delta e1 c) (delta e2 c)
 delta'		:: Regex -> String -> Regex
 delta'		= foldl delta
 
-match		:: Regex -> String -> Maybe String
-match e
+matchWithRE		:: Regex -> String -> Maybe String
+matchWithRE e
     = res . delta' e
     where
     res (Zero err)	= Just err

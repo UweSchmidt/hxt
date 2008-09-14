@@ -21,7 +21,14 @@
 module Text.XML.HXT.RelaxNG.XmlSchema.RegexMatch
     ( matchRE
     , splitRE
+    , sedRE
     , tokenizeRE
+    , tokenizeRE'
+    , match
+    , tokenize
+    , tokenize'
+    , sed
+    , split
     )
 where
 
@@ -48,6 +55,7 @@ splitRegex re inp@(c : inp')
 
     evalRes (Just (tok, rest))
 	    		= Just (c : tok, rest)
+-- ------------------------------------------------------------
 
 -- | split a string by taking the longest prefix matching a regular expression
 --
@@ -63,6 +71,16 @@ splitRegex re inp@(c : inp')
 splitRE	:: String -> String -> Maybe (String, String)
 splitRE re input
     = either (const Nothing) (flip splitRegex input) . parseRegex $ re
+
+-- | convenient function for splitRE
+--
+-- syntax errors in R.E. are interpreted as no matching prefix found
+
+split		:: String -> String -> (String, String)
+split re input
+    = fromMaybe ("", input) . splitRE re $ input
+
+-- ------------------------------------------------------------
 
 -- | split a string into tokens (words) by giving a regular expression
 -- which all tokens must match
@@ -91,18 +109,99 @@ splitRE re input
 
 tokenizeRE	:: String -> String -> Maybe [String]
 tokenizeRE regex input
-    = either (const Nothing) (Just . flip tokenize input) $ parseRegex regex
+    = either (const Nothing) (Just . flip token' input) $ parseRegex regex
     where
-    tokenize	:: Regex -> String -> [String]
-    tokenize re inp
+    token'	:: Regex -> String -> [String]
+    token' re inp
 	| null inp	= []
 	| otherwise	= evalRes . splitRegex re $ inp
 	where
-	evalRes Nothing	= tokenize re (tail inp)	-- re does not match any prefix
+	evalRes Nothing	= token' re (tail inp)	-- re does not match any prefix
 	evalRes (Just (tok, rest))
-	    | null tok	= tokenize re (tail rest)	-- re is nullable and only the empty prefix matches
-	    | otherwise	= tok : tokenize re rest	-- token found, tokenize the rest
+	    | null tok	= token' re (tail rest)	-- re is nullable and only the empty prefix matches
+	    | otherwise	= tok : token' re rest	-- token found, tokenize the rest
 
+-- | convenient function for tokenizeRE a string
+--
+-- syntax errors in R.E. result in an empty list
+
+tokenize	:: String -> String -> [String]
+tokenize re
+    = fromMaybe [] . tokenizeRE re
+
+-- ------------------------------------------------------------
+
+-- | split a string into tokens and delimierter by giving a regular expression
+-- wich all tokens must match
+--
+-- This is a generalisation of the above 'tokenizeRE' functions.
+-- The none matching char sequences are marked with @Left@, the matching ones are marked with @Right@
+--
+-- If the regular expression contains syntax errors @Nothing@ is returned
+--
+-- The following Law holds:
+--
+-- > concat . map (either id id) . fromJust . tokenizeRE' re == id
+
+tokenizeRE'	:: String -> String -> Maybe [Either String String]
+tokenizeRE' regex input
+    = either (const Nothing) (Just . flip token' input) $ parseRegex regex
+    where
+    token'	:: Regex -> String -> [Either String String]
+    token' re
+	= tok2 ""
+	where
+	tok2 :: String -> String -> [Either String String]
+	tok2 noMatchPrefix inp
+	    | null inp	= addNoMatch []
+	    | otherwise	= evalRes . splitRegex re $ inp
+	    where
+	    addNoMatch res
+		| null noMatchPrefix	= res
+		| otherwise		= (Left . reverse $ noMatchPrefix) : res
+
+	    evalRes Nothing		= tok2 (head inp : noMatchPrefix) (tail inp)		-- re does not match any prefix
+	    evalRes (Just (tok, rest))
+		| null tok		= tok2 (head rest : noMatchPrefix) (tail rest)		-- re is nullable and only the empty prefix matches
+		| otherwise		= addNoMatch . (Right tok :) . tok2 "" $ rest		-- token found, tokenize the rest
+
+-- | convenient function for tokenizeRE'
+--
+-- When the regular expression contains errors @[Left input]@ is returned, that means tokens are found
+
+tokenize'	:: String -> String -> [Either String String]
+tokenize' regex input
+    = fromMaybe [Left input] . tokenizeRE' regex $ input
+
+-- ------------------------------------------------------------
+
+-- | sed like editing function
+--
+-- All matching tokens are edited by the 1. argument, the editing function,
+-- all other chars remain as they are
+--
+-- examples:
+--
+-- > sedRE (const "b") "a" "xaxax"       = Just "xbxbx"
+-- > sedRE (\ x -> x ++ x) "a" "xax"     = Just "xaax"
+-- > sedRE undefined       "[" undefined = Nothing
+
+sedRE		:: (String -> String) -> String -> String -> Maybe String
+sedRE edit regex input
+    = maybe Nothing (Just . concatMap (either id edit)) $ tokenizeRE' regex input
+
+-- | convenient function for sedRE
+--
+-- When the regular expression contains errors, sed is the identity, else
+-- the funtionality is like 'sedRE'
+--
+-- > sed undefined "["  == id
+
+sed		:: (String -> String) -> String -> String -> String
+sed edit regex input
+    = fromMaybe input . sedRE edit regex $ input
+
+-- ------------------------------------------------------------
 
 -- | match a string with a regular expression
 --
@@ -118,6 +217,16 @@ tokenizeRE regex input
 
 matchRE	:: String -> String -> Maybe Bool
 matchRE regex input
-    = either (const Nothing) (Just . isNothing . flip match input) $ parseRegex regex
+    = either (const Nothing) (Just . isNothing . flip matchWithRE input) $ parseRegex regex
+
+
+-- | convenient function for matchRE
+--
+-- syntax errors in R.E. are interpreted as no match found
+
+match		:: String -> String -> Bool
+match re	= fromMaybe False . matchRE re
+
+-- ------------------------------------------------------------
 
 -- ------------------------------------------------------------

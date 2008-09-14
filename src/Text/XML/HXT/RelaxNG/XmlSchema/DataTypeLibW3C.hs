@@ -66,7 +66,7 @@ import Text.XML.HXT.DOM.NamespacePredicates
 
 import Text.XML.HXT.RelaxNG.XmlSchema.Regex
     ( Regex
-    , match
+    , matchWithRE
     )
 import Text.XML.HXT.RelaxNG.XmlSchema.RegexParser
     ( parseRegex )
@@ -243,7 +243,7 @@ patParamValid :: String -> String -> Bool
 patParamValid regex a
     = case parseRegex regex of
       (Left _  )	-> False
-      (Right ex)	-> isNothing . match ex $ a
+      (Right ex)	-> isNothing . matchWithRE ex $ a
 
 -- ----------------------------------------
 
@@ -363,7 +363,7 @@ rex		:: String -> Regex
 rex		= either undefined id . parseRegex
 
 isRex		:: Regex -> String -> Bool
-isRex ex	= isNothing . match ex
+isRex ex	= isNothing . matchWithRE ex
 
 -- ----------------------------------------
 
