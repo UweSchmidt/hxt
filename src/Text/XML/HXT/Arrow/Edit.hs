@@ -256,9 +256,12 @@ buildEntityRefTable	= M.fromList . map (\ (x,y) -> (y,x) )
 
 escapeText''	:: (Char -> XmlTree) -> (Char -> Bool) -> XmlTree -> XmlTrees
 escapeText'' escChar isEsc t
-    = maybe [t] escape . XN.getText $ t
+    = maybe [t] escape' . XN.getText $ t
     where
-    escape []
+    escape' "" = [t]		-- empty text nodes remain empty text nodes
+    escape' s  = escape s	-- they do not disapear
+
+    escape ""
 	= []
     escape (c:s1)
 	| isEsc c
