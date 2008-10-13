@@ -8,7 +8,6 @@
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : stable
    Portability: portable
-   Version    : $Id$
 
    Interface for Data.Char.UTF8 funtions
 
@@ -19,6 +18,7 @@
 module Text.XML.HXT.DOM.UTF8Decoding (
    decodeUtf8,
    decodeUtf8EmbedErrors,
+   decodeUtf8IgnoreErrors,
    )
 where
 
@@ -32,6 +32,10 @@ decodeUtf8 str
     = (res, map (uncurry toErrStr) errs)
     where
     (res, errs) = UTF8.decode . stringToByteString $ str
+
+decodeUtf8IgnoreErrors	:: String -> String
+decodeUtf8IgnoreErrors
+    = fst . decodeUtf8
 
 decodeUtf8EmbedErrors	:: String -> [Either String Char]
 decodeUtf8EmbedErrors str

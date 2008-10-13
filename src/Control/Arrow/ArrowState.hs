@@ -7,8 +7,7 @@
 
    Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
    Stability  : experimental
-   Portability: portable
-   Version    : $Id: ArrowState.hs,v 1.5 2005/09/02 17:09:39 hxml Exp $
+   Portability: multy parameter classes and functional depenedencies required
 
    Arrows for managing an explicit state
 

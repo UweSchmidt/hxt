@@ -86,7 +86,7 @@ split re input
 -- which all tokens must match
 --
 -- This can be used for simple tokenizers.
--- The in the result list contain at least one char.
+-- The words in the result list contain at least one char.
 -- All none matching chars are discarded. If the given regex contains syntax errors,
 -- @Nothing@ is returned
 --

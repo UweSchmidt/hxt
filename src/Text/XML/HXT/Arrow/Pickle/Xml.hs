@@ -49,7 +49,8 @@ import qualified Text.XML.HXT.DOM.XmlNode as XN
 import           Control.Arrow.ListArrows
 import           Text.XML.HXT.Arrow.XmlArrow
 import           Text.XML.HXT.Arrow.Pickle.Schema
-import           Text.XML.HXT.Arrow.ReadDocument (xread)
+import           Text.XML.HXT.Arrow.ReadDocument  (xread)
+import           Text.XML.HXT.Arrow.Edit          (xshowEscapeXml)
 
 -- ------------------------------------------------------------
 
@@ -364,14 +365,15 @@ xpTrees	= (xpList xpTree) { theSchema = Any }
 -- | Pickle a string representing XML contents by inserting the tree representation into the XML document.
 --
 -- Unpickling is done by converting the contents with
--- 'Text.XML.HXT.Arrow.XmlArrow.xshow' into a string,
--- pickling is done with 'Text.XML.HXT.Arrow.ReadDocument.xread'
+-- 'Text.XML.HXT.Arrow.Edit.xshowEscapeXml' into a string,
+-- this function will escape all XML special chars, such that pickling the value back becomes save.
+-- Pickling is done with 'Text.XML.HXT.Arrow.ReadDocument.xread'
 
 xpXmlText	:: PU String
 xpXmlText
     = xpWrap ( showXML, readXML ) $ xpTrees
     where
-    showXML = concat . runLA ( xshow unlistA )
+    showXML = concat . runLA ( xshowEscapeXml unlistA )
     readXML = runLA xread
 
 -- ------------------------------------------------------------

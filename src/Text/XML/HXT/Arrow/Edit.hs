@@ -6,9 +6,8 @@
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
-   Stability  : experimental
+   Stability  : stable
    Portability: portable
-   Version    : $Id: Edit.hs,v 1.8 2006/11/12 14:52:59 hxml Exp $
 
    common edit arrows
 
@@ -22,6 +21,8 @@ module Text.XML.HXT.Arrow.Edit
     , canonicalizeContents
     , collapseAllXText
     , collapseXText
+
+    , xshowEscapeXml
 
     , escapeXmlDoc
     , escapeHtmlDoc
@@ -236,6 +237,21 @@ collapseAllXText	:: ArrowList a => a XmlTree XmlTree
 collapseAllXText
     = fromLA $
       processBottomUp collapseXText'
+
+-- ------------------------------------------------------------
+
+-- | apply an arrow to the input and convert the resulting XML trees into an XML escaped string
+--
+-- This is a save variant for converting a tree into an XML string representation that is parsable with 'Text.XML.HXT.Arrow.ReadDocument'.
+-- It is implemented with 'Text.XML.HXT.Arrow.XmlArrow.xshow', but xshow does no XML escaping. The XML escaping is done with
+-- 'Text.XML.HXT.Arrow.Edit.escapeXmlDoc' before xshow is applied.
+--
+-- So the following law holds
+--
+-- > xshowEscape f >>> xread == f
+
+xshowEscapeXml		:: ArrowXml a => a n XmlTree -> a n String
+xshowEscapeXml f	= xshow (f >>> escapeXmlDoc)
 
 -- ------------------------------------------------------------
 
