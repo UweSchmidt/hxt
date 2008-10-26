@@ -2,13 +2,12 @@
 
 {- |
    Module     : Control.Arrow.IOStateListArrow
-   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   Copyright  : Copyright (C) 2005-8 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: IOStateListArrow.hs,v 1.7 2005/09/02 17:09:39 hxml Exp $
 
    Implementation of arrows with IO and a state
 
@@ -22,10 +21,6 @@ module Control.Arrow.IOStateListArrow
     , runSt
     )
 where
-
-import Prelude hiding (id, (.))
-
-import Control.Category
 
 import Control.Arrow
 import Control.Arrow.ArrowList
@@ -182,5 +177,9 @@ runSt s2 (IOSLA f)
 
 instance ArrowTree (IOSLA s)
 
+instance (NFData s) => ArrowNF (IOSLA s) where
+    rnfA (IOSLA f)	= IOSLA $ \ s x -> do
+					   res <- f s x
+					   return (res `demanding` rnf res)
 
 -- ------------------------------------------------------------

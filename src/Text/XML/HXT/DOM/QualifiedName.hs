@@ -20,7 +20,7 @@ module Text.XML.HXT.DOM.QualifiedName
     )
 
 where
-import Control.Strategies.DeepSeq
+import Control.Parallel.Strategies
 
 import Data.Char		(toLower)
 import Data.Typeable
@@ -58,9 +58,11 @@ instance Eq QName where
 	ns1 = namespaceUri q1
 	ns2 = namespaceUri q2
 
-instance DeepSeq QName where
-    deepSeq (QN np lp ns) y	= deepSeq np $ deepSeq lp $ deepSeq ns y
+instance NFData QName where
+    rnf (QN np lp ns)	= rnf np `seq` rnf lp `seq` rnf ns
 
+
+-- just for adding the module to the lib
 -- |
 -- builds the full name \"prefix:localPart\", if prefix is not null, else the local part is the result
 

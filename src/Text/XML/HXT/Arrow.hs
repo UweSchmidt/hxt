@@ -47,6 +47,8 @@ where
 
 import Control.Arrow.ListArrows			-- arrow classes
 
+import Data.Atom ()				-- import this explicitly
+
 import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.DocumentInput
 import Text.XML.HXT.Arrow.DocumentOutput
@@ -59,10 +61,11 @@ import Text.XML.HXT.Arrow.ReadDocument
 import Text.XML.HXT.Arrow.WriteDocument
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlIOStateArrow
-import Text.XML.HXT.Arrow.XmlRegex ()		-- import this "by hand"
+import Text.XML.HXT.Arrow.XmlRegex ()		-- import this explicitly
 import Text.XML.HXT.Arrow.XPath
-import qualified				-- just for adding the module to the lib
-       Text.XML.HXT.Arrow.XPathSimple as XPS ()
+
+import Text.XML.HXT.Arrow.XPathSimple ()	-- import this explicitly
+
 
 import Text.XML.HXT.XSLT.XsltArrows
 

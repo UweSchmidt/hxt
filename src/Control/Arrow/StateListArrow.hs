@@ -8,9 +8,8 @@
    Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: StateListArrow.hs,v 1.7 2005/09/02 17:09:39 hxml Exp $
 
-   Implementation of list arrows with a state
+Implementation of list arrows with a state
 
 -}
 
@@ -21,10 +20,6 @@ module Control.Arrow.StateListArrow
     , fromSLA
     )
 where
-
-import Prelude hiding (id, (.))
-
-import Control.Category
 
 import Control.Arrow
 import Control.Arrow.ArrowList
@@ -154,6 +149,11 @@ instance ArrowState s (SLA s) where
     accessState	af	= SLA $ \ s x -> (s, [af s x])
 
 instance ArrowTree (SLA s)
+
+instance (NFData s) => ArrowNF (SLA s) where
+    rnfA (SLA f)	= SLA $ \ s x -> let res = f s x
+                                         in
+                                         res `demanding` rnf res
 
 -- ------------------------------------------------------------
 

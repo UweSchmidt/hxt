@@ -8,11 +8,10 @@
    Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: TypeDefs.hs,v 1.6 2005/09/02 17:09:39 hxml Exp $
 
-Interface definition for trees
+   Interface definition for trees
 
-n-ary tree structure (rose trees)
+   n-ary tree structure (rose trees)
 
 -}
 
@@ -24,7 +23,7 @@ module Data.Tree.NTree.TypeDefs
     )
 where
 
-import Control.Strategies.DeepSeq
+import Control.Parallel.Strategies
 
 import Data.Tree.Class
 import Data.Typeable
@@ -47,10 +46,8 @@ type NTrees   a	= [NTree a]
 
 -- ------------------------------------------------------------
 
--- |
-
-instance (DeepSeq a) => DeepSeq (NTree a) where
-    deepSeq (NTree n cl) y		= deepSeq n $ deepSeq cl y
+instance (NFData a) => NFData (NTree a) where
+    rnf (NTree n cl)			= rnf n `seq` rnf cl
 
 -- | NTree implements class Functor
 

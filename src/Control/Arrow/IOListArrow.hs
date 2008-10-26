@@ -23,11 +23,14 @@ import Prelude hiding (id, (.))
 
 import Control.Category
 
-import Control.Arrow
-import Control.Arrow.ArrowList
-import Control.Arrow.ArrowIf
-import Control.Arrow.ArrowTree
-import Control.Arrow.ArrowIO
+import           Control.Arrow
+import           Control.Arrow.ArrowIf
+import           Control.Arrow.ArrowList
+import           Control.Arrow.ArrowNF
+import           Control.Arrow.ArrowTree
+import           Control.Arrow.ArrowIO
+
+import           Control.Parallel.Strategies
 
 -- ------------------------------------------------------------
 
@@ -120,5 +123,10 @@ instance ArrowIOIf IOLA where
 				       return (if res then [x] else [])
 
 instance ArrowTree IOLA
+
+instance ArrowNF IOLA where
+    rnfA (IOLA f)	= IOLA $ \ x -> do
+					res <- f x
+					return (res `demanding` rnf res)
 
 -- ------------------------------------------------------------

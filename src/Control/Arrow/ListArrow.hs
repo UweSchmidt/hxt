@@ -8,9 +8,8 @@
    Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: ListArrow.hs,v 1.7 2006/05/04 14:17:53 hxml Exp $
 
-Implementation of pure list arrows
+   Implementation of pure list arrows
 
 -}
 
@@ -22,17 +21,14 @@ module Control.Arrow.ListArrow
     )
 where
 
-import Prelude hiding (id, (.))
-
-import Control.Category
-
 import Control.Arrow
 import Control.Arrow.ArrowList
 import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
 
-import Data.List
-    ( partition )
+import           Control.Parallel.Strategies
+
+import           Data.List ( partition )
 
 -- ------------------------------------------------------------
 
@@ -100,6 +96,11 @@ instance ArrowIf LA where
     partitionA	p	= LA $ (:[]) . partition (not . null . runLA p)
 
 instance ArrowTree LA
+
+instance ArrowNF LA where
+    rnfA (LA f)		= LA $ \ x -> let res = f x
+                                      in
+                                      res `demanding` rnf res
 
 -- ------------------------------------------------------------
 

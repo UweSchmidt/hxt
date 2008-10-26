@@ -56,16 +56,16 @@ HXT_SRC	= \
 	Control/Arrow/ArrowIf.hs \
 	Control/Arrow/ArrowIO.hs \
 	Control/Arrow/ArrowList.hs \
+	Control/Arrow/ArrowNF.hs \
 	Control/Arrow/ArrowState.hs \
-	Control/Arrow/ArrowStrict.hs \
 	Control/Arrow/ArrowTree.hs \
 	Control/Arrow/IOListArrow.hs \
 	Control/Arrow/IOStateListArrow.hs \
 	Control/Arrow/ListArrow.hs \
 	Control/Arrow/ListArrows.hs \
 	Control/Arrow/StateListArrow.hs \
-	Control/Strategies/DeepSeq.hs \
 	Data/AssocList.hs \
+	Data/Atom.hs \
 	Data/Char/UTF8.hs \
 	Data/NavTree.hs \
 	Data/Tree/Class.hs \

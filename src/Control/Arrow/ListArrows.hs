@@ -8,7 +8,6 @@
    Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: ListArrows.hs,v 1.1 2005/09/30 14:41:44 hxml Exp $
 
 Module for importing all list arrows
 
@@ -18,9 +17,9 @@ Module for importing all list arrows
 
 module Control.Arrow.ListArrows
     ( module Control.Arrow			-- arrow classes
-    , module Control.Arrow.ArrowStrict
     , module Control.Arrow.ArrowList
     , module Control.Arrow.ArrowIf
+    , module Control.Arrow.ArrowNF
     , module Control.Arrow.ArrowState
     , module Control.Arrow.ArrowTree
     , module Control.Arrow.ArrowIO
@@ -33,9 +32,9 @@ module Control.Arrow.ListArrows
 where
 
 import Control.Arrow				-- arrow classes
-import Control.Arrow.ArrowStrict
 import Control.Arrow.ArrowList
 import Control.Arrow.ArrowIf
+import Control.Arrow.ArrowNF
 import Control.Arrow.ArrowState
 import Control.Arrow.ArrowTree
 import Control.Arrow.ArrowIO

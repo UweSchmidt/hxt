@@ -133,7 +133,7 @@ import Control.Arrow.ArrowTree
 import Control.Arrow.ArrowIO
 import Control.Arrow.IOStateListArrow
 
-import Control.Strategies.DeepSeq
+import Control.Parallel.Strategies
 
 import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlArrow
@@ -192,9 +192,9 @@ data XIOSysState	= XIOSys  { xio_trace			:: ! Int
 				  , xio_mimeTypes		::   MimeTypeTable
 				  }
 
-instance DeepSeq XIOSysState where
-    deepSeq (XIOSys tr es em _emh emc eml bu du al _mt) y
-	= deepSeq tr $ deepSeq es $ deepSeq em $ deepSeq emc $ deepSeq eml $ deepSeq bu $ deepSeq du $ deepSeq al y
+instance NFData XIOSysState where
+    rnf (XIOSys tr es em _emh emc eml bu du al _mt)
+	= rnf tr `seq` rnf es `seq` rnf em `seq` rnf emc `seq` rnf eml `seq` rnf bu `seq` rnf du `seq` rnf al
 
 -- |
 -- state datatype consists of a system state and a user state
@@ -204,8 +204,8 @@ data XIOState us	= XIOState { xio_sysState		:: ! XIOSysState
 				   , xio_userState		:: ! us
 				   }
 
-instance (DeepSeq us) => DeepSeq (XIOState us) where
-    deepSeq (XIOState sys usr) y	= deepSeq sys $ deepSeq usr y
+instance (NFData us) => NFData (XIOState us) where
+    rnf (XIOState sys usr)	= rnf sys `seq` rnf usr
 
 -- |
 -- The arrow type for stateful arrows
