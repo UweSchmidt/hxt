@@ -30,8 +30,11 @@ module Text.XML.HXT.XSLT.XsltArrows
     )
 where
 
-import qualified Control.Exception as E
-    ( catch
+import Prelude hiding ( catch )
+
+import Control.Exception
+    ( SomeException
+    , catch
     , evaluate )
 
 import Control.Arrow.ListArrows
@@ -60,20 +63,23 @@ import Text.XML.HXT.XSLT.Application
 
 arrWithCatch	:: (a -> b) -> IOSArrow a b
 arrWithCatch f
-    = arrIO applyf
+    = arrIO (applyf f)
       >>>
       ( (applyA (arr issueErr) >>> none)
 	|||
 	this
       )
-    where
-    -- applyf	:: a -> IO (Either String b)
-    applyf x
-	= E.catch ( do
-		    res <- E.evaluate ( f x )
+
+applyf	:: (a -> b) -> a -> IO (Either String b)
+applyf f x
+	= catch'  ( do
+		    res <- evaluate ( f x )
 		    return . Right $ res
 		  )
 	  (\ e -> return . Left . ("XSLT: " ++) . show $ e)
+        where
+        catch' :: IO a -> (SomeException -> IO a) -> IO a
+	catch' = catch
 	  
 -- ------------------------------------------------------------
 

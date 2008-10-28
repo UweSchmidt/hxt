@@ -16,7 +16,7 @@ prof		:
 		ghc --make -o $(prog) -Wall -prof -auto-all -O -fglasgow-exts -ignore-package hxt -ignore-package HTTP -i../../../src $(prog).hs
 
 local		:
-		ghc --make -o $(prog) -Wall -O -fglasgow-exts -ignore-package hxt -i../../../src $(prog).hs
+		ghc --make -o $(prog) $(GHCFLAGS) -fglasgow-exts -ignore-package hxt -i../../../src $(prog).hs
 
 $(prog)		: HXmlParser.hs
 		$(GHC) --make -o $@ $<

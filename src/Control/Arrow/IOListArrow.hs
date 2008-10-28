@@ -19,6 +19,9 @@ module Control.Arrow.IOListArrow
     ( IOLA(..)
     )
 where
+import Prelude hiding (id, (.))
+
+import Control.Category
 
 import Control.Arrow
 import Control.Arrow.ArrowList
@@ -32,13 +35,16 @@ import Control.Arrow.ArrowIO
 
 newtype IOLA a b = IOLA { runIOLA :: a -> IO [b] }
 
-instance Arrow IOLA where
-    arr f		= IOLA $ \ x -> return [f x]
+instance Category IOLA where
+    id                  = arr id
 
-    IOLA f >>> IOLA g	= IOLA $ \ x -> do
+    IOLA g . IOLA f	= IOLA $ \ x -> do
 					ys <- f x
 					zs <- sequence . map g $ ys
 					return (concat zs)
+
+instance Arrow IOLA where
+    arr f		= IOLA $ \ x -> return [f x]
 
     first (IOLA f)	= IOLA $ \ ~(x1, x2) -> do
 					        ys1 <- f x1

@@ -25,7 +25,7 @@ HSCOLOUR_CSS	= doc/hscolour.css
 all		:
 		$(MAKE) -C src all
 		$(MAKE)        $(SOFTWARE).cabal
-		$(MAKE)        allexamples
+		# $(MAKE)        allexamples
 
 allexamples	:
 		$(MAKE) -C examples all
@@ -35,11 +35,13 @@ test		:
 
 # ------------------------------------------------------------
 
+CABAL_OPTIONS	= 
+
 cabal		:
 		$(MAKE) cabal_configure cabal_build cabal_doc cabal_install
 
 cabal_configure :
-		runhaskell $(SETUP) configure
+		runhaskell $(SETUP) configure $(CABAL_OPTIONS)
 
 cabal_doc	:
 		$(HSCOLOUR) -print-css > $(HSCOLOUR)
@@ -50,7 +52,7 @@ cabal_build	:
 		runhaskell $(SETUP) build
 
 cabal_install	:
-		sudo runhaskell $(SETUP) build
+		sudo runhaskell $(SETUP) install
 
 # ------------------------------------------------------------
 
@@ -59,16 +61,22 @@ $(SOFTWARE).cabal	: src/$(SOFTWARE)-package.hs src/Makefile Makefile
 
 DOC_HXT		= $(DIST)/doc/hdoc
 
+# doc brakes because of error in haddock
+
 doc		: $(SOFTWARE).cabal
 		$(MAKE) cabal_configure cabal_doc
 		[ -d $(DOC_HXT) ] || mkdir -p $(DOC_HXT)
 		( cd dist/doc/html/$(SOFTWARE) ; tar cf - . ) | ( cd $(DOC_HXT) ; tar xf - )
 
-dist		: all doc
+distall		: all doc
+		$(MAKE) dist
+
+dist		:
 		[ -d $(DIST) ] || mkdir -p $(DIST)
 		$(MAKE) -C src      dist
 		$(MAKE) -C examples dist
-		$(MAKE) -C doc      dist
+		# $(MAKE) -C doc      dist
+		[ -d $(DIST)/doc ] || mkdir -p $(DIST)/doc
 		cat doc/index.html | $(EDIT_VERSION) > $(DIST)/doc/index.html
 		cp $(DIST_FILES) $(DIST)
 

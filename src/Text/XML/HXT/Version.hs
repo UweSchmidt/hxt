@@ -1,4 +1,4 @@
 module Text.XML.HXT.Version
 where
 hxt_version :: String
-hxt_version = "8.1.2"
+hxt_version = "8.2.0"

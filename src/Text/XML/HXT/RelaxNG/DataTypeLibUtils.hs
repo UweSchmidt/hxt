@@ -46,28 +46,33 @@ module Text.XML.HXT.RelaxNG.DataTypeLibUtils
   )
 
 where
+import Prelude hiding (id, (.))
+
+import Control.Category
+import Control.Arrow
+
+import Data.Either
+import Data.Maybe
 
 import Text.XML.HXT.DOM.Util
 
 import Text.XML.HXT.RelaxNG.DataTypes
 import Text.XML.HXT.RelaxNG.Utils
 
-import Control.Arrow
-
-import Data.Either
-import Data.Maybe
-
 -- ------------------------------------------------------------
 
 newtype CheckA a b	= C { runCheck :: a -> Either String b }
 
-instance Arrow CheckA where
-    arr f	= C ( Right . f )		-- unit: no check, always o.k., just a conversion
+instance Category CheckA where
+    id          = arr id
 
-    f1 >>> f2	= C $				-- logical and: f1 and f2 must hold
+    f2 . f1	= C $				-- logical and: f1 and f2 must hold
 		  \ x -> case runCheck f1 x of
 			 Right y	-> runCheck f2 y
 			 Left  e	-> Left e
+
+instance Arrow CheckA where
+    arr f	= C ( Right . f )		-- unit: no check, always o.k., just a conversion
 
     first f1	= C $				-- check 1. component of a pair
 		  \ ~(x1, x2) -> case runCheck f1 x1 of

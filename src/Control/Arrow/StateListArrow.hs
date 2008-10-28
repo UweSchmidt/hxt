@@ -10,7 +10,7 @@
    Portability: portable
    Version    : $Id: StateListArrow.hs,v 1.7 2005/09/02 17:09:39 hxml Exp $
 
-Implementation of list arrows with a state
+   Implementation of list arrows with a state
 
 -}
 
@@ -21,6 +21,10 @@ module Control.Arrow.StateListArrow
     , fromSLA
     )
 where
+
+import Prelude hiding (id, (.))
+
+import Control.Category
 
 import Control.Arrow
 import Control.Arrow.ArrowList
@@ -34,10 +38,10 @@ import Control.Arrow.ArrowState
 
 newtype SLA s a b = SLA { runSLA :: s -> a -> (s, [b]) }
 
-instance Arrow (SLA s) where
-    arr f		= SLA $ \ s x -> (s, [f x])
+instance Category (SLA s) where
+    id                  = arr id
 
-    SLA f >>> SLA g	= SLA $ \ s x -> let
+    SLA g . SLA f	= SLA $ \ s x -> let
 					 ~(s1, ys) = f s x
 					 sequence' s' []
 					     = (s', [])
@@ -50,7 +54,9 @@ instance Arrow (SLA s) where
 					 in
 					 sequence' s1 ys
 	                                 
-								 
+instance Arrow (SLA s) where
+    arr f		= SLA $ \ s x -> (s, [f x])
+
     first (SLA f)	= SLA $ \ s ~(x1, x2) -> let
 						 ~(s', ys1) = f s x1
 						 in

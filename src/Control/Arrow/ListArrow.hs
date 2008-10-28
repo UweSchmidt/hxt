@@ -22,6 +22,10 @@ module Control.Arrow.ListArrow
     )
 where
 
+import Prelude hiding (id, (.))
+
+import Control.Category
+
 import Control.Arrow
 import Control.Arrow.ArrowList
 import Control.Arrow.ArrowIf
@@ -36,9 +40,12 @@ import Data.List
 
 newtype LA a b = LA { runLA :: a -> [b] }
 
+instance Category LA where
+    id                  = arr id
+    LA g . LA f	= LA $ concatMap g . f
+
 instance Arrow LA where
     arr f		= LA $ \ x -> [f x]
-    LA f >>> LA g	= LA $ concatMap g . f
     first (LA f)	= LA $ \ ~(x1, x2) -> [ (y1, x2) | y1 <- f x1 ]
 
     -- just for efficiency

@@ -23,6 +23,10 @@ module Control.Arrow.IOStateListArrow
     )
 where
 
+import Prelude hiding (id, (.))
+
+import Control.Category
+
 import Control.Arrow
 import Control.Arrow.ArrowList
 import Control.Arrow.ArrowIf
@@ -36,10 +40,10 @@ import Control.Arrow.ArrowIO
 
 newtype IOSLA s a b = IOSLA { runIOSLA :: s -> a -> IO (s, [b]) }
 
-instance Arrow (IOSLA s) where
-    arr f		= IOSLA $ \ s x -> return (s, [f x])
+instance Category (IOSLA s) where
+    id                  = arr id
 
-    IOSLA f >>> IOSLA g	= IOSLA $ \ s x -> do
+    IOSLA g . IOSLA f	= IOSLA $ \ s x -> do
 					   (s1, ys) <- f s x
 					   sequence' s1 ys
 					   where
@@ -48,6 +52,9 @@ instance Arrow (IOSLA s) where
 								   (s1', ys') <- g s' x'
 								   (s2', zs') <- sequence' s1' xs'
 								   return (s2', ys' ++ zs')
+
+instance Arrow (IOSLA s) where
+    arr f		= IOSLA $ \ s x -> return (s, [f x])
 
     first (IOSLA f)	= IOSLA $ \ s (x1, x2) -> do
 					           (s', ys1) <- f s x1
