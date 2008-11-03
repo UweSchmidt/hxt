@@ -255,6 +255,20 @@
       <li>In <a href="hxt-8.1.2.tar.gz">Version 8.1.2</a>
 	<ul>
 	  <li>
+	    A new module <tt>Data.Atom</tt> for dealing with names like LISP atoms
+	    and for sharing the memory for these values. When using names as keys
+	    in tables, trees or maps, it becomes much more efficient to represent these
+	    names as atoms than as strings. Equality check on atoms is constant in time and really fast, and all occurences
+	    of an atom share the same internal value.
+	  </li>
+	  <li>
+	    Implementation of <tt>strictA</tt> changed. <tt>strictA</tt> is marked deprecated.
+	    The implementation is not longer done with a <tt>DeepSeq</tt> function bit with
+	    <tt>Control.Parallel.Strategies</tt>, the <tt>NFData</tt> class and <tt>rnf</tt>.
+	    There is a new combinator <tt>rnfA</tt> for complete <em>deep</em> evaluation of an
+	    arrow result.
+	  </li>
+	  <li>
 	    Further functions for working with <a href="http://www.w3.org/TR/xmlschema11-2/#regexs">W3C XML Schema Regular expressions</a>
 	    in module Text.XML.HXT.RelaxNG.XmlSchema.RegexMatch,
 	    especially for tokenizing and sed like editing of text.
