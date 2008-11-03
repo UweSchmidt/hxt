@@ -64,10 +64,19 @@ part4a dir
 part4b :: [String]
 part4b
     = [ " hs-source-dirs: src"
-      , " ghc-options: -Wall -O0"
+      , " ghc-options: -Wall -O"
       , " extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances"
       , ""
-      , " build-depends: base >= 4, haskell98 >= 1, containers >= 0.1, directory >= 1, filepath >= 1, parsec >= 2.1 && < 3, HUnit >= 1.2, network >= 2.1, tagsoup >= 0.6, curl >= 1.3"
+      , " build-depends: base       >= 4,"
+      , "                haskell98  >= 1,"
+      , "                containers >= 0.1,"
+      , "                directory  >= 1,"
+      , "                filepath   >= 1,"
+      , "                parsec     >= 2.1 && < 3,"
+      , "                HUnit      >= 1.2,"
+      , "                network    >= 2.1,"
+      , "                tagsoup    >= 0.6,"
+      , "                curl       >= 1.3"
       ]
 
 main	:: IO()

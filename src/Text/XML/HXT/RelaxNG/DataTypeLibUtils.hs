@@ -64,7 +64,7 @@ import Text.XML.HXT.RelaxNG.Utils
 newtype CheckA a b	= C { runCheck :: a -> Either String b }
 
 instance Category CheckA where
-    id          = arr id
+    id          = C $ Right
 
     f2 . f1	= C $				-- logical and: f1 and f2 must hold
 		  \ x -> case runCheck f1 x of

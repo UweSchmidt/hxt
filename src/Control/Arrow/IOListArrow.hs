@@ -36,7 +36,7 @@ import Control.Arrow.ArrowIO
 newtype IOLA a b = IOLA { runIOLA :: a -> IO [b] }
 
 instance Category IOLA where
-    id                  = arr id
+    id                  = IOLA $ return . (:[])
 
     IOLA g . IOLA f	= IOLA $ \ x -> do
 					ys <- f x

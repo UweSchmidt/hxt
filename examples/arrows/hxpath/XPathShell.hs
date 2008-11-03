@@ -34,7 +34,7 @@ import Text.XML.HXT.XPath.XPathParser
     ( parseXPath
     )
 
-import System.Console.Readline
+import System.Console.Editline.Readline
 import System.Environment
 
 import Text.ParserCombinators.Parsec

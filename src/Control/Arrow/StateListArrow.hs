@@ -39,7 +39,7 @@ import Control.Arrow.ArrowState
 newtype SLA s a b = SLA { runSLA :: s -> a -> (s, [b]) }
 
 instance Category (SLA s) where
-    id                  = arr id
+    id                  = SLA $ \ s x -> (s, [x])
 
     SLA g . SLA f	= SLA $ \ s x -> let
 					 ~(s1, ys) = f s x

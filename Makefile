@@ -72,10 +72,11 @@ distall		: all doc
 		$(MAKE) dist
 
 dist		:
+		$(MAKE) hxt.cabal
 		[ -d $(DIST) ] || mkdir -p $(DIST)
 		$(MAKE) -C src      dist
 		$(MAKE) -C examples dist
-		# $(MAKE) -C doc      dist
+		$(MAKE) -C doc      dist
 		[ -d $(DIST)/doc ] || mkdir -p $(DIST)/doc
 		cat doc/index.html | $(EDIT_VERSION) > $(DIST)/doc/index.html
 		cp $(DIST_FILES) $(DIST)
@@ -161,7 +162,7 @@ distbuild	: tarball
 		; rm -rf $(DIST) \
 		; tar xvzf $(DIST_TAR) \
 		; cd $(DIST) || exit 1 \
-		; runhaskell $(SETUP) configure || exit 1 \
+		; runhaskell $(SETUP) configure $(CABAL_OPTIONS) || exit 1 \
 		; runhaskell $(SETUP) build || exit 1 \
 		; $(INSTALL) sudo runhaskell $(SETUP) install $(INSTEND) \
 		)

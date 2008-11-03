@@ -41,8 +41,8 @@ import Data.List
 newtype LA a b = LA { runLA :: a -> [b] }
 
 instance Category LA where
-    id                  = arr id
-    LA g . LA f	= LA $ concatMap g . f
+    id                  = LA $ (:[])
+    LA g . LA f		= LA $ concatMap g . f
 
 instance Arrow LA where
     arr f		= LA $ \ x -> [f x]

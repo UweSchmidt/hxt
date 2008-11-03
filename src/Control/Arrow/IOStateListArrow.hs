@@ -41,7 +41,7 @@ import Control.Arrow.ArrowIO
 newtype IOSLA s a b = IOSLA { runIOSLA :: s -> a -> IO (s, [b]) }
 
 instance Category (IOSLA s) where
-    id                  = arr id
+    id                  = IOSLA $ \ s x -> return (s, [x])
 
     IOSLA g . IOSLA f	= IOSLA $ \ s x -> do
 					   (s1, ys) <- f s x
