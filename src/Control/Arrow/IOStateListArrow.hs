@@ -22,12 +22,19 @@ module Control.Arrow.IOStateListArrow
     )
 where
 
-import Control.Arrow
-import Control.Arrow.ArrowList
-import Control.Arrow.ArrowIf
-import Control.Arrow.ArrowTree
-import Control.Arrow.ArrowState
-import Control.Arrow.ArrowIO
+import           Prelude hiding (id, (.))
+
+import           Control.Category
+
+import           Control.Arrow
+import           Control.Arrow.ArrowIf
+import           Control.Arrow.ArrowIO
+import           Control.Arrow.ArrowList
+import           Control.Arrow.ArrowNF
+import           Control.Arrow.ArrowTree
+import           Control.Arrow.ArrowState
+
+import           Control.Parallel.Strategies
 
 -- ------------------------------------------------------------
 
@@ -36,7 +43,7 @@ import Control.Arrow.ArrowIO
 newtype IOSLA s a b = IOSLA { runIOSLA :: s -> a -> IO (s, [b]) }
 
 instance Category (IOSLA s) where
-    id                  = IOSLA $ \ s x -> return (s, [x])
+    id                  = IOSLA $ \ s x -> return (s, [x])	-- don't defined id = arr id, this gives loops during optimization
 
     IOSLA g . IOSLA f	= IOSLA $ \ s x -> do
 					   (s1, ys) <- f s x

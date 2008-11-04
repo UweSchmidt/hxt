@@ -21,10 +21,15 @@ module Control.Arrow.ListArrow
     )
 where
 
-import Control.Arrow
-import Control.Arrow.ArrowList
-import Control.Arrow.ArrowIf
-import Control.Arrow.ArrowTree
+import           Prelude hiding (id, (.))
+
+import           Control.Category
+
+import           Control.Arrow
+import           Control.Arrow.ArrowIf
+import           Control.Arrow.ArrowList
+import           Control.Arrow.ArrowNF
+import           Control.Arrow.ArrowTree
 
 import           Control.Parallel.Strategies
 
