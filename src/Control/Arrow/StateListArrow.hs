@@ -2,14 +2,14 @@
 
 {- |
    Module     : Control.Arrow.StateListArrow
-   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   Copyright  : Copyright (C) 2005-8 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
    Stability  : experimental
    Portability: portable
 
-Implementation of list arrows with a state
+   Implementation of list arrows with a state
 
 -}
 
