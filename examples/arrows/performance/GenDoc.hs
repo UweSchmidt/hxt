@@ -1,3 +1,7 @@
+{-# LANGUAGE BangPatterns#-}
+
+-- ----------------------------------------
+
 module Main
 where
 
