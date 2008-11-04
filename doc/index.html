@@ -173,7 +173,7 @@
     <a name="req"></a>
     <h3>Requirements</h3>
     <ul>
-      <li>ghc-6.8 or ghc-6.6 with cabal 1.2</li>
+      <li>ghc-6.10 with cabal 1.6</li>
       <li><a href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/curl">curl package >= 1.3</a></li>
       <li><a href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/tagsoup">tagsoup package >= 0.6</a></li>
     </ul>
@@ -189,8 +189,8 @@
       released %PUBDATE%:
     </p>
     <ul>
-      <li>This version works with ghc 6.8 and ghc 6.6 with cabal
-	1.2. For ghc 6.6 and cabal < 1.2 please use HXT 7.3.</li>
+      <li>This version works with ghc 6.10 with cabal 1.6.
+	For ghc 6.8 and cabal &amp; 1.6 please use HXT 8.1.1.</li>
       <li>This version does not contain the filter part of hxt any
 	more.
 	That functionality is separated into a package <a
@@ -252,8 +252,11 @@
     <a name="change"></a>
     <h3>Change History</h3>
     <ul>
-      <li>In <a href="hxt-8.1.2.tar.gz">Version 8.1.2</a>
+      <li>In <a href="hxt-8.2.0.tar.gz">Version 8.2.0</a>
 	<ul>
+	  <li>
+	    Modifications to work with ghc-6.10.
+	  </li>
 	  <li>
 	    A new module <tt>Data.Atom</tt> for dealing with names like LISP atoms
 	    and for sharing the memory for these values. When using names as keys
