@@ -90,7 +90,7 @@ install_local_package	: $(PKG_NAME)-package.conf
 		tar cvf - $(PKG_HI) | ( cd $(LOCAL_IMPORT_DIR) ; tar xf - )
 		[ -f $(LOCAL_INSTALL_DIR)/package.conf ] || echo "[]" > $(LOCAL_INSTALL_DIR)/package.conf
 		cat $(PKG_NAME)-package.conf \
-		| ghc-pkg --update-package --config-file $(LOCAL_INSTALL_DIR)/package.conf
+		| ghc-pkg update - --package-conf=$(LOCAL_INSTALL_DIR)/package.conf
 		@echo use package with: ghc\(i\) ... -package-conf $(LOCAL_INSTALL_DIR)/package.conf -package $(PKG_NAME) ...
 
 GHC_INSTALL	= $(shell ghc -v 2>&1 | head -n 2 | tail -n 1 | cut -d " " -f 5 | sed 's|/package.conf||')

@@ -31,7 +31,7 @@ part2
 
 part3a	:: [String]
 part3a
-    = [ "tested-with: ghc-6.8"
+    = [ "tested-with: ghc-6.10"
       , "exposed: True"
       , "exposed-modules:"
       ]
@@ -39,10 +39,7 @@ part3a
 part3b :: [String]
 part3b
     = [ "build-type: Simple"
-      , "cabal-version: >=1.2"
-      , ""
-      , "flag splitBase"
-      , "  description: Choose the new smaller, split-up base package."
+      , "cabal-version: >=1.6"
       , ""
       , "library"
       , " exposed-modules:"
@@ -55,7 +52,16 @@ part4a dir
       , "import-dirs: " ++ dir ++ "/imports"
       , "library-dirs: " ++ dir
       , "hs-libraries: HShxt-filter"
-      , "depends: base, haskell98, parsec, HTTP, HUnit, network, containers, directory, process, hxt-8.1.1"
+      , "depends: base-4.0.0.0,"
+      , "         haskell98-1.0.1.0,"
+      , "         HUnit-1.2.0.3,"
+      , "         HTTP-3001.1.4,"
+      , "         parsec-2.1.0.1,"
+      , "         network-2.2.0.1,"
+      , "         containers-0.2.0.0,"
+      , "         directory-1.0.0.2,"
+      , "         process-1.0.1.0,"
+      , "         hxt-8.2.0"
       ]
 
 part4b :: [String]
@@ -64,11 +70,17 @@ part4b
       , " ghc-options: -Wall"
       , " extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances"
       , ""
-      , " build-depends: base, haskell98 >= 1, parsec >= 2.1 && < 3, HTTP, HUnit >= 1.2, network >= 2.1, hxt >= 8.1"
-      , " if flag(splitBase)"
-      , "   build-depends: base >= 3, containers >= 0.1, directory >= 1, process >= 1"
-      , " else"
-      , "   build-depends: base < 3"
+      , " build-depends: base       >= 4,"
+      , "                haskell98  >= 1,"
+      , "                containers >= 0.1,"
+      , "                directory  >= 1,"
+      , "                filepath   >= 1,"
+      , "                parsec     >= 2.1 && < 3,"
+      , "                HUnit      >= 1.2,"
+      , "                network    >= 2.1,"
+      , "                HTTP       >= 3001.1,"
+      , "                process    >= 1.0.1,"
+      , "                hxt        >= 8.2"
       ]
 
 main	:: IO()

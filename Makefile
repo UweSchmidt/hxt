@@ -23,7 +23,6 @@ HSCOLOUR_CSS	= doc/hscolour.css
 all		:
 		$(MAKE) -C src all
 		$(MAKE)        $(SOFTWARE).cabal
-		$(MAKE)        allexamples
 
 allexamples	:
 		$(MAKE) -C examples all
@@ -37,7 +36,7 @@ cabal		:
 		$(MAKE) cabal_configure cabal_build cabal_doc cabal_install
 
 cabal_configure :
-		runhaskell $(SETUP) configure
+		runhaskell $(SETUP) configure --global
 
 cabal_doc	:
 		$(HSCOLOUR) -print-css > $(HSCOLOUR)
@@ -48,7 +47,7 @@ cabal_build	:
 		runhaskell $(SETUP) build
 
 cabal_install	:
-		sudo runhaskell $(SETUP) install
+		sudo runhaskell $(SETUP) install --global
 
 # ------------------------------------------------------------
 
@@ -127,7 +126,7 @@ distbuild	: tarball
 		; cd $(DIST) || exit 1 \
 		; runhaskell $(SETUP) configure || exit 1 \
 		; runhaskell $(SETUP) build || exit 1 \
-		; $(INSTALL) sudo runhaskell $(SETUP) install $(INSTEND) \
+		; $(INSTALL) sudo runhaskell $(SETUP) install --global $(INSTEND) \
 		)
 
 distinstall	:
