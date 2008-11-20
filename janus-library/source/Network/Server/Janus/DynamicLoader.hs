@@ -19,8 +19,6 @@
 
 -- ------------------------------------------------------------
 
-{-# OPTIONS -fglasgow-exts -farrows #-}
-
 module Network.Server.Janus.DynamicLoader
     (
     -- data types

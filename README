@@ -7,15 +7,15 @@ no main application. The library package is a prerequisite for a runnable server
 To the library package depends on various other Haskell packages described in "janus-libray/Janus-Library.cabal".
 It does not require the hs-plugins library for dynamic loading of Haskell binaries. This package made a lot of
 trouble in the past, because it is depended on the ghc version and a the bytestring package delivered with ghc.
-It requires GHC >= 6.8
+It requires GHC >= 6.10
 
-Janus 0.2.0 has currently no plugin support, this has to be reworked and reenabled in the future.
+Janus 0.4.0 has currently no plugin support, this has to be reworked and reenabled in the future.
 
 Quick Janus installation:
 =========================
 
-tar xvzf janus-0.2.0.tar.gz
-cd janus-0.2.0
+tar xvzf janus-0.4.0.tar.gz
+cd janus-0.4.0
 cd janus-library
 make all
 cd ..
@@ -41,9 +41,16 @@ A specific application can be derived from the "static-server" dir.
 There is a "conf" subdir in which the file "server.xml" for the server configuration
 is stored. This XML config file must be tailored th the needs of a specific app.
 
+Dynamic Loading
+===============
+
+Dynamic loading of modules is currently not supported, because of lack
+op a plugin version for ghc-6.10
+
+This is how it worked in the past:
+
 The application specific source files are usually located in subdir "source" in the
 package Network.Server.Janus.Shader. There the Janus servlets sources are located.
-
 
 cd build
 ./janus

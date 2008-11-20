@@ -20,8 +20,6 @@
 
 -- ------------------------------------------------------------
 
-{-# OPTIONS -fglasgow-exts -farrows #-}
-
 module Network.Server.Janus.Shader.DaemonShader
     (
     -- daemon shaders

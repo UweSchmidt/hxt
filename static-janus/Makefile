@@ -24,7 +24,7 @@ Janus.hs	: $(CONF)
 # generate the executable janus from the main prog
 
 janus		: Janus.hs $(SERVLETS)
-		ghc -Wall -o $@ --make -i./source Janus.hs
+		ghc -Wall -o $@ -XScopedTypeVariables -XArrows --make -i./source Janus.hs
 
 clean		:
 		rm -f Janus.hs Janus.o Janus.hi $(SERVLETS:.hs=.o) $(SERVLETS:.hs=.hi)

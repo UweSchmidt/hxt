@@ -17,8 +17,6 @@
 
 -- ------------------------------------------------------------
 
-{-# OPTIONS -fglasgow-exts -farrows #-}
-
 module Network.Server.Janus.Shader.ControlShader
    (
    -- control shaders

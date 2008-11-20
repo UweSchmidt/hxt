@@ -18,8 +18,6 @@
 
 -- ------------------------------------------------------------
 
-{-# OPTIONS -fglasgow-exts -farrows #-}
-
 module Network.Server.Janus.XmlHelper
     (
     -- data types
@@ -203,7 +201,7 @@ maybeA op =
 Transforms an IO Monad constructor into an Arrow. An exception thrown by the IO Monad value is catched and handled
 by the second argument.
 -}
-catchA :: ArrowIO a => (b -> IO c) -> (Exception -> IO c) -> a b c
+catchA :: ArrowIO a => (b -> IO c) -> (SomeException -> IO c) -> a b c
 catchA action handler =
     proc x -> do
         arrIO $ (\param -> Control.Exception.catch (action param) handler)  -< x
@@ -212,14 +210,14 @@ catchA action handler =
 Like catchA, but operates on IO Monad values instead of constructor functions. Therefore the input value of the resulting
 Arrow is ignored.
 -}
-catchA_ :: ArrowIO a => IO c -> (Exception -> IO c) -> a b c
+catchA_ :: ArrowIO a => IO c -> (SomeException -> IO c) -> a b c
 catchA_ action handler =
     catchA (\_ -> action) handler
 
 {- |
 Like catchA, but utilizes an Arrow for exception handling.
 -}
-exceptA :: (a -> IO b) -> IOStateArrow s Exception b -> IOStateArrow s a b
+exceptA :: (a -> IO b) -> IOStateArrow s SomeException b -> IOStateArrow s a b
 exceptA f ea =
     proc x -> do
         result <- arrIO $ (\param -> Control.Exception.catch (action param) handler)    -< x

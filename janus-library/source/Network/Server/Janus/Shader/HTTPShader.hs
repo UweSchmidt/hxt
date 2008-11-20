@@ -18,8 +18,6 @@
 
 -- ------------------------------------------------------------
 
-{-# OPTIONS -fglasgow-exts -farrows #-}
-
 module Network.Server.Janus.Shader.HTTPShader
    (
    -- HTTP shaders
@@ -34,7 +32,7 @@ module Network.Server.Janus.Shader.HTTPShader
    )
 where
 
-import Data.ByteString as BStr (hGet, hPut) -- length
+-- import Data.ByteString as BStr (hGet, hPut) -- length
 import Data.Array ()
 import Data.Array.IO ()
 import Data.Array.MArray ()
@@ -258,6 +256,7 @@ fileShader =
 	      , [("file", filename)]
 	      )                                                                                 -<< in_ta'
    where
+{-
       handleCopy hIn hOut blocksize =
          do
             content <- BStr.hGet hIn blocksize
@@ -266,6 +265,8 @@ fileShader =
             if not eof
                then handleCopy hIn hOut blocksize
                else return ()
+-}
+
 --   where
 --      handleCopy hIn hOut buffer blocksize =
 --         do

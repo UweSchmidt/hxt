@@ -1,21 +1,18 @@
 name:          janus-library
-version:	0.2.0
+version:	0.4.0
 license:       OtherLicense
 license-file:  LICENSE
 author:        Christian Uhlig
 copyright:     Copyright (c) 2006 Christian Uhlig
 maintainer:    Christian Uhlig <uhl@fh-wedel.de>
 stability:     experimental
-category:      Server, Network
+category:      Web, Server, Network
 synopsis:      A flexible Haskell application server.
 homepage:      http://holumbus.fh-wedel.de/janus
 description:   A flexible Haskell application server.
 build-type:    Simple
 
-cabal-version: >=1.4
-
-flag splitBase
-  description: Choose the new smaller, split-up base package.
+cabal-version: >=1.6
 
 flag withHsPlugins
   Description: Enable dynamic loading via hsplugins
@@ -23,7 +20,7 @@ flag withHsPlugins
 
 
 library
-  build-depends: base         >= 3
+  build-depends: base         >= 4
                , haskell98    >= 1.0
                , array        >= 0.1
                , unix         >= 2.3
@@ -35,7 +32,7 @@ library
                , network      >= 2.1
                , regex-compat >= 0.71
                , html         >= 1.0
-               , hxt          >= 8.0
+               , hxt          >= 8.2
 
   if flag(withHsPlugins)
     build-depends: plugins    >= 1.1
@@ -73,6 +70,8 @@ library
 
   hs-source-dirs: source
 
+  extensions: DeriveDataTypeable ScopedTypeVariables Arrows
+
   if flag(withHsPlugins)
     extensions:  CPP
     cpp-options: -DPLUGINS=1
@@ -89,7 +88,7 @@ executable janus-conf
                , haskell98    >= 1.0
                , old-time     >= 1.0
                , old-locale   >= 1.0
-               , hxt          >= 8.0
+               , hxt          >= 8.2
   other-modules:
     Network.Server.Janus.ServerVersion
   hs-source-dirs: source

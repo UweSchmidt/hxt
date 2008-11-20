@@ -29,7 +29,7 @@ run		:
 		cd $(TESTDIR) ; ./janus
 
 clean		:
-		$(MAKE) -C $(LIBDIR) vclean
+		$(MAKE) -C $(LIBDIR) clean
 		$(MAKE) -C $(TESTDIR) clean
 		rm -rf dist
 

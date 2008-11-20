@@ -21,8 +21,6 @@
 
 -- ------------------------------------------------------------
 
-{-# OPTIONS -fglasgow-exts -farrows #-}
-
 module Network.Server.Janus.Handler.ConsoleHandler
     (
     -- console handler

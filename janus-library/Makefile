@@ -4,9 +4,9 @@ CF		= Janus-Library.cabal
 VF		= source/Network/Server/Janus/ServerVersion.hs
 
 all		: version
-		runhaskell Setup.hs configure
+		runhaskell Setup.hs configure --global
 		runhaskell Setup.hs build
-		sudo runhaskell Setup.hs install
+		sudo runhaskell Setup.hs install --global
 
 # run this target, instead of "all"
 # when using hs-plugins for dynamic loading of shaders and handlers

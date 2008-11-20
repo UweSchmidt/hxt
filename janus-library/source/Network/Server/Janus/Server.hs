@@ -15,8 +15,6 @@
 
 -- ------------------------------------------------------------
 
-{-# OPTIONS -fglasgow-exts -farrows #-}
-
 module Network.Server.Janus.Server
     ( serverArrow
     , normalizeConfig

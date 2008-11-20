@@ -19,7 +19,7 @@
 
 -- ------------------------------------------------------------
 
-{-# OPTIONS -fglasgow-exts -farrows #-}
+{-# LANGUAGE Arrows#-}
 
 module Network.Server.Janus.HTMLBuilder
    (

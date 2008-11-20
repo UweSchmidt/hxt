@@ -19,8 +19,6 @@
 
 -- ------------------------------------------------------------
 
-{-# OPTIONS -fglasgow-exts -farrows #-}
-
 module Network.Server.Janus.Transaction
     (
     -- transaction xpath constants
