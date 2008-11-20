@@ -266,7 +266,7 @@
 	  </li>
 	  <li>
 	    Implementation of <tt>strictA</tt> changed. <tt>strictA</tt> is marked deprecated.
-	    The implementation is not longer done with a <tt>DeepSeq</tt> function bit with
+	    The implementation is not longer done with a <tt>DeepSeq</tt> function but with
 	    <tt>Control.Parallel.Strategies</tt>, the <tt>NFData</tt> class and <tt>rnf</tt>.
 	    There is a new combinator <tt>rnfA</tt> for complete <em>deep</em> evaluation of an
 	    arrow result.
@@ -499,32 +499,20 @@
     <p>
       Portability to Windows based systems has not been tested very
       intensively, but did work on an XP system with the Cygwin tools installed.
-      Development was done under Linux with GHC 6.4 with the -Wall
+      Development was done under Linux with GHC 6.10 with the -Wall
       flag. No warnings were issued, when compiling the toolbox sources.
     </p>
-
-    <p>Haskell Modules and Libraries used in the toolbox</p>
-    <ul>
-      <li>Various <a href="http://www.haskell.org/ghc/">GHC</a>
-	libraries including the
-	<a href="http://www.cs.uu.nl/~daan/parsec.html">Parsec</a>
-	parser combinator library.
-      </li>
-      <li>The
-	<a href="http://www.haskell.org/http/">HTTP and Browser Modules</a>
-      </li>
-    </ul>
 
     <a name="filter"></a>
     <h3>HXT with Filters</h3>
     <p>
       For older applications using the filter functionality,
-      there is an extra package <a href="hxt-filter-8.0.0.tar.gz">hxt-filter</a>.
+      there is an extra package <a href="hxt-filter-8.2.0.tar.gz">hxt-filter</a>.
       This package must be installed on top of hxt.
       The filter package will not be actively developed any more.
       Please move to the arrow version for long term projects.
       Installation works with cabal in the usual way.
-      Download archive is <a href="hxt-filter-8.0.0.tar.gz">hxt-filter-8.0.0.tar.gz</a>,
+      Download archive is <a href="hxt-filter-8.2.0.tar.gz">hxt-filter-8.2.0.tar.gz</a>,
       <em><a href="./hdoc-filter/index.html">HXT Filter API Documentation</a></em>
       with source links is availabe as well as a
       darcs repository under <a href="http://darcs2.fh-wedel.de/repos/hxt-filter/">http://darcs2.fh-wedel.de/repos/hxt-filter</a>.

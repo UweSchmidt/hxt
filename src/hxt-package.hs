@@ -67,7 +67,7 @@ part4a dir
       , "         containers-0.2.0.0,"
       , "         directory-1.0.0.2,"
       , "         tagsoup-0.6,"
-      , "         curl-1.3.2.1"
+      , "         curl-1.3.3"
       ]
 
 part4b :: [String]
