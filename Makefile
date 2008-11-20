@@ -41,7 +41,7 @@ cabal		:
 		$(MAKE) cabal_configure cabal_build cabal_doc cabal_install
 
 cabal_configure :
-		runhaskell $(SETUP) configure $(CABAL_OPTIONS)
+		runhaskell $(SETUP) configure --global $(CABAL_OPTIONS)
 
 cabal_doc	:
 		$(HSCOLOUR) -print-css > $(HSCOLOUR)
@@ -52,7 +52,7 @@ cabal_build	:
 		runhaskell $(SETUP) build
 
 cabal_install	:
-		sudo runhaskell $(SETUP) install
+		sudo runhaskell $(SETUP) install --global
 
 # ------------------------------------------------------------
 
@@ -164,7 +164,7 @@ distbuild	: tarball
 		; cd $(DIST) || exit 1 \
 		; runhaskell $(SETUP) configure $(CABAL_OPTIONS) || exit 1 \
 		; runhaskell $(SETUP) build || exit 1 \
-		; $(INSTALL) sudo runhaskell $(SETUP) install $(INSTEND) \
+		; $(INSTALL) sudo runhaskell $(SETUP) install --global $(INSTEND) \
 		)
 
 distinstall	:

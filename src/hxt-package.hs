@@ -32,7 +32,7 @@ part2
 	" and funtions for serialization and deserialization of user defined data." ++
 	" The libraray make extensive use of the arrow approach for processing XML."
       , "homepage: http://www.fh-wedel.de/~si/HXmlToolbox/index.html"
-      , "copyright: Copyright (c) 2005 Uwe Schmidt"
+      , "copyright: Copyright (c) 2005-2008 Uwe Schmidt"
       ]
 
 part3a	:: [String]
