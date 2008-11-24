@@ -47,37 +47,30 @@ import Control.Arrow.ListArrows
 
 import Data.Maybe
 
-import Text.ParserCombinators.Parsec
-    ( runParser )
+import Text.ParserCombinators.Parsec		( runParser )
 
 import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlArrow
 
-import qualified Text.XML.HXT.Arrow.XPath as XP
-    ( getXPathTreesWithNsEnv
-    )
+import qualified Text.XML.HXT.Arrow.XPath as XP	( getXPathTreesWithNsEnv
+						)
+import Text.XML.HXT.Arrow.Edit			( canonicalizeForXPath
+						)
 
-import Text.XML.HXT.Arrow.Edit
-    ( canonicalizeForXPath
-    )
-
-import Text.XML.HXT.XPath.XPathDataTypes
-    ( XPNumber (..)
-    , Expr (..)
-    , Op (..)
-    , XPathNode (..)
-    , LocationPath (..)
-    , Path (..)
-    , XStep (..)
-    , AxisSpec (..)
-    , NodeTest (..)
-    , XPathValue (..)
-    )
-
-import Text.XML.HXT.XPath.XPathParser
-    ( parseXPath
-    , parseNumber
-    )
+import Text.XML.HXT.XPath.XPathDataTypes	( XPNumber (..)
+						, Expr (..)
+						, Op (..)
+						, XPathNode (..)
+						, LocationPath (..)
+						, Path (..)
+						, XStep (..)
+						, AxisSpec (..)
+						, NodeTest (..)
+						, XPathValue (..)
+						)
+import Text.XML.HXT.XPath.XPathParser		( parseXPath
+						, parseNumber
+						)
 
 -- ----------------------------------------
 
@@ -90,7 +83,7 @@ getXPathTreesInDoc			= getXPathTreesInDocWithNsEnv []
 -- |
 -- Same Functionality as 'Text.XML.HXT.Arrow.XPath.getXPathTreesInDocWithNsEnv'
 
-getXPathTreesInDocWithNsEnv		:: ArrowXml a => NsEnv -> String -> a XmlTree XmlTree
+getXPathTreesInDocWithNsEnv		:: ArrowXml a => Attributes -> String -> a XmlTree XmlTree
 getXPathTreesInDocWithNsEnv env query	= canonicalizeForXPath
 					  >>>
 					  tryGetXPath env query
@@ -103,11 +96,11 @@ getXPathTrees				= getXPathTreesWithNsEnv []
 -- |
 -- Same Functionality as 'Text.XML.HXT.Arrow.XPath.getXPathTreesWithNsEnv'
 
-getXPathTreesWithNsEnv			:: ArrowXml a => NsEnv -> String -> a XmlTree XmlTree
+getXPathTreesWithNsEnv			:: ArrowXml a => Attributes -> String -> a XmlTree XmlTree
 getXPathTreesWithNsEnv			= tryGetXPath
 
 
-tryGetXPath				:: ArrowXml a => NsEnv -> String -> a XmlTree XmlTree
+tryGetXPath				:: ArrowXml a => Attributes -> String -> a XmlTree XmlTree
 tryGetXPath env query			= ( listA (getXPathTreesWithNsEnvSimple env query)
 					    &&&
 					    listA (   XP.getXPathTreesWithNsEnv env query)
@@ -123,25 +116,25 @@ tryGetXPath env query			= ( listA (getXPathTreesWithNsEnvSimple env query)
 -- In case of a too complicated or illegal xpath expression an error
 -- node is returned, else the list of selected XML trees
 
-getXPathTreesWithNsEnvSimple		:: ArrowXml a => NsEnv -> String -> a XmlTree XmlTree
-getXPathTreesWithNsEnvSimple env s	= fromLA $ getXP env s
+getXPathTreesWithNsEnvSimple		:: ArrowXml a => Attributes -> String -> a XmlTree XmlTree
+getXPathTreesWithNsEnvSimple env s	= fromLA $ getXP (toNsEnv env) s
 
 -- ----------------------------------------
 
-getXP			:: NsEnv -> String -> LA XmlTree XmlTree
-getXP env s		= either (err
+getXP				:: NsEnv -> String -> LA XmlTree XmlTree
+getXP env s			= either ( err
+					   .
+					   (("Syntax error in XPath expression " ++ show s ++ ": ") ++)
+					   .
+					   show . show
+					 ) (fromMaybe (err ( "XPath expression " ++ show s ++
+							     " too complicated for simple arrow evaluation"
+							   )
+						      ) . compXPath
+					   )
 				  .
-				  (("Syntax error in XPath expression " ++ show s ++ ": ") ++)
-				  .
-				  show . show
-				 ) (fromMaybe (err ( "XPath expression " ++ show s ++
-						     " too complicated for simple arrow evaluation"
-						   )
-					      ) . compXPath
-				   )
-			  .
-			  runParser parseXPath env ""
-			  $ s
+				  runParser parseXPath env ""
+				  $ s
 
 -- ----------------------------------------
 

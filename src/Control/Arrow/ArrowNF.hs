@@ -34,3 +34,5 @@ strictA	= arr $ \ x -> x `demanding` rnf x
 class (Arrow a) => ArrowNF a where
     rnfA	:: (NFData c) => a b c -> a b c
     rnfA f	= f >>> strictA
+
+-- ------------------------------------------------------------

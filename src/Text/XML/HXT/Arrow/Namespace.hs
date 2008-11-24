@@ -2,13 +2,12 @@
 
 {- |
    Module     : Text.XML.HXT.Arrow.Namespace
-   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   Copyright  : Copyright (C) 2005-2008 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: Namespace.hs,v 1.13 2006/11/12 14:52:59 hxml Exp $
 
    namespace specific arrows
 
@@ -41,13 +40,10 @@ import Control.Arrow.ListArrow
 import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlArrow
 
-import Data.Maybe
-    ( isNothing
-    , fromJust
-    )
-
-import Data.List
-    ( nub )
+import Data.Maybe		    ( isNothing
+				    , fromJust
+				    )
+import Data.List		    ( nub )
 
 -- ------------------------------------------------------------
 
@@ -56,14 +52,7 @@ import Data.List
 isNamespaceDeclAttr	:: ArrowXml a => a XmlTree XmlTree
 isNamespaceDeclAttr
     = fromLA $
-      (getAttrName >>> isA isNsQName) `guards` this
-      where
-      isNsQName n
-	  = px == a_xmlns
-	    &&
-	    (null lp || (not . null . tail $ lp))
-	  where
-	  (px, lp) = span (/= ':') . qualifiedName $ n
+      (getAttrName >>> isA isNameSpaceName) `guards` this
 
 -- | get the namespace prefix and the namespace URI out of
 -- an attribute tree with a namespace declaration (see 'isNamespaceDeclAttr')
@@ -145,7 +134,7 @@ uniqueNamespacesFromDeclAndQNames
 
 cleanupNamespaces	:: LA XmlTree (String, String) -> LA XmlTree XmlTree
 cleanupNamespaces collectNamespaces
-    = renameNamespaces $< (listA collectNamespaces >>^ nub)
+    = renameNamespaces $< (listA collectNamespaces >>^ (toNsEnv >>> nub))
     where
     renameNamespaces :: NsEnv -> LA XmlTree XmlTree
     renameNamespaces env
@@ -163,11 +152,11 @@ cleanupNamespaces collectNamespaces
 	where
 	renamePrefix	:: QName -> QName
 	renamePrefix n
-	    | null uri		= n
+	    | isNullXName uri	= n
 	    | isNothing newPx	= n
-	    | otherwise		= n {namePrefix = fromJust newPx}
+	    | otherwise		= setNamePrefix' (fromJust newPx) n
 	    where
-	    uri   = namespaceUri n
+	    uri   = namespaceUri' n
 	    newPx = lookup uri revEnv1
 	    
         revEnv1 = map (\ (x, y) -> (y, x)) env1
@@ -175,13 +164,13 @@ cleanupNamespaces collectNamespaces
 	env1 :: NsEnv
 	env1 = newEnv [] uris
 
-	uris :: [String]
+	uris :: [XName]
 	uris = nub . map snd $ env
 
-	genPrefixes :: [String]
-        genPrefixes = map (("ns" ++) . show) [(0::Int)..]
+	genPrefixes :: [XName]
+        genPrefixes = map (newXName . ("ns" ++) . show) [(0::Int)..]
 
-        newEnv	:: NsEnv -> [String] -> NsEnv
+        newEnv	:: NsEnv -> [XName] -> NsEnv
 	newEnv env' []
 	    = env'
 
@@ -225,7 +214,7 @@ processWithNsEnv1 withAttr f env
 
     extendEnv	:: NsEnv -> XmlTree -> NsEnv
     extendEnv env' t'
-	= addEntries newDecls env'
+	= addEntries (toNsEnv newDecls) env'
 	where
 	newDecls = runLA ( getAttrl >>> getNamespaceDecl ) t'
 
@@ -270,12 +259,13 @@ attachEnv env
     nsAttrl		:: [LA XmlTree XmlTree]
     nsAttrl		= map nsDeclToAttr env
 
-    nsDeclToAttr	:: (String, String) -> LA XmlTree XmlTree
+    nsDeclToAttr	:: (XName, XName) -> LA XmlTree XmlTree
     nsDeclToAttr (n, uri)
-	= mkAttr qn (txt uri)
+	= mkAttr qn (txt (show uri))
 	where
 	qn :: QName
-	qn = mkNsName (a_xmlns ++ (if null n then "" else ':' : n)) xmlnsNamespace
+	qn | isNullXName n	= mkQName' nullXName  xmlnsXName xmlnsNamespaceXName
+	   | otherwise		= mkQName' xmlnsXName n          xmlnsNamespaceXName
 
 -- -----------------------------------------------------------------------------
 
@@ -288,7 +278,10 @@ attachEnv env
 -- The arrow may be applied repeatedly if neccessary.
 
 propagateNamespaces	:: ArrowXml a => a XmlTree XmlTree
-propagateNamespaces	= fromLA $ propagateNamespaceEnv [ (a_xml, xmlNamespace), (a_xmlns, xmlnsNamespace) ]
+propagateNamespaces	= fromLA $
+			  propagateNamespaceEnv [ (xmlXName,   xmlNamespaceXName)
+						, (xmlnsXName, xmlnsNamespaceXName)
+						]
 
 -- |
 -- attaches the namespace info given by the namespace table
@@ -308,7 +301,7 @@ propagateNamespaceEnv
 
     attachNamespaceUriToAttr	:: NsEnv -> LA XmlTree XmlTree
     attachNamespaceUriToAttr attrEnv
-	= ( ( getName >>> isA hasPrefixLocalPart )
+	= ( ( getQName >>> isA (not . null . namePrefix) )
 	    `guards`
 	    changeAttrName (setNamespace attrEnv)
 	  )
@@ -317,16 +310,6 @@ propagateNamespaceEnv
 	    `when`
 	    hasName a_xmlns
 	  )
-	where
-	hasPrefixLocalPart	:: String -> Bool
-	hasPrefixLocalPart s
-	    = ( ':' `elem` s )				-- small optimization: only do some string handling when is ':' found
-	      &&
-	      ( let					-- check none empty prefix and local part
-		(px, lp) = span (/= ':') s
-		in
-		not (null px) && not (null (drop 1 lp))
-	      )
 
 -- -----------------------------------------------------------------------------
 
@@ -334,7 +317,7 @@ propagateNamespaceEnv
 -- validate the namespace constraints in a whole tree.
 --
 -- Result is the list of errors concerning namespaces.
--- Predicates 'isWellformedQName', 'isWellformedQualifiedName', 'isDeclaredNamespaces'
+-- Predicates 'isWellformedQName', 'isWellformedQualifiedName', 'isDeclaredNamespace'
 -- and 'isWellformedNSDecl' are applied to the appropriate elements and attributes.
 
 validateNamespaces	:: ArrowXml a => a XmlTree XmlTree
@@ -420,7 +403,7 @@ validate1Namespaces
     where
     nsError	:: (String -> String) -> LA XmlTree XmlTree
     nsError msg
-	= getName >>> nsErr msg
+	= (getQName >>> arr show) >>> nsErr msg
 
     nsErr	:: (String -> String) -> LA String XmlTree
     nsErr msg	= arr msg >>> mkError c_err

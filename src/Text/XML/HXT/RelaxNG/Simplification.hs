@@ -89,7 +89,7 @@ simplificationStep1
 	( processHref $< getBaseURI )
 	>>>
 	-- 4.10 QNames
-	processWithNsEnv processEnvNames [("xml",xmlNamespace)]
+	processWithNsEnv processEnvNames (toNsEnv [("xml",xmlNamespace)])
 	>>>
 	-- 4.4 For any data or value element that does not have a datatypeLibrary attribute,
 	-- a datatypeLibrary attribute is added.
@@ -229,7 +229,7 @@ simplificationStep1
                 )
 	      )
 
-    processEnvNames :: [(String, String)] -> IOSArrow XmlTree XmlTree
+    processEnvNames :: NsEnv -> IOSArrow XmlTree XmlTree
     processEnvNames env
 	= ( ( (replaceQNames env $< getAttrValue "name")
               `when`
@@ -252,29 +252,29 @@ simplificationStep1
 	    = setBaseUri &&& constA (map createAttr env) >>> arr2L (:)
 	    where
 
-	    createAttr :: (String, String) -> XmlTree
+	    createAttr :: (XName, XName) -> XmlTree
 	    createAttr (pre, uri)
-		= XN.mkAttr (mkName nm) [XN.mkText uri]
+		= XN.mkAttr (mkName nm) [XN.mkText (show uri)]
 		where
-		nm  | null pre	= "RelaxContextDefault"
-		    | otherwise	= contextAttributes ++ pre
+		nm  | isNullXName pre	= "RelaxContextDefault"
+		    | otherwise		= contextAttributes ++ show pre
 
 	    setBaseUri :: IOSArrow String XmlTree
 	    setBaseUri = mkAttr (mkName contextBaseAttr) (txt $< this)
 
-	replaceQNames :: [(String, String)] -> String -> IOSArrow XmlTree XmlTree                        
+	replaceQNames :: NsEnv -> String -> IOSArrow XmlTree XmlTree                        
 	replaceQNames e name
 	    | isNothing uri
 		= mkRelaxError "" ( "No Namespace-Mapping for the prefix " ++ show pre ++ 
 				    " in the Context of Element: " ++ show name
 				  )
 	    | otherwise
-		= addAttr "name" ( "{" ++ (fromJust uri) ++ "}" ++ local )
+		= addAttr "name" ( "{" ++ (show . fromJust $ uri) ++ "}" ++ local )
 	    where
 	    (pre, local') = span (/= ':') name
 	    local         = tail local'
-	    uri 	:: Maybe String
-	    uri           = lookup pre e
+	    uri 	:: Maybe XName
+	    uri           = lookup (newXName pre) e
 
     -- The value of the added datatypeLibrary attribute is the value of the 
     -- datatypeLibrary attribute of the nearest ancestor element that 

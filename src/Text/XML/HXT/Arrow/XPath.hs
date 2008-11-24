@@ -83,7 +83,7 @@ getXPathTreesInDoc			= getXPathTreesInDocWithNsEnv []
 
 -- | Same as 'getXPathTreesInDoc' but with namespace environment for the XPath names
 
-getXPathTreesInDocWithNsEnv		:: ArrowXml a => NsEnv -> String -> a XmlTree XmlTree
+getXPathTreesInDocWithNsEnv		:: ArrowXml a => Attributes -> String -> a XmlTree XmlTree
 getXPathTreesInDocWithNsEnv env query	= canonicalizeForXPath
 					  >>>
 					  arrL (PT.getXPathSubTreesWithNsEnv env query)
@@ -106,7 +106,7 @@ getXPathTrees				= getXPathTreesWithNsEnv []
 
 -- | Same as 'getXPathTrees' but with namespace environment for the XPath names
 
-getXPathTreesWithNsEnv			:: ArrowXml a => NsEnv -> String -> a XmlTree XmlTree
+getXPathTreesWithNsEnv			:: ArrowXml a => Attributes -> String -> a XmlTree XmlTree
 getXPathTreesWithNsEnv env query	= arrL (PT.getXPathSubTreesWithNsEnv env query)
 
 -- | Select a set of nodes via an XPath expression from an arbitray XML tree
@@ -122,7 +122,7 @@ getXPathNodeSet				= getXPathNodeSetWithNsEnv []
 
 -- | Same as 'getXPathNodeSet' but with namespace environment for the XPath names
 
-getXPathNodeSetWithNsEnv		:: ArrowXml a => NsEnv -> String -> a XmlTree XmlNodeSet
+getXPathNodeSetWithNsEnv		:: ArrowXml a => Attributes -> String -> a XmlTree XmlNodeSet
 getXPathNodeSetWithNsEnv nsEnv query	= arr (PT.getXPathNodeSetWithNsEnv nsEnv query)
 
 -- ------------------------------------------------------------
@@ -226,7 +226,7 @@ processXPathTrees f		= processXPathTreesWithNsEnv f []
 
 -- | Same as 'processXPathTrees' but with namespace environment for the XPath names
 
-processXPathTreesWithNsEnv	:: ArrowXml a => a XmlTree XmlTree  -> NsEnv -> String -> a XmlTree XmlTree
+processXPathTreesWithNsEnv	:: ArrowXml a => a XmlTree XmlTree  -> Attributes -> String -> a XmlTree XmlTree
 processXPathTreesWithNsEnv f nsEnv query
     = choiceA
       [ isRoot :-> processChildren pns

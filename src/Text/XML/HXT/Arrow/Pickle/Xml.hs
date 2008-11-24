@@ -77,12 +77,12 @@ addCont x s	= s {contents = x : contents s}
 dropCont	:: St -> St
 dropCont s	= s { contents = drop 1 (contents s) }
 
-getAtt		:: String -> St -> Maybe XmlTree
-getAtt name s
+getAtt		:: QName -> St -> Maybe XmlTree
+getAtt qn s
     = listToMaybe $
       runLA ( arrL attributes
 	      >>>
-	      isAttr >>> hasName name
+	      isAttr >>> hasQName qn
 	    ) s
 
 getCont		:: St -> Maybe XmlTree
@@ -494,40 +494,47 @@ xpAlt tag ps
 
 -- | Pickler for wrapping\/unwrapping data into an XML element
 --
--- Extra parameter is the element name. THE pickler for constructing
+-- Extra parameter is the element name given as a QName. THE pickler for constructing
 -- nested structures
 --
 -- Example:
 --
--- > xpElem "number" $ xpickle
+-- > xpElemQN (mkName "number") $ xpickle
 --
 -- will map an (42::Int) onto
 --
 -- > <number>42</number>
 
-xpElem	:: String -> PU a -> PU a
-xpElem name pa
+xpElemQN	:: QName -> PU a -> PU a
+xpElemQN qn pa
     = PU { appPickle   = ( \ (a, st) ->
 			   let
 	                   st' = appPickle pa (a, emptySt)
 			   in
-			   addCont (XN.mkElement (mkName name) (attributes st') (contents st')) st
+			   addCont (XN.mkElement qn (attributes st') (contents st')) st
 			 )
 	 , appUnPickle = \ st -> fromMaybe (Nothing, st) (unpickleElement st)
-	 , theSchema   = scElem name (theSchema pa)
+	 , theSchema   = scElem (qualifiedName qn) (theSchema pa)
 	 }
       where
       unpickleElement st
 	  = do
 	    t <- getCont st
 	    n <- XN.getElemName t
-	    if qualifiedName n /= name
-	       then fail "element name does not match"
+	    if n /= qn
+	       then fail ("element name " ++ show n ++ " does not match" ++ show qn)
 	       else do
 		    let cs = XN.getChildren t
 		    al <- XN.getAttrl t
 		    res <- fst . appUnPickle pa $ St {attributes = al, contents = cs}
 		    return (Just res, dropCont st)
+
+-- | convenient Pickler for xpElemQN
+--
+-- > xpElem n = xpElemQN (mkName n)
+
+xpElem		:: String -> PU a -> PU a
+xpElem		= xpElemQN . mkName
 
 -- ------------------------------------------------------------
 
@@ -590,25 +597,32 @@ xpElemWithAttrValue name an av pa
 --
 -- The attribute is inserted in the surrounding element constructed by the 'xpElem' pickler
 
-xpAttr	:: String -> PU a -> PU a
-xpAttr name pa
+xpAttrQN	:: QName -> PU a -> PU a
+xpAttrQN qn pa
     = PU { appPickle   = ( \ (a, st) ->
 			   let
 			   st' = appPickle pa (a, emptySt)
 			   in
-			   addAtt (XN.mkAttr (mkName name) (contents st')) st
+			   addAtt (XN.mkAttr qn (contents st')) st
 			 )
 	 , appUnPickle = \ st -> fromMaybe (Nothing, st) (unpickleAttr st)
-	 , theSchema   = scAttr name (theSchema pa)
+	 , theSchema   = scAttr (qualifiedName qn) (theSchema pa)
 	 }
       where
       unpickleAttr st
 	  = do
-	    a <- getAtt name st
+	    a <- getAtt qn st
 	    let av = XN.getChildren a
 	    res <- fst . appUnPickle pa $ St {attributes = [], contents = av}
 	    return (Just res, st)	-- attribute is not removed from attribute list,
 					-- attributes are selected by name
+
+-- | convenient Pickler for xpAttrQN
+--
+-- > xpAttr n = xpAttrQN (mkName n)
+
+xpAttr		:: String -> PU a -> PU a
+xpAttr		= xpAttrQN . mkName
 
 -- | Add an optional attribute for an optional value (Maybe a).
 

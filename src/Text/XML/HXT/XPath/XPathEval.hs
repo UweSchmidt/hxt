@@ -95,10 +95,10 @@ getXPath		= getXPathWithNsEnv []
 -- Works like 'getXPath' but the prefix:localpart names in the XPath expression
 -- are interpreted with respect to the given namespace environment
 
-getXPathWithNsEnv	:: NsEnv -> String -> XmlTree -> XmlTrees
+getXPathWithNsEnv	:: Attributes -> String -> XmlTree -> XmlTrees
 getXPathWithNsEnv env s	= runLA ( canonicalizeForXPath
 				  >>>
-				  arrL (getXPathValues xPValue2XmlTrees xPathErr env s)
+				  arrL (getXPathValues xPValue2XmlTrees xPathErr (toNsEnv env) s)
 				)
 
 -- |
@@ -119,9 +119,9 @@ getXPathSubTrees	= getXPathSubTreesWithNsEnv []
 
 -- | Same as 'getXPathSubTrees' but with namespace aware XPath expression
 
-getXPathSubTreesWithNsEnv	:: NsEnv -> String -> XmlTree -> XmlTrees
+getXPathSubTreesWithNsEnv	:: Attributes -> String -> XmlTree -> XmlTrees
 getXPathSubTreesWithNsEnv nsEnv xpStr
-    = getXPathValues xPValue2XmlTrees xPathErr nsEnv xpStr
+    = getXPathValues xPValue2XmlTrees xPathErr (toNsEnv nsEnv) xpStr
 
 -- | compute the node set of an XPath query
 
@@ -130,9 +130,9 @@ getXPathNodeSet		= getXPathNodeSetWithNsEnv []
 
 -- | compute the node set of a namespace aware XPath query
 
-getXPathNodeSetWithNsEnv	:: NsEnv -> String -> XmlTree -> XmlNodeSet
+getXPathNodeSetWithNsEnv	:: Attributes -> String -> XmlTree -> XmlNodeSet
 getXPathNodeSetWithNsEnv nsEnv xpStr
-    = getXPathValues xPValue2NodeSet (const (const emptyNodeSet)) nsEnv xpStr
+    = getXPathValues xPValue2NodeSet (const (const emptyNodeSet)) (toNsEnv nsEnv) xpStr
 
 -- | parse xpath, evaluate xpath expr and prepare results
 

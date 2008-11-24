@@ -2,13 +2,12 @@
 
 {- |
    Module     : Text.XML.HXT.XPath.XPathParser
-   Copyright  : Copyright (C) 2006 Uwe Schmidt
+   Copyright  : Copyright (C) 2006-2008 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: XPathParser.hs,v 1.6 2006/10/12 11:51:29 hxml Exp $
 
    the XPath Parser
 
@@ -39,27 +38,26 @@ import Text.XML.HXT.Parser.XmlTokenParser
     , qName
     )
 
-lookupNs		:: NsEnv -> String -> String
+lookupNs				:: NsEnv -> XName -> XName
 lookupNs uris prefix
-    -- downwards compatibility: if namespace env is not supported
-    -- no error is raised, but the uri remains empty
-    -- not conformant to XPath spec: If namespaces are used, an complete env must be supported,
-    -- but we don't care about this
+					-- downwards compatibility: if namespace env is not supported
+					-- no error is raised, but the uri remains empty
+					-- not conformant to XPath spec:
+					-- If namespaces are used, a complete env must be supported,
+					-- but we don't care about this
+					= fromMaybe nullXName $ lookup prefix uris
 
-    = lookup1 prefix uris
-
-enhanceAttrQName	:: NsEnv -> QName -> QName
+enhanceAttrQName			:: NsEnv -> QName -> QName
 enhanceAttrQName uris qn
-    | null (namePrefix qn)	= qn
-    | otherwise			= enhanceQName uris qn
+    | isNullXName (namePrefix' qn)	= qn
+    | otherwise				= enhanceQName uris qn
 
-enhanceQName 		:: NsEnv -> QName -> QName
-enhanceQName uris qn
-    = qn {namespaceUri = lookupNs uris (namePrefix qn)}
+enhanceQName 				:: NsEnv -> QName -> QName
+enhanceQName uris qn			= setNamespaceUri' ( lookupNs uris (namePrefix' qn) ) qn
 
-enhanceQN		::  AxisSpec -> NsEnv -> QName -> QName
-enhanceQN Attribute	= enhanceAttrQName
-enhanceQN _		= enhanceQName
+enhanceQN				::  AxisSpec -> NsEnv -> QName -> QName
+enhanceQN Attribute			= enhanceAttrQName
+enhanceQN _				= enhanceQName
 
 type XParser a = GenParser Char NsEnv a
 
@@ -591,7 +589,9 @@ functionName
     = try ( do           
             (p, n) <- qName
             uris   <- getState
-            u      <- return $ if null p then "" else '{' : lookupNs uris p ++ "}"
+            u      <- return $ if null p
+	                       then ""
+                               else '{' : show (lookupNs uris (newXName p)) ++ "}"
             let fn = (u ++ n) in
               if fn `elem` ["processing-instruction", "comment", "text", "node"]
                 then fail ("function name: " ++ fn ++ "not allowed")
@@ -607,7 +607,7 @@ variableReference
       tokenParser (symbol "$")
       (p,n) <- qName
       uris   <- getState
-      return (lookupNs uris p, n)
+      return (show (lookupNs uris (newXName p)), n)
       <?> "variableReference"
 
 

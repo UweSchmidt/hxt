@@ -69,7 +69,6 @@ HXT_SRC	= \
 	Data/Char/UTF8.hs \
 	Data/NavTree.hs \
 	Data/Tree/Class.hs \
-	Data/Tree/NTree/Filter.hs \
 	Data/Tree/NTree/TypeDefs.hs \
 	Text/XML/HXT/Arrow/DocumentInput.hs \
 	Text/XML/HXT/Arrow/DocumentOutput.hs \
@@ -96,7 +95,6 @@ HXT_SRC	= \
 	Text/XML/HXT/DOM/IsoLatinTables.hs \
 	Text/XML/HXT/DOM/MimeTypeDefaults.hs \
 	Text/XML/HXT/DOM/MimeTypes.hs \
-	Text/XML/HXT/DOM/NamespacePredicates.hs \
 	Text/XML/HXT/DOM/QualifiedName.hs \
 	Text/XML/HXT/DOM/ShowXml.hs \
 	Text/XML/HXT/DOM/TypeDefs.hs \
@@ -106,7 +104,6 @@ HXT_SRC	= \
 	Text/XML/HXT/DOM/XmlKeywords.hs \
 	Text/XML/HXT/DOM/XmlNode.hs \
 	Text/XML/HXT/DOM/XmlOptions.hs \
-	Text/XML/HXT/DOM/XmlTreeTypes.hs \
 	Text/XML/HXT/DTDValidation/AttributeValueValidation.hs \
 	Text/XML/HXT/DTDValidation/DocTransformation.hs \
 	Text/XML/HXT/DTDValidation/DocValidation.hs \

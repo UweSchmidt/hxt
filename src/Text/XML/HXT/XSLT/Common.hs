@@ -2,13 +2,12 @@
 
 {- |
    Module     : Text.XML.HXT.XSLT.Application
-   Copyright  : Copyright (C) 2006 Tim Walkenhorst, Uwe Schmidt
+   Copyright  : Copyright (C) 2006-2008 Tim Walkenhorst, Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: Common.hs,v 1.5 2007/05/02 06:41:05 hxml Exp $
 
    Common imports and functions for HXSLT
 
@@ -87,69 +86,73 @@ import Control.Arrow
 import Control.Arrow.ListArrow
 import Control.Arrow.ArrowList
 
-import Text.XML.HXT.Arrow.XmlArrow
-    ( xshow
-    )
-import Text.XML.HXT.DOM.XmlNode
-    ( XmlNode (..)
-    , mkElement
-    , mkRoot
-    , mkAttr
-    , mergeAttrl
-    )
+import Text.XML.HXT.Arrow.XmlArrow	( xshow
+					)
 import Text.XML.HXT.DOM.XmlKeywords
+import Text.XML.HXT.DOM.XmlNode		( XmlNode (..)
+					, mkElement
+					, mkRoot
+					, mkAttr
+					, mergeAttrl
+					)
 
-import Text.XML.HXT.DOM.TypeDefs
-    ( XmlTree
-    , XNode(XTag, XAttr)
-    , QName(namePrefix, localPart, namespaceUri)
-    , equivQName
-    , mkName
-    , mkQName
-    )
+import Text.XML.HXT.DOM.TypeDefs	( XmlTree
+					, XNode(XTag, XAttr)
+					, QName
+					, toNsEnv
+					, namePrefix
+					, localPart
+					, namespaceUri
+					, equivQName
+					, mkName
+					, mkQName
+					)
+import Text.XML.HXT.DOM.FormatXmlTree	( formatXmlTree
+					)
 
-import Text.XML.HXT.DOM.FormatXmlTree
-    ( formatXmlTree )
+import Text.XML.HXT.XPath.XPathDataTypes( Expr		( LiteralExpr
+							, FctExpr
+							, GenExpr
+							, PathExpr
+							)
+					, Op		( Union )
+					, LocationPath	( LocPath )
+					, Path		( Rel )
+					, XStep 	( Step )
+					, NodeTest	( NameTest
+							, PI
+							, TypeTest
+							)
+					, NavXmlTree
+					, XPathValue	( XPVNode
+							, XPVBool
+							, XPVString
+							, XPVError
+							)
+					)
+import Text.XML.HXT.XPath.XPathParser	( parseXPath
+					)
+import Text.XML.HXT.XPath.XPathEval	( evalExpr
+					)
+import Text.XML.HXT.XPath.XPathFct	( isNotInNodeList
+					)
+import Text.XML.HXT.XPath.XPathToString ( xPValue2XmlTrees
+					)
 
-import Text.XML.HXT.XPath.XPathDataTypes
-    ( Expr(LiteralExpr, FctExpr, GenExpr, PathExpr)
-    , Op(Union)
-    , LocationPath (LocPath)
-    , Path (Rel)
-    , XStep (Step)
-    , NodeTest (NameTest, PI, TypeTest)
-    , NavXmlTree
-    , XPathValue(XPVNode, XPVBool, XPVString, XPVError)
-    )
-
-import Text.XML.HXT.XPath.XPathParser
-    ( parseXPath )
-
-import Text.XML.HXT.XPath.XPathEval
-    ( evalExpr )
-
-import Text.XML.HXT.XPath.XPathFct
-    ( isNotInNodeList )
-
-import Text.XML.HXT.XPath.XPathToString
-    ( xPValue2XmlTrees )
-
-import Data.Map (Map)
+import           Data.Map (Map)
 import qualified Data.Map as Map hiding (Map)
 
 import Data.Tree.Class 
 
-import Data.NavTree
-    ( NavTree
-    , ntree
-    , subtreeNT
-    , upNT
-    , downNT
-    , rightNT
-    , leftNT
-    , getChildrenNT
-    )
-
+import Data.NavTree			( NavTree
+					, ntree
+					, subtreeNT
+					, upNT
+					, downNT
+					, rightNT
+					, leftNT
+					, getChildrenNT
+					)
 import Data.Maybe
 import Data.List
 import Data.Char

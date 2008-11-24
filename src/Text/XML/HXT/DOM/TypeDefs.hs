@@ -29,7 +29,7 @@ import Data.AssocList
 import Data.Tree.NTree.TypeDefs
 import Data.Typeable
 
-import Text.XML.HXT.DOM.QualifiedName hiding ( QN )
+import Text.XML.HXT.DOM.QualifiedName
 
 -- -----------------------------------------------------------------------------
 --
@@ -126,15 +126,6 @@ instance NFData DTDElem
 -- used for storing option lists and features of DTD parts
 
 type Attributes	= AssocList String String
-
--- -----------------------------------------------------------------------------
---
-
--- |
--- Type for the namespace association list, used when propagating namespaces by
--- modifying the 'QName' values in a tree
-
-type NsEnv = AssocList String String
 
 -- -----------------------------------------------------------------------------
 --

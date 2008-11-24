@@ -61,7 +61,7 @@ part4a dir
       , "depends: base-4.0.0.0,"
       , "         haskell98-1.0.1.0,"
       , "         bytestring-0.9.1.4,"
-      , "         parallel-1.0.0.1,"
+      , "         parallel-1.1.0.0,"
       , "         parsec-2.1.0.1,"
       , "         network-2.2.0.1,"
       , "         containers-0.2.0.0,"

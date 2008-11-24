@@ -2,7 +2,7 @@
 
 {- |
    Module     : Text.XML.HXT.Parser.TagSoup
-   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   Copyright  : Copyright (C) 2005-2008 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
@@ -23,60 +23,41 @@ where
 
 -- ------------------------------------------------------------
 
-import           Data.Char (toLower)
-import           Data.Maybe
-import qualified Data.Map as M
-
+import Data.Char (toLower)
+import Data.Maybe
 
 import Text.HTML.TagSoup
-import Text.HTML.TagSoup.Entity
-    ( lookupNumericEntity
-    )
-
-import Text.XML.HXT.DOM.Unicode
-    ( isXmlSpaceChar
-    )
-
-import Text.XML.HXT.DOM.NamespacePredicates
-    ( isWellformedQualifiedName
-    )
-
-import Text.XML.HXT.Parser.XmlEntities
-    ( -- xmlEntities
-    )
-
+import Text.HTML.TagSoup.Entity		( lookupNumericEntity
+					)
+import Text.XML.HXT.DOM.Unicode		( isXmlSpaceChar
+					)
+import Text.XML.HXT.Parser.HtmlParsec	( isEmptyHtmlTag
+					, isInnerHtmlTagOf
+					, closesHtmlTag
+					)
 import Text.XML.HXT.Parser.XhtmlEntities
-    ( xhtmlEntities
-    )
-
-import Text.XML.HXT.Parser.HtmlParsec
-    ( isEmptyHtmlTag
-    , isInnerHtmlTagOf
-    , closesHtmlTag
-    )
-
-import Text.XML.HXT.DOM.Interface
-    ( XmlTrees
-    , QName
-    , NsEnv
-    , mkQName
-    , mkName
-    , mkPrefixLocalPart
-    , c_warn
-    , a_xml
-    , a_xmlns
-    , xmlNamespace
-    , xmlnsNamespace
-    )
-
-import Text.XML.HXT.DOM.XmlNode
-    ( isElem
-    , mkError
-    , mkCmt
-    , mkText
-    , mkElement
-    , mkAttr
-    )
+import Text.XML.HXT.DOM.Interface	( XmlTrees
+					, QName
+					, NsEnv
+					, toNsEnv
+					, newXName
+					, nullXName
+					, mkQName'
+					, mkName
+					, isWellformedQualifiedName
+					, c_warn
+					, a_xml
+					, a_xmlns
+					, xmlNamespace
+					, xmlnsNamespace
+					)
+import Text.XML.HXT.DOM.XmlNode		( isElem
+					, mkError
+					, mkCmt
+					, mkText
+					, mkElement
+					, mkAttr
+					)
 
 -- ---------------------------------------- 
 
@@ -84,15 +65,13 @@ import Text.XML.HXT.DOM.XmlNode
 -- the first time they are ecountered, and later always this name is used,
 -- not a string built by the parser.
 
-type Tags	= [Tag]
+type Tags		= [Tag]
 
-type NameTable	= M.Map QName QName
+type Context		= ([String], NsEnv)
 
-type Context	= ([String], NsEnv)
+type State		= Tags
 
-data State	= S !Tags !NameTable		-- the name table must be evaluated striktly, else a stack overflow occurs
-
-newtype Parser a = P { parse :: State -> (a, State)}
+newtype Parser a 	= P { parse :: State -> (a, State)}
 
 instance Monad Parser where
     return x	= P $ \ ts -> (x, ts)
@@ -102,7 +81,7 @@ instance Monad Parser where
 			      parse (f res) ts'
 
 runParser	:: Parser a -> Tags -> a
-runParser p ts	= fst . parse p $ S ts M.empty
+runParser p ts	= fst . parse p $ ts
 
 -- ----------------------------------------
 
@@ -112,13 +91,13 @@ cond c t e	= do
 		  if p then t else e
 
 lookAhead	:: (Tag -> Bool) -> Parser Bool
-lookAhead p	= P $ \ s@(S ts _) -> (not (null ts) && p (head ts), s)
+lookAhead p	= P $ \ s -> (not (null s) && p (head s), s)
 
 -- ----------------------------------------
 -- primitive look ahead tests
 
 isEof		:: Parser Bool
-isEof		= P $ \ s@(S ts _) -> (null ts, s)
+isEof		= P $ \ s -> (null s, s)
 
 isText		:: Parser Bool
 isText		= lookAhead is
@@ -160,7 +139,7 @@ isOpn		= lookAhead is
 -- primitive symbol parsers
 
 getTag		:: Parser Tag
-getTag		= P $ \ (S (t1:ts1) nt) -> (t1, S ts1 nt)
+getTag		= P $ \ (t1:ts1) -> (t1, ts1)
 
 getSym		:: (Tag -> a) -> Parser a
 getSym f	= do
@@ -207,7 +186,7 @@ getOpn		= getSym sym
 -- pushback parsers for inserting missing tags
 
 pushBack	:: Tag -> Parser ()
-pushBack t	= P $ \ (S ts nt) -> ((), S (t:ts) nt)
+pushBack t	= P $ \ ts -> ((), t:ts)
 
 insCls		:: String -> Parser ()
 insCls n	= pushBack (TagClose n)
@@ -217,43 +196,31 @@ insOpn n al	= pushBack (TagOpen n al)
 
 -- ----------------------------------------
 
-insertQName	:: QName -> Parser QName
-insertQName n	= P $ \ (S ts nt) -> let
-				     (n', nt') = insert n nt
-				     in
-				     (n', S ts nt')
-		  where
-		  insert s nt
-		      | isJust r	= (fromJust r, nt)
-		      | otherwise	= (s, M.insert s s nt)
-		      where
-		      r = M.lookup s nt
-
 mkQN		:: Bool -> Bool -> NsEnv -> String -> Parser QName
 mkQN withNamespaces isAttr env s
     | withNamespaces
-	= insertQName qn1
+	= return qn1
     | otherwise
-	= insertQName qn0
+	= return qn0
     where
     qn1
-	| isAttr && isSimpleName	= mkName s
-	| isSimpleName			= mkQName "" s (nsUri "")
-	| isWellformedQualifiedName s	= mkQName px lp (nsUri px)
-	| otherwise			= mkName s
-    qn0
-	| isSimpleName			= mkName s
-	| isWellformedQualifiedName s	= mkPrefixLocalPart px lp
-	| otherwise			= mkName s
+	| isAttr && isSimpleName	= s'
+	| isSimpleName			= mkQName' nullXName (newXName s) (nsUri nullXName)
+	| isWellformedQualifiedName s	= mkQName' px'        lp'         (nsUri px')
+	| otherwise			= s'
+    qn0					= s'
 
-    nsUri x		= fromMaybe "" . lookup x $ env
-    isSimpleName	= all (/= ':') s
-    (px, (_ : lp))	= span(/= ':') s
+    nsUri x				= fromMaybe nullXName . lookup x $ env
+    isSimpleName			= all (/= ':') s
+    (px, (_ : lp))			= span(/= ':') s
+    px'                 		= newXName px
+    lp'                 		= newXName lp
+    s'                                  = mkName   s
 
 extendNsEnv	:: Bool -> [(String, String)] -> NsEnv -> NsEnv
 extendNsEnv withNamespaces al1 env
     | withNamespaces
-	= concatMap (uncurry addNs) al1 ++ env
+	= toNsEnv (concatMap (uncurry addNs) al1) ++ env
     | otherwise
 	= env
     where
@@ -336,7 +303,8 @@ parseHtmlTagSoup withNamespaces withWarnings withComment removeWhiteSpace asHtml
 	= take 1 . filter isElem
 
     initContext		= ( []
-			  , [ (a_xml,   xmlNamespace)
+			  , toNsEnv $
+			    [ (a_xml,   xmlNamespace)
 			    , (a_xmlns, xmlnsNamespace)
 			    ]
 			  )

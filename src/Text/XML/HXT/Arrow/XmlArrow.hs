@@ -237,21 +237,21 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     mkqelem		:: QName -> [a n XmlTree] -> [a n XmlTree] -> a n XmlTree
     mkqelem  n afs cfs	= mkElement n (catA afs) (catA cfs)
 
-    -- | convenient arrow for element construction with strings instead of qualified names as tagnames, see also 'mkElement' and 'mkelem'
+    -- | convenient arrow for element construction with strings instead of qualified names as element names, see also 'mkElement' and 'mkelem'
     mkelem		:: String -> [a n XmlTree] -> [a n XmlTree] -> a n XmlTree
-    mkelem  n afs cfs	= mkElement (mkSNsName n) (catA afs) (catA cfs)
+    mkelem  n afs cfs	= mkElement (mkName n) (catA afs) (catA cfs)
 
     -- | convenient arrow for element constrution with attributes but without content, simple variant of 'mkelem' and 'mkElement'
     aelem		:: String -> [a n XmlTree]                  -> a n XmlTree
-    aelem n afs		= catA afs >. \ al -> XN.mkElement (mkSNsName n) al []
+    aelem n afs		= catA afs >. \ al -> XN.mkElement (mkName n) al []
 
     -- | convenient arrow for simple element constrution without attributes, simple variant of 'mkelem' and 'mkElement'
     selem		:: String                  -> [a n XmlTree] -> a n XmlTree
-    selem n cfs		= catA cfs >.         XN.mkElement (mkSNsName n) []
+    selem n cfs		= catA cfs >.         XN.mkElement (mkName n) []
 
     -- | convenient arrow for constrution of empty elements without attributes, simple variant of 'mkelem' and 'mkElement'
     eelem		:: String                                   -> a n XmlTree
-    eelem n		= constA      (XN.mkElement (mkSNsName n) [] [])
+    eelem n		= constA      (XN.mkElement (mkName n) [] [])
 
     -- | construction of an element node with name \"\/\" for document roots
     root		::           [a n XmlTree] -> [a n XmlTree] -> a n XmlTree
@@ -263,7 +263,7 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
 
     -- | convenient arrow for attribute constrution, simple variant of 'mkAttr'
     attr		:: String -> a n XmlTree -> a n XmlTree
-    attr		= mkAttr . mkSNsName
+    attr		= mkAttr . mkName
 
     -- constant arrows (ignoring the input) for tree construction ------------------------------
 
@@ -297,7 +297,7 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
 
     -- | constant arrow for simple processing instructions, see 'mkPi'
     spi			:: String -> String -> a n XmlTree
-    spi piName piCont	= constA (XN.mkPi   (mkSNsName piName) [XN.mkText piCont])
+    spi piName piCont	= constA (XN.mkPi   (mkName piName) [XN.mkText piCont])
 
     -- | constant arrow for attribute nodes, attribute name is a qualified name and value is a text,
     -- | see also 'mkAttr', 'qattr', 'attr'
@@ -307,7 +307,7 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     -- | constant arrow for attribute nodes, attribute name and value are
     -- | given by parameters, see 'mkAttr'
     sattr		:: String -> String -> a n XmlTree
-    sattr an av		= constA (XN.mkAttr (mkSNsName an)     [XN.mkText av])
+    sattr an av		= constA (XN.mkAttr (mkName an)     [XN.mkText av])
 
     -- selector arrows --------------------------------------------------
 

@@ -54,25 +54,21 @@ module Text.XML.HXT.RelaxNG.XmlSchema.DataTypeLibW3C
   )
 where
 
-import Text.XML.HXT.RelaxNG.DataTypeLibUtils  
-
-import Network.URI
-  ( isURIReference )
-
-import Text.XML.HXT.DOM.NamespacePredicates
-  ( isWellformedQualifiedName
-  , isNCName
-  )
-
-import Text.XML.HXT.RelaxNG.XmlSchema.Regex
-    ( Regex
-    , matchWithRE
-    )
-import Text.XML.HXT.RelaxNG.XmlSchema.RegexParser
-    ( parseRegex )
-
 import Data.Maybe
 import Data.Ratio
+
+import Network.URI				( isURIReference )
+
+import Text.XML.HXT.DOM.QualifiedName		( isWellformedQualifiedName
+						, isNCName
+						)
+import Text.XML.HXT.RelaxNG.DataTypeLibUtils
+import Text.XML.HXT.RelaxNG.XmlSchema.Regex	( Regex
+						, matchWithRE
+						)
+import Text.XML.HXT.RelaxNG.XmlSchema.RegexParser
+                                                ( parseRegex
+						)
   
 -- ------------------------------------------------------------
 

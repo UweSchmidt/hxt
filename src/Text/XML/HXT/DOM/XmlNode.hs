@@ -303,7 +303,7 @@ mkElement	:: QName -> XmlTrees -> XmlTrees -> XmlTree
 mkElement n al	= mkTree (mkElementNode n al)
 
 mkRoot		:: XmlTrees -> XmlTrees -> XmlTree
-mkRoot al	= mkTree (mkElementNode (mkSNsName t_root) al)
+mkRoot al	= mkTree (mkElementNode (mkName t_root) al)
 
 mkAttr		:: QName -> XmlTrees -> XmlTree
 mkAttr n	= mkTree (mkAttrNode n)

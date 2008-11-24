@@ -8,7 +8,6 @@
    Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: Compilation.hs,v 1.7 2007/05/02 06:41:05 hxml Exp $
 
    The compilation functions for XSLT stylesheets
 
@@ -22,19 +21,19 @@ module Text.XML.HXT.XSLT.Compilation
     )
 where
 
-import Control.Monad
+import           Control.Monad
 
-import Data.Maybe
-import Data.Either
-import Data.List
+import           Data.Maybe
+import           Data.Either
+import           Data.List
 import qualified Data.Map as Map hiding (Map)
-import Data.Map(Map)
+import           Data.Map(Map)
 
-import Text.ParserCombinators.Parsec.Prim(runParser)
+import           Text.ParserCombinators.Parsec.Prim	( runParser )
 
-import Text.XML.HXT.XSLT.Common
-import Text.XML.HXT.XSLT.Names
-import Text.XML.HXT.XSLT.CompiledStylesheet
+import           Text.XML.HXT.XSLT.Common
+import           Text.XML.HXT.XSLT.Names
+import           Text.XML.HXT.XSLT.CompiledStylesheet
 
 -- No deep meaning just a shortcut notation for a *very* common expression...
 
@@ -50,7 +49,7 @@ parseExpr :: UriMapping -> String -> Expr
 parseExpr uris selectStr
     = either (error.show) id parseResult                               
     where
-    parseResult = runParser parseXPath (Map.toList uris) ("select-expr:"++selectStr) selectStr 
+    parseResult = runParser parseXPath (toNsEnv . Map.toList $ uris) ("select-expr:"++selectStr) selectStr 
 
 parseSelect :: UriMapping -> String -> SelectExpr
 parseSelect uris
