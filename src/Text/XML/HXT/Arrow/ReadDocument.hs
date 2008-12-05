@@ -109,6 +109,9 @@ available options:
 
 - 'a_use_curl' : obsolete and ignored, HTTP acccess is always done with curl bindings for libcurl
 
+- 'a_strict_input' : file input is done strictly using the 'Data.ByteString' input functions. This ensures correct closing of files, especially when working with
+                     the tagsoup parser and not processing the whole input data. Default is off.
+
 - 'a_options_curl' : deprecated but for compatibility reasons still supported.
                      More options passed to the curl binding.
                      Instead of using this option to set a whole bunch of options at once for curl
@@ -147,11 +150,12 @@ reads document \"test.php\", parses it as HTML or XML depending on the mimetype 
 >              ] ""
 
 reads a HTML document from standard input, no validation is done when parsing HTML, default encoding is 'isoLatin1',
-parsing is done with tagsoup parser
+parsing is done with tagsoup parser, but input is read strictly
 
 > readDocument [ (a_encoding, isoLatin1)
 >              , (a_mime_type,    "/etc/mime.types")
->              , (a_tagsoup,    "1")
+>              , (a_tagsoup,      "1")
+>              , (a_strict_input, "1")
 >              ] "test.svg"
 
 reads an SVG document from standard input, sets the mime type by looking in the system mimetype config file, default encoding is 'isoLatin1',
@@ -198,6 +202,7 @@ readDocument userOptions src
     defaultOptions
 	= [ ( a_parse_html,		  v_0 )
 	  , ( a_tagsoup,		  v_0 )
+	  , ( a_strict_input,		  v_0 )
 	  , ( a_validate,		  v_1 )
 	  , ( a_issue_warnings,		  v_1 )
 	  , ( a_check_namespaces,	  v_0 )

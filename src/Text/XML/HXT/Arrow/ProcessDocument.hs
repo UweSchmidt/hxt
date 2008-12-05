@@ -10,9 +10,9 @@
    Portability: portable
    Version    : $Id: ProcessDocument.hs,v 1.3 2006/08/30 16:20:52 hxml Exp $
 
-Compound arrows for reading, parsing, validating and writing XML documents
+   Compound arrows for reading, parsing, validating and writing XML documents
 
-All arrows use IO and a global state for options, errorhandling, ...
+   All arrows use IO and a global state for options, errorhandling, ...
 -}
 
 -- ------------------------------------------------------------
@@ -131,7 +131,7 @@ arbitray errors, but the application is only interested in parts of the document
 
 parseHtmlDocument	:: Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> IOStateArrow s XmlTree XmlTree
 parseHtmlDocument withTagSoup withNamespaces warnings preserveCmt removeWhitespace asHtml
-    = ( perform ( getAttrValue a_source >>> traceString 1 (("parseHtmlDoc: parse HTML document " ++) . show) )
+    = ( perform ( getAttrValue a_source >>> traceValue 1 (("parseHtmlDoc: parse HTML document " ++) . show) )
 	>>>
 	replaceChildren ( ( getAttrValue a_source		-- get source name
 			    &&&
@@ -151,7 +151,7 @@ parseHtmlDocument withTagSoup withNamespaces warnings preserveCmt removeWhitespa
 	>>>
 	perform ( getAttrValue a_source
 		  >>>
-		  traceString 1 (\ src -> "parse HTML document " ++ show src ++ " finished")
+		  traceValue 1 (\ src -> "parse HTML document " ++ show src ++ " finished")
 		)
       )
       `when` documentStatusOk

@@ -1,40 +1,58 @@
 -- ------------------------------------------------------------
---
--- GET for local file access
---
--- Version : $Id: GetFILE.hs,v 1.6 2006/09/04 06:03:03 hxml Exp $
+
+{- |
+   Module     : Text.XML.HXT.IO.GetFILE
+   Copyright  : Copyright (C) 2008 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : stable
+   Portability: portable
+
+   The GET method for file protocol
+
+-}
+
+-- ------------------------------------------------------------
 
 module Text.XML.HXT.IO.GetFILE
-    ( module Text.XML.HXT.IO.GetFILE
+    ( getStdinCont
+    , getCont
     )
 
 where
 
-import System.IO
-    ( IOMode(..)
-    , openFile
-    -- , getContents  is defined in the prelude
-    , hGetContents
-    )
+import qualified Data.ByteString as B
 
-import System.IO.Error
-    ( ioeGetErrorString
-    , try
-    )
+import           System.IO		( IOMode(..)
+					, openFile
+					  -- , getContents  is defined in the prelude
+					, hGetContents
+					)
 
-import System.Directory
-    ( doesFileExist
-    , getPermissions
-    , readable
-    )
+import           System.IO.Error	( ioeGetErrorString
+					, try
+					)
+
+import           System.Directory	( doesFileExist
+					, getPermissions
+					, readable
+					)
 
 -- ------------------------------------------------------------
 
-getStdinCont		:: IO (Either String String)
-getStdinCont
+byteToString	:: B.ByteString -> String
+byteToString	= map (toEnum . fromEnum) . B.unpack
+{-# INLINE byteToString #-}
+
+getStdinCont		:: Bool -> IO (Either String String)
+getStdinCont strictInput
     = do
-      c <- try ( do
-		 getContents
+      c <- try ( if strictInput
+		 then do
+		      cb <- B.getContents
+		      return  (byteToString cb)
+		 else getContents
 	       )
       return (either readErr Right c)
     where
@@ -43,8 +61,8 @@ getStdinCont
 		 ++ ioeGetErrorString e
 	       )
 
-getCont		:: String -> IO (Either String String)
-getCont source
+getCont		:: Bool -> String -> IO (Either String String)
+getCont strictInput source
     = do			-- preliminary
       exists <- doesFileExist source'
       if not exists
@@ -54,12 +72,17 @@ getCont source
 	      if not (readable perm)
 	         then return (Left ("file " ++ show source' ++ " not readable"))
 	         else do
-		      c <- try ( do
-				 h <- openFile source' ReadMode
-				 hGetContents h
+		      c <- try ( if strictInput
+				 then do
+				      cb <- B.readFile source
+				      return (byteToString cb)
+				 else do
+				      h <- openFile source' ReadMode
+				      hGetContents h
 			       )
 		      return (either readErr Right c)
     where
+
     -- please NO call of unEscapeString for file names, NOT: source' = drivePath . unEscapeString $ source
     source' = drivePath $ source
     readErr e

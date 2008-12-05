@@ -18,11 +18,12 @@
 module Text.XML.HXT.DOM.MimeTypes
 where
 
-import           Control.Monad (mplus)
+import           Control.Monad		( mplus )
 
+import qualified Data.ByteString	as B
 import           Data.Char
 import           Data.List
-import qualified Data.Map as M
+import qualified Data.Map		as M
 import           Data.Maybe
 
 import           System.IO
@@ -93,9 +94,11 @@ extensionToMimeType e
 readMimeTypeTable	:: FilePath -> IO MimeTypeTable
 readMimeTypeTable inp
     = do
-      h <- openFile inp ReadMode
-      c <- hGetContents h
-      return . M.fromList . parseMimeTypeTable $ c
+      cb <- B.readFile inp
+      return . M.fromList . parseMimeTypeTable . byteToString $ cb
+    where
+    byteToString	:: B.ByteString -> String
+    byteToString	= map (toEnum . fromEnum) . B.unpack
 
 parseMimeTypeTable	:: String -> [(String, String)]
 parseMimeTypeTable

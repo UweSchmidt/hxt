@@ -113,11 +113,20 @@ getStringContents
 
 getFileContents		:: IOStateArrow s XmlTree XmlTree
 getFileContents
-    = applyA ( getAttrValue transferURI
+    = applyA ( ( ( getAttrValue  a_strict_input
+		   >>>
+		   arr isTrueValue
+		 )
+		 &&&
+		 ( getAttrValue transferURI
+		   >>>
+		   getPathFromURI
+		 )
+	       )
 	       >>>
-	       getPathFromURI
+	       traceValue 2 (\ (b, f) -> "read file " ++ show f ++ " (strict input = " ++ show b ++ ")")
 	       >>>
-	       arrIO FILE.getCont
+	       arrIO (uncurry FILE.getCont)
 	       >>>
 	       ( arr addError		-- io error occured
 		 |||
@@ -129,7 +138,11 @@ getFileContents
 
 getStdinContents		:: IOStateArrow s XmlTree XmlTree
 getStdinContents
-    = applyA ( arrIO (\ _ -> FILE.getStdinCont)
+    = applyA (  getAttrValue  a_strict_input
+		>>>
+		arr isTrueValue
+		>>>
+		arrIO FILE.getStdinCont
 	       >>>
 	       ( arr addError		-- io error occured
 		 |||
@@ -267,7 +280,7 @@ getURIContents
     getCont
 	= applyA ( getBaseURI				-- compute the handler and call it
 		   >>>
-		   traceString 2 (("getURIContents: reading " ++) . show)
+		   traceValue 2 (("getURIContents: reading " ++) . show)
 		   >>>
 		   getSchemeFromURI
 		   >>>
@@ -338,7 +351,7 @@ getXmlContents' parseEncodingSpec
 	>>>
 	perform ( getAttrValue transferURI
 		  >>>
-		  traceString 1 (("getXmlContents: content read and decoded for " ++) . show)
+		  traceValue 1 (("getXmlContents: content read and decoded for " ++) . show)
 		)
 	>>>
 	traceTree

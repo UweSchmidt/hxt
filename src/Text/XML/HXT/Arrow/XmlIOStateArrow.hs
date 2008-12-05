@@ -101,7 +101,7 @@ module Text.XML.HXT.Arrow.XmlIOStateArrow
       withTraceLevel,
       trace,
       traceMsg,
-      traceString,
+      traceValue,
       traceSource,
       traceTree,
       traceDoc,
@@ -633,7 +633,7 @@ setBaseURI		:: IOStateArrow s String String
 setBaseURI
     = changeSysParam (\ b s -> s { xio_baseURI = b } )
       >>>
-      traceString 2 (("setBaseURI: new base URI is " ++) . show)
+      traceValue 2 (("setBaseURI: new base URI is " ++) . show)
 
 -- | read the base URI from the globale state
 
@@ -675,7 +675,7 @@ setDefaultBaseURI base
       >>>
       changeSysParam (\ b s -> s { xio_defaultBaseURI = b } )
       >>>
-      traceString 2 (("setDefaultBaseURI: new default base URI is " ++) . show)
+      traceValue 2 (("setDefaultBaseURI: new default base URI is " ++) . show)
     where
     getDir _ = do
 	       cwd <- getCurrentDirectory
@@ -768,17 +768,20 @@ trace level trc
 	       isA (>= level)
 	     )
 
--- | issue a string message as trace 
+-- | trace the current value transfered in a sequence of arrows.
+--
+-- The value is formated by a string conversion function. This is a substitute for
+-- the old and less general traceString function
+
+traceValue		:: Int -> (b -> String) -> IOStateArrow s b b
+traceValue level trc
+    = trace level (arr $ (('-' : "- (" ++ show level ++ ") ") ++) . trc)
+
+-- | issue a string message as trace
+
 traceMsg	:: Int -> String -> IOStateArrow s b b
 traceMsg level msg
-    = perform ( trace level $
-		constA ('-' : "- (" ++ show level ++ ") " ++ msg)
-	      )
-
--- | issue the string input of an arrow
-traceString	:: Int -> (String -> String) -> IOStateArrow s String String
-traceString level f
-    = perform (applyA (arr f >>> arr (traceMsg level)))
+    = traceValue level (const msg)
 
 -- | issue the source representation of a document if trace level >= 3
 --
@@ -832,7 +835,7 @@ traceState
 			applyA (arr formatParam)
 		      )
 		>>>
-		traceString 2 ("global state:\n" ++)
+		traceValue 2 ("global state:\n" ++)
 	      )
       where
       -- formatParam	:: (String, XmlTrees) -> IOStateArrow s b1 XmlTree

@@ -132,7 +132,7 @@ processGeneralEntity context recl
     addInternalEntity
 	= ( ( getDTDAttrValue a_name
 	      >>>
-	      traceString 2 (("processGeneralEntity: general entity definition for " ++) . show)
+	      traceValue 2 (("processGeneralEntity: general entity definition for " ++) . show)
 	    )
 	    &&&
 	    xshow (getChildren >>> isText)
@@ -160,7 +160,7 @@ processGeneralEntity context recl
     addExternalEntity
 	= ( ( getDTDAttrValue a_name
 	      >>>
-	      traceString 2 (("processGeneralEntity: external entity definition for " ++) . show)
+	      traceValue 2 (("processGeneralEntity: external entity definition for " ++) . show)
             )
 	    &&&
 	    getDTDAttrValue a_url 			-- the absolute URL, not the relative in attr: k_system
@@ -174,7 +174,7 @@ processGeneralEntity context recl
     addUnparsedEntity
 	= getDTDAttrValue a_name
 	  >>>
-	  traceString 2 (("processGeneralEntity: unparsed entity definition for " ++) . show)
+	  traceValue 2 (("processGeneralEntity: unparsed entity definition for " ++) . show)
           >>>
 	  applyA (arr (insertEntity substUnparsed))
 	  >>>
@@ -236,7 +236,7 @@ processGeneralEntity context recl
     substEntityRef
 	= applyA ( ( ( getEntityRef				-- get the entity name and the env
 		       >>>					-- and compute the arrow to be applied
-		       traceString 2 (("processGeneralEntity: entity reference for entity " ++) . show)
+		       traceValue 2 (("processGeneralEntity: entity reference for entity " ++) . show)
 		       >>>
 		       traceMsg 3 ("recursion list = " ++ show recl)
 		     )
