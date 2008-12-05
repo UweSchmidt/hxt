@@ -7,6 +7,7 @@
 
 module Text.XML.HXT.DOM.XmlTreeTypes
     ( module Data.Tree.NTree.Filter
+    , module Text.XML.HXT.DOM.TypeDefs
     , module Text.XML.HXT.DOM.XmlTreeTypes
     )
 

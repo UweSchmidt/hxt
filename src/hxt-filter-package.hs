@@ -26,7 +26,7 @@ part2
 	" This package is a compatibitlity package for old software working with the filter approach like in HaXml." ++
 	" For new projects it's recomended to use the arrow based library (hxt)."
       , "homepage: http://www.fh-wedel.de/~si/HXmlToolbox/index.html"
-      , "copyright: Copyright (c) 2005-8 Uwe Schmidt"
+      , "copyright: Copyright (c) 2005-2009 Uwe Schmidt"
       ]
 
 part3a	:: [String]
@@ -61,7 +61,7 @@ part4a dir
       , "         containers-0.2.0.0,"
       , "         directory-1.0.0.2,"
       , "         process-1.0.1.0,"
-      , "         hxt-8.2.0"
+      , "         hxt-8.3.0"
       ]
 
 part4b :: [String]
@@ -80,7 +80,7 @@ part4b
       , "                network    >= 2.1,"
       , "                HTTP       >= 3001.1,"
       , "                process    >= 1.0.1,"
-      , "                hxt        >= 8.2"
+      , "                hxt        >= 8.3"
       ]
 
 main	:: IO()

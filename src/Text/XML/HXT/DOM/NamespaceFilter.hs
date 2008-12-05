@@ -16,13 +16,10 @@
 
 module Text.XML.HXT.DOM.NamespaceFilter
     ( module Text.XML.HXT.DOM.NamespaceFilter
-    , module Text.XML.HXT.DOM.NamespacePredicates
     )
 where
 
 import Text.XML.HXT.DOM.XmlTree
-
-import Text.XML.HXT.DOM.NamespacePredicates
 
 import Text.XML.HXT.DOM.Util
     ( doubles )
@@ -48,7 +45,7 @@ type NamespaceTable = NsEnv
 -- The filter may be applied repeatedly if neccessary.
 
 propagateNamespaces	:: XmlFilter
-propagateNamespaces	= propagateNamespaceEnv [ (a_xml, xmlNamespace), (a_xmlns, xmlnsNamespace) ]
+propagateNamespaces	= propagateNamespaceEnv $ toNsEnv [ (a_xml, xmlNamespace), (a_xmlns, xmlnsNamespace) ]
 
 -- |
 -- attaches the namespace info given by the namespace table
@@ -88,7 +85,7 @@ propagateNamespaceEnv env n
 			    .
 			    getChildren
 			   ) nsAttrs)
-    newEnv	= addEntries nsDecl env
+    newEnv	= addEntries (toNsEnv nsDecl) env
 
     attachNamespaceUrisToAttr	:: NamespaceTable -> XmlFilter
     attachNamespaceUrisToAttr attrEnv
