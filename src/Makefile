@@ -54,7 +54,7 @@ HXT_DRIVER	= HXT.o
 HXT_LIBA	= libHS$(HXT_PACKAGE).a
 HXT_LIBO	= HS$(HXT_PACKAGE).o
 HXT_LIB		= $(HXT_LIBA) $(HXT_LIBO)
-HXT_REQ_PKG	= -package parsec -package HTTP -package hxt
+HXT_REQ_PKG	= -package parsec -package HTTP -package hxt-8.3.0
 
 $(HXT_LIBA)	: $(HXT_SRC)
 		$(GHC) -package-name $(HXT_PACKAGE_NAME) $(HXT_REQ_PKG) --make $(HXT_DRIVER:.o=.hs)
