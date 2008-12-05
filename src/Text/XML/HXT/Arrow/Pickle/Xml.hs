@@ -2,35 +2,34 @@
 
 {- |
    Module     : Text.XML.HXT.Arrow.Pickle.Xml
-   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   Copyright  : Copyright (C) 2005-2008 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id$
 
-Pickler functions for converting between user defined data types
-and XmlTree data. Usefull for persistent storage and retreival
-of arbitray data as XML documents
+   Pickler functions for converting between user defined data types
+   and XmlTree data. Usefull for persistent storage and retreival
+   of arbitray data as XML documents
 
-This module is an adaptation of the pickler combinators
-developed by Andrew Kennedy
-( http:\/\/research.microsoft.com\/~akenn\/fun\/picklercombinators.pdf )
+   This module is an adaptation of the pickler combinators
+   developed by Andrew Kennedy
+   ( http:\/\/research.microsoft.com\/~akenn\/fun\/picklercombinators.pdf )
 
-The difference to Kennedys approach is that the target is not
-a list of Chars but a list of XmlTrees. The basic picklers will
-convert data into XML text nodes. New are the picklers for
-creating elements and attributes.
+   The difference to Kennedys approach is that the target is not
+   a list of Chars but a list of XmlTrees. The basic picklers will
+   convert data into XML text nodes. New are the picklers for
+   creating elements and attributes.
 
-One extension was neccessary: The unpickling may fail.
-Therefore the unpickler has a Maybe result type.
-Failure is used to unpickle optional elements
-(Maybe data) and lists of arbitray length
+   One extension was neccessary: The unpickling may fail.
+   Therefore the unpickler has a Maybe result type.
+   Failure is used to unpickle optional elements
+   (Maybe data) and lists of arbitray length
 
-There is an example program demonstrating the use
-of the picklers for a none trivial data structure.
-(see \"examples\/arrows\/pickle\" directory)
+   There is an example program demonstrating the use
+   of the picklers for a none trivial data structure.
+   (see \"examples\/arrows\/pickle\" directory)
 
 -}
 
