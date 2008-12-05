@@ -40,6 +40,7 @@ packagename	:
 
 HXT_SRC	= \
 	$(wildcard Control/Monad/*.hs) \
+        $(wildcard Data/*/*/*.hs) \
         $(wildcard System/*.hs) \
 	$(wildcard Text/XML/HXT/*.hs) \
 	$(wildcard Text/XML/HXT/DOM/*.hs) \
