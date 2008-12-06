@@ -161,7 +161,8 @@ readDoc src
 		   , (a_remove_whitespace, v_1)
 		   , (a_encoding, isoLatin1)
 		   , (a_issue_warnings, v_0)
-		   , (a_trace, "1")
+		   , (a_trace, v_1)
+		   , (a_strict_input, v_0)
 		   ] src
       >>>
       processChildren (isElem `guards` this)
