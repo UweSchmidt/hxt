@@ -102,7 +102,7 @@ main4 i
 		    >>>
 		    arr2 (\ ma mi -> "maximum value = " ++ show ma ++ ", minimum = " ++ show mi )
 		    >>>
-		    traceString 1 id
+		    traceValue 1 id
 		  )
       putStrLn x
 

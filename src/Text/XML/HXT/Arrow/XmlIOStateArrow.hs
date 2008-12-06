@@ -102,6 +102,7 @@ module Text.XML.HXT.Arrow.XmlIOStateArrow
       trace,
       traceMsg,
       traceValue,
+      traceString,
       traceSource,
       traceTree,
       traceDoc,
@@ -776,6 +777,11 @@ trace level trc
 traceValue		:: Int -> (b -> String) -> IOStateArrow s b b
 traceValue level trc
     = trace level (arr $ (('-' : "- (" ++ show level ++ ") ") ++) . trc)
+
+-- | an old alias for 'traceValue'
+
+traceString		:: Int -> (b -> String) -> IOStateArrow s b b
+traceString		= traceValue
 
 -- | issue a string message as trace
 

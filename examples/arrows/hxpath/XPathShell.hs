@@ -40,6 +40,7 @@ import System.Environment
 import Text.ParserCombinators.Parsec
     ( runParser )
 
+type NsEnv'	= AssocList String String
 
 main	:: IO()
 main
@@ -50,17 +51,20 @@ main
 	 then evalXPath path env (head doc)
 	 else evalLoop env doc
 
-evalArgs			:: [String] -> IO (String, NsEnv, XmlTrees)
+evalArgs			:: [String] -> IO (String, NsEnv', XmlTrees)
 evalArgs []			= evalArgs (""   : "[]" : ""  : [])
 evalArgs [doc]			= evalArgs (""   : "[]" : doc : [])
 evalArgs [path, doc]		= evalArgs (path : "[]" : doc : [])
-evalArgs [path, env, ""]	= return (path, addEntries (read env) $ defaultEnv, [])
+evalArgs [path, env, ""]	= return (path, buildEnv env, [])
 evalArgs [path, env, doc]	= do
 				  (d, ne) <- loadDoc doc
-				  return (path, addEntries ne $ addEntries (read env) $ defaultEnv, d)
+				  return (path, addEntries ne . buildEnv $ env, d)
 evalArgs al			= evalArgs (take 3 al)
 
-loadDoc		:: String -> IO ([XmlTree], NsEnv)
+buildEnv			:: String -> NsEnv'
+buildEnv env			= (addEntries . read $ env) $ defaultEnv
+
+loadDoc		:: String -> IO ([XmlTree], NsEnv')
 loadDoc doc
     = do
       d <- runX ( readDocument [ (a_tagsoup, v_0)
@@ -98,7 +102,7 @@ showTree doc
 	   )
       return ()
 
-evalXPath	:: String -> NsEnv -> XmlTree -> IO()
+evalXPath	:: String -> NsEnv' -> XmlTree -> IO()
 evalXPath path env doc
     | nr == xr
 	= putStrLn . unlines $ "ok: " : nr
@@ -112,11 +116,11 @@ evalXPath path env doc
 		       ] ++ nr
 	  putStrLn $ xpt path
     where
-    xpt = either show show . runParser parseXPath env ""
+    xpt = either show show . runParser parseXPath (toNsEnv env) ""
     nr = runLA (XPS.getXPathTreesWithNsEnv env path >>> xshow this) doc
     xr = runLA (    getXPathTreesWithNsEnv env path >>> xshow this) doc
 
-evalLoop	:: NsEnv -> XmlTrees -> IO ()
+evalLoop	:: NsEnv' -> XmlTrees -> IO ()
 evalLoop env doc
     = do
       maybeLine <- readline "xpath> "
@@ -163,7 +167,7 @@ evalLoop env doc
 			  (nd, nv) <- loadDoc n
 			  if null nd
 			     then do
-				  putStrLn ("error when loading " ++ show doc)
+				  putStrLn ("error when loading " ++ show n)
 				  evalLoop env doc
 			     else evalLoop (addEntries nv env) nd
     evalCmd ws@((':':_):_)
@@ -177,9 +181,9 @@ evalLoop env doc
 			     else evalXPath path env (head doc)
 			  evalLoop env doc
 
-defaultEnv	:: NsEnv
-defaultEnv	= [ ("xml",xmlNamespace)
-		  , ("xmlns",xmlnsNamespace)
-		  ]
+defaultEnv		:: NsEnv'
+defaultEnv		= [ ("xml",xmlNamespace)
+			  , ("xmlns",xmlnsNamespace)
+			  ]
 
 -- ----------------------------------------

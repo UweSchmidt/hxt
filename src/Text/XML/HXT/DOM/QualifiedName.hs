@@ -272,7 +272,7 @@ mkQName' px lp ns
 -- |
 -- constructs a simple name, with prefix and localPart but without a namespace uri.
 --
--- see also 'mkName', 'mkNsName', 'mkSNsName'
+-- see also 'mkQName', 'mkName'
 
 mkPrefixLocalPart               :: String -> String -> QName
 mkPrefixLocalPart px lp
@@ -282,21 +282,26 @@ mkPrefixLocalPart px lp
     n1 = LP (newXName lp)
 
 -- |
--- constructs a simple, namespace unaware name,
+-- constructs a simple, namespace unaware name.
+-- If the name is in @prefix:localpart@ form and the prefix is not empty
+-- the name is split internally into
+-- a prefix and a local part.
 
 mkName                          :: String -> QName
 mkName n                        
     | (':' `elem` n)
       &&
-      isWellformedQualifiedName n
-                                = let
-                                  (px, (_:lp)) = span (/= ':') n
-                                  in
-                                  mkPrefixLocalPart px lp
+      not (null px)			-- more restrictive: isWellformedQualifiedName n
+                                = mkPrefixLocalPart px lp
     | otherwise                 = mkPrefixLocalPart "" n
+    where
+    (px, (_:lp)) = span (/= ':') n
 
 -- |
 -- constructs a complete qualified name with 'namePrefix', 'localPart' and 'namespaceUri'.
+-- This function can be used to build not wellformed prefix:localpart names.
+-- The XPath module uses wildcard names like @xxx:*@. These must be build with 'mkQName'
+-- and not with mkName.
 
 mkQName                         :: String -> String -> String -> QName
 mkQName px lp ns
@@ -314,7 +319,8 @@ mkSNsName                       :: String -> QName
 mkSNsName                       = mkName
 
 -- |
--- constructs a simple, namespace aware name, with prefix:localPart as first parameter, namspace uri as second.
+-- constructs a simple, namespace aware name, with prefix:localPart as first parameter,
+-- namspace uri as second.
 --
 -- see also 'mkName', 'mkPrefixLocalPart'
 

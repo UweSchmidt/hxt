@@ -614,16 +614,15 @@ variableReference
 -- [37] NameTest
 nameTest :: AxisSpec -> XParser QName
 nameTest as
-    = do
-      tokenParser (symbol "*")
-      uris <- getState
-      return (enhanceQN as uris $ mkName "*")
-      <|> try ( do
-                  pre <- ncName
-                  symbol ":*"
-                  uris <- getState
-                  return (enhanceQN as uris $ mkNsName (pre ++ ":*") "")                
-              )
+    = do tokenParser (symbol "*")
+	 uris <- getState
+	 return (enhanceQN as uris $ mkPrefixLocalPart "" "*")
+      <|>
+      try ( do pre <- ncName
+               symbol ":*"
+               uris <- getState
+               return (enhanceQN as uris $ mkPrefixLocalPart pre "*")
+	  )
       <|>
       do
       (pre,local) <- qName      	      
@@ -650,3 +649,5 @@ nodeType
              , symbolParser (n_node, XPNode)
              ]
       <?> "nodeType"
+
+-- ------------------------------------------------------------

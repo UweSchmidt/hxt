@@ -13,6 +13,9 @@ all		: $(prog) $(prog2)
 force		:
 		$(GHC) --make -o $(prog) $(prog).hs
 
+local		:
+		ghc --make -o $(prog2) $(GHCFLAGS) -fglasgow-exts -ignore-package hxt -i../../../src $(prog2).hs
+
 $(prog)		: $(prog).hs
 		$(GHC) --make -o $@ $<
 
