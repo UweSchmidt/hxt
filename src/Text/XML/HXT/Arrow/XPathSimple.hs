@@ -42,6 +42,8 @@
 module Text.XML.HXT.Arrow.XPathSimple
 where
 
+-- import qualified Debug.Trace as T
+
 import Control.Monad
 import Control.Arrow.ListArrows
 
@@ -132,6 +134,7 @@ getXP env s			= either ( err
 							   )
 						      ) . compXPath
 					   )
+				  -- . ( \ e -> T.trace (("getXP: xp = "++) . show $ e) e)
 				  .
 				  runParser parseXPath env ""
 				  $ s

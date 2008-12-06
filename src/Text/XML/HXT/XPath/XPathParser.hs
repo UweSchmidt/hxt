@@ -624,11 +624,10 @@ nameTest as
                return (enhanceQN as uris $ mkPrefixLocalPart pre "*")
 	  )
       <|>
-      do
-      (pre,local) <- qName      	      
-      uris <- getState
-      return (enhanceQN as uris $ mkNsName (pre ++ ":" ++ local) "")
-      <?> "nameTest"	
+      do (pre,local) <- qName
+	 uris <- getState
+	 return (enhanceQN as uris $ mkPrefixLocalPart pre local)
+      <?> "nameTest"
 
 	
 -- [38] NodeType
