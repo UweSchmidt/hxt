@@ -22,7 +22,8 @@ module Text.XML.HXT.IO.GetFILE
 
 where
 
-import qualified Data.ByteString as B
+import qualified Data.ByteString        as B
+import qualified Data.ByteString.Char8  as C
 
 import           System.IO		( IOMode(..)
 					, openFile
@@ -41,17 +42,13 @@ import           System.Directory	( doesFileExist
 
 -- ------------------------------------------------------------
 
-byteToString	:: B.ByteString -> String
-byteToString	= map (toEnum . fromEnum) . B.unpack
-{-# INLINE byteToString #-}
-
 getStdinCont		:: Bool -> IO (Either String String)
 getStdinCont strictInput
     = do
       c <- try ( if strictInput
 		 then do
 		      cb <- B.getContents
-		      return  (byteToString cb)
+		      return  (C.unpack cb)
 		 else getContents
 	       )
       return (either readErr Right c)
@@ -75,7 +72,7 @@ getCont strictInput source
 		      c <- try ( if strictInput
 				 then do
 				      cb <- B.readFile source
-				      return (byteToString cb)
+				      return (C.unpack cb)
 				 else do
 				      h <- openFile source' ReadMode
 				      hGetContents h

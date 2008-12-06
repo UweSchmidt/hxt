@@ -21,6 +21,8 @@ where
 import           Control.Monad		( mplus )
 
 import qualified Data.ByteString	as B
+import qualified Data.ByteString.Char8  as C
+
 import           Data.Char
 import           Data.List
 import qualified Data.Map		as M
@@ -95,10 +97,7 @@ readMimeTypeTable	:: FilePath -> IO MimeTypeTable
 readMimeTypeTable inp
     = do
       cb <- B.readFile inp
-      return . M.fromList . parseMimeTypeTable . byteToString $ cb
-    where
-    byteToString	:: B.ByteString -> String
-    byteToString	= map (toEnum . fromEnum) . B.unpack
+      return . M.fromList . parseMimeTypeTable . C.unpack $ cb
 
 parseMimeTypeTable	:: String -> [(String, String)]
 parseMimeTypeTable

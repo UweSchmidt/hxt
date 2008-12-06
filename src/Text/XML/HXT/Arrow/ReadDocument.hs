@@ -110,7 +110,8 @@ available options:
 - 'a_use_curl' : obsolete and ignored, HTTP acccess is always done with curl bindings for libcurl
 
 - 'a_strict_input' : file input is done strictly using the 'Data.ByteString' input functions. This ensures correct closing of files, especially when working with
-                     the tagsoup parser and not processing the whole input data. Default is off.
+                     the tagsoup parser and not processing the whole input data. Default is off. The @ByteString@ input usually is not faster than the buildin @hGetContents@
+		     for strings.
 
 - 'a_options_curl' : deprecated but for compatibility reasons still supported.
                      More options passed to the curl binding.

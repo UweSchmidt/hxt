@@ -8,6 +8,10 @@ GHC		= ghc $(GHCFLAGS) $(PKGFLAGS)
 DIST		= $(HXT_HOME)/dist/examples/arrows
 DIST_DIR	= $(DIST)/performance
 
+CNT		= 3
+
+ropts		= +RTS -s -RTS 
+
 prog		= ./GenDoc
 prog2		= ./ReadDoc
 prog3		= ./PruneRight
@@ -57,7 +61,7 @@ perftest	: $(prog)
 genfiles	:
 		@for i in $(tests) ; \
 		do \
-		echo time $(prog) $$i ; \
+		echo time $(prog) $(ropts) $$i ; \
 		time $(prog) $$i ; \
 		ls -l tree-*$$i.xml ; \
 		echo ; \
@@ -66,7 +70,7 @@ genfiles	:
 readfiles	:
 		@for i in $(tests) ; \
 		do \
-		echo time $(prog2) $$i ; \
+		echo time $(prog2) $(ropts) $$i ; \
 		time $(prog2) $$i ; \
 		echo ; \
 		done
@@ -74,7 +78,7 @@ readfiles	:
 pruneright	:
 		@for i in $(tests) ; \
 		do \
-		echo time $(prog3) $$i ; \
+		echo time $(prog3) $(ropts) $$i ; \
 		time $(prog3) $$i ; \
 		echo ; \
 		done
@@ -82,7 +86,7 @@ pruneright	:
 pruneleft	:
 		@for i in $(tests) ; \
 		do \
-		echo time $(prog4) $$i ; \
+		echo time $(prog4) $(ropts) $$i ; \
 		time $(prog4) $$i ; \
 		echo ; \
 		done
@@ -91,7 +95,7 @@ memtest	:
 		@for i in $(tests) ; \
 		do \
 		echo time $(prog5) $$i ; \
-		time $(prog5) $$i ; \
+		time $(prog5) $(ropts) $$i ; \
 		echo ; \
 		done
 
