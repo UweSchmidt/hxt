@@ -73,7 +73,7 @@ part4a dir
 part4b :: [String]
 part4b
     = [ " hs-source-dirs: src"
-      , " ghc-options: -Wall -O"
+      , " ghc-options: -Wall"
       , " extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances"
       , ""
       , " build-depends: base       >= 4,"
