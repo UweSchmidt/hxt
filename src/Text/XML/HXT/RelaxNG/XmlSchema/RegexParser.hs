@@ -22,8 +22,8 @@ module Text.XML.HXT.RelaxNG.XmlSchema.RegexParser
     ( parseRegex )
 where
 
-import Control.Applicative ( liftA2 )
 import Data.Maybe
+
 import Text.ParserCombinators.Parsec
 
 import Text.XML.HXT.DOM.Unicode
@@ -176,9 +176,9 @@ multiCharEsc
 	 , ('w', not . isNotWord		)
 	 , ('W',       isNotWord		)
 	 ]
-    isDigit   = ('0' <=) &&& (<= '9')
-    isNotWord = isUnicodeP |||
-		isUnicodeZ |||
+    isDigit   = ('0' <=) <&&> (<= '9')
+    isNotWord = isUnicodeP <||>
+		isUnicodeZ <||>
 		isUnicodeC
 
 catEsc	:: Parser Regex
@@ -204,7 +204,7 @@ isBlock
 	 then return $ let
 		       (lb, ub) = fromJust b
 		       in
-		       (lb <=) &&& (<= ub)
+		       (lb <=) <&&> (<= ub)
 	 else fail   $ "unknown Unicode code block " ++ show name
     where
     legalChar c	 = 'A' <= c && c <= 'Z' ||
@@ -350,13 +350,5 @@ wildCardEsc
       char '.'
       return $ mkSym (`notElem` "\n\r")
 
-
--- ------------------------------------------------------------
-
-(&&&)	:: (Char -> Bool) -> (Char -> Bool) -> (Char -> Bool)
-(&&&)	= liftA2 (&&)
-
-(|||)	:: (Char -> Bool) -> (Char -> Bool) -> (Char -> Bool)
-(|||)	= liftA2 (||)
 
 -- ------------------------------------------------------------

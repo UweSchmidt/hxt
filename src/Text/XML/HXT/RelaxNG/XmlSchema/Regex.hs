@@ -39,6 +39,8 @@ module Text.XML.HXT.RelaxNG.XmlSchema.Regex
     , nullable
     , delta
     , matchWithRE
+    , (<&&>)
+    , (<||>)
     )
 where
 
@@ -80,68 +82,74 @@ instance Inv Regex where
     inv (Dif e1 e2)	= inv e1 &&
 			  inv e2
 -}
--- ------------------------------------------------------------
---
--- smart constructors
 
+-- ------------------------------------------------------------
 -- | enumerate all chars specified by a predicate
 --
 -- this function is expensive, it should only be used for testing
 
-chars		:: (Char -> Bool) -> [Char]
-chars p		= filter p $ [minBound .. maxBound]
+chars				:: (Char -> Bool) -> [Char]
+chars p				= filter p $ [minBound .. maxBound]
 
-charRngs	:: [Char] -> [(Char, Char)]
-charRngs []	= []
-charRngs (x:xs)	= charRng x xs
-                  where
-		  charRng y []		= (x,y) : []
-		  charRng y xs'@(x1:xs1)
-		      | x1 == succ y	= charRng x1 xs1
-		      | otherwise	= (x,y) : charRngs xs'
+charRngs			:: [Char] -> [(Char, Char)]
+charRngs []			= []
+charRngs (x:xs)			= charRng x xs
+                  		where
+		  		charRng y []		= (x,y) : []
+		  		charRng y xs'@(x1:xs1)
+		      		    | x1 == succ y	= charRng x1 xs1
+				    | otherwise		= (x,y) : charRngs xs'
 
-mkZero		:: String -> Regex
-mkZero		= Zero
+-- ------------------------------------------------------------
+--
+-- smart constructors
 
-mkUnit		:: Regex
-mkUnit		= Unit
+mkZero				:: String -> Regex
+mkZero				= Zero
+{-# INLINE mkZero #-}
 
-mkSym		:: (Char -> Bool) -> Regex
-mkSym		= Sym
+mkUnit				:: Regex
+mkUnit				= Unit
+{-# INLINE mkUnit #-}
 
-mkSym1		:: Char	-> Regex
-mkSym1	c	= mkSym (==c)
+mkSym				:: (Char -> Bool) -> Regex
+mkSym				= Sym
+{-# INLINE mkSym #-}
 
-mkSymRng	:: Char -> Char -> Regex
+mkSym1				:: Char	-> Regex
+mkSym1	c			= mkSym (==c)
+
+mkSymRng			:: Char -> Char -> Regex
 mkSymRng c1 c2
     | c1 == minBound &&
-      c2 == maxBound	= mkDot
-    | c1 <= c2		= mkSym  $ ( \ x -> x >= c1 && x<= c2 )
-    | otherwise		= mkZero $ "empty char range"
+      c2 == maxBound		= mkDot
+    | c1 <= c2			= mkSym  $ (>= c1) <&&> (<= c2)
+    | otherwise			= mkZero $ "empty char range"
 
-mkDot	:: Regex
-mkDot	= Dot
+mkDot				:: Regex
+mkDot				= Dot
+{-# INLINE mkDot #-}
 
-mkStar			:: Regex -> Regex
-mkStar (Zero _)		= mkUnit		-- {}* == ()
-mkStar e@Unit		= e			-- ()* == ()
-mkStar e@(Star _e1)	= e			-- (r*)* == r*
-mkStar (Rep 1 e1)	= mkStar e1		-- (r+)* == r*
-mkStar e@(Alt _ _)	= Star (rmStar e)	-- (a*|b)* == (a|b)*
-mkStar e		= Star e
+mkStar				:: Regex -> Regex
+mkStar (Zero _)			= mkUnit		-- {}* == ()
+mkStar e@Unit			= e			-- ()* == ()
+mkStar e@(Star _e1)		= e			-- (r*)* == r*
+mkStar (Rep 1 e1)		= mkStar e1		-- (r+)* == r*
+mkStar e@(Alt _ _)		= Star (rmStar e)	-- (a*|b)* == (a|b)*
+mkStar e			= Star e
 
-rmStar	:: Regex -> Regex
-rmStar (Alt e1 e2)	= mkAlt (rmStar e1) (rmStar e2)
-rmStar (Star e1)	= rmStar e1
-rmStar (Rep 1 e1)	= rmStar e1
-rmStar e1		= e1
+rmStar				:: Regex -> Regex
+rmStar (Alt e1 e2)		= mkAlt (rmStar e1) (rmStar e2)
+rmStar (Star e1)		= rmStar e1
+rmStar (Rep 1 e1)		= rmStar e1
+rmStar e1			= e1
 
 mkAlt					:: Regex -> Regex -> Regex
 mkAlt e1            (Zero _)		= e1				-- e1 u {} = e1
 mkAlt (Zero _)      e2			= e2				-- {} u e2 = e2
 mkAlt e1@(Star Dot) _e2			= e1				-- A* u e1 = A*
 mkAlt _e1           e2@(Star Dot)	= e2				-- e1 u A* = A*
-mkAlt (Sym p1)      (Sym p2)		= mkSym $ \ x -> p1 x || p2 x	-- melting of predicates
+mkAlt (Sym p1)      (Sym p2)		= mkSym $ p1 <||> p2		-- melting of predicates
 mkAlt e1            e2@(Sym _)		= mkAlt e2 e1			-- symmetry: predicates always first
 mkAlt e1@(Sym _)    (Alt e2@(Sym _) e3)	= mkAlt (mkAlt e1 e2) e3	-- prepare melting of predicates
 mkAlt (Alt e1 e2)   e3			= mkAlt e1 (mkAlt e2 e3)	-- associativity
@@ -172,8 +180,8 @@ mkRng _l _u e@(Zero _)		= e
 mkRng _l _u e@Unit		= e
 mkRng lb ub e			= Rng lb ub e
 
-mkOpt	:: Regex -> Regex
-mkOpt	= mkRng 0 1
+mkOpt				:: Regex -> Regex
+mkOpt				= mkRng 0 1
 
 mkDif	:: Regex -> Regex -> Regex
 mkDif e1@(Zero _) _e2		= e1
@@ -186,8 +194,8 @@ mkDif (Sym p1)    (Sym p2)
 				= mkZero "empty set of chars in difference expr"
 mkDif e1          e2		= Dif e1 e2
 
-mkCompl		:: Regex -> Regex
-mkCompl		= mkDif mkDot
+mkCompl				:: Regex -> Regex
+mkCompl				= mkDif mkDot
 
 -- ------------------------------------------------------------
 
@@ -231,6 +239,7 @@ instance Show Regex where
 isZero			:: Regex -> Bool
 isZero (Zero _)		= True
 isZero _		= False
+{-# INLINE isZero #-}
 
 nullable		:: Regex -> Bool
 nullable (Zero _)	= False
@@ -291,5 +300,18 @@ matchWithRE e
     res re
 	| nullable re	= Nothing	-- o.k.
 	| otherwise	= Just $ "input does not match " ++ show e
+
+-- ------------------------------------------------------------
+
+(<&&>)		:: (Char -> Bool) -> (Char -> Bool) -> (Char -> Bool)
+f <&&> g	= \ x -> f x && g x		-- liftA2 (&&)
+
+{-# INLINE (<&&>) #-}
+
+
+(<||>)		:: (Char -> Bool) -> (Char -> Bool) -> (Char -> Bool)
+f <||> g	= \ x -> f x || g x		-- liftA2 (||)
+
+{-# INLINE (<||>) #-}
 
 -- ------------------------------------------------------------

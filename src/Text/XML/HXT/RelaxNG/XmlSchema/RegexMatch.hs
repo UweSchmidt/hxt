@@ -37,8 +37,11 @@ import Data.Maybe
 import Text.XML.HXT.RelaxNG.XmlSchema.Regex
 import Text.XML.HXT.RelaxNG.XmlSchema.RegexParser
 
--- ------------------------------------------------------------
+{-
+import qualified Debug.Trace as T
+-}
 
+-- ------------------------------------------------------------
 
 splitRegex		:: Regex -> String -> Maybe (String, String)
 splitRegex re ""
@@ -47,14 +50,16 @@ splitRegex re ""
 
 splitRegex re inp@(c : inp')
     | isZero   re	= Nothing
-    | otherwise		= evalRes . splitRegex (delta re c) $ inp'
+    | otherwise		= evalRes . splitRegex {- (T.trace (show re') re') -} re' $ inp'
     where
+    re' = delta re c
     evalRes Nothing
 	| nullable re	= Just ("", inp)
 	| otherwise	= Nothing
 
     evalRes (Just (tok, rest))
 	    		= Just (c : tok, rest)
+
 -- ------------------------------------------------------------
 
 -- | split a string by taking the longest prefix matching a regular expression
@@ -65,7 +70,8 @@ splitRegex re inp@(c : inp')
 -- examples:
 --
 -- > splitRE "a*b" "abc" = Just ("ab","c")
--- > splitRE "a*"  "bc"  = Just ("", "bc)
+-- > splitRE "a*"  "bc"  = Just ("", "bc")
+-- > splitRE "a+"  "bc"  = Nothing
 -- > splitRE "["   "abc" = Nothing
 
 splitRE	:: String -> String -> Maybe (String, String)
@@ -116,10 +122,11 @@ tokenizeRE regex input
 	| null inp	= []
 	| otherwise	= evalRes . splitRegex re $ inp
 	where
-	evalRes Nothing	= token' re (tail inp)	-- re does not match any prefix
+	token''         = token' re
+	evalRes Nothing	= token'' (tail inp)		-- re does not match any prefix
 	evalRes (Just (tok, rest))
-	    | null tok	= token' re (tail rest)	-- re is nullable and only the empty prefix matches
-	    | otherwise	= tok : token' re rest	-- token found, tokenize the rest
+	    | null tok	= token'' (tail rest)		-- re is nullable and only the empty prefix matches
+	    | otherwise	= tok : token'' rest		-- token found, tokenize the rest
 
 -- | convenient function for tokenizeRE a string
 --
@@ -229,4 +236,3 @@ match re	= fromMaybe False . matchRE re
 
 -- ------------------------------------------------------------
 
--- ------------------------------------------------------------
