@@ -1,7 +1,19 @@
--- |
--- state arrows for document output
---
--- version: $Id: DocumentOutput.hs,v 1.7 2006/11/02 09:34:08 hxml Exp $
+-- ------------------------------------------------------------
+
+{- |
+   Module     : Text.XML.HXT.Arrow.DocumentOutput
+   Copyright  : Copyright (C) 2005-9 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : experimental
+   Portability: portable
+
+   State arrows for document output
+
+-}
+
+-- ------------------------------------------------------------
 
 module Text.XML.HXT.Arrow.DocumentOutput
     ( module Text.XML.HXT.Arrow.DocumentOutput )

@@ -255,6 +255,27 @@
       <li>In <a href="hxt-8.2.0.tar.gz">Version 8.2.0</a>
 	<ul>
 	  <li>
+	    New output option "a_no_empty_elements" for preventing
+	    the XML short format "&lt;name/&gt;" for HTML elements,
+	    like "script", "p", and others. Especially a script tag
+	    of the form "&lt;script href="..."/&gt;" does not work in
+	    firefox.
+	    Turning this option on gives the form "&lt;script href="..."&gt;&lt;/script&gt;".
+	  </li>
+	  <li>
+	    An input option "a_strict_input" for bytestring input of
+	    files added. Lazy input, especially when using the tagsoup
+	    parser, can lead to error messages like "too many open
+	    files" when processing a whole bunsh of documents.
+	  </li>
+	  <li>Internal representation of qualified names changed to gain
+	    more space efficency.
+	  </li>
+	</ul>
+      </li>
+      <li>In <a href="hxt-8.2.0.tar.gz">Version 8.2.0</a>
+	<ul>
+	  <li>
 	    Modifications to work with ghc-6.10.
 	  </li>
 	  <li>

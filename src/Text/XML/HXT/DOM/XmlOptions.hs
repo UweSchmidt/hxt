@@ -113,6 +113,7 @@ outputOptions
       , Option "f"	[a_output_file]		(ReqArg (att a_output_file)        "FILE")	"output file for resulting document (default: stdout)"
       , Option ""	[a_output_html]	        (NoArg  (att a_output_html           v_1))	"output of none ASCII chars as HTMl entity references"
       , Option ""       [a_no_xml_pi]	        (NoArg  (att a_no_xml_pi             v_1))      ("output without <?xml ...?> processing instruction, useful in combination with --" ++ show a_output_html)
+      , Option ""       [a_no_empty_elements]   (NoArg  (att a_no_empty_elements     v_1))      "output of empty elements done in format <elem...></elem> instead of <elem/>"
       ]
     where
     att n v	= (n, v)

@@ -2,15 +2,14 @@
 
 {- |
    Module     : Text.XML.HXT.Arrow.WriteDocument
-   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   Copyright  : Copyright (C) 2005-9 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: WriteDocument.hs,v 1.8 2006/11/09 20:27:42 hxml Exp $
 
-Compound arrow for writing XML documents
+   Compound arrow for writing XML documents
 
 -}
 
@@ -32,19 +31,18 @@ import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlIOStateArrow
 
-import Text.XML.HXT.Arrow.Edit
-    ( indentDoc
-    , removeDocWhiteSpace
-    , treeRepOfXmlDoc
-    , haskellRepOfXmlDoc
-    , escapeXmlDoc
-    , escapeHtmlDoc
-    )
+import Text.XML.HXT.Arrow.Edit			( escapeHtmlDoc
+						, escapeXmlDoc
+						, haskellRepOfXmlDoc
+						, indentDoc
+						, preventEmptyElements
+						, removeDocWhiteSpace
+						, treeRepOfXmlDoc
+						)
 
-import Text.XML.HXT.Arrow.DocumentOutput
-    ( putXmlDocument
-    , encodeDocument
-    )
+import Text.XML.HXT.Arrow.DocumentOutput	( putXmlDocument
+						, encodeDocument
+						)
 
 -- ------------------------------------------------------------
 
@@ -72,6 +70,11 @@ available options are
                    for non XML output, e.g. generated Haskell code, LaTex, Java, ...
 
 - 'a_output_html' : issue XHTML: quote alle XML chars, use HTML entity refs or char refs for none ASCII chars
+
+- 'a_no_empty_elements' : do not write the short form \<name .../\> for empty elements. When 'a_output_html' is set,
+                          the always empty HTML elements are still written in short form, but not the others, as e.g. the script element.
+                          Empty script elements, like \<script href=\"...\"/\>, are always a problem for firefox and others.
+                          When XML output is generated with this option, all empty elements are written in the long form.
 
 - 'a_no_xml_pi' : suppress generation of \<?xml ... ?\> processing instruction
 
@@ -158,6 +161,9 @@ prepareContents userOptions
       >>>
       format
     where
+    formatEmptyElems
+	| hasOption a_no_empty_elements = preventEmptyElements
+	| otherwise                     = const this
     indent
 	| hasOption a_indent		= indentDoc			-- document indentation
 	| hasOption a_remove_whitespace	= removeDocWhiteSpace		-- remove all whitespace between tags
@@ -166,11 +172,15 @@ prepareContents userOptions
     format
 	| hasOption a_show_tree		= treeRepOfXmlDoc
 	| hasOption a_show_haskell	= haskellRepOfXmlDoc
-	| hasOption a_output_html	= escapeHtmlDoc			-- escape al XML and HTML chars >= 128
+	| hasOption a_output_html	= formatEmptyElems True
+					  >>>
+					  escapeHtmlDoc			-- escape al XML and HTML chars >= 128
 					  >>>
 					  encodeDocument		-- convert doc into text with respect to output encoding with ASCII as default
 					    suppressXmlPi ( lookupDef usAscii a_output_encoding options )
-	| hasOption a_output_xml	= escapeXmlDoc			-- escape lt, gt, amp, quot, 
+	| hasOption a_output_xml	= formatEmptyElems False
+					  >>>
+					  escapeXmlDoc			-- escape lt, gt, amp, quot, 
 					  >>>
 					  encodeDocument		-- convert doc into text with respect to output encoding
 					    suppressXmlPi ( lookupDef "" a_output_encoding options )
@@ -191,6 +201,7 @@ prepareContents userOptions
 	      , ( a_show_haskell,	v_0 )
 	      , ( a_output_html,	v_0 )
 	      , ( a_no_xml_pi,          v_0 )
+	      , ( a_no_empty_elements,  v_0 )
 	      ]
 
 -- ------------------------------------------------------------

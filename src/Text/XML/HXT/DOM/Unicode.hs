@@ -278,9 +278,9 @@ isXmlNCNameStartChar c
 
 isXmlPubidChar		:: Unicode -> Bool
 isXmlPubidChar c
-    = isInList c [ ('A', 'Z')
+    = isInList c [ ('0', '9')
+		 , ('A', 'Z')
 		 , ('a', 'z')
-		 , ('0', '9')
 		 ]
       ||
       ( c `elem` " \r\n-'()+,./:=?;!*#@$_%" )

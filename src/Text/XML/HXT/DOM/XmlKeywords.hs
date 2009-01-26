@@ -56,6 +56,7 @@ a_canonicalize,
  a_module,
  a_modifier,
  a_name,
+ a_no_empty_elements,
  a_no_xml_pi,
  a_options_curl,
  a_output_encoding,
@@ -163,6 +164,7 @@ a_mime_types			= "mimetypes"
 a_module			= "module"
 a_modifier			= "modifier"
 a_name				= "name"
+a_no_empty_elements		= "no-empty-elements"
 a_no_xml_pi                     = "no-xml-pi"
 a_options_curl			= "options-curl"
 a_output_file			= "output-file"

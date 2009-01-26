@@ -2,7 +2,7 @@
 
 {- |
    Module     : Text.XML.HXT.DOM.ShowXml
-   Copyright  : Copyright (C) 2008 Uwe Schmidt
+   Copyright  : Copyright (C) 2008-9 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
@@ -21,15 +21,14 @@ module Text.XML.HXT.DOM.ShowXml
     )
 where
 
+import Data.Maybe
 import Data.Tree.NTree.TypeDefs
 
 import Text.XML.HXT.DOM.TypeDefs		-- XML Tree types
 import Text.XML.HXT.DOM.XmlKeywords
-import Text.XML.HXT.DOM.XmlNode
-    ( mkDTDElem
-    , getDTDAttrl
-    )
-import Data.Maybe
+import Text.XML.HXT.DOM.XmlNode			( mkDTDElem
+						, getDTDAttrl
+						)
 
 -- -----------------------------------------------------------------------------
 --

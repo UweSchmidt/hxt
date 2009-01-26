@@ -2,7 +2,7 @@
 
 {- |
    Module     : Text.XML.HXT.Arrow.Edit
-   Copyright  : Copyright (C) 2006 Uwe Schmidt
+   Copyright  : Copyright (C) 2006-9 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
@@ -33,6 +33,7 @@ module Text.XML.HXT.Arrow.Edit
 
     , indentDoc
     , numberLinesInXmlDoc
+    , preventEmptyElements
  
     , removeComment
     , removeAllComment
@@ -56,35 +57,23 @@ module Text.XML.HXT.Arrow.Edit
     )
 where
 
-import Control.Arrow
-import Control.Arrow.ArrowList
-import Control.Arrow.ArrowIf
-import Control.Arrow.ArrowTree
+import           Control.Arrow
+import           Control.Arrow.ArrowList
+import           Control.Arrow.ArrowIf
+import           Control.Arrow.ArrowTree
+import 		 Control.Arrow.ListArrow
 
-import Control.Arrow.ListArrow
+import           Text.XML.HXT.Arrow.XmlArrow
+import           Text.XML.HXT.DOM.Interface
+import qualified Text.XML.HXT.DOM.XmlNode 	as XN
+import           Text.XML.HXT.DOM.Unicode		( isXmlSpaceChar )
+import           Text.XML.HXT.DOM.FormatXmlTree 	( formatXmlTree )
+import           Text.XML.HXT.Parser.HtmlParsec         ( emptyHtmlTags )
+import           Text.XML.HXT.Parser.XmlEntities	( xmlEntities )
+import           Text.XML.HXT.Parser.XhtmlEntities	( xhtmlEntities )
 
-import Text.XML.HXT.Arrow.XmlArrow
-
-import Text.XML.HXT.DOM.Interface
-
-import qualified
-       Text.XML.HXT.DOM.XmlNode as XN
-
-import Text.XML.HXT.DOM.Unicode
-    ( isXmlSpaceChar )
-
-import Text.XML.HXT.DOM.FormatXmlTree
-    ( formatXmlTree )
-
-import Text.XML.HXT.Parser.XmlEntities
-    ( xmlEntities )
-
-import Text.XML.HXT.Parser.XhtmlEntities
-    ( xhtmlEntities )
-
-import Data.Maybe
-
-import qualified Data.Map as M
+import qualified Data.Map 			as M
+import           Data.Maybe
 
 -- ------------------------------------------------------------
 
@@ -304,6 +293,8 @@ escapeXmlEntityRef	= escapeEntityRef xmlEntityRefTable
 escapeHtmlEntityRef	:: Char -> XmlTree
 escapeHtmlEntityRef	= escapeEntityRef xhtmlEntityRefTable
 
+-- ------------------------------------------------------------
+
 -- |
 -- escape all special XML chars into XML entity references or char references
 --
@@ -328,6 +319,8 @@ escapeXmlDoc
 -- in attribute values also \', \", \>, \\n, \\r and \\t are converted into entity or char references,
 -- in comments nothing is converted
 
+-- ------------------------------------------------------------
+
 escapeHtmlDoc		:: ArrowList a => a XmlTree XmlTree
 escapeHtmlDoc
     = fromLA $ escapeDoc escHtmlText escHtmlAttrValue
@@ -341,6 +334,8 @@ escapeHtmlDoc
 	= c >= toEnum(128) || ( c `elem` "<&" )
     isHtmlAttrEsc c
 	= c >= toEnum(128) || ( c `elem` "<>\"\'&\n\r\t" )
+
+-- ------------------------------------------------------------
 
 escapeDoc		:: LA XmlTree XmlTree -> LA XmlTree XmlTree -> LA XmlTree XmlTree
 escapeDoc escText escAttr
@@ -359,6 +354,28 @@ escapeDoc escText escAttr
 	  ]
     escVal   = processChildren escAttr
     escDTD   = escVal `when` ( isDTDEntity <+> isDTDPEntity )
+
+-- ------------------------------------------------------------
+
+preventEmptyElements	:: ArrowList a => Bool -> a XmlTree XmlTree
+preventEmptyElements isHtml
+    = fromLA $ insertDummyElem
+    where
+    isNoneEmpty
+	| isHtml	= hasNameWith (localPart >>> (`notElem` emptyHtmlTags))
+	| otherwise	= this
+
+    insertDummyElem
+	= processBottomUp
+	  ( replaceChildren (txt "")
+	    `when`
+	    ( isElem
+	      >>>
+	      isNoneEmpty
+	      >>>
+	      neg getChildren
+	    )
+	  )
 
 -- ------------------------------------------------------------
 

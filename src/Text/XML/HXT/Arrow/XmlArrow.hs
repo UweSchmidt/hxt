@@ -2,13 +2,12 @@
 
 {- |
    Module     : Text.XML.HXT.Arrow.XmlArrow
-   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   Copyright  : Copyright (C) 2005-9 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: XmlArrow.hs,v 1.34 2006/11/02 16:43:39 hxml Exp $
 
    Basic arrows for processing XML documents
 
@@ -22,24 +21,25 @@ module Text.XML.HXT.Arrow.XmlArrow
     ( module Text.XML.HXT.Arrow.XmlArrow )
 where
 
-import Data.Maybe
+import           Control.Arrow			-- classes
+import           Control.Arrow.ArrowList
+import           Control.Arrow.ArrowIf
+import           Control.Arrow.ArrowTree
 
-import Control.Arrow			-- classes
-import Control.Arrow.ArrowList
-import Control.Arrow.ArrowIf
-import Control.Arrow.ArrowTree
+import           Control.Arrow.ListArrow		-- arrow types
+import           Control.Arrow.StateListArrow
+import           Control.Arrow.IOListArrow
+import           Control.Arrow.IOStateListArrow
 
-import Control.Arrow.ListArrow		-- arrow types
-import Control.Arrow.StateListArrow
-import Control.Arrow.IOListArrow
-import Control.Arrow.IOStateListArrow
+import           Data.Maybe
 
 import           Text.XML.HXT.DOM.Interface
-import           Text.XML.HXT.DOM.Unicode
-    ( isXmlSpaceChar
-    )
+import           Text.XML.HXT.DOM.Unicode	( isXmlSpaceChar
+						)
 import qualified Text.XML.HXT.DOM.XmlNode as XN
 import qualified Text.XML.HXT.DOM.ShowXml as XS
+
+-- ------------------------------------------------------------
 
 {- | Arrows for processing 'Text.XML.HXT.DOM.TypeDefs.XmlTree's
 
