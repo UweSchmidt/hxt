@@ -37,8 +37,9 @@ EX2		= ../../xhtml/xhtml.xml
 EX3		= ./namespace0.xml
 EX3a		= ./namespace1.xml
 EX4		= ./lousy.html
+EX4a		= ./emptyElements.html
 
-EX		= $(wildcard example*.xml) $(wildcard lousy*.html) $(wildcard *valid*.xml *valid*.rng) $(wildcard namespace*.xml)
+EX		= $(wildcard example*.xml) $(wildcard lousy*.html) $(wildcard empty*.html) $(wildcard *valid*.xml *valid*.rng) $(wildcard namespace*.xml)
 
 test0		:
 		@echo "===> a 1. simple valid document"
@@ -108,6 +109,11 @@ test4		:
 		$(prog) --indent --preserve-comment --parse-html $(EX4)
 		@sleep 2 ; echo ; echo "===> same with lasy parser with tagsoup" ; echo ; sleep 2
 		$(prog) -H -T -r --indent $(EX4)
+		@echo
+		@echo "===> the source of another lousy html document containing empty elements" ; echo ; sleep 2
+		cat $(EX4a)
+		@sleep 2 ; echo ; echo "===> parser accepts this document and tries to build a document tree" ; echo ; sleep 2
+		$(prog) --indent --preserve-comment --parse-html --output-html --no-empty-elements $(EX4a)
 		@echo
 
 
