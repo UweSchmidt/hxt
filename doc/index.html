@@ -159,7 +159,7 @@
     <p>
       The description of the development of the <a href="http://www.w3.org/TR/xpath">XPath</a> modules
       is described (in german) in <em>Konzeption und Implementierung
-	eines XPath-Moduls für die Haskell XML Toolbox</em>
+	eines XPath-Moduls f&uuml;r die Haskell XML Toolbox</em>
       (<a href="./hxpath/diplomarbeit.pdf">PDF-document</a>).
     </p>
 
@@ -228,10 +228,9 @@
       <tt>.../HXT-%VERSION%</tt>
     </p>
     <pre>
-    make setup
-    ./setup configure --ghc
-    ./setup build
-    ./setup install		# with root privileges
+    cabal configure
+    cabal build
+    sudo cabal install --global
     </pre>
     <p>
       A quick test of the example programs:
@@ -252,7 +251,7 @@
     <a name="change"></a>
     <h3>Change History</h3>
     <ul>
-      <li>In <a href="hxt-8.2.0.tar.gz">Version 8.2.0</a>
+      <li>In <a href="hxt-8.3.0.tar.gz">Version 8.3.0</a>
 	<ul>
 	  <li>
 	    New output option "a_no_empty_elements" for preventing
@@ -260,7 +259,7 @@
 	    like "script", "p", and others. Especially a script tag
 	    of the form "&lt;script href="..."/&gt;" does not work in
 	    firefox.
-	    Turning this option on gives the form "&lt;script href="..."&gt;&lt;/script&gt;".
+	    Turning on this option gives the form "&lt;script href="..."&gt;&lt;/script&gt;".
 	  </li>
 	  <li>
 	    An input option "a_strict_input" for bytestring input of
