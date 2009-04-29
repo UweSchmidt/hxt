@@ -1,75 +1,77 @@
-\begin{hcarentry}{Haskell XML Toolbox}
+\begin{hcarentry}[updated]{Haskell XML Toolbox}
 \label{hxt}
-\report{Uwe Schmidt}
-\status{seventh major release (current release: 8.0.0)}
-\participants{(Christial Uhlig)}
-\entry{changed}
+\report{Uwe Schmidt}%11/08
+\status{seventh major release (current release: 8.3.0)}
 \makeheader
 
 \subsubsection*{Description}
 
-The Haskell XML Toolbox is a collection of tools for processing XML with
+The Haskell XML Toolbox (HXT) is a collection of tools for processing XML with
 Haskell. It is itself purely written in Haskell 98. The core component of the
 Haskell XML Toolbox is a validating XML-Parser that supports
-almost fully the Extensible Markup Language (XML) 1.0 (Second Edition),
+almost fully the Extensible Markup Language (XML) 1.0 (Second Edition).
 There is a validator based on DTDs and a new more powerful one for
-Relax NG schemas.
+Relax~NG schemas.
 
-The Haskell XML Toolbox bases on the ideas of HaXml~\cref{haxml} and HXML,
+The Haskell XML Toolbox is based on the ideas of HaXml~\cref{haxml} and HXML,
 but introduces a more general approach for processing XML with Haskell.
 The processing model is based on arrows. The arrow interface is more flexible
 than the filter approach taken in the earlier HXT versions and in HaXml.
-It is also safer, type checking of combinators becomes possible with the arrow
+It is also safer; type checking of combinators becomes possible with the arrow
 approach.
+
+HXT consists of two packages, the old first approach (hxt-filter)
+based on filters and the newer and more flexible and save approach
+using arrows (hxt). The old package hxt-filter, will further be maintained to work
+with the latest ghc version, but new development will only be done
+with the arrow based hxt package.
 
 \subsubsection*{Features}
 
-\begin{compactitem}
+\begin{itemize}
 \item Validating XML parser
 \item Very liberal HTML parser
-\item Lightweight lazy parser for XML/HTML based on Tagsoup
+\item Lightweight lazy parser for XML/HTML based on Tagsoup~\cref{tagsoup}
 \item Easy de-/serialization between native Haskell data and XML by pickler and pickler combinators
 \item XPath support
 \item Full Unicode support
 \item Support for XML namespaces
-\item Cabal package support for ghc
-\item Native Haskell support of HTTP 1.1 and FILE protocol
-\item HTTP and access via other protocols via external program curl
+\item Cabal package support for GHC
+\item HTTP access via Haskell bindings to libcurl
 \item Tested with W3C XML validation suite
 \item Example programs
-\item Relax NG schema validator
-\item A HXT Cookbook for using the toolbox and the arrow interface
+\item Relax~NG schema validator
+\item An HXT Cookbook for using the toolbox and the arrow interface
 \item Basic XSLT support
-\item darcs repository with current development version (8.0.1) under
-  \url{http://darcs.fh-wedel.de/hxt}
-\end{compactitem}
+\item Darcs repository with current development version (8.3.1) under
+  \url{http://darcs2.fh-wedel.de/hxt}
+\end{itemize}
 
 \subsubsection*{Current Work}
 
-In a master student's project done by Christian Uhlig, the development of a web server called Janus,
-has been finished.
-The title is \emph{A Dynamic Webserver with Servlet Functionality in
-  Haskell Representing all Internal Data by Means of XML}.
-HXT has been used for processing all internal data of this web server.
-The Janus server is highly configurable and can be used not only as HTTP server, but for
-various other server like tasks.
-This server is used and will be further developed and extended within another
-project called Holumbus (\url{http://holumbus.fh-wedel.de/}.
-Holumbus is a framework for developing specialized
-search engines.
-The Janus system is available via \url{http://darcs.fh-wedel.de/janus}.
-Current activity consists of testing, example applications, demos and documentation.
-An application of Janus is the Hayoo! search engine (\uri{http://holumbus.fh-wedel.de/hayoo/}
-implemented with the Holumbus framework~\cref{holumbus}.
+Currently mainly maintenance work is done. This includes
+space and runtime optimizations, the internal representation of XML
+names has been changed to gain less memory consumption. Equal XML names
+share the same main memory.
+
+It is planned to further develop and extend the validation part with
+Relax~NG and the conversion from/to Haskell internal data. The pickler
+approach used in that task can be extended to derive DTDs, Relax~NG
+Schemas or XML Schemas for Validation of the external XML representation.
+
+The HXT library is extensively used in the Holumbus
+project~\cref{holumbus}, there it forms the basis for the index generation.
 
 \FurtherReading
-
 The Haskell XML Toolbox Web page
 (\url{http://www.fh-wedel.de/~si/HXmlToolbox/index.html})
 includes downloads, online API documentation, a cookbook with nontrivial examples
-of XML processing using arrows and RDF documents, and master thesises describing the
-design of the toolbox, the DTD validator, the arrow based Relax NG
-validator and the XSLT system.
-A getting started tutorial about HXT is avaliable in the Haskell Wiki (\url{http://www.haskell.org/haskellwiki/HXT}
-).
+of XML processing using arrows and RDF documents, and master theses describing the
+design of the toolbox, the DTD validator, the arrow based Relax~NG
+validator, and the XSLT system.
+
+A getting started tutorial about HXT is available in the Haskell Wiki (\url{http://www.haskell.org/haskellwiki/HXT}
+). The conversion between XML and native Haskell datatypes is
+described in another Wiki page
+(\url{http://www.haskell.org/haskellwiki/HXT/Conversion_of_Haskell_data_from/to_XML}).
 \end{hcarentry}
