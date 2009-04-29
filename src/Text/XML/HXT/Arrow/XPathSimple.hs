@@ -10,29 +10,29 @@
    Portability: portable
 
    XPath selection for simple XPath expressions with list arrows
-   instead of navigatable trees.
+   instead of navigable trees.
 
-   It is recomended, that this module is imported qualified,
+   It is recommended, that this module is imported qualified,
    e.g like @Text.XML.HXT.Arrow.XPathSimple as XS@.
 
    The arrows defined in this module have the same
    functionality as the functions in 'Text.XML.HXT.Arrow.XPath'.
 
-   The computation modell in XPath is a navigatable tree,
-   that means a tree wicht can be traveresed in arbitrary directions,
-   not only from the root to the leafs. Sometimes this modell
-   leads to inefficent XPath processing for simple queries, which
+   The computation model in XPath is a navigable tree,
+   that means a tree which can be traversed in arbitrary directions,
+   not only from the root to the leafs. Sometimes this model
+   leads to inefficient XPath processing for simple queries, which
    only need a top down tree traversal.
 
    When evaluating an XPath expression with these functions, first an attempt is made
    to map the XPath expression to a pure arrow. If this is possible
-   due to the siplicity of the XPath expressions, the result is computed
+   due to the simplicity of the XPath expressions, the result is computed
    directly, else the query is processed by the corresponding
    function in 'Text.XML.HXT.Arrow.XPath'.
 
    The simple evaluation is possible, when in the XPath expression
-   only the top down axis (self, child, descendant, descendant or self are used,
-   when no builtin functions concerning the position of a node are used,
+   only the top down axes (self, child, descendant, descendant or self) are used,
+   when no built-in functions concerning the position of a node are used,
    and no comparison of nodes e.g. in node set union is required.
 
 -}
