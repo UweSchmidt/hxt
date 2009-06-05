@@ -76,7 +76,8 @@ initCurl
 --
 -- will set the user agent and the referer URL for this request.
 
-getCont		:: [(String, String)] -> String -> IO (Either String ([(String, String)], String))
+getCont		:: [(String, String)] -> String -> IO (Either ([(String, String)], String)
+						              ([(String, String)], String))
 getCont options uri
     = do
       initCurl
@@ -96,12 +97,16 @@ getCont options uri
 	  ]
     evalResponse r
 	| rc /= CurlOK
-	    = Left ( "http error when requesting URI "
+	    = Left ( [ (transferStatus,  "999")
+		     , (transferMessage, "curl library rc: " ++ show rc)
+		     ]
+		   , "curl library error when requesting URI "
 		     ++ show uri
 		     ++ ": (curl return code=" ++ show rc ++ ") "
 		   )
 	| rs < 200 && rs >= 300
-	    = Left ( "http error when accessing URI "
+	    = Left ( contentT ++ headers
+		   , "http error when accessing URI "
 		     ++ show uri
 		     ++ ": "
 		     ++ show rsl

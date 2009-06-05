@@ -128,7 +128,7 @@ getFileContents
 	       >>>
 	       arrIO (uncurry FILE.getCont)
 	       >>>
-	       ( arr addError		-- io error occured
+	       ( arr (uncurry addError)	-- io error occured
 		 |||
 		 arr addTxtContent	-- content read
 	       )
@@ -144,15 +144,17 @@ getStdinContents
 		>>>
 		arrIO FILE.getStdinCont
 	       >>>
-	       ( arr addError		-- io error occured
+	       ( arr (uncurry addError)	-- io error occured
 		 |||
 		 arr addTxtContent	-- content read
 	       )
 	     )
 
-addError		:: String -> IOStateArrow s XmlTree XmlTree
-addError e
+addError		:: [(String, String)] -> String -> IOStateArrow s XmlTree XmlTree
+addError al e
     = issueFatal e
+      >>>
+      seqA (map (uncurry addAttr) al)
       >>>
       setDocumentStatusFromSystemState "accessing documents"
 
@@ -202,37 +204,11 @@ getHttpContents
 		       arrIO0 ( LibCURL.getCont options uri )
 		     )
 		     >>>
-		     ( arr addError
+		     ( arr (uncurry addError)
 		       |||
 		       arr addContent
 		     )
 		   )
-		    
-{- old stuff
-	  = applyA ( ( if curl == v_1
-		       then ( traceMsg 2 ( "get HTTP via "
-					   ++ show ( "curl "
-						     ++ (if null proxy then "" else "--proxy " ++ proxy)
-						     ++ (if null curlOpt then "" else " " ++ curlOpt)
-						     ++ " " ++ uri
-						   )
-					 )
-			      >>>
-			      arrIO0 ( CURL.getCont curlOpt uri proxy )
-			    )
-		       else arrIO0 ( HTTP.getCont         uri proxy )
-		     )
-		     >>>
-		     ( arr addError
-		       |||
-		       arr addContent
-		     )
-		   )
-	    where
-	    proxy   = lookup1 a_proxy        options
-	    curl    = lookup1 a_use_curl     options
-	    curlOpt = lookup1 a_options_curl options
--}
 
       addContent	:: (AssocList String String, String) -> IOStateArrow s XmlTree XmlTree
       addContent (al, c)

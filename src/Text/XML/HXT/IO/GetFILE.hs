@@ -39,10 +39,12 @@ import           System.Directory	( doesFileExist
 					, getPermissions
 					, readable
 					)
+import 		 Text.XML.HXT.DOM.XmlKeywords
 
 -- ------------------------------------------------------------
 
-getStdinCont		:: Bool -> IO (Either String String)
+getStdinCont		:: Bool -> IO (Either ([(String, String)], String)
+				              String)
 getStdinCont strictInput
     = do
       c <- try ( if strictInput
@@ -54,20 +56,26 @@ getStdinCont strictInput
       return (either readErr Right c)
     where
     readErr e
-	= Left ( "system error when reading from stdin: "
-		 ++ ioeGetErrorString e
+	= Left ( [ (transferStatus,  "999")
+		 , (transferMessage, msg)
+		 ]
+	       , msg
 	       )
+	  where
+	  msg = "stdin read error: " ++ es
+	  es  = ioeGetErrorString e
 
-getCont		:: Bool -> String -> IO (Either String String)
+getCont		:: Bool -> String -> IO (Either ([(String, String)], String)
+					        String)
 getCont strictInput source
     = do			-- preliminary
       exists <- doesFileExist source'
       if not exists
-	 then return (Left ("file " ++ show source' ++ " not found"))
+	 then return $ fileErr "file not found"
 	 else do
 	      perm <- getPermissions source'
 	      if not (readable perm)
-	         then return (Left ("file " ++ show source' ++ " not readable"))
+	         then return $ fileErr "file not readable"
 	         else do
 		      c <- try ( if strictInput
 				 then do
@@ -83,11 +91,15 @@ getCont strictInput source
     -- please NO call of unEscapeString for file names, NOT: source' = drivePath . unEscapeString $ source
     source' = drivePath $ source
     readErr e
-	= Left ( "system error when reading file "
-		 ++ show source
-		 ++ ": "
-		 ++ ioeGetErrorString e
+	= fileErr (ioeGetErrorString e)
+    fileErr msg0
+	= Left ( [ (transferStatus,  "999")
+		 , (transferMessage, msg)
+		 ]
+	       , msg
 	       )
+	  where
+	  msg = "file read error: " ++ show msg0 ++ " when accessing " ++ show source'
 
     -- remove leading / if file starts with windows drive letter, e.g. /c:/windows -> c:/windows
     drivePath ('/' : file@(d : ':' : _more))
