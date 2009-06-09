@@ -32,7 +32,7 @@ import Control.Arrow
 import Control.Arrow.ArrowList
 import Control.Arrow.ArrowIf
 
-infixl 5 />, </
+infixl 5 />, //>, </
 
 -- ------------------------------------------------------------
 
@@ -124,6 +124,22 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
 
     (/>)		:: Tree t => a (t b) (t b) -> a (t b) (t b) -> a (t b) (t b)
     f /> g		= f >>> getChildren >>> g
+
+    -- |
+    -- pronounced \"double slash\", meaning g arbitrary deep inside f
+    --
+    -- defined as @ f \/\/> g = f >>> getChildren >>> deep g @
+    --
+    -- example: @ hasName \"html\" \/\/> hasName \"table\" @
+    --
+    -- This expression selects
+    -- all top level \"table\" elements within an \"html\" element, an expression.
+    -- Attantion: This does not correspond
+    -- to the XPath selection path \"html\/\/table\". The latter on matches all table elements
+    -- even nested ones, but @\/\/>@ gives in many cases the appropriate functionality.
+
+    (//>)		:: Tree t => a (t b) (t b) -> a (t b) (t b) -> a (t b) (t b)
+    f //> g		= f >>> getChildren >>> deep g
 
 
     -- |
