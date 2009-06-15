@@ -331,7 +331,7 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
 
     -- | generalization of arrow combinator '<+>'
     --
-    -- definition: @ catA = foldl (<+>) none @
+    -- definition: @ catA = foldl (\<+\>) none @
 
     catA		:: [a b c] -> a b c
     catA		= foldl (<+>) none

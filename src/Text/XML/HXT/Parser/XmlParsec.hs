@@ -663,7 +663,7 @@ parseName
 --    - 2.parameter root :  a document root
 --
 --    - returns : the same tree, but with an additional
---			  attribute "encoding" in the root node
+--			  attribute \"encoding\" in the root node
 --			  in case of a valid encoding spec
 --			  else the unchanged tree
 

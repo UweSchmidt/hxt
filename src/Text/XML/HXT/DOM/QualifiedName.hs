@@ -116,7 +116,7 @@ type XName      = Atom
 -- A qualified name consists of a name prefix, a local name
 -- and a namespace uri.
 -- All modules, which are not namespace aware, use only the 'localPart' component.
--- When dealing with namespaces, the document tree must be processed by "propagateNamespaces"
+-- When dealing with namespaces, the document tree must be processed by 'Text.XML.HXT.Arrow.Namespace.propagateNamespaces'
 -- to split names of structure \"prefix:localPart\" and label the name with the apropriate namespace uri
 
 data QName      = LP ! XName

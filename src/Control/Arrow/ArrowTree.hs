@@ -126,7 +126,7 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
     f /> g		= f >>> getChildren >>> g
 
     -- |
-    -- pronounced \"double slash\", meaning g arbitrary deep inside f
+    -- pronounced \"double slash\", meaning g arbitrarily deep inside f
     --
     -- defined as @ f \/\/> g = f >>> getChildren >>> deep g @
     --

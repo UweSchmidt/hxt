@@ -121,7 +121,7 @@ uniqueNamespaces
 -- | generate unique namespaces and add all namespace declarations for all prefix-uri pairs in all qualified names
 --
 -- useful for cleanup of namespaces in generated documents.
--- Calls 'cleanupNamespaces' with @ collectNamespaceDecl <+> collectPrefixUriPairs @
+-- Calls 'cleanupNamespaces' with @ collectNamespaceDecl \<+> collectPrefixUriPairs @
 
 uniqueNamespacesFromDeclAndQNames	:: ArrowXml a => a XmlTree XmlTree
 uniqueNamespacesFromDeclAndQNames

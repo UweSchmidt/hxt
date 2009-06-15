@@ -61,7 +61,7 @@ import Data.Char
 {- |
 the main document input filter
 
-this filter can be configured by an option list, a value of type "Attributes"
+this filter can be configured by an option list, a value of type 'Text.XML.HXT.DOM.TypeDefs.Attributes'
 
 available options:
 
