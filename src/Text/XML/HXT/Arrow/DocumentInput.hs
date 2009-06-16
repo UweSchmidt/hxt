@@ -30,27 +30,22 @@ import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
 import Control.Arrow.ArrowIO
 
-import Data.Char
-    ( toLower
-    )
-import Data.List
-    ( isPrefixOf
-    )
+import Data.List				( isPrefixOf )
 import Data.Maybe
 
-import System.FilePath
-    ( takeExtension )
+import System.FilePath				( takeExtension )
 
-import Text.XML.HXT.DOM.Unicode
-    ( getDecodingFct
-    , guessEncoding
-    , normalizeNL
-    )
+import Text.XML.HXT.DOM.Util			( stringToLower )
+import Text.XML.HXT.DOM.Unicode			( getDecodingFct
+						, guessEncoding
+						, normalizeNL
+						)
 
 import qualified Text.XML.HXT.IO.GetFILE	as FILE
 import qualified Text.XML.HXT.IO.GetHTTPLibCurl	as LibCURL
 
 {- not longer needed, libcurl is used
+
 import qualified Text.XML.HXT.IO.GetHTTPNative	as HTTP
 import qualified Text.XML.HXT.IO.GetHTTPCurl	as CURL
 -}
@@ -59,11 +54,10 @@ import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlIOStateArrow
-import Text.XML.HXT.Arrow.ParserInterface
-    ( parseXmlDocEncodingSpec
-    , parseXmlEntityEncodingSpec
-    , removeEncodingSpec
-    )
+import Text.XML.HXT.Arrow.ParserInterface	( parseXmlDocEncodingSpec
+						, parseXmlEntityEncodingSpec
+						, removeEncodingSpec
+						)
 
 -- ----------------------------------------------------------
 
@@ -182,7 +176,7 @@ getHttpContents		:: IOStateArrow s XmlTree XmlTree
 getHttpContents
     = getCont $<< ( getAttrValue transferURI
 		    &&&
-		    ( ( getAttrlAsAssoc	-- get all attributes of root node
+		    ( ( getAttrlAsAssoc		-- get all attributes of root node
 			&&&
 			getAllParamsString	-- get all system params
 		      )
@@ -364,7 +358,7 @@ decodeDocument
       ( isRoot >>> isXmlOrHtmlDoc )
     where
     isXmlOrHtmlDoc
-	= ( getAttrValue transferMimeType >>^ map toLower )
+	= ( getAttrValue transferMimeType >>^ stringToLower )
 	  >>>
 	  isA (\ t -> null t || isXmlMimeType t || isHtmlMimeType t)
 

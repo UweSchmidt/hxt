@@ -1,8 +1,19 @@
 -- ------------------------------------------------------------
---
--- GET for http access with curl
---
--- Version : $Id: GetHTTPCurl.hs,v 1.3 2005/04/14 12:52:52 hxml Exp $
+
+{- |
+   Module     : Text.XML.HXT.IO.GetHTTPLibCurl
+   Copyright  : Copyright (C) 2008 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : stable
+   Portability: portable
+
+   GET for http access with libcurl
+
+-}
+
+-- ------------------------------------------------------------
 
 module Text.XML.HXT.IO.GetHTTPLibCurl
     ( getCont
@@ -10,37 +21,30 @@ module Text.XML.HXT.IO.GetHTTPLibCurl
 
 where
 
-import Control.Arrow
-    ( first )
+import Control.Arrow			( first
+					, (>>>)
+					)
 import Control.Concurrent.MVar
-import Control.Monad
-    ( when )
+import Control.Monad			( when )
 
-import Data.Char
-    ( isDigit
-    , toLower
-    )
-import Data.List
-    ( isPrefixOf
-    )
+import Data.Char			( isDigit
+					, isSpace
+					)
+import Data.List			( isPrefixOf )
 
 import Network.Curl
 
 import System.IO
-import System.IO.Unsafe
-    ( unsafePerformIO
-    )
+import System.IO.Unsafe			( unsafePerformIO )
 
-import Text.ParserCombinators.Parsec
-    ( parse
-    )
+import Text.ParserCombinators.Parsec	( parse )
+
+import Text.XML.HXT.DOM.Util		( stringToLower )
 import Text.XML.HXT.DOM.XmlKeywords
-import Text.XML.HXT.DOM.XmlOptions
-    ( isTrueValue
-    )
+import Text.XML.HXT.DOM.XmlOptions	( isTrueValue )
+
 import Text.XML.HXT.Parser.ProtocolHandlerUtil
-    ( parseContentType
-    )
+					( parseContentType )
 import Text.XML.HXT.Version
 
 -- ------------------------------------------------------------
@@ -61,6 +65,7 @@ initCurl
       putMVar isInitCurl True
 
 -- ------------------------------------------------------------
+
 --
 -- the http protocol handler implemented by calling libcurl
 -- (<http://curl.haxx.se/>)
@@ -70,6 +75,7 @@ initCurl
 -- The naming convetion is as follows: A curl option must be prefixed by the string
 -- \"curl\" and then written exactly as described in the curl man page
 -- (<http://curl.haxx.se/docs/manpage.html>).
+--
 -- Example:
 --
 -- > getCont [("curl--user-agent","My first HXT app"),("curl-e","http://the.referer.url/")] "http://..."
@@ -82,58 +88,78 @@ getCont options uri
     = do
       initCurl
       resp <- curlGetResponse uri curlOptions
+      -- dumpResponse
       return $ evalResponse resp
     where
+    _dumpResponse r
+	= do
+	  hPutStrLn stderr $ show $ respCurlCode   r
+	  hPutStrLn stderr $ show $ respStatus     r
+	  hPutStrLn stderr $        respStatusLine r
+	  hPutStrLn stderr $ show $ respHeaders    r
+	  hPutStrLn stderr $        respBody       r
+
     curlOptions
 	= defaultOptions ++ concatMap (uncurry copt) options ++ standardOptions
-    defaultOptions
+
+    defaultOptions						-- these options may be overwritten
 	= [ CurlUserAgent ("hxt/" ++ hxt_version ++ " via libcurl")
-	  ]
-    standardOptions
-	= [ CurlFailOnError False
-	  , CurlHeader True
-	  , CurlNoProgress True
 	  , CurlFollowLocation True
+	  ]
+
+    standardOptions						-- these options can't be overwritten
+	= [ CurlFailOnError    False
+	  , CurlHeader         False
+	  , CurlNoProgress     True
 	  ]
     evalResponse r
 	| rc /= CurlOK
-	    = Left ( [ (transferStatus,  "999")
-		     , (transferMessage, "curl library rc: " ++ show rc)
+	    = Left ( [ mkH transferStatus    "999"
+		     , mkH transferMessage $ "curl library rc: " ++ show rc
 		     ]
 		   , "curl library error when requesting URI "
 		     ++ show uri
 		     ++ ": (curl return code=" ++ show rc ++ ") "
 		   )
 	| rs < 200 && rs >= 300
-	    = Left ( contentT ++ headers
+	    = Left ( contentT rsh ++ headers
 		   , "http error when accessing URI "
 		     ++ show uri
 		     ++ ": "
 		     ++ show rsl
 		   )
 	| otherwise
-	    = Right ( contentT ++ headers, respBody r
+	    = Right ( contentT rsh ++ headers, respBody r
 		    )
 	where
+	mkH x y	= (x, dropWhile isSpace y)
+
 	headers
-	    = map (\ (k, v) -> (httpPrefix ++ k, v)) rsh
-	      ++ statusLine (words rsl)
+	    = map (\ (k, v) -> mkH (httpPrefix ++ k) v) rsh
+	      ++
+              statusLine (words rsl)
 
 	contentT
-	    = concat
-	      . map ( either (const []) id
-		      . parse parseContentType ""
-		    )
-	      . map snd
-	      . take 1
-              . filter ((== "content-type") . fst)
-              . map (first (map toLower))
-              $ rsh
+	    = map (first stringToLower)			-- all header names to lowercase
+	      >>>
+	      filter ((== "content-type") . fst)	-- select content-type header
+	      >>>
+	      reverse					-- when libcurl is called with automatic redirects, there are more than one content-type headers
+	      >>>
+	      take 1					-- take the last one, (if at leat one is found)
+	      >>>
+	      map snd					-- select content-type value
+	      >>>
+	      map ( either (const []) id
+		    . parse parseContentType ""		-- parse the content-type for mimetype and charset
+		  )
+	      >>>
+	      concat
 
-	statusLine (vers : code : msg)
-	    = [ (transferVersion, vers)
-	      , (transferMessage, unwords msg)
-	      , (transferStatus, code)
+	statusLine (vers : _code : msg)			-- the status line of the curl response can be an old one, e.g. in the case of a redirect,
+	    = [ mkH transferVersion   vers		-- so the return code is taken from the status field, which is contains the last status
+	      , mkH transferMessage $ unwords msg
+	      , mkH transferStatus  $ show rs
 	      ]
         statusLine _
 	    = []

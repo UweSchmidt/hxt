@@ -1,9 +1,23 @@
--- |
--- utility functions
----- Version : $Id: Util.hs,v 1.3 2006/05/01 18:56:24 hxml Exp $
+-- ------------------------------------------------------------
+
+{- |
+   Module     : Text.XML.HXT.DOM.Util
+   Copyright  : Copyright (C) 2008 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : stable
+   Portability: portable
+
+   Little useful things for strings, lists and other values
+
+-}
+
+-- ------------------------------------------------------------
 
 module Text.XML.HXT.DOM.Util
     ( stringTrim
+    , stringToLower
     , stringToUpper
     , normalizeNumber
     , normalizeWhitespace
@@ -37,19 +51,24 @@ where
 import Data.Char
 
 -- ------------------------------------------------------------
+
 -- |
 -- remove leading and trailing whitespace with standard Haskell predicate isSpace
 
 stringTrim		:: String -> String
-stringTrim
-    = reverse . dropWhile isSpace . reverse . dropWhile isSpace
+stringTrim		= reverse . dropWhile isSpace . reverse . dropWhile isSpace
 
 -- |
--- convert string to upercase with standard Haskell toUpper function
+-- convert string to uppercase with standard Haskell toUpper function
 
 stringToUpper		:: String -> String
-stringToUpper
-    = map toUpper
+stringToUpper		= map toUpper
+
+-- |
+-- convert string to lowercase with standard Haskell toLower function
+
+stringToLower		:: String -> String
+stringToLower		= map toLower
 
 -- | Removes leading \/ trailing whitespaces and leading zeros
 
@@ -58,18 +77,15 @@ normalizeNumber
     = reverse . dropWhile (== ' ') . reverse . 
       dropWhile (\x -> x == '0' || x == ' ')
 
-
 -- | Reduce whitespace sequences to a single whitespace
 
 normalizeWhitespace	:: String -> String
-normalizeWhitespace
-    = unwords . words
+normalizeWhitespace	= unwords . words
 
 -- | replace all whitespace chars by blanks
 
 normalizeBlanks		:: String -> String
-normalizeBlanks
-    = map (\ x -> if isSpace x then ' ' else x)
+normalizeBlanks		= map (\ x -> if isSpace x then ' ' else x)
 
 -- ------------------------------------------------------------
 
@@ -95,7 +111,7 @@ escapeURI ref
 
 -- ------------------------------------------------------------
 
-escapeXml	:: String -> String -> String
+escapeXml		:: String -> String -> String
 escapeXml escSet
     = concatMap esc
       where
@@ -118,8 +134,8 @@ stringEscapeXml	= escapeXml "<>\"\'&"
 --
 -- see also : 'attrEscapeXml'
 
-textEscapeXml	:: String -> String
-textEscapeXml	= escapeXml "<&"
+textEscapeXml		:: String -> String
+textEscapeXml		= escapeXml "<&"
 
 -- |
 -- escape XML chars in attribute values, same as stringEscapeXml, but none blank whitespace
@@ -127,10 +143,10 @@ textEscapeXml	= escapeXml "<&"
 --
 -- see also : 'stringEscapeXml'
 
-attrEscapeXml	:: String -> String
-attrEscapeXml	= escapeXml "<>\"\'&\n\r\t"
+attrEscapeXml		:: String -> String
+attrEscapeXml		= escapeXml "<>\"\'&\n\r\t"
 
-stringToInt	:: Int -> String -> Int
+stringToInt		:: Int -> String -> Int
 stringToInt base digits
     = sign * (foldl acc 0 $ concatMap digToInt digits1)
       where

@@ -168,6 +168,17 @@ distbuild	: tarball
 		; $(INSTALL) sudo runhaskell $(SETUP) install $(CABAL_OPTIONS) $(INSTEND) \
 		)
 
+disttry		: tarball
+		( [ -f $(DIST_TAR) ] || exit 1 \
+		; cp -f $(DIST_TAR) $(PROD_DIR) || exit 1 \
+		; cd $(PROD_DIR) || exit 1 \
+		; tar xvzf $(DIST_TAR) \
+		; cd $(DIST) || exit 1 \
+		; runhaskell $(SETUP) configure $(CABAL_OPTIONS) || exit 1 \
+		; runhaskell $(SETUP) build || exit 1 \
+		; $(INSTALL) sudo runhaskell $(SETUP) install $(CABAL_OPTIONS) $(INSTEND) \
+		)
+
 distinstall	:
 		$(MAKE) distbuild INSTALL="" INSTEND=""
 

@@ -10,7 +10,6 @@ PACKAGE_DIR	= $(HXT_HOME_PATH)/lib/hxt
 HDOC_DIR	= $(HXT_HOME)/doc/hdoc
 HDOC_DIR_ARROW	= $(HXT_HOME)/doc/hdoc_arrow
 HDOC_DIR_FILTER	= $(HXT_HOME)/doc/hdoc_filter
-HDOC_FLAGS	= --source=http://darcs.fh-wedel.de/hxt/src/%F --package=hxt-$(VERSION)
 IMPORT_DIR	= imports
 HXT_PACKAGE	= hxt
 
@@ -24,7 +23,7 @@ GHCVERSION	=  $(shell ghc -v 2>&1 | head -n 2 | tail -n 1 | cut -d " " -f 5 | se
 
 HXT_PACKAGE_NAME=$(HXT_PACKAGE)-$(VERSION)
 
-HDOCFLAGS	= -v -h $(HDOC_FLAGS) --use-package=base
+HDOCFLAGS	= -v -v -v -h
 HDOC            = haddock $(HDOCFLAGS)
 
 RM              = rm -f
@@ -283,6 +282,12 @@ clean		:
 
 clean_$(HXT_PACKAGE)	:
 		$(RM) $(HXT_DRIVER) $(HXT_DRIVER:.o=.hi) $(HXT_OBJ) $(HXT_HI) $(HXT_LIB)
+
+# ------------------------------------------------------------
+
+doc           : $(HXT_SRC)
+		[ -d $(HDOC_DIR) ] || mkdir -p $(HDOC_DIR)
+		$(HDOC) -t "Haskell Xml Toolbox $(VERSION): The complete API" -o $(HDOC_DIR) $(HXT_SRC)
 
 # ------------------------------------------------------------
 

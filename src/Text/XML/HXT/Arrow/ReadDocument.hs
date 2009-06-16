@@ -29,32 +29,25 @@ where
 import Control.Arrow.ListArrows
 
 import Text.XML.HXT.DOM.Interface
+import Text.XML.HXT.DOM.Util			( stringToLower )
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlIOStateArrow
 
-import Text.XML.HXT.Arrow.Edit
-    ( canonicalizeAllNodes
-    , canonicalizeForXPath
-    , canonicalizeContents
-    , removeDocWhiteSpace
-    )
+import Text.XML.HXT.Arrow.Edit			( canonicalizeAllNodes
+						, canonicalizeForXPath
+						, canonicalizeContents
+						, removeDocWhiteSpace
+						)
 
 import Text.XML.HXT.Arrow.ParserInterface
     
-import Text.XML.HXT.Arrow.ProcessDocument
-    ( getDocumentContents
-    , parseXmlDocument
-    , parseHtmlDocument
-    , propagateAndValidateNamespaces
-    )
+import Text.XML.HXT.Arrow.ProcessDocument	( getDocumentContents
+						, parseXmlDocument
+						, parseHtmlDocument
+						, propagateAndValidateNamespaces
+						)
 
-import Text.XML.HXT.RelaxNG.Validator
-    ( validateDocumentWithRelaxSchema
-    )
-
-import Data.Char
-    ( toLower
-    )
+import Text.XML.HXT.RelaxNG.Validator		( validateDocumentWithRelaxSchema )
 
 -- ------------------------------------------------------------
 
@@ -229,7 +222,7 @@ readDocument userOptions src
 	  loadMineTypes f	= setMimeTypeTableFromFile f
 
     getMimeType
-	= getAttrValue transferMimeType >>^ map toLower
+	= getAttrValue transferMimeType >>^ stringToLower
 
     processDoc mimeType
 	= traceMsg 1 ("readDocument: " ++ show src ++ " (mime type: " ++ show mimeType ++ ") will be processed")
@@ -286,7 +279,7 @@ readDocument userOptions src
 	validateWithRelax	= hasEntry a_relax_schema options
 	relaxSchema		= lookup1 a_relax_schema options
 	parseHtml		= hasOption a_parse_html
-	isHtml			= parseHtml				-- force HTML
+	isHtml			= parseHtml					-- force HTML
 				  ||
 				  ( parseByMimeType && isHtmlMimeType mimeType )
 	isXml			= ( not parseByMimeType && not parseHtml )
@@ -296,7 +289,7 @@ readDocument userOptions src
 				    ( isXmlMimeType mimeType
 				      ||
 				      null mimeType
-				    )					-- mime type is XML or not known
+				    )						-- mime type is XML or not known
 				  )
 	isXmlOrHtml	= isHtml || isXml
 	parseByMimeType	= hasOption a_parse_by_mimetype

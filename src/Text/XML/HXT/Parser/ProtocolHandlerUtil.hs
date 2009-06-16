@@ -1,8 +1,19 @@
 -- ------------------------------------------------------------
---
--- protocol handler utility functions
---
--- Version : $Id: ProtocolHandlerUtil.hs,v 1.4 2005/04/14 12:52:53 hxml Exp $
+
+{- 
+   Module     : Text.XML.HXT.Parser.ProtocolHandlerUtil
+   Copyright  : Copyright (C) 2008 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : stable
+   Portability: portable
+
+   Protocol handler utility functions
+
+-}
+
+-- ------------------------------------------------------------
 
 module Text.XML.HXT.Parser.ProtocolHandlerUtil
     ( parseContentType
@@ -12,18 +23,19 @@ where
 
 import Text.XML.HXT.DOM.XmlKeywords
 
-import Text.XML.HXT.DOM.Util
-    ( stringToUpper
-    )
+import Text.XML.HXT.DOM.Util	( stringToUpper
+				, stringTrim
+				)
 
 import qualified Text.ParserCombinators.Parsec as P
 
 -- ------------------------------------------------------------
---
--- try to extract charset spec from Content-Type header
--- e.g. "text/html; charset=ISO-8859-1"
 
--- sometimes the server deliver the charset spec in quotes
+-- |
+-- Try to extract charset spec from Content-Type header
+-- e.g. \"text\/html; charset=ISO-8859-1\"
+--
+-- Sometimes the server deliver the charset spec in quotes
 -- these are removed
 
 parseContentType	:: P.Parser [(String, String)]
@@ -31,7 +43,7 @@ parseContentType
     = P.try ( do
 	      mimeType <- ( do
 			    mt <- P.many (P.noneOf ";")
-			    return [ (transferMimeType, mt) ]
+			    rtMT mt
 			  )
 	      charset  <- ( do
 			    P.char ';'
@@ -45,9 +57,11 @@ parseContentType
 	    )
       P.<|>
       ( do
-	mimeType <- P.many (P.noneOf ";")
-	return [ (transferMimeType, mimeType) ]
+	mt <- P.many (P.noneOf ";")
+	rtMT mt
       )
+    where
+    rtMT mt = return [ (transferMimeType, stringTrim mt) ]
 
 -- ------------------------------------------------------------
 
