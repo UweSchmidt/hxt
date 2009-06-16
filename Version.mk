@@ -2,6 +2,6 @@
 # Version numbering for HXT
 
 SOFTWARE	= hxt
-VERSION		= 8.3.0
-LASTVERSION	= 8.2.0
+VERSION		= 8.3.1
+LASTVERSION	= 8.3.0
 DIST_NAME	= $(SOFTWARE)-$(VERSION)

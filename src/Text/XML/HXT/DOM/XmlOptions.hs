@@ -45,6 +45,8 @@ inputOptions 	:: [OptDescr (String, String)]
 inputOptions
     = [ Option "t"	[a_trace]			(OptArg trc "LEVEL")			"trace level (0-4), default 1"
       , Option "p"	[a_proxy]			(ReqArg (att a_proxy)         "PROXY")	"proxy for http access (e.g. \"www-cache:3128\")"
+      , Option ""       [a_redirect]			(NoArg  (att a_redirect          v_1))  "automatically follow redirected URIs"
+      , Option ""       [a_no_redirect]			(NoArg  (att a_redirect          v_0))  "switch off following redirected URIs"
       , Option ""	[a_use_curl]			(NoArg  (att a_use_curl          v_1))	"obsolete, since hxt-8.1 HTTP access is always done with curl bindings"
       , Option ""	[a_do_not_use_curl]		(NoArg  (att a_use_curl          v_0))	"obsolete, since hxt-8.1 HTTP access is always done with curl bindings"
       , Option ""	[a_options_curl]		(ReqArg (att a_options_curl)    "STR")	"additional curl options, e.g. for timeout, ..."

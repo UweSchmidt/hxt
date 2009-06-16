@@ -100,6 +100,8 @@ available options:
 
 - 'a_proxy' : proxy for http access, e.g. www-cache:3128
 
+- 'a_redirect' : automatically follow redirected URIs, default is yes
+
 - 'a_use_curl' : obsolete and ignored, HTTP acccess is always done with curl bindings for libcurl
 
 - 'a_strict_input' : file input is done strictly using the 'Data.ByteString' input functions. This ensures correct closing of files, especially when working with
@@ -112,7 +114,9 @@ available options:
                      it is recomended to use the @curl-.*@ options syntax described below.
 
 - 'a_encoding' : default document encoding ('utf8', 'isoLatin1', 'usAscii', 'iso8859_2', ... , 'iso8859_16', ...).
-                 Only XML and HTML documents are decoded, documents with none XML\/HTML mime types are not decoded. The whole content is returned in a single text node
+                 Only XML, HTML and text documents are decoded,
+                 default decoding for XML\/HTML is utf8, for text iso latin1 (no decoding).
+		 The whole content is returned in a single text node.
 
 - 'a_mime_types' : set the mime type table for file input with given file. The format of this config file must be in the syntax of a debian linux \"mime.types\" config file
 

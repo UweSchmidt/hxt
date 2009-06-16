@@ -39,7 +39,7 @@ force		:
 		$(MAKE) distclean all
 
 test		: $(prog)
-		$(foreach op,$(tests),$(prog) $(op) "http://www.haskell.org/" "-" ;)
+		$(foreach op,$(tests),echo $(prog) $(op) "http://www.haskell.org/" "-" ; $(prog) $(op) "http://www.haskell.org/" "-" ;)
 		$(foreach i,$(EXAMPLES),$(MAKE) -C $i $@ ;)
 
 dist		:

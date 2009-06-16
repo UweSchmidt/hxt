@@ -251,6 +251,21 @@
     <a name="change"></a>
     <h3>Change History</h3>
     <ul>
+      <li>In <a href="hxt-8.3.1.tar.gz">Version 8.3.1</a>
+	This is only a bug fix release.
+	<ul>
+	  <li>
+	    Interface and option handling for libcurl reworked.
+	    New input option "a_no_redirect" for preventing autmatic
+	    redirect added.
+	  </li>
+	  <li>
+	    Encoding of none XML/HTML text data done with the same
+	    encoding routines as for XML/HTML. This enables easy processing
+	    of other text documents.
+	  </li>
+	</ul>
+      </li>
       <li>In <a href="hxt-8.3.0.tar.gz">Version 8.3.0</a>
 	<ul>
 	  <li>
@@ -486,7 +501,7 @@
 	    by an XPath expressions (see module Text.XML.HXT.Arrow.XmlNodeSet).
 	  </li>
 	  <li>Separation of the API documentation into two documents, one for the
-	    old <a href="./hdoc_filter/index.html">Filter API</a>
+	    old <a href="./hdoc-filter/index.html">Filter API</a>
 	    and a separate one for the <a href="./hdoc_arrow/index.html">Arrow API</a>.
 	    The <a href="./hdoc/index.htm">complete API documentation</a> is still available.
 	  </li>

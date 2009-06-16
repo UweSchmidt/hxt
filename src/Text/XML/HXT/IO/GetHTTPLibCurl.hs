@@ -176,7 +176,7 @@ copt k v
     | "curl" `isPrefixOf` k
 	= opt2copt (drop 4 k) v
 
-    | k == a_proxy
+    | k `elem` [a_proxy, a_redirect]
 	= opt2copt k v
 
     | k == a_options_curl
@@ -198,7 +198,8 @@ opt2copt k v
     | k `elem` ["-H", "--header"]	= [CurlHttpHeaders         $ lines   v]
     | k == "--ignore-content-length"	= [CurlIgnoreContentLength $ isTrue  v]
     | k `elem` ["-I", "--head"]		= [CurlNoBody              $ isTrue  v]
-    | k `elem` ["-L", "--location"]	= [CurlFollowLocation      $ isTrue  v]
+    | k `elem` ["-L", "--location", a_redirect]
+					= [CurlFollowLocation      $ isTrue  v]
     | k == "--max-filesize"
       &&
       isIntArg v			= [CurlMaxFileSizeLarge    $ read    v]

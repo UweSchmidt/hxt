@@ -29,13 +29,13 @@ import Control.Arrow.ArrowList
 import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
 import Control.Arrow.ArrowIO
+import Control.Arrow.ListArrow
 
 import Data.List				( isPrefixOf )
 import Data.Maybe
 
 import System.FilePath				( takeExtension )
 
-import Text.XML.HXT.DOM.Util			( stringToLower )
 import Text.XML.HXT.DOM.Unicode			( getDecodingFct
 						, guessEncoding
 						, normalizeNL
@@ -44,20 +44,14 @@ import Text.XML.HXT.DOM.Unicode			( getDecodingFct
 import qualified Text.XML.HXT.IO.GetFILE	as FILE
 import qualified Text.XML.HXT.IO.GetHTTPLibCurl	as LibCURL
 
-{- not longer needed, libcurl is used
-
-import qualified Text.XML.HXT.IO.GetHTTPNative	as HTTP
-import qualified Text.XML.HXT.IO.GetHTTPCurl	as CURL
--}
-
 import Text.XML.HXT.DOM.Interface
 
-import Text.XML.HXT.Arrow.XmlArrow
-import Text.XML.HXT.Arrow.XmlIOStateArrow
 import Text.XML.HXT.Arrow.ParserInterface	( parseXmlDocEncodingSpec
 						, parseXmlEntityEncodingSpec
 						, removeEncodingSpec
 						)
+import Text.XML.HXT.Arrow.XmlArrow
+import Text.XML.HXT.Arrow.XmlIOStateArrow
 
 -- ----------------------------------------------------------
 
@@ -309,15 +303,16 @@ getXmlContents'		:: IOStateArrow s XmlTree XmlTree -> IOStateArrow s XmlTree Xml
 getXmlContents' parseEncodingSpec
     = ( getURIContents
 	>>>
-	( ( parseEncodingSpec
-	    >>>
-	    filterErrorMsg
-	    >>>
-	    decodeDocument
-	  )
-	  `when`
-	  isXmlHtml
-	)
+	choiceA
+	[ isXmlHtmlDoc	:-> ( parseEncodingSpec
+			      >>>
+			      filterErrorMsg
+			      >>>
+			      decodeDocument
+			    )
+	, isTextDoc	:->  decodeDocument
+	, this		:-> this
+	]
 	>>>
 	perform ( getAttrValue transferURI
 		  >>>
@@ -330,11 +325,20 @@ getXmlContents' parseEncodingSpec
       )
       `when`
       isRoot
-    where
-    isXmlHtml
-	= getAttrValue transferMimeType
-	  >>>
-	  arr (\ mt -> isHtmlMimeType mt || isXmlMimeType mt)
+
+isMimeDoc		:: (String -> Bool) -> IOStateArrow s XmlTree XmlTree
+isMimeDoc isMT		= fromLA $
+			  ( ( getAttrValue transferMimeType >>^ stringToLower )
+			    >>>
+			    isA (\ t -> null t || isMT t)
+			  )
+			  `guards` this
+
+isTextDoc, isXmlHtmlDoc	:: IOStateArrow s XmlTree XmlTree
+
+isTextDoc		= isMimeDoc isTextMimeType
+
+isXmlHtmlDoc		= isMimeDoc (\ mt -> isHtmlMimeType mt || isXmlMimeType mt)
 
 -- ------------------------------------------------------------
 
@@ -344,26 +348,32 @@ getEncoding
 	     >>>
 	     arr guessEncoding
 	   , getAttrValue transferEncoding	-- 2. guess: take the transfer encoding
-	   , getAttrValue a_encoding		-- 4. guess: take encoding parameter in root node
-	   , getParamString a_encoding		-- 5. guess: take encoding parameter in global state
+	   , getAttrValue a_encoding		-- 3. guess: take encoding parameter in root node
+	   , getParamString a_encoding		-- 4. guess: take encoding parameter in global state
 	   , constA utf8			-- default : utf8
+	   ]
+      >. (head . filter (not . null))		-- make the filter deterministic: take 1. entry from list of guesses
+
+getTextEncoding	:: IOStateArrow s XmlTree String
+getTextEncoding
+    = catA [ getAttrValue transferEncoding	-- 1. guess: take the transfer encoding
+	   , getAttrValue a_encoding		-- 2. guess: take encoding parameter in root node
+	   , getParamString a_encoding		-- 3. guess: take encoding parameter in global state
+	   , constA isoLatin1			-- default : no encoding
 	   ]
       >. (head . filter (not . null))		-- make the filter deterministic: take 1. entry from list of guesses
 
 
 decodeDocument	:: IOStateArrow s XmlTree XmlTree
 decodeDocument
-    = ( decodeArr $< getEncoding )
-      `when`
-      ( isRoot >>> isXmlOrHtmlDoc )
+    = choiceA
+      [ ( isRoot >>> isXmlHtmlDoc )   :-> ( decodeArr normalizeNL  $< getEncoding )
+      , ( isRoot >>> isTextDoc )      :-> ( decodeArr id           $< getTextEncoding )
+      , this                          :-> this
+      ]
     where
-    isXmlOrHtmlDoc
-	= ( getAttrValue transferMimeType >>^ stringToLower )
-	  >>>
-	  isA (\ t -> null t || isXmlMimeType t || isHtmlMimeType t)
-
-    decodeArr	:: String -> IOStateArrow s XmlTree XmlTree
-    decodeArr enc
+    decodeArr	:: (String -> String) -> String -> IOStateArrow s XmlTree XmlTree
+    decodeArr normalizeNewline enc
 	= maybe notFound found . getDecodingFct $ enc
 	where
 	found df
@@ -382,7 +392,9 @@ decodeDocument
 	    = processChildren
 	      ( getText							-- get the document content
 		>>> arr df						-- decode the text, result is (string, [errMsg])
-		>>> ( ( (normalizeNL . fst) ^>> mkText )		-- take decoded string, normalize newline and build text node
+		>>> ( ( (fst >>> normalizeNewline)			-- take decoded string, normalize newline and build text node
+			^>> mkText
+		      )
 		      <+>
 		      ( if isTrueValue ignoreErrs
 			then none					-- encoding errors are ignored

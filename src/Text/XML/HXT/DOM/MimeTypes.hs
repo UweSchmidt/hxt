@@ -59,57 +59,53 @@ text_html				= "text/html"
 text_xml				= "text/xml"
 text_xml_external_parsed_entity		= "text/xml-external-parsed-entity"
 
-isHtmlMimeType	:: String -> Bool
-isHtmlMimeType t
-    = t == text_html
+isTextMimeType				:: String -> Bool
+isTextMimeType				= ("text/" `isPrefixOf`)
 
-isXmlMimeType	:: String -> Bool
-isXmlMimeType t
-    = ( t `elem` [ application_xhtml
-		 , application_xml
-		 , application_xml_external_parsed_entity
-		 , application_xml_dtd
-		 , text_xml
-		 , text_xml_external_parsed_entity
-		 ]
-	||
-	"+xml" `isSuffixOf` t		-- application/mathml+xml
-      )					-- or image/svg+xml
+isHtmlMimeType				:: String -> Bool
+isHtmlMimeType t			= t == text_html
 
-defaultMimeTypeTable	:: MimeTypeTable
-defaultMimeTypeTable
-    = M.fromList mimeTypeDefaults
+isXmlMimeType				:: String -> Bool
+isXmlMimeType t				= ( t `elem` [ application_xhtml
+						     , application_xml
+						     , application_xml_external_parsed_entity
+						     , application_xml_dtd
+						     , text_xml
+						     , text_xml_external_parsed_entity
+						     ]
+					    ||
+					    "+xml" `isSuffixOf` t		-- application/mathml+xml
+					  )					-- or image/svg+xml
 
-extensionToMimeType	:: String -> MimeTypeTable -> String
-extensionToMimeType e
-    = fromMaybe "" . lookupMime 
+defaultMimeTypeTable			:: MimeTypeTable
+defaultMimeTypeTable			= M.fromList mimeTypeDefaults
+
+extensionToMimeType			:: String -> MimeTypeTable -> String
+extensionToMimeType e			= fromMaybe "" . lookupMime 
     where
-    lookupMime t
-	= M.lookup e t			-- try exact match
-	  `mplus`
-	  M.lookup (map toLower e) t	-- else try lowercase match
-          `mplus`
-	  M.lookup (map toUpper e) t	-- else try uppercase match
+    lookupMime t			= M.lookup e t			-- try exact match
+					  `mplus`
+					  M.lookup (map toLower e) t	-- else try lowercase match
+					  `mplus`
+					  M.lookup (map toUpper e) t	-- else try uppercase match
 
 -- ------------------------------------------------------------
 
-readMimeTypeTable	:: FilePath -> IO MimeTypeTable
-readMimeTypeTable inp
-    = do
-      cb <- B.readFile inp
-      return . M.fromList . parseMimeTypeTable . C.unpack $ cb
+readMimeTypeTable			:: FilePath -> IO MimeTypeTable
+readMimeTypeTable inp			= do
+					  cb <- B.readFile inp
+					  return . M.fromList . parseMimeTypeTable . C.unpack $ cb
 
-parseMimeTypeTable	:: String -> [(String, String)]
-parseMimeTypeTable
-    = concat
-      . map buildPairs
-      . map words
-      . filter (not . ("#" `isPrefixOf`))
-      . filter (not . all (isSpace))
-      . lines
+parseMimeTypeTable			:: String -> [(String, String)]
+parseMimeTypeTable			= concat
+					  . map buildPairs
+					  . map words
+					  . filter (not . ("#" `isPrefixOf`))
+					  . filter (not . all (isSpace))
+					  . lines
     where
-    buildPairs	:: [String] -> [(String, String)]
-    buildPairs	[] = []
-    buildPairs	(mt:exts) = map (\ x -> (x, mt)) $ exts
+    buildPairs				:: [String] -> [(String, String)]
+    buildPairs	[] 			= []
+    buildPairs	(mt:exts) 		= map (\ x -> (x, mt)) $ exts
 
 -- ------------------------------------------------------------

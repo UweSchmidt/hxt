@@ -57,6 +57,7 @@ a_canonicalize,
  a_modifier,
  a_name,
  a_no_empty_elements,
+ a_no_redirect,
  a_no_xml_pi,
  a_options_curl,
  a_output_encoding,
@@ -71,6 +72,7 @@ a_canonicalize,
  a_propagate_errors,
  a_proxy,
  a_remove_whitespace,
+ a_redirect,
  a_show_haskell,
  a_show_tree,
  a_source,
@@ -165,6 +167,7 @@ a_module			= "module"
 a_modifier			= "modifier"
 a_name				= "name"
 a_no_empty_elements		= "no-empty-elements"
+a_no_redirect	 		= "no-redirect"
 a_no_xml_pi                     = "no-xml-pi"
 a_options_curl			= "options-curl"
 a_output_file			= "output-file"
@@ -178,6 +181,7 @@ a_peref				= k_peref
 a_preserve_comment 		= "preserve-comment"
 a_propagate_errors		= "propagate-errors"
 a_proxy				= "proxy"
+a_redirect	 		= "redirect"
 a_remove_whitespace 		= "remove-whitespace"
 a_show_haskell			= "show-haskell"
 a_show_tree			= "show-tree"
