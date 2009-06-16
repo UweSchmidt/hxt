@@ -135,7 +135,7 @@ getCont options uri
 	mkH x y	= (x, dropWhile isSpace y)
 
 	headers
-	    = map (\ (k, v) -> mkH (httpPrefix ++ k) v) rsh
+	    = map (\ (k, v) -> mkH (httpPrefix ++ stringToLower k) v) rsh
 	      ++
               statusLine (words rsl)
 
