@@ -122,7 +122,7 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
     -- all \"h1\" elements in the \"body\" element of an \"html\" element, an expression, that
     -- corresponds 1-1 to the XPath selection path \"html\/body\/h1\" 
 
-    (/>)		:: Tree t => a (t b) (t b) -> a (t b) (t b) -> a (t b) (t b)
+    (/>)		:: Tree t => a b (t c) -> a (t c) d -> a b d
     f /> g		= f >>> getChildren >>> g
 
     -- |
@@ -138,7 +138,7 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
     -- to the XPath selection path \"html\/\/table\". The latter on matches all table elements
     -- even nested ones, but @\/\/>@ gives in many cases the appropriate functionality.
 
-    (//>)		:: Tree t => a (t b) (t b) -> a (t b) (t b) -> a (t b) (t b)
+    (//>)		:: Tree t => a b (t c) -> a (t c) (t c) -> a b (t c)
     f //> g		= f >>> getChildren >>> deep g
 
 
@@ -159,7 +159,7 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
     -- example: @ deep isHtmlTable @ selects all top level table elements in a document
     -- (with an appropriate definition for isHtmlTable) but no tables occuring within a table cell.
 
-    deep		:: Tree t => a (t b) (t b) -> a (t b) (t b)
+    deep		:: Tree t => a (t b) c -> a (t b) c
     deep f		= f					-- success when applying f
 			  `orElse`
 			  (getChildren >>> deep f)		-- seach children
@@ -171,7 +171,7 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
     -- example: @ deepest isHtmlTable @ selects all innermost table elements in a document
     -- but no table elements containing tables. See 'deep' and 'multi' for other search strategies.
 
-    deepest		:: Tree t => a (t b) (t b) -> a (t b) (t b)
+    deepest		:: Tree t => a (t b) c -> a (t b) c
     deepest f		= (getChildren >>> deepest f)		-- seach children
 			  `orElse`
 			  f					-- no success: apply f to root
