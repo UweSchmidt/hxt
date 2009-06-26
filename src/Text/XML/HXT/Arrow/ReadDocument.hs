@@ -210,6 +210,7 @@ readDocument userOptions src
 	  , ( a_parse_by_mimetype,	  v_0 )
 	  , ( a_ignore_encoding_errors,   v_0 )
 	  , ( a_ignore_none_xml_contents, v_0 )
+	  , ( a_accept_mimetypes,         ""  )
 	  ]
 
     traceLevel
@@ -231,20 +232,29 @@ readDocument userOptions src
     processDoc mimeType
 	= traceMsg 1 ("readDocument: " ++ show src ++ " (mime type: " ++ show mimeType ++ ") will be processed")
 	  >>>
-	  parse
-	  >>>
-	  ( if isXmlOrHtml
-	    then ( checknamespaces
+	  ( if isAcceptedMimeType (lookup1 a_accept_mimetypes options) mimeType
+	    then ( parse
 		   >>>
-		   canonicalize
-		   >>>
-		   whitespace
-		   >>>
-		   relax
+		   ( if isXmlOrHtml
+		     then ( checknamespaces
+			    >>>
+			    canonicalize
+			    >>>
+			    whitespace
+			    >>>
+			    relax
+			  )
+		     else this
+		   )
 		 )
-	    else this
+	    else ( traceMsg 2 ("readDocument: " ++ show src ++ " (mime type: " ++ show mimeType ++ ") not accepted")
+		   >>>
+		   replaceChildren none
+		 )								-- remove contents of not accepted mimetype
 	  )
 	where
+	isAcceptedMimeType		:: String -> String -> Bool
+	isAcceptedMimeType _mts _mt	= True					-- TODO
 	parse
 	    | isHtml
 	      || 
@@ -257,7 +267,7 @@ readDocument userOptions src
 					  isHtml
 	    | validateWithRelax		= parseXmlDocument False		-- for Relax NG use XML parser without validation
 	    | isXml			= parseXmlDocument validate		-- parse as XML
-	    | removeNoneXml		= replaceChildren none			-- don't parse, if mime type is not XML nore HTML
+	    | removeNoneXml		= replaceChildren none			-- don't parse, if mime type is not XML nor HTML
 	    | otherwise			= this					-- but remove contents when option is set
 	checknamespaces
 	    | (withNamespaces && not withTagSoup)

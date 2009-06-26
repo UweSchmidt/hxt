@@ -26,7 +26,8 @@ where
 t_xml,				-- tag names
  t_root		:: String
 
-a_canonicalize,
+a_accept_mimetypes,
+ a_canonicalize,
  a_default,			-- attribute names
  a_check_namespaces,
  a_contentLength,
@@ -136,6 +137,7 @@ k_any,				-- DTD keywords
 t_xml		= "xml"
 t_root		= "/"		-- name of root node tag
 
+a_accept_mimetypes		= "accept-mimetypes"
 a_canonicalize			= "canonicalize"
 a_check_namespaces		= "check-namespaces"
 a_collect_errors		= "collect-errors"

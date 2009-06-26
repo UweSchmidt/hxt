@@ -19,6 +19,10 @@ module Text.XML.HXT.DOM.Util
     ( stringTrim
     , stringToLower
     , stringToUpper
+    , stringAll
+    , stringFirst
+    , stringLast
+
     , normalizeNumber
     , normalizeWhitespace
     , normalizeBlanks
@@ -48,7 +52,9 @@ module Text.XML.HXT.DOM.Util
     )
 where
 
-import Data.Char
+import 		 Data.Char
+import 		 Data.List
+import		 Data.Maybe
 
 -- ------------------------------------------------------------
 
@@ -70,6 +76,23 @@ stringToUpper		= map toUpper
 stringToLower		:: String -> String
 stringToLower		= map toLower
 
+
+-- | find all positions where a string occurs within another string
+
+stringAll	:: (Eq a) => [a] -> [a] -> [Int]
+stringAll x	= map fst . filter ((x `isPrefixOf`) . snd) . zip [0..] . tails
+
+-- | find the position of the first occurence of a string
+
+stringFirst	:: (Eq a) => [a] -> [a] -> Maybe Int
+stringFirst x	= listToMaybe . stringAll x
+
+-- | find the position of the last occurence of a string
+
+stringLast	:: (Eq a) => [a] -> [a] -> Maybe Int
+stringLast x	= listToMaybe . reverse . stringAll x
+
+-- ------------------------------------------------------------
 -- | Removes leading \/ trailing whitespaces and leading zeros
 
 normalizeNumber		:: String -> String
