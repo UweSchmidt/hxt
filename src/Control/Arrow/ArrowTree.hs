@@ -138,7 +138,7 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
     -- to the XPath selection path \"html\/\/table\". The latter on matches all table elements
     -- even nested ones, but @\/\/>@ gives in many cases the appropriate functionality.
 
-    (//>)		:: Tree t => a b (t c) -> a (t c) (t c) -> a b (t c)
+    (//>)		:: Tree t => a b (t c) -> a (t c) d -> a b d
     f //> g		= f >>> getChildren >>> deep g
 
 

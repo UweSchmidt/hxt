@@ -230,7 +230,8 @@ readDocument userOptions src
 	= getAttrValue transferMimeType >>^ stringToLower
 
     processDoc mimeType
-	= traceMsg 1 ("readDocument: " ++ show src ++ " (mime type: " ++ show mimeType ++ ") will be processed")
+	= traceMsg 1 (unwords [ "readDocument:", show src
+			      , "(mime type:", show mimeType, ") will be processed"])
 	  >>>
 	  ( if isAcceptedMimeType (lookup1 a_accept_mimetypes options) mimeType
 	    then ( parse
@@ -247,14 +248,34 @@ readDocument userOptions src
 		     else this
 		   )
 		 )
-	    else ( traceMsg 2 ("readDocument: " ++ show src ++ " (mime type: " ++ show mimeType ++ ") not accepted")
+	    else ( traceMsg 1 (unwords [ "readDocument:", show src
+				       , "mime type:", show mimeType, "not accepted"])
 		   >>>
 		   replaceChildren none
 		 )								-- remove contents of not accepted mimetype
 	  )
 	where
 	isAcceptedMimeType		:: String -> String -> Bool
-	isAcceptedMimeType _mts _mt	= True					-- TODO
+	isAcceptedMimeType mts mt
+	    | null mts
+	      ||
+	      null mt			= True
+	    | otherwise			= foldr (matchMt mt') False $ mts'
+	    where
+	    mt'				= parseMt mt
+	    mts'			= words
+					  >>>
+					  map parseMt
+					  $
+					  mts
+	    parseMt			= break (== '/')
+					  >>>
+					  second (drop 1)
+	    matchMt (ma,mi) (mas,mis) r	= ( (ma == mas || mas == "*")
+					    &&
+					    (mi == mis || mis == "*")
+					  )
+					  || r
 	parse
 	    | isHtml
 	      || 
