@@ -20,6 +20,7 @@ module Text.XML.HXT.Arrow.DocumentInput
     , getXmlContents
     , getXmlEntityContents
     , getEncoding
+    , getTextEncoding
     , decodeDocument
     )
 where
