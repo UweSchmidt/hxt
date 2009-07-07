@@ -251,6 +251,17 @@
     <a name="change"></a>
     <h3>Change History</h3>
     <ul>
+      <li>
+	<ul>
+	  <li>
+	    Dealing with URIs containing unescaped chars changed.
+	    When URIs can't be parsed (with Network.URI), then the
+	    not allowed chars will be escaped in %XX format and
+	    URI parsing is retried. This enables normal file names to contain blanks and
+	    other chars without explicit escaping.
+	  </li>
+	</ul>
+      </li>
       <li>In <a href="hxt-8.3.1.tar.gz">Version 8.3.1</a>
 	This is only a bug fix release.
 	<ul>
