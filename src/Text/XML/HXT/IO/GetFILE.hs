@@ -25,6 +25,9 @@ where
 import qualified Data.ByteString        as B
 import qualified Data.ByteString.Char8  as C
 
+import		 Network.URI		( unEscapeString
+					)
+
 import           System.IO		( IOMode(..)
 					, openFile
 					  -- , getContents  is defined in the prelude
@@ -69,26 +72,24 @@ getCont		:: Bool -> String -> IO (Either ([(String, String)], String)
 					        String)
 getCont strictInput source
     = do			-- preliminary
-      exists <- doesFileExist source'
-      if not exists
-	 then return $ fileErr "file not found"
-	 else do
-	      perm <- getPermissions source'
-	      if not (readable perm)
-	         then return $ fileErr "file not readable"
-	         else do
-		      c <- try ( if strictInput
-				 then do
-				      cb <- B.readFile source
-				      return (C.unpack cb)
-				 else do
-				      h <- openFile source' ReadMode
-				      hGetContents h
-			       )
-		      return (either readErr Right c)
+      source'' <- checkFile source'
+      case source'' of
+           Nothing -> return $ fileErr "file not found"
+	   Just fn -> do
+		      perm <- getPermissions fn
+		      if not (readable perm)
+			 then return $ fileErr "file not readable"
+			 else do
+			      c <- try $
+				   if strictInput
+				      then do
+					   cb <- B.readFile fn
+					   return (C.unpack cb)
+				      else do
+					   h <- openFile fn ReadMode
+					   hGetContents h
+			      return (either readErr Right c)
     where
-
-    -- please NO call of unEscapeString for file names, NOT: source' = drivePath . unEscapeString $ source
     source' = drivePath $ source
     readErr e
 	= fileErr (ioeGetErrorString e)
@@ -108,5 +109,23 @@ getCont strictInput source
     drivePath file
 	= file
 
+-- | check whether file exists, if not
+-- try to unescape filename and check again
+-- return the existing filename
+
+checkFile	:: String -> IO (Maybe String)
+checkFile fn
+    = do
+      exists <- doesFileExist fn
+      if exists
+	 then return (Just fn)
+	 else do
+	      exists' <- doesFileExist fn'
+	      return ( if exists'
+		       then Just fn'
+		       else Nothing
+		     )
+    where
+    fn' = unEscapeString fn
 
 -- ------------------------------------------------------------

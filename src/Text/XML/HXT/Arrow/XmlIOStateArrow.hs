@@ -134,6 +134,7 @@ import Control.Arrow.ArrowTree
 import Control.Arrow.ArrowIO
 import Control.Arrow.IOStateListArrow
 
+import Control.Monad				( mplus )
 import Control.Parallel.Strategies
 
 import Text.XML.HXT.DOM.Interface
@@ -850,13 +851,24 @@ traceState
 
 -- ----------------------------------------------------------
 
+-- | parse a URI reference, in case of a failure try to escape special chars
+-- and try parsing again
+
+parseURIReference'	:: String -> Maybe URI
+parseURIReference' uri
+    = parseURIReference uri
+      `mplus`
+      parseURIReference uri'
+    where
+    uri' = concatMap ( escapeURIChar isUnescapedInURI) uri
+
 -- | compute the absolut URI for a given URI and a base URI
 
 expandURIString	:: String -> String -> Maybe String
 expandURIString uri base
     = do
-      base' <- parseURIReference base
-      uri'  <- parseURIReference uri
+      base' <- parseURIReference' base
+      uri'  <- parseURIReference' uri
       abs'  <- nonStrictRelativeTo uri' base'
       return $ show abs'
 
@@ -924,7 +936,7 @@ getPartFromURI sel
     = arrL (maybeToList . getPart)
       where
       getPart s = do
-		  uri <- parseURIReference s
+		  uri <- parseURIReference' s
 		  return (sel uri)
 
 -- ------------------------------------------------------------
