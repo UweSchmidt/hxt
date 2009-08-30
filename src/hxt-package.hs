@@ -58,7 +58,17 @@ part4a dir
       , "import-dirs: " ++ dir ++ "/imports"
       , "library-dirs: " ++ dir
       , "hs-libraries: HShxt"
-      , "depends: base-4.0.0.0,"
+      , "build-depends: base >= 4.0.0.0,"
+      , "         haskell98 >= 1.0.1.0,"
+      , "         bytestring >= 0.9.1.4,"
+      , "         parallel >= 1.1.0.0,"
+      , "         parsec >= 2.1.0.1,"
+      , "         network >= 2.2.0.1,"
+      , "         containers >= 0.2.0.0,"
+      , "         directory >= 1.0.0.2,"
+      , "         tagsoup >= 0.6,"
+      , "         curl >= 1.3.3"
+{-      , "depends: base-4.0.0.0,"
       , "         haskell98-1.0.1.0,"
       , "         bytestring-0.9.1.4,"
       , "         parallel-1.1.0.0,"
@@ -68,7 +78,7 @@ part4a dir
       , "         directory-1.0.0.2,"
       , "         tagsoup-0.6,"
       , "         curl-1.3.3"
-      ]
+-}      ]
 
 part4b :: [String]
 part4b

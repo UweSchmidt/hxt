@@ -268,7 +268,7 @@ hxt-package.conf	: hxt-package.hs
 
 install_packages	:
 		runghc hxt-package.hs $(VERSION) "ghc" $(GHC_INSTALL_DIR) $(HXT_SRC) \
-		| ghc-pkg --update-package
+		| ghc-pkg update -
 
 uninstall_packages	:
 		ghc-pkg --remove-package $(HXT_PACKAGE) || true
