@@ -207,6 +207,7 @@ opt2copt k v
       &&
       isIntArg v			= [CurlTimeoutMS           $ read    v]
     | k `elem` ["-n", "--netrc"]	= [CurlNetrcFile                     v]
+    | k `elem` ["--ssl-verify-peer"]	= [CurlSSLVerifyPeer $ read v]
     | k `elem` ["-R", "--remote-time"]  = [CurlFiletime            $ isTrue  v]
     | k `elem` ["-u", "--user"]		= [CurlUserPwd                       v]
     | k `elem` ["-U", "--proxy-user"]	= [CurlProxyUserPwd                  v]
