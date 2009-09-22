@@ -142,11 +142,14 @@ writeDocument userOptions dst
 
 -- |
 -- Convert a document into a string. Formating is done the same way
--- and with the same options as in 'writeDocument'.
+-- and with the same options as in 'writeDocument'. Default output encoding is
+-- no encoding, that means the result is a normal unicode encode haskell string.
+-- The default may be overwritten with the 'Text.XML.HXT.XmlKeywords.a_output_encoding' option.
+-- The XML PI can be suppressed by the 'Text.XML.HXT.XmlKeywords.a_no_xml_pi' option.
 
 writeDocumentToString	:: Attributes  ->  IOStateArrow s XmlTree String
 writeDocumentToString userOptions
-    = prepareContents userOptions
+    = prepareContents (userOptions ++ [(a_output_encoding, unicodeString)])
       >>>
       xshow getChildren
 

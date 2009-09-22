@@ -87,7 +87,7 @@ getCont		:: [(String, String)] -> String -> IO (Either ([(String, String)], Stri
 getCont options uri
     = do
       initCurl
-      resp <- curlGetResponse uri curlOptions
+      resp <- curlGetResponse_ uri curlOptions
       -- dumpResponse
       return $ evalResponse resp
     where

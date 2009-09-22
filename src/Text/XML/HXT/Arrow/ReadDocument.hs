@@ -344,7 +344,7 @@ readDocument userOptions src
 
 readFromDocument	:: Attributes -> IOStateArrow s String XmlTree
 readFromDocument userOptions
-    = applyA ( arr $ \ s -> readDocument userOptions s )
+    = applyA ( arr $ readDocument userOptions )
 
 -- ------------------------------------------------------------
 
@@ -367,7 +367,7 @@ readString userOptions content
 
 readFromString	:: Attributes -> IOStateArrow s String XmlTree
 readFromString userOptions
-    = applyA ( arr $ \ s -> readString userOptions s )
+    = applyA ( arr $ readString userOptions )
 
 -- ------------------------------------------------------------
 

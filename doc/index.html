@@ -255,6 +255,11 @@
 	This is only a bug fix release.
 	<ul>
 	  <li>
+	    writeDocumentToString changed, such that the default
+	    encoding is the identity, so the result is a pure Unicode
+	    encoded Haskell string. 
+	  </li>
+	  <li>
 	    Dealing with URIs containing unescaped chars changed.
 	    When URIs can't be parsed (with Network.URI), then the
 	    not allowed chars will be escaped in %XX format and
