@@ -1063,6 +1063,7 @@ outputEncodingTable
       , (isoLatin1,	unicodeToLatin1		)
       , (usAscii,	unicodeToXmlEntity	)
       , (ucs2,		ucs2ToUnicode		)
+      , (unicodeString,	id			)
       , ("",		unicodeToUtf8		)	-- default
       ]
 

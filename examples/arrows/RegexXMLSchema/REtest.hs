@@ -137,7 +137,7 @@ mkT n	= do
 -- ----------------------------------------
 
 -- output is done with low level ops to write the
--- document i a lasy manner
+-- document i a lazy manner
 -- adding an xml pi and encoding is done "by hand"
 -- latin1 decoding is the identity, so please generate the
 -- docs with latin1 encoding. Here ist done even with ASCCI

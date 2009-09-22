@@ -70,7 +70,7 @@ main2 i
 
 -- ----------------------------------------
 
--- test on lasyness, is the whole tree read or only the first child of every child node?
+-- test on lazyness, is the whole tree read or only the first child of every child node?
 
 main3	:: Bool -> Int -> IO ()
 main3 l i
@@ -243,7 +243,7 @@ foldT1 op (Fork l r)	= foldT1 op l `op` foldT1 op r
 -- ----------------------------------------
 
 -- output is done with low level ops to write the
--- document i a lasy manner
+-- document i a lazy manner
 -- adding an xml pi and encoding is done "by hand"
 -- latin1 decoding is the identity, so please generate the
 -- docs with latin1 encoding. Here ist done even with ASCCI
