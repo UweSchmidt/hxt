@@ -42,6 +42,7 @@ import Text.XML.HXT.Arrow.Edit			( escapeHtmlDoc
 
 import Text.XML.HXT.Arrow.DocumentOutput	( putXmlDocument
 						, encodeDocument
+						, encodeDocument'
 						)
 
 -- ------------------------------------------------------------
@@ -129,7 +130,7 @@ writeDocument	:: Attributes -> String -> IOStateArrow s XmlTree XmlTree
 writeDocument userOptions dst
     = perform ( traceMsg 1 ("writeDocument: destination is " ++ show dst)
 		>>>
-		prepareContents userOptions
+		prepareContents userOptions encodeDocument
 		>>>
 		putXmlDocument dst
 		>>>
@@ -146,10 +147,20 @@ writeDocument userOptions dst
 -- no encoding, that means the result is a normal unicode encode haskell string.
 -- The default may be overwritten with the 'Text.XML.HXT.XmlKeywords.a_output_encoding' option.
 -- The XML PI can be suppressed by the 'Text.XML.HXT.XmlKeywords.a_no_xml_pi' option.
+--
+-- This arrow fails, when the encoding scheme is not supported.
+-- The arrow is pure, it does not run in the IO monad.
+-- The XML PI is suppressed, if not explicitly turned on with an
+-- option @ (a_no_xml_pi, v_0) @
 
-writeDocumentToString	:: Attributes  ->  IOStateArrow s XmlTree String
+writeDocumentToString	:: ArrowXml a => Attributes  -> a XmlTree String
 writeDocumentToString userOptions
-    = prepareContents (userOptions ++ [(a_output_encoding, unicodeString)])
+    = prepareContents ( addEntries
+                        userOptions
+                        [ (a_output_encoding, unicodeString)
+                        , (a_no_xml_pi, v_1)
+                        ]
+                      ) encodeDocument'
       >>>
       xshow getChildren
 
@@ -158,8 +169,8 @@ writeDocumentToString userOptions
 -- |
 -- indent and format output
 
-prepareContents	:: Attributes -> IOStateArrow s XmlTree XmlTree
-prepareContents userOptions
+prepareContents	:: ArrowXml a => Attributes -> (Bool -> String -> a XmlTree XmlTree) -> a XmlTree XmlTree
+prepareContents userOptions encodeDoc
     = indent
       >>>
       format
@@ -179,13 +190,13 @@ prepareContents userOptions
 					  >>>
 					  escapeHtmlDoc			-- escape al XML and HTML chars >= 128
 					  >>>
-					  encodeDocument		-- convert doc into text with respect to output encoding with ASCII as default
+					  encodeDoc			-- convert doc into text with respect to output encoding with ASCII as default
 					    suppressXmlPi ( lookupDef usAscii a_output_encoding options )
 	| hasOption a_output_xml	= formatEmptyElems False
 					  >>>
 					  escapeXmlDoc			-- escape lt, gt, amp, quot, 
 					  >>>
-					  encodeDocument		-- convert doc into text with respect to output encoding
+					  encodeDoc			-- convert doc into text with respect to output encoding
 					    suppressXmlPi ( lookupDef "" a_output_encoding options )
 	| otherwise			= this
 

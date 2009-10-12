@@ -252,12 +252,11 @@
     <h3>Change History</h3>
     <ul>
       <li>In <a href="hxt-8.3.2.tar.gz">Version 8.3.2</a>
-	This is only a bug fix release.
+	This is a bug fix release.
 	<ul>
 	  <li>
-	    writeDocumentToString changed, such that the default
-	    encoding is the identity, so the result is a pure Unicode
-	    encoded Haskell string. 
+	    writeDocumentToString changed, such that it is a pure
+	    arrow and does not need to run in the IO monad.
 	  </li>
 	  <li>
 	    Dealing with URIs containing unescaped chars changed.

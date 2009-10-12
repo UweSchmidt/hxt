@@ -16,7 +16,12 @@
 -- ------------------------------------------------------------
 
 module Text.XML.HXT.Arrow.DocumentOutput
-    ( module Text.XML.HXT.Arrow.DocumentOutput )
+    ( putXmlDocument
+    , putXmlTree
+    , putXmlSource
+    , encodeDocument
+    , encodeDocument'
+    )
 where
 
 import Control.Arrow				-- arrow classes
@@ -24,11 +29,13 @@ import Control.Arrow.ArrowList
 import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
 import Control.Arrow.ArrowIO
+import Control.Arrow.ListArrow
 
 import Text.XML.HXT.DOM.Unicode
     ( getOutputEncodingFct )
 
 import Text.XML.HXT.DOM.Interface
+
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlIOStateArrow
 
@@ -125,8 +132,39 @@ putXmlSource dst
 
 -- ------------------------------------------------------------
 
+getEncodingParam	:: IOStateArrow s XmlTree String
+getEncodingParam
+    = catA [ getParamString a_output_encoding	-- 4. guess: take output encoding parameter from global state
+	   , getParamString a_encoding		-- 5. guess: take encoding parameter from global state
+	   , constA utf8			-- default : utf8
+           ]
+      >. (head . filter (not . null))
+
 getOutputEncoding	:: String -> IOStateArrow s XmlTree String
 getOutputEncoding defaultEnc
+    = getEC $< getEncodingParam
+    where
+    getEC enc' = fromLA $ getOutputEncoding' defaultEnc enc'
+
+encodeDocument	:: Bool -> String -> IOStateArrow s XmlTree XmlTree
+encodeDocument supressXmlPi defaultEnc
+    = encode $< getOutputEncoding defaultEnc
+    where
+    encode enc
+        = traceMsg 2 ("encodeDocument: encoding is " ++ show enc)
+	  >>>
+          ( encodeDocument' supressXmlPi enc
+            `orElse`
+            ( issueFatal ("encoding scheme not supported: " ++ show enc)
+	      >>>
+	      setDocumentStatusFromSystemState "encoding document"
+            )
+          )
+
+-- ------------------------------------------------------------
+
+getOutputEncoding'	:: String -> String -> LA XmlTree String
+getOutputEncoding' defaultEnc defaultEnc2
     =  catA [ getChildren			-- 1. guess: evaluate <?xml ... encoding="..."?>
 	      >>>
 	      ( ( isPi >>> hasName t_xml )
@@ -135,45 +173,33 @@ getOutputEncoding defaultEnc
 	      )
 	    , constA defaultEnc			-- 2. guess: explicit parameter, may be ""
 	    , getAttrValue a_output_encoding	-- 3. guess: take output encoding parameter in root node
-	    , getParamString a_output_encoding	-- 4. guess: take output encoding parameter in global state
-	    , getParamString a_encoding		-- 5. guess: take encoding parameter in global state
-	    , constA utf8			-- default : utf8
+	    , constA defaultEnc2		-- default : UNICODE or utf8
 	    ]
       >. (head . filter (not . null))		-- make the filter deterministic: take 1. entry from list of guesses
 
-encodeDocument	:: Bool -> String -> IOStateArrow s XmlTree XmlTree
-encodeDocument supressXmlPi defaultEnc
-    = applyA ( getOutputEncoding defaultEnc
-	       >>>
-	       arr encArr
-	     )
-      `when`
-      isRoot
+encodeDocument'	:: ArrowXml a => Bool -> String -> a XmlTree XmlTree
+encodeDocument' supressXmlPi defaultEnc
+    = fromLA (encode $< getOutputEncoding' defaultEnc utf8)
     where
-    encArr	:: String -> IOStateArrow s XmlTree XmlTree
-    encArr enc	= maybe notFound found . getOutputEncodingFct $ enc
-	where
-	found ef = traceMsg 2 ("encodeDocument: encoding is " ++ show enc)
-		   >>>
-		   ( if supressXmlPi
-		     then processChildren (none `when` isXmlPi)
-		     else ( addXmlPi
-			    >>>
-			    addXmlPiEncoding enc
-			  )
-		   )
-		   >>>
-		   replaceChildren ( xshow getChildren
-				     >>>
-				     arr ef
-				     >>>
-				     mkText
-				   )
-		   >>>
-		   addAttr a_output_encoding enc
-
-	notFound = issueFatal ("encoding scheme not supported: " ++ show enc)
-		   >>>
-		   setDocumentStatusFromSystemState "encoding document"
+    encode	:: String -> LA XmlTree XmlTree
+    encode encodingScheme
+        = case getOutputEncodingFct encodingScheme of
+          Nothing	-> none
+          Just ef	-> ( if supressXmlPi
+		             then processChildren (none `when` isXmlPi)
+		             else ( addXmlPi
+			            >>>
+			            addXmlPiEncoding encodingScheme
+			          )
+		           )
+		           >>>
+		           replaceChildren ( xshow getChildren
+				             >>>
+				             arr ef
+				             >>>
+				             mkText
+				           )
+		           >>>
+		           addAttr a_output_encoding encodingScheme
 
 -- ------------------------------------------------------------

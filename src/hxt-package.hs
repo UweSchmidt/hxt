@@ -37,7 +37,7 @@ part2
 
 part3a	:: [String]
 part3a
-    = [ "tested-with: ghc-6.10"
+    = [ "tested-with: ghc-6.10.4"
       , "exposed: True"
       , "exposed-modules:"
       ]
@@ -91,7 +91,7 @@ part4b
       , "                containers >= 0.1 && < 1,"
       , "                directory  >= 1 && < 2,"
       , "                filepath   >= 1 && < 2,"
-      , "                parsec     >= 2.1 && < 3,"
+      , "                parsec     >= 2.1 && < 4,"
       , "                HUnit      >= 1.2 && < 2,"
       , "                network    >= 2.1 && < 3,"
       , "                parallel   >= 1.0 && < 2,"
