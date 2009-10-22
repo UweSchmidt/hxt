@@ -27,6 +27,7 @@ t_xml,				-- tag names
  t_root		:: String
 
 a_accept_mimetypes,
+ a_add_default_dtd,
  a_canonicalize,
  a_default,			-- attribute names
  a_check_namespaces,
@@ -58,6 +59,7 @@ a_accept_mimetypes,
  a_modifier,
  a_name,
  a_no_empty_elements,
+ a_no_empty_elem_for,
  a_no_redirect,
  a_no_xml_pi,
  a_options_curl,
@@ -65,6 +67,7 @@ a_accept_mimetypes,
  a_output_file,
  a_output_xml,
  a_output_html,
+ a_output_xhtml,
  a_parse_by_mimetype,
  a_parse_html,
  a_parse_xml,
@@ -138,6 +141,7 @@ t_xml		= "xml"
 t_root		= "/"		-- name of root node tag
 
 a_accept_mimetypes		= "accept-mimetypes"
+a_add_default_dtd               = "add-default-dtd"
 a_canonicalize			= "canonicalize"
 a_check_namespaces		= "check-namespaces"
 a_collect_errors		= "collect-errors"
@@ -169,12 +173,14 @@ a_module			= "module"
 a_modifier			= "modifier"
 a_name				= "name"
 a_no_empty_elements		= "no-empty-elements"
+a_no_empty_elem_for             = "no-empty-elem-for"
 a_no_redirect	 		= "no-redirect"
 a_no_xml_pi                     = "no-xml-pi"
 a_options_curl			= "options-curl"
 a_output_file			= "output-file"
 a_output_encoding		= "output-encoding"
 a_output_html			= "output-html"
+a_output_xhtml			= "output-xhtml"
 a_output_xml			= "output-xml"
 a_parse_by_mimetype		= "parse-by-mimetype"
 a_parse_html			= "parse-html"
@@ -246,6 +252,9 @@ k_pcdata	= "#PCDATA"
 k_required	= "#REQUIRED"
 k_default	= "#DEFAULT"
 
+
+dtdPrefix	:: String
+dtdPrefix	= "doctype-"
 
 -- ------------------------------------------------------------
 --

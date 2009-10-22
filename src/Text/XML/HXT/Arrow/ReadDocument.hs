@@ -36,6 +36,7 @@ import Text.XML.HXT.Arrow.XmlIOStateArrow
 import Text.XML.HXT.Arrow.Edit			( canonicalizeAllNodes
 						, canonicalizeForXPath
 						, canonicalizeContents
+                                                , rememberDTDAttrl
 						, removeDocWhiteSpace
 						)
 
@@ -239,6 +240,8 @@ readDocument userOptions src
 		   ( if isXmlOrHtml
 		     then ( checknamespaces
 			    >>>
+                            rememberDTDAttrl
+                            >>>
 			    canonicalize
 			    >>>
 			    whitespace

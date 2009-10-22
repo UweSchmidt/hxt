@@ -255,7 +255,18 @@
 	This is a bug fix release.
 	<ul>
 	  <li>
-	    writeDocumentToString changed, such that it is a pure
+	    New output option <tt>a_output_xhtml</tt>for writing XHTML.
+	  </li>
+	  <li>
+	    New output option <tt>a_no_empty_elem_for</tt> for precise
+	    control, which empty elements shall not be emitted in
+	    short form <tt>&lt;name .../&gt;</tt>.
+	  </li>
+	  <li>New output option <tt>a_add_default_dtd</tt> for easy
+	    adding a Document Type Declaration.
+	  </li>
+	  <li>
+	    <tt>writeDocumentToString</tt> changed, such that it is a pure
 	    arrow and does not need to run in the IO monad.
 	  </li>
 	  <li>

@@ -479,7 +479,7 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     setAttrl		:: a XmlTree XmlTree -> a XmlTree XmlTree
     setAttrl		= changeAttrl (const id) 		-- (\ x y -> y)
 
-    -- | add a list of attributes list to an element
+    -- | add a list of attributes to an element
     addAttrl		:: a XmlTree XmlTree -> a XmlTree XmlTree
     addAttrl		= changeAttrl (XN.mergeAttrl)
 

@@ -35,6 +35,7 @@ import Text.XML.HXT.Arrow.Edit			( escapeHtmlDoc
 						, escapeXmlDoc
 						, haskellRepOfXmlDoc
 						, indentDoc
+                                                , addDefaultDTDecl
 						, preventEmptyElements
 						, removeDocWhiteSpace
 						, treeRepOfXmlDoc
@@ -76,6 +77,12 @@ available options are
                           the always empty HTML elements are still written in short form, but not the others, as e.g. the script element.
                           Empty script elements, like \<script href=\"...\"/\>, are always a problem for firefox and others.
                           When XML output is generated with this option, all empty elements are written in the long form.
+
+- 'a_no_empty_elem_for' : do not generate empty elements for the element names given in the comma separated list of this option value.
+                          This option overwrites the above described 'a_no_empty_elements' option
+
+- 'a_add_default_dtd' : if the document to be written was build by reading another document containing a Document Type Declaration,
+                        this DTD is inserted into the output document (default: no insert)
 
 - 'a_no_xml_pi' : suppress generation of \<?xml ... ?\> processing instruction
 
@@ -173,11 +180,19 @@ prepareContents	:: ArrowXml a => Attributes -> (Bool -> String -> a XmlTree XmlT
 prepareContents userOptions encodeDoc
     = indent
       >>>
+      addDtd
+      >>>
       format
     where
     formatEmptyElems
-	| hasOption a_no_empty_elements = preventEmptyElements
+        | not (null noEmptyElemFor)     = preventEmptyElements noEmptyElemFor
+	| hasOption a_no_empty_elements
+          ||
+          hasOption a_output_xhtml      = preventEmptyElements []
 	| otherwise                     = const this
+    addDtd
+        | hasOption a_add_default_dtd   = addDefaultDTDecl
+        | otherwise                     = this
     indent
 	| hasOption a_indent		= indentDoc			-- document indentation
 	| hasOption a_remove_whitespace	= removeDocWhiteSpace		-- remove all whitespace between tags
@@ -192,7 +207,7 @@ prepareContents userOptions encodeDoc
 					  >>>
 					  encodeDoc			-- convert doc into text with respect to output encoding with ASCII as default
 					    suppressXmlPi ( lookupDef usAscii a_output_encoding options )
-	| hasOption a_output_xml	= formatEmptyElems False
+	| hasOption a_output_xml	= formatEmptyElems (hasOption a_output_xhtml)
 					  >>>
 					  escapeXmlDoc			-- escape lt, gt, amp, quot, 
 					  >>>
@@ -202,6 +217,12 @@ prepareContents userOptions encodeDoc
 
     suppressXmlPi							-- remove <?xml ... ?> when set
 	= hasOption a_no_xml_pi
+
+    noEmptyElemFor
+        = words
+          . map (\ c -> if c == ',' then ' ' else c)
+          . lookup1 a_no_empty_elem_for
+          $ options
 
     hasOption n
 	= optionIsSet n options
@@ -214,8 +235,11 @@ prepareContents userOptions encodeDoc
 	      , ( a_show_tree,		v_0 )
 	      , ( a_show_haskell,	v_0 )
 	      , ( a_output_html,	v_0 )
+	      , ( a_output_xhtml,	v_0 )
 	      , ( a_no_xml_pi,          v_0 )
 	      , ( a_no_empty_elements,  v_0 )
+              , ( a_no_empty_elem_for,  ""  )
+              , ( a_add_default_dtd,    v_0 )
 	      ]
 
 -- ------------------------------------------------------------

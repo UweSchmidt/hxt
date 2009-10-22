@@ -56,7 +56,7 @@ inputOptions
       , Option ""	[a_issue_errors]		(NoArg	(att a_issue_errors      v_1))	"issue all errorr messages on stderr (default)"
       , Option ""	[a_do_not_issue_errors]		(NoArg	(att a_issue_errors      v_0))	"ignore all error messages"
       , Option ""	[a_ignore_encoding_errors]	(NoArg  (att a_ignore_encoding_errors v_1))   "ignore encoding errors"
-      , Option ""	[a_ignore_none_xml_contents]    (NoArg  (att a_ignore_none_xml_contents v_1)) "discards all contents of none XML/HTML documents, only the meta info remains stays in the doc tree"
+      , Option ""	[a_ignore_none_xml_contents]    (NoArg  (att a_ignore_none_xml_contents v_1)) "discards all contents of none XML/HTML documents, only the meta info remains in the doc tree"
       , Option ""	[a_accept_mimetypes]            (ReqArg (att a_accept_mimetypes) "MIMETYPES") "only accept documents matching the given list of mimetype specs"
       , Option "H"	[a_parse_html]			(NoArg	(att a_parse_html        v_1))	"parse input as HTML, try to interprete everything as HTML, no validation"
       , Option "M"	[a_parse_by_mimetype]		(NoArg  (att a_parse_by_mimetype v_1))	"parse dependent on mime type: text/html as HTML, text/xml and text/xhtml and others as XML, else no parse"
@@ -116,7 +116,10 @@ outputOptions
       , Option "f"	[a_output_file]		(ReqArg (att a_output_file)        "FILE")	"output file for resulting document (default: stdout)"
       , Option ""	[a_output_html]	        (NoArg  (att a_output_html           v_1))	"output of none ASCII chars as HTMl entity references"
       , Option ""       [a_no_xml_pi]	        (NoArg  (att a_no_xml_pi             v_1))      ("output without <?xml ...?> processing instruction, useful in combination with --" ++ show a_output_html)
+      , Option ""	[a_output_xhtml]        (NoArg  (att a_output_xhtml          v_1))	"output of HTML elements with empty content (script, ...) done in format <elem...></elem> instead of <elem/>"
+      , Option ""       [a_no_empty_elem_for]   (ReqArg (att a_no_empty_elem_for) "NAMES")      "output of empty elements done in format <elem...></elem> only for given list of element names"
       , Option ""       [a_no_empty_elements]   (NoArg  (att a_no_empty_elements     v_1))      "output of empty elements done in format <elem...></elem> instead of <elem/>"
+      , Option ""       [a_add_default_dtd]     (NoArg  (att a_add_default_dtd       v_1))      "add the document type declaration given in the input document"
       ]
     where
     att n v	= (n, v)

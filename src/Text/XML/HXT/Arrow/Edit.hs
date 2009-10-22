@@ -46,6 +46,9 @@ module Text.XML.HXT.Arrow.Edit
     , transfCharRef
     , transfAllCharRef
 
+    , rememberDTDAttrl
+    , addDefaultDTDecl
+
     , hasXmlPi
     , addXmlPi
     , addXmlPiEncoding
@@ -72,6 +75,7 @@ import           Text.XML.HXT.Parser.HtmlParsec         ( emptyHtmlTags )
 import           Text.XML.HXT.Parser.XmlEntities	( xmlEntities )
 import           Text.XML.HXT.Parser.XhtmlEntities	( xhtmlEntities )
 
+import           Data.List                              ( isPrefixOf )
 import qualified Data.Map 			as M
 import           Data.Maybe
 
@@ -357,11 +361,12 @@ escapeDoc escText escAttr
 
 -- ------------------------------------------------------------
 
-preventEmptyElements	:: ArrowList a => Bool -> a XmlTree XmlTree
-preventEmptyElements isHtml
+preventEmptyElements	:: ArrowList a => [String] -> Bool -> a XmlTree XmlTree
+preventEmptyElements ns isHtml
     = fromLA $ insertDummyElem
     where
     isNoneEmpty
+        | not (null ns) = hasNameWith (localPart >>> (`elem` ns))
 	| isHtml	= hasNameWith (localPart >>> (`notElem` emptyHtmlTags))
 	| otherwise	= this
 
@@ -704,6 +709,39 @@ transfCharRef		= fromLA $
 transfAllCharRef	:: ArrowXml a => a XmlTree XmlTree
 transfAllCharRef	= fromLA $
 			  processBottomUp transfCharRef'
+
+-- ------------------------------------------------------------
+
+rememberDTDAttrl	:: ArrowList a => a XmlTree XmlTree
+rememberDTDAttrl
+    = fromLA $
+      ( ( addDTDAttrl $< ( getChildren >>> isDTDDoctype >>> getDTDAttrl ) )
+        `orElse`
+        this
+      )
+    where
+    addDTDAttrl al
+        = seqA . map (uncurry addAttr) . map (first (dtdPrefix ++)) $ al
+
+addDefaultDTDecl	:: ArrowList a => a XmlTree XmlTree
+addDefaultDTDecl
+    = fromLA $
+      ( addDTD $< listA (getAttrl >>> (getName &&& xshow getChildren) >>> hasDtdPrefix) )
+    where
+    hasDtdPrefix
+        = isA (fst >>> (dtdPrefix `isPrefixOf`))
+          >>>
+          arr (first (drop (length dtdPrefix)))
+    addDTD []
+        = this
+    addDTD al
+        = replaceChildren
+          ( mkDTDDoctype al none
+            <+>
+            txt "\n"
+            <+>
+            ( getChildren >>> (none `when` isDTDDoctype) )	-- remove old DTD stuff
+          )
 
 -- ------------------------------------------------------------
 
