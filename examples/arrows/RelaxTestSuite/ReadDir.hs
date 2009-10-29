@@ -19,6 +19,7 @@ import System.Directory
   )
 import Data.List
   ( find
+  , sort
   , isSuffixOf
   )
 import Maybe
@@ -46,7 +47,7 @@ readDir :: FilePath -> FilePath -> IO Entry
 readDir pre p
   = do 
     dir     <- getDirectoryContents $ pre ++ "/" ++ p
-    entries <- getEntries $ clean [".", "..", "CVS"] dir
+    entries <- getEntries $ sort $ clean [".", "..", "CVS"] dir
     return $ Dir entries
   where
   getEntries :: [FilePath] -> IO [Entry]

@@ -54,8 +54,18 @@ import Text.XML.HXT.RelaxNG.Schema        as S
 import Text.XML.HXT.RelaxNG.SchemaGrammar as SG
 
 import Data.Maybe
-import Data.Char
+    ( fromJust
+    , fromMaybe
+    , isNothing
+    )
 import Data.List
+    ( elemIndices
+    , isPrefixOf
+    , nub
+    , deleteBy
+    , find
+    , (\\)
+    )
 
 import System.Directory
   ( doesFileExist )
@@ -223,7 +233,7 @@ simplificationStep1
 		>>> 
                 arr (\ a -> fromMaybe "" (expandURIString a u))
                 >>> -- the uri should not have a fragment-identifier (4.5)
-                ( (arr (++ ", it is not a valid URI for text/xml"))
+                ( arr ("illegal URI, fragment identifier not allowed: " ++)
                   `whenNot`
                   (getFragmentFromURI >>> isA null)
                 )
@@ -359,12 +369,16 @@ simplificationStep2 readOptions validateExternalRef validateInclude extHRefs inc
   where
   importExternalRef :: String -> String -> IOSArrow XmlTree XmlTree
   importExternalRef ns href
-    = ifA ( -- test whether the referenced schema exists
-            neg $ constA href >>> getPathFromURI >>> isIOA doesFileExist
+    = ifA ( neg $ constA href
+                  >>> getPathFromURI
+                  >>> ( isA (not . ("illegal URI" `isPrefixOf`))
+                        `guards`
+                        isIOA doesFileExist
+                      )
           )
         ( mkRelaxError ""
-	  ( "Can't read " ++ show href ++
-	    ", referenced in externalRef-Pattern"
+	  ( show href ++
+	    ": can't read URI, referenced in externalRef-Pattern"
 	  )
 	)
         ( ifP (const $ elem href extHRefs)
@@ -377,7 +391,7 @@ simplificationStep2 readOptions validateExternalRef validateInclude extHRefs inc
             )
             ( ifA ( if validateExternalRef 					-- if validation parameters are set
 		    then validateDocWithRelax S.relaxSchemaArrow [] href	-- the referenced schema is validated with respect to
-		    else none							-- the Relax NG spezification
+		    else none							-- the Relax NG specification
                   )
                 ( mkRelaxError ""
 		  ( "The content of the schema " ++ show href ++ 
