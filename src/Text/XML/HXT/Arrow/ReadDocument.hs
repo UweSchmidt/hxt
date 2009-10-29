@@ -61,7 +61,7 @@ available options:
 
 * 'a_parse_html': use HTML parser, else use XML parser (default)
 
-- 'a_tagsoup' : use light weight and lasy parser based on tagsoup lib
+- 'a_tagsoup' : use light weight and lazy parser based on tagsoup lib
 
 - 'a_parse_by_mimetype' : select the parser by the mime type of the document
                           (pulled out of the HTTP header). When the mime type is set to \"text\/html\"

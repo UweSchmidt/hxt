@@ -9,7 +9,7 @@
    Stability  : experimental
    Portability: portable
 
-   lasy HTML and simpe XML parser implemented with tagsoup
+   lazy HTML and simpe XML parser implemented with tagsoup
    parsing is done with a very simple monadic top down parser
 
 -}
@@ -294,7 +294,7 @@ parseHtmlTagSoup withNamespaces withWarnings withComment removeWhiteSpace asHtml
 			   )
       )
     where
-    -- This is essential for lasy parsing:
+    -- This is essential for lazy parsing:
     -- the call of "take 1" stops parsing, when the first element is detected
     -- no check on end of input sequence is required to build this (0- or 1-element list)
     -- so eof is never checked unneccessarily
