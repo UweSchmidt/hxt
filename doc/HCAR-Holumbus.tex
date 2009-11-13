@@ -1,9 +1,8 @@
 \begin{hcarentry}[updated]{Holumbus Search Engine Framework}
 \label{holumbus}
-\report{Uwe Schmidt}%05/09
+\report{Uwe Schmidt}%10/09
 \participants{Timo~B.\ H\"ubel, Sebastian Reese, Sebastian Schlatt,
-  Stefan Schmidt, Bj\"orn Peem\"oller, Stefan Roggensack
-}
+  Stefan Schmidt, Bj\"orn Peem\"oller, Stefan Roggensack, Alexander Treptow}
 \status{first release}
 \makeheader
 
@@ -59,23 +58,38 @@ and a distributed storage system.
 \subsubsection*{Current Work}
 
 The indexer and search module will be used and extended
-to support the Hayoo!\ engine for searching the Hackage package library
+to support the Hayoo!\ engine for searching the hackage package library
 (http://holumbus.fh-wedel.de/hayoo/hayoo.html).
 
-Stefan Schmidt has finished his master thesis developing
-the Holumbus MapReduce system,  a
-framework for distributed computing with an architecture
-like the Google
-{\em map--reduce} system.
-
-A follow-up thesis bringing this
-MapReduce system into a development status for real world
-distributed applications has been started by Sebastian Reese.
-One subgoal of this work is to write a {\em cookbook}
+In a follow-up project of Stefan Schmidts system,
+Sebasian Reese is working on a {\em cookbook}
 for programming with the MapReduce framework and for giving
-tuning and configuration hints.
-The distributed recomputation and update of the Hayoo!\ index will
-be one of the real world test cases of this project.
+tuning and configuration hints. Benchmarks for various small problems
+and for generating search indexes have shown, that the architecture
+scales very well. The thesis with the final results will be finished
+end of March 2010. 
+
+In a further subproject, the so called Hawk system, 
+Bj\"orn Peem\"oller and Stefan Roggensack developped a web framework
+for Haskell. The results of this master thesis will be published soon
+on the Holumbus web site.
+
+The Hawk system is comparable in functionality and architecture with Ruby on Rail
+and other web frameworks. Its architecture follows the MVC pattern.
+It consists of a simple relational database mapper for persistent storage of data
+and a template system for the view component. This template system has two
+interesting features: Fist the templates are valid XHTML documents. The parts,
+where data has to be filled in, are marked with Hawk specific elements and attributes.
+These parts are in a different namespace, so they do not destroy the XHTML structure.
+The second interesting feature is, that the templates contain type descriptions for
+the values to be filled in. This type information enables a static check, whether
+the models and views fit together.
+
+The Hawk framework is independent of the Holumbus search engine.
+It will be applicable for the development of arbitrary web applications,
+but one of the first applications is the reimplementation of the web interface
+for Hayoo! search engine. This project will be done by Alexander Treptow within
+the next six months.
 
 \FurtherReading
 
@@ -83,7 +97,7 @@ The Holumbus web page
 (\url{http://holumbus.fh-wedel.de/})
 includes downloads, Darcs web interface, current status, requirements, 
 and documentation.
-Timo H\"ubel's Master Thesis describing the Holumbus index structure and
+Timo H\"ubel's master thesis describing the Holumbus index structure and
 the search engine is available at
 \url{http://holumbus.fh-wedel.de/branches/develop/doc/thesis-searching.pdf}.
 Sebastian Schlatt's thesis dealing with the crawler component is

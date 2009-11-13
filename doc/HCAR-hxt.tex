@@ -1,7 +1,7 @@
 \begin{hcarentry}[updated]{Haskell XML Toolbox}
 \label{hxt}
-\report{Uwe Schmidt}%11/08
-\status{seventh major release (current release: 8.3.0)}
+\report{Uwe Schmidt}%10/09
+\status{seventh major release (current release: 8.3.2)}
 \makeheader
 
 \subsubsection*{Description}
@@ -50,14 +50,7 @@ with the arrow based hxt package.
 \subsubsection*{Current Work}
 
 Currently mainly maintenance work is done. This includes
-space and runtime optimizations, the internal representation of XML
-names has been changed to gain less memory consumption. Equal XML names
-share the same main memory.
-
-It is planned to further develop and extend the validation part with
-Relax~NG and the conversion from/to Haskell internal data. The pickler
-approach used in that task can be extended to derive DTDs, Relax~NG
-Schemas or XML Schemas for Validation of the external XML representation.
+space and runtime optimizations.
 
 The HXT library is extensively used in the Holumbus
 project~\cref{holumbus}, there it forms the basis for the index generation.
