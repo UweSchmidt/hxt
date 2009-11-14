@@ -45,6 +45,7 @@ module Text.XML.HXT.RelaxNG.XmlSchema.Regex
 where
 
 import Data.Maybe
+import Data.List	( foldl' )
 
 -- ------------------------------------------------------------
 
@@ -290,7 +291,7 @@ delta (Dif e1 e2) c	= mkDif (delta e1 c) (delta e2 c)
 -- ------------------------------------------------------------
 
 delta'		:: Regex -> String -> Regex
-delta'		= foldl delta
+delta'		= foldl' delta
 
 matchWithRE		:: Regex -> String -> Maybe String
 matchWithRE e
