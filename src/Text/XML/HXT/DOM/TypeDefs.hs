@@ -117,7 +117,7 @@ data DTDElem	= DOCTYPE	-- ^ attr: name, system, public,	XDTD elems as children
 		                --
 				--  for lists of names in notation types or nmtokens in enumeration types
 		| PEREF		-- ^ for Parameter Entity References in DTDs
-		  deriving (Eq, Ord, Show, Read, Typeable)
+		  deriving (Eq, Ord, Enum, Show, Read, Typeable)
 
 instance NFData DTDElem
 
