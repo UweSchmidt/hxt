@@ -1,4 +1,4 @@
-{- OPTIONS -fno-warn-orphans -fno-warn-unused-imports #-}
+{-# OPTIONS -fno-warn-orphans -fno-warn-unused-imports #-}
 
 -- ------------------------------------------------------------
 
