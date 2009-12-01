@@ -11,7 +11,7 @@
    Stability  : stable
    Portability: portable
 
-   De-/Serialisation for NTrees
+   De-/Serialisation for XmlTrees
 -}
 
 -- ------------------------------------------------------------

@@ -1,0 +1,2 @@
+:set -i../src
+:l TestXmlTreeBinary

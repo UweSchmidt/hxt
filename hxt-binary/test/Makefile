@@ -9,6 +9,6 @@ test	: $(PROG)
 	./$(PROG)
 
 clean	:
-	rm -f *.o *.hi t.bin $(PROG)
+	rm -f *.o *.hi t.bin t.bin.bz $(PROG)
 
  
