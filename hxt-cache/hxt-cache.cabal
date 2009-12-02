@@ -1,0 +1,37 @@
+name: hxt-cache
+version: 0.0.1
+license: OtherLicense
+license-file: LICENCE
+maintainer: Uwe Schmidt <uwe@fh-wedel.de>
+stability: experimental
+category: XML
+synopsis: Cache for HXT XML Documents and other binary data
+description: Extension for caching XML documents and other binary data in cache directory
+ of the local filesystem. The module exports a version of readDocument with the
+ additional cache functionality.
+homepage: http://www.fh-wedel.de/~si/HXmlToolbox/index.html
+copyright: Copyright (c) 2009 Uwe Schmidt
+build-type: Simple
+cabal-version: >=1.6
+
+extra-source-files:
+ test/TestXmlCache.hs
+
+library
+ exposed-modules:
+  Text.XML.HXT.Arrow.XmlCache
+
+ hs-source-dirs: src
+ ghc-options: -Wall
+
+ build-depends: base       >= 4   && < 5,
+                bytestring >= 0.9 && < 1,
+                binary     >= 0.5 && < 1,
+                directory  >= 1   && < 2,
+                filepath   >= 1.1 && < 2,
+                haskell98  >= 1   && < 2,
+                hxt        >= 8.2 && < 9,
+                hxt-binary >= 0   && < 1,
+                old-time   >= 1   && < 2,
+                SHA        >= 1.4 && < 2
+

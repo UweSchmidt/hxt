@@ -1,3 +1,5 @@
+{-# OPTIONS -fno-warn-unused-imports #-}
+
 -- ------------------------------------------------------------
 
 {- |
@@ -19,15 +21,25 @@ module Text.XML.HXT.Arrow.XmlCache
     , a_cache
     , a_compress
     , a_document_age
+    , lookupCache
+    , writeCache
+    , CacheConfig(..)
     )
 where
 
+import 		 Control.Exception	( SomeException	, try )
+
+import 		 Data.Binary
 import qualified Data.ByteString.Lazy	as B
+import           Data.Char
+import           Data.Either
 import           Data.Maybe
 import		 Data.Digest.Pure.SHA
 
 import           System.FilePath
 import		 System.Directory
+import           System.IO
+import           System.Time
 
 import           Text.XML.HXT.Arrow	hiding	( readDocument )
 import qualified Text.XML.HXT.Arrow 	as	X
@@ -70,18 +82,26 @@ readDocument userOptions src
                                     )
                           )
     | otherwise		= X.readDocument userOptions src
+
       where
-      options		= addEntries userOptions defaultOptions
-      defaultOptions	= [ ( a_compress,	v_0	   )
-                          , ( a_cache,		"./.cache" )
-                          ]
-      compr		= optionIsSet a_compress options
-      withCache		= isJust . lookup a_cache $ userOptions
-      cachedir		= lookup1 a_cache options
-      cacheConfig	= CC { c_dir      = cachedir
-                             , c_compress = compr
-                             , c_age      = undefined
-                             }
+
+      options			= addEntries userOptions defaultOptions
+      defaultOptions		= [ ( a_compress,	v_0	   )
+				  , ( a_cache,		"./.cache" )
+				  , ( a_document_age,   ""         )
+				  ]
+      compr			= optionIsSet a_compress options
+      withCache			= isJust . lookup a_cache $ userOptions
+      cacheDir			= lookup1 a_cache options
+      cacheAge			= readInteger . lookup1 a_document_age $ options
+      readInteger s
+	  | null s || not (all isDigit s)
+				= 60 * 60 * 24				-- default age: 1 day
+	  | otherwise		= read s
+      cacheConfig		= CC { c_dir      = cacheDir
+				     , c_compress = compr
+				     , c_age      = cacheAge
+				     }
 
 -- ------------------------------------------------------------
 
@@ -90,14 +110,21 @@ data CacheConfig	= CC { c_dir		:: FilePath
                              , c_age		:: Integer
                              }
 
-lookupCache		:: CacheConfig -> String -> IOStateArrow s a XmlTree
-lookupCache cc f	= readBinaryValue (c_compress cc) (uncurry (</>) $ cacheFile cc f)
+lookupCache		:: (Binary b) => CacheConfig -> String -> IOStateArrow s a b
+lookupCache cc f	= isIOA (const $ cacheHit cc cf)
+			  `guards`
+			  readBinaryValue (c_compress cc) cf
+    where
+    cf			= uncurry (</>) $ cacheFile cc f
 
-writeCache		:: CacheConfig -> String -> IOStateArrow s XmlTree ()
+writeCache		:: (Binary b) => CacheConfig -> String -> IOStateArrow s b ()
 writeCache cc f		= perform (arrIO0 createDir)
                           >>>
-                          writeBinaryValue (c_compress cc) (dir </> file)
+                          writeBinaryValue (c_compress cc) hf
+			  >>>
+			  perform (arrIO0 $ writeIndex cc f hf)
     where
+    hf                  = dir </> file
     (dir, file)		= cacheFile cc f
     createDir		= createDirectoryIfMissing True dir
 
@@ -106,5 +133,34 @@ cacheFile cc f		= (c_dir cc </> fd, fn)
     where
     (fd, fn)		= splitAt 2 . showDigest . sha1 . B.pack . map (toEnum . fromEnum) $ f
     
+
+cacheHit		:: CacheConfig -> FilePath -> IO Bool
+cacheHit cc hf		= ( try' $
+			    do
+			    e <- doesFileExist hf
+			    if not e
+			      then return False
+			      else do
+			           mt <- getModificationTime hf
+				   ct <- getClockTime
+				   return $ (dt `addToClockTime` mt) >= ct
+			  ) >>= return . either (const False) id
+    where	  
+    age			= c_age cc
+    seconds		= fromInteger $ age `mod` 60
+    minutes		= fromInteger $ age `div` 60
+    dt			= normalizeTimeDiff $ TimeDiff 0 0 0 0 minutes seconds 0
+
+try'			:: IO a -> IO (Either SomeException a)
+try'			= try
+
+writeIndex		:: CacheConfig -> String -> FilePath -> IO ()
+writeIndex cc f hf	= ( try' $
+			    do
+			    h <- openFile (c_dir cc </> ".index") AppendMode
+			    hPutStrLn h $ show (f, hf)
+			    hClose h
+			    return ()
+			  ) >> return ()
 
 -- ------------------------------------------------------------

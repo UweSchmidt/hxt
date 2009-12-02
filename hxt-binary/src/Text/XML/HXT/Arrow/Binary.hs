@@ -34,6 +34,7 @@ import           Text.XML.HXT.Arrow
 -- ------------------------------------------------------------
 
 -- | Read a serialied value from a file. The the flag indicates uncompressing.
+-- In case of an error, the error message is issued and the arrow fails
 
 readBinaryValue 	:: (Binary a) => Bool -> String -> IOStateArrow s b a
 readBinaryValue c f	= arrIO (\ _ -> try' $ dec c)
@@ -44,6 +45,7 @@ readBinaryValue c f	= arrIO (\ _ -> try' $ dec c)
     dec True		= B.readFile f >>= return . decode . decompress
 
 -- | Serialize a value, optionally compress it, and write it to a file.
+-- In case of an error, the error message is issued and the arrow fails
 
 writeBinaryValue	:: (Binary a) => Bool -> String -> IOStateArrow s a ()
 writeBinaryValue c f	= arrIO (\ x -> try' $ enc c x)
