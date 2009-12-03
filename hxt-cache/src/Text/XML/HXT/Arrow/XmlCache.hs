@@ -62,6 +62,13 @@ a_document_age		= "document-age"
 
 readDocument		:: Attributes -> String -> IOStateArrow s b XmlTree
 readDocument userOptions src
+			= maybe rd (\ l -> withTraceLevel (read l) rd) $
+                          lookup a_trace userOptions
+    where
+    rd                  = readDocument' userOptions src
+    
+readDocument'		:: Attributes -> String -> IOStateArrow s b XmlTree
+readDocument' userOptions src
     | withCache		= ( traceMsg 1 ("looking up document " ++ show src ++ " in cache")
                             >>>
                             lookupCache cacheConfig src
@@ -158,7 +165,7 @@ writeIndex		:: CacheConfig -> String -> FilePath -> IO ()
 writeIndex cc f hf	= ( try' $
 			    do
 			    h <- openFile (c_dir cc </> ".index") AppendMode
-			    hPutStrLn h $ show (f, hf)
+			    hPutStrLn h $ show (hf, f)
 			    hClose h
 			    return ()
 			  ) >> return ()
