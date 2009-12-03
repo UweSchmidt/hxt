@@ -164,7 +164,7 @@ try'			= try
 writeIndex		:: CacheConfig -> String -> FilePath -> IO ()
 writeIndex cc f hf	= ( try' $
 			    do
-			    h <- openFile (c_dir cc </> ".index") AppendMode
+			    h <- openFile (c_dir cc </> "index") AppendMode
 			    hPutStrLn h $ show (hf, f)
 			    hClose h
 			    return ()
