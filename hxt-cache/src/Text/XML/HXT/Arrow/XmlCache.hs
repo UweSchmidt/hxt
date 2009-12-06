@@ -23,6 +23,8 @@ module Text.XML.HXT.Arrow.XmlCache
     , a_document_age
     , lookupCache
     , writeCache
+    , sha1HashValue
+    , sha1HashString
     , CacheConfig(..)
     )
 where
@@ -59,6 +61,18 @@ a_document_age		:: String
 a_document_age		= "document-age"
 
 -- ------------------------------------------------------------
+
+-- | This readDocument is a wrapper for the 'Text.XML.HXT.Arrow.ReadDocument.readDocument' function.
+-- The function is controlled by the options 'a_cache', 'a_compress' and 'a_document_age'.
+--
+-- * 'a_cache': the document tree of the document read is cached in the directory given by this option,
+--              or, if it is read before and it is not too old, see 'a_document_age', it is read from the
+--              cache. The document is stored in binary format (used package: binary).
+--
+-- - 'a_compress' : controls whether the cache contents is compressed with the bzip2 lib for saving space
+--
+-- - 'a_document_age': determines the maximum age of the document in seconds. If this time is exceeded, the chache entry
+--                     is ignored, the original is reread and cached again.
 
 readDocument		:: Attributes -> String -> IOStateArrow s b XmlTree
 readDocument userOptions src
@@ -138,9 +152,8 @@ writeCache cc f		= perform (arrIO0 createDir)
 cacheFile		:: CacheConfig -> String -> (FilePath, FilePath)
 cacheFile cc f		= (c_dir cc </> fd, fn)
     where
-    (fd, fn)		= splitAt 2 . showDigest . sha1 . B.pack . map (toEnum . fromEnum) $ f
+    (fd, fn)		= splitAt 2 . sha1HashString $ f
     
-
 cacheHit		:: CacheConfig -> FilePath -> IO Bool
 cacheHit cc hf		= ( try' $
 			    do
@@ -169,5 +182,15 @@ writeIndex cc f hf	= ( try' $
 			    hClose h
 			    return ()
 			  ) >> return ()
+
+-- ------------------------------------------------------------
+
+-- | Compute the SHA1 hash is hexadecimal format for an arbitray serializable value
+
+sha1HashValue		:: (Arrow a, Binary b) => a b Integer
+sha1HashValue		= arr $ integerDigest . sha1 . encode
+
+sha1HashString		:: (Arrow a, Binary b) => a b String
+sha1HashString		= arr $ showDigest . sha1 . encode
 
 -- ------------------------------------------------------------
