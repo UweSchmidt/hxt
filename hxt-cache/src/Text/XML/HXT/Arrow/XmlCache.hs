@@ -71,8 +71,8 @@ a_document_age		= "document-age"
 --
 -- - 'a_compress' : controls whether the cache contents is compressed with the bzip2 lib for saving space
 --
--- - 'a_document_age': determines the maximum age of the document in seconds. If this time is exceeded, the chache entry
---                     is ignored, the original is reread and cached again.
+-- - 'a_document_age': determines the maximum age of the document in seconds. If this time is exceeded, the cache entry
+--                     is ignored, the original is re-read and cached again. Default for the document age is 1 day.
 
 readDocument		:: Attributes -> String -> IOStateArrow s b XmlTree
 readDocument userOptions src
