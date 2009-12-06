@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes" ?>
+
+<!-- $Id: namespace1.xml,v 1.1 2004/03/03 12:52:19 hxml Exp $ -->
+
+<!DOCTYPE a [
+<!ATTLIST a xmlns   CDATA #IMPLIED>
+<!ATTLIST a xmlns:d CDATA #IMPLIED>
+<!ATTLIST a xmlns:x CDATA #IMPLIED>
+<!ATTLIST a xmlns:y CDATA #IMPLIED>
+<!ATTLIST a xmlns:z CDATA #IMPLIED>
+<!ELEMENT a ANY>
+
+<!-- error: a DTD part contains a not wellformed qualified Name: "a:b:c" -->
+<!ELEMENT a:b:c ANY>
+
+<!-- error: an ATTLIST declaration contains as attribute name a not wellformed qualified Name: "x:y:z" -->
+<!ATTLIST a:b:c x:y:z CDATA #IMPLIED>
+
+<!-- error: an entity or notation declaration contains a not wellformed NCName: "xyz:abc" -->
+<!ENTITY xyz:abc "123">
+<!ENTITY % xxx:yyy "zzz">
+
+]>
+
+<!-- everythin is legal here -->
+<a
+   xmlns  ="default namespace"
+   xmlns:d="default namespace"
+   xmlns:x="namespace for x"
+   xmlns:y="namespace common for y and z"
+   xmlns:z="namespace common for y and z"
+
+     att1="abc"
+   x:att1="xxx yyy"
+   y:att1="abc">
+
+  <!-- legal -->
+  <d:b attr2="xxx" d:attr2="yyy" xml:lang="de"/>
+
+  <!-- 4 x error: tag name "..." is not a wellformed qualified name -->
+  <d:tag:name/><:tag/><:/><:::/>
+
+  <!-- error: namespace for prefix in tag name "a:a" is undefined -->
+  <a:a/>
+
+  <!-- error: multiple occurences of universal names for attributes of tag "d:b" : "{namespace common for y and z}att2" -->
+  <d:b y:att2="y" z:att2="z"/>
+
+  <!-- 4 x error: attribute name "..." is not a wellformed qualified name -->
+  <d:b d:attr:name="" :attr="" :="" :::=""/>
+
+  <!-- error: namespace value of namespace declaration for "xmlns:x" has no value -->
+  <d:b xmlns:x=""/>
+
+  <!-- error: illegal namespace declaration with reserved prefix "..." starting with "xml" -->
+  <d:b xmlns:xml="something else"/><d:b xmlns:xml123="something else"/>
+
+  <!-- error: a PI contains a not wellformed NCName: "pi:pi" -->
+  <?pi:pi ?>
+</a>
