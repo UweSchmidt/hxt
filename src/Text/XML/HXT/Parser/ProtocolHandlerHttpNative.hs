@@ -82,7 +82,7 @@ getHttpContentsWithHttp uri n
     where
     readErr msg	= addFatal msg n
 
-    getHttp		:: Int -> URI -> String -> IO Response
+    getHttp		:: Int -> URI -> String -> IO (Response String)
     getHttp trc' uri' proxy'
 	= withSocketsDo $
 	  browse ( do
@@ -109,7 +109,7 @@ getHttpContentsWithHttp uri n
     convertResponseStatus (a, b, c)
 	= 100 * a + 10 * b + c
 
-    convertResponseHeaders	:: Response -> XmlTrees
+    convertResponseHeaders	:: Response String -> XmlTrees
     convertResponseHeaders r'
 	= cvResponseCode (rspCode r')
 	  ++
