@@ -67,7 +67,7 @@ genBlocks
 	  , ""
 	  , cmt
 	  , ""
-	  , "codeBlocks	:: [(String, (Char, Char))]"
+	  , "codeBlocks        :: [(String, (Char, Char))]"
 	  , "codeBlocks ="
 	  ]
     trailer

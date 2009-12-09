@@ -92,8 +92,8 @@ header2
       , ""
       , cmt
       , ""
-      , "isInList	:: Char -> [(Char, Char)] -> Bool"
-      , "isInList i ="
+      , "isInList        :: Char -> [(Char, Char)] -> Bool"
+      , "isInList i      ="
       , "   foldr (\\(lb, ub) b -> i >= lb && (i <= ub || b)) False"
       , ""
       , cmt
