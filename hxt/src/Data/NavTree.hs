@@ -11,7 +11,6 @@ module Data.NavTree
 where
 
 import Data.Tree.NTree.TypeDefs
-import Data.Maybe
 
 -- -----------------------------------------------------------------------------
 

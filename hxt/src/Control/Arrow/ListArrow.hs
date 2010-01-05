@@ -31,7 +31,7 @@ import           Control.Arrow.ArrowList
 import           Control.Arrow.ArrowNF
 import           Control.Arrow.ArrowTree
 
-import           Control.Parallel.Strategies
+import           Control.DeepSeq
 
 import           Data.List ( partition )
 
@@ -105,7 +105,7 @@ instance ArrowTree LA
 instance ArrowNF LA where
     rnfA (LA f)		= LA $ \ x -> let res = f x
                                       in
-                                      res `demanding` rnf res
+                                      deepseq res res
 
 -- ------------------------------------------------------------
 

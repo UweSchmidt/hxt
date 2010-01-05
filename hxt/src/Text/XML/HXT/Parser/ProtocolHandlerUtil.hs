@@ -46,10 +46,10 @@ parseContentType
 			    rtMT mt
 			  )
 	      charset  <- ( do
-			    P.char ';'
-			    P.many  (P.oneOf " \t'")
-			    P.string "charset="
-			    P.option '"' (P.oneOf "\"'")
+			    _ <- P.char ';'
+			    _ <- P.many  (P.oneOf " \t'")
+			    _ <- P.string "charset="
+			    _ <- P.option '"' (P.oneOf "\"'")
 			    cs <- P.many1 (P.noneOf "\"'")
 			    return [ (transferEncoding, stringToUpper cs) ]
 			  )

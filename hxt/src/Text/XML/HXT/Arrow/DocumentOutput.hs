@@ -31,43 +31,37 @@ import Control.Arrow.ArrowTree
 import Control.Arrow.ArrowIO
 import Control.Arrow.ListArrow
 
-import Text.XML.HXT.DOM.Unicode
-    ( getOutputEncodingFct )
-
+import Text.XML.HXT.DOM.Unicode			( getOutputEncodingFct )
 import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlIOStateArrow
 
-import Text.XML.HXT.Arrow.Edit
-    ( addHeadlineToXmlDoc
-    , addXmlPi
-    , addXmlPiEncoding
-    , indentDoc
-    , numberLinesInXmlDoc
-    , treeRepOfXmlDoc
-    )
+import Text.XML.HXT.Arrow.Edit			( addHeadlineToXmlDoc
+						, addXmlPi
+						, addXmlPiEncoding
+						, indentDoc
+						, numberLinesInXmlDoc
+						, treeRepOfXmlDoc
+						)
 
-import Data.Maybe
+import System.IO				( Handle
+						, IOMode(..)
+						, openFile
+						, openBinaryFile
+						, hPutStrLn
+						, hClose
+						, stdout
+						)
 
-import System.IO
-    ( Handle
-    , IOMode(..)
-    , openFile
-    , hPutStrLn
-    , hClose
-    , stdout
-    )
-
-import System.IO.Error
-    ( try )
+import System.IO.Error				( try )
 
 -- ------------------------------------------------------------
 --
 -- output arrows
 
-putXmlDocument	:: String -> IOStateArrow s XmlTree XmlTree
-putXmlDocument dst
+putXmlDocument	:: Bool -> String -> IOStateArrow s XmlTree XmlTree
+putXmlDocument textMode dst
     = perform ( xshow getChildren
 		>>>
 		arrIO (\ s -> try ( hPutDocument (\h -> hPutStrLn h s)))
@@ -92,13 +86,16 @@ putXmlDocument dst
 		  then "stdout"
 		       else show dst
 
-      hPutDocument	:: (Handle -> IO()) -> IO()
+      hPutDocument	:: (Handle -> IO ()) -> IO ()
       hPutDocument action
 	  | isStdout
 	      = action stdout
 	  | otherwise
 	      = do
-		handle <- openFile dst WriteMode
+		handle <- ( if textMode
+			    then openFile
+			    else openBinaryFile
+			  ) dst WriteMode
 		action handle
 		hClose handle
 
@@ -111,7 +108,7 @@ putXmlTree dst
 		>>>
 		addHeadlineToXmlDoc
 	        >>>
-		putXmlDocument dst
+		putXmlDocument True dst
 	      )
 
 -- |
@@ -127,7 +124,7 @@ putXmlSource dst
 		>>>
 		addHeadlineToXmlDoc
 	        >>>
-		putXmlDocument dst
+		putXmlDocument True dst
 	      )
 
 -- ------------------------------------------------------------

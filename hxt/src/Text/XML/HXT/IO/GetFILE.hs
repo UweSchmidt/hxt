@@ -29,7 +29,7 @@ import		 Network.URI		( unEscapeString
 					)
 
 import           System.IO		( IOMode(..)
-					, openFile
+					, openBinaryFile
 					  -- , getContents  is defined in the prelude
 					, hGetContents
 					)
@@ -86,7 +86,7 @@ getCont strictInput source
 					   cb <- B.readFile fn
 					   return (C.unpack cb)
 				      else do
-					   h <- openFile fn ReadMode
+					   h <- openBinaryFile fn ReadMode
 					   hGetContents h
 			      return (either readErr Right c)
     where

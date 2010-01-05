@@ -60,7 +60,7 @@ module Data.Atom (
  ) where
 
 import           Control.Concurrent.MVar
-import           Control.Parallel.Strategies
+import           Control.DeepSeq
 
 import           Data.ByteString.Internal       ( toForeignPtr, c2w, w2c )
 import           Data.ByteString                ( ByteString, pack, unpack )

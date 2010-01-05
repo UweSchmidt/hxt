@@ -135,7 +135,7 @@ import Control.Arrow.ArrowIO
 import Control.Arrow.IOStateListArrow
 
 import Control.Monad				( mplus )
-import Control.Parallel.Strategies
+import Control.DeepSeq
 
 import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlArrow

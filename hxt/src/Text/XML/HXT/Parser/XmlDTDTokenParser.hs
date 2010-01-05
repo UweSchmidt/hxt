@@ -18,17 +18,12 @@
 
 module Text.XML.HXT.Parser.XmlDTDTokenParser where
 
-import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Pos
+import           Text.ParserCombinators.Parsec
 
--- import           Text.XML.HXT.DOM.XmlTree		hiding (choice)
-
-import Text.XML.HXT.DOM.Interface
-
-import Text.XML.HXT.DOM.XmlNode
-    ( mkDTDElem
-    , mkText
-    )
+import           Text.XML.HXT.DOM.Interface
+import           Text.XML.HXT.DOM.XmlNode		( mkDTDElem
+							, mkText
+							)
 import qualified Text.XML.HXT.Parser.XmlTokenParser	as XT
 
 -- ------------------------------------------------------------
@@ -56,8 +51,8 @@ dtdDeclStart
     dtdStart	:: String -> DTDElem -> GenParser Char state (DTDElem, Attributes)
     dtdStart dcl element
 	= try ( do
-		string "<!"
-		string dcl
+		_ <- string "<!"
+		_ <- string dcl
 		pos <- getPosition
 		return (element, [ (a_source, sourceName pos)
 				 , (a_line,   show (sourceLine pos))
@@ -69,7 +64,7 @@ dtdDeclStart
 dtdDeclEnd	:: GenParser Char state ()
 dtdDeclEnd
     = do
-      XT.gt
+      _ <- XT.gt
       return ()
 
 dtdToken	:: GenParser Char state XmlTree

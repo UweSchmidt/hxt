@@ -25,7 +25,7 @@ module Data.Tree.NTree.TypeDefs
     )
 where
 
-import Control.Parallel.Strategies
+import Control.DeepSeq
 
 import Data.Tree.Class
 import Data.Typeable

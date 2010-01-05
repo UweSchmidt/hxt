@@ -271,7 +271,7 @@ putDoc dst
 	      = action stdout
 	  | otherwise
 	      = do
-		handle <- openFile dst WriteMode
+		handle <- openBinaryFile dst WriteMode
 		action handle
 		hClose handle
 

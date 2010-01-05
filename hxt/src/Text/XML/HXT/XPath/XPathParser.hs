@@ -120,7 +120,7 @@ tokenParser :: XParser String -> XParser ()
 tokenParser p
     = try ( do
             skipS0
-            p
+            _ <- p
             skipS0
            )
 
@@ -619,7 +619,7 @@ nameTest as
 	 return (enhanceQN as uris $ mkPrefixLocalPart "" "*")
       <|>
       try ( do pre <- ncName
-               symbol ":*"
+               _ <- symbol ":*"
                uris <- getState
                return (enhanceQN as uris $ mkPrefixLocalPart pre "*")
 	  )

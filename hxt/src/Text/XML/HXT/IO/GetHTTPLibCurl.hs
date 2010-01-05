@@ -59,7 +59,7 @@ initCurl
     = do
       i <- takeMVar isInitCurl
       when (not i) ( do
-		     curl_global_init 3
+		     _ <- curl_global_init 3
 		     return ()
 		   )
       putMVar isInitCurl True

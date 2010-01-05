@@ -42,13 +42,12 @@ import Text.XML.HXT.Arrow.DocumentInput
     ( getXmlEntityContents
     )
 
-import Data.Maybe
-
 import qualified Data.Map as M
     ( Map
     , empty
     , lookup
-    , insert)
+    , insert
+    )
 
 -- ------------------------------------------------------------
 

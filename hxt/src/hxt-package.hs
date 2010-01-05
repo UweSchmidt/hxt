@@ -37,7 +37,7 @@ part2
 
 part3a	:: [String]
 part3a
-    = [ "tested-with: ghc-6.10.4"
+    = [ "tested-with: ghc-6.12.1"
       , "exposed: True"
       , "exposed-modules:"
       ]
@@ -86,15 +86,15 @@ part4b
       , " ghc-options: -Wall"
       , " extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances"
       , ""
-      , " build-depends: base       >= 4   && < 5,"
+      , " build-depends: base       >= 4.2 && < 5,"
       , "                haskell98  >= 1   && < 2,"
-      , "                containers >= 0.1 && < 1,"
+      , "                containers >= 0.3 && < 1,"
       , "                directory  >= 1   && < 2,"
       , "                filepath   >= 1   && < 2,"
       , "                parsec     >= 2.1 && < 4,"
       , "                HUnit      >= 1.2 && < 2,"
       , "                network    >= 2.1 && < 3,"
-      , "                parallel   >= 1.0 && < 2,"
+      , "                deepseq    >= 1.1 && < 2,"
       , "                bytestring >= 0.9 && < 1,"
       , "                tagsoup    >= 0.6 && < 1,"
       , "                curl       >= 1.3 && < 2"

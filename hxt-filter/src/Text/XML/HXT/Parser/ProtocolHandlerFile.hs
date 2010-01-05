@@ -42,7 +42,7 @@ getFileContents uri n
 	      perm <- io $ getPermissions source
 	      if readable perm
 		 then do
-		      h <- io $ try ( openFile source ReadMode )
+		      h <- io $ try ( openBinaryFile source ReadMode )
 		      case h of
 			     Left e
 				 -> readErr ( "system error when reading file "

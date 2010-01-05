@@ -34,8 +34,6 @@ import Text.XML.HXT.DTDValidation.TypeDefs
 import Text.XML.HXT.DTDValidation.AttributeValueValidation
 import Text.XML.HXT.DTDValidation.XmlRE
 
-import Data.Maybe
-
 -- ------------------------------------------------------------
 
 -- |

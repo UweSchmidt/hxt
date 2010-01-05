@@ -164,7 +164,7 @@ getDocumentAndGenerateHaskellCode t
 	  = performAction
 	    ( \ page ->
 	      io $ do
-	           h <- openFile fn WriteMode
+	           h <- openBinaryFile fn WriteMode
 	           hPutStr h (extractText page)
 	           hClose h
 	    )

@@ -96,11 +96,6 @@ import Text.XML.HXT.DOM.Unicode
     , intToCharRefHex
     )
 
-import Text.XML.HXT.DOM.Util
-    ( hexStringToInt
-    , decimalStringToInt
-    )
-
 import Text.XML.HXT.Parser.XmlCharParser
     ( xmlNameChar
     , xmlNameStartChar
@@ -171,7 +166,7 @@ qName
     = do
       s1 <- ncName
       s2 <- option "" ( do
-			char ':'
+			_ <- char ':'
 			ncName
 		      )
       return ( if null s2 then (s2, s1) else (s1, s2) )
@@ -288,15 +283,15 @@ checkCharRef i
 charRef		:: GenParser Char state Int
 charRef
     = do
-      try (string "&#x")
+      _ <- try (string "&#x")
       d <- many1 hexDigit
-      semi
+      _ <- semi
       checkCharRef (hexStringToInt d)
       <|>
       do
-      try (string "&#")
+      _ <- try (string "&#")
       d <- many1 digit
-      semi
+      _ <- semi
       checkCharRef (decimalStringToInt d)
       <?> "character reference"
 
@@ -304,18 +299,18 @@ charRef
 entityRef	:: GenParser Char state String
 entityRef
     = do
-      char '&'
+      _ <- char '&'
       n <- name
-      semi
+      _ <- semi
       return n
       <?> "entity reference"
 
 peReference	:: GenParser Char state String
 peReference
     = try ( do
-	    char '%'
+	    _ <- char '%'
 	    n <- name
-	    semi
+	    _ <- semi
 	    return n
 	  )
       <?> "parameter-entity reference"
@@ -379,10 +374,10 @@ semi	= char ';'
 separator	:: Char -> GenParser Char state ()
 separator c
     = do
-      try ( do
-	    skipS0
-	    char c
-	  )
+      _ <- try ( do
+		 skipS0
+		 char c
+	       )
       skipS0
       <?> [c]
 
@@ -394,13 +389,13 @@ eq	= separator '='
 
 lpar
     = do
-      char '('
+      _ <- char '('
       skipS0
 
 rpar
     = do
       skipS0
-      char ')'
+      _ <- char ')'
       return ()
 
 
@@ -417,9 +412,9 @@ allBut1 p prd (c:rest)
     = p ( satisfy (\ x -> isXmlChar x && prd x && not (x == c) )
 	  <|>
 	  try ( do
-		char c
+		_ <- char c
 		notFollowedBy ( do
-				try (string rest)
+				_ <- try (string rest)
 				return c
 			      )
 		return c

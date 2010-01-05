@@ -74,7 +74,7 @@ hPutXmlDoc handle t
 putXmlDocToFile	:: String -> XmlStateFilter a
 putXmlDocToFile fn t
     = do
-      res <- io $ try (openFile fn WriteMode)
+      res <- io $ try (openBinaryFile fn WriteMode)
       case res of
         Left ioerr
 	    -> ( issueFatal (show ioerr)

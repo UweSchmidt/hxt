@@ -19,13 +19,12 @@
 module Text.XML.HXT.XSLT.CompiledStylesheet
 where  
 
-import Text.XML.HXT.XSLT.Common
-import Text.XML.HXT.XSLT.Names
+import           Text.XML.HXT.XSLT.Common
+import           Text.XML.HXT.XSLT.Names
 
-import Data.Maybe
-import Data.List
+import           Data.Maybe
 
-import Data.Map(Map)
+import           Data.Map               (Map)
 import qualified Data.Map as Map hiding (Map)
 
 -- -------------------

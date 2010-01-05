@@ -83,13 +83,12 @@ import           Debug.Trace
 import           Control.Arrow                  ( (***) )
 
 import           Control.Concurrent.MVar
-import           Control.Parallel.Strategies
+import           Control.DeepSeq
 
 import           Data.AssocList
 import           Data.Char                      ( toLower )
 import           Data.List                      ( isPrefixOf )
 import qualified Data.Map               as M
-import           Data.Maybe
 import           Data.Typeable
 
 import           System.IO.Unsafe               ( unsafePerformIO )
@@ -509,7 +508,7 @@ theAtoms        = unsafePerformIO (newMVar M.empty)
 -- | insert a bytestring into the atom cache
 
 insertAtom      :: String -> Atoms -> (Atoms, Atom)
-insertAtom s m  = maybe (M.insert {- (trace (show s) s) -} s s m, A s `demanding` rnf s)
+insertAtom s m  = maybe (M.insert {- (trace (show s) s) -} s s m, deepseq s (A s))
                         (\ s' -> (m, A s'))
                   .
                   M.lookup s $ m

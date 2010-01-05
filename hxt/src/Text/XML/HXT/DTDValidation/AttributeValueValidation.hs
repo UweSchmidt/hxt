@@ -40,7 +40,7 @@ import Text.XML.HXT.Parser.XmlParsec
 
 import Text.XML.HXT.DTDValidation.TypeDefs
 
-import Text.XML.HXT.DOM.Util
+-- ------------------------------------------------------------
 
 -- |
 -- Checks if the attribute value meets the lexical constraints of its type.

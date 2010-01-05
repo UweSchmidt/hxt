@@ -25,7 +25,7 @@ module Text.XML.HXT.DOM.TypeDefs
 
 where
 
-import Control.Parallel.Strategies
+import Control.DeepSeq
 
 import Data.AssocList
 import Data.Tree.NTree.TypeDefs

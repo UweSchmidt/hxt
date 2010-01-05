@@ -59,10 +59,10 @@ main2	:: String -> (String -> [String]) -> Int -> IO ()
 main2 ext lines' i
     = do
       hPutStrLn stderr "start processing"
-      h  <- openFile (fn i) ReadMode
+      h  <- openBinaryFile (fn i) ReadMode
       c  <- hGetContents h
       let ls = lines' c
-      o  <- openFile (fn i ++ "." ++ ext) WriteMode
+      o  <- openBinaryFile (fn i ++ "." ++ ext) WriteMode
       mapM_ (hPutStrLn o) ls
       hClose o
       hClose h
@@ -165,7 +165,7 @@ putDoc dst
 	      = action stdout
 	  | otherwise
 	      = do
-		handle <- openFile dst WriteMode
+		handle <- openBinaryFile dst WriteMode
 		action handle
 		hClose handle
 

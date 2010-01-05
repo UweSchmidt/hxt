@@ -24,10 +24,9 @@ where
 import           Control.Monad
 
 import           Data.Maybe
-import           Data.Either
 import           Data.List
-import qualified Data.Map as Map hiding (Map)
-import           Data.Map(Map)
+import qualified Data.Map 		as Map hiding 	( Map )
+import           Data.Map				( Map )
 
 import           Text.ParserCombinators.Parsec.Prim	( runParser )
 

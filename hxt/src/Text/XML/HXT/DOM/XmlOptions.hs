@@ -120,6 +120,7 @@ outputOptions
       , Option ""       [a_no_empty_elem_for]   (ReqArg (att a_no_empty_elem_for) "NAMES")      "output of empty elements done in format <elem...></elem> only for given list of element names"
       , Option ""       [a_no_empty_elements]   (NoArg  (att a_no_empty_elements     v_1))      "output of empty elements done in format <elem...></elem> instead of <elem/>"
       , Option ""       [a_add_default_dtd]     (NoArg  (att a_add_default_dtd       v_1))      "add the document type declaration given in the input document"
+      , Option ""       [a_text_mode]		(NoArg  (att a_text_mode             v_1))	"output in text mode"
       ]
     where
     att n v	= (n, v)

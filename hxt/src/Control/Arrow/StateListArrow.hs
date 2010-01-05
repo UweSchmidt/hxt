@@ -34,7 +34,7 @@ import           Control.Arrow.ArrowNF
 import           Control.Arrow.ArrowState
 import           Control.Arrow.ArrowTree
 
-import           Control.Parallel.Strategies
+import           Control.DeepSeq
 
 -- ------------------------------------------------------------
 
@@ -162,7 +162,7 @@ instance ArrowTree (SLA s)
 instance (NFData s) => ArrowNF (SLA s) where
     rnfA (SLA f)	= SLA $ \ s x -> let res = f s x
                                          in
-                                         res `demanding` rnf res
+                                         deepseq res res
 
 -- ------------------------------------------------------------
 

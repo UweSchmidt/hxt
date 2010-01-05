@@ -136,7 +136,7 @@ htmlProlog
 	       <|>
 	       ( do
 		 pos <- getPosition
-		 try (string "<?")
+		 _ <- try (string "<?")
 		 return $ [mkError c_warn (show pos ++ " wrong XML declaration")]
 	       )
 	     )
@@ -146,7 +146,7 @@ htmlProlog
 		   <|>
 		   ( do
 		     pos <- getPosition
-		     try (upperCaseString "<!DOCTYPE")
+		     _ <- try (upperCaseString "<!DOCTYPE")
 		     return $ [mkError c_warn (show pos ++ " HTML DOCTYPE declaration ignored")]
 		   )
 		 )
@@ -169,7 +169,7 @@ doctypedecl
 externalID	:: Parser Attributes
 externalID
     = do
-      try (upperCaseString k_public)
+      _ <- try (upperCaseString k_public)
       skipS
       pl <- pubidLiteral
       sl <- option "" $ try ( do
@@ -251,7 +251,7 @@ hCloseTag	:: Context -> Parser Context
 hCloseTag context
     = do
       n <- try ( do
-		 string "</"
+		 _ <- string "</"
 		 lowerCaseName
 	       )
       skipS0
@@ -270,7 +270,7 @@ hOpenTagStart	:: Parser (String, XmlTrees)
 hOpenTagStart
     = do
       n <- try ( do
-		 char '<'
+		 _ <- char '<'
 		 n <- lowerCaseName
 		 return n
 	       )
@@ -281,7 +281,7 @@ hOpenTagStart
 hOpenTagRest	:: SourcePos -> (String, XmlTrees) -> Context -> Parser Context
 hOpenTagRest pos (tn, al) context
     = ( do
-	try $ string "/>"
+	_ <- try $ string "/>"
 	return (addHtmlTag tn al [] context)
       )
       <|>
@@ -336,7 +336,7 @@ hReference'
     = try referenceT
       <|>
       ( do
-	char '&'
+	_ <- char '&'
 	return (mkText "&")
       )
 
@@ -363,7 +363,7 @@ checkSymbol p msg context
       pos <- getPosition
       option (addHtmlWarn (show pos ++ " " ++ msg) context)
        ( do 
-	 try p
+	 _ <- try p
 	 return context
        )
 

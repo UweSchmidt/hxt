@@ -139,12 +139,14 @@ writeDocument userOptions dst
 		>>>
 		prepareContents userOptions encodeDocument
 		>>>
-		putXmlDocument dst
+		putXmlDocument textMode dst
 		>>>
 		traceMsg 1 "writeDocument: finished"
 	      )
       `when`
       documentStatusOk
+    where
+    textMode	= optionIsSet a_text_mode userOptions
 
 -- ------------------------------------------------------------
 

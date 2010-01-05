@@ -30,7 +30,7 @@ import           Control.Arrow.ArrowNF
 import           Control.Arrow.ArrowTree
 import           Control.Arrow.ArrowIO
 
-import           Control.Parallel.Strategies
+import           Control.DeepSeq
 
 -- ------------------------------------------------------------
 
@@ -127,6 +127,6 @@ instance ArrowTree IOLA
 instance ArrowNF IOLA where
     rnfA (IOLA f)	= IOLA $ \ x -> do
 					res <- f x
-					return (res `demanding` rnf res)
+					deepseq res $ return res
 
 -- ------------------------------------------------------------

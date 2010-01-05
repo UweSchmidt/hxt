@@ -41,7 +41,6 @@ import Control.Arrow.StateListArrow
 import Text.XML.HXT.Arrow.XmlArrow
 
 import           Text.XML.HXT.DOM.Interface
-import qualified Text.XML.HXT.DOM.XmlNode as XN
 
 -- ------------------------------------------------------------
 

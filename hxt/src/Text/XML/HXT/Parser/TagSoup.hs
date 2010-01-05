@@ -366,11 +366,11 @@ parseHtmlTagSoup withNamespaces withWarnings withComment removeWhiteSpace asHtml
 				return (warn w ++ rl)
 			      )
 		  ( cond isPos ( do
-				 getPos
+				 _ <- getPos
 				 buildCont ns
 			       )
 		    ( cond isEof ( do
-				   isEof
+				   _ <- isEof
 				   closeAll ns
 				 )
 		      ( return (warn "parse error in tagsoup tree construction")

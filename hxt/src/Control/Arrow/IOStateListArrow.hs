@@ -36,7 +36,7 @@ import           Control.Arrow.ArrowNF
 import           Control.Arrow.ArrowTree
 import           Control.Arrow.ArrowState
 
-import           Control.Parallel.Strategies
+import           Control.DeepSeq
 
 -- ------------------------------------------------------------
 
@@ -189,6 +189,6 @@ instance ArrowTree (IOSLA s)
 instance (NFData s) => ArrowNF (IOSLA s) where
     rnfA (IOSLA f)	= IOSLA $ \ s x -> do
 					   res <- f s x
-					   return (res `demanding` rnf res)
+					   deepseq res $ return res
 
 -- ------------------------------------------------------------

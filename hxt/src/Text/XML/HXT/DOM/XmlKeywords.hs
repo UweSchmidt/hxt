@@ -84,6 +84,7 @@ a_accept_mimetypes,
  a_standalone,
  a_strict_input,
  a_tagsoup,
+ a_text_mode,
  a_trace,
  a_type,
  a_use_curl,
@@ -198,6 +199,7 @@ a_standalone			= "standalone"
 a_status			= "status"
 a_strict_input			= "strict-input"
 a_tagsoup			= "tagsoup"
+a_text_mode			= "text-mode"
 a_trace				= "trace"
 a_type				= "type"
 a_url				= "url"

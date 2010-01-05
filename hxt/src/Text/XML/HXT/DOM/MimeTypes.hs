@@ -28,8 +28,6 @@ import           Data.List
 import qualified Data.Map		as M
 import           Data.Maybe
 
-import           System.IO
-
 import           Text.XML.HXT.DOM.MimeTypeDefaults
 
 -- ------------------------------------------------------------

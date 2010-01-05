@@ -55,7 +55,7 @@ regExp
     where
     branch1
 	= do
-	  char '|'
+	  _ <- char '|'
 	  branch
 
 branch	:: Parser Regex
@@ -73,21 +73,21 @@ piece
 quantifier	:: Regex -> Parser Regex
 quantifier r
     = ( do
-	char '?'
+	_ <- char '?'
 	return $ mkOpt r )
       <|>
       ( do
-	char '*'
+	_ <- char '*'
 	return $ mkStar r )
       <|>
       ( do
-	char '+'
+	_ <- char '+'
 	return $ mkRep 1 r )
       <|>
       ( do
-	char '{'
+	_ <- char '{'
 	res <- quantity r
-	char '}'
+	_ <- char '}'
 	return res
       )
       <|>
@@ -102,7 +102,7 @@ quantity r
 quantityRest	:: Regex -> Int -> Parser Regex
 quantityRest r lb
     = ( do
-	char ','
+	_ <- char ','
 	ub <- many digit
 	return ( if null ub
 		 then mkRep lb r
@@ -137,7 +137,7 @@ charClass
 charClassEsc	:: Parser Regex
 charClassEsc
     = do
-      char '\\'
+      _ <- char '\\'
       ( singleCharEsc
 	<|>
 	multiCharEsc
@@ -184,7 +184,7 @@ multiCharEsc
 catEsc	:: Parser Regex
 catEsc
     = do
-      char 'p'
+      _ <- char 'p'
       s <- between (char '{') (char '}') charProp
       return $ mkSym s
 
@@ -197,7 +197,7 @@ charProp
 isBlock		:: Parser (Char -> Bool)
 isBlock
     = do
-      string "Is"
+      _ <- string "Is"
       name <- many1 (satisfy legalChar)
       let b = lookup name codeBlocks
       if isJust b
@@ -273,7 +273,7 @@ isCategory'
     where
     prop c1 cs2
 	= do
-	  char c1
+	  _ <- char c1
 	  s2 <- option ""
 		( do
 		  c2 <- satisfy (`elem` cs2)
@@ -283,7 +283,7 @@ isCategory'
 complEsc	:: Parser Regex
 complEsc
     = do
-      char 'P'
+      _ <- char 'P'
       s <- between (char '{') (char '}') charProp
       return $ mkSym (not . s)
 
@@ -300,7 +300,7 @@ charGroup
 	   )
       s <- option (mkZero "")	-- charClassSub
 	   ( do
-	     char '-'
+	     _ <- char '-'
 	     charClassExpr
 	   )
       return $ mkDif r s
@@ -321,7 +321,7 @@ seRange	:: Parser Regex
 seRange
     = do
       c1 <- charOrEsc'
-      char '-'
+      _ <- char '-'
       c2 <- charOrEsc'
       return $ mkSymRng c1 c2
 
@@ -340,14 +340,14 @@ xmlCharIncDash
 negCharGroup	:: Parser Regex
 negCharGroup
     = do
-      char '^'
+      _ <- char '^'
       r <- posCharGroup
       return $ mkCompl r
 
 wildCardEsc	:: Parser Regex
 wildCardEsc
     = do
-      char '.'
+      _ <- char '.'
       return $ mkSym (`notElem` "\n\r")
 
 

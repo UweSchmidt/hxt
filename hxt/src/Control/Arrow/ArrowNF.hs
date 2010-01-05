@@ -19,17 +19,17 @@ module Control.Arrow.ArrowNF
 where
 
 import Control.Arrow
-import Control.Parallel.Strategies
+import Control.DeepSeq
 
 -- |
--- complete evaluation of an arrow result using 'Control.Parallel.Strategies.rnf'
+-- complete evaluation of an arrow result using 'Control.DeepSeq'
 --
 -- this is sometimes useful for preventing space leaks, especially after reading
 -- and validation of a document, all DTD stuff is not longer in use and can be
 -- recycled by the GC.
 
 strictA	:: (Arrow a, NFData b) => a b b
-strictA	= arr $ \ x -> x `demanding` rnf x
+strictA	= arr $ \ x -> deepseq x x
 
 class (Arrow a) => ArrowNF a where
     rnfA	:: (NFData c) => a b c -> a b c

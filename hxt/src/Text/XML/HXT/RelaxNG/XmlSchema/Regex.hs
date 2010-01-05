@@ -44,7 +44,6 @@ module Text.XML.HXT.RelaxNG.XmlSchema.Regex
     )
 where
 
-import Data.Maybe
 import Data.List	( foldl' )
 
 -- ------------------------------------------------------------

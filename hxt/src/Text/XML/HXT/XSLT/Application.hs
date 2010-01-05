@@ -28,14 +28,11 @@ where
 import Text.XML.HXT.XSLT.Common
 import Text.XML.HXT.XSLT.CompiledStylesheet
 
-import Data.Maybe
-import Data.Either
-import Data.List
-
-import Data.Map(Map)
-import qualified Data.Map as Map hiding (Map)
-
-import Data.Char
+import           Data.Char
+import           Data.List
+import           Data.Map                     (Map)
+import qualified Data.Map 	as Map hiding (Map)
+import           Data.Maybe
 
 -- ------------------------------------------------------------
 

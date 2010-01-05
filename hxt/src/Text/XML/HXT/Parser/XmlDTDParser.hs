@@ -31,10 +31,10 @@ import Data.Maybe
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Pos
 
-import Text.XML.HXT.DOM.Interface	-- XmlTree              hiding (choice)
-import Text.XML.HXT.DOM.Util
-    ( stringToUpper
-    )
+import Text.XML.HXT.DOM.Interface
+
+
+
 import Text.XML.HXT.DOM.ShowXml
     ( xshow
     )
@@ -94,7 +94,7 @@ getPos		= do
 
 delPE	:: SParser ()
 delPE	= do
-	  char '\0'
+	  _ <- char '\0'
 	  return ()
 
 startPE	:: SParser ()
@@ -130,7 +130,7 @@ inSamePE p
 
 xmlSpaceChar	:: SParser ()
 xmlSpaceChar	= ( do
-		    XC.xmlSpaceChar
+		    _ <- XC.xmlSpaceChar
 		    return ()
 		  )
 		  <|>
@@ -194,7 +194,7 @@ contentspec
     where
     simplespec kw v
 	= do
-	  XT.keyword kw
+	  _ <- XT.keyword kw
 	  return ([(a_type, v)], [])
 
 -- ------------------------------------------------------------
@@ -278,10 +278,10 @@ cp
 mixed		:: SParser (Attributes, XmlTrees)
 mixed
     = ( do
-	try ( do
-	      lpar
-	      string k_pcdata
-	    )
+	_ <- try ( do
+		   lpar
+		   string k_pcdata
+		 )
 	nl <- many ( do
 		     bar
 		     name
@@ -289,12 +289,12 @@ mixed
 	rpar
 	if null nl
           then do
-	       option ' ' (char '*')		-- (#PCDATA) or (#PCDATA)* , both are legal
+	       _ <- option ' ' (char '*')		-- (#PCDATA) or (#PCDATA)* , both are legal
 	       return ( [ (a_type, v_pcdata) ]
 		      , []
 		      )
 	  else do
-	       char '*' <?> "closing parent for mixed content (\")*\")"
+	       _ <- char '*' <?> "closing parent for mixed content (\")*\")"
 	       return ( [ (a_type, v_mixed) ]
 		      , [ mkDTDElem CONTENT [ (a_modifier, "*")
 					     , (a_kind, v_choice)
@@ -371,7 +371,7 @@ enumeration
 notationType	:: SParser (Attributes, XmlTrees)
 notationType
     = do
-      XT.keyword k_notation
+      _ <- XT.keyword k_notation
       skipS
       nl <- inSamePE (between lpar rpar ( sepBy1 name bar ))
       return ([(a_type, k_notation)], nl)
@@ -397,7 +397,7 @@ defaultDecl
     where
     fixed = option [(a_kind, k_default)]
 	    ( do
-	      try $ string k_fixed
+	      _ <- try $ string k_fixed
 	      skipS
 	      return [(a_kind, k_fixed)]
 	    )
@@ -444,7 +444,7 @@ externalEntitySpec
 peDecl			:: SParser XmlTrees
 peDecl
     = do
-      char '%'
+      _ <- char '%'
       skipS
       n <- XT.name
       skipS
@@ -473,14 +473,14 @@ entityValue
 externalID	:: SParser Attributes
 externalID
     = ( do
-	XT.keyword k_system
+	_ <- XT.keyword k_system
 	skipS
 	lit <- XT.systemLiteral
 	return [(k_system, lit)]
       )
       <|>
       ( do
-	XT.keyword k_public
+	_ <- XT.keyword k_public
 	skipS
 	pl <- XT.pubidLiteral
 	skipS
@@ -493,10 +493,10 @@ externalID
 nDataDecl	:: SParser Attributes
 nDataDecl
     = do
-      try ( do
-	    skipS
-	    XT.keyword k_ndata
-	  )
+      _ <- try ( do
+		 skipS
+		 XT.keyword k_ndata
+	       )
       skipS
       n <- XT.name
       return [(k_ndata, n)]
@@ -525,7 +525,7 @@ notationDeclBody
 publicID		:: SParser Attributes
 publicID
     = do
-      XT.keyword k_public
+      _ <- XT.keyword k_public
       skipS
       l <- XT.pubidLiteral
       return [(k_public, l)]
@@ -548,10 +548,10 @@ condSectCondBody
 separator	:: Char -> SParser ()
 separator c
     = do
-      try ( do
-	    skipS0
-	    char c
-	  )
+      _ <- try ( do
+		 skipS0
+		 char c
+	       )
       skipS0
       <?> [c]
 
@@ -563,13 +563,13 @@ comma	= separator ','
 
 lpar
     = do
-      char '('
+      _ <- char '('
       skipS0
 
 rpar
     = do
       skipS0
-      char ')'
+      _ <- char ')'
       return ()
 
 

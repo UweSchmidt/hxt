@@ -33,7 +33,6 @@ import Control.Arrow.ArrowIO
 import Control.Arrow.ListArrow
 
 import Data.List				( isPrefixOf )
-import Data.Maybe
 
 import System.FilePath				( takeExtension )
 
