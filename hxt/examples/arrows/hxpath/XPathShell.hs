@@ -23,8 +23,6 @@ where
 
 import qualified Control.Monad as M
 
-import Data.Maybe
-
 import Text.XML.HXT.Arrow
 
 import qualified
@@ -82,25 +80,23 @@ loadDoc doc
 
 showDoc		:: XmlTree -> IO ()
 showDoc doc
-    = do
-      runX ( constA doc
+    = runX ( constA doc
 	     >>>
 	     writeDocument [ (a_indent, v_1)
 			   , (a_no_xml_pi, v_1)
 			   ] ""
 	   )
-      return ()
+      >> return ()
 
 showTree		:: XmlTree -> IO ()
 showTree doc
-    = do
-      runX ( constA doc
+    = runX ( constA doc
 	     >>>
 	     writeDocument [ (a_show_tree, v_1)
 			   , (a_no_xml_pi, v_1)
 			   ] ""
 	   )
-      return ()
+      >> return ()
 
 evalXPath	:: String -> NsEnv' -> XmlTree -> IO()
 evalXPath path env doc

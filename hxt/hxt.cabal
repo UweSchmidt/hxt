@@ -9,9 +9,65 @@ category: XML
 synopsis: A collection of tools for processing XML with Haskell. 
 description:  The Haskell XML Toolbox bases on the ideas of HaXml and HXML, but introduces a more general approach for processing XML with Haskell. The Haskell XML Toolbox uses a generic data model for representing XML documents, including the DTD subset and the document subset, in Haskell. It contains a validating XML parser, a HTML parser, namespace support, an XPath expression evaluator, an XSLT library, a RelaxNG schema validator and funtions for serialization and deserialization of user defined data. The libraray make extensive use of the arrow approach for processing XML.
 homepage: http://www.fh-wedel.de/~si/HXmlToolbox/index.html
-copyright: Copyright (c) 2005-2008 Uwe Schmidt
+copyright: Copyright (c) 2005-2010 Uwe Schmidt
 build-type: Simple
 cabal-version: >=1.6
+
+extra-source-files:
+ examples/arrows/absurls/AbsURIs.hs
+ examples/arrows/absurls/lousy.html
+ examples/arrows/absurls/Makefile
+ examples/arrows/absurls/ProcessDocument.hs
+ examples/arrows/AGentleIntroductionToHXT/.ghci
+ examples/arrows/AGentleIntroductionToHXT/Makefile
+ examples/arrows/AGentleIntroductionToHXT/PicklerExample/Baseball.hs
+ examples/arrows/AGentleIntroductionToHXT/PicklerExample/Makefile
+ examples/arrows/AGentleIntroductionToHXT/PicklerExample/new-simple2.xml
+ examples/arrows/AGentleIntroductionToHXT/PicklerExample/simple2.xml
+ examples/arrows/AGentleIntroductionToHXT/SimpleExamples.hs
+ examples/arrows/dtd2hxt/DTDtoHXT.hs
+ examples/arrows/dtd2hxt/.ghci
+ examples/arrows/dtd2hxt/Makefile
+ examples/arrows/HelloWorld/bye.xml
+ examples/arrows/HelloWorld/HelloWorld.hs
+ examples/arrows/HelloWorld/hello.xml
+ examples/arrows/HelloWorld/Makefile
+ examples/arrows/HelloWorld/Mini.hs
+ examples/arrows/hparser/emptyElements.html
+ examples/arrows/hparser/example1.xml
+ examples/arrows/hparser/HXmlParser.hs
+ examples/arrows/hparser/invalid1.xml
+ examples/arrows/hparser/invalid2.rng
+ examples/arrows/hparser/invalid3.rng
+ examples/arrows/hparser/invalid.xml
+ examples/arrows/hparser/lousy.html
+ examples/arrows/hparser/Makefile
+ examples/arrows/hparser/namespace0.xml
+ examples/arrows/hparser/namespace1.xml
+ examples/arrows/hparser/valid1.rng
+ examples/arrows/hparser/valid1.xml
+ examples/arrows/hrelaxng/.ghci
+ examples/arrows/hrelaxng/HRelaxNG.hs
+ examples/arrows/hrelaxng/invalid1.xml
+ examples/arrows/hrelaxng/invalid2.rng
+ examples/arrows/hrelaxng/invalid3.rng
+ examples/arrows/hrelaxng/Makefile
+ examples/arrows/hrelaxng/valid1.rng
+ examples/arrows/hrelaxng/valid1.xml
+ examples/arrows/hrelaxng/valid2.rng
+ examples/arrows/hrelaxng/valid2.xml
+ examples/arrows/hxpath/example1.xml
+ examples/arrows/hxpath/.ghci
+ examples/arrows/hxpath/HXPath.hs
+ examples/arrows/hxpath/Makefile
+ examples/arrows/hxpath/W3CTestData.hs
+ examples/arrows/hxpath/XPathShell.hs
+ examples/arrows/performance/GenDoc.hs
+ examples/arrows/performance/Makefile
+ examples/arrows/pickle/Makefile
+ examples/arrows/pickle/PickleTest.hs
+ examples/arrows/RegexXMLSchema/Makefile
+ examples/arrows/RegexXMLSchema/REtest.hs
 
 library
  exposed-modules:
@@ -118,15 +174,12 @@ library
   Text.XML.HXT.XPath.XPathKeywords,
   Text.XML.HXT.XPath.XPathParser,
   Text.XML.HXT.XPath.XPathToNodeSet,
-  Text.XML.HXT.XPath.XPathToString,
-  Text.XML.HXT.XSLT.Application,
-  Text.XML.HXT.XSLT.Common,
-  Text.XML.HXT.XSLT.Compilation,
-  Text.XML.HXT.XSLT.CompiledStylesheet,
-  Text.XML.HXT.XSLT.Names,
-  Text.XML.HXT.XSLT.XsltArrows
+  Text.XML.HXT.XPath.XPathToString
+
  hs-source-dirs: src
+
  ghc-options: -Wall
+
  extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances
 
  build-depends: base       >= 4.2 && < 5,
@@ -141,4 +194,3 @@ library
                 bytestring >= 0.9 && < 1,
                 tagsoup    >= 0.6 && < 1,
                 curl       >= 1.3 && < 2
-

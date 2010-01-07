@@ -1,12 +1,9 @@
 # $Id: Makefile,v 1.1 2006/11/11 15:36:03 hxml Exp $
 
-HXT_HOME	= ../../../..
+HXT_HOME	= ../../..
 PKGFLAGS	= 
 GHCFLAGS	= -Wall -O2
 GHC		= ghc $(GHCFLAGS) $(PKGFLAGS)
-
-DIST		= $(HXT_HOME)/dist/examples/arrows/hparser
-DIST_DIR	= $(DIST)/xslt
 
 prog		= ../HXmlParser
 xslt		= $(prog) --do-not-validate
@@ -17,9 +14,6 @@ all		:
 test		:
 		@echo "===> run a few simple xslt test cases with $(prog)"
 		$(MAKE) test1
-
-
-
 
 testcases	= \
 		'strip_example.xsl     strip_example.xml' \
@@ -56,10 +50,7 @@ test1		:
 stylesheets	= $(wildcard *.xsl)
 inputs		= $(wildcard *.xml)
 
-dist		:
-		[ -d $(DIST_DIR) ] || mkdir -p $(DIST_DIR)
-		cp $(EX) Makefile $(stylesheets) $(inputs) $(DIST_DIR)
-
 clean		:
 		rm -f *.xsl.out
 
+.PHONY		: all test test1 clean

@@ -2,13 +2,12 @@
 
 {- |
    Module     : Text.XML.HXT.Arrow
-   Copyright  : Copyright (C) 2006 Uwe Schmidt
+   Copyright  : Copyright (C) 2006-2010 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
-   Stability  : experimental
+   Stability  : stable
    Portability: portable
-   Version    : $Id: Arrow.hs,v 1.12 2006/11/11 15:36:04 hxml Exp $
 
    The HXT arrow interface
 
@@ -39,8 +38,6 @@ module Text.XML.HXT.Arrow
     , module Text.XML.HXT.Arrow.WriteDocument
     , module Text.XML.HXT.Arrow.Pickle
 
-    , module Text.XML.HXT.XSLT.XsltArrows
-
     , module Text.XML.HXT.Version
     )
 where
@@ -65,9 +62,6 @@ import Text.XML.HXT.Arrow.XmlRegex ()		-- import this explicitly
 import Text.XML.HXT.Arrow.XPath
 
 import Text.XML.HXT.Arrow.XPathSimple ()	-- import this explicitly
-
-
-import Text.XML.HXT.XSLT.XsltArrows
 
 import Text.XML.HXT.Version
 

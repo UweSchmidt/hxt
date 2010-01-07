@@ -2,25 +2,24 @@
 
 {- |
    Module     : HXmlParser
-   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   Copyright  : Copyright (C) 2005-2010 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt
    Maintainer : uwe@fh-wedel.de
    Stability  : experimental
    Portability: portable
-   Version    : $Id: HXmlParser.hs,v 1.7 2006/11/09 20:27:41 hxml Exp $
 
-HXmlParser - Validating XML Parser of the Haskell XML Toolbox
+   HXmlParser - Validating XML Parser of the Haskell XML Toolbox
 
-XML well-formed checker and validator.
+   XML well-formed checker and validator.
 
-this program may be used as example main program for the
-arrow API of the Haskell XML Toolbox
+   this program may be used as example main program for the
+   arrow API of the Haskell XML Toolbox
 
-commandline parameter evaluation and
-and return code is the most complicated part
-of this example application
+   commandline parameter evaluation and
+   and return code is the most complicated part
+   of this example application
 
 -}
 
@@ -91,10 +90,6 @@ parser al src
 
 processDocument	:: Attributes -> IOSArrow XmlTree XmlTree
 processDocument al
-    | applyXSLT
-	= traceMsg 1 ("applying XSLT stylesheet " ++ show xsltUri)
-	  >>>
-	  xsltApplyStylesheetFromURI xsltUri
     | extractText
 	= traceMsg 1 "selecting plain text"
 	  >>>
@@ -102,9 +97,7 @@ processDocument al
     | otherwise
 	= this
     where
-    applyXSLT	= hasEntry "xslt"	  $ al
     extractText	= optionIsSet "show-text" $ al
-    xsltUri     = lookup1 "xslt"          $ al
 
 -- ------------------------------------------------------------
 --
@@ -124,14 +117,11 @@ options
       ++
       outputOptions
       ++
-      [ Option ""	["xslt"]		(ReqArg (att "xslt") "STYLESHEET")	"STYLESHEET is the uri of the XSLT stylesheet to be applied"
-      , Option "q"	["no-output"]		(NoArg  ("no-output", "1"))		"no output of resulting document"
+      [ Option "q"	["no-output"]		(NoArg  ("no-output", "1"))		"no output of resulting document"
       , Option "x"	["show-text"]		(NoArg	("show-text", "1"))		"output only the raw text, remove all markup"
       ]
       ++
       showOptions
-    where
-    att n v = (n, v)
 
 usage		:: [String] -> IO a
 usage errl
@@ -145,7 +135,7 @@ usage errl
 	  exitProg True
     where
     header = "HXmlParser - Validating XML Parser of the Haskell XML Toolbox with Arrow Interface\n" ++
-             "XML well-formed checker, DTD validator, Relax NG validator and XSLT transformer.\n\n" ++
+             "XML well-formed checker, DTD validator, Relax NG validator.\n\n" ++
              "Usage: " ++ progName ++ " [OPTION...] [URI or FILE]"
     use    = usageInfo header options
 

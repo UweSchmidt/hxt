@@ -10,7 +10,6 @@ module Main where
 import System
 import Test.HUnit
 import Text.XML.HXT.Arrow
-import Data.Char
 
 {-
 aMinimalDoc	:: XmlTree

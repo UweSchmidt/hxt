@@ -23,12 +23,9 @@ HSCOLOUR_CSS	= doc/hscolour.css
 # --------------------------------------------------
 
 all		:
-		$(MAKE) version
-		$(MAKE) cabal
-
-version		:
-		$(MAKE) Version.mk
-		$(MAKE) -C src "Text/XML/HXT/Version.hs"
+		$(MAKE) -C src all
+		$(MAKE)        $(SOFTWARE).cabal
+		# $(MAKE)        allexamples
 
 allexamples	:
 		$(MAKE) -C examples all
@@ -38,35 +35,29 @@ test		:
 
 # ------------------------------------------------------------
 
-# CABAL_OPTIONS	= --global
-CABAL_OPTIONS	=
+CABAL_OPTIONS	= --global
 
 cabal		:
 		$(MAKE) cabal_configure cabal_build cabal_doc cabal_install
 
 cabal_configure :
-		cabal configure $(CABAL_OPTIONS)
+		runhaskell $(SETUP) configure $(CABAL_OPTIONS)
 
 cabal_doc	:
 		$(HSCOLOUR) -print-css > $(HSCOLOUR)
-		cabal haddock --hyperlink-source --hscolour-css=$(HSCOLOUR)
+		runhaskell $(SETUP) haddock --hyperlink-source --hscolour-css=$(HSCOLOUR)
 		rm -f $(HSCOLOUR)
 
 cabal_build	:
-		cabal build  $(CABAL_OPTIONS)
+		runhaskell $(SETUP) build
 
 cabal_install	:
-		cabal install $(CABAL_OPTIONS)
+		sudo runhaskell $(SETUP) install --global
 
 # ------------------------------------------------------------
 
-Version.mk	: hxt.cabal Makefile
-		( echo "SOFTWARE	= hxt" \
-		; echo "VERSION		= $$(cat hxt.cabal | grep -i '^version:' | cut -d ' ' -f 2)" \
-		; echo 'DIST_NAME	= $$(SOFTWARE)-$$(VERSION)' \
-		) > $@
-
-# ------------------------------------------------------------
+$(SOFTWARE).cabal	: src/$(SOFTWARE)-package.hs src/Makefile Makefile
+		$(MAKE) -C src ../$(SOFTWARE).cabal
 
 DOC_HXT		= $(DIST)/doc/hdoc
 

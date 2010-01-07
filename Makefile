@@ -1,4 +1,4 @@
-HXTPACKAGES	= hxt hxt-filter hxt-binary hxt-cache
+HXTPACKAGES	= hxt hxt-xslt hxt-filter hxt-binary hxt-cache
 
 all	:
 	$(foreach i,$(HXTPACKAGES), ( cd $i && cabal configure && cabal build && cabal install; ) ; )

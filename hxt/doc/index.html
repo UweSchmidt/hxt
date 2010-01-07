@@ -20,6 +20,8 @@
       <li><a href="#limit">Known problems and limitations</a></li>
       <li><a href="#port">Portability</a></li>
       <li><a href="#filter">HXT with Filters</a>
+      <li><a href="#xslt">HXT XSLT</a>
+      <li><a href="#etc">HXT extensions</a>
       <li><a href="#rel">Related Work</a></li>
       <li><a href="#feed">Feedback</a></li>
     </ul>
@@ -189,22 +191,24 @@
       released %PUBDATE%:
     </p>
     <ul>
-      <li>This version works with ghc 6.10 with cabal 1.6.
-	For ghc 6.8 and cabal &amp; 1.6 please use HXT 8.1.1.</li>
-      <li>This version does not contain the filter part of hxt any
-	more.
-	That functionality is separated into a package <a
-	  href="#filter">hxt-filter</a>.
+      <li>This version works with ghc 6.12.1 with cabal 1.8.
+	For ghc 6.10.* please use HXT 8.3.*.</li>
+      <li>This version does not include the filter variant of hxt and
+	the XSLT part.
+	These modules are separated into extra packages
+	<a href="#filter">hxt-filter</a> and <a href="#xslt">hxt-xslt</a>.
       </li>
       <li>Includes sources for building a ghc package
-	<code>hxt</code> with Cabal or make.
+	<code>hxt</code> with Cabal.
 	This package contains a Haskell DOM, an XML parser, a HTML parser based on parsec,
 	a lightweight HTML/XML parser based on tagsoup, a
 	DTD validator,  namespace processing functions, a Relax
-	NG validator, an XPath expression evaluator, an XSLT transformer,
+	NG validator, an XPath expression evaluator,
 	and serialization/deserialisation of data to/from XML.
       </li>
       <li>HTTP access is done via the <a href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/curl">curl binding</a>.
+	When installing curl (under Linux) be aware to first install the
+	source package of the curl library.
       </li>
       <li>Includes various examples, e.g. in example dir
 	<tt>examples/arrows/hparser/</tt>
@@ -216,8 +220,9 @@
       </li>
     </ul>
     <p>
-      A darcs repository is available under <a href="http://darcs2.fh-wedel.de/repos/hxt/">http://darcs2.fh-wedel.de/repos/hxt</a>,
-      the web interface is <a href="http://darcs2.fh-wedel.de/cgi-bin/darcsweb.cgi">http://darcs2.fh-wedel.de/cgi-bin/darcsweb.cgi</a>.
+      A git repository is available under
+      <a href="http://git.fh-wedel.de/repos/hxt.git/">http://git.fh-wedel.de/repos/hxt.git</a>.
+      This repo also contains the other hxt-packages.
     </p>
     <a name="install"></a>
     <h3>Installation</h3>
@@ -241,16 +246,19 @@
     make test
     </pre>
     <p>
-      Installation without Cabal with GNU make:
-    </p>
-    <pre>
-    make all
-    make install               # with root privileges
-    </pre>
 
     <a name="change"></a>
     <h3>Change History</h3>
     <ul>
+      <li>In <a href="hxt-8.4.0.tar.gz">Version 8.4.0</a>
+	<ul>
+	  <li>Changes for ghc-6.12. This version requires
+	    ghc-6.12. There is a new option <tt>a_text_mode</tt> for
+	    text output of documents.
+	  </li>
+	  <li>XSLT part separated into extra package hxt-xslt</li>
+	</ul>
+      </li>
       <li>In <a href="hxt-8.3.2.tar.gz">Version 8.3.2</a>
 	This is a bug fix release.
 	<ul>
@@ -406,147 +414,8 @@
 	  </li>
 	</ul>
       </li>
-      <li>In <a href="hxt-7.5.tar.gz">Version 7.5</a>
-	<ul>
-	  <li>
-	    A module <tt>Text.XML.HXT.Arrow.XPathSimple</tt> for fast XPath selection for simple XPath queries
-	    added. If the XPath query only contains for navigaion the axis from the
-	    root down to the leaves, the query is evaluated by computing
-	    a simple arrow and applying the arrow. This gives a
-	    speedup for queries like <tt>/htm/body//h1/text()</tt> for
-	    extraction of the headline text of a HTML document.
-	  </li>
-	  <li>
-	    Option added to control the selection of the parser
-	    (XML/HTML) by the mime type of the document.
-	  </li>
-	  <li>
-	    New lasy and lightweight HTML/XML parser based on tagsoup library.
-	    Useful especially for converting XML into native Haskell
-	    data. (Example in examples/arrows/performance)
-
-	  </li>
-	  <li>
-	    W3C XML Schema Datatype library for validating with RelaxNG extended.
-	    Currently supported Datatypes: Strings, URIs, QNames,
-	    binary string-encoded, decimal and all integer datatypes.
-	  </li>
-	  <li>
-	    Regular expression pattern matcher for W3C XML Schema datatype patterns.
-	  <li>
-	  <li>New arrow combinator 'mergeA' in Control.Arrow.ArrowList
-	    for combining the components of a tuple, resulting from
-	    applying arrows constructed with (&&&), (***) and similar combinators.
-	  </li>
-	</ul>
-      </li>
-      <li>In <a href="hxt-7.4.tar.gz">Version 7.4</a>
-	<ul>
-	  <li>Configuration changes for ghc-6.8</li>
-	  <li>Error in DTD validation algorithm resulting in exponential
-	    growth of runtime during validating mixed content elements removed.
-	  </li>
-	</ul>
-      </li>
-      <li>In <a href="hxt-7.3.tar.gz">Version 7.3</a>
-	<ul>
-	  <li>Module <tt>Text.XML.HXT.Pickle</tt> for conversion between user
-	    defined data types and the HXT DOM structure extendet.
-	    The picklers are extended, such that a DTD can be derived
-	    from a pickler and can be checked for consistency.
-	    See Haddock doc (<tt>Text.XML.HXT.Pickle</tt>)
-	    and example directory
-	    <tt>examples/arrows/pickle</tt> for examples.
-	  </li>
-	</ul>
-      </li>
-      <li>In <a href="HXT-7.2.tar.gz">Version 7.2</a>
-	<ul>
-	  <li>New module Text.XML.HXT.XmlPickler for conversion between user
-	    defined data types and the HXT DOM structure. This enables
-	    the simple persistent storage and retrieval of arbitrary
-	    data with XML documents. See example directory
-	    <tt>examples/arrows/pickle</tt> for a none trivial example
-	    of these picklers. These functions are an adaptation of
-	    <a href="http://research.microsoft.com/~akenn/fun/picklercombinators.pdf">Andrew
-	      Kennedy's pickler combinators</a>.
-	  </li>
-	  <li>UTF-8 decoding done with UTF8 module from
-	    <a href="http://www.abridgegame.org/darcs/">darcs</a>.
-	    Decoding errors are detected and issued.
-	    US-ASCII decoding also checks encoding errors.
-	  </li>
-	  <li>
-	    ISO-8859-X (X=2..11,13..16) deccoding of input documents implemented
-	  </li>
-	  <li>
-	    Some bug fixes.
-	  </li>
-	</ul>
-      </li>
-      <li>In <a href="HXT-7.1.tar.gz">Version 7.1</a>
-	<ul>
-	  <li>Version control changed from CVS to darcs.
-	    darcs repository is available under
-	    <tt><a href="http://darcs2.fh-wedel.de/repos/hxt/">http://darcs2.fh-wedel.de/repos/hxt/</a></tt>.
-	  </li>
-	  <li><tt>deepSeq</tt> and <tt>strict</tt> added for <tt>XmlTree</tt>
-	    and an arrow <tt>strictA</tt> for forcing the evaluation of a whole
-	    XML tree. This sometimes saves space when applied after document input,
-	    DTD processing and validation.
-	  </li>
-	  <li>Typeable instances added for all DOM data types.</li>
-	  <li>HTTP access via curl extended to handle automatic redirects</li>
-	</ul>
-      </li>
-      <li>In <a href="HXT-7.0.tar.gz">Version 7.0</a>
-	<ul>
-	  <li>New integrated XSLT transformer module. The example
-	    parser (<tt>examples/arrows/hparser</tt>) is extended to act as an XSLT transformer.
-	  </li>
-	  <li>Errors concerning HTML parsing and implict closing of
-	    elements have been fixed.
-	  </li>
-	  <li>Some minor changes of and additions to the arrow API.
-	  </li>
-	  <li>New functions <tt>readString</tt> and
-	    <tt>readFromString</tt> for reading documents from Haskell
-	    strings the same way as reading external documents with <tt>readDocument</tt>.
-	  </li>
-	</ul>
-      </li>
-      <li>In <a href="HXT-6.1.tar.gz">Version 6.1</a>
-	<ul>
-	  <li>HXT 6.1. contains only changes in the cabal installation process for
-	    working with the <a href="http://www.haskell.org/http/">Haskell HTTP module</a> in tar archive http-20060707.tgz.
-	    This module no longer depends on <a href="http://www.haskell.org/crypto/">The Haskell Cryptographic Library</a>,
-	    and <a href="http://www.n-heptane.com/nhlab/">NewBinary package</a>.
-	  </li>
-	</ul>
-      </li>
-      <li>In <a href="HXT-6.0.tar.gz">Version 6.0</a>
-	<ul>
-	  <li>The arrow interface has changed slightly, especially the handling of user defined states in the state and IO arrows has been simplified.
-	    This is the main reason for a 6.0 version.
-	  </li>
-	  <li>The XPath arrows have been extended.
-	    There are arrows not only for selecting nodes via an XPath expression, but also
-	    for processing and modifying all nodes selected
-	    by an XPath expressions (see module Text.XML.HXT.Arrow.XmlNodeSet).
-	  </li>
-	  <li>Separation of the API documentation into two documents, one for the
-	    old <a href="./hdoc-filter/index.html">Filter API</a>
-	    and a separate one for the <a href="./hdoc_arrow/index.html">Arrow API</a>.
-	    The <a href="./hdoc/index.htm">complete API documentation</a> is still available.
-	  </li>
-	  <li>DTD processing for the arrow part is done completely by arrow based routines.
-	  </li>
-	  <li>Cabal config file and dependencies change to work with ghc 6.4.2.
-	</ul>
-      </li>
     </ul>
 
-    
     <a name="limit"></a>
     <h3>Known problems and limitations</h3>
     <p>
@@ -568,28 +437,53 @@
     <p>
       Portability to Windows based systems has not been tested very
       intensively, but did work on an XP system with the Cygwin tools installed.
-      Development was done under Linux with GHC 6.10 with the -Wall
-      flag. No warnings were issued, when compiling the toolbox sources.
+      Development was done under Linux with GHC 6.12 with the -Wall
+      flag. No warnings were issued, when compiling the sources.
     </p>
 
     <a name="filter"></a>
     <h3>HXT with Filters</h3>
     <p>
       For older applications using the filter functionality,
-      there is an extra package <a href="hxt-filter-8.2.0.tar.gz">hxt-filter</a>.
+      there is an extra package <a href="hxt-filter-8.4.0.tar.gz">hxt-filter</a>.
       This package must be installed on top of hxt.
       The filter package will not be actively developed any more.
       Please move to the arrow version for long term projects.
       Installation works with cabal in the usual way.
-      Download archive is <a href="hxt-filter-8.3.0.tar.gz">hxt-filter-8.3.0.tar.gz</a>,
+      Download archive is <a href="hxt-filter-8.4.0.tar.gz">hxt-filter-8.4.0.tar.gz</a>,
       <em><a href="./hdoc-filter/index.html">HXT Filter API Documentation</a></em>
       with source links is availabe as well as a
-      darcs repository under <a href="http://darcs2.fh-wedel.de/repos/hxt-filter/">http://darcs2.fh-wedel.de/repos/hxt-filter</a>.
+      darcs repository under
+      <a href="http://git.fh-wedel.de/repos/hxt.git/">http://git.fh-wedel.de/repos/hxt.git</a>.
+    </p>
+
+    <a name="xslt"></a>
+    <h3>HXT XSLT</h3>
+    <p>
+      The XSLT library is
+      <a href="hxt-xslt-8.4.0.tar.gz">hxt-xslt-8.4.0.tar.gz</a>,
+      It can be included with <tt>import Text.XML.HXT.XSLT</tt>.
+    </p>
+
+    <a name="etc"></a>
+    <h3>Extensions</h3>
+    <p>
+      There is a small package
+      <a href="hxt-binary-0.0.1.tar.gz">hxt-binary-0.0.1.tar.gz</a>
+      for serializing and deserializing documents represented as
+      XmlTrees. In this package contains <tt>Binary</tt> instances for the HXT
+      data types representing XML data.
+    </p>
+    <p>
+      The above package is used for a package implementing a simple
+      cache system for parsed XML data
+      <a href="hxt-cache-0.0.1.tar.gz">hxt-cache-0.0.1.tar.gz</a>.
+      The cache system may be useful for the development of crawlers
+      or for preprocessing templates for a web framework.
     </p>
 
     <a name="rel"></a>
     <h3>Related work</h3>
-
     <ul>
       <li>Malcolm Wallace and Colin Runciman wrote
 	<a href="http://www.cs.york.ac.uk/fp/HaXml/">HaXml</a>,

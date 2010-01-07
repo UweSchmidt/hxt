@@ -155,23 +155,18 @@ HXT_SRC	= \
 	Text/XML/HXT/XPath/XPathKeywords.hs \
 	Text/XML/HXT/XPath/XPathParser.hs \
 	Text/XML/HXT/XPath/XPathToNodeSet.hs \
-	Text/XML/HXT/XPath/XPathToString.hs \
-	Text/XML/HXT/XSLT/Application.hs \
-	Text/XML/HXT/XSLT/Common.hs \
-	Text/XML/HXT/XSLT/Compilation.hs \
-	Text/XML/HXT/XSLT/CompiledStylesheet.hs \
-	Text/XML/HXT/XSLT/Names.hs \
-	Text/XML/HXT/XSLT/XsltArrows.hs
+	Text/XML/HXT/XPath/XPathToString.hs
+
 
 # no longer in use	System/PipeOpen.hs
 # no longer in use	Text/XML/HXT/IO/GetHTTPNative.hs
 # no longer in use	Text/XML/HXT/IO/GetHTTPCurl.hs
 
-Text/XML/HXT/Version.hs	: ../Version.mk Makefile
+Text/XML/HXT/Version.hs	: ../hxt.cabal
 		( echo "module Text.XML.HXT.Version" \
 		; echo "where" \
 		; echo "hxt_version :: String" \
-		; echo "hxt_version = \"$(VERSION)\"" \
+		; echo "hxt_version = \"$$(cat ../hxt.cabal | grep -i '^version:' | cut -d ' ' -f 2)\"" \
 		) > $@
 
 HXT_OBJ		= $(HXT_SRC:.hs=.o)
@@ -199,89 +194,6 @@ PROFFLAGS	= -Wall -fglasgow-exts $(HXT_REQ_PKG) -prof -auto -ignore-package hxt 
 
 prof		:
 		ghc $(PROFFLAGS) --make $(HXT_DRIVER:.o=.hs)
-
-# ------------------------------------------------------------
-#
-# under construction: XSLT
-
-XSLT_SRC	= $(wildcard ./Text/XML/HXT/XSLT/*.hs)
-XSLT_DRIVER	= ./Text/XML/HXT/XSLT/XSLT.o
-
-xslt		: $(XSLT_DRIVER)
-
-$(XSLT_DRIVER)	: $(XSLT_SRC)
-		$(GHC) -package-name $(HXT_PACKAGE) $(HXT_REQ_PKG) --make $*
-
-# ------------------------------------------------------------
-
-LOCAL_INSTALL_DIR	= $(PACKAGE_DIR)
-LOCAL_IMPORT_DIR	= $(PACKAGE_DIR)/$(IMPORT_DIR)
-
-PKG_LIB		= 
-PKG_NAME	=
-PKG_HI		=
-
-install_local_$(HXT_PACKAGE)	: $(HXT_LIB) hxt-package.conf
-		$(MAKE) install_local_package PKG_NAME=$(HXT_PACKAGE) PKG_LIB="$(HXT_LIB)" PKG_HI="$(HXT_HI)"
-
-install_local_package	: $(PKG_NAME)-package.conf
-		[ -d $(LOCAL_INSTALL_DIR) ] || mkdir -p $(LOCAL_INSTALL_DIR)
-		[ -d $(LOCAL_IMPORT_DIR)  ] || mkdir -p $(LOCAL_IMPORT_DIR)
-		cp -f  $(PKG_LIB)    $(LOCAL_INSTALL_DIR)
-		tar cvf - $(PKG_HI) | ( cd $(LOCAL_IMPORT_DIR) ; tar xf - )
-		[ -f $(LOCAL_INSTALL_DIR)/package.conf ] || echo "[]" > $(LOCAL_INSTALL_DIR)/package.conf
-		cat $(PKG_NAME)-package.conf \
-		| ghc-pkg update - --package-conf=$(LOCAL_INSTALL_DIR)/package.conf
-		@echo use package with: ghc\(i\) ... -package-conf $(LOCAL_INSTALL_DIR)/package.conf -package $(PKG_NAME) ...
-
-GHC_INSTALL	= $(shell ghc -v 2>&1 | head -n 2 | tail -n 1 | cut -d " " -f 5 | sed 's|/package.conf||')
-GHC_INSTALL_DIR	= $(GHC_INSTALL)/hxt
-GHC_PKG_CONF	=
-
-install		: hxt-package.conf
-		@[ -d $(GHC_INSTALL)     ] || ( echo "ghc install dir not found"       1>&2 ; exit 1 )
-		@[ -w $(GHC_INSTALL)     ] || ( echo "you need root access for this target" ; exit 1 )
-		[ -d $(GHC_INSTALL_DIR) ] || mkdir -p $(GHC_INSTALL_DIR)
-		cp -r $(LOCAL_INSTALL_DIR)/*.[ao] $(LOCAL_INSTALL_DIR)/imports $(GHC_INSTALL_DIR)
-		$(MAKE) install_packages
-		@echo
-		@echo use package with: ghc\(i\) ... -package $(HXT_PACKAGE) ...
-
-uninstall	:
-		@[ -d $(GHC_INSTALL) ] || ( echo "ghc install dir not found"       1>&2 ; exit 1 )
-		@[ -w $(GHC_INSTALL) ] || ( echo "you need root access for this target" ; exit 1 )
-		$(MAKE) uninstall_packages
-		rm -rf $(GHC_INSTALL_DIR)
-
-# ------------------------------------------------------------
-
-all		:
-		$(MAKE) install_local_$(HXT_PACKAGE)
-
-hxt-package.conf	: hxt-package.hs
-		ghc -o hxt-package hxt-package.hs
-		./hxt-package $(VERSION) "ghc" $(LOCAL_INSTALL_DIR) $(HXT_SRC) > $@
-
-../hxt.cabal	: hxt-package.hs Makefile ../Makefile
-		ghc -o hxt-package hxt-package.hs
-		./hxt-package $(VERSION) "cabal" $(GHC_INSTALL_DIR) $(HXT_SRC) > $@
-
-install_packages	:
-		runghc hxt-package.hs $(VERSION) "ghc" $(GHC_INSTALL_DIR) $(HXT_SRC) \
-		| ghc-pkg update -
-
-uninstall_packages	:
-		ghc-pkg --remove-package $(HXT_PACKAGE) || true
-
-clean_packages	:
-		$(MAKE) clean_$(HXT_PACKAGE)
-
-clean		:
-		$(MAKE) clean_packages
-		rm -rf $(LOCAL_INSTALL_DIR) hxt-package hxt-package.conf ../hxt.cabal
-
-clean_$(HXT_PACKAGE)	:
-		$(RM) $(HXT_DRIVER) $(HXT_DRIVER:.o=.hi) $(HXT_OBJ) $(HXT_HI) $(HXT_LIB)
 
 # ------------------------------------------------------------
 

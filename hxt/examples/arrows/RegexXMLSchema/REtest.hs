@@ -14,7 +14,6 @@ import Text.XML.HXT.DOM.Unicode
 
 import Control.Monad.State.Strict hiding (when)
 
-import Data.List
 import Data.Maybe
 
 import System.IO			-- import the IO and commandline option stuff
@@ -47,9 +46,8 @@ main
 
 main1	:: Int -> IO ()
 main1 i
-    = do
-      runX (genDoc i (fn i))
-      return ()
+    = runX (genDoc i (fn i))
+      >> return ()
 
 -- ----------------------------------------
 

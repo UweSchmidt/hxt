@@ -1,7 +1,7 @@
 -- ------------------------------------------------------------
 
 {- |
-   Module     : AbsURIs
+   Module     : HXmlParser
    Copyright  : Copyright (C) 2005 Uwe Schmidt
    License    : MIT
 
@@ -9,11 +9,17 @@
    Maintainer : uwe@fh-wedel.de
    Stability  : experimental
    Portability: portable
-   Version    : $Id: AbsURIs.hs,v 1.1 2005/05/12 16:41:38 hxml Exp $
 
-AbsURIs - Conversion references into absolute URIs in HTML pages
+   HXmlParser - Validating XML Parser of the Haskell XML Toolbox with XSLT support
 
-The commandline interface
+   XML well-formed checker and validator.
+
+   this program may be used as example main program for the
+   arrow API of the Haskell XML Toolbox
+
+   commandline parameter evaluation and
+   and return code is the most complicated part
+   of this example application
 -}
 
 -- ------------------------------------------------------------
@@ -21,14 +27,15 @@ The commandline interface
 module Main
 where
 
-import Text.XML.HXT.Arrow		-- import all stuff for parsing, validating, and transforming XML
+import Text.XML.HXT.Arrow
+import Text.XML.HXT.XSLT               ( xsltApplyStylesheetFromURI )
 
 import System.IO			-- import the IO and commandline option stuff
 import System.Environment
 import System.Console.GetOpt
 import System.Exit
 
-import ProcessDocument
+import Data.Maybe
 
 -- ------------------------------------------------------------
 
@@ -59,21 +66,44 @@ exitProg False	= exitWith ExitSuccess
 
 parser	:: Attributes -> String -> IOSArrow b Int
 parser al src
-    = readDocument ([(a_parse_html, v_1)] ++ al) src
+    = readDocument al src
       >>>
-      traceMsg 1 "start processing"
-      >>>
-      processDocument
-      >>>
-      traceMsg 1 "processing finished"
+      ( ( traceMsg 1 "start processing document"
+	  >>>
+	  processDocument al
+	  >>>
+	  traceMsg 1 "document processing finished"
+	)
+	`when`
+	documentStatusOk
+      )
       >>>
       traceSource
       >>>
       traceTree
       >>>
-      writeDocument al "-" `whenNot` hasAttr "no-output"
+      writeDocument al (fromMaybe "-" . lookup a_output_file $ al) `whenNot` hasAttr "no-output"
       >>>
       getErrStatus
+
+-- simple example of a processing arrow
+
+processDocument	:: Attributes -> IOSArrow XmlTree XmlTree
+processDocument al
+    | applyXSLT
+	= traceMsg 1 ("applying XSLT stylesheet " ++ show xsltUri)
+	  >>>
+	  xsltApplyStylesheetFromURI xsltUri
+    | extractText
+	= traceMsg 1 "selecting plain text"
+	  >>>
+	  processChildren (deep isText)
+    | otherwise
+	= this
+    where
+    applyXSLT	= hasEntry "xslt"	  $ al
+    extractText	= optionIsSet "show-text" $ al
+    xsltUri     = lookup1 "xslt"          $ al
 
 -- ------------------------------------------------------------
 --
@@ -81,17 +111,26 @@ parser al src
 -- see doc for System.Console.GetOpt
 
 progName	:: String
-progName	= "AbsURIs"
+progName	= "HXmlParser"
     
 options 	:: [OptDescr (String, String)]
 options
     = generalOptions
       ++
-      selectOptions [a_trace, a_proxy, a_use_curl, a_issue_warnings, a_do_not_issue_warnings, a_do_not_use_curl, a_options_curl, a_encoding] inputOptions
+      inputOptions
+      ++
+      relaxOptions
       ++
       outputOptions
       ++
+      [ Option ""	["xslt"]		(ReqArg (att "xslt") "STYLESHEET")	"STYLESHEET is the uri of the XSLT stylesheet to be applied"
+      , Option "q"	["no-output"]		(NoArg  ("no-output", "1"))		"no output of resulting document"
+      , Option "x"	["show-text"]		(NoArg	("show-text", "1"))		"output only the raw text, remove all markup"
+      ]
+      ++
       showOptions
+    where
+    att n v = (n, v)
 
 usage		:: [String] -> IO a
 usage errl
@@ -104,7 +143,8 @@ usage errl
 	  hPutStrLn stderr (concat errl ++ "\n" ++ use)
 	  exitProg True
     where
-    header = progName ++ " - Convert all references in an HTML document into absolute URIs\n\n" ++
+    header = "HXmlParser - Validating XML Parser of the Haskell XML Toolbox with Arrow Interface\n" ++
+             "XML well-formed checker, DTD validator, Relax NG validator and XSLT transformer.\n\n" ++
              "Usage: " ++ progName ++ " [OPTION...] [URI or FILE]"
     use    = usageInfo header options
 

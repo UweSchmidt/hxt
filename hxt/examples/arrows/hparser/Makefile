@@ -29,7 +29,7 @@ test		: $(prog)
 		@echo "===> first see all command line options"
 		$(prog) --help
 		@echo
-		$(MAKE) test0 test1 test2 test3 test4 test5 xslttest
+		$(MAKE) test0 test1 test2 test3 test4 test5
 
 EX1		= ./example1.xml
 EXi		= ./invalid.xml
@@ -150,15 +150,11 @@ test6		:
 		$(prog) --tagsoup --parse-html --remove-whitespace --show-tree http://www.haskell.org/
 		@echo
 
-xslttest	:
-		$(MAKE) -C xslt test
-
 dist		:
 		[ -d $(DIST_DIR) ] || mkdir -p $(DIST_DIR)
 		cp $(EX) Makefile $(prog).hs $(DIST_DIR)
-		$(foreach i,xslt,$(MAKE) -C $i dist DIST=../$(DIST_DIR) ;)
-
 
 clean		:
 		rm -f $(prog) *.o *.hi
 
+.PHONY		: all test test0 test1 test2 test3 test4 test5 test6 dist clean prof local force
