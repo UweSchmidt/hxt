@@ -622,16 +622,23 @@ disambigElem nsMap element =
     oldUris    = Map.elems nsMap  
 
 remapNsName :: UriMapping -> QName -> QName
-remapNsName nsMap name = 
-
+remapNsName nsMap name
+    | null nsUri
+      ||
+      ( isJust luUri
+        &&
+        fromJust luUri == nsUri
+      )			= name
+    | otherwise		= mkQName newPref (localPart name) nsUri
+{-
     if maybe (nsUri=="") (== nsUri) luUri
     then name
 
     else mkQName newPref (localPart name) nsUri
-
+-}
   where
     luUri   = Map.lookup (namePrefix name) nsMap
-    newPref = head $ (++ (error $ "int. error: No prefix for " ++ nsUri)) 
+    newPref = head $ (++ (error $ "int. error: No prefix for " ++ show name ++ " " ++ show nsMap ++ " " ++ show luUri ++ " " ++ show nsUri)) 
                 $ Map.keys $ Map.filter (==namespaceUri name) nsMap
     nsUri   = namespaceUri name
 

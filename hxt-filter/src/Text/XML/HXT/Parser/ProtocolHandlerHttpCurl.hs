@@ -132,7 +132,7 @@ parseHttpResponse
     crlf		:: Parser ()
     crlf
 	= do
-	  ( Text.ParserCombinators.Parsec.try (string "\r\n") <|> string "\n" )
+	  _ <- ( Text.ParserCombinators.Parsec.try (string "\r\n") <|> string "\n" )
 	  return ()
 
     parseResp		:: Parser (Int, XmlTrees)
@@ -141,7 +141,7 @@ parseHttpResponse
 	  vers <- ( do
 		    http <- string "HTTP/"
 		    mav <- many1 digit
-		    char '.'
+		    _ <- char '.'
 		    miv <- many1 digit
 		    return (http ++ mav ++ "." ++ miv)
 		  )

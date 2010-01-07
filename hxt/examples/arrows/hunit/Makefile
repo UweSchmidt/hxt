@@ -17,7 +17,7 @@ $(prog)		: $(prog).hs
 
 test		: $(prog)
 		@echo "===> run HUnit examples" ; echo ; sleep 2
-		$(prog)
+		./$(prog)
 
 DIST		= $(HXT_HOME)/dist/examples/arrows
 DIST_DIR	= $(DIST)/hunit

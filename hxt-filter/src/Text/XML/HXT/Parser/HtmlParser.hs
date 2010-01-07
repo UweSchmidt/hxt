@@ -120,11 +120,11 @@ parseHtmlDoc
 	    in do 
 	       if null warnings
 		  then thisM t'
-		  else do
-		       if noWarnings
+		  else (  if noWarnings
 			  then return []
 			  else do
 			       issueError $$< warnings
+                       ) >>
 		       return (remWarnings t')
 
 -- | The pure HTML parser, usually called via 'parseHtmlDoc'.
@@ -133,11 +133,9 @@ parseHtmlDoc
 runHtmlParser	:: XmlStateFilter a
 runHtmlParser t
     = if null errs
-      then do
-	   return (replaceChildren res t)
-      else do
-	   issueError $$< errs
-	   return (setStatus c_err "parsing HTML" t)
+      then return (replaceChildren res t)
+      else (issueError $$< errs)
+	   >> return (setStatus c_err "parsing HTML" t)
       where
       res  = getChildren .> parseHtmlText loc $ t
       errs = isXError .> neg isWarning $$ res

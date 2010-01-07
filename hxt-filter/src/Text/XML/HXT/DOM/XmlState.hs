@@ -155,9 +155,8 @@ changeSysStateAttrs cf sstate
 
 setSysErrorHandler		:: XmlStateFilter () -> XState state ()
 setSysErrorHandler ehf
-    = do
-      changeSysState (\ s -> s { sysStateErrorHandler = ehf })
-      return ()
+    = changeSysState (\ s -> s { sysStateErrorHandler = ehf })
+      >> return ()
 
 -- |
 -- get the error handler
@@ -183,9 +182,8 @@ getSysErrorHandler
 
 setSysParamTree		:: String -> XmlTrees -> XState state ()
 setSysParamTree name val
-    = do
-      changeSysState (changeSysStateAttrs (addEntry name val))
-      return ()
+    = changeSysState (changeSysStateAttrs (addEntry name val))
+      >> return ()
 
 -- |
 -- set or change a single system parameter of type string.
@@ -216,9 +214,8 @@ setSysParamInt name val	= setSysParam name (show val)
 
 setSystemParams	:: XmlStateFilter state
 setSystemParams t
-    = do
-      changeSysState (changeSysStateAttrs (addEntries (toTreel . getAttrl $ t)))
-      thisM t
+    = changeSysState (changeSysStateAttrs (addEntries (toTreel . getAttrl $ t)))
+      >> thisM t
 
 -- ------------------------------------------------------------
 
@@ -335,7 +332,7 @@ chain' initialUserState1 cmd1
     = do
       sysState0 <- getSysState
       (res, finalState1) <- io $ run0 (XmlState sysState0 initialUserState1) cmd1
-      setSysState (sysState finalState1)
+      _ <- setSysState (sysState finalState1)
       return (res, (userState finalState1))
 
 -- |
@@ -500,7 +497,7 @@ errorMsgHandler
     = performAction
       ( \ t -> chain' () ( do
 			   ehf <- getSysErrorHandler
-			   ehf t
+			   _ <- ehf t
 			   return ()
 			 )
       )
@@ -621,9 +618,8 @@ addFatal msg
 checkStatus	:: XmlStateFilter state
 checkStatus t
     = if status >= c_err
-      then do
-	   errorMsgHandler (mkXErrorTree c_warn (errClass status ++ "s detected in " ++ msg) [])
-	   noneM t
+      then errorMsgHandler (mkXErrorTree c_warn (errClass status ++ "s detected in " ++ msg) [])
+	   >> noneM t
 	else
            thisM t
     where

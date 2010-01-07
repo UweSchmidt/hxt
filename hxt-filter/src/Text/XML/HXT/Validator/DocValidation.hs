@@ -29,8 +29,6 @@ import Text.XML.HXT.DOM.XmlTree
 import Text.XML.HXT.Validator.AttributeValueValidation
 import Text.XML.HXT.Validator.XmlRE
 
-import Data.Maybe
-
 -- |
 -- Lookup-table which maps element names to their validation functions. The
 -- validation functions are XmlFilters.

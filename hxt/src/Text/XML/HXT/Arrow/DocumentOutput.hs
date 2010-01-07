@@ -49,6 +49,7 @@ import System.IO				( Handle
 						, IOMode(..)
 						, openFile
 						, openBinaryFile
+                                                , hSetBinaryMode
 						, hPutStrLn
 						, hClose
 						, stdout
@@ -89,7 +90,10 @@ putXmlDocument textMode dst
       hPutDocument	:: (Handle -> IO ()) -> IO ()
       hPutDocument action
 	  | isStdout
-	      = action stdout
+	      = do
+                hSetBinaryMode stdout (not textMode)
+                action stdout
+                hSetBinaryMode stdout False
 	  | otherwise
 	      = do
 		handle <- ( if textMode

@@ -905,8 +905,7 @@ liftMf f t
 
 performAction	:: Monad m => (a -> m b) -> a -> m [a]
 performAction cmd t
-    = do
-      cmd t
-      return [t]
+    = cmd t
+      >> return [t]
 
 -- eof ------------------------------------------------------------

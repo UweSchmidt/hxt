@@ -353,9 +353,8 @@ substParamEntity loc n@(NTree xn _cs)
     | isDTDElemNode CONDSECT xn					-- conditional section
       &&
       loc == Internal
-	  = do
-	    issueErr "conditional sections in internal part of the DTD is not allowed" n
-            return []
+	  = issueErr "conditional sections in internal part of the DTD is not allowed" n
+            >> return []
 
     | isDTDElemNode CONDSECT xn					-- conditional section
       &&
@@ -414,7 +413,7 @@ substParamEntity loc n@(NTree xn _cs)
     addPE name t
 	= do
 	  trace 2 ("substParamEntity: add entity to env: " ++ xshow [t])
-	  changeState $ addPeEntry name t
+	  _ <- changeState $ addPeEntry name t
 	  return []
 
     substPEref	:: DTDStateFilter
@@ -568,7 +567,7 @@ processExternalDTD n@(NTree (XDTD DOCTYPE al) _dtd)
 	= return []
     | otherwise
 	= do
-	  checkStandalone
+	  _ <- checkStandalone
 	  dtdContent <- ( getXmlEntityContents
 			  .>>
 			  traceMsg 2 ("processExternalDTD: parsing DTD part for " ++ show sysVal)
@@ -579,7 +578,7 @@ processExternalDTD n@(NTree (XDTD DOCTYPE al) _dtd)
 			)
 		       $ newDocument sysVal
 	  trace 2 "processExternalDTD: parsing DTD part done"
-	  traceTree $ mkRootTree [] dtdContent
+	  _ <- traceTree $ mkRootTree [] dtdContent
 	  return dtdContent
     where
     sysVal		= lookup1 k_system al
@@ -756,14 +755,14 @@ processGeneralEntity cx rl n@(NTree (XDTD ENTITY al) cl)
 	    = return []
 	| null txt'						-- something weird in entity content
 	    = do
-	      issueErr ("illegal external parsed entity value for entity " ++ show name) n
+	      _ <- issueErr ("illegal external parsed entity value for entity " ++ show name) n
 	      return []
 	| otherwise						-- o.k.: parse the contents
 	    = do
 	      res' <- liftF (parseXmlGeneralEntityValue ("external parsed entity " ++ show name)) $$< txt'
-	      ( traceSource
-		.>>
-		traceTree ) $ mkRootTree (fromAttrl context) res'
+	      _ <- ( traceSource
+		     .>>
+		     traceTree ) $ mkRootTree (fromAttrl context) res'
 	      return res'
 	where
 	txt' = (getChildren .> isXText) $$ cl'
@@ -775,11 +774,11 @@ processGeneralEntity cx rl n@(NTree (XDTD ENTITY al) cl)
 	  case lookupGeEnv name' geEnv' of
 	    Just _fct
 		-> do
-		   issueWarn ("entity " ++ show name ++ " already defined, repeated definition ignored") n
+		   _ <- issueWarn ("entity " ++ show name ++ " already defined, repeated definition ignored") n
 		   return []
             Nothing
 		-> do
-		   changeState $ addGeEntry name' fct' 
+		   _ <- changeState $ addGeEntry name' fct' 
 		   return $ this n
 
     -- --------
@@ -803,7 +802,7 @@ processGeneralEntity cx rl n@(NTree (XDTD ENTITY al) cl)
 	= do
 	  trace 2 ("substExternalParsed1Time: read and parse external parsed entity " ++ show name)
 	  res  <- runInLocalURIContext getContents' $ newDocument' context
-	  changeState $ addGeEntry name (substExternalParsed res)
+	  _ <- changeState $ addGeEntry name (substExternalParsed res)
 	  substExternalParsed res cx' rl' n' 
 	  where
 	  getContents'	:: GeStateFilter
@@ -851,7 +850,7 @@ processGeneralEntity cx rl n@(NTree (XDTD ENTITY al) cl)
 
     forbidden msg' cx'					-- 4.4.4
 	= do
-	  issueErr ("reference of " ++ msg' ++ show name ++ " forbidden in " ++ cx') n
+	  _ <- issueErr ("reference of " ++ msg' ++ show name ++ " forbidden in " ++ cx') n
           return []
 
 							-- normalize default value in ATTLIST
@@ -878,13 +877,13 @@ processGeneralEntity cx rl n@(NTree (XEntityRef name) _)
         Just fct
 	  -> if name `elem` rl
 	     then do
-		  issueErr ("recursive substitution of general entity reference " ++ show ref ++ " not processed") n
+		  _ <- issueErr ("recursive substitution of general entity reference " ++ show ref ++ " not processed") n
 		  return nl
 	     else do
 		  fct cx rl n
         Nothing
 	  -> do
-	     issueErr ("general entity reference " ++ show ref ++ " not processed, no definition found, (forward reference?)") n
+	     _ <- issueErr ("general entity reference " ++ show ref ++ " not processed, no definition found, (forward reference?)") n
 	     return nl
       where
       nl  = this n

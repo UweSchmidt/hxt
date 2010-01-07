@@ -51,7 +51,6 @@ import Prelude hiding (id, (.))
 import Control.Category
 import Control.Arrow
 
-import Data.Either
 import Data.Maybe
 
 import Text.XML.HXT.DOM.Util

@@ -25,7 +25,7 @@ import Text.XML.HXT.Validator.Validation
 import Text.XML.HXT.DOM.EditFilters
 import Text.XML.HXT.DOM.Namespace
 
-import System.IO
+-- import System.IO
 
 -- ------------------------------------------------------------
 

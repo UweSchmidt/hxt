@@ -45,8 +45,8 @@ propagateAndValidateNamespaces
 	  errs = validateNamespaces t
 	  in if null errs
 	     then thisM t
-	     else do
-		  liftF this $$< errs
+	     else ( liftF this $$< errs )
+                  >>
 		  return (setStatus c_err "namespace propagation" t)
 	  
 -- -----------------------------------------------------------------------------

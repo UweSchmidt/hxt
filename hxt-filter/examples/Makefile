@@ -5,8 +5,8 @@ include ../Version.mk
 
 HXT_HOME	= ..
 
-EXAMPLES	= mini hparser hfilter hunit hsvg dtd2haskell
-MORE_SAMPLES	= blutgraetsche photoalbum
+EXAMPLES	= mini hparser hfilter hunit dtd2haskell
+MORE_SAMPLES	= hsvg blutgraetsche photoalbum
 DIST		= ../$(DIST_NAME)
 DIST_DIR	= $(DIST)/examples
 

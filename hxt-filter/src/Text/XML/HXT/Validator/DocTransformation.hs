@@ -37,10 +37,7 @@ import Text.XML.HXT.DOM.XmlTree
 
 import Text.XML.HXT.Validator.AttributeValueValidation
 
-import Data.Maybe
 import Data.List
-
-
 
 -- |
 -- Lookup-table which maps element names to their transformation functions. The

@@ -84,7 +84,7 @@ putXmlDocToFile fn t
 	Right h
 	    -> do
 	       t' <- hPutXmlDoc h t
-	       io $ try (hClose h)
+	       _  <- io $ try (hClose h)
 	       trace 2 ("document written to file: " ++ fn)
 	       return t'
 

@@ -48,8 +48,8 @@ getValidatedDoc
       )
       where
       runValidation t
-	  = do
-	    issueError $$< res
+	  = ( issueError $$< res )
+            >>
 	    ( if null errs
 	      then ( traceMsg 1 "transforming validated document"
 		     .>>
