@@ -10,11 +10,10 @@ module Main
 where
 
 import           Data.Map (Map, fromList, toList)
-import qualified Data.Map as M
 
 import Text.XML.HXT.Arrow
 
--- Example data drawn from:
+-- Example data taken from:
 -- http://www.ibiblio.org/xml/books/bible/examples/05/5-1.xml
 
 -- ------------------------------------------------------------

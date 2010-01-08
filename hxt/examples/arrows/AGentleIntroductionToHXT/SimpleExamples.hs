@@ -12,9 +12,6 @@ import Text.XML.HXT.Arrow		-- import HXT stuff
 import Data.List			-- auxiliary functions
 import Data.Maybe
 
--- import Data.Tree.Class (Tree)
-
-import System.IO
 import System.Environment
 import System.Console.GetOpt()
 import System.Exit
