@@ -65,7 +65,9 @@ import Text.XML.HXT.DOM.XmlNode		( isElem
 -- the first time they are ecountered, and later always this name is used,
 -- not a string built by the parser.
 
-type Tags		= [Tag]
+type STag		= Tag String
+
+type Tags		= [STag]
 
 type Context		= ([String], NsEnv)
 
@@ -90,7 +92,7 @@ cond c t e	= do
 		  p <- c
 		  if p then t else e
 
-lookAhead	:: (Tag -> Bool) -> Parser Bool
+lookAhead	:: (STag -> Bool) -> Parser Bool
 lookAhead p	= P $ \ s -> (not (null s) && p (head s), s)
 
 -- ----------------------------------------
@@ -138,10 +140,10 @@ isOpn		= lookAhead is
 -- ----------------------------------------
 -- primitive symbol parsers
 
-getTag		:: Parser Tag
+getTag		:: Parser STag
 getTag		= P $ \ (t1:ts1) -> (t1, ts1)
 
-getSym		:: (Tag -> a) -> Parser a
+getSym		:: (STag -> a) -> Parser a
 getSym f	= do
 		  t <- getTag
 		  return (f t)
@@ -185,7 +187,7 @@ getOpn		= getSym sym
 -- ----------------------------------------
 -- pushback parsers for inserting missing tags
 
-pushBack	:: Tag -> Parser ()
+pushBack	:: STag -> Parser ()
 pushBack t	= P $ \ ts -> ((), t:ts)
 
 insCls		:: String -> Parser ()
@@ -238,7 +240,7 @@ extendNsEnv withNamespaces al1 env
 
 -- own entity lookup to prevent problems with &amp; and tagsoup hack for IE
 
-lookupEntity	:: Bool -> Bool -> String -> [Tag]
+lookupEntity	:: Bool -> Bool -> String -> Tags
 lookupEntity withWarnings _asHtml e0@('#':e)
     = case lookupNumericEntity e of
       Just c  -> [ TagText [c] ]
@@ -249,7 +251,7 @@ lookupEntity withWarnings _asHtml e0@('#':e)
 
 lookupEntity withWarnings asHtml e
     = case (lookup e entities) of
-      Just x  -> [ TagText [toEnum x]]
+      Just x  -> [TagText [toEnum x]]
       Nothing -> (TagText $ "&" ++ e ++ ";") :
 		 if withWarnings
 		 then [TagWarning $ "Unknown entity reference: &" ++ e ++ ";"]
@@ -259,13 +261,33 @@ lookupEntity withWarnings asHtml e
 	| asHtml    = xhtmlEntities
 	| otherwise = xhtmlEntities -- xmlEntities (TODO: xhtml is xml and html)
 
+lookupEntityAttr	:: Bool -> Bool -> (String, Bool) -> (String, Tags)
+lookupEntityAttr withWarnings asHtml (e, b)
+    | null r	= (s,                   r)
+    | otherwise	= ("&" ++ s ++ [';'|b], r)
+    where
+    (TagText s) : r = lookupEntity withWarnings asHtml e
+
+-- ----------------------------------------
+{-
+        entityData x = case lookupEntity y of
+            Just y -> [TagText $ fromChar y]
+            Nothing -> [TagText $ fromString $ "&" ++ y ++ ";"
+                       ,TagWarning $ fromString $ "Unknown entity: " ++ y]
+            where y = toString x
+
+        entityAttrib (x,b) = case lookupEntity y of
+            Just y -> (fromChar y, [])
+            Nothing -> (fromString $ "&" ++ y ++ [';'|b], [TagWarning $ fromString $ "Unknown entity: " ++ y])
+            where y = toString x
+-}
 -- ----------------------------------------
 
 -- |
 -- Turns all element and attribute names to lower case
 -- even !DOCTYPE stuff. But this is discarded when parsing the tagsoup
 
-lowerCaseNames :: [Tag] -> [Tag]
+lowerCaseNames :: Tags -> Tags
 lowerCaseNames
     = map f
     where
@@ -288,12 +310,21 @@ parseHtmlTagSoup withNamespaces withWarnings withComment removeWhiteSpace asHtml
 	    then lowerCaseNames
 	    else id
 	  )
-	. parseTagsOptions (parseOptions { optTagWarning   = withWarnings
-					 , optLookupEntity = lookupEntity withWarnings asHtml
-					 }
-			   )
+	. tagsoupParse
       )
     where
+    tagsoupParse	:: String -> Tags
+    tagsoupParse	= parseTagsOptions tagsoupOptions
+
+    tagsoupOptions	:: ParseOptions String
+    tagsoupOptions	= parseOptions' { optTagWarning     = withWarnings
+					, optEntityData   = lookupEntity     withWarnings asHtml
+					, optEntityAttrib = lookupEntityAttr withWarnings asHtml
+					}
+			  where
+			  parseOptions' :: ParseOptions String
+			  parseOptions' = parseOptions
+
     -- This is essential for lazy parsing:
     -- the call of "take 1" stops parsing, when the first element is detected
     -- no check on end of input sequence is required to build this (0- or 1-element list)

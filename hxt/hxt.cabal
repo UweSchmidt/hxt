@@ -1,6 +1,6 @@
 -- arch-tag: Haskell XML Toolbox main description file
 name: hxt
-version: 8.4.0
+version: 8.4.1
 license: OtherLicense
 license-file: LICENCE
 maintainer: Uwe Schmidt <uwe@fh-wedel.de>
@@ -192,5 +192,5 @@ library
                 network    >= 2.1 && < 3,
                 deepseq    >= 1.1 && < 2,
                 bytestring >= 0.9 && < 1,
-                tagsoup    >= 0.6 && < 1,
+                tagsoup    >= 0.8 && < 1,
                 curl       >= 1.3 && < 2
