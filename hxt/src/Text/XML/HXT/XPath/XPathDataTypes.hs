@@ -23,6 +23,8 @@ module Text.XML.HXT.XPath.XPathDataTypes
     )
 where
 
+import Data.Function			( on )
+
 import Text.XML.HXT.XPath.NavTree
 import Text.XML.HXT.DOM.Interface
 
@@ -157,11 +159,20 @@ data XStep        = Step AxisSpec NodeTest [Expr]
 
 -- | Represents XPath axis
 
-data AxisSpec     = Ancestor | AncestorOrSelf | Attribute | Child | Descendant  
-                  | DescendantOrSelf | Following | FollowingSibling
-                  | Namespace | Parent | Preceding | PrecedingSibling | Self
+data AxisSpec     = Ancestor
+		  | AncestorOrSelf
+		  | Attribute
+		  | Child
+		  | Descendant  
+                  | DescendantOrSelf
+		  | Following
+		  | FollowingSibling
+                  | Namespace
+		  | Parent
+		  | Preceding
+		  | PrecedingSibling
+		  | Self
                   deriving (Show, Eq)
-
 
 -- -----------------------------------------------------------------------------
 --
@@ -174,10 +185,6 @@ data NodeTest     = NameTest QName     -- ^ name-test
                   | PI String           -- ^ processing-instruction-test with a literal argument
                   | TypeTest XPathNode  -- ^ all nodetype-tests
                   deriving (Show, Eq)
-
-
-
-
 
 -- -----------------------------------------------------------------------------
 --
@@ -226,7 +233,6 @@ type ConLen       = Int
 type ConNode      = NavXmlTree
 
 
-
 -- -----------------------------------------------------------------------------
 --
 -- XPathValue
@@ -240,26 +246,60 @@ data XPathValue   = XPVNode NodeSet      -- ^ node-set
                   | XPVError String      -- ^ error message with text
                   deriving (Show, Eq, Ord)
 
-
 -- -----------------------------------------------------------------------------
 --
 -- Basic types for navigable tree and filters
 
 -- | Node of navigable tree representation
 
-type NavXmlTree   = NavTree XNode
+type NavXmlTree   	= NavTree XNode
 
 -- | List of nodes of navigable tree representation
 
-type NavXmlTrees  = [NavXmlTree]
+type NavXmlTrees  	= [NavXmlTree]
 
 -- | Type synonym for a list of navigable tree representation
 
-type NodeSet      = NavXmlTrees
+type NodeSet      	= [NodeElem]
+
+-- | newtype for NavXmlTree to define document order for Ord
+
+newtype NodeElem	= NE { unNE :: NavXmlTree }
+                          deriving (Show)
 
 -- | A functions that takes a XPath result and returns a XPath result
 
-type XPathFilter  = XPathValue -> XPathValue
+type XPathFilter  	= XPathValue -> XPathValue
+
+-- -----------------------------------------------------------------------------
+
+withXPVNode		:: String -> (NodeSet -> XPathValue) -> XPathFilter
+withXPVNode s f	n	= case n of
+			  XPVNode ns		-> f ns
+			  e@(XPVError _)	-> e
+			  _			-> XPVError s
+
+-- -----------------------------------------------------------------------------
+
+-- | node set functions
+
+instance Eq NodeElem where
+    (==)		= (==) `on` (pathNT . unNE)
+
+instance Ord NodeElem where
+    compare		= compare `on` (pathNT . unNE)
+
+fromNodeSet		:: NodeSet -> NavXmlTrees
+fromNodeSet		= map unNE
+
+toNodeSet		:: NavXmlTrees -> NodeSet
+toNodeSet		= map NE
+
+withNodeElem		:: (NavXmlTree -> NavXmlTree) -> NodeElem -> NodeElem
+withNodeElem f		= NE . f . unNE
+
+withNodeSet		:: (NavXmlTrees -> NavXmlTrees) -> NodeSet -> NodeSet
+withNodeSet f		= toNodeSet . f . fromNodeSet
 
 
 

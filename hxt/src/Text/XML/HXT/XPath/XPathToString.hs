@@ -50,7 +50,7 @@ type XPathTree = NTree String
 -- Convert an navigable tree in a xmltree
 --
 toXPathTree			:: [NavTree a] -> [NTree a]
-toXPathTree xs			= foldr (\ x -> (subtreeNT x :)) [] xs
+toXPathTree			= map subtreeNT
 
 -- -----------------------------------------------------------------------------
 -- |
@@ -60,8 +60,7 @@ toXPathTree xs			= foldr (\ x -> (subtreeNT x :)) [] xs
 --
 
 xPValue2String			:: XPathValue -> String
-xPValue2String (XPVNode ns)
-    = foldr (\t -> ((formatXmlTree t ++ "\n") ++)) "" (toXPathTree ns)
+xPValue2String (XPVNode ns)	= foldr (\ t -> ((formatXmlTree t ++ "\n") ++)) "" (toXPathTree . map unNE $ ns)
 xPValue2String (XPVBool b) 	= map toLower (show b)
 xPValue2String (XPVNumber (Float f)) = show f
 xPValue2String (XPVNumber s) 	= show s
@@ -74,7 +73,7 @@ xPValue2String (XPVError s) 	= "Error: " ++ s
 --
 
 xPValue2XmlTrees			:: XPathValue -> XmlTrees
-xPValue2XmlTrees (XPVNode ns)		= toXPathTree ns
+xPValue2XmlTrees (XPVNode ns)		= toXPathTree . map unNE $ ns
 xPValue2XmlTrees (XPVBool b)		= xtext (show b)
 xPValue2XmlTrees (XPVNumber (Float f))	= xtext (show f)
 xPValue2XmlTrees (XPVNumber s)		= xtext (show s)

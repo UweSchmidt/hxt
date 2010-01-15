@@ -12,8 +12,6 @@ where
 import Text.XML.HXT.DOM.TypeDefs
 import Text.XML.HXT.XPath.XPathDataTypes
 
-import Data.Maybe
-
 -- -----------------------------------------------------------------------------
 -- |
 -- Convert a a XPath-value into a XmlNodeSet represented by a tree structure
@@ -23,7 +21,7 @@ import Data.Maybe
 
 xPValue2NodeSet		:: XPathValue -> XmlNodeSet
 xPValue2NodeSet (XPVNode ns)
-    = toNodeSet ns
+    = toNodeSet' ns
 
 xPValue2NodeSet _
     = emptyNodeSet
@@ -34,29 +32,24 @@ emptyNodeSet		= XNS False [] []
 leafNodeSet		:: XmlNodeSet
 leafNodeSet		= XNS True [] []
 
-toNodeSet		:: NodeSet -> XmlNodeSet
-toNodeSet
-    = pathListToNodeSet . map toPath
+toNodeSet'		:: NodeSet -> XmlNodeSet
+toNodeSet'		= pathListToNodeSet . map (toPath . unNE)
 
 toPath			:: NavXmlTree -> XmlNodeSet
-toPath
-    = upTree leafNodeSet
+toPath			= upTree leafNodeSet
 
 
-upTree			:: XmlNodeSet -> NavXmlTree -> XmlNodeSet
-upTree ps t@(NT (NTree n _) _par left _right)
-    = up (upNT t)
+upTree				:: XmlNodeSet -> NavXmlTree -> XmlNodeSet
+upTree ps (NT _ _ [] _ _)
+			= ps	-- root node reached
+
+upTree ps (NT (NTree n _) ix par _left _right)
+			= upTree ps' $ head par
     where
-    up (Just pt)
-	| isJust . upNT $ pt		-- pt is a "real" node
-	    = upTree (pix n) pt
-	| otherwise			-- pt is the added root node, stop recursion
-	    = ps
-    up Nothing				-- never used recursion should stop earler
-	= ps
+    ps'			= pix n
 
     pix (XAttr qn)	= XNS False [qn] []
-    pix _		= XNS False []   [(length left, ps)]
+    pix _		= XNS False []   [(ix, ps)]
 
 pathListToNodeSet	::[XmlNodeSet] -> XmlNodeSet
 pathListToNodeSet

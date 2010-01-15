@@ -100,8 +100,16 @@ showTree doc
 
 evalXPath	:: String -> NsEnv' -> XmlTree -> IO()
 evalXPath path env doc
-    | nr == xr
+    | False	-- nr == xr
 	= putStrLn . unlines $ "ok: " : nr
+    | otherwise
+	= do
+          putStrLn . unlines $ ["start xpath evaluation: " ++ show path
+                               ,"          parsed xpath: " ++ xpt path
+                               ]
+          putStrLn . unlines $ ["xpath general result:"] ++ xr
+	  putStrLn . unlines $ ["xpath simple  result:"] ++ nr
+	  putStrLn $ "end   xpath evaluation: " ++ show path
     | otherwise
 	= do
 	  putStrLn . unlines $
