@@ -38,13 +38,13 @@ import Text.XML.HXT.XPath.XPathArithmetic	( xPathAdd
 						)
 import Text.XML.HXT.XPath.XPathParser		( parseXPath )
 import Text.XML.HXT.XPath.XPathToString		( xPValue2XmlTrees )
-import Text.XML.HXT.XPath.XPathToNodeSet	( xPValue2NodeSet
-						, emptyNodeSet
+import Text.XML.HXT.XPath.XPathToNodeSet	( xPValue2XmlNodeSet
+						, emptyXmlNodeSet
 						)
 
 import Text.ParserCombinators.Parsec		( runParser )
 
-import Data.List				( nub, sort, partition )
+import Data.List				( partition )
 import Data.Maybe				( fromJust, fromMaybe )
 
 -- ----------------------------------------
@@ -126,7 +126,7 @@ getXPathNodeSet		= getXPathNodeSetWithNsEnv []
 
 getXPathNodeSetWithNsEnv	:: Attributes -> String -> XmlTree -> XmlNodeSet
 getXPathNodeSetWithNsEnv nsEnv xpStr
-    = getXPathValues xPValue2NodeSet (const (const emptyNodeSet)) (toNsEnv nsEnv) xpStr
+    = getXPathValues xPValue2XmlNodeSet (const (const emptyXmlNodeSet)) (toNsEnv nsEnv) xpStr
 
 -- | parse xpath, evaluate xpath expr and prepare results
 
@@ -143,7 +143,7 @@ getXPathValues cvRes cvErr nsEnv xpStr t
 					  , idAttributesToXPathValue . getIdAttributes $ t'
 					  )
 	navTD				= ntree t'
-	xpRes				= evalExpr (idAttr:(getVarTab varEnv),[]) (1, 1, navTD) xpe (XPVNode [NE navTD])
+	xpRes				= evalExpr (idAttr:(getVarTab varEnv),[]) (1, 1, navTD) xpe (XPVNode . singletonNodeSet $ navTD)
 
 addRoot					:: XmlTree -> XmlTree
 addRoot t
@@ -207,6 +207,7 @@ evalSpezExpr _ _ _			= XPVError "Call to evalExpr with a wrong argument"
 
 -- |
 -- filter for evaluating a filter-expression
+
 filterEval 				:: Env -> Context -> [Expr] -> XPathFilter
 filterEval env cont (prim:predicates) ns
     					= case evalExpr env cont prim ns of
@@ -224,12 +225,15 @@ unionEval vs
     | not (null evs)			= case head evs of
 					  e@(XPVError _)	-> e
 					  _			-> XPVError "A value of a union ( | ) is not a nodeset"
-    | otherwise				= XPVNode . nub . sort . concatMap (\ (XPVNode ns) -> ns) $ nvs
+    | otherwise				= XPVNode . unionsNodeSet . map theNode $ nvs
     where
     (nvs, evs)				= partition isNode vs
 
     isNode (XPVNode _)			= True
     isNode _				= False
+
+    theNode (XPVNode ns)		= ns
+    theNode _				= error "illegal argument in unionEval"
 
 -- |
 -- Equality or relational test for node-sets, numbers, boolean values or strings,
@@ -346,8 +350,8 @@ getRoot _				= XPVError "Call to getRoot without a nodeset"
 getRoot					= withXPVNode "Call to getRoot without a nodeset" $ getRoot'
     where
     getRoot' ns
-	| null ns			= XPVError "Call to getRoot with empty nodeset"
-	| otherwise			= XPVNode . (:[]) . withNodeElem getRoot'' . head $ ns
+	| nullNodeSet ns		= XPVError "Call to getRoot with empty nodeset"
+	| otherwise			= XPVNode . singletonNodeSet . getRoot'' . headNodeSet $ ns
 
     getRoot'' tree			= case upNT tree of
 					  Nothing 	-> tree
@@ -451,18 +455,21 @@ evalPredL _ _ _				= XPVError "Call to evalPredL without a nodeset"
 -}
 evalPredL env pr n			= withXPVNode "Call to evalPredL without a nodeset" evalPl n
     where
-    evalPl ns				= foldl (evalPred env 1 (length ns)) n pr
+    evalPl ns				= foldl (evalPred env 1 (cardNodeSet ns)) n pr
 
-evalPred 					:: Env -> Int -> Int -> XPathValue -> Expr -> XPathValue
-evalPred _ _ _ ns@(XPVNode []) _ 		= ns
-evalPred env pos len (XPVNode (x : xs)) ex	= case testPredicate env (pos, len, unNE x) ex (XPVNode [x]) of
-						  e@(XPVError _) -> e
-						  XPVBool True   -> XPVNode (x : n)
-						  XPVBool False  -> nextNode
-						  _              -> XPVError "Value of testPredicate is not a boolean"
-      					          where
-						  nextNode@(XPVNode n) = evalPred env (pos + 1) len (XPVNode xs) ex
-evalPred _ _ _ _ _				= XPVError "Call to evalPred without a nodeset"
+evalPred 				:: Env -> Int -> Int -> XPathValue -> Expr -> XPathValue
+evalPred env pos len nv@(XPVNode ns) ex
+    | nullNodeSet ns			= nv
+    | otherwise				= case testPredicate env (pos, len, x) ex (XPVNode . singletonNodeSet $ x) of
+					  e@(XPVError _) -> e
+					  XPVBool True   -> XPVNode $ insertNodeSet x n
+					  XPVBool False  -> nextNode
+					  _              -> XPVError "Value of testPredicate is not a boolean"
+      					  where
+					  (xp, x)		= head . elemsNodeSet $ ns
+					  xs			= deleteNodeSet xp ns
+					  nextNode@(XPVNode n) = evalPred env (pos + 1) len (XPVNode xs) ex
+evalPred _ _ _ _ _			= XPVError "Call to evalPred without a nodeset"
 
 
 testPredicate 					:: Env -> Context -> Expr -> XPathFilter

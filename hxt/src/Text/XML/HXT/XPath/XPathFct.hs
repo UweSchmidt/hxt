@@ -68,9 +68,6 @@ import Data.Char				( isAscii
 						, ord
 						)
 
-import Data.List				( nub
-						)
-
 import Data.Maybe
 
 -- -----------------------------------------------------------------------------
@@ -297,7 +294,6 @@ evalFct name env cont args
 toXValue 			:: XFct -> Context -> Env -> [XPathValue] -> [XPathValue]
 toXValue fct c env args 	= [fct c env [x] | x <- args]
 
-
 -- -----------------------------------------------------------------------------
 -- core-funktions library
 
@@ -321,7 +317,7 @@ xposition (pos, _ , _) _ _ 	= XPVNumber $ int2XPNumber pos
 -- number count(node-set): returns the number of nodes in the argument node-set
 
 xcount 				:: XFct
-xcount _ _ [XPVNode ns]		= XPVNumber $ int2XPNumber $ length ns
+xcount _ _ [XPVNode ns]		= XPVNumber . int2XPNumber . cardNodeSet $ ns
 xcount _ _ _			= XPVError "Call to function count with wrong arguments"
 
 
@@ -331,7 +327,7 @@ xcount _ _ _			= XPVError "Call to function count with wrong arguments"
 xid 				:: XFct
 xid (_, _, cn) env [XPVNode ns]	= isInId  (getIds env) (strValues ns) [cn]
                                   where
-				  strValues = map ((\ (XPVString str) -> str) . stringValue . unNE)
+				  strValues = map ((\ (XPVString str) -> str) . stringValue) . fromNodeSet
 
 xid c@(_, _, cn) env arg	= isInId (getIds env) ( (\(XPVString s) -> words s) (xstring c env arg)) [cn]
 
@@ -347,8 +343,7 @@ getIds env			= words $			-- hier muss noch auf prefix getestet werden
 				  getVarTab env 
 
 isInId 				:: [String] -> [String] -> NavXmlTrees -> XPathValue
-isInId ids str			= {- remDups -}
-				  XPVNode . nub . map NE . concatMap (filterNS ids str . descendantOrSelfAxis)
+isInId ids str			= XPVNode . toNodeSet . concatMap (filterNS ids str . descendantOrSelfAxis)
 
 
 filterNS 			:: [String] -> [String] -> NavXmlTrees -> NavXmlTrees
@@ -371,8 +366,9 @@ filterNS ids str ns		= [ n | n@(NT a _ _ _ _) <- ns
 
 xlocalName 			:: XFct
 xlocalName (_, _, cn) _ []  	= XPVString (xpLocalPartOf . subtreeNT $ cn)
-xlocalName _ _ [XPVNode []] 	= XPVString ""
-xlocalName _ _ [XPVNode ns] 	= XPVString (xpLocalPartOf . subtreeNT . unNE . head $ ns)
+xlocalName _ _ [XPVNode ns]
+    | nullNodeSet ns		= XPVString ""
+    | otherwise			= XPVString (xpLocalPartOf . subtreeNT . headNodeSet $ ns)
 xlocalName _ _ _            	= XPVError "Call to function local-name with wrong arguments"
 
 -- |
@@ -386,8 +382,9 @@ xlocalName _ _ _            	= XPVError "Call to function local-name with wrong 
 
 xnamespaceUri 			:: XFct
 xnamespaceUri (_, _, cn) _ []  	= XPVString (xpNamespaceOf . subtreeNT $ cn)
-xnamespaceUri _ _ [XPVNode []] 	= XPVString ""
-xnamespaceUri _ _ [XPVNode ns] 	= XPVString (xpNamespaceOf . subtreeNT . unNE . head $ ns)
+xnamespaceUri _ _ [XPVNode ns]
+    | nullNodeSet ns		= XPVString ""
+    | otherwise			= XPVString (xpNamespaceOf . subtreeNT . headNodeSet $ ns)
 xnamespaceUri _ _ _            	= XPVError "Call to function namespace-uri with wrong arguments"
 
 
@@ -405,8 +402,9 @@ xnamespaceUri _ _ _            	= XPVError "Call to function namespace-uri with 
 
 xname 				:: XFct
 xname (_, _, cn) _ []  		= XPVString (xpNameOf . subtreeNT $ cn)
-xname _ _ [XPVNode []] 		= XPVString ""
-xname _ _ [XPVNode ns] 		= XPVString (xpNameOf . subtreeNT . unNE . head $ ns)
+xname _ _ [XPVNode ns]
+    | nullNodeSet ns		= XPVString ""
+    | otherwise			= XPVString (xpNameOf . subtreeNT . headNodeSet $ ns)
 xname _ _ _            		= XPVError "Call to function name with wrong arguments"
 
 -- ------------------------------------------------------------
@@ -455,8 +453,9 @@ stringValue			= XPVString . xpTextOf . self
 -- string string(object?): converts an object to a string
 
 xstring 				:: XFct
-xstring _ _ [XPVNode []]           	= XPVString ""
-xstring _ _ [XPVNode (x:_)]        	= stringValue . unNE $ x
+xstring _ _ [XPVNode ns]
+    | nullNodeSet ns	           	= XPVString ""
+    | otherwise				= stringValue . headNodeSet $ ns
 xstring (_, _, cn) _ []            	= stringValue cn
 
 xstring _ _ [XPVNumber (Float a)]
@@ -576,7 +575,7 @@ xsubstring' _ _ _			= XPVError "Call to xsubstring' with a wrong argument"
 xstringLength 				:: XFct
 xstringLength c@(_, _, cn) env []	= XPVNumber (Float (fromIntegral $ length s))
       					  where
-					  XPVString s = xstring c env [XPVNode [NE cn]]
+					  XPVString s = xstring c env [XPVNode $ singletonNodeSet cn]
 
 xstringLength c env args		= XPVNumber $
 					  (\[XPVString s] -> int2XPNumber $ length s) $
@@ -594,7 +593,7 @@ xstringLength c env args		= XPVNumber $
 
 xnormalizeSpace 			:: XFct
 xnormalizeSpace c@(_, _, cn) env []	= (\ (XPVString s) -> XPVString $ normStr s) $
-					  xstring c env [XPVNode [NE cn]]
+					  xstring c env [XPVNode $ singletonNodeSet cn]
 xnormalizeSpace c env args		= (\ [XPVString s] -> XPVString $ normStr s) $
 					  toXValue xstring c env args
 
@@ -637,7 +636,7 @@ xboolean 				:: XFct
 xboolean _ _ [XPVNumber a] 		= XPVBool (a/= NaN && a/= Neg0 && a/= Pos0)
 xboolean _ _ [XPVString s] 		= XPVBool (length s /= 0)
 xboolean _ _ [XPVBool b]   		= XPVBool b
-xboolean _ _ [XPVNode ns]  		= XPVBool (length ns > 0)
+xboolean _ _ [XPVNode ns]  		= XPVBool (not . nullNodeSet $ ns)
 xboolean _ _ [XPVError e]  		= XPVError e
 xboolean _ _ _             		= XPVError "Call to xboolean with a wrong argument"
 
@@ -680,7 +679,7 @@ xlang _ _ _				= XPVError "namespaces are not supported"
 -- |
 -- number number(object?): converts its argument to a number
 xnumber 				:: XFct
-xnumber c@(_, _, cn) env []		= (\ (XPVString s) -> parseNumber s) (xstring c env [XPVNode [NE cn]])
+xnumber c@(_, _, cn) env []		= (\ (XPVString s) -> parseNumber s) (xstring c env [XPVNode $ singletonNodeSet cn])
 xnumber c env [n@(XPVNode _)]		= (\ (XPVString s) -> parseNumber s) (xstring c env [n])
 
 xnumber _ _ [XPVBool b]
@@ -699,11 +698,12 @@ xnumber _ _ _             		= XPVError "Call to xnumber with a wrong argument"
 -- converting the string-values of the node to a number
 
 xsum 					:: XFct
-xsum _ _ [XPVNode []] 			= XPVNumber NaN
-xsum c env [XPVNode ns]			= foldr1 (\ a b -> (xPathAdd Plus a b)) (getValues ns)
+xsum c env [XPVNode ns]
+    | nullNodeSet ns			= XPVNumber NaN
+    | otherwise				= foldr1 (\ a b -> (xPathAdd Plus a b)) (getValues ns)
       where
       getValues 			:: NodeSet -> [XPathValue]
-      getValues 			= foldr (\ n -> ([xnumber c env $ [stringValue . unNE $ n] ] ++) ) []
+      getValues 			= foldr (\ n -> ([xnumber c env $ [stringValue n] ] ++) ) [] . fromNodeSet
 
 xsum _ _ _				= XPVError "The value of the function sum is not a nodeset"
 
@@ -765,7 +765,7 @@ xround' _ _ _             		= XPVError "Call to xround' without a number"
 -- converted to a string 
 xkey 					:: XFct
 xkey _ env ((XPVString s) : [XPVNode ns])
-    					= isInKey (getKeyTab env) s (strValues . map unNE $ ns)
+    					= isInKey (getKeyTab env) s (strValues . fromNodeSet $ ns)
     where
     strValues 				= map ((\ (XPVString str) -> str) . stringValue)
 
@@ -778,8 +778,7 @@ xkey _ _ _ 				= XPVError "Call to xkey with a wrong argument"
 
 
 isInKey 				:: KeyTab -> String -> [String] -> XPathValue
-isInKey kt kn kv			-- = remDups (XPVNode (map ntree ts) )
-    					= XPVNode $ map NE ts --(map ntree ts)
+isInKey kt kn kv			= XPVNode . toNodeSet $ ts
     where
     (_, _, ts) 				= unzip3 $ concat $ map (isKeyVal (isKeyName kt kn)) kv
 
@@ -813,7 +812,7 @@ xformatNumber _ _ _			= XPVError "Call to xformatNumber with a wrong argument"
 -- Should still be good enough for home use.
 
 xdocument 				:: XFct
-xdocument c e val 			= XPVNode $ map NE $ (\ (XPVString s) -> xdocument' s) $ xstring c e val
+xdocument c e val 			= XPVNode . toNodeSet . (\ (XPVString s) -> xdocument' s) . xstring c e $ val
 
 xdocument' 				:: String -> [NavXmlTree]
 xdocument' uri 				= map ntree $
@@ -825,13 +824,15 @@ xdocument' uri 				= map ntree $
 
 -- generate-id, should be fully compliant with XSLT specification.
 
-xgenerateId 					:: XFct
-xgenerateId _            _ [XPVNode (node:_)] 	= xgenerateId' . unNE $ node
-xgenerateId (_, _, node) _ []                 	= xgenerateId' node
-xgenerateId _            _ _                  	= error "illegal arguments in xgenerateId"
+xgenerateId 				:: XFct
+xgenerateId _            _ [XPVNode ns]
+    | not (nullNodeSet ns)		= xgenerateId' . headNodeSet $ ns
 
-xgenerateId' 					:: NavXmlTree -> XPathValue
-xgenerateId' 					= XPVString . ("id_"++) . str2XmlId . show . nodeID . Just
+xgenerateId (_, _, node) _ []           = xgenerateId' node
+xgenerateId _            _ _            = error "illegal arguments in xgenerateId"
+
+xgenerateId' 				:: NavXmlTree -> XPathValue
+xgenerateId' 				= XPVString . ("id_"++) . str2XmlId . show . nodeID . Just
 
 str2XmlId 				:: String -> String
 str2XmlId 				= concatMap convert

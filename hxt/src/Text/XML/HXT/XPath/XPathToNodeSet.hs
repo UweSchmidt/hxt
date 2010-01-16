@@ -4,8 +4,8 @@
 
 
 module Text.XML.HXT.XPath.XPathToNodeSet
-    ( xPValue2NodeSet
-    , emptyNodeSet
+    ( xPValue2XmlNodeSet
+    , emptyXmlNodeSet
     )
 where
 
@@ -19,53 +19,49 @@ import Text.XML.HXT.XPath.XPathDataTypes
 -- The XmlNodeSet can be used to traverse a tree an process all
 -- marked nodes.
 
-xPValue2NodeSet		:: XPathValue -> XmlNodeSet
-xPValue2NodeSet (XPVNode ns)
-    = toNodeSet' ns
+xPValue2XmlNodeSet			:: XPathValue -> XmlNodeSet
+xPValue2XmlNodeSet (XPVNode ns)		= toNodeSet' ns
 
-xPValue2NodeSet _
-    = emptyNodeSet
+xPValue2XmlNodeSet _			= emptyXmlNodeSet
 
-emptyNodeSet		:: XmlNodeSet
-emptyNodeSet		= XNS False [] []
+emptyXmlNodeSet				:: XmlNodeSet
+emptyXmlNodeSet				= XNS False [] []
 
-leafNodeSet		:: XmlNodeSet
-leafNodeSet		= XNS True [] []
+leafNodeSet				:: XmlNodeSet
+leafNodeSet				= XNS True [] []
 
-toNodeSet'		:: NodeSet -> XmlNodeSet
-toNodeSet'		= pathListToNodeSet . map (toPath . unNE)
+toNodeSet'				:: NodeSet -> XmlNodeSet
+toNodeSet'				= pathListToNodeSet . map toPath . fromNodeSet
 
-toPath			:: NavXmlTree -> XmlNodeSet
-toPath			= upTree leafNodeSet
+toPath					:: NavXmlTree -> XmlNodeSet
+toPath					= upTree leafNodeSet
 
 
-upTree				:: XmlNodeSet -> NavXmlTree -> XmlNodeSet
-upTree ps (NT _ _ [] _ _)
-			= ps	-- root node reached
+upTree					:: XmlNodeSet -> NavXmlTree -> XmlNodeSet
+upTree ps (NT _ _ [] _ _)		= ps	-- root node reached
 
-upTree ps (NT (NTree n _) ix par _left _right)
-			= upTree ps' $ head par
+upTree ps (NT (NTree n _)
+              ix par _left _right)	= upTree ps' $ head par
     where
-    ps'			= pix n
+    ps'					= pix n
 
-    pix (XAttr qn)	= XNS False [qn] []
-    pix _		= XNS False []   [(ix, ps)]
+    pix (XAttr qn)			= XNS False [qn] []
+    pix _				= XNS False []   [(ix, ps)]
 
-pathListToNodeSet	::[XmlNodeSet] -> XmlNodeSet
-pathListToNodeSet
-    = foldr mergePaths emptyNodeSet
+pathListToNodeSet			::[XmlNodeSet] -> XmlNodeSet
+pathListToNodeSet			= foldr mergePaths emptyXmlNodeSet
     where
-    mergePaths (XNS p1 al1 cl1) (XNS p2 al2 cl2)
-	= XNS (p1 || p2) (al1 ++ al2) (mergeSubPaths cl1 cl2)
+    mergePaths (XNS p1 al1 cl1)
+               (XNS p2 al2 cl2)		= XNS (p1 || p2) (al1 ++ al2) (mergeSubPaths cl1 cl2)
 
-    mergeSubPaths []       sp2 = sp2
-    mergeSubPaths (s1:sp1) sp2 = mergeSubPath s1 (mergeSubPaths sp1 sp2)
+    mergeSubPaths []       sp2 		= sp2
+    mergeSubPaths (s1:sp1) sp2 		= mergeSubPath s1 (mergeSubPaths sp1 sp2)
 
-    mergeSubPath s1 []
-	= [s1]
-    mergeSubPath s1@(ix1,p1) sl@(s2@(ix2, p2) : sl')
-	| ix1 < ix2	= s1 : sl
-	| ix1 > ix2	= s2 : mergeSubPath s1 sl'		-- ordered insert of s1 
-	| otherwise	= (ix1, mergePaths p1 p2) : sl'		-- same ix merge subpaths
+    mergeSubPath s1 []			= [s1]
+    mergeSubPath s1@(ix1,p1)
+                 sl@(s2@(ix2, p2) : sl')
+	| ix1 < ix2			= s1 : sl
+	| ix1 > ix2			= s2 : mergeSubPath s1 sl'		-- ordered insert of s1 
+	| otherwise			= (ix1, mergePaths p1 p2) : sl'		-- same ix merge subpaths
 
 -- -----------------------------------------------------------------------------

@@ -24,6 +24,9 @@ module Text.XML.HXT.XPath.XPathDataTypes
 where
 
 import Data.Function			( on )
+import Data.Map				( Map )
+import qualified
+       Data.Map				as M
 
 import Text.XML.HXT.XPath.NavTree
 import Text.XML.HXT.DOM.Interface
@@ -141,7 +144,8 @@ data LocationPath = LocPath Path [XStep]
 -- |
 -- A location path is either a relative or an absolute path.
 
-data Path         = Rel | Abs
+data Path         = Rel
+		  | Abs
                   deriving (Show, Eq)
 					
 
@@ -204,33 +208,33 @@ data XPathNode    = XPNode            -- ^ all 7 nodetypes
 --
 -- useful type definitions
 
-type Name = (NamePrefix, LocalName)
-type NamePrefix = String
-type LocalName = String
+type Name 		= (NamePrefix, LocalName)
+type NamePrefix 	= String
+type LocalName 		= String
 
 -- | Variable name
-type VarName      = Name
+type VarName      	= Name
 
 -- | a string
-type Literal      = String					
+type Literal      	= String					
 
 -- | Function name
-type FctName      = String
+type FctName      	= String
 
 -- | Function arguments
-type FctArguments = [Expr]
+type FctArguments 	= [Expr]
 
 -- | Evaluation context
-type Context      = (ConPos ,ConLen, ConNode)
+type Context      	= (ConPos ,ConLen, ConNode)
 
 -- | Context position
-type ConPos       = Int
+type ConPos       	= Int
 
 -- | Context length
-type ConLen       = Int
+type ConLen       	= Int
 
 -- | Context node
-type ConNode      = NavXmlTree
+type ConNode      	= NavXmlTree
 
 
 -- -----------------------------------------------------------------------------
@@ -258,14 +262,14 @@ type NavXmlTree   	= NavTree XNode
 
 type NavXmlTrees  	= [NavXmlTree]
 
--- | Type synonym for a list of navigable tree representation
+-- | Set of navigable trees identified by their document position (NodePath)
 
-type NodeSet      	= [NodeElem]
+newtype NodeSet      	= NS { unNS :: Map NodePath NavXmlTree }
+			  deriving (Show)
 
--- | newtype for NavXmlTree to define document order for Ord
+-- | path represented as list of indices starting at root
 
-newtype NodeElem	= NE { unNE :: NavXmlTree }
-                          deriving (Show)
+type NodePath		= [Int]
 
 -- | A functions that takes a XPath result and returns a XPath result
 
@@ -283,25 +287,50 @@ withXPVNode s f	n	= case n of
 
 -- | node set functions
 
-instance Eq NodeElem where
-    (==)		= (==) `on` (pathNT . unNE)
+emptyNodeSet		:: NodeSet
+emptyNodeSet		= NS M.empty
 
-instance Ord NodeElem where
-    compare		= compare `on` (pathNT . unNE)
+singletonNodeSet	:: NavXmlTree -> NodeSet
+singletonNodeSet	= toNodeSet . (:[])
+
+nullNodeSet		:: NodeSet -> Bool
+nullNodeSet		= M.null . unNS
+
+cardNodeSet		:: NodeSet -> Int
+cardNodeSet		= M.size . unNS
+
+deleteNodeSet		:: NodePath -> NodeSet -> NodeSet
+deleteNodeSet p		= NS . M.delete p . unNS
+
+insertNodeSet		:: NavXmlTree -> NodeSet -> NodeSet
+insertNodeSet t		= NS . M.insert (pathNT t) t . unNS
+
+unionNodeSet		:: NodeSet -> NodeSet -> NodeSet
+unionNodeSet ns1	= NS . M.union (unNS ns1) . unNS
+
+unionsNodeSet		:: [NodeSet] -> NodeSet
+unionsNodeSet		= NS . foldl (\ res ns -> M.union res $ unNS ns) M.empty
+
+elemsNodeSet		:: NodeSet -> [(NodePath, NavXmlTree)]
+elemsNodeSet		= M.toList . unNS
 
 fromNodeSet		:: NodeSet -> NavXmlTrees
-fromNodeSet		= map unNE
+fromNodeSet		= M.elems . unNS
 
 toNodeSet		:: NavXmlTrees -> NodeSet
-toNodeSet		= map NE
+toNodeSet		= NS . foldl (\ m t -> M.insert (pathNT t) t m) M.empty
 
-withNodeElem		:: (NavXmlTree -> NavXmlTree) -> NodeElem -> NodeElem
-withNodeElem f		= NE . f . unNE
+headNodeSet		:: NodeSet -> NavXmlTree
+headNodeSet		= head . fromNodeSet
 
 withNodeSet		:: (NavXmlTrees -> NavXmlTrees) -> NodeSet -> NodeSet
 withNodeSet f		= toNodeSet . f . fromNodeSet
 
+instance Eq NodeSet where
+    (==)		= (==) `on` (M.keys . unNS)
 
+instance Ord NodeSet where
+    compare		= compare `on` (M.keys . unNS)
 
 -- -----------------------------------------------------------------------------
 --
@@ -312,14 +341,14 @@ withNodeSet f		= toNodeSet . f . fromNodeSet
 -- All variables are stored in the environment,
 -- each variable name is bound to a value.
 
-type VarTab       = [(VarName, XPathValue)]
-type KeyTab       = [(QName, String, NavXmlTree)]
+type VarTab       	= [(VarName, XPathValue)]
+type KeyTab       	= [(QName, String, NavXmlTree)]
 
-type Env          = (VarTab, KeyTab)
+type Env          	= (VarTab, KeyTab)
 
-varEnv :: Env
-varEnv = ( [ (("", "name"), XPVNumber NaN) ]
-	 , []
-         )
+varEnv 			:: Env
+varEnv 			= ( [ (("", "name"), XPVNumber NaN) ]
+			  , []
+			  )
 
 -- -----------------------------------------------------------------------------
