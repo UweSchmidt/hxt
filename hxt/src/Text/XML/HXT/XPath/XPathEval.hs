@@ -30,22 +30,23 @@ where
 
 import Text.XML.HXT.XPath.XPathFct
 import Text.XML.HXT.XPath.XPathDataTypes
-import Text.XML.HXT.XPath.XPathArithmetic	( xPathAdd
-						, xPathDiv
-						, xPathMod
-						, xPathMulti
-						, xPathUnary
-						)
-import Text.XML.HXT.XPath.XPathParser		( parseXPath )
-import Text.XML.HXT.XPath.XPathToString		( xPValue2XmlTrees )
-import Text.XML.HXT.XPath.XPathToNodeSet	( xPValue2XmlNodeSet
+import Text.XML.HXT.XPath.XPathArithmetic
+					( xPathAdd
+					, xPathDiv
+					, xPathMod
+					, xPathMulti
+					, xPathUnary
+					)
+import Text.XML.HXT.XPath.XPathParser	( parseXPath )
+import Text.XML.HXT.XPath.XPathToString	( xPValue2XmlTrees )
+import Text.XML.HXT.XPath.XPathToNodeSet( xPValue2XmlNodeSet
 						, emptyXmlNodeSet
 						)
 
-import Text.ParserCombinators.Parsec		( runParser )
+import Text.ParserCombinators.Parsec	( runParser )
 
-import Data.List				( partition )
-import Data.Maybe				( fromJust, fromMaybe )
+import Data.List			( partition )
+import Data.Maybe			( fromJust, fromMaybe )
 
 -- ----------------------------------------
 
@@ -83,6 +84,7 @@ import Text.XML.HXT.Arrow.Edit		( canonicalizeForXPath )
 getXPath		:: String -> XmlTree -> XmlTrees
 getXPath		= getXPathWithNsEnv []
 
+-- -----------------------------------------------------------------------------
 -- |
 -- Select parts of a document by a namespace aware XPath expression.
 --
@@ -95,6 +97,7 @@ getXPathWithNsEnv env s	= runLA ( canonicalizeForXPath
 				  arrL (getXPathValues xPValue2XmlTrees xPathErr (toNsEnv env) s)
 				)
 
+-- -----------------------------------------------------------------------------
 -- |
 -- Select parts of an XML tree by a XPath expression.
 --
@@ -111,22 +114,27 @@ getXPathWithNsEnv env s	= runLA ( canonicalizeForXPath
 getXPathSubTrees	:: String -> XmlTree -> XmlTrees
 getXPathSubTrees	= getXPathSubTreesWithNsEnv []
 
+-- -----------------------------------------------------------------------------
 -- | Same as 'getXPathSubTrees' but with namespace aware XPath expression
 
 getXPathSubTreesWithNsEnv	:: Attributes -> String -> XmlTree -> XmlTrees
 getXPathSubTreesWithNsEnv nsEnv xpStr
     = getXPathValues xPValue2XmlTrees xPathErr (toNsEnv nsEnv) xpStr
 
+-- -----------------------------------------------------------------------------
 -- | compute the node set of an XPath query
 
 getXPathNodeSet		:: String -> XmlTree -> XmlNodeSet
 getXPathNodeSet		= getXPathNodeSetWithNsEnv []
 
+-- -----------------------------------------------------------------------------
 -- | compute the node set of a namespace aware XPath query
 
 getXPathNodeSetWithNsEnv	:: Attributes -> String -> XmlTree -> XmlNodeSet
 getXPathNodeSetWithNsEnv nsEnv xpStr
     = getXPathValues xPValue2XmlNodeSet (const (const emptyXmlNodeSet)) (toNsEnv nsEnv) xpStr
+
+-- -----------------------------------------------------------------------------
 
 -- | parse xpath, evaluate xpath expr and prepare results
 
@@ -157,6 +165,9 @@ xPathErr xpStr parseError		= [ XN.mkError c_err $
 					      show parseError
 					    )
 					  ]
+
+-- -----------------------------------------------------------------------------
+
 -- |
 -- The main evaluation entry point. 
 -- Each XPath-'Expr' is mapped to an evaluation function. The 'Env'-parameter contains the set of global variables
@@ -190,10 +201,12 @@ evalExpr env cont (PathExpr (Just fe) (Just lp))
 evalExpr env cont (FilterExpr ex)	= filterEval env cont ex
 evalExpr env _    ex			= evalSpezExpr env ex
 
-
+-- -----------------------------------------------------------------------------
 
 evalExprL 				:: Env -> Context -> [Expr] -> XPathValue -> [XPathValue]
 evalExprL env cont ex ns		= map (\e -> evalExpr env cont e ns) ex
+
+-- -----------------------------------------------------------------------------
 
 evalSpezExpr 				:: Env -> Expr -> XPathFilter
 evalSpezExpr _ (NumberExpr (Float 0)) _ = XPVNumber Pos0
@@ -201,7 +214,6 @@ evalSpezExpr _ (NumberExpr (Float f)) _ = XPVNumber (Float f)
 evalSpezExpr _ (LiteralExpr s) _	= XPVString s
 evalSpezExpr env (VarExpr name) v	= getVariable env name v
 evalSpezExpr _ _ _			= XPVError "Call to evalExpr with a wrong argument"
-
 
 -- -----------------------------------------------------------------------------
 
@@ -216,7 +228,7 @@ filterEval env cont (prim:predicates) ns
 filterEval _ _ _ _			= XPVError "Call to filterEval without an expression"
 
 
-
+-- -----------------------------------------------------------------------------
 -- |
 -- returns the union of its arguments, the arguments have to be node-sets.
 
@@ -235,6 +247,7 @@ unionEval vs
     theNode (XPVNode ns)		= ns
     theNode _				= error "illegal argument in unionEval"
 
+-- -----------------------------------------------------------------------------
 -- |
 -- Equality or relational test for node-sets, numbers, boolean values or strings,
 -- each computation of two operands is done by relEqEv'
@@ -268,7 +281,7 @@ relEqEv' env cont op a b		= XPVBool ((fromJust $ getOpFct op) (toXNumber a) (toX
     where
     toXNumber x 			= xnumber cont env [x]
 
-
+-- -----------------------------------------------------------------------------
 
 -- |
 -- Equality or relational test for two node-sets.
@@ -286,6 +299,7 @@ relEqTwoNodes _ _ op (XPVNode ns)
       					  getStrValues = map stringValue . fromNodeSet
 relEqTwoNodes _ _ _ _ _			= XPVError "Call to relEqTwoNodes without a nodeset"
 
+-- -----------------------------------------------------------------------------
 -- |
 -- Comparison between a node-set and different type.
 -- The node-set is converted in a boolean value if the second argument is of type boolean.
@@ -294,14 +308,7 @@ relEqTwoNodes _ _ _ _ _			= XPVError "Call to relEqTwoNodes without a nodeset"
 
 relEqOneNode 				:: Env -> Context ->
 					   (XPathValue -> XPathValue -> Bool) -> XPathValue -> XPathFilter
-{- TODO
-relEqOneNode env cont fct arg (XPVNode ns)	= XPVBool (any  (fct arg) (getStrValues arg ns))
-                                                  where
-						  getStrValues arg' = map ((fromJust $ getConvFct arg') cont env . (:[])) .
-								      map stringValue .
-								      fromNodeSet
-relEqOneNode _ _ _ _ _				= XPVError "Call to relEqOneNode without a nodeset"
--}
+
 relEqOneNode env cont fct arg		= withXPVNode "Call to relEqOneNode without a nodeset" $
 					  \ ns -> XPVBool (any  (fct arg) (getStrValues arg ns))
     where
@@ -309,6 +316,7 @@ relEqOneNode env cont fct arg		= withXPVNode "Call to relEqOneNode without a nod
 					  map stringValue .
 					  fromNodeSet
 
+-- -----------------------------------------------------------------------------
 
 -- |
 -- No node-set is involved and the operator is equality or not-equality.
@@ -323,6 +331,7 @@ eqEv env cont fct f@(XPVNumber _) g	= XPVBool (f `fct` xnumber cont env [g])
 eqEv env cont fct f g@(XPVNumber _)	= XPVBool (xnumber cont env [f] `fct` g)
 eqEv env cont fct f g			= XPVBool (xstring cont env [f] `fct` xstring cont env [g])
 
+-- -----------------------------------------------------------------------------
 
 getOpFct 				:: Op -> Maybe (XPathValue -> XPathValue -> Bool)
 getOpFct Eq        			= Just (==)
@@ -333,20 +342,12 @@ getOpFct Greater   			= Just (>)
 getOpFct GreaterEq 			= Just (>=)
 getOpFct _         			= Nothing
 
+-- -----------------------------------------------------------------------------
+
 -- |
 -- Filter for accessing the root element of a document tree
 
 getRoot 				:: XPathFilter
-{- TODO
-getRoot (XPVNode (n:_))			= XPVNode [withNodeElem getRoot' $ n]
-      where
-      getRoot' tree			= case upNT tree of
-					  Nothing -> tree
-					  Just t -> getRoot' t
-
-getRoot _				= XPVError "Call to getRoot without a nodeset"
--}
-
 getRoot					= withXPVNode "Call to getRoot without a nodeset" $ getRoot'
     where
     getRoot' ns
@@ -356,6 +357,8 @@ getRoot					= withXPVNode "Call to getRoot without a nodeset" $ getRoot'
     getRoot'' tree			= case upNT tree of
 					  Nothing 	-> tree
 					  Just t 	-> getRoot'' t
+
+-- -----------------------------------------------------------------------------
 
 -- |
 -- Filter for accessing all nodes of a XPath-axis
@@ -387,6 +390,7 @@ axisFctL 				= [ (Ancestor		, ancestorAxis)
 					  , (Self		, selfAxis)
 					  ]
 
+-- -----------------------------------------------------------------------------
 -- |
 -- evaluates a location path,
 -- evaluation of an absolute path starts at the document root, 
@@ -397,9 +401,10 @@ locPathEval env (LocPath Rel steps)	= evalSteps env steps
 locPathEval env (LocPath Abs steps)	= evalSteps env steps . getRoot
 
 
+-- -----------------------------------------------------------------------------
+
 evalSteps 				:: Env -> [XStep] -> XPathFilter
 evalSteps env steps ns			= foldl (evalStep env) ns steps
-
 
 -- |
 -- evaluate a single XPath step
@@ -411,14 +416,11 @@ evalStep _   _  (Step Namespace _ _)  	= XPVError "namespace-axis not supported"
 evalStep _   ns (Step Attribute nt _) 	= evalAttr nt (getAxisNodes Attribute ns)
 evalStep env ns (Step axisSpec nt pr) 	= evalStep' env pr nt (getAxisNodes axisSpec ns)
 
+-- -----------------------------------------------------------------------------
+
 evalAttr 				:: NodeTest -> XPathFilter
-{- TODO
-evalAttr nt (XPVNode ns)		= XPVNode $ 			-- (foldr (\n -> (evalAttrNodeTest nt n ++)) [] ns)
-					  withNodeSet (concatMap (evalAttrNodeTest nt)) $
-					  ns
-evalAttr _ _				= XPVError "Call to evalAttr without a nodeset"
--}
-evalAttr nt				= withXPVNode "Call to evalAttr without a nodeset" evalTest
+evalAttr nt				= withXPVNode "Call to evalAttr without a nodeset" $
+                                          evalTest
     where
     evalTest				= XPVNode .
 					  withNodeSet (concatMap . evalAttrNodeTest $ nt)
@@ -446,13 +448,9 @@ evalAttrNodeTest _ _			= []
 evalStep' 				:: Env -> [Expr] -> NodeTest -> XPathFilter
 evalStep' env pr nt			= evalPredL env pr . nodeTest nt
 
+-- -----------------------------------------------------------------------------
 
 evalPredL 				:: Env -> [Expr] -> XPathFilter
-
-{- TODO
-evalPredL env pr n@(XPVNode ns)		= {- remDups TODO $ -} foldl (evalPred env 1 (length ns)) n pr
-evalPredL _ _ _				= XPVError "Call to evalPredL without a nodeset"
--}
 evalPredL env pr n			= withXPVNode "Call to evalPredL without a nodeset" evalPl n
     where
     evalPl ns				= foldl (evalPred env 1 (cardNodeSet ns)) n pr
@@ -478,6 +476,7 @@ testPredicate env context@(pos, _, _) ex ns	= case evalExpr env context ex ns of
 						  XPVNumber _         -> XPVBool False
 						  _                   -> xboolean context env [evalExpr env context ex ns]
 
+-- -----------------------------------------------------------------------------
 -- |
 -- filter for selecting a special type of nodes from the current fragment tree
 --
@@ -504,6 +503,8 @@ nodeTest (PI n)                         = filterNodes isPiNode
 
 nodeTest (TypeTest t)                   = typeTest t
 
+-- -----------------------------------------------------------------------------
+
 nameTest				:: QName -> XNode -> Bool
 nameTest xpName (XTag elemName _)
     | namespaceAware			= localPart xpName == localPart elemName
@@ -514,6 +515,8 @@ nameTest xpName (XTag elemName _)
     namespaceAware 			= not . null . namespaceUri $ xpName
 
 nameTest _ _ 				= False
+
+-- -----------------------------------------------------------------------------
 
 wildcardTest				:: QName -> XNode -> Bool
 wildcardTest xpName (XTag elemName _)
@@ -526,6 +529,7 @@ wildcardTest xpName (XTag elemName _)
 
 wildcardTest _ _ 			= False
 
+-- -----------------------------------------------------------------------------
 -- |
 -- tests whether a node is of a special type
 --
@@ -535,6 +539,7 @@ typeTest XPCommentNode  		= filterNodes XN.isCmt
 typeTest XPPINode       		= filterNodes XN.isPi
 typeTest XPTextNode     		= filterNodes XN.isText
 
+-- -----------------------------------------------------------------------------
 -- |
 -- the filter selects the NTree part of a navigable tree and
 -- tests whether the node is of the necessary type
@@ -542,15 +547,10 @@ typeTest XPTextNode     		= filterNodes XN.isText
 --    * 1.parameter fct :  filter function from the XmlTreeFilter module which tests the type of a node
 
 filterNodes 				:: (XNode -> Bool) -> XPathFilter
-{- TODO
-filterNodes fct (XPVNode ns)		= XPVNode $		-- ([n | n@(NT (NTree node _) _ _ _) <- ns , fct node])
-					  withNodeSet (filter (fct . dataNT)) $
-					  ns
-filterNodes _ _				= XPVError "Call to filterNodes without a nodeset"
--}
 filterNodes fct				= withXPVNode "Call to filterNodes without a nodeset" $
 					  (XPVNode . withNodeSet (filter (fct . dataNT)))
 
+-- -----------------------------------------------------------------------------
 -- |
 -- evaluates a boolean expression, the evaluation is non-strict
 
@@ -568,18 +568,15 @@ boolEval env cont And (x:xs) ns		= case xboolean cont env [evalExpr env cont x n
 boolEval _ _ _ _ _			= XPVError "Call to boolEval with a wrong argument"
 
 
+-- -----------------------------------------------------------------------------
 -- |
 -- returns the value of a variable
 getVariable 				:: Env -> VarName -> XPathFilter
-{-
-getVariable env name _			= case lookup name (getVarTab env) of
-					  Nothing -> XPVError ("Variable: " ++ show name ++ " not found")
-					  Just v  -> v
--}
 getVariable env name _			= fromMaybe (XPVError ("Variable: " ++ show name ++ " not found")) $
 					  lookup name (getVarTab env)
 
 
+-- -----------------------------------------------------------------------------
 -- |
 -- evaluates a function, 
 -- computation is done by 'XPathFct.evalFct' which is defined in "XPathFct".
@@ -587,6 +584,7 @@ getVariable env name _			= fromMaybe (XPVError ("Variable: " ++ show name ++ " n
 fctEval 				:: Env -> Context -> FctName -> [Expr] -> XPathFilter
 fctEval env cont name args		= evalFct name env cont . evalExprL env cont args
 
+-- -----------------------------------------------------------------------------
 -- |
 -- evaluates an arithmetic operation.
 --
@@ -596,6 +594,7 @@ numEval 				:: (Op -> XPathValue -> XPathValue -> XPathValue) ->
 					   Op -> [XPathValue] -> XPathValue
 numEval f op 				= foldl1 (f op)
 
+-- -----------------------------------------------------------------------------
 -- |
 -- Convert list of ID attributes from DTD into a space separated 'XPVString'
 --
@@ -603,6 +602,7 @@ numEval f op 				= foldl1 (f op)
 idAttributesToXPathValue		:: XmlTrees -> XPathValue
 idAttributesToXPathValue ts		= XPVString (foldr (\ n -> ( (valueOfDTD a_value n ++ " ") ++)) [] ts)
 
+-- -----------------------------------------------------------------------------
 -- |
 -- Extracts all ID-attributes from the document type definition (DTD).
 --

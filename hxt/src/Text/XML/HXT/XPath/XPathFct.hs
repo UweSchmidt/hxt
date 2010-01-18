@@ -98,7 +98,16 @@ type FctTableElem = (XFct, CheckArgCount)
 
 type CheckArgCount = ([XPathValue] -> Bool)
 
-zero, zeroOrOne, one, two, twoOrM, twoOrThree, three :: CheckArgCount
+-- -----------------------------------------------------------------------------
+
+zero
+ , zeroOrOne
+ , one
+ , two
+ , twoOrM
+ , twoOrThree
+ , three :: CheckArgCount
+
 zero ex       = length ex == 0
 zeroOrOne ex  = length ex == 0 || length ex == 1
 one ex        = length ex == 1
@@ -108,6 +117,7 @@ twoOrThree ex = length ex == 2 || length ex == 3
 three ex      = length ex == 3
 
 
+-- -----------------------------------------------------------------------------
 -- |
 -- The core-functions library
 
@@ -162,6 +172,7 @@ getKeyTab :: Env -> KeyTab
 getKeyTab (_, keyTab) = keyTab
 
 
+-- -----------------------------------------------------------------------------
 -- |
 -- Returns the table of variables from the environment
 
@@ -169,6 +180,7 @@ getVarTab :: Env -> VarTab
 getVarTab (varTab, _) = varTab
 
 
+-- -----------------------------------------------------------------------------
 -- |
 -- Returns the conversion function for the XPath results: string, boolean and number
 -- A nodeset can not be converted.
@@ -179,53 +191,14 @@ getConvFct (XPVString _) = Just xstring
 getConvFct (XPVBool _)   = Just xboolean
 getConvFct _             = Nothing
 
-{- TODO
--- |
--- Filter for ordering a list of Nodes in document order
-
-createDocumentOrder :: XPathFilter
-createDocumentOrder (XPVNode n) = XPVNode (sortBy documentOrder n)
-      where
-      documentOrder :: NavXmlTree -> NavXmlTree -> Ordering
-      documentOrder a b = compare (documentPos a) (documentPos b)
-
-createDocumentOrder e@(XPVError _) = e
-createDocumentOrder _ = XPVError "Call to createDocumentOrder without a nodeset"
-
-
--- |
--- Filter for ordering a list of Nodes in reverse document order
-
-createDocumentOrderReverse :: XPathFilter
-createDocumentOrderReverse (XPVNode n) = XPVNode (sortBy documentOrderReverse n)
-      where
-      documentOrderReverse :: NavXmlTree -> NavXmlTree -> Ordering
-      documentOrderReverse a b = compare (documentPos b) (documentPos a)
-
-createDocumentOrderReverse e@(XPVError _) = e
-createDocumentOrderReverse _              = XPVError "Call to createDocumentOrderReverse without a nodeset"
-
--- |
--- Filter for removing identical fragment trees in a nodeset
-
-remDups :: XPathFilter
-remDups e@(XPVError _) = e
-remDups (XPVNode []) = XPVNode []
-remDups (XPVNode (x:xs))
-    | isNotInNodeList x xs = XPVNode (x : y)
-    | otherwise            = remDups (XPVNode xs)
-      where
-      (XPVNode y) = remDups (XPVNode xs)
-remDups _ = XPVError "Call to remDups without a nodeset"
--}
-
+-- -----------------------------------------------------------------------------
 -- |
 -- Check whether a node is not a part of a node list. Needed to implement matching & testing in xslt.
 
 isNotInNodeList :: NavXmlTree -> [NavXmlTree] -> Bool
 isNotInNodeList n xs' = nodeID (Just n) `notElem` map (nodeID . Just) xs'
 
-
+-- -----------------------------------------------------------------------------
 -- |
 -- calculate an ID for a NODE
 --
@@ -253,14 +226,7 @@ nodeID' t@(NT node ix _ _ _)
    where
    getRootId		= concat . runLA (getAttrValue "rootId")
 
-{- TODO
--- |
--- Calculates the position of a node in a tree (in document order)
-
-documentPos :: NavXmlTree -> [IdPathStep]
-documentPos tree = reverse $ nodeID (Just tree)
--}
-
+-- -----------------------------------------------------------------------------
 -- |
 -- Evaluates a function.
 -- Calculation of the function value is done by looking up the function name in the function table,
@@ -306,6 +272,7 @@ xlast 				:: XFct
 xlast (_, len , _) _ _ 		= XPVNumber $ int2XPNumber len
 
 
+-- -----------------------------------------------------------------------------
 -- |
 -- number position(): returns a number equal to the context position from the expression evaluation context
 
@@ -313,6 +280,7 @@ xposition 			:: XFct
 xposition (pos, _ , _) _ _ 	= XPVNumber $ int2XPNumber pos
 
 
+-- -----------------------------------------------------------------------------
 -- |
 -- number count(node-set): returns the number of nodes in the argument node-set
 
@@ -321,6 +289,7 @@ xcount _ _ [XPVNode ns]		= XPVNumber . int2XPNumber . cardNodeSet $ ns
 xcount _ _ _			= XPVError "Call to function count with wrong arguments"
 
 
+-- -----------------------------------------------------------------------------
 -- |
 -- node-set id(object): selects elements by their unique ID
 
@@ -333,6 +302,7 @@ xid c@(_, _, cn) env arg	= isInId (getIds env) ( (\(XPVString s) -> words s) (xs
 
 
 
+-- -----------------------------------------------------------------------------
 -- |
 -- returns all IDs from the variable environment as a list of strings.
 -- the IDs are stored in the variable: idAttr
@@ -342,9 +312,13 @@ getIds env			= words $			-- hier muss noch auf prefix getestet werden
 				  (\ (XPVString str) -> str) . fromJust $ lookup ("", "idAttr") $
 				  getVarTab env 
 
+-- -----------------------------------------------------------------------------
+
 isInId 				:: [String] -> [String] -> NavXmlTrees -> XPathValue
 isInId ids str			= XPVNode . toNodeSet . concatMap (filterNS ids str . descendantOrSelfAxis)
 
+
+-- -----------------------------------------------------------------------------
 
 filterNS 			:: [String] -> [String] -> NavXmlTrees -> NavXmlTrees
 filterNS ids str ns		= [ n | n@(NT a _ _ _ _) <- ns
@@ -355,6 +329,7 @@ filterNS ids str ns		= [ n | n@(NT a _ _ _ _) <- ns
       idInIdList al str' b 	= (getValue b al) `elem` str'
 
 
+-- -----------------------------------------------------------------------------
 -- |
 -- string local-name(node-set?):
 -- returns the local part of the expanded-name of the node in the argument node-set
@@ -371,6 +346,7 @@ xlocalName _ _ [XPVNode ns]
     | otherwise			= XPVString (xpLocalPartOf . subtreeNT . headNodeSet $ ns)
 xlocalName _ _ _            	= XPVError "Call to function local-name with wrong arguments"
 
+-- -----------------------------------------------------------------------------
 -- |
 -- string namespace-uri(node-set?):
 -- returns the namespace URI of the expanded-name of the node in the argument node-set
@@ -388,6 +364,7 @@ xnamespaceUri _ _ [XPVNode ns]
 xnamespaceUri _ _ _            	= XPVError "Call to function namespace-uri with wrong arguments"
 
 
+-- -----------------------------------------------------------------------------
 -- |
 -- string name(node-set?): 
 -- returns a string containing a QName representing the expanded-name of the node
@@ -417,17 +394,20 @@ getFirstPos s sub		= if (getFirstPos' s sub) > length s
 				  then -1
 				  else getFirstPos' s sub
 
+-- -----------------------------------------------------------------------------
+
 getFirstPos' 			:: String -> String -> Int
 getFirstPos' [] _ 		= 2
 getFirstPos' (x:xs) sub		= if strStartsWith (x:xs) sub
 				  then 0
 				  else 1 + getFirstPos' xs sub
 
+-- -----------------------------------------------------------------------------
+
 strStartsWith 			:: String -> String -> Bool
 strStartsWith a b		= take (length b) a == b
 
-
-
+-- -----------------------------------------------------------------------------
 -- |
 -- Returns the string-value of a node,
 -- the value of a namespace node is not supported
@@ -449,6 +429,7 @@ stringValue			= XPVString . xpTextOf . self
 -}
 
 
+-- -----------------------------------------------------------------------------
 -- |
 -- string string(object?): converts an object to a string
 
@@ -470,15 +451,14 @@ xstring _ _ [XPVString s]          	= XPVString s
 xstring _ _ [XPVError e]           	= XPVError e
 xstring _ _ _                      	= XPVError "Call to xstring with a wrong argument"
 
-
-
+-- -----------------------------------------------------------------------------
 -- |
 -- string concat(string, string, string*): returns the concatenation of its arguments
 
 xconcat 				:: XFct
 xconcat c env args 			= XPVString (foldr (\ (XPVString s) -> (s ++)) "" (toXValue xstring c env args))
 
-
+-- -----------------------------------------------------------------------------
 -- |
 -- boolean starts-with(string, string): 
 -- returns true if the first argument string starts 
@@ -489,7 +469,7 @@ xstartsWith c env args			= XPVBool $
 					  (\ ((XPVString a):[XPVString b]) -> strStartsWith a b) $
 					  toXValue xstring c env args
 
-
+-- -----------------------------------------------------------------------------
 -- |
 -- boolean contains(string, string):
 -- returns true if the first argument string contains the second argument string,
@@ -501,6 +481,7 @@ xcontains c env args			= XPVBool $
 					  toXValue xstring c env args
 
 
+-- -----------------------------------------------------------------------------
 -- |
 -- string substring-before(string, string):
 -- returns the substring of the first argument string that precedes the first occurrence of
@@ -516,8 +497,7 @@ xsubstringBefore' _ _ ((XPVString _):[XPVString []]) 	= XPVString ""
 xsubstringBefore' _ _ ((XPVString s):[XPVString sub]) 	= XPVString (take (getFirstPos s sub) s)
 xsubstringBefore' _ _ _ 				= XPVError  "Call to xsubstringBefore' with a wrong argument"
 
-
-
+-- -----------------------------------------------------------------------------
 -- |
 -- string substring-after(string, string):
 -- returns the substring of the first argument string that follows the first occurrence of
@@ -536,6 +516,7 @@ xsubstringAfter' _ _ ((XPVString s):[XPVString sub])	= if getFirstPos s sub == -
 xsubstringAfter' _ _ _ 					= XPVError "Call to xsubstringAfter' with a wrong argument"
 
 
+-- -----------------------------------------------------------------------------
 -- |
 -- string substring(string, number, number?):
 -- returns the substring of the first argument starting at the position specified
@@ -566,6 +547,7 @@ xsubstring' c env ((XPVString s):start:[end])
 xsubstring' _ _ _			= XPVError "Call to xsubstring' with a wrong argument"
 
 
+-- -----------------------------------------------------------------------------
 -- |
 -- number string-length(string?):
 -- returns the number of characters in the string. If the argument is omitted,
@@ -582,6 +564,7 @@ xstringLength c env args		= XPVNumber $
 					  toXValue xstring c env args
 
 
+-- -----------------------------------------------------------------------------
 -- |
 -- string normalize-space(string?):
 -- returns the argument string with whitespace normalized by stripping leading
@@ -601,6 +584,7 @@ xnormalizeSpace c env args		= (\ [XPVString s] -> XPVString $ normStr s) $
 normStr 				:: String -> String
 normStr 				= unwords . words
 
+-- -----------------------------------------------------------------------------
 -- |
 -- string translate(string, string, string):
 -- returns the first argument string with occurrences of characters in the second argument string replaced by the character at 
@@ -625,7 +609,6 @@ replace str (x:xs) (y:ys)		= replace (rep x y str) xs ys
 					  rep :: Char -> Char -> String -> String
 					  rep a b = foldr (\c -> if c == a then (b:) else (c:)) ""
 
-
 -- ------------------------------------------------------------
 -- boolean functions
 
@@ -641,37 +624,39 @@ xboolean _ _ [XPVError e]  		= XPVError e
 xboolean _ _ _             		= XPVError "Call to xboolean with a wrong argument"
 
 
+-- -----------------------------------------------------------------------------
 -- |
 -- boolean not(boolean): returns true if its argument is false, and false otherwise
 xnot 					:: XFct
 xnot c env args				= XPVBool ( (\ (XPVBool b) -> not b) (xboolean c env args) )
 
-
+-- -----------------------------------------------------------------------------
 -- |
 -- boolean true(): returns true
 xtrue 					:: XFct
 xtrue _ _ _ 				= XPVBool True
 
-
+-- -----------------------------------------------------------------------------
 -- |
 -- boolean false(): returns false
 xfalse 					:: XFct
 xfalse _ _ _ 				= XPVBool False
 
-
+-- -----------------------------------------------------------------------------
 -- |
 -- boolean lang(string):
 -- returns true or false depending on whether the language of the context node as specified by xml:lang attributes 
 -- is the same as or is a sublanguage of the language specified by the argument string
 
--- function needs namespaces which are not supported by the toolbox
+-- -----------------------------------------------------------------------------
+--
+-- function needs namespaces which are not supported by the toolbox (???)
+
 xlang 					:: XFct
 xlang _ _ _				= XPVError "namespaces are not supported"
 
 -- xlang c env args
 --    = (\ (_, _, cn) [XPVString s] -> ...) c (toXValue xstring c env args)
-
-
 
 -- ------------------------------------------------------------
 -- number functions
@@ -691,7 +676,7 @@ xnumber _ _ [XPVNumber a] 		= XPVNumber a
 xnumber _ _ [XPVError e]  		= XPVError e
 xnumber _ _ _             		= XPVError "Call to xnumber with a wrong argument"
 
-
+-- -----------------------------------------------------------------------------
 -- |
 -- number sum(node-set): 
 -- returns the sum, for each node in the argument node-set, of the result of 
@@ -707,6 +692,7 @@ xsum c env [XPVNode ns]
 
 xsum _ _ _				= XPVError "The value of the function sum is not a nodeset"
 
+-- -----------------------------------------------------------------------------
 -- |
 -- number floor(number): returns the largest (closest to positive infinity) number that is not greater 
 -- than the argument and that is an integer
@@ -720,6 +706,7 @@ xfloor c env args			= xfloor' (toXValue xnumber c env args)
     xfloor' [XPVNumber a] 		= XPVNumber a
     xfloor' _             		= XPVError "Call to xfloor' without a number"
 
+-- -----------------------------------------------------------------------------
 -- |
 -- number ceiling(number): returns the smallest (closest to negative infinity) number that is not less 
 -- than the argument and that is an integer
@@ -733,6 +720,7 @@ xceiling c env args			= xceiling' (toXValue xnumber c env args)
     xceiling' [XPVNumber a] 		= XPVNumber a
     xceiling' _             		= XPVError "Call to xceiling' without a number"
 
+-- -----------------------------------------------------------------------------
 -- |
 -- number round(number):
 -- returns the number that is closest to the argument and that is an integer. 
@@ -754,6 +742,7 @@ xround' _ _ [XPVNumber (Float f)]
 xround' _ _ [XPVNumber a] 		= XPVNumber a
 xround' _ _ _             		= XPVError "Call to xround' without a number"
 
+-- -----------------------------------------------------------------------------
 -- |
 -- node-set key(string, object):
 -- does for keys what the id function does for IDs
@@ -796,6 +785,7 @@ isOfKeyValue 				:: String -> (QName, String, NavXmlTree) -> Bool
 isOfKeyValue kv (_, v, _)   		= v == kv
 
 
+-- -----------------------------------------------------------------------------
 -- |
 -- string format-number(number, string, string?):
 -- converts its first argument to a string using the format pattern string
@@ -806,6 +796,8 @@ xformatNumber 				:: XFct
 xformatNumber c env (x:xs)		= xsubstring' c env (toXValue xstring c env [x] ++ toXValue xnumber c env xs)
 xformatNumber _ _ _			= XPVError "Call to xformatNumber with a wrong argument"
 
+
+-- -----------------------------------------------------------------------------
 
 -- Poor man's document(...) function. Opens exactly one document. 
 -- Does not support "fragment identifiers". "Base-URI" is always current directory.
@@ -821,6 +813,8 @@ xdocument' uri 				= map ntree $
 						 >>>
 						 addAttr "rootId" ("doc " ++ uri)
 					       )
+
+-- -----------------------------------------------------------------------------
 
 -- generate-id, should be fully compliant with XSLT specification.
 

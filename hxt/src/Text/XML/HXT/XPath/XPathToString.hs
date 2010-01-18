@@ -2,7 +2,7 @@
 
 {- |
    Module     : Text.XML.HXT.XPath.XPathToString
-   Copyright  : Copyright (C) 2008 Uwe Schmidt
+   Copyright  : Copyright (C) 2008 - infinity: Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
@@ -22,6 +22,7 @@ module Text.XML.HXT.XPath.XPathToString
     , nt2XPathTree
     , pred2XPathTree
     , toXPathTree
+    , formatXPathTree
     )
 where
 
@@ -38,8 +39,7 @@ import Data.Char			( toLower )
 
 -- ------------------------------------------------------------
 
-type XPathTree = NTree String
-
+type XPathTree 				= NTree String
 
 -- -----------------------------------------------------------------------------
 -- |
@@ -47,6 +47,11 @@ type XPathTree = NTree String
 --
 toXPathTree				:: [NavTree a] -> [NTree a]
 toXPathTree				= map subtreeNT
+
+-- -----------------------------------------------------------------------------
+
+formatXPathTree				:: Expr -> String
+formatXPathTree				= formatTree id . expr2XPathTree
 
 -- -----------------------------------------------------------------------------
 -- |

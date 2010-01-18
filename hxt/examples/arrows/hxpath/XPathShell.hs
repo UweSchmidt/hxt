@@ -25,18 +25,13 @@ import qualified Control.Monad as M
 
 import Text.XML.HXT.Arrow
 
-import qualified
-       Text.XML.HXT.Arrow.XPathSimple as XPS
-
-import Text.XML.HXT.XPath.XPathParser
-    ( parseXPath
-    )
+import Text.XML.HXT.XPath.XPathToString	( formatXPathTree )
+import Text.XML.HXT.XPath.XPathParser	( parseXPath )
 
 import System.Console.Editline.Readline
 import System.Environment
 
-import Text.ParserCombinators.Parsec
-    ( runParser )
+import Text.ParserCombinators.Parsec	( runParser )
 
 type NsEnv'	= AssocList String String
 
@@ -100,29 +95,21 @@ showTree doc
 
 evalXPath	:: String -> NsEnv' -> XmlTree -> IO()
 evalXPath path env doc
-    | False	-- nr == xr
-	= putStrLn . unlines $ "ok: " : nr
-    | otherwise
-	= do
-          putStrLn . unlines $ ["start xpath evaluation: " ++ show path
-                               ,"          parsed xpath: " ++ xpt path
-                               ]
-          putStrLn . unlines $ ["xpath general result:"] ++ xr
-	  putStrLn . unlines $ ["xpath simple  result:"] ++ nr
-	  putStrLn $ "end   xpath evaluation: " ++ show path
-    | otherwise
-	= do
-	  putStrLn . unlines $
-		       [ "results differ"
-		       , "expected: "
-		       ] ++ xr ++
-		       [ "got:      "
-		       ] ++ nr
-	  putStrLn $ xpt path
+    = putStrLn . unlines $
+      [ "start xpath evaluation: " ++ pathS
+      , "          parsed xpath: " ++ pathString
+      , "  parsed xpath as tree:"
+      , pathTree
+      , "xpath result:"
+      ] ++ xr ++
+      [ "end   xpath evaluation: " ++ pathS
+      ]
     where
-    xpt = either show show . runParser parseXPath (toNsEnv env) ""
-    nr = runLA (XPS.getXPathTreesWithNsEnv env path >>> xshow this) doc
-    xr = runLA (    getXPathTreesWithNsEnv env path >>> xshow this) doc
+    pathS	= show					$ path
+    pathEx	= runParser parseXPath (toNsEnv env) "" $ path
+    pathString	= either show show 			$ pathEx
+    pathTree	= either show formatXPathTree 		$ pathEx
+    xr 		= runLA (    getXPathTreesWithNsEnv env path >>> xshow this) doc
 
 evalLoop	:: NsEnv' -> XmlTrees -> IO ()
 evalLoop env doc
