@@ -4,7 +4,7 @@
 #
 
 EXAMPLES	= \
-		HelloWorld hparser hunit hxpath dtd2hxt absurls \
+		HelloWorld hparser hunit dtd2hxt absurls \
 		pickle \
 		hrelaxng \
 		RelaxTestSuite \
@@ -21,11 +21,6 @@ all		:
 
 test		:
 		$(foreach i,$(EXAMPLES),$(MAKE) -C $i $@ ;)
-
-dist		:
-		[ -d $(DIST_DIR) ] || mkdir -p $(DIST_DIR)
-		$(foreach i,$(EXAMPLES),$(MAKE) -C $i dist DIST=../$(DIST_DIR) ;)
-		cp Makefile $(DIST_DIR)
 
 clean		:
 		$(foreach i,$(EXAMPLES),$(MAKE) -C $i $@ ;)

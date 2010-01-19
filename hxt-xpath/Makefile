@@ -36,7 +36,5 @@ clean		:
 		cabal clean
 		$(MAKE) -C examples clean
 
-.PHONY		: all doc test dist clean tag install
-
 # ------------------------------------------------------------
 # end Makefile

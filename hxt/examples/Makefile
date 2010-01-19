@@ -26,20 +26,8 @@ alldist		:
 test		:
 		$(foreach i,$(EXAMPLES),$(MAKE) -C $i $@ ;)
 
-dist		:
-		[ -d $(DIST_DIR) ] || mkdir -p $(DIST_DIR)
-		$(foreach i,$(EXAMPLES),$(MAKE) -C $i dist DIST=../$(DIST_DIR);)
-		[ -d $(DIST_DIR)/xhtml ] || mkdir -p $(DIST_DIR)/xhtml
-		cp xhtml/xhtml*.dtd xhtml/xhtml*.ent xhtml/xhtml*.xml $(DIST_DIR)/xhtml
-		cp Makefile $(DIST_DIR)
-
 clean		:
 		$(foreach i,$(EXAMPLES),$(MAKE) -C $i $@ ;)
-
-# under construction
-
-hxslt/runXslt	: hxslt/runXslt.hs
-		$(GHC) --make -o $@ $<
 
 .PHONY		: all alllocal alldist test dist clean
 

@@ -1,4 +1,4 @@
-HXTPACKAGES	= hxt hxt-xslt hxt-filter hxt-binary hxt-cache
+HXTPACKAGES	= hxt hxt-xpath hxt-xslt hxt-filter hxt-binary hxt-cache
 
 all	:
 	$(MAKE) untar

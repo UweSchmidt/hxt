@@ -24,9 +24,7 @@ where
 import qualified Control.Monad as M
 
 import Text.XML.HXT.Arrow
-
-import Text.XML.HXT.XPath.XPathToString	( formatXPathTree )
-import Text.XML.HXT.XPath.XPathParser	( parseXPath )
+import Text.XML.HXT.XPath
 
 import System.Console.Editline.Readline
 import System.Environment

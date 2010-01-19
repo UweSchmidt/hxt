@@ -26,7 +26,6 @@ module Text.XML.HXT.Arrow
 
     , module Text.XML.HXT.Arrow.XmlArrow
     , module Text.XML.HXT.Arrow.XmlIOStateArrow
-    , module Text.XML.HXT.Arrow.XPath
 
     , module Text.XML.HXT.Arrow.DocumentInput
     , module Text.XML.HXT.Arrow.DocumentOutput
@@ -59,9 +58,6 @@ import Text.XML.HXT.Arrow.WriteDocument
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlIOStateArrow
 import Text.XML.HXT.Arrow.XmlRegex ()		-- import this explicitly
-import Text.XML.HXT.Arrow.XPath
-
-import Text.XML.HXT.Arrow.XPathSimple ()	-- import this explicitly
 
 import Text.XML.HXT.Version
 

@@ -22,9 +22,10 @@ module Text.XML.HXT.XPath.XPathEval
     , getXPathWithNsEnv
     , getXPathSubTrees
     , getXPathSubTreesWithNsEnv
-    , getXPathNodeSet
-    , getXPathNodeSetWithNsEnv
+    , getXPathNodeSet'
+    , getXPathNodeSetWithNsEnv'
     , evalExpr
+    , addRoot'
     )
 where
 
@@ -111,27 +112,27 @@ getXPathWithNsEnv env s	= runLA ( canonicalizeForXPath
 -- XPath values other than XmlTrees (numbers, attributes, tagnames, ...)
 -- are convertet to text nodes.
 
-getXPathSubTrees	:: String -> XmlTree -> XmlTrees
-getXPathSubTrees	= getXPathSubTreesWithNsEnv []
+getXPathSubTrees			:: String -> XmlTree -> XmlTrees
+getXPathSubTrees			= getXPathSubTreesWithNsEnv []
 
 -- -----------------------------------------------------------------------------
 -- | Same as 'getXPathSubTrees' but with namespace aware XPath expression
 
-getXPathSubTreesWithNsEnv	:: Attributes -> String -> XmlTree -> XmlTrees
+getXPathSubTreesWithNsEnv		:: Attributes -> String -> XmlTree -> XmlTrees
 getXPathSubTreesWithNsEnv nsEnv xpStr
     = getXPathValues xPValue2XmlTrees xPathErr (toNsEnv nsEnv) xpStr
 
 -- -----------------------------------------------------------------------------
 -- | compute the node set of an XPath query
 
-getXPathNodeSet		:: String -> XmlTree -> XmlNodeSet
-getXPathNodeSet		= getXPathNodeSetWithNsEnv []
+getXPathNodeSet'			:: String -> XmlTree -> XmlNodeSet
+getXPathNodeSet'			= getXPathNodeSetWithNsEnv' []
 
 -- -----------------------------------------------------------------------------
 -- | compute the node set of a namespace aware XPath query
 
-getXPathNodeSetWithNsEnv	:: Attributes -> String -> XmlTree -> XmlNodeSet
-getXPathNodeSetWithNsEnv nsEnv xpStr
+getXPathNodeSetWithNsEnv'		:: Attributes -> String -> XmlTree -> XmlNodeSet
+getXPathNodeSetWithNsEnv' nsEnv xpStr
     = getXPathValues xPValue2XmlNodeSet (const (const emptyXmlNodeSet)) (toNsEnv nsEnv) xpStr
 
 -- -----------------------------------------------------------------------------
@@ -146,15 +147,15 @@ getXPathValues cvRes cvErr nsEnv xpStr t
     where
     evalXP xpe				= cvRes xpRes
 	where
-	t'      			= addRoot t				-- we need a root node for starting xpath eval
+	t'      			= addRoot' t				-- we need a root node for starting xpath eval
 	idAttr				= ( ("", "idAttr")			-- id attributes from DTD (if there)
 					  , idAttributesToXPathValue . getIdAttributes $ t'
 					  )
 	navTD				= ntree t'
 	xpRes				= evalExpr (idAttr:(getVarTab varEnv),[]) (1, 1, navTD) xpe (XPVNode . singletonNodeSet $ navTD)
 
-addRoot					:: XmlTree -> XmlTree
-addRoot t
+addRoot'				:: XmlTree -> XmlTree
+addRoot' t
     | XN.isRoot t			= t
     | otherwise				= XN.mkRoot [] [t]
 

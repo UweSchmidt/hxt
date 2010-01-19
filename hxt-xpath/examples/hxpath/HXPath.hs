@@ -21,6 +21,7 @@ module Main
 where
 
 import Text.XML.HXT.Arrow
+import Text.XML.HXT.XPath
 
 import System.IO			-- import the IO and commandline option stuff
 import System.Environment

@@ -22,7 +22,7 @@ $(prog)		: $(prog).hs
 $(prog2)	: $(prog2).hs
 		$(GHC) --make -o $@ $<
 
-EX		= ../../xhtml/xhtml.xml
+EX		= xhtml/xhtml.xml
 
 test		: $(prog)
 		@echo "===> XPath extraction examples" ; echo ; sleep 2

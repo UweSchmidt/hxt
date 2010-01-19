@@ -1,4 +1,4 @@
-HXTPACKAGES	= hxt hxt-xslt hxt-filter hxt-binary hxt-cache
+HXTPACKAGES	= hxt hxt-xpath hxt-xslt hxt-filter hxt-binary hxt-cache
 
 all	:
 	$(foreach i,$(HXTPACKAGES), ( cd $i && cabal configure && cabal build && cabal install && cabal sdist; ); )
@@ -18,5 +18,5 @@ test	:
 	$(foreach i, $(HXTPACKAGES), cp $(wildcard $i/dist/$i-*.tar.gz) ~/tmp; )
 	$(MAKE) -C ~/tmp all
 
-.PHONY	: all global clean tmp
+.PHONY	: all global clean test
 
