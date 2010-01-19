@@ -26,7 +26,6 @@ module Text.XML.HXT.XSLT.Common
     , module Text.XML.HXT.XPath.XPathEval
     , module Text.XML.HXT.XPath.XPathFct
     , module Text.XML.HXT.XPath.XPathToString
-    , module Data.NavTree
     , module Data.Tree.Class
 
     -- Tree Functions
@@ -110,7 +109,16 @@ import Text.XML.HXT.DOM.TypeDefs	( XmlTree
 import Text.XML.HXT.DOM.FormatXmlTree	( formatXmlTree
 					)
 
-import Text.XML.HXT.XPath.XPathDataTypes( Expr		( LiteralExpr
+import Text.XML.HXT.XPath.XPathDataTypes( NavTree
+					, ntree
+					, subtreeNT
+					, upNT
+					, downNT
+					, rightNT
+					, leftNT
+					, getChildrenNT
+
+                                        , Expr		( LiteralExpr
 							, FctExpr
 							, GenExpr
 							, PathExpr
@@ -123,12 +131,25 @@ import Text.XML.HXT.XPath.XPathDataTypes( Expr		( LiteralExpr
 							, PI
 							, TypeTest
 							)
+                                        , NodeSet	(..)
 					, NavXmlTree
 					, XPathValue	( XPVNode
 							, XPVBool
 							, XPVString
 							, XPVError
 							)
+                                        , emptyNodeSet
+                                        , singletonNodeSet
+                                        , nullNodeSet
+                                        , cardNodeSet
+                                        , deleteNodeSet
+                                        , insertNodeSet
+                                        , unionNodeSet
+                                        , elemsNodeSet
+                                        , fromNodeSet
+                                        , toNodeSet
+                                        , headNodeSet
+                                        , withNodeSet
 					)
 import Text.XML.HXT.XPath.XPathParser	( parseXPath
 					)
@@ -144,15 +165,6 @@ import qualified Data.Map as Map hiding (Map)
 
 import Data.Tree.Class 
 
-import Data.NavTree			( NavTree
-					, ntree
-					, subtreeNT
-					, upNT
-					, downNT
-					, rightNT
-					, leftNT
-					, getChildrenNT
-					)
 import Data.Maybe
 import Data.List
 import Data.Char

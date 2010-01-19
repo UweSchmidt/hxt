@@ -196,7 +196,7 @@ getConvFct _             = Nothing
 -- Check whether a node is not a part of a node list. Needed to implement matching & testing in xslt.
 
 isNotInNodeList :: NavXmlTree -> [NavXmlTree] -> Bool
-isNotInNodeList n xs' = nodeID (Just n) `notElem` map (nodeID . Just) xs'
+isNotInNodeList n xs' = nodeID' n `notElem` map nodeID' xs'
 
 -- -----------------------------------------------------------------------------
 -- |

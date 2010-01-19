@@ -29,6 +29,7 @@ testcases	= \
 		'comment_pi.xsl        example_document.xml' \
 		'attset.xsl            example_document.xml' \
 		'copy_copy_of.xsl      example_document.xml' \
+		'copy_rec.xsl          example0.xml' \
 		'sorting.xsl           example_document.xml' \
 		'strip_space.xsl       exdoc2.xml' \
 		'testEX.xsl            empty.xml' \

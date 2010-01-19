@@ -180,9 +180,15 @@ attributeAxis t@(NT xt _ a _ _)
       not (isRoot xt)	= foldr (\ (ix, attr) -> ((NT attr ix (t:a) [] []):)) [] al
     | otherwise		= []
     where
+    aix xs		= zip [(0 - length xs) .. (-1)] xs
     al 			= filter ((/= xmlnsNamespace) . maybe "" namespaceUri . getName . snd)
-			  . zip [0..]
+			  . aix
 			  . fromMaybe []
 			  . getAttrl $ xt
+
+-- attributes are indexed in the path with negative indices
+-- this corresponds to document order and makes the index paths
+-- for attributes and children disjoint.
+-- The attribute index is never referenced when navigating in trees
 
 -- ------------------------------------------------------------

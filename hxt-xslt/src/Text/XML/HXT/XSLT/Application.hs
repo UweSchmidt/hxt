@@ -34,6 +34,10 @@ import           Data.Map                     (Map)
 import qualified Data.Map 	as Map hiding (Map)
 import           Data.Maybe
 
+-- just for debugging
+-- import Debug.Trace(trace)
+-- import Text.XML.HXT.XPath.NavTree (subtreeNT)
+
 -- ------------------------------------------------------------
 
 type XPathParams = Map ExName Expr
@@ -110,10 +114,12 @@ recDepth CtxEmpty = 0
 
 evalXPathExpr :: Expr -> Context -> XPathValue
 evalXPathExpr expr (Ctx node _ pos len globVars locVars _ _ _)
-    = filterXPath $ evalExpr (vars,[]) (pos, len, node) expr (XPVNode [node])
+    = filterXPath $ evalExpr (vars,[]) (pos, len, node) expr (XPVNode . singletonNodeSet $ node)
     where 
     filterXPath (XPVError err)    = error err
-    filterXPath (XPVNode nodes)   = XPVNode $ (\x -> fst x ++ snd x) $ partition (isAttr.subtreeNT) nodes
+    -- filterXPath (XPVNode nodes)   = XPVNode $ (\x -> fst x ++ snd x) $ partition (isAttr . subtreeNT) nodes
+    -- this has been moved to applySelect, that's the point where the node set is converted inot a list of trees
+
     -- line above: complicated issue: consider: <lre><xsl:copy-of select="a/@*|a/*|b/@*"/></lre>
     -- assume a is in document order before b. Shall b's attributes be added to lre or be ignored?!
     filterXPath xpv               = xpv
@@ -124,19 +130,39 @@ evalXPathExpr _ CtxEmpty
     = error "internal error in evalXPathExpr in XSLT module"
 
 evalRtf :: Template -> String -> Context -> XPathValue
-evalRtf template rtfId ctx = XPVNode [ntree rtfRoot]
+evalRtf template rtfId ctx = XPVNode $ singletonNodeSet (ntree rtfRoot)
   where
     rtfRoot = setAttribute rootIdName ("rtf " ++ rtfId) $ mkRoot [] $ applyTemplate template ctx
     rootIdName = mkQName "" "rootId" ""
 
-applySelect :: SelectExpr -> Context -> [NavXmlTree]
-applySelect (SelectExpr expr) ctx = 
+-- ------------------------------------------------------------
+
+applySelect 				:: SelectExpr -> Context -> [NavXmlTree]
+applySelect				= applySelect'
+
+{- just for debugging
+applySelect e@(SelectExpr expr) ctx = trace msg2 $ res
+                                      where
+                                      res = applySelect' e $ trace msg1 ctx
+                                      msg1 = unlines $ [ "applySelect: " ++ show expr
+                                                       , formatXmlTree . subtreeNT . ctxGetNode $ ctx
+                                                       ]
+                                      msg2 = unlines $ "result trees" : map (formatXmlTree . subtreeNT) res
+-}
+
+applySelect' :: SelectExpr -> Context -> [NavXmlTree]
+applySelect' (SelectExpr expr) ctx = 
     extractNodes xpathResult
   where 
     xpathResult                  = evalXPathExpr expr ctx
-    extractNodes (XPVNode nodes) = nodes
+
+    extractNodes (XPVNode nodes) = attributesFirst . fromNodeSet $ nodes
     extractNodes r               = error $ "XPATH-Expression in select or match attribute returned a value of the wrong type ("              
                                            ++ take 15 (show r)  ++ "...)"
+
+    attributesFirst		 = uncurry (++) . partition (isAttr . subtreeNT)
+
+-- ------------------------------------------------------------
 
 applyTest :: TestExpr -> Context -> Bool
 applyTest (TestExpr expr) ctx = bool
@@ -362,27 +388,45 @@ applyCopyOf (TemplCopyOf expr)
 
 applyCopyOf _ = const []
 
--- ------------------------------------
+-- ------------------------------------------------------------
 
 applyTemplate :: Template -> Context -> [XmlTree]
-applyTemplate t@(TemplComposite _)     = applyComposite t
-applyTemplate t@(TemplMessage _ _)     = applyMessage t
-applyTemplate t@(TemplForEach _ _ _)   = applyForEach t
-applyTemplate t@(TemplChoose _)        = applyChoose t
-applyTemplate t@(TemplElement _ _ _ _) = applyElement t
-applyTemplate t@(TemplAttribute _ _)   = applyAttribute t
-applyTemplate t@(TemplText _)          = applyText t
-applyTemplate t@(TemplValueOf _)       = applyValueOf t
-applyTemplate t@(TemplComment _)       = applyComment t
-applyTemplate t@(TemplProcInstr _ _)   = applyProcInstr t
-applyTemplate t@(TemplApply _ _ _ _)   = applyApplTempl t
-applyTemplate t@(TemplApplyImports)    = applyImports t
-applyTemplate t@(TemplCall _ _)        = applyCallTempl t
-applyTemplate t@(TemplCopy _ _)        = applyCopy t
-applyTemplate t@(TemplCopyOf _)        = applyCopyOf t
-applyTemplate   (TemplVariable _)      = const []	-- trace ("Warning: Unreacheable variable: " ++ show (getVarName v)) const []
+applyTemplate				= applyTemplate'
 
--- ------------------------------------
+{- just for debugging
+applyTemplate t ctx
+					= trace msg2 $ res
+                                          where
+                                          res = applyTemplate' t $ trace msg1 ctx
+                                          msg1 = unlines [ "applyTemplate begin"
+                                                         , "template: " ++ show t
+                                                         , "context tree: "
+                                                         , formatXmlTree . subtreeNT . ctxGetNode $ ctx
+                                                         ]
+                                          msg2 = unlines $ [ "applyTemplate end"
+                                                           , "result trees:"
+                                                           ] ++ map formatXmlTree res
+-}
+
+applyTemplate' :: Template -> Context -> [XmlTree]
+applyTemplate' t@(TemplComposite _)     = applyComposite t
+applyTemplate' t@(TemplMessage _ _)     = applyMessage t
+applyTemplate' t@(TemplForEach _ _ _)   = applyForEach t
+applyTemplate' t@(TemplChoose _)        = applyChoose t
+applyTemplate' t@(TemplElement _ _ _ _) = applyElement t
+applyTemplate' t@(TemplAttribute _ _)   = applyAttribute t
+applyTemplate' t@(TemplText _)          = applyText t
+applyTemplate' t@(TemplValueOf _)       = applyValueOf t
+applyTemplate' t@(TemplComment _)       = applyComment t
+applyTemplate' t@(TemplProcInstr _ _)   = applyProcInstr t
+applyTemplate' t@(TemplApply _ _ _ _)   = applyApplTempl t
+applyTemplate' t@(TemplApplyImports)    = applyImports t
+applyTemplate' t@(TemplCall _ _)        = applyCallTempl t
+applyTemplate' t@(TemplCopy _ _)        = applyCopy t
+applyTemplate' t@(TemplCopyOf _)        = applyCopyOf t
+applyTemplate'   (TemplVariable _)      = const []	-- trace ("Warning: Unreacheable variable: " ++ show (getVarName v)) const []
+
+-- ------------------------------------------------------------
 -- "Main" :
 
 applyStylesheetWParams :: XPathParams -> CompiledStylesheet -> XmlTree -> [XmlTree]

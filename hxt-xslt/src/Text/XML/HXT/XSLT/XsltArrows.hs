@@ -138,12 +138,14 @@ compileSSTWithIncludeStack incStack
 	      none
 	    )
       ]
+      >>>
+      traceValue 3 (("compiled stylesheet:\n" ++) . show)
     where
     assStylesheet imports				-- do the assembly, the compilation
 	= arrWithCatch (flip assembleStylesheet $ imports)
 
     expStylesheet (imports, rest)
-	= traceMsg 2 "expandStylesheet"
+	= traceMsg 2 "expand stylesheet"
 	  >>>
 	  setChildren rest				-- remove import rules from stylesheet
 	  >>>
@@ -259,7 +261,7 @@ checkApplySST appl
 	>>>
 	traceDoc "XSLT stylesheet applied"
 	>>>
-	setDocumentStatusFromSystemState "applying XSLT styleshhet"
+	setDocumentStatusFromSystemState "applying XSLT stylesheet"
       )
       `orElse`
       issueErr "XSLT: complete document with root node required for stylesheet application"

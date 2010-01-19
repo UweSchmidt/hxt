@@ -40,8 +40,8 @@ import Text.XML.HXT.XPath.XPathArithmetic
 import Text.XML.HXT.XPath.XPathParser	( parseXPath )
 import Text.XML.HXT.XPath.XPathToString	( xPValue2XmlTrees )
 import Text.XML.HXT.XPath.XPathToNodeSet( xPValue2XmlNodeSet
-						, emptyXmlNodeSet
-						)
+					, emptyXmlNodeSet
+					)
 
 import Text.ParserCombinators.Parsec	( runParser )
 
