@@ -1,13 +1,13 @@
 -- arch-tag: Haskell XML Toolbox main description file
 name: hxt
-version: 8.4.1
+version: 8.5.0
 license: OtherLicense
 license-file: LICENCE
 maintainer: Uwe Schmidt <uwe@fh-wedel.de>
 stability: stable
 category: XML
 synopsis: A collection of tools for processing XML with Haskell. 
-description:  The Haskell XML Toolbox bases on the ideas of HaXml and HXML, but introduces a more general approach for processing XML with Haskell. The Haskell XML Toolbox uses a generic data model for representing XML documents, including the DTD subset and the document subset, in Haskell. It contains a validating XML parser, a HTML parser, namespace support, an XPath expression evaluator, an XSLT library, a RelaxNG schema validator and funtions for serialization and deserialization of user defined data. The libraray make extensive use of the arrow approach for processing XML.
+description:  The Haskell XML Toolbox bases on the ideas of HaXml and HXML, but introduces a more general approach for processing XML with Haskell. The Haskell XML Toolbox uses a generic data model for representing XML documents, including the DTD subset and the document subset, in Haskell. It contains a validating XML parser, a HTML parser, namespace support, an XPath expression evaluator, an XSLT library, a RelaxNG schema validator and funtions for serialization and deserialization of user defined data. The library make extensive use of the arrow approach for processing XML. Since version 8.5 XPath and XSLT have been moved to separate packages hxt-xpath and hxt-xslt.
 homepage: http://www.fh-wedel.de/~si/HXmlToolbox/index.html
 copyright: Copyright (c) 2005-2010 Uwe Schmidt
 build-type: Simple
@@ -56,12 +56,6 @@ extra-source-files:
  examples/arrows/hrelaxng/valid1.xml
  examples/arrows/hrelaxng/valid2.rng
  examples/arrows/hrelaxng/valid2.xml
- examples/arrows/hxpath/example1.xml
- examples/arrows/hxpath/.ghci
- examples/arrows/hxpath/HXPath.hs
- examples/arrows/hxpath/Makefile
- examples/arrows/hxpath/W3CTestData.hs
- examples/arrows/hxpath/XPathShell.hs
  examples/arrows/performance/GenDoc.hs
  examples/arrows/performance/Makefile
  examples/arrows/pickle/Makefile
@@ -85,7 +79,6 @@ library
   Data.AssocList,
   Data.Atom,
   Data.Char.UTF8,
-  Data.NavTree,
   Data.Tree.Class,
   Data.Tree.NTree.TypeDefs,
   Text.XML.HXT.Arrow,
@@ -103,8 +96,6 @@ library
   Text.XML.HXT.Arrow.ProcessDocument,
   Text.XML.HXT.Arrow.ReadDocument,
   Text.XML.HXT.Arrow.WriteDocument,
-  Text.XML.HXT.Arrow.XPath,
-  Text.XML.HXT.Arrow.XPathSimple,
   Text.XML.HXT.Arrow.XmlArrow,
   Text.XML.HXT.Arrow.XmlIOStateArrow,
   Text.XML.HXT.Arrow.XmlRegex,
@@ -164,17 +155,7 @@ library
   Text.XML.HXT.RelaxNG.XmlSchema.Regex,
   Text.XML.HXT.RelaxNG.XmlSchema.RegexMatch,
   Text.XML.HXT.RelaxNG.XmlSchema.RegexParser,
-  Text.XML.HXT.Version,
-  Text.XML.HXT.XPath,
-  Text.XML.HXT.XPath.NavTree,
-  Text.XML.HXT.XPath.XPathArithmetic,
-  Text.XML.HXT.XPath.XPathDataTypes,
-  Text.XML.HXT.XPath.XPathEval,
-  Text.XML.HXT.XPath.XPathFct,
-  Text.XML.HXT.XPath.XPathKeywords,
-  Text.XML.HXT.XPath.XPathParser,
-  Text.XML.HXT.XPath.XPathToNodeSet,
-  Text.XML.HXT.XPath.XPathToString
+  Text.XML.HXT.Version
 
  hs-source-dirs: src
 
@@ -192,5 +173,5 @@ library
                 network    >= 2.1 && < 3,
                 deepseq    >= 1.1 && < 2,
                 bytestring >= 0.9 && < 1,
-                tagsoup    >= 0.8 && < 1,
+                tagsoup    >= 0.8 && < 0.9,
                 curl       >= 1.3 && < 2

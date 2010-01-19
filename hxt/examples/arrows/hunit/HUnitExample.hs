@@ -3,7 +3,6 @@
 --
 -- Author: Uwe Schmidt uwe@fh-wedel.de
 --
--- Version : $Id: HUnitExample.hs,v 1.4 2006/09/06 06:35:28 hxml Exp $
 
 module Main where
 
@@ -11,7 +10,8 @@ import System
 import Test.HUnit
 import Text.XML.HXT.Arrow
 
-{-
+{- old filter tests, must be refactored for arrow operators
+
 aMinimalDoc	:: XmlTree
 aMinimalDoc	= mkRootTree [] (xtext "<?xml version='1.0'?><x/>")
 
@@ -577,13 +577,11 @@ ys = head $
 -}
 
 -- |
--- ausiliary function to make haskell string constants with quotes more readable
+-- auxiliary function to make haskell string constants with quotes more readable
 
 singleToDoubleQuote	:: String -> String
 singleToDoubleQuote
-    = map (\ c -> if c == '\'' then '"' else c)
-
-
+    = map (\ c -> if c == '\'' then '\"' else c)
 
 testLA	:: String -> String -> LA XmlTree XmlTree -> Test
 testLA doc expected f
@@ -642,6 +640,8 @@ simpleTests
 
 	    ]
 
+{- these arrows have been moved to the hxt-xpath package
+
 nodeSetTests	:: Test
 nodeSetTests
     = TestList $
@@ -686,6 +686,7 @@ nodeSetTests
 	   , ("<x p='.'>.0<x p='.1'>.1.0</x>.2<y p='.3'>.3.0<x p='.3.1' q='3.2'>.3.1.0</x></y>.4</x>",
 											  "/x/y/x",		addAttr "q" "3.2"	)
 	   ]
+-}
 
 -- |
 -- the complete set of test cases
@@ -694,7 +695,7 @@ allTests	:: Test
 allTests
     = TestList
       [ simpleTests
-      , nodeSetTests
+      -- , nodeSetTests
       ]
 
 main	:: IO ()
