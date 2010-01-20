@@ -8,6 +8,7 @@ module Main
 where
 
 import Text.XML.HXT.Arrow		-- import HXT stuff
+import Text.XML.HXT.XPath
 
 import Data.List			-- auxiliary functions
 import Data.Maybe
