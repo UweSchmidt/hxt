@@ -177,7 +177,7 @@
     <ul>
       <li>ghc-6.10 with cabal 1.6</li>
       <li><a href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/curl">curl package >= 1.3</a></li>
-      <li><a href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/tagsoup">tagsoup package >= 0.6</a></li>
+      <li><a href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/tagsoup">tagsoup package >= 0.8</a></li>
     </ul>
     <p>
       It is recommended to install the versions available from
@@ -185,26 +185,30 @@
     </p>
 
     <a name="down"></a>
-    <h3>Downloads</h3>
+    <h3>HXT Downloads</h3>
     <p>
-      <a href="%DISTFILE%.tar.gz">Haskell XML Toolbox %VERSION%</a>,
-      released %PUBDATE%:
+      <li><a href="hxt-8.5.0.tar.gz">hxt-8.5.0.tar.gz</a></li>
+      <li><a href="hxt-xpath-8.5.0.tar.gz">hxt-xpath-8.5.0.tar.gz</a></li>
+      <li><a href="hxt-xslt-8.5.0.tar.gz">hxt-xslt-8.5.0.tar.gz</a></li>
+      <li><a href="hxt-filter-8.4.0.tar.gz">hxt-filter-8.4.0.tar.gz</a></li>
+      <li><a href="#etc">extension modules</a></li>
     </p>
     <ul>
       <li>This version works with ghc 6.12.1 with cabal 1.8.
 	For ghc 6.10.* please use HXT 8.3.*.</li>
-      <li>This version does not include the filter variant of hxt and
-	the XSLT part.
-	These modules are separated into extra packages
-	<a href="#filter">hxt-filter</a> and <a href="#xslt">hxt-xslt</a>.
+      <li>This version does not include the filter variant of hxt.
+	These modules are separated into an extra packages
+	<tt>hxt-filter</tt>.
+	Also
+	the XPath and XSLT modules are separated into packages
+	<tt>hxt-xpath</tt> and <tt">hxt-xslt</tt>.
       </li>
       <li>Includes sources for building a ghc package
 	<code>hxt</code> with Cabal.
 	This package contains a Haskell DOM, an XML parser, a HTML parser based on parsec,
 	a lightweight HTML/XML parser based on tagsoup, a
-	DTD validator,  namespace processing functions, a Relax
-	NG validator, an XPath expression evaluator,
-	and serialization/deserialisation of data to/from XML.
+	DTD validator,  namespace processing functions, and a Relax
+	NG validator and the serialization/deserialisation of data to/from XML.
       </li>
       <li>HTTP access is done via the <a href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/curl">curl binding</a>.
 	When installing curl (under Linux) be aware to first install the
@@ -222,26 +226,23 @@
     <p>
       A git repository is available under
       <a href="http://git.fh-wedel.de/repos/hxt.git/">http://git.fh-wedel.de/repos/hxt.git</a>.
-      This repo also contains the other hxt-packages.
+      This repository also contains the other hxt-packages.
     </p>
+
     <a name="install"></a>
     <h3>Installation</h3>
       
     <p>
       Before installing this version, install the curl and tagsoup modules.
-      For a quick install with Cabal execute the following commands in
-      <tt>.../HXT-%VERSION%</tt>
+      For a quick install and access to hackage use the cabal installation
+      program.
     </p>
-    <pre>
-    cabal configure
-    cabal build
-    sudo cabal install --global
-    </pre>
     <p>
-      A quick test of the example programs:
+      A quick test of the example programs unpack the tar files and move into the example
+      subdirectories.
     </p>
     <pre>
-    cd examples
+    cd &lt;hxt-package&gt;/examples
     make all
     make test
     </pre>
@@ -250,6 +251,17 @@
     <a name="change"></a>
     <h3>Change History</h3>
     <ul>
+      <li>In <a href="hxt-8.5.0.tar.gz">Version 8.5.0</a>
+	<ul>
+	  <li>
+	    XPath module has been internally refactored and optimized
+	    for speed. Runtime deficiencies for complex and ambigious
+	    XPath expressions have been removed.
+	  </li>
+	  <li>XPath modules are separated into extra package hxt-xpath
+	  </li>
+	</ul>
+      </li>
       <li>In <a href="hxt-8.4.0.tar.gz">Version 8.4.0</a>
 	<ul>
 	  <li>Changes for ghc-6.12. This version requires
@@ -457,21 +469,13 @@
       <a href="http://git.fh-wedel.de/repos/hxt.git/">http://git.fh-wedel.de/repos/hxt.git</a>.
     </p>
 
-    <a name="xslt"></a>
-    <h3>HXT XSLT</h3>
-    <p>
-      The XSLT library is
-      <a href="hxt-xslt-8.4.0.tar.gz">hxt-xslt-8.4.0.tar.gz</a>,
-      It can be included with <tt>import Text.XML.HXT.XSLT</tt>.
-    </p>
-
     <a name="etc"></a>
-    <h3>Extensions</h3>
+    <h3>Extension Packages</h3>
     <p>
       There is a small package
       <a href="hxt-binary-0.0.1.tar.gz">hxt-binary-0.0.1.tar.gz</a>
       for serializing and deserializing documents represented as
-      XmlTrees. In this package contains <tt>Binary</tt> instances for the HXT
+      XmlTrees. This package contains <tt>Binary</tt> instances for the HXT
       data types representing XML data.
     </p>
     <p>
@@ -479,7 +483,7 @@
       cache system for parsed XML data
       <a href="hxt-cache-0.0.1.tar.gz">hxt-cache-0.0.1.tar.gz</a>.
       The cache system may be useful for the development of crawlers
-      or for preprocessing templates for a web framework.
+      or for preprocessing templates for web frameworks.
     </p>
 
     <a name="rel"></a>
