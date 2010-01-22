@@ -134,45 +134,41 @@ import Control.Arrow.ArrowTree
 import Control.Arrow.ArrowIO
 import Control.Arrow.IOStateListArrow
 
-import Control.Monad				( mplus )
+import Control.Monad			( mzero
+					, mplus )
 import Control.DeepSeq
 
 import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlArrow
 
-import Text.XML.HXT.Arrow.Edit
-    ( addHeadlineToXmlDoc
-    , treeRepOfXmlDoc
-    , indentDoc
-    )
+import Text.XML.HXT.Arrow.Edit		( addHeadlineToXmlDoc
+					, treeRepOfXmlDoc
+					, indentDoc
+					)
 
 import Data.Maybe
 
-import Network.URI
-    ( URI
-    , escapeURIChar
-    , isUnescapedInURI
-    , nonStrictRelativeTo
-    , parseURIReference
-    , uriAuthority
-    , uriFragment
-    , uriPath
-    , uriPort
-    , uriQuery
-    , uriRegName
-    , uriScheme
-    , uriUserInfo
-    )
+import Network.URI			( URI
+					, escapeURIChar
+					, isUnescapedInURI
+					, nonStrictRelativeTo
+					, parseURIReference
+					, uriAuthority
+					, uriFragment
+					, uriPath
+					, uriPort
+					, uriQuery
+					, uriRegName
+					, uriScheme
+					, uriUserInfo
+					)
 
-import System.IO
-    ( hPutStrLn
-    , hFlush
-    , stderr
-    )
+import System.IO			( hPutStrLn
+					, hFlush
+					, stderr
+					)
 
-import System.Directory
-    ( getCurrentDirectory
-    )
+import System.Directory			( getCurrentDirectory )
 
 -- ------------------------------------------------------------
 {- $datatypes -}
@@ -851,16 +847,25 @@ traceState
 
 -- ----------------------------------------------------------
 
--- | parse a URI reference, in case of a failure try to escape special chars
+-- | parse a URI reference, in case of a failure,
+-- try to escape unescaped chars, convert backslashes to slashes for windows paths,
 -- and try parsing again
 
 parseURIReference'	:: String -> Maybe URI
 parseURIReference' uri
     = parseURIReference uri
       `mplus`
-      parseURIReference uri'
+      ( if unesc
+	then parseURIReference uri'
+	else mzero
+      )
     where
-    uri' = concatMap ( escapeURIChar isUnescapedInURI) uri
+    unesc	= not . all isUnescapedInURI $ uri
+
+    escape '\\'	= "/"
+    escape c	= escapeURIChar isUnescapedInURI c
+
+    uri' 	= concatMap escape uri
 
 -- | compute the absolut URI for a given URI and a base URI
 
