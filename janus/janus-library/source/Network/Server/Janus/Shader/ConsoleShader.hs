@@ -377,7 +377,7 @@ ttyStoreShader =
                             (XmlVal cfg)    <- runInContext context $
                                                     getSV ident                 -<< ()
 
-                            putXmlDocument file                                 -<< cfg
+                            putXmlDocument False file                           -<< cfg
                             done                                                -<  in_ta''
                         else
                             this

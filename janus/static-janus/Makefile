@@ -8,10 +8,12 @@ SERVLETS	:= $(wildcard source/Network/Server/Janus/Shader/*.hs) \
 
 CONF		= conf/server.xml
 
-#JANUSCONF	= $(JANUSHOME)/janus-library/dist/build/janus-conf/janus-conf 
+JANUSHOME	= ..
+
+JANUSCONF	= $(JANUSHOME)/janus-library/dist/build/janus-conf/janus-conf 
 # janus-conf is installed togeher with the janus-library
 
-JANUSCONF	= janus-conf
+# JANUSCONF	= janus-conf
 
 # generate the Janus main from server.xml
 

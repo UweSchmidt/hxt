@@ -88,6 +88,7 @@ import Data.Maybe
 import System.Time
 
 import Text.XML.HXT.Arrow
+import Text.XML.HXT.XPath
 
 import Network.Server.Janus.JanusPaths
 
@@ -263,9 +264,9 @@ processA arrow =
         thread  <- arrIO $ forkIO       -< action x state
         returnA                         -< thread
     where
-        action input state = do
+        action input state =
             runX (withOtherUserState state (constA input >>> arrow))
-            return ()
+            >> return ()
 
 {- |
 An Arrow taking an XmlTree and delivering an Arrow independent of its input and returning this XmlTree.

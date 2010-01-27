@@ -29,7 +29,6 @@ import Network.Server.Janus.ServerVersion
 
 import System.Environment
 import System.Exit
-import System.IO
 import System.Locale	( rfc822DateFormat
 			, defaultTimeLocale
 			)
@@ -39,6 +38,7 @@ import System.Time	( formatCalendarTime
 			)
 
 import Text.XML.HXT.Arrow
+import Text.XML.HXT.XPath
 
 -- ------------------------------------------------------------
 

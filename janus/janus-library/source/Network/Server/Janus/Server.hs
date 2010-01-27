@@ -22,6 +22,7 @@ module Network.Server.Janus.Server
 where
 
 import Text.XML.HXT.Arrow
+import Text.XML.HXT.XPath
 
 import Network.Server.Janus.Core as Shader
 import Network.Server.Janus.Messaging

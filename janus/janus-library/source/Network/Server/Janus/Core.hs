@@ -203,10 +203,8 @@ import Control.Concurrent
 
 import Data.Char
 import Data.Dynamic
-import Data.Either
 import Data.Map
 import Data.Maybe
-import Data.Typeable
 
 import Network.Server.Janus.DynamicLoader
 import Network.Server.Janus.Messaging
