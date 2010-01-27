@@ -1,0 +1,72 @@
+Installation of the Janus application server 0.2.0
+=================================================
+
+You have to build two parts for a Janus application server: A Haskell library package (janus.a), which integrates all basic system modules, but
+no main application. The library package is a prerequisite for a runnable server.
+
+To the library package depends on various other Haskell packages described in "janus-libray/Janus-Library.cabal".
+It does not require the hs-plugins library for dynamic loading of Haskell binaries. This package made a lot of
+trouble in the past, because it is depended on the ghc version and a the bytestring package delivered with ghc.
+It requires GHC >= 6.10
+
+Janus 0.4.0 has currently no plugin support, this has to be reworked and reenabled in the future.
+
+Quick Janus installation:
+=========================
+
+tar xvzf janus-0.4.0.tar.gz
+cd janus-0.4.0
+cd janus-library
+make all
+cd ..
+
+make all is a shortcut for the 3 usual steps with cabal: configure, build and install
+
+
+A Janus Application:
+====================
+
+There is an example application for a Janus test server under dir "static-janus".
+To build this application perform
+
+cd static-server
+make janus
+./janus
+
+The last line will start the server, which is listening on port 8080.
+To test the server, access "http://localhost:8080/index.html" and hopefully the test server
+home page shows up.
+
+A specific application can be derived from the "static-server" dir.
+There is a "conf" subdir in which the file "server.xml" for the server configuration
+is stored. This XML config file must be tailored th the needs of a specific app.
+
+Dynamic Loading
+===============
+
+Dynamic loading of modules is currently not supported, because of lack
+op a plugin version for ghc-6.10
+
+This is how it worked in the past:
+
+The application specific source files are usually located in subdir "source" in the
+package Network.Server.Janus.Shader. There the Janus servlets sources are located.
+
+cd build
+./janus
+
+Jaunus will then listen on port 8080.
+check "http://localhost:8080/index.html for a running server.
+The janus state can be queried by giving commands on the janus console.
+
+In case of the hs-plugins package, an error message may occur stating lacking permissions for the configuration script. Please change the file
+permissions of the "configure" file in the hs-plugins directory accordingly.
+
+If you installed the janus-1.0 package, you may optinally continue with building an executable Janus server installation. This may be done simply by
+invoking "make janus". Afterwards you will find a relocatable Janus installation in the ../build subdirectory. In the ../build/conf directory, there will be a
+default configuration file "server.xml". The ".../build/Network/..." subdirectories contains the servlet object files to start the server.
+
+
+
+
+

@@ -1,0 +1,96 @@
+name:          janus-library
+version:	0.5.0
+license:       OtherLicense
+license-file:  LICENSE
+author:        Christian Uhlig
+copyright:     Copyright (c) 2006 Christian Uhlig
+maintainer:    Christian Uhlig <uhl@fh-wedel.de>
+stability:     experimental
+category:      Web, Server, Network
+synopsis:      A flexible Haskell application server.
+homepage:      http://holumbus.fh-wedel.de/janus
+description:   A flexible Haskell application server.
+build-type:    Simple
+
+cabal-version: >=1.6
+
+flag withHsPlugins
+  Description: Enable dynamic loading via hsplugins
+  Default:     False
+
+
+library
+  build-depends: base         >= 4.2 && < 5
+               , haskell98    >= 1.0 && < 2
+               , array        >= 0.3 && < 1
+               , unix         >= 2.4 && < 3
+               , bytestring   >= 0.9 && < 1
+               , containers   >= 0.3 && < 1
+               , old-time     >= 1.0 && < 2
+               , directory    >= 1.0 && < 2
+               , parsec       >= 2.1 && < 4
+               , network      >= 2.1 && < 3
+               , regex-compat >= 0.92 && < 1
+               , html         >= 1.0 && < 2
+               , hxt          >= 8.5 && < 9
+               , hxt-xpath    >= 8.5 && < 9
+
+  if flag(withHsPlugins)
+    build-depends: plugins    >= 1.1
+
+  exposed-modules:
+    Network.Server.Janus.Core
+    Network.Server.Janus.Server
+    Network.Server.Janus.ServerVersion
+    Network.Server.Janus.JanusPaths
+    Network.Server.Janus.XmlHelper
+    Network.Server.Janus.Transaction
+    Network.Server.Janus.Messaging
+    Network.Server.Janus.DynamicLoader
+    Network.Server.Janus.HTMLBuilder
+    Network.Server.Janus.Handler.ConsoleHandler
+    Network.Server.Janus.Handler.SystemHandler
+    Network.Server.Janus.Handler.TCPHandler
+    Network.Server.Janus.Shader.ConsoleShader
+    Network.Server.Janus.Shader.ControlShader
+    Network.Server.Janus.Shader.DaemonShader
+    Network.Server.Janus.Shader.ExprShader
+    Network.Server.Janus.Shader.HTTPShader
+    Network.Server.Janus.Shader.PredicateShader
+    Network.Server.Janus.Shader.ServletShader
+    Network.Server.Janus.Shader.ShaderLib
+    Network.Server.Janus.Shader.SystemShader
+    Network.Server.HWS.Util
+    Network.Server.HWS.Request
+    Network.Server.HWS.Response
+  other-modules:
+    Network.Server.HWS.Config
+    Network.Server.HWS.MimeTypes
+    Network.Server.HWS.ParseError
+    Network.Server.HWS.Parser
+
+  hs-source-dirs: source
+
+  extensions: DeriveDataTypeable ScopedTypeVariables Arrows
+
+  if flag(withHsPlugins)
+    extensions:  CPP
+    cpp-options: -DPLUGINS=1
+    ghc-options: -Wall
+  else
+    extensions:  CPP
+    cpp-options: -DPLUGINS=0
+    ghc-options: -Wall
+
+executable janus-conf
+  main-is:
+    JanusConf.hs
+  build-depends: base         >= 4.2 && < 5
+               , haskell98    >= 1.0 && < 2
+               , old-time     >= 1.0 && < 2
+               , old-locale   >= 1.0 && < 2
+               , hxt          >= 8.5 && < 9
+  other-modules:
+    Network.Server.Janus.ServerVersion
+  hs-source-dirs: source
+  ghc-options:    -Wall

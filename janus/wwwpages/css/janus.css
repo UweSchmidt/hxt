@@ -1,0 +1,21 @@
+body {
+  background-color: white;
+  background-image: url("../icons/JanusInvert.jpg");
+  background-position: right top;
+  background-repeat: no-repeat;
+  color: #111155;
+}
+
+a {
+  text-decoration: none;
+  color: #551111;
+}
+
+a:hover, a:active, a:focus {
+  text-decoration: underline;
+  color: #aa0000;
+}
+
+.red {
+  color: #ff0000;
+}
