@@ -5,11 +5,11 @@ all	:
 	ghc-pkg list
 
 global	:
-	$(foreach i,$(HXTPACKAGES), ( cd $i && cabal configure && cabal build && cabal sdist && sudo cabal install --global; ) )
+	$(foreach i,$(HXTPACKAGES), ( cd $i && cabal configure && cabal build && cabal sdist && sudo cabal install --global; ); )
 	ghc-pkg list
 
 clean	:
-	$(foreach i,$(HXTPACKAGES), ( cd $i && cabal clean; ) )
+	$(foreach i,$(HXTPACKAGES), ( cd $i && cabal clean; ); )
 
 test	:
 	[ -d ~/tmp ] || mkdir ~/tmp
