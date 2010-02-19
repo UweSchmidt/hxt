@@ -107,7 +107,7 @@ evalXPath path env doc
     pathEx	= runParser parseXPath (toNsEnv env) "" $ path
     pathString	= either show show 			$ pathEx
     pathTree	= either show formatXPathTree 		$ pathEx
-    xr 		= runLA (    getXPathTreesWithNsEnv env path >>> xshow this) doc
+    xr 		= runLA ( xshow $ getXPathTreesWithNsEnv env path) doc
 
 evalLoop	:: NsEnv' -> XmlTrees -> IO ()
 evalLoop env doc

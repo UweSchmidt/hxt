@@ -282,7 +282,7 @@ part2 cf dt
 	  , "            >>>"
 	  , "            serverArrow " ++ show dt ++ " "  ++ show cf
 	  , "          ) initContext"
-	  , "  return ()"
+	  , "    >> return ()"
 	  , ""
 	  ]
 

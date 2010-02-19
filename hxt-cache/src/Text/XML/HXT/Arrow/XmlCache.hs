@@ -66,7 +66,7 @@ a_document_age		= "document-age"
 -- The function is controlled by the options 'a_cache', 'a_compress' and 'a_document_age'.
 --
 -- * 'a_cache': the document tree of the document read is cached in the directory given by this option,
---              or, if it is read before and it is not too old, see 'a_document_age', it is read from the
+--              or, if it is read before and it is not out of date, see 'a_document_age', it is read from the
 --              cache. The document is stored in binary format (used package: binary).
 --
 -- - 'a_compress' : controls whether the cache contents is compressed with the bzip2 lib for saving space
