@@ -2,13 +2,12 @@
 
 {- |
    Module     : Text.XML.HXT.Arrow.XmlIOStateArrow
-   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   Copyright  : Copyright (C) 2010 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
-   Stability  : experimental
+   Stability  : stable
    Portability: portable
-   Version    : $Id: XmlIOStateArrow.hs,v 1.39 2006/11/09 20:27:42 hxml Exp $
 
    the basic state arrows for XML processing
 
@@ -99,6 +98,8 @@ module Text.XML.HXT.Arrow.XmlIOStateArrow
       setTraceLevel,
       getTraceLevel,
       withTraceLevel,
+      setTraceCmd,
+      getTraceCmd,
       trace,
       traceMsg,
       traceValue,
@@ -179,6 +180,7 @@ import System.Directory			( getCurrentDirectory )
 -- system functions, like trace, error handling, ...
 
 data XIOSysState	= XIOSys  { xio_trace			:: ! Int
+                                  , xio_traceCmd		::   Int -> String -> IO ()
 				  , xio_errorStatus		:: ! Int
 				  , xio_errorModule		:: ! String
 				  , xio_errorMsgHandler		::   String -> IO ()
@@ -191,7 +193,7 @@ data XIOSysState	= XIOSys  { xio_trace			:: ! Int
 				  }
 
 instance NFData XIOSysState where
-    rnf (XIOSys tr es em _emh emc eml bu du al _mt)
+    rnf (XIOSys tr _trc es em _emh emc eml bu du al _mt)
 	= rnf tr `seq` rnf es `seq` rnf em `seq` rnf emc `seq` rnf eml `seq` rnf bu `seq` rnf du `seq` rnf al
 
 -- |
@@ -228,6 +230,7 @@ initialState s	= XIOState { xio_sysState 	= initialSysState
 
 initialSysState	:: XIOSysState
 initialSysState	= XIOSys { xio_trace		= 0
+                         , xio_traceCmd		= traceOutputToStderr
 			 , xio_errorStatus	= c_ok
 			 , xio_errorModule	= ""
 			 , xio_errorMsgHandler	= hPutStrLn stderr
@@ -733,6 +736,18 @@ getTraceLevel	:: IOStateArrow s b Int
 getTraceLevel
     = getSysParam xio_trace
 
+-- | set the global trace command. This command does the trace output
+
+setTraceCmd	:: (Int -> String -> IO ()) -> IOStateArrow s b b
+setTraceCmd c
+    = changeSysParam (\ _ s -> s { xio_traceCmd = c } )
+
+-- | acces the command for trace output
+ 
+getTraceCmd	:: IOStateArrow a b (Int -> String -> IO ())
+getTraceCmd
+    = getSysParam xio_traceCmd
+
 -- | run an arrow with a given trace level, the old trace level is restored after the arrow execution
 
 withTraceLevel	:: Int -> IOStateArrow s b c -> IOStateArrow s b c
@@ -755,16 +770,20 @@ trace		:: Int -> IOStateArrow s b String -> IOStateArrow s b b
 trace level trc
     = perform ( trc
 		>>>
-		arrIO (\ s -> ( do
-				hPutStrLn stderr s
-				hFlush stderr
-			      )
-		      )
+                ( getTraceCmd &&& this )
+                >>>
+		arrIO (\ (cmd, msg) -> cmd level msg)
 	      )
       `when` ( getTraceLevel
 	       >>>
 	       isA (>= level)
 	     )
+
+traceOutputToStderr	:: Int -> String -> IO ()
+traceOutputToStderr _level msg
+    = do
+      hPutStrLn stderr msg
+      hFlush stderr
 
 -- | trace the current value transfered in a sequence of arrows.
 --

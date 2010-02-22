@@ -16,7 +16,7 @@ cabal-version: >=1.6
 
 extra-source-files:
  test/TestXmlCache.hs
- examples/Cache.hs
+ examples/mini/Cache.hs
 
 library
  exposed-modules:
