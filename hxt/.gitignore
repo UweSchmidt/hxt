@@ -1,12 +1,3 @@
 dist
 hxt-8.4.0.tar.gz
-doc
-examples
-hxt.cabal
-LICENCE
-Makefile
-README
-Setup.lhs
-src
-Version.mk
 hxt-8.5.0.tar.gz
