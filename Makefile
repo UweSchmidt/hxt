@@ -1,4 +1,4 @@
-HXTPACKAGES	= hxt hxt-xpath hxt-xslt hxt-filter hxt-binary hxt-cache
+HXTPACKAGES	= hxt hxt-xpath hxt-xslt hxt-filter hxt-binary hxt-cache janus/janus-library
 
 all	:
 	$(foreach i,$(HXTPACKAGES), ( cd $i && cabal configure && cabal build && cabal install && cabal sdist; ); )
