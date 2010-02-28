@@ -211,7 +211,8 @@ opt2copt k v
     | k `elem` ["-R", "--remote-time"]  = [CurlFiletime            $ isTrue  v]
     | k `elem` ["-u", "--user"]		= [CurlUserPwd                       v]
     | k `elem` ["-U", "--proxy-user"]	= [CurlProxyUserPwd                  v]
-    | k `elem` ["-x", "--proxy"]        =  proxyOptions
+    | k `elem` ["-x", "--proxy", a_proxy]
+				        =  proxyOptions
     | k `elem` ["-X", "--request"]      = [CurlCustomRequest                 v]
     | k `elem` ["-y", "--speed-time"]
       &&
@@ -219,7 +220,11 @@ opt2copt k v
     | k `elem` ["-Y", "--speed-limit"]
       &&
       isIntArg v			= [CurlLowSpeed            $ read    v]
-    | k `elem` ["-z", "--time-cond"]	=  ifModifiedOptions
+    | k `elem` ["-z", "--time-cond", a_if_modified_since]
+					=  ifModifiedOptions
+
+    | k == a_if_modified_since		= [CurlHttpHeaders	   $ ["If-Modified-Since: " ++ v] ]
+					-- CurlTimeValue seems to be buggy, therefore this workaround
     | k == "--max-redirs"
       &&
       isIntArg v			= [CurlMaxRedirs           $ read    v]

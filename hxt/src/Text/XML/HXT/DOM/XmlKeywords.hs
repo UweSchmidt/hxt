@@ -47,6 +47,7 @@ a_accept_mimetypes,
  a_error,
  a_error_log,
  a_help,
+ a_if_modified_since,
  a_ignore_encoding_errors,
  a_ignore_none_xml_contents,
  a_indent,
@@ -98,6 +99,7 @@ a_accept_mimetypes,
 
 v_0,				-- attribute values
  v_1,
+ v_2,
  v_yes,
  v_no,
  v_any,
@@ -162,6 +164,7 @@ a_encoding			= "encoding"
 a_error				= "error"
 a_error_log			= "errorLog"
 a_help				= "help"
+a_if_modified_since		= "if-modified-since"
 a_ignore_encoding_errors	= "ignore-encoding-errors"
 a_ignore_none_xml_contents	= "ignore-none-xml-contents"
 a_indent			= "indent"
@@ -213,8 +216,9 @@ a_xmlns				= "xmlns"
 
 v_yes		= "yes"
 v_no		= "no"
-v_1		= "1"
 v_0		= "0"
+v_1		= "1"
+v_2		= "2"
 
 v_any		= k_any
 v_children	= "children"

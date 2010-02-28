@@ -41,6 +41,8 @@ import		 Data.Digest.Pure.SHA
 import           System.FilePath
 import		 System.Directory
 import           System.IO
+import           System.Locale
+import           System.Posix		( touchFile )
 import           System.Time
 
 import           Text.XML.HXT.Arrow	hiding	( readDocument )
@@ -83,27 +85,8 @@ readDocument userOptions src
     
 readDocument'		:: Attributes -> String -> IOStateArrow s b XmlTree
 readDocument' userOptions src
-    | withCache		= ( traceMsg 1 ("looking up document " ++ show src ++ " in cache")
-                            >>>
-                            lookupCache cacheConfig src
-                            >>>
-                            traceMsg 1 "cache hit"
-                          )
-                          `orElse`
-                          ( traceMsg 1 "cache miss, reading original document"
-                            >>>
-                            X.readDocument userOptions src
-                            >>>
-                            perform ( ( writeCache cacheConfig src
-                                        >>>
-                                        none
-                                      )
-                                      `when`
-                                      documentStatusOk
-                                    )
-                          )
+    | withCache		= applyA $ arrIO0 (lookupCache' cacheConfig userOptions src)
     | otherwise		= X.readDocument userOptions src
-
       where
 
       options			= addEntries userOptions defaultOptions
@@ -131,12 +114,71 @@ data CacheConfig	= CC { c_dir		:: FilePath
                              , c_age		:: Integer
                              }
 
+lookupCache'		:: CacheConfig -> Attributes -> String -> IO (IOStateArrow s a XmlTree)
+lookupCache' cc os src	= do
+                          ch <- cacheHit cc cf
+                          return $
+                                 case ch of
+                                 Nothing        -> readAndCacheDocument
+                                 Just Nothing   -> readDocumentFromCache
+                                 Just (Just mt) -> readDocumentCond mt
+    where
+    cf			= uncurry (</>) $ cacheFile cc src
+
+    readDocumentFromCache
+			= traceMsg 1 "cache hit, reading from cache"
+                          >>>
+                          readBinaryValue (c_compress cc) cf
+                          >>>
+                          traceMsg 1 "cache read"
+    readAndCacheDocument
+			= traceMsg 1 "cache miss, reading original document"
+                          >>>
+                          X.readDocument os src
+                          >>>
+                          perform ( (writeCache cc src >>> none)
+                                    `when`
+                                    documentStatusOk
+                                  )
+    readDocumentCond mt
+			= traceMsg 1 "cache out of date, read original document if modified"
+                          >>>
+                          X.readDocument (addEntries (condOpts mt) os) src
+                          >>>
+                          choiceA
+                          [ is304            :-> ( traceMsg 1 "document not modified, using cache data"
+                                                   >>>
+                                                   perform (arrIO0 $ touchFile cf)
+                                                   >>>
+                                                   readBinaryValue (c_compress cc) cf
+                                                 )
+                          , documentStatusOk :-> ( traceMsg 1 "document read and cache updated"
+                                                   >>>
+                                                   perform (writeCache cc src)
+                                                 )
+                          , this             :-> traceMsg 1 "document read without caching"
+                          ]
+        where
+        is304           = hasAttrValue transferStatus (== "304")
+        condOpts t	= [("curl--header", "If-Modified-Since: " ++ fmtTime t)]
+                          -- [(a_if_modified_since, fmtTime t)]
+        fmtTime		= formatCalendarTime defaultTimeLocale rfc822DateFormat . toUTCTime
+
+-- ------------------------------------------------------------
+
 lookupCache		:: (Binary b) => CacheConfig -> String -> IOStateArrow s a b
-lookupCache cc f	= isIOA (const $ cacheHit cc cf)
+lookupCache cc f	= isIOA (const $ hit)
 			  `guards`
 			  readBinaryValue (c_compress cc) cf
     where
     cf			= uncurry (</>) $ cacheFile cc f
+    hit			= do
+                          ch <- cacheHit cc cf
+                          return $ case ch of
+                                   Just Nothing -> True
+                                   _            -> False
+
+-- ------------------------------------------------------------
 
 writeCache		:: (Binary b) => CacheConfig -> String -> IOStateArrow s b ()
 writeCache cc f		= perform (arrIO0 createDir)
@@ -149,22 +191,32 @@ writeCache cc f		= perform (arrIO0 createDir)
     (dir, file)		= cacheFile cc f
     createDir		= createDirectoryIfMissing True dir
 
+-- ------------------------------------------------------------
+
 cacheFile		:: CacheConfig -> String -> (FilePath, FilePath)
 cacheFile cc f		= (c_dir cc </> fd, fn)
     where
     (fd, fn)		= splitAt 2 . sha1HashString $ f
+
+-- result interpretation for cacheHit
+--
+-- Nothing       : cache miss: get document
+-- Just Nothing  : cache hit, cache data valid: use cache data
+-- Just (Just t) : cache hit, but cache data out of date: get document conditionally with if-modified-since t
     
-cacheHit		:: CacheConfig -> FilePath -> IO Bool
+cacheHit		:: CacheConfig -> FilePath -> IO (Maybe (Maybe ClockTime))
 cacheHit cc hf		= ( try' $
 			    do
 			    e <- doesFileExist hf
 			    if not e
-			      then return False
+			      then return Nothing
 			      else do
 			           mt <- getModificationTime hf
 				   ct <- getClockTime
-				   return $ (dt `addToClockTime` mt) >= ct
-			  ) >>= return . either (const False) id
+				   return . Just $ if (dt `addToClockTime` mt) >= ct
+                                                   then Nothing
+                                                   else Just mt
+			  ) >>= return . either (const Nothing) id
     where	  
     age			= c_age cc
     seconds		= fromInteger $ age `mod` 60
