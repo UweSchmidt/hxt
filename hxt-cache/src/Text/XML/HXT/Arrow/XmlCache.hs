@@ -29,6 +29,7 @@ module Text.XML.HXT.Arrow.XmlCache
     )
 where
 
+import           Control.Concurrent.ResourceTable
 import 		 Control.Exception	( SomeException	, try )
 
 import 		 Data.Binary
@@ -44,6 +45,7 @@ import           System.IO
 import           System.Locale
 import           System.Posix		( touchFile )
 import           System.Time
+import           System.IO.Unsafe               ( unsafePerformIO )
 
 import           Text.XML.HXT.Arrow	hiding	( readDocument )
 import qualified Text.XML.HXT.Arrow 	as	X
@@ -128,7 +130,7 @@ lookupCache' cc os src	= do
     readDocumentFromCache
 			= traceMsg 1 "cache hit, reading from cache"
                           >>>
-                          readBinaryValue (c_compress cc) cf
+                          readCache cc cf
                           >>>
                           traceMsg 1 "cache read"
     readAndCacheDocument
@@ -150,7 +152,7 @@ lookupCache' cc os src	= do
                                                    >>>
                                                    perform (arrIO0 $ touchFile cf)
                                                    >>>
-                                                   readBinaryValue (c_compress cc) cf
+                                                   readCache cc cf
                                                  )
                           , documentStatusOk :-> ( traceMsg 1 "document read and cache updated"
                                                    >>>
@@ -169,7 +171,7 @@ lookupCache' cc os src	= do
 lookupCache		:: (Binary b) => CacheConfig -> String -> IOStateArrow s a b
 lookupCache cc f	= isIOA (const $ hit)
 			  `guards`
-			  readBinaryValue (c_compress cc) cf
+			  readCache cc cf
     where
     cf			= uncurry (</>) $ cacheFile cc f
     hit			= do
@@ -180,14 +182,18 @@ lookupCache cc f	= isIOA (const $ hit)
 
 -- ------------------------------------------------------------
 
+readCache		:: (Binary c) => CacheConfig -> String -> IOStateArrow s b c
+readCache cc cf		= withLock cf $ readBinaryValue (c_compress cc) cf
+
 writeCache		:: (Binary b) => CacheConfig -> String -> IOStateArrow s b ()
 writeCache cc f		= perform (arrIO0 createDir)
                           >>>
-                          writeBinaryValue (c_compress cc) hf
+                          withLock hf (writeBinaryValue (c_compress cc) hf)
 			  >>>
-			  perform (arrIO0 $ writeIndex cc f hf)
+			  perform (withLock ixf (arrIO0 $ writeIndex ixf f hf))
     where
     hf                  = dir </> file
+    ixf 		= c_dir cc </> "index"
     (dir, file)		= cacheFile cc f
     createDir		= createDirectoryIfMissing True dir
 
@@ -226,10 +232,10 @@ cacheHit cc hf		= ( try' $
 try'			:: IO a -> IO (Either SomeException a)
 try'			= try
 
-writeIndex		:: CacheConfig -> String -> FilePath -> IO ()
-writeIndex cc f hf	= ( try' $
+writeIndex		:: String -> String -> FilePath -> IO ()
+writeIndex ixf f hf	= ( try' $
 			    do
-			    h <- openBinaryFile (c_dir cc </> "index") AppendMode
+			    h <- openBinaryFile ixf AppendMode
 			    hPutStrLn h $ show (hf, f)
 			    hClose h
 			    return ()
@@ -246,3 +252,26 @@ sha1HashString		:: (Arrow a, Binary b) => a b String
 sha1HashString		= arr $ showDigest . sha1 . encode
 
 -- ------------------------------------------------------------
+
+
+-- | the internal table of file locks
+
+theLockedFiles		:: ResourceTable String
+theLockedFiles		= unsafePerformIO newResourceTable
+{-# NOINLINE theLockedFiles #-}
+
+lockFile, unlockFile	:: String -> IO ()
+lockFile		= requestResource theLockedFiles
+unlockFile		= releaseResource theLockedFiles
+
+withLock		:: String -> IOStateArrow s b c -> IOStateArrow s b c
+withLock l a		= ( perform (arrIO0 $ lockFile l)
+			    >>>
+			    listA a
+			    >>>
+			    perform (arrIO0 $ unlockFile l)
+			  )
+			  >>>
+			  unlistA
+		  
+-----------------------------------------------------------------------------

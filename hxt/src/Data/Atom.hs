@@ -64,7 +64,7 @@ import           Control.DeepSeq
 
 import           Data.ByteString.Internal       ( toForeignPtr, c2w, w2c )
 import           Data.ByteString                ( ByteString, pack, unpack )
-import qualified Data.Map                 as M
+import qualified Data.Map                 	as M
 import           Data.Typeable
 
 import           System.IO.Unsafe               ( unsafePerformIO )

@@ -37,6 +37,13 @@ hxtLogger level msg
 	| level == 2	= INFO
 	| level >= 3	= DEBUG
 
+hxtSetTraceAndErrorLogger	:: Priority -> IOStateArrow s b b
+hxtSetTraceAndErrorLogger priority
+    = hxtSetLogLevel priority
+      >>>
+      hxtSetErrorLog
+
+hxtSetLogLevel			:: Priority -> IOStateArrow s b b
 hxtSetLogLevel priority
     = setTraceLevel (fromPriority priority)
       >>>
@@ -51,6 +58,7 @@ hxtSetLogLevel priority
     fromPriority DEBUG	 = 3
     fromPriority _	 = 0
 
+hxtSetErrorLog	:: IOStateArrow s b b
 hxtSetErrorLog	= setErrorMsgHandler False hxtErrorLogger
 
 hxtErrorLogger	:: String -> IO ()
