@@ -128,13 +128,13 @@ lookupCache' cc os src	= do
     cf			= uncurry (</>) $ cacheFile cc src
 
     readDocumentFromCache
-			= traceMsg 1 "cache hit, reading from cache"
+			= traceMsg 1 ("cache hit, reading from cache file " ++ show cf)
                           >>>
                           readCache cc cf
                           >>>
                           traceMsg 1 "cache read"
     readAndCacheDocument
-			= traceMsg 1 "cache miss, reading original document"
+			= traceMsg 1 ("cache miss, reading original document" ++ show src)
                           >>>
                           X.readDocument os src
                           >>>
@@ -143,12 +143,12 @@ lookupCache' cc os src	= do
                                     documentStatusOk
                                   )
     readDocumentCond mt
-			= traceMsg 1 "cache out of date, read original document if modified"
+			= traceMsg 1 ("cache out of date, read original document if modified" ++ show src)
                           >>>
                           X.readDocument (addEntries (condOpts mt) os) src
                           >>>
                           choiceA
-                          [ is304            :-> ( traceMsg 1 "document not modified, using cache data"
+                          [ is304            :-> ( traceMsg 1 ("document not modified, using cache data from " ++ show cf)
                                                    >>>
                                                    perform (arrIO0 $ touchFile cf)
                                                    >>>
