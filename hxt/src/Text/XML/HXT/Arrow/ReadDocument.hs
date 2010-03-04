@@ -238,11 +238,8 @@ readDocument' userOptions src
 			      , "(mime type:", show mimeType, ") will be processed"])
 	  >>>
 	  ( if isAcceptedMimeType (lookup1 a_accept_mimetypes options) mimeType
-	    then ( ( replaceChildren none					-- empty response, e.g. in if-modified-since request
-                     `when`
-                     hasEmptyBody
-                   )
-                   `orElse`
+	    then ( ifA hasEmptyBody
+                   ( replaceChildren none )					-- empty response, e.g. in if-modified-since request
                    ( parse
 		     >>>
 		     ( if isXmlOrHtml
