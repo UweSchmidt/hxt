@@ -120,6 +120,9 @@ available options:
 
 - 'a_mime_types' : set the mime type table for file input with given file. The format of this config file must be in the syntax of a debian linux \"mime.types\" config file
 
+- 'a_if_modified_since' : read document conditionally, only if the document is newer than the given date and time argument, the contents is delivered,
+                          else just the root node with the meta data is returned. The date and time must be given in "System.Locale.rfc822DateFormat".
+
 - curl options : the HTTP interface with libcurl can be configured with a lot of options. To support these options in an easy way, there is a naming convetion:
                  Every option, which has the prefix @curl@ and the rest of the name forms an option as described in the curl man page, is passed to the curl binding lib.
                  See 'Text.XML.HXT.IO.GetHTTPLibCurl.getCont' for examples. Currently most of the options concerning HTTP requests are implemented.
@@ -234,22 +237,28 @@ readDocument userOptions src
 			      , "(mime type:", show mimeType, ") will be processed"])
 	  >>>
 	  ( if isAcceptedMimeType (lookup1 a_accept_mimetypes options) mimeType
-	    then ( parse
-		   >>>
-		   ( if isXmlOrHtml
-		     then ( checknamespaces
-			    >>>
-                            rememberDTDAttrl
-                            >>>
-			    canonicalize
-			    >>>
-			    whitespace
-			    >>>
-			    relax
-			  )
-		     else this
+	    then ( ( replaceChildren none					-- empty response, e.g. in if-modified-since request
+                     `when`
+                     hasEmptyBody
+                   )
+                   `orElse`
+                   ( parse
+		     >>>
+		     ( if isXmlOrHtml
+		       then ( checknamespaces
+			      >>>
+                              rememberDTDAttrl
+                              >>>
+			      canonicalize
+			      >>>
+			      whitespace
+			      >>>
+			      relax
+			    )
+		       else this
+		     )
 		   )
-		 )
+                 )
 	    else ( traceMsg 1 (unwords [ "readDocument:", show src
 				       , "mime type:", show mimeType, "not accepted"])
 		   >>>
@@ -257,6 +266,8 @@ readDocument userOptions src
 		 )								-- remove contents of not accepted mimetype
 	  )
 	where
+        hasEmptyBody			= neg getChildren <+> (getChildren >>> isWhiteSpace)
+
 	isAcceptedMimeType		:: String -> String -> Bool
 	isAcceptedMimeType mts mt
 	    | null mts
@@ -298,11 +309,11 @@ readDocument userOptions src
 	      validateWithRelax		= propagateAndValidateNamespaces
 	    | otherwise			= this
 	canonicalize
-	    | withTagSoup		= this					-- tagsoup already removes redundant struff
+	    | withTagSoup		= this					-- tagsoup already removes redundant stuff
 	    | validateWithRelax		= canonicalizeAllNodes
 	    | hasOption a_canonicalize
 	      &&
-	      preserveCmt			= canonicalizeForXPath
+	      preserveCmt		= canonicalizeForXPath
 	    | hasOption a_canonicalize	= canonicalizeAllNodes
 	    | otherwise			= this
 	relax
