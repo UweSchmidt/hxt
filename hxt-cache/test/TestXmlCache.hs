@@ -12,11 +12,11 @@ import Text.XML.HXT.Arrow.XmlCache
 
 main'			:: String -> IO ()
 main' url		= runX
-                            ( readDocument [ ( a_trace,		"2"	  )
+                            ( readDocument [ ( a_trace,		v_1	  )
 					   , ( a_parse_html,	v_1	  )
 					   , ( a_issue_warnings, v_0	  )
                                            , ( a_cache, 	"./cache" )
-					   , ( a_document_age,  "1000"      )	-- 10 sec., just for testing
+					   , ( a_document_age,  "10"      )	-- 10 sec., just for testing
                                            , ( a_compress, 	v_1	  )
                                            ] url
                               >>>

@@ -49,7 +49,7 @@ import           System.Time
 import           System.IO.Unsafe               ( unsafePerformIO )
 
 import           Text.XML.HXT.Arrow	hiding	( readDocument )
-import qualified Text.XML.HXT.Arrow 	as	X
+import qualified Text.XML.HXT.Arrow 	-- as	X
 import           Text.XML.HXT.Arrow.Binary
 
 import           Text.XML.HXT.DOM.Binary
@@ -89,7 +89,7 @@ readDocument userOptions src
 readDocument'		:: Attributes -> String -> IOStateArrow s b XmlTree
 readDocument' userOptions src
     | withCache		= applyA $ arrIO0 (lookupCache' cacheConfig userOptions src)
-    | otherwise		= X.readDocument userOptions src
+    | otherwise		= Text.XML.HXT.Arrow.readDocument userOptions src
       where
 
       options			= addEntries userOptions defaultOptions
@@ -131,36 +131,37 @@ lookupCache' cc os src	= do
     readDocumentFromCache
 			= traceMsg 1 ("cache hit, reading from cache file " ++ show cf)
                           >>>
-                          ( ( readCache cc cf
-                              >>>
-                              traceMsg 1 "cache read"
-                            )
-                            `orElse`
-                            ( traceMsg 1 "cache file was corrupted, reading original"
-                              >>>
-                              readAndCacheDocument
-                            )
+			  ( readCache cc cf
+                            >>>
+                            traceMsg 1 "cache read"
+                          )
+                          `orElse`
+                          ( clearErrStatus
+                            >>>
+                            traceMsg 1 "cache file was corrupted, reading original"
+                            >>>
+                            readAndCacheDocument
                           )
     readAndCacheDocument
 			= traceMsg 1 ("cache miss, reading original document" ++ show src)
                           >>>
-                          X.readDocument os src
+                          Text.XML.HXT.Arrow.readDocument os src
                           >>>
                           perform ( (writeCache cc src >>> none)
                                     `when`
                                     documentStatusOk
                                   )
     readDocumentCond mt
-			= traceMsg 1 ("cache out of date, read original document if modified" ++ show src)
+			= traceMsg 1 ("cache out of date, read original document if modified " ++ show src)
                           >>>
-                          X.readDocument (addEntries (condOpts mt) os) src
+                          Text.XML.HXT.Arrow.readDocument (addEntries (condOpts mt) os) src
                           >>>
                           choiceA
                           [ is304            :-> ( traceMsg 1 ("document not modified, using cache data from " ++ show cf)
                                                    >>>
                                                    perform (arrIO0 $ touchFile cf)
                                                    >>>
-                                                   readCache cc cf
+                                                   readDocumentFromCache
                                                  )
                           , documentStatusOk :-> ( traceMsg 1 "document read and cache updated"
                                                    >>>
@@ -194,7 +195,9 @@ readCache		:: (NFData c, Binary c) => CacheConfig -> String -> IOStateArrow s b 
 readCache cc cf		= withLock cf $ readBinaryValue (c_compress cc) cf
 
 writeCache		:: (Binary b) => CacheConfig -> String -> IOStateArrow s b ()
-writeCache cc f		= perform (arrIO0 createDir)
+writeCache cc f		= traceMsg 1 ("writing cache file " ++ show f)
+                          >>>
+                          perform (arrIO0 createDir)
                           >>>
                           withLock hf (writeBinaryValue (c_compress cc) hf)
 			  >>>
