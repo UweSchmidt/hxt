@@ -28,6 +28,7 @@ where
 
 import Control.Arrow.ListArrows
 
+import Data.Char				( isDigit )
 import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlIOStateArrow
@@ -183,9 +184,19 @@ for minimal complete examples see 'Text.XML.HXT.Arrow.WriteDocument.writeDocumen
 
 readDocument	:: Attributes -> String -> IOStateArrow s b XmlTree
 readDocument userOptions src
-    = traceLevel
-      >>>
-      addInputOptionsToSystemState
+    = case getTraceLev of
+      Nothing	->                    readDocument' userOptions src
+      Just l    -> withTraceLevel l $ readDocument' userOptions src
+    where
+    getTraceLev = do
+                  s <- lookup a_trace $ userOptions
+                  if not (null s) && all isDigit s
+                      then return (read s)
+                      else fail "not a number"
+
+readDocument'	:: Attributes -> String -> IOStateArrow s b XmlTree
+readDocument' userOptions src
+    = loadMineTypes (lookup1 a_mime_types userOptions)
       >>>
       getDocumentContents options src
       >>>
@@ -216,18 +227,8 @@ readDocument userOptions src
 	  , ( a_accept_mimetypes,         ""  )
 	  ]
 
-    traceLevel
-	= maybe this (setTraceLevel . read) . lookup a_trace $ options
-
-    addInputOptionsToSystemState
-	= addSysOptions options
-	  >>>
-	  loadMineTypes (lookup1 a_mime_types userOptions)
-	  where
-	  addSysOptions
-	      = seqA . map (uncurry setParamString)
-	  loadMineTypes ""	= this
-	  loadMineTypes f	= setMimeTypeTableFromFile f
+    loadMineTypes ""	= this
+    loadMineTypes f	= setMimeTypeTableFromFile f
 
     getMimeType
 	= getAttrValue transferMimeType >>^ stringToLower
