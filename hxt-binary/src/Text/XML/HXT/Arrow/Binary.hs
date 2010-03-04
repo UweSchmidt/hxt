@@ -20,6 +20,7 @@ module Text.XML.HXT.Arrow.Binary
     )
 where
 
+import           Control.DeepSeq
 import 		 Control.Exception	( SomeException
 					, try
 					)
@@ -36,8 +37,11 @@ import           Text.XML.HXT.Arrow
 -- | Read a serialied value from a file. The the flag indicates uncompressing.
 -- In case of an error, the error message is issued and the arrow fails
 
-readBinaryValue 	:: (Binary a) => Bool -> String -> IOStateArrow s b a
-readBinaryValue c f	= arrIO (\ _ -> try' $ dec c)
+readBinaryValue 	:: (NFData a, Binary a) => Bool -> String -> IOStateArrow s b a
+readBinaryValue c f	= arrIO0 (try' $ do
+                                         r <- dec c
+                                         rnf r `seq` return r
+                                 )
 			  >>>
 			  issueExc "readBinaryValue"
     where

@@ -1,2 +1,3 @@
-:set -i../src
+:set -i../src:../../hxt-binary/src
+:set -ignore-package hxt-cache -ignore-package hxt-binary
 :l TestXmlCache

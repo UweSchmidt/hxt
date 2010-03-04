@@ -16,7 +16,7 @@ main' url		= runX
 					   , ( a_parse_html,	v_1	  )
 					   , ( a_issue_warnings, v_0	  )
                                            , ( a_cache, 	"./cache" )
-					   , ( a_document_age,  "10"      )	-- 10 sec., just for testing
+					   , ( a_document_age,  "1000"      )	-- 10 sec., just for testing
                                            , ( a_compress, 	v_1	  )
                                            ] url
                               >>>

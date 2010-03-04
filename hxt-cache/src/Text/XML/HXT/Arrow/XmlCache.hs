@@ -29,6 +29,7 @@ module Text.XML.HXT.Arrow.XmlCache
     )
 where
 
+import           Control.DeepSeq
 import           Control.Concurrent.ResourceTable
 import 		 Control.Exception	( SomeException	, try )
 
@@ -130,9 +131,16 @@ lookupCache' cc os src	= do
     readDocumentFromCache
 			= traceMsg 1 ("cache hit, reading from cache file " ++ show cf)
                           >>>
-                          readCache cc cf
-                          >>>
-                          traceMsg 1 "cache read"
+                          ( ( readCache cc cf
+                              >>>
+                              traceMsg 1 "cache read"
+                            )
+                            `orElse`
+                            ( traceMsg 1 "cache file was corrupted, reading original"
+                              >>>
+                              readAndCacheDocument
+                            )
+                          )
     readAndCacheDocument
 			= traceMsg 1 ("cache miss, reading original document" ++ show src)
                           >>>
@@ -168,7 +176,7 @@ lookupCache' cc os src	= do
 
 -- ------------------------------------------------------------
 
-lookupCache		:: (Binary b) => CacheConfig -> String -> IOStateArrow s a b
+lookupCache		:: (NFData b, Binary b) => CacheConfig -> String -> IOStateArrow s a b
 lookupCache cc f	= isIOA (const $ hit)
 			  `guards`
 			  readCache cc cf
@@ -182,7 +190,7 @@ lookupCache cc f	= isIOA (const $ hit)
 
 -- ------------------------------------------------------------
 
-readCache		:: (Binary c) => CacheConfig -> String -> IOStateArrow s b c
+readCache		:: (NFData c, Binary c) => CacheConfig -> String -> IOStateArrow s b c
 readCache cc cf		= withLock cf $ readBinaryValue (c_compress cc) cf
 
 writeCache		:: (Binary b) => CacheConfig -> String -> IOStateArrow s b ()

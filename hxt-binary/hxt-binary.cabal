@@ -1,5 +1,5 @@
 name: hxt-binary
-version: 0.0.1
+version: 0.0.2
 license: OtherLicense
 license-file: LICENCE
 maintainer: Uwe Schmidt <uwe@fh-wedel.de>
@@ -9,7 +9,7 @@ synopsis: Serialisation and deserialisation of HXT XmlTrees.
 description: Extension for storing and loading already parsed XML documents in an internal format.
  Serialisation and Deserialisation is done with the binary package.
 homepage: http://www.fh-wedel.de/~si/HXmlToolbox/index.html
-copyright: Copyright (c) 2009 Uwe Schmidt
+copyright: Copyright (c) 2010 Uwe Schmidt
 build-type: Simple
 cabal-version: >=1.6
 
@@ -32,4 +32,5 @@ library
                 bytestring >= 0.9 && < 1,
                 binary     >= 0.5 && < 1,
                 bzlib      >= 0.5 && < 1,
-                hxt        >= 8.2 && < 9
+                deepseq    >= 1.1 && < 2,
+                hxt        >= 8.5 && < 9
