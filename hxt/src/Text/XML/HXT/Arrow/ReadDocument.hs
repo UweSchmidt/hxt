@@ -233,6 +233,9 @@ readDocument' userOptions src
     getMimeType
 	= getAttrValue transferMimeType >>^ stringToLower
 
+    getStatus
+        = getAttrValue transferStatus
+
     processDoc mimeType
 	= traceMsg 1 (unwords [ "readDocument:", show src
 			      , "(mime type:", show mimeType, ") will be processed"])
@@ -264,7 +267,12 @@ readDocument' userOptions src
 		 )								-- remove contents of not accepted mimetype
 	  )
 	where
-        hasEmptyBody			= neg getChildren <+> (getChildren >>> isWhiteSpace)
+        hasEmptyBody			= hasAttrValue (/= "200")		-- test on empty response body for not o.k. responses
+                                          `guards`				-- e.g. 3xx status values
+                                          ( neg getChildren
+                                            <+>
+                                            ( getChildren >>> isWhiteSpace )
+                                          )
 
 	isAcceptedMimeType		:: String -> String -> Bool
 	isAcceptedMimeType mts mt

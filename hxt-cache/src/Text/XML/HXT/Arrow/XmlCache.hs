@@ -167,7 +167,10 @@ lookupCache' cc os src	= do
                                                    >>>
                                                    perform (writeCache cc src)
                                                  )
-                          , this             :-> traceMsg 1 "document read without caching"
+                          , this             :-> ( traceMsg 1 "document read without caching"
+                                                   >>>
+                                                   perform ( arrIO0 $ remFile cf )
+                                                 )
                           ]
         where
         is304           = hasAttrValue transferStatus (== "304")
@@ -207,6 +210,15 @@ writeCache cc f		= traceMsg 1 ("writing cache file " ++ show f)
     ixf 		= c_dir cc </> "index"
     (dir, file)		= cacheFile cc f
     createDir		= createDirectoryIfMissing True dir
+
+-- ------------------------------------------------------------
+
+remFile			:: FilePath -> IO ()
+remFile f		= ( try' $ do ex <- doesFileExist f
+                                      if ex
+                                        then removeFile f
+                                        else return ()
+                          ) >> return ()
 
 -- ------------------------------------------------------------
 
