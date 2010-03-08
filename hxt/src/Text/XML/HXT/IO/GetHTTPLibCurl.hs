@@ -27,6 +27,9 @@ import Control.Arrow			( first
 import Control.Concurrent.MVar
 import Control.Monad			( when )
 
+import qualified Data.ByteString        as B
+import qualified Data.ByteString.Char8  as C
+
 import Data.Char			( isDigit
 					, isSpace
 					)
@@ -54,6 +57,8 @@ import Text.XML.HXT.Version
 isInitCurl	:: MVar Bool
 isInitCurl	= unsafePerformIO $ newMVar False
 
+{-# NOINLINE isInitCurl #-}
+
 initCurl	:: IO ()
 initCurl
     = do
@@ -63,6 +68,21 @@ initCurl
 		     return ()
 		   )
       putMVar isInitCurl True
+
+-- ------------------------------------------------------------
+
+-- The curl lib is not thread save
+
+curlResource	:: MVar ()
+curlResource	= unsafePerformIO $ newMVar ()
+
+{-# NOINLINE curlResource #-}
+
+requestCurl	:: IO ()
+requestCurl	= takeMVar curlResource
+
+releaseCurl	:: IO ()
+releaseCurl	= putMVar curlResource ()
 
 -- ------------------------------------------------------------
 
@@ -87,9 +107,13 @@ getCont		:: [(String, String)] -> String -> IO (Either ([(String, String)], Stri
 getCont options uri
     = do
       initCurl
+      requestCurl
       resp <- curlGetResponse_ uri curlOptions
+      let resp' = evalResponse resp
+      resp' `seq`
+            releaseCurl
       -- dumpResponse
-      return $ evalResponse resp
+      return resp'
     where
     _dumpResponse r
 	= do
@@ -129,9 +153,15 @@ getCont options uri
 		     ++ show rsl
 		   )
 	| otherwise
-	    = Right ( contentT rsh ++ headers, respBody r
+	    = B.length body
+              `seq`
+              Right ( contentT rsh ++ headers
+                    , C.unpack body
 		    )
 	where
+        body :: B.ByteString
+        body = respBody r
+
 	mkH x y	= (x, dropWhile isSpace y)
 
 	headers

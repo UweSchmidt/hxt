@@ -233,15 +233,12 @@ readDocument' userOptions src
     getMimeType
 	= getAttrValue transferMimeType >>^ stringToLower
 
-    getStatus
-        = getAttrValue transferStatus
-
     processDoc mimeType
 	= traceMsg 1 (unwords [ "readDocument:", show src
 			      , "(mime type:", show mimeType, ") will be processed"])
 	  >>>
 	  ( if isAcceptedMimeType (lookup1 a_accept_mimetypes options) mimeType
-	    then ( ifA hasEmptyBody
+	    then ( ifA (fromLA hasEmptyBody)
                    ( replaceChildren none )					-- empty response, e.g. in if-modified-since request
                    ( parse
 		     >>>
@@ -264,11 +261,12 @@ readDocument' userOptions src
 				       , "mime type:", show mimeType, "not accepted"])
 		   >>>
 		   replaceChildren none
-		 )								-- remove contents of not accepted mimetype
+		 )									-- remove contents of not accepted mimetype
 	  )
 	where
-        hasEmptyBody			= hasAttrValue (/= "200")		-- test on empty response body for not o.k. responses
-                                          `guards`				-- e.g. 3xx status values
+        hasEmptyBody			:: LA XmlTree XmlTree
+        hasEmptyBody			= hasAttrValue transferStatus (/= "200")	-- test on empty response body for not o.k. responses
+                                          `guards`					-- e.g. 3xx status values
                                           ( neg getChildren
                                             <+>
                                             ( getChildren >>> isWhiteSpace )
