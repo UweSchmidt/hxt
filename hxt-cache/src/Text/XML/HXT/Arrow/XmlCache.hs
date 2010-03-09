@@ -129,7 +129,7 @@ lookupCache' cc os src	= do
     cf			= uncurry (</>) $ cacheFile cc src
 
     readDocumentFromCache
-			= traceMsg 1 ("cache hit, reading from cache file " ++ show cf)
+			= traceMsg 1 ("cache hit for " ++ show src ++ " reading " ++ show cf)
                           >>>
 			  ( readCache cc cf
                             >>>
@@ -143,14 +143,18 @@ lookupCache' cc os src	= do
                             readAndCacheDocument
                           )
     readAndCacheDocument
-			= traceMsg 1 ("cache miss, reading original document" ++ show src)
+			= traceMsg 1 ("cache miss, reading original document " ++ show src)
                           >>>
                           Text.XML.HXT.Arrow.readDocument os src
                           >>>
-                          perform ( (writeCache cc src >>> none)
-                                    `when`
-                                    documentStatusOk
+                          perform ( choiceA
+                                    [ is200 :-> ( writeCache cc src >>> none )
+                                    , this  :-> traceMsg 1 "transfer status /= 200, page not cached"
+                                    ]
                                   )
+        where
+        is200		= hasAttrValue transferStatus (== "200")
+
     readDocumentCond mt
 			= traceMsg 1 ("cache out of date, read original document if modified " ++ show src)
                           >>>
