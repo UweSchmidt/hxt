@@ -26,6 +26,8 @@ module Text.XML.HXT.Arrow.XmlCache
     , sha1HashValue
     , sha1HashString
     , CacheConfig(..)
+    , isInCache
+    , isInCache'
     )
 where
 
@@ -93,10 +95,6 @@ readDocument' userOptions src
       where
 
       options			= addEntries userOptions defaultOptions
-      defaultOptions		= [ ( a_compress,	v_0	   )
-				  , ( a_cache,		"./.cache" )
-				  , ( a_document_age,   ""         )
-				  ]
       compr			= optionIsSet a_compress options
       withCache			= isJust . lookup a_cache $ userOptions
       cacheDir			= lookup1 a_cache options
@@ -110,6 +108,29 @@ readDocument' userOptions src
 				     , c_age      = cacheAge
 				     }
 
+defaultOptions			:: [(String, String)]
+defaultOptions			= [ ( a_compress,	v_0	   )
+				  , ( a_cache,		"./.cache" )
+				  , ( a_document_age,   ""         )
+				  ]
+
+-- ------------------------------------------------------------
+
+-- | Arrow for checking if a document is in the cache.
+-- The arrow fails if document not there, else the file modification time is returned.
+
+isInCache		:: Attributes -> IOStateArrow s String ClockTime
+isInCache options	= arrIO ( isInCache' (CC { c_dir = lookup1 a_cache (addEntries options defaultOptions)
+                                                 , c_compress = undefined
+                                                 , c_age      = 0
+                                                 }
+                                             )
+                                )
+                          >>>
+                          arr maybeToList
+                          >>>
+                          unlistA
+                          
 -- ------------------------------------------------------------
 
 data CacheConfig	= CC { c_dir		:: FilePath
@@ -127,6 +148,9 @@ lookupCache' cc os src	= do
                                  Just (Just mt) -> readDocumentCond mt
     where
     cf			= uncurry (</>) $ cacheFile cc src
+
+    is200		= hasAttrValue transferStatus (== "200")
+    is304           	= hasAttrValue transferStatus (== "304")
 
     readDocumentFromCache
 			= traceMsg 1 ("cache hit for " ++ show src ++ " reading " ++ show cf)
@@ -152,8 +176,6 @@ lookupCache' cc os src	= do
                                     , this  :-> traceMsg 1 "transfer status /= 200, page not cached"
                                     ]
                                   )
-        where
-        is200		= hasAttrValue transferStatus (== "200")
 
     readDocumentCond mt
 			= traceMsg 1 ("cache out of date, read original document if modified " ++ show src)
@@ -167,7 +189,7 @@ lookupCache' cc os src	= do
                                                    >>>
                                                    readDocumentFromCache
                                                  )
-                          , documentStatusOk :-> ( traceMsg 1 "document read and cache updated"
+                          , is200            :-> ( traceMsg 1 "document read and cache updated"
                                                    >>>
                                                    perform (writeCache cc src)
                                                  )
@@ -177,7 +199,6 @@ lookupCache' cc os src	= do
                                                  )
                           ]
         where
-        is304           = hasAttrValue transferStatus (== "304")
         condOpts t	= [("curl--header", "If-Modified-Since: " ++ fmtTime t)]
                           -- [(a_if_modified_since, fmtTime t)]
         fmtTime		= formatCalendarTime defaultTimeLocale rfc822DateFormat . toUTCTime
@@ -230,6 +251,21 @@ cacheFile		:: CacheConfig -> String -> (FilePath, FilePath)
 cacheFile cc f		= (c_dir cc </> fd, fn)
     where
     (fd, fn)		= splitAt 2 . sha1HashString $ f
+
+-- ------------------------------------------------------------
+
+isInCache'		:: CacheConfig -> String -> IO (Maybe ClockTime)
+isInCache' cc f		= do
+                          h <- cacheHit cc' cf
+                          return $
+                                 case h of
+                                 Just (Just t)	-> Just t
+                                 _		-> Nothing
+    where
+    cf			= uncurry (</>) $ cacheFile cc f
+    cc'			= cc { c_age = 0 }
+
+-- ------------------------------------------------------------
 
 -- result interpretation for cacheHit
 --
