@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
+{-# OPTIONS_GHC -fno-warn-unused-binds #-}
 
 {-----------------------------------------------------------
  Daan Leijen (c) 1999-2000, daan@cs.uu.nl
