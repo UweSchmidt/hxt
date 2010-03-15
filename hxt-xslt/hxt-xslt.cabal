@@ -1,6 +1,6 @@
 -- arch-tag: Haskell XML Toolbox XSLT Module
 name: hxt-xslt
-version: 8.5.0
+version: 8.5.2
 license: OtherLicense
 license-file: LICENCE
 maintainer: Uwe Schmidt <uwe@fh-wedel.de>
@@ -80,9 +80,9 @@ library
  ghc-options: -Wall
  extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances
 
- build-depends: base       >= 4.2 && < 5,
+ build-depends: base       >= 4   && < 5,
                 haskell98  >= 1   && < 2,
-                containers >= 0.3 && < 1,
+                containers >= 0.2 && < 1,
                 directory  >= 1   && < 2,
                 filepath   >= 1   && < 2,
                 parsec     >= 2.1 && < 4,
