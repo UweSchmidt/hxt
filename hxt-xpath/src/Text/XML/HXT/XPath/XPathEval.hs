@@ -2,13 +2,12 @@
 
 {- |
    Module     : Text.XML.HXT.XPath.XPathEval
-   Copyright  : Copyright (C) 2006 Uwe Schmidt
+   Copyright  : Copyright (C) 2006-2010 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: XPathEval.hs,v 1.8 2006/10/12 11:51:29 hxml Exp $
 
    The core functions for evaluating the different types of XPath expressions.
    Each 'Expr'-constructor is mapped to an evaluation function.
@@ -19,15 +18,27 @@
 
 module Text.XML.HXT.XPath.XPathEval
     ( getXPath
-    , getXPathWithNsEnv
     , getXPathSubTrees
-    , getXPathSubTreesWithNsEnv
     , getXPathNodeSet'
+
+    , getXPathWithNsEnv
+    , getXPathSubTreesWithNsEnv
     , getXPathNodeSetWithNsEnv'
+
     , evalExpr
     , addRoot'
+
+    , parseXPathExpr
+    , parseXPathExprWithNsEnv
+
+    , getXPath'
+    , getXPathSubTrees'
+    , getXPathNodeSet''
     )
 where
+
+import Data.List			( partition )
+import Data.Maybe			( fromJust, fromMaybe )
 
 import Text.XML.HXT.XPath.XPathFct
 import Text.XML.HXT.XPath.XPathDataTypes
@@ -46,9 +57,6 @@ import Text.XML.HXT.XPath.XPathToNodeSet( xPValue2XmlNodeSet
 
 import Text.ParserCombinators.Parsec	( runParser )
 
-import Data.List			( partition )
-import Data.Maybe			( fromJust, fromMaybe )
-
 -- ----------------------------------------
 
 -- the DOM functions
@@ -60,7 +68,7 @@ import qualified Text.XML.HXT.DOM.XmlNode as XN
 
 -- the list arrow functions
 
-import Control.Arrow			( (>>>), (>>^) )
+import Control.Arrow			( (>>>), (>>^), left )
 import Control.Arrow.ArrowList		( arrL, isA )
 import Control.Arrow.ArrowIf    	( filterA )
 import Control.Arrow.ListArrow		( runLA )
@@ -71,19 +79,28 @@ import Text.XML.HXT.Arrow.XmlArrow	( ArrowDTD, isDTD, getDTDAttrl )
 import Text.XML.HXT.Arrow.Edit		( canonicalizeForXPath )
 
 -- -----------------------------------------------------------------------------
-
 -- |
--- Select parts of a document by an XPath expression.
+-- Select parts of a document by a string representing a XPath expression.
 --
 -- The main filter for selecting parts of a document via XPath.
 -- The string argument must be a XPath expression with an absolute location path,
 -- the argument tree must be a complete document tree.
 -- Result is a possibly empty list of XmlTrees forming the set of selected XPath values.
 -- XPath values other than XmlTrees (numbers, attributes, tagnames, ...)
--- are convertet to text nodes.
+-- are converted to text nodes.
 
 getXPath		:: String -> XmlTree -> XmlTrees
 getXPath		= getXPathWithNsEnv []
+
+-- -----------------------------------------------------------------------------
+-- |
+-- Select parts of a document by an already parsed XPath expression
+
+getXPath'		:: Expr -> XmlTree -> XmlTrees
+getXPath' e		= runLA $
+                          canonicalizeForXPath
+			  >>>
+			  arrL (getXPathValues' xPValue2XmlTrees e)
 
 -- -----------------------------------------------------------------------------
 -- |
@@ -95,12 +112,12 @@ getXPath		= getXPathWithNsEnv []
 getXPathWithNsEnv	:: Attributes -> String -> XmlTree -> XmlTrees
 getXPathWithNsEnv env s	= runLA ( canonicalizeForXPath
 				  >>>
-				  arrL (getXPathValues xPValue2XmlTrees xPathErr (toNsEnv env) s)
+				  arrL (getXPathValues xPValue2XmlTrees xPathErr env s)
 				)
 
 -- -----------------------------------------------------------------------------
 -- |
--- Select parts of an XML tree by a XPath expression.
+-- Select parts of an XML tree by a string representing an XPath expression.
 --
 -- The main filter for selecting parts of an arbitrary XML tree via XPath.
 -- The string argument must be a XPath expression with an absolute location path,
@@ -116,56 +133,88 @@ getXPathSubTrees			:: String -> XmlTree -> XmlTrees
 getXPathSubTrees			= getXPathSubTreesWithNsEnv []
 
 -- -----------------------------------------------------------------------------
+-- |
+-- Select parts of an XML tree by an XPath expression.
+
+getXPathSubTrees'			:: Expr -> XmlTree -> XmlTrees
+getXPathSubTrees'			= getXPathValues' xPValue2XmlTrees
+
+-- -----------------------------------------------------------------------------
 -- | Same as 'getXPathSubTrees' but with namespace aware XPath expression
 
 getXPathSubTreesWithNsEnv		:: Attributes -> String -> XmlTree -> XmlTrees
-getXPathSubTreesWithNsEnv nsEnv xpStr
-    = getXPathValues xPValue2XmlTrees xPathErr (toNsEnv nsEnv) xpStr
+getXPathSubTreesWithNsEnv nsEnv xpStr   = getXPathValues xPValue2XmlTrees xPathErr nsEnv xpStr
 
 -- -----------------------------------------------------------------------------
--- | compute the node set of an XPath query
+-- |
+-- compute the node set of an XPath query
 
 getXPathNodeSet'			:: String -> XmlTree -> XmlNodeSet
 getXPathNodeSet'			= getXPathNodeSetWithNsEnv' []
 
 -- -----------------------------------------------------------------------------
+-- |
+-- compute the node set of an XPath query for an already parsed XPath expr
+
+getXPathNodeSet''			:: Expr -> XmlTree -> XmlNodeSet
+getXPathNodeSet''			= getXPathValues' xPValue2XmlNodeSet
+
+-- -----------------------------------------------------------------------------
 -- | compute the node set of a namespace aware XPath query
 
 getXPathNodeSetWithNsEnv'		:: Attributes -> String -> XmlTree -> XmlNodeSet
-getXPathNodeSetWithNsEnv' nsEnv xpStr
-    = getXPathValues xPValue2XmlNodeSet (const (const emptyXmlNodeSet)) (toNsEnv nsEnv) xpStr
+getXPathNodeSetWithNsEnv' nsEnv xpStr   = getXPathValues xPValue2XmlNodeSet (const emptyXmlNodeSet) nsEnv xpStr
 
 -- -----------------------------------------------------------------------------
 
 -- | parse xpath, evaluate xpath expr and prepare results
 
-getXPathValues				:: (XPathValue -> a) -> (String -> String -> a) -> NsEnv -> String -> XmlTree -> a
+getXPathValues				:: (XPathValue -> a) -> (String -> a) -> Attributes -> String -> XmlTree -> a
 getXPathValues cvRes cvErr nsEnv xpStr t
-    = case (runParser parseXPath nsEnv "" xpStr) of
-      Left parseError			-> cvErr xpStr (show parseError)
-      Right xpExpr			-> evalXP xpExpr
+    					= case parseXPathExprWithNsEnv nsEnv xpStr of
+                                          Left  parseError	-> cvErr parseError
+                                          Right xpExpr		-> getXPathValues' cvRes xpExpr t
+
+xPathErr				:: String -> [XmlTree]
+xPathErr parseError			= [ XN.mkError c_err parseError ]
+
+-- -----------------------------------------------------------------------------
+
+-- | parse xpath, evaluate xpath expr and prepare results
+
+getXPathValues'				:: (XPathValue -> a) -> Expr -> XmlTree -> a
+getXPathValues' cvRes xpExpr t		= cvRes xpRes
     where
-    evalXP xpe				= cvRes xpRes
-	where
-	t'      			= addRoot' t				-- we need a root node for starting xpath eval
-	idAttr				= ( ("", "idAttr")			-- id attributes from DTD (if there)
+    t'		      			= addRoot' t				-- we need a root node for starting xpath eval
+    idAttr				= ( ("", "idAttr")			-- id attributes from DTD (if there)
 					  , idAttributesToXPathValue . getIdAttributes $ t'
 					  )
-	navTD				= ntree t'
-	xpRes				= evalExpr (idAttr:(getVarTab varEnv),[]) (1, 1, navTD) xpe (XPVNode . singletonNodeSet $ navTD)
+    navTD				= ntree t'
+    xpRes				= evalExpr (idAttr:(getVarTab varEnv),[]) (1, 1, navTD) xpExpr (XPVNode . singletonNodeSet $ navTD)
 
 addRoot'				:: XmlTree -> XmlTree
 addRoot' t
     | XN.isRoot t			= t
     | otherwise				= XN.mkRoot [] [t]
 
-xPathErr				:: String -> String -> [XmlTree]
-xPathErr xpStr parseError		= [ XN.mkError c_err $
-					    ( "Syntax error in XPath expression " ++
-					      show xpStr ++ ": " ++
-					      show parseError
-					    )
-					  ]
+-- -----------------------------------------------------------------------------
+
+-- | parse an XPath expr string 
+-- and return an expr tree or an error message.
+-- Namespaces are not taken into account.
+
+parseXPathExpr				:: String -> Either String Expr
+parseXPathExpr				= parseXPathExprWithNsEnv []
+
+-- | parse an XPath expr string with a namespace environment for qualified names in the XPath expr
+-- and return an expr tree or an error message
+
+parseXPathExprWithNsEnv			:: Attributes -> String -> Either String Expr
+parseXPathExprWithNsEnv nsEnv xpStr	= left fmtErr . runParser parseXPath (toNsEnv nsEnv) "" $ xpStr
+    where
+    fmtErr parseError			= "Syntax error in XPath expression " ++
+					  show xpStr ++ ": " ++
+					  show parseError
 
 -- -----------------------------------------------------------------------------
 

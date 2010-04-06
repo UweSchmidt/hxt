@@ -18,5 +18,9 @@ test	:
 	$(foreach i, $(HXTPACKAGES), cp $(wildcard $i/dist/$i-*.tar.gz) ~/tmp; )
 	$(MAKE) -C ~/tmp all
 
+unregister	:
+	for i in $$(ghc-pkg list | egrep '(hxt(-[a-z]+)?-|janus-library-)'); do ghc-pkg --force unregister $$i; done
+	ghc-pkg list
+
 .PHONY	: all global clean test
 
