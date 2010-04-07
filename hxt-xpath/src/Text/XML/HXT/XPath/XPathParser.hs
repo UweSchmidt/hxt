@@ -2,14 +2,14 @@
 
 {- |
    Module     : Text.XML.HXT.XPath.XPathParser
-   Copyright  : Copyright (C) 2006-2008 Uwe Schmidt
+   Copyright  : Copyright (C) 2006-2010 Uwe Schmidt, Torben Kuseler
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
 
-   the XPath Parser
+   The XPath Parser
 
 -}
 
@@ -21,8 +21,6 @@ module Text.XML.HXT.XPath.XPathParser
     )
 where
 
-import Data.Maybe
-
 import Text.ParserCombinators.Parsec
 
 import Text.XML.HXT.DOM.TypeDefs
@@ -30,36 +28,37 @@ import Text.XML.HXT.DOM.TypeDefs
 import Text.XML.HXT.XPath.XPathKeywords
 import Text.XML.HXT.XPath.XPathDataTypes
 
-import Text.XML.HXT.Parser.XmlTokenParser
-    ( separator
-    , systemLiteral
-    , skipS0
-    , ncName
-    , qName
-    )
+import Text.XML.HXT.Parser.XmlTokenParser	( separator
+                                                , systemLiteral
+                                                , skipS0
+                                                , ncName
+                                                , qName
+                                                )
 
-lookupNs				:: NsEnv -> XName -> XName
+-- ------------------------------------------------------------
+
+lookupNs				:: NsEnv -> XName -> Maybe XName
 lookupNs uris prefix
-					-- downwards compatibility: if namespace env is not supported
-					-- no error is raised, but the uri remains empty
-					-- not conformant to XPath spec:
-					-- If namespaces are used, a complete env must be supported,
-					-- but we don't care about this
-					= fromMaybe nullXName $ lookup prefix uris
+    | null uris				= Just nullXName		-- not namespace aware XPath
+    | isNullXName prefix		= maybe (Just nullXName) Just $	-- no default namespace given
+                                          lookup prefix uris
+    | otherwise				= lookup prefix uris		-- namespace aware
 
-enhanceAttrQName			:: NsEnv -> QName -> QName
+enhanceAttrQName			:: NsEnv -> QName -> Maybe QName
 enhanceAttrQName uris qn
-    | isNullXName (namePrefix' qn)	= qn
+    | isNullXName (namePrefix' qn)	= Just qn
     | otherwise				= enhanceQName uris qn
 
-enhanceQName 				:: NsEnv -> QName -> QName
-enhanceQName uris qn			= setNamespaceUri' ( lookupNs uris (namePrefix' qn) ) qn
+enhanceQName 				:: NsEnv -> QName -> Maybe QName
+enhanceQName uris qn			= do
+					  nsu <- lookupNs uris (namePrefix' qn)
+                                          return $ setNamespaceUri' nsu qn
 
-enhanceQN				::  AxisSpec -> NsEnv -> QName -> QName
+enhanceQN				::  AxisSpec -> NsEnv -> QName -> Maybe QName
 enhanceQN Attribute			= enhanceAttrQName
 enhanceQN _				= enhanceQName
 
-type XParser a = GenParser Char NsEnv a
+type XParser a 				= GenParser Char NsEnv a
 
 -- ------------------------------------------------------------
 -- parse functions which are used in the XPathFct module
@@ -586,50 +585,50 @@ number
 
 functionName :: XParser String
 functionName
-    = try ( do           
-            (p, n) <- qName
-            uris   <- getState
-            u      <- return $ if null p
-	                       then ""
-                               else '{' : show (lookupNs uris (newXName p)) ++ "}"
-            let fn = (u ++ n) in
-              if fn `elem` ["processing-instruction", "comment", "text", "node"]
-                then fail ("function name: " ++ fn ++ "not allowed")
-                else return fn
-          )
+    = do (p, n) <- try qName
+         fn     <- enhanceName Attribute $ mkPrefixLocalPart p n
+         if null p
+            then if n `elem` ["processing-instruction", "comment", "text", "node"]
+                 then fail   $ "function name: " ++ n ++ "not allowed"
+                 else return n
+            else return $ "{" ++ namespaceUri fn ++ "}" ++ n
       <?> "functionName"
 
 
 -- [36] VariableReference
 variableReference :: XParser (String, String)
 variableReference
-    = do
-      tokenParser (symbol "$")
-      (p,n) <- qName
-      uris   <- getState
-      return (show (lookupNs uris (newXName p)), n)
+    = do tokenParser (symbol "$")
+         (p, n) <- qName
+         vn     <- enhanceName Attribute $ mkPrefixLocalPart p n
+         return (namespaceUri vn, n)
       <?> "variableReference"
 
 
 -- [37] NameTest
 nameTest :: AxisSpec -> XParser QName
-nameTest as
+nameTest axs
     = do tokenParser (symbol "*")
-	 uris <- getState
-	 return (enhanceQN as uris $ mkPrefixLocalPart "" "*")
+         enhanceName axs $ mkPrefixLocalPart "" "*"
       <|>
-      try ( do pre <- ncName
-               _ <- symbol ":*"
-               uris <- getState
-               return (enhanceQN as uris $ mkPrefixLocalPart pre "*")
-	  )
+      do pre <- try ( do pre' <- ncName
+                         _    <- symbol ":*"
+                         return pre'
+                    )
+         enhanceName axs $ mkPrefixLocalPart pre "*"
       <|>
       do (pre,local) <- qName
-	 uris <- getState
-	 return (enhanceQN as uris $ mkPrefixLocalPart pre local)
+         enhanceName axs $ mkPrefixLocalPart pre local
       <?> "nameTest"
 
-	
+enhanceName	:: AxisSpec -> QName -> XParser QName
+enhanceName axs qn
+    = do uris <- getState
+         case enhanceQN axs uris qn of
+           Nothing  -> fail $ "no namespace uri given for prefix " ++ show (namePrefix qn)
+           Just qn' -> return qn'
+      <?> "qualified name with defined namespace uri"
+
 -- [38] NodeType
 nodeType' :: XParser XPathNode
 nodeType' 

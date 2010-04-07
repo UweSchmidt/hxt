@@ -11,7 +11,10 @@ wrongXml :: String
 wrongXml = "<???>"
 
 nsEnv :: [(String, String)]
-nsEnv = [ ("s"    , "http://www.w3.org/2003/05/soap-envelope") ]
+nsEnv = [ ("s"    , "http://www.w3.org/2003/05/soap-envelope")
+        , ("soap" , "http://www.w3.org/2003/05/soap-envelope")
+        , (""     , "the-default-namespace")
+        ]
 
 evalXPath :: String -> String -> [XmlTree]
 evalXPath xpath xml =
@@ -25,9 +28,11 @@ evalXPath xpath xml =
           )
         ) xml
 
-t1 = evalXPath "//s:Body"    simpleXml
-t2 = evalXPath "//soap:Body" simpleXml
-t3 = evalXPath "???"         simpleXml
-t4 = evalXPath "//soap:Body" wrongXml
-t5 = runLA xread wrongXml
+t1 = evalXPath "//s:Body"    simpleXml		-- o.k.
+t2 = evalXPath "//soap:Body" simpleXml		-- o.k.
+t3 = evalXPath "???"         simpleXml		-- syntax error in xpath
+t4 = evalXPath "//xxx:Body"  simpleXml		-- syntax error in xpath: no namespace given for xxx
+t5 = evalXPath "//soap:Body" wrongXml		-- syntax error in doc
+
+t6 = runLA xread wrongXml
 
