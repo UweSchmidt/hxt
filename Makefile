@@ -19,7 +19,7 @@ test	:
 	$(MAKE) -C ~/tmp all
 
 unregister	:
-	for i in $$(ghc-pkg list | egrep '(hxt(-[a-z]+)?-|janus-library-)'); do ghc-pkg --force unregister $$i; done
+	ghc-pkg list --simple-output | xargs --max-args=1 echo | egrep '(hxt(-[a-z]+)?-|janus-library-)' | xargs --max-args=1 ghc-pkg --force unregister
 	ghc-pkg list
 
 .PHONY	: all global clean test

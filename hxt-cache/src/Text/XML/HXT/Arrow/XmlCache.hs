@@ -21,6 +21,7 @@ module Text.XML.HXT.Arrow.XmlCache
     , a_cache
     , a_compress
     , a_document_age
+    , a_cache_404
     , lookupCache
     , writeCache
     , sha1HashValue
@@ -67,6 +68,9 @@ a_compress		= "compress"
 a_document_age		:: String
 a_document_age		= "document-age"
 
+a_cache_404		:: String
+a_cache_404		= "cache-404"
+
 -- ------------------------------------------------------------
 
 -- | This readDocument is a wrapper for the 'Text.XML.HXT.Arrow.ReadDocument.readDocument' function.
@@ -80,6 +84,8 @@ a_document_age		= "document-age"
 --
 -- - 'a_document_age': determines the maximum age of the document in seconds. If this time is exceeded, the cache entry
 --                     is ignored, the original is re-read and cached again. Default for the document age is 1 day.
+--
+-- - 'a_cache_404' : If set, cache is activated even for 404 (not found) responses, default is false.
 
 readDocument		:: Attributes -> String -> IOStateArrow s b XmlTree
 readDocument userOptions src
@@ -94,25 +100,29 @@ readDocument' userOptions src
     | otherwise		= Text.XML.HXT.Arrow.readDocument userOptions src
       where
 
-      options			= addEntries userOptions defaultOptions
-      compr			= optionIsSet a_compress options
-      withCache			= isJust . lookup a_cache $ userOptions
-      cacheDir			= lookup1 a_cache options
-      cacheAge			= readInteger . lookup1 a_document_age $ options
+      options		= addEntries userOptions defaultOptions
+      compr		= optionIsSet a_compress options
+      withCache		= isJust . lookup a_cache $ userOptions
+      cacheDir		= lookup1 a_cache options
+      cacheAge		= readInteger . lookup1 a_document_age $ options
+      cache404		= optionIsSet a_cache_404 options
       readInteger s
 	  | null s || not (all isDigit s)
-				= 60 * 60 * 24				-- default age: 1 day
-	  | otherwise		= read s
-      cacheConfig		= CC { c_dir      = cacheDir
-				     , c_compress = compr
-				     , c_age      = cacheAge
-				     }
+			= 60 * 60 * 24				-- default age: 1 day
+	  | otherwise	= read s
+      cacheConfig	= CC
+                          { c_dir      = cacheDir
+			  , c_compress = compr
+			  , c_age      = cacheAge
+                          , c_404	  = cache404
+			  }
 
-defaultOptions			:: [(String, String)]
-defaultOptions			= [ ( a_compress,	v_0	   )
-				  , ( a_cache,		"./.cache" )
-				  , ( a_document_age,   ""         )
-				  ]
+defaultOptions		:: [(String, String)]
+defaultOptions		= [ ( a_compress,	v_0	   )
+			  , ( a_cache,		"./.cache" )
+			  , ( a_document_age,   ""         )
+                          , ( a_cache_404,	v_0	   )
+			  ]
 
 -- ------------------------------------------------------------
 
@@ -120,11 +130,9 @@ defaultOptions			= [ ( a_compress,	v_0	   )
 -- The arrow fails if document not there, else the file modification time is returned.
 
 isInCache		:: Attributes -> IOStateArrow s String ClockTime
-isInCache options	= arrIO ( isInCache' (CC { c_dir = lookup1 a_cache (addEntries options defaultOptions)
-                                                 , c_compress = undefined
-                                                 , c_age      = 0
-                                                 }
-                                             )
+isInCache options	= arrIO ( isInCache' $
+                                  defaultCacheConfig
+                                  { c_dir = lookup1 a_cache (addEntries options defaultOptions) }
                                 )
                           >>>
                           arr maybeToList
@@ -133,10 +141,20 @@ isInCache options	= arrIO ( isInCache' (CC { c_dir = lookup1 a_cache (addEntries
                           
 -- ------------------------------------------------------------
 
-data CacheConfig	= CC { c_dir		:: FilePath
-                             , c_compress	:: Bool
-                             , c_age		:: Integer
-                             }
+data CacheConfig	= CC
+                          { c_dir		:: FilePath
+                          , c_compress	:: Bool
+                          , c_age		:: Integer
+                          , c_404		:: Bool
+                          }
+
+defaultCacheConfig	:: CacheConfig
+defaultCacheConfig	= CC
+                          { c_dir		= "./.cache"
+                          , c_compress		= False
+                          , c_age		= 0
+                          , c_404		= False
+                          }
 
 lookupCache'		:: CacheConfig -> Attributes -> String -> IO (IOStateArrow s a XmlTree)
 lookupCache' cc os src	= do
@@ -149,7 +167,10 @@ lookupCache' cc os src	= do
     where
     cf			= uncurry (</>) $ cacheFile cc src
 
-    is200		= hasAttrValue transferStatus (== "200")
+    is200
+        | c_404 cc	= hasAttrValue transferStatus (`elem` ["200", "404"])
+        | otherwise	= hasAttrValue transferStatus (== "200")
+
     is304           	= hasAttrValue transferStatus (== "304")
 
     readDocumentFromCache
