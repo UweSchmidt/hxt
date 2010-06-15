@@ -1,7 +1,7 @@
 # $Id: Makefile,v 1.5 2005/04/14 12:52:51 hxml Exp $
 
 HXT_HOME	= ../..
-PKGFLAGS	= 
+PKGFLAGS	=
 GHCFLAGS	= -Wall -O2
 GHC		= ghc $(GHCFLAGS) $(PKGFLAGS)
 

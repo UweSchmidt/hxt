@@ -21,11 +21,11 @@ where
 
 import Text.XML.HXT.XSLT.Common
 
-xsltPrefix	:: String
-xsltPrefix	= "xsl"
+xsltPrefix      :: String
+xsltPrefix      = "xsl"
 
-xsltUri		:: String
-xsltUri		= "http://www.w3.org/1999/XSL/Transform"
+xsltUri         :: String
+xsltUri         = "http://www.w3.org/1999/XSL/Transform"
 
 mkXsltName :: String -> QName
 mkXsltName name = mkQName xsltPrefix name xsltUri
@@ -63,7 +63,7 @@ xsltTransform
   , xsltSort
   , xsltStripSpace
   , xsltPreserveSpace
-  , xsltNamespaceAlias	:: QName
+  , xsltNamespaceAlias  :: QName
 
 xsltTransform                   = mkXsltName "transform"
 xsltStylesheet                  = mkXsltName "stylesheet"
@@ -114,11 +114,11 @@ xsltTerminate
   , xsltResultPrefix
   , xsltVersion
   , xsltExlcudeResultPrefixes
-  , xsltExtensionElementPrefixes	:: QName
+  , xsltExtensionElementPrefixes        :: QName
 
-xsltTerminate                   = mkXsltAttribName "terminate" 
-xsltSelect                      = mkXsltAttribName "select" 
-xsltTest                        = mkXsltAttribName "test" 
+xsltTerminate                   = mkXsltAttribName "terminate"
+xsltSelect                      = mkXsltAttribName "select"
+xsltTest                        = mkXsltAttribName "test"
 xsltName                        = mkXsltAttribName "name"
 xsltNamespace                   = mkXsltAttribName "namespace"
 xsltUseAttributeSets            = mkXsltAttribName "use-attribute-sets"
@@ -139,14 +139,14 @@ xsltExtensionElementPrefixes    = mkXsltAttribName "extension-element-prefixes"
 xsltUseAttributeSetsLRE
   , xsltVersionLRE
   , xsltExlcudeResultPrefixesLRE
-  , xsltExtensionElementPrefixesLRE	:: QName
+  , xsltExtensionElementPrefixesLRE     :: QName
 
-xsltUseAttributeSetsLRE         = mkXsltName "use-attribute-sets" 
+xsltUseAttributeSetsLRE         = mkXsltName "use-attribute-sets"
 xsltVersionLRE                  = mkXsltName "version"
 xsltExlcudeResultPrefixesLRE    = mkXsltName "exclude-result-prefixes"
 xsltExtensionElementPrefixesLRE = mkXsltName "extension-element-prefixes"
 
 -- xml:space attribute-name
-xmlSpace	:: QName
+xmlSpace        :: QName
 
 xmlSpace                        = mkQName "xml" "space" xmlNamespace

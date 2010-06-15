@@ -26,7 +26,7 @@ module Text.XML.HXT.Arrow.ProcessDocument
     )
 where
 
-import Control.Arrow				-- arrow classes
+import Control.Arrow                            -- arrow classes
 import Control.Arrow.ArrowList
 import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
@@ -67,7 +67,7 @@ import Text.XML.HXT.Arrow.Namespace
 
 -- ------------------------------------------------------------
 
-{- | 
+{- |
 XML parser
 
 Input tree must be a root tree with a text tree as child containing the document to be parsed.
@@ -86,36 +86,36 @@ Example:
 This parser is useful for applications processing correct XML documents.
 -}
 
-parseXmlDocument	:: Bool -> IOStateArrow s XmlTree XmlTree
+parseXmlDocument        :: Bool -> IOStateArrow s XmlTree XmlTree
 parseXmlDocument validate
     = ( replaceChildren ( ( getAttrValue a_source
-			    &&&
-			    xshow getChildren
-			  )
-			  >>>
-			  parseXmlDoc
-			  >>>
-			  filterErrorMsg
-			)
-	>>>
-	setDocumentStatusFromSystemState "parse XML document"
-	>>>
-	processDTD
-	>>>
-	processGeneralEntities
-	>>>
-	transfAllCharRef
-	>>>
-	( if validate
-	  then validateDocument
-	  else this
-	)
+                            &&&
+                            xshow getChildren
+                          )
+                          >>>
+                          parseXmlDoc
+                          >>>
+                          filterErrorMsg
+                        )
+        >>>
+        setDocumentStatusFromSystemState "parse XML document"
+        >>>
+        processDTD
+        >>>
+        processGeneralEntities
+        >>>
+        transfAllCharRef
+        >>>
+        ( if validate
+          then validateDocument
+          else this
+        )
       )
       `when` documentStatusOk
 
 -- ------------------------------------------------------------
 
-{- | 
+{- |
 HTML parser
 
 Input tree must be a root tree with a text tree as child containing the document to be parsed.
@@ -129,57 +129,57 @@ arbitray errors, but the application is only interested in parts of the document
 
 -}
 
-parseHtmlDocument	:: Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> IOStateArrow s XmlTree XmlTree
+parseHtmlDocument       :: Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> IOStateArrow s XmlTree XmlTree
 parseHtmlDocument withTagSoup withNamespaces warnings preserveCmt removeWhitespace asHtml
     = ( perform ( getAttrValue a_source >>> traceValue 1 (("parseHtmlDoc: parse HTML document " ++) . show) )
-	>>>
-	replaceChildren ( ( getAttrValue a_source		-- get source name
-			    &&&
-			    xshow getChildren
-			  ) 					-- get string to be parsed
-			  >>>
-			  parseHtml
-			)
-	>>>
-	removeWarnings
-	>>>
-	setDocumentStatusFromSystemState "parse HTML document"
-	>>>
-	traceTree
-	>>>
-	traceSource
-	>>>
-	perform ( getAttrValue a_source
-		  >>>
-		  traceValue 1 (\ src -> "parse HTML document " ++ show src ++ " finished")
-		)
+        >>>
+        replaceChildren ( ( getAttrValue a_source               -- get source name
+                            &&&
+                            xshow getChildren
+                          )                                     -- get string to be parsed
+                          >>>
+                          parseHtml
+                        )
+        >>>
+        removeWarnings
+        >>>
+        setDocumentStatusFromSystemState "parse HTML document"
+        >>>
+        traceTree
+        >>>
+        traceSource
+        >>>
+        perform ( getAttrValue a_source
+                  >>>
+                  traceValue 1 (\ src -> "parse HTML document " ++ show src ++ " finished")
+                )
       )
       `when` documentStatusOk
     where
     parseHtml
-	| withTagSoup	= traceMsg 1 ("parse document with tagsoup " ++
-				      ( if asHtml then "HT" else "X" ) ++ "ML parser"
-				     )
-			  >>>
-			  parseHtmlTagSoup withNamespaces warnings preserveCmt removeWhitespace asHtml
+        | withTagSoup   = traceMsg 1 ("parse document with tagsoup " ++
+                                      ( if asHtml then "HT" else "X" ) ++ "ML parser"
+                                     )
+                          >>>
+                          parseHtmlTagSoup withNamespaces warnings preserveCmt removeWhitespace asHtml
 
-	| otherwise	= traceMsg 1 ("parse document with parsec HTML parser")
-			  >>>
-			  parseHtmlDoc				-- run parser
-			  >>>
-			  substHtmlEntityRefs			-- substitute entity refs
+        | otherwise     = traceMsg 1 ("parse document with parsec HTML parser")
+                          >>>
+                          parseHtmlDoc                          -- run parser
+                          >>>
+                          substHtmlEntityRefs                   -- substitute entity refs
     removeWarnings
-	| withTagSoup
-	  &&
-	  not warnings	= this
-	| otherwise	= processTopDownWithAttrl
-			  ( if warnings				-- remove warnings inserted by parser and entity subst
-			    then filterErrorMsg
-			    else ( none
-				   `when`
-				   isError
-				 )
-			  )
+        | withTagSoup
+          &&
+          not warnings  = this
+        | otherwise     = processTopDownWithAttrl
+                          ( if warnings                         -- remove warnings inserted by parser and entity subst
+                            then filterErrorMsg
+                            else ( none
+                                   `when`
+                                   isError
+                                 )
+                          )
 
 -- ------------------------------------------------------------
 
@@ -198,28 +198,28 @@ of the root node \"\/\" and the document content is removed from the tree.
 
 -}
 
-validateDocument	:: IOStateArrow s XmlTree XmlTree
+validateDocument        :: IOStateArrow s XmlTree XmlTree
 validateDocument
     = ( traceMsg 1 "validating document"
-	>>>
-	perform ( validateDoc
-		  >>>
-		  filterErrorMsg
-		)
-	>>>
-	setDocumentStatusFromSystemState "document validation"
-	>>>
-	transformDoc
-	>>>
-	traceMsg 1 "document validated"
-	>>>
-	traceSource
-	>>>
-	traceTree
+        >>>
+        perform ( validateDoc
+                  >>>
+                  filterErrorMsg
+                )
+        >>>
+        setDocumentStatusFromSystemState "document validation"
+        >>>
+        transformDoc
+        >>>
+        traceMsg 1 "document validated"
+        >>>
+        traceSource
+        >>>
+        traceTree
       )
       `when`
       documentStatusOk
-      
+
 -- ------------------------------------------------------------
 
 {- | Namespace propagation
@@ -237,22 +237,22 @@ of the root node \"\/\" and the document content is removed from the tree.
 
 -}
 
-propagateAndValidateNamespaces	:: IOStateArrow s XmlTree XmlTree
+propagateAndValidateNamespaces  :: IOStateArrow s XmlTree XmlTree
 propagateAndValidateNamespaces
     = ( traceMsg 1 "propagating namespaces"
-	>>>
-	propagateNamespaces
-	>>>
-	traceDoc "propagating namespaces done"
-	>>>
-	traceMsg 1 "validating namespaces"
-	>>>
-	( setDocumentStatusFromSystemState "namespace propagation"
-	  `when`
-	  ( validateNamespaces >>> perform filterErrorMsg )
-	)
-	>>>
-	traceMsg 1 "namespace validation finished"
+        >>>
+        propagateNamespaces
+        >>>
+        traceDoc "propagating namespaces done"
+        >>>
+        traceMsg 1 "validating namespaces"
+        >>>
+        ( setDocumentStatusFromSystemState "namespace propagation"
+          `when`
+          ( validateNamespaces >>> perform filterErrorMsg )
+        )
+        >>>
+        traceMsg 1 "namespace validation finished"
       )
       `when`
       documentStatusOk
@@ -269,14 +269,14 @@ propagateAndValidateNamespaces
    For supported protocols see 'Text.XML.HXT.Arrow.DocumentInput.getXmlContents'
 -}
 
-getDocumentContents	:: Attributes -> String -> IOStateArrow s b XmlTree
+getDocumentContents     :: Attributes -> String -> IOStateArrow s b XmlTree
 getDocumentContents options src
     = root [] []
       >>>
       addAttr a_source src
       >>>
-      seqA (map (uncurry addAttr) options)					-- add all options to doc root
-      >>>									-- e.g. getXmlContents needs some of these
+      seqA (map (uncurry addAttr) options)                                      -- add all options to doc root
+      >>>                                                                       -- e.g. getXmlContents needs some of these
       traceMsg 1 ("readDocument: start processing document " ++ show src)
       >>>
       getXmlContents

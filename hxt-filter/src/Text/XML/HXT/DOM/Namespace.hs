@@ -25,7 +25,7 @@ import Text.XML.HXT.Parser.XmlOutput
 --
 -- see also : 'propagateNamespaces', 'validateNamespaces'
 
-propagateAndValidateNamespaces	:: XmlStateFilter a
+propagateAndValidateNamespaces  :: XmlStateFilter a
 propagateAndValidateNamespaces
     = traceMsg 2 "propagating namespaces"
       .>>
@@ -39,14 +39,14 @@ propagateAndValidateNamespaces
       .>>
       validate
     where
-    validate	:: XmlStateFilter a
+    validate    :: XmlStateFilter a
     validate t
-	= let
-	  errs = validateNamespaces t
-	  in if null errs
-	     then thisM t
-	     else ( liftF this $$< errs )
+        = let
+          errs = validateNamespaces t
+          in if null errs
+             then thisM t
+             else ( liftF this $$< errs )
                   >>
-		  return (setStatus c_err "namespace propagation" t)
-	  
+                  return (setStatus c_err "namespace propagation" t)
+
 -- -----------------------------------------------------------------------------

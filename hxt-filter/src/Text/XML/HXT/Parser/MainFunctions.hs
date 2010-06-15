@@ -61,17 +61,17 @@ import Text.XML.HXT.DOM.Namespace
 --
 -- for options see 'parseDocument', 'a_collect_errors' is set implicitly
 
-getXmlDocument	:: Attributes -> String -> IO (XmlTree, XmlTrees, Int)
+getXmlDocument  :: Attributes -> String -> IO (XmlTree, XmlTrees, Int)
 getXmlDocument options url
     = do
-      let options' = [ (a_collect_errors, v_1)		-- collect errors
-		     , (a_issue_errors,   v_0)		-- but don't issue
-		     ]					-- can be overwritten by supporting other values in options
-	             ++
-		     options
-		     ++
-		     [ (a_source, url)			-- set the source url
-		     ]
+      let options' = [ (a_collect_errors, v_1)          -- collect errors
+                     , (a_issue_errors,   v_0)          -- but don't issue
+                     ]                                  -- can be overwritten by supporting other values in options
+                     ++
+                     options
+                     ++
+                     [ (a_source, url)                  -- set the source url
+                     ]
       res <- run' $ parseDocument options' emptyRoot
       let root = head res
       let errs = tail res
@@ -115,17 +115,17 @@ getXmlDocument options url
 -- > computeNewTree :: XmlTree -> XmlTree
 
 
-putXmlDocument	:: Attributes -> String -> XmlTree -> IO (XmlTrees, Int)
+putXmlDocument  :: Attributes -> String -> XmlTree -> IO (XmlTrees, Int)
 putXmlDocument options fileName t
     = do
-      let options' = [ (a_collect_errors, v_1)		-- collect errors
-		     , (a_issue_errors,   v_0)		-- but don't issue
-		     ]					-- can be overwritten by supporting other values in options
-	             ++
-		     options
-		     ++
-		     [ (a_output_file, fileName)	-- set the source url
-		     ]
+      let options' = [ (a_collect_errors, v_1)          -- collect errors
+                     , (a_issue_errors,   v_0)          -- but don't issue
+                     ]                                  -- can be overwritten by supporting other values in options
+                     ++
+                     options
+                     ++
+                     [ (a_output_file, fileName)        -- set the source url
+                     ]
       res <- run' $ writeDocument options' t
       let root = head res
       let errs = tail res
@@ -163,7 +163,7 @@ putXmlDocument options fileName t
 -- - 'a_issue_errors' : issue all error messages on stderr (default), or ignore all error messages
 --
 -- - 'a_collect_errors' : all error messages are collected during processing and appended to the result document
--- 			  for further processing within the calling modules
+--                        for further processing within the calling modules
 --
 -- - 'a_trace' : trace level: values: 0 -4
 --
@@ -216,74 +216,74 @@ putXmlDocument options fileName t
 -- but collects errors and appends the list of errors to the single element list for the document.
 -- this enables the calling application to define own error handlers.
 
-parseDocument	:: Attributes -> XmlStateFilter state
+parseDocument   :: Attributes -> XmlStateFilter state
 parseDocument userOptions
     = processDocument userOptions defaultOptions
       ( traceMsg 1 "parseDocument: options added, start processing"
-	.>>
-	traceTree
-	.>>
-	getXmlContents					-- get the content as text
-	.>>
-	choiceM						-- select parser
-	[ hasOption a_parse_html
-		:-> parseHtmlDoc			-- parse everything as HTML
-	, this
-		:-> checkWellformedDoc			-- parse XML and process entities
-	            .>>
-                    ( getValidatedDoc			-- validate
-		      `whenM`
-		      hasOption a_validate
-		    )
-	]
-	.>>
-	( propagateAndValidateNamespaces			-- namespace processing
-	  `whenM`
-	  hasOption a_check_namespaces
-	)
-	.>>
-	liftMf						-- canonicalization
-	( choice
-	  [ hasOption a_preserve_comment		-- don't remove comments (in XPath required)
- 	  	:-> canonicalizeForXPath
-	  , this
-		:-> canonicalizeAllNodes		-- do normal canonicaliazion
-	  ]
-	  `when`
-	  hasOption a_canonicalize			-- caconicalization can be switched off
-	)
-	.>>
-	liftMf
-	( removeDocWhiteSpace				-- remove all whitespace between tags
-	  `when`
-	  hasOption a_remove_whitespace
-	)
-	.>>
-	traceMsg 1 "parseDocument: document processed"	-- trace output
-	.>>
-	traceSource
-	.>>
-	traceTree
+        .>>
+        traceTree
+        .>>
+        getXmlContents                                  -- get the content as text
+        .>>
+        choiceM                                         -- select parser
+        [ hasOption a_parse_html
+                :-> parseHtmlDoc                        -- parse everything as HTML
+        , this
+                :-> checkWellformedDoc                  -- parse XML and process entities
+                    .>>
+                    ( getValidatedDoc                   -- validate
+                      `whenM`
+                      hasOption a_validate
+                    )
+        ]
+        .>>
+        ( propagateAndValidateNamespaces                        -- namespace processing
+          `whenM`
+          hasOption a_check_namespaces
+        )
+        .>>
+        liftMf                                          -- canonicalization
+        ( choice
+          [ hasOption a_preserve_comment                -- don't remove comments (in XPath required)
+                :-> canonicalizeForXPath
+          , this
+                :-> canonicalizeAllNodes                -- do normal canonicaliazion
+          ]
+          `when`
+          hasOption a_canonicalize                      -- caconicalization can be switched off
+        )
+        .>>
+        liftMf
+        ( removeDocWhiteSpace                           -- remove all whitespace between tags
+          `when`
+          hasOption a_remove_whitespace
+        )
+        .>>
+        traceMsg 1 "parseDocument: document processed"  -- trace output
+        .>>
+        traceSource
+        .>>
+        traceTree
       )
     where
     defaultOptions
-	= [ ( a_parse_html,		v_0 )
-	  , ( a_validate,		v_1 )
-	  , ( a_issue_errors,		v_1 )
-	  , ( a_issue_warnings,		v_1 )
-	  , ( a_check_namespaces,	v_0 )
-	  , ( a_canonicalize,		v_1 )
-	  , ( a_preserve_comment,	v_0 )
-	  , ( a_remove_whitespace,	v_0 )
-	  ]
+        = [ ( a_parse_html,             v_0 )
+          , ( a_validate,               v_1 )
+          , ( a_issue_errors,           v_1 )
+          , ( a_issue_warnings,         v_1 )
+          , ( a_check_namespaces,       v_0 )
+          , ( a_canonicalize,           v_1 )
+          , ( a_preserve_comment,       v_0 )
+          , ( a_remove_whitespace,      v_0 )
+          ]
 
 -- ------------------------------------------------------------
 
-addOptions		:: Attributes -> XmlFilter
+addOptions              :: Attributes -> XmlFilter
 addOptions
     = seqF . map (\ (n,v) -> addAttr n v )
 
-addDefaultOptions	:: Attributes -> XmlFilter
+addDefaultOptions       :: Attributes -> XmlFilter
 addDefaultOptions
     = seqF . map (\ (n,v) -> addAttr n v `whenNot` hasAttr n)
 
@@ -327,7 +327,7 @@ addDefaultOptions
 -- >       (inp, outp, options) <- cmdlineOpts argv                     -- and evaluate them, return a key-value list
 -- >                                                                    -- and input and output
 -- >       res  <- run' $ application inp outp options $ emptyRoot      -- run the application
--- > 
+-- >
 -- >       exitWith (if null res
 -- >                 then ExitFailure (-1)
 -- >                 else exitSuccess
@@ -345,55 +345,55 @@ addDefaultOptions
 -- >
 
 
-writeDocument	:: Attributes -> XmlStateFilter state
+writeDocument   :: Attributes -> XmlStateFilter state
 writeDocument userOptions
     = processDocument userOptions defaultOptions
       ( traceMsg 1 "writeDocument: options added, start processing"
-	.>>
-	liftMf
-	( choice
-	  [ hasOption a_indent			:-> indentDoc			-- document indentation
-	  , hasOption a_remove_whitespace	:-> removeDocWhiteSpace		-- remove all whitespace between tags
-	  , this				:-> this
-	  ]
-	)
-	.>>
-	liftMf
-	( choice
-	  [ hasOption a_show_tree	:-> treeRepOfXmlDoc
-	  , hasOption a_show_haskell	:-> haskellRepOfXmlDoc
-	  , hasOption a_output_xml	:-> ( escapeXmlDoc		-- escape lt, gt, amp, quot, 
-					      .>
-					      addXmlPiToDoc		-- add <?xml ... > pi
-					      .>
-					      unparseXmlDoc		-- convert doc into text with respect to output encoding
-					    )
-	  , this			:-> this
-	  ]
-	)
-	.>>
-	writeXmlDoc
-	.>>
-	traceMsg 1 "writeDocument: finished"
+        .>>
+        liftMf
+        ( choice
+          [ hasOption a_indent                  :-> indentDoc                   -- document indentation
+          , hasOption a_remove_whitespace       :-> removeDocWhiteSpace         -- remove all whitespace between tags
+          , this                                :-> this
+          ]
+        )
+        .>>
+        liftMf
+        ( choice
+          [ hasOption a_show_tree       :-> treeRepOfXmlDoc
+          , hasOption a_show_haskell    :-> haskellRepOfXmlDoc
+          , hasOption a_output_xml      :-> ( escapeXmlDoc              -- escape lt, gt, amp, quot,
+                                              .>
+                                              addXmlPiToDoc             -- add <?xml ... > pi
+                                              .>
+                                              unparseXmlDoc             -- convert doc into text with respect to output encoding
+                                            )
+          , this                        :-> this
+          ]
+        )
+        .>>
+        writeXmlDoc
+        .>>
+        traceMsg 1 "writeDocument: finished"
       )
     where
     defaultOptions
-	= [ ( a_output_file,		"-" )
-	  , ( a_indent,			v_0 )
-	  , ( a_remove_whitespace,	v_0 )
-	  , ( a_output_xml,		v_1 )
-	  , ( a_output_encoding,       utf8 )
-	  , ( a_show_tree,		v_0 )
-	  , ( a_show_haskell,		v_0 )
-	  ]
+        = [ ( a_output_file,            "-" )
+          , ( a_indent,                 v_0 )
+          , ( a_remove_whitespace,      v_0 )
+          , ( a_output_xml,             v_1 )
+          , ( a_output_encoding,       utf8 )
+          , ( a_show_tree,              v_0 )
+          , ( a_show_haskell,           v_0 )
+          ]
 
-writeXmlDoc	:: XmlStateFilter state
+writeXmlDoc     :: XmlStateFilter state
 writeXmlDoc t'
     = put t'
     where
     put
-	| null fn || fn == "-"	= putXmlDoc
-	| otherwise		= putXmlDocToFile fn
+        | null fn || fn == "-"  = putXmlDoc
+        | otherwise             = putXmlDocToFile fn
 
     fn = xshow . getValue a_output_file $ t'
 
@@ -409,46 +409,46 @@ writeXmlDoc t'
 -- parameters and default parameters can be used to contol
 -- the filer and common tasks like error message handling
 
-processDocument	:: Attributes -> Attributes -> XmlStateFilter state -> XmlStateFilter state
+processDocument :: Attributes -> Attributes -> XmlStateFilter state -> XmlStateFilter state
 processDocument userOptions defaultOptions processFilter
     = liftMf isRoot
       .>>
       liftMf (addOptions userOptions
-	      .>
-	      addOptions [(a_status, show c_ok)]
-	     )
+              .>
+              addOptions [(a_status, show c_ok)]
+             )
       .>>
       liftMf (addDefaultOptions defaultOptions)
       .>>
-      setSystemParams							-- store options in system state
+      setSystemParams                                                   -- store options in system state
       .>>
       choiceM
-      [ hasOption a_propagate_errors					-- error handling is set by calling environment
-		:-> thisM
+      [ hasOption a_propagate_errors                                    -- error handling is set by calling environment
+                :-> thisM
 
       , hasOption a_collect_errors
-	.>
-	hasOption a_issue_errors
-		:-> performAction (\ _ -> setSysErrorHandler (errorMsgLogging.>> errorMsgToStderr)	)
+        .>
+        hasOption a_issue_errors
+                :-> performAction (\ _ -> setSysErrorHandler (errorMsgLogging.>> errorMsgToStderr)      )
 
       , hasOption a_collect_errors
-		:-> performAction (\ _ -> setSysErrorHandler errorMsgLogging	)
+                :-> performAction (\ _ -> setSysErrorHandler errorMsgLogging    )
 
       , hasOption a_issue_errors
-		:-> performAction (\ _ -> setSysErrorHandler errorMsgToStderr	)
+                :-> performAction (\ _ -> setSysErrorHandler errorMsgToStderr   )
 
       , this
-		:-> performAction (\ _ -> setSysErrorHandler noneM		)
+                :-> performAction (\ _ -> setSysErrorHandler noneM              )
       ]
       .>>
       processFilter
       .>>
       ( thisM
         +++>>
-	( hasOption a_collect_errors
+        ( hasOption a_collect_errors
           `guardsM`
-	  getErrorMsg
-	)
+          getErrorMsg
+        )
       )
 
 -- ------------------------------------------------------------

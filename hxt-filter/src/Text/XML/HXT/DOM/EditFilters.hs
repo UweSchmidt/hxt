@@ -18,16 +18,16 @@ module Text.XML.HXT.DOM.EditFilters
     , removeComment
     , removeAllComment
 
-    , transfCdata		, transfAllCdata	-- CDATA to text
-    , transfCdataEscaped	, transfAllCdataEscaped	-- CDATA to text
-    , transfCharRef		, transfAllCharRef	-- &#nnn; to text
+    , transfCdata               , transfAllCdata        -- CDATA to text
+    , transfCdataEscaped        , transfAllCdataEscaped -- CDATA to text
+    , transfCharRef             , transfAllCharRef      -- &#nnn; to text
 
     , escapeXmlDoc
     , escapeXmlText
     , escapeXmlAttrValue
 
     , unparseXmlDoc
-    , numberLinesInXmlDoc	, numberLines
+    , numberLinesInXmlDoc       , numberLines
     , treeRepOfXmlDoc
     , haskellRepOfXmlDoc
     , addHeadlineToXmlDoc
@@ -50,14 +50,14 @@ import Data.Maybe
 -- |
 -- remove Comments
 
-removeComment		:: XmlFilter
-removeComment		= none `when` isXCmt
+removeComment           :: XmlFilter
+removeComment           = none `when` isXCmt
 
 -- |
 -- remove all Comments recursively
 
-removeAllComment	:: XmlFilter
-removeAllComment	= processBottomUp removeComment
+removeAllComment        :: XmlFilter
+removeAllComment        = processBottomUp removeComment
 
 -- ------------------------------------------------------------
 
@@ -69,8 +69,8 @@ removeAllComment	= processBottomUp removeComment
 --
 -- see also : 'removeAllWhiteSpace', 'removeDocWhiteSpace'
 
-removeWhiteSpace	:: XmlFilter
-removeWhiteSpace	= none `when` isWhiteSpace
+removeWhiteSpace        :: XmlFilter
+removeWhiteSpace        = none `when` isWhiteSpace
 
 -- |
 -- simple recursive filter for removing all whitespace.
@@ -80,20 +80,20 @@ removeWhiteSpace	= none `when` isWhiteSpace
 --
 -- see also : 'removeWhiteSpace', 'removeDocWhiteSpace'
 
-removeAllWhiteSpace	:: XmlFilter
-removeAllWhiteSpace	= processBottomUp removeWhiteSpace
+removeAllWhiteSpace     :: XmlFilter
+removeAllWhiteSpace     = processBottomUp removeWhiteSpace
 
 -- ------------------------------------------------------------
 -- |
 -- converts CDATA sections in whole document tree into normal text nodes
 
-transfAllCdataEscaped	:: XmlFilter
-transfAllCdataEscaped	= processBottomUp transfCdataEscaped
+transfAllCdataEscaped   :: XmlFilter
+transfAllCdataEscaped   = processBottomUp transfCdataEscaped
 
 -- |
 -- converts CDATA section in normal text nodes
 
-transfCdataEscaped	:: XmlFilter
+transfCdataEscaped      :: XmlFilter
 transfCdataEscaped (NTree (XCdata str) _)
     = xtext str
 
@@ -105,13 +105,13 @@ transfCdataEscaped n
 -- |
 -- converts CDATA sections in whole document tree
 
-transfAllCdata		:: XmlFilter
-transfAllCdata		= processBottomUp transfCdata
+transfAllCdata          :: XmlFilter
+transfAllCdata          = processBottomUp transfCdata
 
 -- |
 -- converts CDATA section in normal text sections
 
-transfCdata		:: XmlFilter
+transfCdata             :: XmlFilter
 transfCdata (NTree (XCdata str) _)
     = xtext str
 
@@ -123,7 +123,7 @@ transfCdata n
 -- |
 -- converts character references to normal text
 
-transfCharRef		:: XmlFilter
+transfCharRef           :: XmlFilter
 transfCharRef (NTree (XCharRef i) _)
     = xtext $ [toEnum i]
 
@@ -134,8 +134,8 @@ transfCharRef n
 -- |
 -- recursively converts all character references to normal text
 
-transfAllCharRef	:: XmlFilter
-transfAllCharRef	= processBottomUp transfCharRef
+transfAllCharRef        :: XmlFilter
+transfAllCharRef        = processBottomUp transfCharRef
 
 -- ------------------------------------------------------------
 
@@ -158,28 +158,28 @@ transfAllCharRef	= processBottomUp transfCharRef
 --
 -- see 'canonicalizeAllNodes' and 'canonicalizeForXPath'
 
-canonicalizeTree	:: XmlFilter -> XmlFilter
+canonicalizeTree        :: XmlFilter -> XmlFilter
 canonicalizeTree toBeRemoved
     = processChildren (none `when` isXText)
       .>
       processBottomUp canonicalize1Node
       where
-      canonicalize1Node	:: XmlFilter
+      canonicalize1Node :: XmlFilter
       canonicalize1Node
-	  = (deep isXPi `when` isXDTD)		-- remove DTD parts, except PIs
-	    .>
-	    (none `when` toBeRemoved)		-- remove unintersting nodes
-	    .>
-	    ( processAttr ( processChildren transfCharRef
-			    .>
-			    collapseXText
-			  ) `when` isXTag)
-	    .>
-	    transfCdata				-- CDATA -> text
-	    .>
-	    transfCharRef			-- Char refs -> text
-	    .>
-	    collapseXText			-- combine text
+          = (deep isXPi `when` isXDTD)          -- remove DTD parts, except PIs
+            .>
+            (none `when` toBeRemoved)           -- remove unintersting nodes
+            .>
+            ( processAttr ( processChildren transfCharRef
+                            .>
+                            collapseXText
+                          ) `when` isXTag)
+            .>
+            transfCdata                         -- CDATA -> text
+            .>
+            transfCharRef                       -- Char refs -> text
+            .>
+            collapseXText                       -- combine text
 
 
 -- |
@@ -187,12 +187,12 @@ canonicalizeTree toBeRemoved
 --
 -- see 'canonicalizeTree'
 
-canonicalizeAllNodes	:: XmlFilter
+canonicalizeAllNodes    :: XmlFilter
 canonicalizeAllNodes
-    = canonicalizeTree (isXCmt		-- remove comment
-			+++
-			isPi t_xml	-- remove xml declaration
-		       )
+    = canonicalizeTree (isXCmt          -- remove comment
+                        +++
+                        isPi t_xml      -- remove xml declaration
+                       )
 
 -- |
 -- Canonicalize a tree for XPath
@@ -200,7 +200,7 @@ canonicalizeAllNodes
 --
 -- see 'canonicalizeTree'
 
-canonicalizeForXPath	:: XmlFilter
+canonicalizeForXPath    :: XmlFilter
 canonicalizeForXPath
     = canonicalizeTree (isPi t_xml)
 
@@ -209,17 +209,17 @@ canonicalizeForXPath
 -- |
 -- Collects sequences of child XText nodes into one XText node.
 
-collapseXText		:: XmlFilter
+collapseXText           :: XmlFilter
 collapseXText n
     = replaceChildren (collapseXText' $ getChildren n) n
     where
     collapseXText' :: XmlSFilter
     collapseXText' ((NTree n1 _) : (NTree n2 _) : zs)
-	| isXTextNode n1 && isXTextNode n2
+        | isXTextNode n1 && isXTextNode n2
             = collapseXText' $ (xtext (t1 ++ t2)) ++ zs
-	      where
-	      t1 = textOfXNode n1
-	      t2 = textOfXNode n2
+              where
+              t1 = textOfXNode n1
+              t2 = textOfXNode n2
 
     collapseXText' (x:xs)
         = x : (collapseXText' xs)
@@ -234,8 +234,8 @@ collapseXText n
 --
 -- see also : 'collapseXText'
 
-collapseAllXText	:: XmlFilter
-collapseAllXText	= processBottomUp collapseXText
+collapseAllXText        :: XmlFilter
+collapseAllXText        = processBottomUp collapseXText
 
 
 -- ------------------------------------------------------------
@@ -261,24 +261,24 @@ collapseAllXText	= processBottomUp collapseXText
 --
 -- see also : 'removeDocWhiteSpace'
 
-indentDoc	:: XmlFilter
-indentDoc 
+indentDoc       :: XmlFilter
+indentDoc
     = modifyChildren (indentRootChildren $$)
       `when`
       isRoot
       where
-      indentRootChildren	:: XmlFilter
+      indentRootChildren        :: XmlFilter
       indentRootChildren
-	  = insertNL `o` indentChild `o` removeText
-	    where
-	    removeText
-		= none `when` isXText
-	    insertNL
-		= this +++ txt "\n"
-	    indentChild
-		= modifyChildren (indentTrees (insertIndentation 2) False 1)
-		  `whenNot`
-		  isXDTD		-- DTD elements are not indented
+          = insertNL `o` indentChild `o` removeText
+            where
+            removeText
+                = none `when` isXText
+            insertNL
+                = this +++ txt "\n"
+            indentChild
+                = modifyChildren (indentTrees (insertIndentation 2) False 1)
+                  `whenNot`
+                  isXDTD                -- DTD elements are not indented
 
 -- |
 -- filter for removing all not significant whitespace.
@@ -297,103 +297,103 @@ indentDoc
 --
 -- see also : 'indentDoc', 'removeAllWhiteSpace'
 
-removeDocWhiteSpace	:: XmlFilter
+removeDocWhiteSpace     :: XmlFilter
 removeDocWhiteSpace
     =  processChildren processRootElement
       `when`
       isRoot
       where
-      processRootElement	:: XmlFilter
+      processRootElement        :: XmlFilter
       processRootElement
-	  = removeText .> processChild
-	    where
-	    removeText
-		= none `when` isWhiteSpace
-	    processChild
-		= choice [ isXDTD
-			   :-> removeAllWhiteSpace			-- whitespace in DTD is redundant
-			 , this
-			   :-> modifyChildren				-- same strategie as for indentation
-			         (indentTrees insertNothing False 1)
-			 ]
+          = removeText .> processChild
+            where
+            removeText
+                = none `when` isWhiteSpace
+            processChild
+                = choice [ isXDTD
+                           :-> removeAllWhiteSpace                      -- whitespace in DTD is redundant
+                         , this
+                           :-> modifyChildren                           -- same strategie as for indentation
+                                 (indentTrees insertNothing False 1)
+                         ]
 
-indentTrees	:: (Int -> XmlFilter) -> Bool -> Int -> XmlTrees -> XmlTrees
+indentTrees     :: (Int -> XmlFilter) -> Bool -> Int -> XmlTrees -> XmlTrees
 indentTrees _ _ _ []
     = []
 indentTrees indentFilter preserveSpace level ts
     = (lsf $$ ls) ++ indentRest rs
       where
       (ls, rs)
-	  = break (satisfies isXTag) ts
+          = break (satisfies isXTag) ts
 
-      isSignificant	:: Bool
+      isSignificant     :: Bool
       isSignificant
-	  = preserveSpace
-	    ||
-	    any (satisfies isSignificantPart) ls
+          = preserveSpace
+            ||
+            any (satisfies isSignificantPart) ls
 
-      isSignificantPart	:: XmlFilter
+      isSignificantPart :: XmlFilter
       isSignificantPart
-	  = cat [ isXText `guards` neg isWhiteSpace
-		, isXCdata
-		, isXCharRef
-		, isXEntityRef
-		]
+          = cat [ isXText `guards` neg isWhiteSpace
+                , isXCdata
+                , isXCharRef
+                , isXEntityRef
+                ]
 
-      lsf	:: XmlFilter
+      lsf       :: XmlFilter
       lsf
-	  | isSignificant
-	      = this
-	  | otherwise
-	      = (none `when` isWhiteSpace)
+          | isSignificant
+              = this
+          | otherwise
+              = (none `when` isWhiteSpace)
                 .>
                 (indentFilter level +++ this)
 
-      indentRest	:: XmlSFilter
+      indentRest        :: XmlSFilter
 
       indentRest []
-	  | isSignificant
-	      = []
-	  | otherwise
-	      = indentFilter (level - 1) (mkXTextTree "")
+          | isSignificant
+              = []
+          | otherwise
+              = indentFilter (level - 1) (mkXTextTree "")
 
       indentRest (t':ts')
-	      = ( (modifyChildren indentChildren .> lsf)
-		  `when`
+              = ( (modifyChildren indentChildren .> lsf)
+                  `when`
                   isXTag
-		  $ t'
-		)
+                  $ t'
+                )
                 ++
-		( if null ts'
-		  then indentRest ts'
-		  else indentTrees indentFilter preserveSpace level ts'
-		)
-		where
-		xmlSpaceAttrName  = "xml:space"
-		xmlSpaceAttrValue = valueOf xmlSpaceAttrName t'
-		preserveSpace'
-		    = fromMaybe preserveSpace
-		      .
-		      lookup xmlSpaceAttrValue
+                ( if null ts'
+                  then indentRest ts'
+                  else indentTrees indentFilter preserveSpace level ts'
+                )
+                where
+                xmlSpaceAttrName  = "xml:space"
+                xmlSpaceAttrValue = valueOf xmlSpaceAttrName t'
+                preserveSpace'
+                    = fromMaybe preserveSpace
+                      .
+                      lookup xmlSpaceAttrValue
                       $ [ ("preserve", True)
-			, ("default",  False)
-			]
-		indentChildren
-		    | all (satisfies isWhiteSpace) $ getChildren t'
-			= (none $$)
-		    | otherwise
-			= indentTrees indentFilter preserveSpace' (level + 1)
+                        , ("default",  False)
+                        ]
+                indentChildren
+                    | all (satisfies isWhiteSpace) $ getChildren t'
+                        = (none $$)
+                    | otherwise
+                        = indentTrees indentFilter preserveSpace' (level + 1)
 
 -- filter for indenting tags
 
-insertIndentation	:: Int -> Int -> XmlFilter
+insertIndentation       :: Int -> Int -> XmlFilter
 insertIndentation indentWidth level
     = txt ('\n' : replicate (level * indentWidth) ' ')
 
 -- filter for removing all whitespace
 
-insertNothing		:: Int -> XmlFilter
-insertNothing _		= none
+insertNothing           :: Int -> XmlFilter
+insertNothing _         = none
 
 -- ------------------------------------------------------------
 
@@ -401,21 +401,21 @@ insertNothing _		= none
 -- escape XmlText,
 -- transform all special XML chars into CharRefs
 
-escapeString	:: (Char -> Bool) -> String -> XmlTrees
+escapeString    :: (Char -> Bool) -> String -> XmlTrees
 escapeString _isEsc []
     = []
 escapeString isEsc (c:s1)
     | isEsc c
-	= mkXCharRefTree (fromEnum c) : escapeString isEsc s1
+        = mkXCharRefTree (fromEnum c) : escapeString isEsc s1
 escapeString isEsc s
     = mkXTextTree s1 : escapeString isEsc s2
       where
       (s1, s2) = break isEsc s
 
-escapeText		:: (Char -> Bool) -> XmlFilter
+escapeText              :: (Char -> Bool) -> XmlFilter
 escapeText isEsc (NTree n _)
     | isXTextNode n
-	= escapeString isEsc (textOfXNode n)
+        = escapeString isEsc (textOfXNode n)
 
 escapeText isEsc (NTree (XCmt c) _)
     = xcmt (xshow . escapeString isEsc $ c)
@@ -428,9 +428,9 @@ escapeText _ t
 -- into character references
 --
 -- see also 'escapeXmlDoc'
- 
-escapeXmlText		:: XmlFilter
-escapeXmlText		= escapeText (`elem` "<&")	-- no escape for ", ' and > required: XML standard 2.4
+
+escapeXmlText           :: XmlFilter
+escapeXmlText           = escapeText (`elem` "<&")      -- no escape for ", ' and > required: XML standard 2.4
 
 -- |
 -- convert the special XML chars in an attribute value into
@@ -438,8 +438,8 @@ escapeXmlText		= escapeText (`elem` "<&")	-- no escape for ", ' and > required: 
 --
 -- see also: 'escapeXmlDoc', 'escapeXmlText'
 
-escapeXmlAttrValue	:: XmlFilter
-escapeXmlAttrValue	= escapeText (`elem` "<>\"\'&\n\r\t")
+escapeXmlAttrValue      :: XmlFilter
+escapeXmlAttrValue      = escapeText (`elem` "<>\"\'&\n\r\t")
 
 -- |
 -- convert the special XML chars \", \<, \>, & and \' in a document to char references,
@@ -447,17 +447,17 @@ escapeXmlAttrValue	= escapeText (`elem` "<>\"\'&\n\r\t")
 --
 -- see also: 'escapeXmlText', 'escapeXmlAttrValue'
 
-escapeXmlDoc		:: XmlFilter
+escapeXmlDoc            :: XmlFilter
 escapeXmlDoc
     = choice [ isXTag  :-> (processChildren (escapeXmlDoc)
-			    .>
-			    processAttr escVal
-			   )
-	     , isXText :-> escapeXmlText
-	     -- , isXCmt  :-> escapeXmlText -- no escape in comments reqired: XML standard 2.4
-	     , isXDTD  :-> processTopDown escDTD
-	     , this    :-> this
-	     ]
+                            .>
+                            processAttr escVal
+                           )
+             , isXText :-> escapeXmlText
+             -- , isXCmt  :-> escapeXmlText -- no escape in comments reqired: XML standard 2.4
+             , isXDTD  :-> processTopDown escDTD
+             , this    :-> this
+             ]
       where
       escVal   = processChildren escapeXmlAttrValue
       escDTD   = escVal `when` (isEntity +++ isParameterEntity)
@@ -476,7 +476,7 @@ escapeXmlDoc
 -- of the @encoding@ attribute for the original input encoding.
 -- If the encoding is not specified or not supported, UTF-8 is taken.
 
-unparseXmlDoc	:: XmlFilter
+unparseXmlDoc   :: XmlFilter
 unparseXmlDoc n
     = modifyChildren ((modifyText encFct $$) . xmlTreesToText) n
     where
@@ -486,26 +486,26 @@ encSpec :: XmlTree -> String
 encSpec n
     = head . filter (not . null)
       $ [ valueOf a_output_encoding n
-	, valueOf a_encoding n
-	, utf8
-	]
+        , valueOf a_encoding n
+        , utf8
+        ]
 
 -- ------------------------------------------------------------
 --
 -- add or modify a XML directive for a document
 -- for specifying the encoding scheme
 
-addXmlPiToDoc		:: XmlFilter
+addXmlPiToDoc           :: XmlFilter
 addXmlPiToDoc n
-    = ( modifyChildren addX				-- add <?xml ...>, if neccessary
-	`whenNot`
-	(getChildren .> isPi t_xml)
+    = ( modifyChildren addX                             -- add <?xml ...>, if neccessary
+        `whenNot`
+        (getChildren .> isPi t_xml)
       )
       .>
-      processChildren ( addAttr a_encoding enc		-- set or replace encoding="..."
-			`when`
-			isPi t_xml
-		      )
+      processChildren ( addAttr a_encoding enc          -- set or replace encoding="..."
+                        `when`
+                        isPi t_xml
+                      )
       $ n
     where
     enc = encSpec n
@@ -515,22 +515,22 @@ addXmlPiToDoc n
 
 -- |
 -- convert a document into a text and add line numbers to the text representation.
--- 
+--
 -- Result is a root node with a single text node as child.
 -- Useful for debugging and trace output.
 -- see also : 'haskellRepOfXmlDoc', 'treeRepOfXmlDoc'
 
-numberLinesInXmlDoc	:: XmlFilter
+numberLinesInXmlDoc     :: XmlFilter
 numberLinesInXmlDoc
     = modifyChildren ((modifyText numberLines $$) . xmlTreesToText)
 
-numberLines	:: String -> String
+numberLines     :: String -> String
 numberLines str
     = concat $
       zipWith (\ n l -> lineNr n ++ l ++ "\n") [1..] (lines str)
       where
-      lineNr	:: Int -> String
-      lineNr n	= (reverse (take 6(reverse (show n) ++ replicate 6 ' '))) ++ "  "
+      lineNr    :: Int -> String
+      lineNr n  = (reverse (take 6(reverse (show n) ++ replicate 6 ' '))) ++ "  "
 
 -- ------------------------------------------------------------
 
@@ -540,7 +540,7 @@ numberLines str
 -- Useful for debugging and trace output.
 -- see also : 'haskellRepOfXmlDoc', 'numberLinesInXmlDoc'
 
-treeRepOfXmlDoc		:: XmlFilter
+treeRepOfXmlDoc         :: XmlFilter
 treeRepOfXmlDoc
     = rootTag [getAttrl] [formatXmlContents]
 
@@ -550,13 +550,13 @@ treeRepOfXmlDoc
 -- Useful for debugging and trace output.
 -- see also : 'treeRepOfXmlDoc', 'numberLinesInXmlDoc'
 
-haskellRepOfXmlDoc	:: XmlFilter
+haskellRepOfXmlDoc      :: XmlFilter
 haskellRepOfXmlDoc n
     = rootTag [getAttrl] [txt $ show n] n
 
 -- ------------------------------------------------------------
 
-addHeadlineToXmlDoc	:: XmlFilter
+addHeadlineToXmlDoc     :: XmlFilter
 addHeadlineToXmlDoc n
     = replaceChildren (xtext title ++ getChildren n ++ xtext "\n") n
       where

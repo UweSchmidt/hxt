@@ -18,21 +18,21 @@
 module Text.XML.HXT.DOM.MimeTypes
 where
 
-import           Control.Monad		( mplus )
+import           Control.Monad          ( mplus )
 
-import qualified Data.ByteString	as B
+import qualified Data.ByteString        as B
 import qualified Data.ByteString.Char8  as C
 
 import           Data.Char
 import           Data.List
-import qualified Data.Map		as M
+import qualified Data.Map               as M
 import           Data.Maybe
 
 import           Text.XML.HXT.DOM.MimeTypeDefaults
 
 -- ------------------------------------------------------------
 
-type MimeTypeTable	= M.Map String String
+type MimeTypeTable      = M.Map String String
 
 -- ------------------------------------------------------------
 
@@ -48,66 +48,66 @@ application_xhtml,
  text_pdf,
  text_plain,
  text_xml,
- text_xml_external_parsed_entity	:: String
+ text_xml_external_parsed_entity        :: String
 
-application_xhtml			= "application/xhtml+xml"
-application_xml				= "application/xml"
-application_xml_external_parsed_entity	= "application/xml-external-parsed-entity"
-application_xml_dtd			= "application/xml-dtd"
+application_xhtml                       = "application/xhtml+xml"
+application_xml                         = "application/xml"
+application_xml_external_parsed_entity  = "application/xml-external-parsed-entity"
+application_xml_dtd                     = "application/xml-dtd"
 
-text_html				= "text/html"
-text_pdf				= "text/pdf"
-text_plain				= "text/plain"
-text_xml				= "text/xml"
-text_xml_external_parsed_entity		= "text/xml-external-parsed-entity"
+text_html                               = "text/html"
+text_pdf                                = "text/pdf"
+text_plain                              = "text/plain"
+text_xml                                = "text/xml"
+text_xml_external_parsed_entity         = "text/xml-external-parsed-entity"
 
-isTextMimeType				:: String -> Bool
-isTextMimeType				= ("text/" `isPrefixOf`)
+isTextMimeType                          :: String -> Bool
+isTextMimeType                          = ("text/" `isPrefixOf`)
 
-isHtmlMimeType				:: String -> Bool
-isHtmlMimeType t			= t == text_html
+isHtmlMimeType                          :: String -> Bool
+isHtmlMimeType t                        = t == text_html
 
-isXmlMimeType				:: String -> Bool
-isXmlMimeType t				= ( t `elem` [ application_xhtml
-						     , application_xml
-						     , application_xml_external_parsed_entity
-						     , application_xml_dtd
-						     , text_xml
-						     , text_xml_external_parsed_entity
-						     ]
-					    ||
-					    "+xml" `isSuffixOf` t		-- application/mathml+xml
-					  )					-- or image/svg+xml
+isXmlMimeType                           :: String -> Bool
+isXmlMimeType t                         = ( t `elem` [ application_xhtml
+                                                     , application_xml
+                                                     , application_xml_external_parsed_entity
+                                                     , application_xml_dtd
+                                                     , text_xml
+                                                     , text_xml_external_parsed_entity
+                                                     ]
+                                            ||
+                                            "+xml" `isSuffixOf` t               -- application/mathml+xml
+                                          )                                     -- or image/svg+xml
 
-defaultMimeTypeTable			:: MimeTypeTable
-defaultMimeTypeTable			= M.fromList mimeTypeDefaults
+defaultMimeTypeTable                    :: MimeTypeTable
+defaultMimeTypeTable                    = M.fromList mimeTypeDefaults
 
-extensionToMimeType			:: String -> MimeTypeTable -> String
-extensionToMimeType e			= fromMaybe "" . lookupMime 
+extensionToMimeType                     :: String -> MimeTypeTable -> String
+extensionToMimeType e                   = fromMaybe "" . lookupMime
     where
-    lookupMime t			= M.lookup e t			-- try exact match
-					  `mplus`
-					  M.lookup (map toLower e) t	-- else try lowercase match
-					  `mplus`
-					  M.lookup (map toUpper e) t	-- else try uppercase match
+    lookupMime t                        = M.lookup e t                  -- try exact match
+                                          `mplus`
+                                          M.lookup (map toLower e) t    -- else try lowercase match
+                                          `mplus`
+                                          M.lookup (map toUpper e) t    -- else try uppercase match
 
 -- ------------------------------------------------------------
 
-readMimeTypeTable			:: FilePath -> IO MimeTypeTable
-readMimeTypeTable inp			= do
-					  cb <- B.readFile inp
-					  return . M.fromList . parseMimeTypeTable . C.unpack $ cb
+readMimeTypeTable                       :: FilePath -> IO MimeTypeTable
+readMimeTypeTable inp                   = do
+                                          cb <- B.readFile inp
+                                          return . M.fromList . parseMimeTypeTable . C.unpack $ cb
 
-parseMimeTypeTable			:: String -> [(String, String)]
-parseMimeTypeTable			= concat
-					  . map buildPairs
-					  . map words
-					  . filter (not . ("#" `isPrefixOf`))
-					  . filter (not . all (isSpace))
-					  . lines
+parseMimeTypeTable                      :: String -> [(String, String)]
+parseMimeTypeTable                      = concat
+                                          . map buildPairs
+                                          . map words
+                                          . filter (not . ("#" `isPrefixOf`))
+                                          . filter (not . all (isSpace))
+                                          . lines
     where
-    buildPairs				:: [String] -> [(String, String)]
-    buildPairs	[] 			= []
-    buildPairs	(mt:exts) 		= map (\ x -> (x, mt)) $ exts
+    buildPairs                          :: [String] -> [(String, String)]
+    buildPairs  []                      = []
+    buildPairs  (mt:exts)               = map (\ x -> (x, mt)) $ exts
 
 -- ------------------------------------------------------------

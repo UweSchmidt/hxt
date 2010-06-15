@@ -8,7 +8,7 @@ module Main
 where
 
 import Text.XML.HXT.RelaxNG
-import Text.XML.HXT.Arrow 
+import Text.XML.HXT.Arrow
 
 import System.Exit
 import System.Environment
@@ -20,7 +20,7 @@ main :: IO String
 main
   = do
     argv <- getArgs
-    [rc]  <- runX $ writeSpecification $ if length argv > 0 
+    [rc]  <- runX $ writeSpecification $ if length argv > 0
                                          then head argv
                                          else relaxSchemaGrammarFile
     exitProg (rc >= c_err)

@@ -25,59 +25,59 @@ module Text.XML.HXT.Arrow.DocumentInput
     )
 where
 
-import Control.Arrow				-- arrow classes
+import Control.Arrow                            -- arrow classes
 import Control.Arrow.ArrowList
 import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
 import Control.Arrow.ArrowIO
 import Control.Arrow.ListArrow
 
-import Data.List				( isPrefixOf )
+import Data.List                                ( isPrefixOf )
 
-import System.FilePath				( takeExtension )
+import System.FilePath                          ( takeExtension )
 
-import Text.XML.HXT.DOM.Unicode			( getDecodingFct
-						, guessEncoding
-						, normalizeNL
-						)
+import Text.XML.HXT.DOM.Unicode                 ( getDecodingFct
+                                                , guessEncoding
+                                                , normalizeNL
+                                                )
 
-import qualified Text.XML.HXT.IO.GetFILE	as FILE
-import qualified Text.XML.HXT.IO.GetHTTPLibCurl	as LibCURL
+import qualified Text.XML.HXT.IO.GetFILE        as FILE
+import qualified Text.XML.HXT.IO.GetHTTPLibCurl as LibCURL
 
 import Text.XML.HXT.DOM.Interface
 
-import Text.XML.HXT.Arrow.ParserInterface	( parseXmlDocEncodingSpec
-						, parseXmlEntityEncodingSpec
-						, removeEncodingSpec
-						)
+import Text.XML.HXT.Arrow.ParserInterface       ( parseXmlDocEncodingSpec
+                                                , parseXmlEntityEncodingSpec
+                                                , removeEncodingSpec
+                                                )
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlIOStateArrow
 
 -- ----------------------------------------------------------
 
-protocolHandlers	:: AssocList String (IOStateArrow s XmlTree XmlTree)
+protocolHandlers        :: AssocList String (IOStateArrow s XmlTree XmlTree)
 protocolHandlers
-    = [ ("file",	getFileContents)
-      , ("http",	getHttpContents)
-      , ("stdin",	getStdinContents)
+    = [ ("file",        getFileContents)
+      , ("http",        getHttpContents)
+      , ("stdin",       getStdinContents)
       ]
 
-getProtocolHandler	:: IOStateArrow s String (IOStateArrow s XmlTree XmlTree)
+getProtocolHandler      :: IOStateArrow s String (IOStateArrow s XmlTree XmlTree)
 getProtocolHandler
     = arr (\ s -> lookupDef getUnsupported s protocolHandlers)
 
-getUnsupported		:: IOStateArrow s XmlTree XmlTree
+getUnsupported          :: IOStateArrow s XmlTree XmlTree
 getUnsupported
     = perform ( getAttrValue a_source
-		>>>
-		arr (("unsupported protocol in URI " ++) . show)
-		>>>
-		applyA (arr issueFatal)
-	      )
+                >>>
+                arr (("unsupported protocol in URI " ++) . show)
+                >>>
+                applyA (arr issueFatal)
+              )
       >>>
       setDocumentStatusFromSystemState "accessing documents"
-	
-getStringContents		:: IOStateArrow s XmlTree XmlTree
+
+getStringContents               :: IOStateArrow s XmlTree XmlTree
 getStringContents
     = setCont $< getAttrValue a_source
       >>>
@@ -86,59 +86,59 @@ getStringContents
       addAttr transferStatus "200"
     where
     setCont contents
-	= replaceChildren (txt contents')
-	  >>>
-	  addAttr transferURI (take 7 contents)			-- the "string:" prefix is stored, this is required by setBaseURIFromDoc
-	  >>>
-	  addAttr a_source (show . prefix 48 $ contents')	-- a quoted prefix of the content, max 48 chars is taken as source name
-	where
-	contents'  = drop (length stringProtocol) contents
-	prefix l s
-	    | length s' > l = take (l - 3) s' ++ "..."
-	    | otherwise     = s'
-	    where
-	    s' = take (l + 1) s
+        = replaceChildren (txt contents')
+          >>>
+          addAttr transferURI (take 7 contents)                 -- the "string:" prefix is stored, this is required by setBaseURIFromDoc
+          >>>
+          addAttr a_source (show . prefix 48 $ contents')       -- a quoted prefix of the content, max 48 chars is taken as source name
+        where
+        contents'  = drop (length stringProtocol) contents
+        prefix l s
+            | length s' > l = take (l - 3) s' ++ "..."
+            | otherwise     = s'
+            where
+            s' = take (l + 1) s
 
-getFileContents		:: IOStateArrow s XmlTree XmlTree
+getFileContents         :: IOStateArrow s XmlTree XmlTree
 getFileContents
     = applyA ( ( ( getAttrValue  a_strict_input
-		   >>>
-		   arr isTrueValue
-		 )
-		 &&&
-		 ( getAttrValue transferURI
-		   >>>
-		   getPathFromURI
-		 )
-	       )
-	       >>>
-	       traceValue 2 (\ (b, f) -> "read file " ++ show f ++ " (strict input = " ++ show b ++ ")")
-	       >>>
-	       arrIO (uncurry FILE.getCont)
-	       >>>
-	       ( arr (uncurry addError)	-- io error occured
-		 |||
-		 arr addTxtContent	-- content read
-	       )
-	     )
+                   >>>
+                   arr isTrueValue
+                 )
+                 &&&
+                 ( getAttrValue transferURI
+                   >>>
+                   getPathFromURI
+                 )
+               )
+               >>>
+               traceValue 2 (\ (b, f) -> "read file " ++ show f ++ " (strict input = " ++ show b ++ ")")
+               >>>
+               arrIO (uncurry FILE.getCont)
+               >>>
+               ( arr (uncurry addError) -- io error occured
+                 |||
+                 arr addTxtContent      -- content read
+               )
+             )
       >>>
       addMimeType
 
-getStdinContents		:: IOStateArrow s XmlTree XmlTree
+getStdinContents                :: IOStateArrow s XmlTree XmlTree
 getStdinContents
     = applyA (  getAttrValue  a_strict_input
-		>>>
-		arr isTrueValue
-		>>>
-		arrIO FILE.getStdinCont
-	       >>>
-	       ( arr (uncurry addError)	-- io error occured
-		 |||
-		 arr addTxtContent	-- content read
-	       )
-	     )
+                >>>
+                arr isTrueValue
+                >>>
+                arrIO FILE.getStdinCont
+               >>>
+               ( arr (uncurry addError) -- io error occured
+                 |||
+                 arr addTxtContent      -- content read
+               )
+             )
 
-addError		:: [(String, String)] -> String -> IOStateArrow s XmlTree XmlTree
+addError                :: [(String, String)] -> String -> IOStateArrow s XmlTree XmlTree
 addError al e
     = issueFatal e
       >>>
@@ -146,19 +146,19 @@ addError al e
       >>>
       setDocumentStatusFromSystemState "accessing documents"
 
-addMimeType	:: IOStateArrow s XmlTree XmlTree
+addMimeType     :: IOStateArrow s XmlTree XmlTree
 addMimeType
     = addMime $< ( getAttrValue transferURI
-		   >>>
-		   ( uriToMime $< getSysParam xio_mimeTypes )
-		 )
+                   >>>
+                   ( uriToMime $< getSysParam xio_mimeTypes )
+                 )
     where
     addMime mt
-	= addAttr transferMimeType mt
+        = addAttr transferMimeType mt
     uriToMime mtt
-	= arr $ ( \ uri -> extensionToMimeType (drop 1 . takeExtension $ uri) mtt )
+        = arr $ ( \ uri -> extensionToMimeType (drop 1 . takeExtension $ uri) mtt )
 
-addTxtContent	:: String -> IOStateArrow s XmlTree XmlTree
+addTxtContent   :: String -> IOStateArrow s XmlTree XmlTree
 addTxtContent c
     = replaceChildren (txt c)
       >>>
@@ -166,101 +166,101 @@ addTxtContent c
       >>>
       addAttr transferStatus "200"
 
-getHttpContents		:: IOStateArrow s XmlTree XmlTree
+getHttpContents         :: IOStateArrow s XmlTree XmlTree
 getHttpContents
     = getCont $<< ( getAttrValue transferURI
-		    &&&
-		    ( ( getAttrlAsAssoc		-- get all attributes of root node
-			&&&
-			getAllParamsString	-- get all system params
-		      )
-		      >>^ uncurry addEntries	-- merge them, attributes overwrite system params
-		    )
-		  )
+                    &&&
+                    ( ( getAttrlAsAssoc         -- get all attributes of root node
+                        &&&
+                        getAllParamsString      -- get all system params
+                      )
+                      >>^ uncurry addEntries    -- merge them, attributes overwrite system params
+                    )
+                  )
       where
-      getAttrlAsAssoc				-- get the attributes as assoc list
-	  = listA ( getAttrl
-		    >>> ( getName
-			  &&&
-			  xshow getChildren
-			)
-		  )
+      getAttrlAsAssoc                           -- get the attributes as assoc list
+          = listA ( getAttrl
+                    >>> ( getName
+                          &&&
+                          xshow getChildren
+                        )
+                  )
 
       getCont uri options
-	  = applyA ( ( traceMsg 2 ( "get HTTP via libcurl, uri=" ++ show uri ++ " options=" ++ show options )
-		       >>>
-		       arrIO0 ( LibCURL.getCont options uri )
-		     )
-		     >>>
-		     ( arr (uncurry addError)
-		       |||
-		       arr addContent
-		     )
-		   )
+          = applyA ( ( traceMsg 2 ( "get HTTP via libcurl, uri=" ++ show uri ++ " options=" ++ show options )
+                       >>>
+                       arrIO0 ( LibCURL.getCont options uri )
+                     )
+                     >>>
+                     ( arr (uncurry addError)
+                       |||
+                       arr addContent
+                     )
+                   )
 
-      addContent	:: (AssocList String String, String) -> IOStateArrow s XmlTree XmlTree
+      addContent        :: (AssocList String String, String) -> IOStateArrow s XmlTree XmlTree
       addContent (al, c)
-	  = replaceChildren (txt c)
-	    >>>
-	    seqA (map (uncurry addAttr) al)
+          = replaceChildren (txt c)
+            >>>
+            seqA (map (uncurry addAttr) al)
 
-getURIContents		:: IOStateArrow s XmlTree XmlTree
+getURIContents          :: IOStateArrow s XmlTree XmlTree
 getURIContents
     = getContentsFromString
       `orElse`
       getContentsFromDoc
     where
     getContentsFromString
-	= ( getAttrValue a_source
-	    >>>
-	    isA (isPrefixOf stringProtocol)
-	  )
-	  `guards`
-	  getStringContents
-	  
+        = ( getAttrValue a_source
+            >>>
+            isA (isPrefixOf stringProtocol)
+          )
+          `guards`
+          getStringContents
+
     getContentsFromDoc
-	= ( ( addTransferURI $< getBaseURI
-	      >>>
-	      getCont
-	    )
-	    `when`
-	    ( setAbsURI $< ( getAttrValue a_source
-			     >>^
-			     ( \ src-> (if null src then "stdin:" else src) )	-- empty document name -> read from stdin
-			   )
-	    )
-	  )
+        = ( ( addTransferURI $< getBaseURI
+              >>>
+              getCont
+            )
+            `when`
+            ( setAbsURI $< ( getAttrValue a_source
+                             >>^
+                             ( \ src-> (if null src then "stdin:" else src) )   -- empty document name -> read from stdin
+                           )
+            )
+          )
           >>>
           setDocumentStatusFromSystemState "getURIContents"
 
     setAbsURI src
-	= ifA ( constA src >>> changeBaseURI )
-	  this
-	  ( issueFatal ("illegal URI : " ++ show src) )
+        = ifA ( constA src >>> changeBaseURI )
+          this
+          ( issueFatal ("illegal URI : " ++ show src) )
 
     addTransferURI uri
-	= addAttr transferURI uri
+        = addAttr transferURI uri
 
     getCont
-	= applyA ( getBaseURI				-- compute the handler and call it
-		   >>>
-		   traceValue 2 (("getURIContents: reading " ++) . show)
-		   >>>
-		   getSchemeFromURI
-		   >>>
-		   getProtocolHandler
-		 )
-	  `orElse`
-	  this						-- don't change tree, when no handler can be found
-	  
-setBaseURIFromDoc	:: IOStateArrow s XmlTree XmlTree
+        = applyA ( getBaseURI                           -- compute the handler and call it
+                   >>>
+                   traceValue 2 (("getURIContents: reading " ++) . show)
+                   >>>
+                   getSchemeFromURI
+                   >>>
+                   getProtocolHandler
+                 )
+          `orElse`
+          this                                          -- don't change tree, when no handler can be found
+
+setBaseURIFromDoc       :: IOStateArrow s XmlTree XmlTree
 setBaseURIFromDoc
     = perform ( getAttrValue transferURI
-		>>>
-		isA (isPrefixOf stringProtocol)		-- do not change base URI when reading from a string
-		>>>
-		setBaseURI
-	      )
+                >>>
+                isA (isPrefixOf stringProtocol)         -- do not change base URI when reading from a string
+                >>>
+                setBaseURI
+              )
 
 {- |
    Read the content of a document.
@@ -285,13 +285,13 @@ setBaseURIFromDoc
 
 -}
 
-getXmlContents		:: IOStateArrow s XmlTree XmlTree
+getXmlContents          :: IOStateArrow s XmlTree XmlTree
 getXmlContents
     = getXmlContents' parseXmlDocEncodingSpec
       >>>
       setBaseURIFromDoc
 
-getXmlEntityContents		:: IOStateArrow s XmlTree XmlTree
+getXmlEntityContents            :: IOStateArrow s XmlTree XmlTree
 getXmlEntityContents
     = getXmlContents' parseXmlEntityEncodingSpec
       >>>
@@ -299,72 +299,72 @@ getXmlEntityContents
       >>>
       setBaseURIFromDoc
 
-getXmlContents'		:: IOStateArrow s XmlTree XmlTree -> IOStateArrow s XmlTree XmlTree
+getXmlContents'         :: IOStateArrow s XmlTree XmlTree -> IOStateArrow s XmlTree XmlTree
 getXmlContents' parseEncodingSpec
     = ( getURIContents
-	>>>
-	choiceA
-	[ isXmlHtmlDoc	:-> ( parseEncodingSpec
-			      >>>
-			      filterErrorMsg
-			      >>>
-			      decodeDocument
-			    )
-	, isTextDoc	:->  decodeDocument
-	, this		:-> this
-	]
-	>>>
-	perform ( getAttrValue transferURI
-		  >>>
-		  traceValue 1 (("getXmlContents: content read and decoded for " ++) . show)
-		)
-	>>>
-	traceTree
-	>>>
-	traceSource
+        >>>
+        choiceA
+        [ isXmlHtmlDoc  :-> ( parseEncodingSpec
+                              >>>
+                              filterErrorMsg
+                              >>>
+                              decodeDocument
+                            )
+        , isTextDoc     :->  decodeDocument
+        , this          :-> this
+        ]
+        >>>
+        perform ( getAttrValue transferURI
+                  >>>
+                  traceValue 1 (("getXmlContents: content read and decoded for " ++) . show)
+                )
+        >>>
+        traceTree
+        >>>
+        traceSource
       )
       `when`
       isRoot
 
-isMimeDoc		:: (String -> Bool) -> IOStateArrow s XmlTree XmlTree
-isMimeDoc isMT		= fromLA $
-			  ( ( getAttrValue transferMimeType >>^ stringToLower )
-			    >>>
-			    isA (\ t -> null t || isMT t)
-			  )
-			  `guards` this
+isMimeDoc               :: (String -> Bool) -> IOStateArrow s XmlTree XmlTree
+isMimeDoc isMT          = fromLA $
+                          ( ( getAttrValue transferMimeType >>^ stringToLower )
+                            >>>
+                            isA (\ t -> null t || isMT t)
+                          )
+                          `guards` this
 
-isTextDoc, isXmlHtmlDoc	:: IOStateArrow s XmlTree XmlTree
+isTextDoc, isXmlHtmlDoc :: IOStateArrow s XmlTree XmlTree
 
-isTextDoc		= isMimeDoc isTextMimeType
+isTextDoc               = isMimeDoc isTextMimeType
 
-isXmlHtmlDoc		= isMimeDoc (\ mt -> isHtmlMimeType mt || isXmlMimeType mt)
+isXmlHtmlDoc            = isMimeDoc (\ mt -> isHtmlMimeType mt || isXmlMimeType mt)
 
 -- ------------------------------------------------------------
 
-getEncoding	:: IOStateArrow s XmlTree String
+getEncoding     :: IOStateArrow s XmlTree String
 getEncoding
-    = catA [ xshow getChildren			-- 1. guess: guess encoding by looking at the first few bytes
-	     >>>
-	     arr guessEncoding
-	   , getAttrValue transferEncoding	-- 2. guess: take the transfer encoding
-	   , getAttrValue a_encoding		-- 3. guess: take encoding parameter in root node
-	   , getParamString a_encoding		-- 4. guess: take encoding parameter in global state
-	   , constA utf8			-- default : utf8
-	   ]
-      >. (head . filter (not . null))		-- make the filter deterministic: take 1. entry from list of guesses
+    = catA [ xshow getChildren                  -- 1. guess: guess encoding by looking at the first few bytes
+             >>>
+             arr guessEncoding
+           , getAttrValue transferEncoding      -- 2. guess: take the transfer encoding
+           , getAttrValue a_encoding            -- 3. guess: take encoding parameter in root node
+           , getParamString a_encoding          -- 4. guess: take encoding parameter in global state
+           , constA utf8                        -- default : utf8
+           ]
+      >. (head . filter (not . null))           -- make the filter deterministic: take 1. entry from list of guesses
 
-getTextEncoding	:: IOStateArrow s XmlTree String
+getTextEncoding :: IOStateArrow s XmlTree String
 getTextEncoding
-    = catA [ getAttrValue transferEncoding	-- 1. guess: take the transfer encoding
-	   , getAttrValue a_encoding		-- 2. guess: take encoding parameter in root node
-	   , getParamString a_encoding		-- 3. guess: take encoding parameter in global state
-	   , constA isoLatin1			-- default : no encoding
-	   ]
-      >. (head . filter (not . null))		-- make the filter deterministic: take 1. entry from list of guesses
+    = catA [ getAttrValue transferEncoding      -- 1. guess: take the transfer encoding
+           , getAttrValue a_encoding            -- 2. guess: take encoding parameter in root node
+           , getParamString a_encoding          -- 3. guess: take encoding parameter in global state
+           , constA isoLatin1                   -- default : no encoding
+           ]
+      >. (head . filter (not . null))           -- make the filter deterministic: take 1. entry from list of guesses
 
 
-decodeDocument	:: IOStateArrow s XmlTree XmlTree
+decodeDocument  :: IOStateArrow s XmlTree XmlTree
 decodeDocument
     = choiceA
       [ ( isRoot >>> isXmlHtmlDoc )   :-> ( decodeArr normalizeNL  $< getEncoding )
@@ -372,43 +372,43 @@ decodeDocument
       , this                          :-> this
       ]
     where
-    decodeArr	:: (String -> String) -> String -> IOStateArrow s XmlTree XmlTree
+    decodeArr   :: (String -> String) -> String -> IOStateArrow s XmlTree XmlTree
     decodeArr normalizeNewline enc
-	= maybe notFound found . getDecodingFct $ enc
-	where
-	found df
-	    = traceMsg 2 ("decodeDocument: encoding is " ++ show enc)
-	      >>>
-	      ( decodeText df $< getAttrValue a_ignore_encoding_errors )
-	      >>>
-	      addAttr transferEncoding enc
+        = maybe notFound found . getDecodingFct $ enc
+        where
+        found df
+            = traceMsg 2 ("decodeDocument: encoding is " ++ show enc)
+              >>>
+              ( decodeText df $< getAttrValue a_ignore_encoding_errors )
+              >>>
+              addAttr transferEncoding enc
 
-	notFound
-	    = issueFatal ("encoding scheme not supported: " ++ show enc)
-	      >>>
-	      setDocumentStatusFromSystemState "decoding document"
+        notFound
+            = issueFatal ("encoding scheme not supported: " ++ show enc)
+              >>>
+              setDocumentStatusFromSystemState "decoding document"
 
-	decodeText df ignoreErrs
-	    = processChildren
-	      ( getText							-- get the document content
-		>>> arr df						-- decode the text, result is (string, [errMsg])
-		>>> ( ( (fst >>> normalizeNewline)			-- take decoded string, normalize newline and build text node
-			^>> mkText
-		      )
-		      <+>
-		      ( if isTrueValue ignoreErrs
-			then none					-- encoding errors are ignored
-			else
-			( arrL snd					-- take the error messages
-			  >>>
-			  arr ((enc ++) . (" encoding error" ++))	-- prefix with enc error
-			  >>>
-			  applyA (arr issueErr)				-- build issueErr arrow and apply
-			  >>>
-			  none						-- neccessary for type match with <+>
-			)
-		      )
-		    )
-	      )
-      
+        decodeText df ignoreErrs
+            = processChildren
+              ( getText                                                 -- get the document content
+                >>> arr df                                              -- decode the text, result is (string, [errMsg])
+                >>> ( ( (fst >>> normalizeNewline)                      -- take decoded string, normalize newline and build text node
+                        ^>> mkText
+                      )
+                      <+>
+                      ( if isTrueValue ignoreErrs
+                        then none                                       -- encoding errors are ignored
+                        else
+                        ( arrL snd                                      -- take the error messages
+                          >>>
+                          arr ((enc ++) . (" encoding error" ++))       -- prefix with enc error
+                          >>>
+                          applyA (arr issueErr)                         -- build issueErr arrow and apply
+                          >>>
+                          none                                          -- neccessary for type match with <+>
+                        )
+                      )
+                    )
+              )
+
 -- ------------------------------------------------------------

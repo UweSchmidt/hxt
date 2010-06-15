@@ -1,17 +1,19 @@
 -- arch-tag: Haskell XML Toolbox XPath Package
-name: hxt-xpath
-version: 8.5.4
-license: OtherLicense
-license-file: LICENCE
-maintainer: Uwe Schmidt <uwe@fh-wedel.de>
-stability: stable
-category: XML
-synopsis: The XPath modules for HXT.
-description:  The Haskell XML Toolbox XPath library. Since version 8.5 this library is packed in a separate package.
-homepage: http://www.fh-wedel.de/~si/HXmlToolbox/index.html
-copyright: Copyright (c) 2005-2010 Uwe Schmidt
-build-type: Simple
-cabal-version: >=1.6
+Name:           hxt-xpath
+Version:        8.5.5
+Synopsis:       The XPath modules for HXT.
+Description:    The Haskell XML Toolbox XPath library.
+                Since version 8.5 this library is packed in a separate package.
+License:        OtherLicense
+License-file:   LICENSE
+Author:         Torben Kuseler
+Maintainer:     Uwe Schmidt <uwe@fh-wedel.de>
+Stability:      Stable
+Category:       XML
+Homepage:       http://www.fh-wedel.de/~si/HXmlToolbox/index.html
+Copyright:      Copyright (c) 2005-2010 Torben Kuseler, Uwe Schmidt
+Build-type:     Simple
+Cabal-version:  >=1.6
 
 extra-source-files:
  examples/hunit/HUnitExample.hs

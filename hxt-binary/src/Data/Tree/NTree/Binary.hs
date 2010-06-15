@@ -25,8 +25,8 @@ import Data.Binary
 import Data.Tree.NTree.TypeDefs
 
 instance (Binary a) => Binary (NTree a) where
-    put	(NTree n cs)	= put n >> put cs
-    get			= do
+    put (NTree n cs)    = put n >> put cs
+    get                 = do
                           n  <- get
                           cs <- get
                           return (NTree n cs)

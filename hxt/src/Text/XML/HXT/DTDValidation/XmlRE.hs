@@ -82,35 +82,35 @@ delta :: RE String -> XmlTree -> RE String
 delta re el
     | not (allowed el) = re
     | otherwise        = case re of
-        RE_ZERO m		 -> re_zero m
-        RE_UNIT			 -> re_zero (elemName el ++" unexpected.")
+        RE_ZERO m                -> re_zero m
+        RE_UNIT                  -> re_zero (elemName el ++" unexpected.")
         RE_SYM sym
-    	    | sym == k_pcdata	 -> if ((XN.isText el) || (XN.isCdata el))
-				    then re_unit
-				    else re_zero ("Character data expected, but "++ elemName el ++" found.")
-       	    | expectedNode el sym -> re_unit
-	    | otherwise           -> re_zero ("Element "++ show sym ++" expected, but "++ elemName el ++" found.")
+            | sym == k_pcdata    -> if ((XN.isText el) || (XN.isCdata el))
+                                    then re_unit
+                                    else re_zero ("Character data expected, but "++ elemName el ++" found.")
+            | expectedNode el sym -> re_unit
+            | otherwise           -> re_zero ("Element "++ show sym ++" expected, but "++ elemName el ++" found.")
         RE_REP e                  -> re_seq (delta e el) (re_rep e)
         RE_PLUS e                 -> re_seq (delta e el) (re_rep e)
         RE_OPT e                  -> delta e el
         RE_SEQ e f
-       	    | nullable e          -> re_alt (re_seq (delta e el) f) (delta f el)
-       	    | otherwise           -> re_seq (delta e el) f
+            | nullable e          -> re_alt (re_seq (delta e el) f) (delta f el)
+            | otherwise           -> re_seq (delta e el) f
         RE_ALT e f                -> re_alt (delta e el) (delta f el)
         RE_DOT                    -> re_unit
 
     where
-    expectedNode	:: XmlTree -> String -> Bool
+    expectedNode        :: XmlTree -> String -> Bool
     expectedNode n sym
-	| XN.isElem n	= nameOfElem n == sym
-	| otherwise	= False
+        | XN.isElem n   = nameOfElem n == sym
+        | otherwise     = False
 
-    elemName		:: XmlTree -> String
+    elemName            :: XmlTree -> String
     elemName n
-	| XN.isElem n	= "element "++ show (nameOfElem n)
-	| otherwise	= "character data"
+        | XN.isElem n   = "element "++ show (nameOfElem n)
+        | otherwise     = "character data"
 
-    allowed	:: XmlTree -> Bool
-    allowed n	= XN.isElem n || XN.isText n || XN.isCdata n
+    allowed     :: XmlTree -> Bool
+    allowed n   = XN.isElem n || XN.isText n || XN.isCdata n
 
 -- ------------------------------------------------------------

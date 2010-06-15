@@ -20,13 +20,13 @@ newtype StateIO state res = STIO { trans :: state -> IO (res, state) }
 
 instance Monad (StateIO state) where
     return v
-	= STIO ( \s -> return (v, s))
+        = STIO ( \s -> return (v, s))
 
     STIO cmd >>= f
-	= STIO ( \s ->
-		  cmd s >>= \ (rl, s') ->
-		  (trans . f) rl s'
-		)
+        = STIO ( \s ->
+                  cmd s >>= \ (rl, s') ->
+                  (trans . f) rl s'
+                )
 
 -- ------------------------------------------------------------
 -- |
@@ -35,10 +35,10 @@ instance Monad (StateIO state) where
 io :: IO a -> StateIO state a
 io iocmd
     = STIO ( \s ->
-	     do
-	     a <- iocmd
-	     return (a, s)
-	   )
+             do
+             a <- iocmd
+             return (a, s)
+           )
 
 -- ------------------------------------------------------------
 
@@ -46,13 +46,13 @@ io iocmd
 -- state inspection command: a \"show\"-like function is applied to the state
 -- and the result is written to stderr.
 
-trcState	:: (state -> String) -> StateIO state ()
+trcState        :: (state -> String) -> StateIO state ()
 trcState fct
     = STIO ( \s ->
-	      do
-	      hPutStr stderr $ fct s
-	      return ((), s)
-	    )
+              do
+              hPutStr stderr $ fct s
+              return ((), s)
+            )
 
 -- ------------------------------------------------------------
 --
@@ -61,25 +61,25 @@ trcState fct
 -- |
 -- change the state with a given function and return the new state
 
-changeState	:: (state -> state) -> StateIO state state
+changeState     :: (state -> state) -> StateIO state state
 changeState f
     = STIO ( \s ->
-	     let s' = f s
-	     in
-	     return (s', s')
-	    )
+             let s' = f s
+             in
+             return (s', s')
+            )
 
 -- |
 -- set the state
 
-setState	:: state -> StateIO state state
+setState        :: state -> StateIO state state
 setState s
     = changeState ( \_ -> s )
 
 -- |
 -- read the state
 
-getState	:: StateIO state state
+getState        :: StateIO state state
 getState
     = changeState id
 

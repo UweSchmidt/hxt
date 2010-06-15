@@ -1,17 +1,18 @@
-name: hxt-binary
-version: 0.0.2
-license: OtherLicense
-license-file: LICENCE
-maintainer: Uwe Schmidt <uwe@fh-wedel.de>
-stability: experimental
-category: XML
-synopsis: Serialisation and deserialisation of HXT XmlTrees.
-description: Extension for storing and loading already parsed XML documents in an internal format.
- Serialisation and Deserialisation is done with the binary package.
-homepage: http://www.fh-wedel.de/~si/HXmlToolbox/index.html
-copyright: Copyright (c) 2010 Uwe Schmidt
-build-type: Simple
-cabal-version: >=1.6
+Name:           hxt-binary
+Version:        0.0.3
+Synopsis:       Serialisation and deserialisation of HXT XmlTrees.
+Description:    Extension for storing and loading already parsed XML documents in an internal format.
+                Serialisation and Deserialisation is done with the binary package.
+License:        OtherLicense
+License-file:   LICENSE
+Author:         Uwe Schmidt
+Maintainer:     Uwe Schmidt <uwe@fh-wedel.de>
+Stability:      Stable
+Category:       XML
+Homepage:       http://www.fh-wedel.de/~si/HXmlToolbox/index.html
+Copyright:      Copyright (c) 2010 Uwe Schmidt
+Build-type:     Simple
+Cabal-version:  >=1.6
 
 extra-source-files:
  test/TestXmlTreeBinary.hs

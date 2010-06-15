@@ -30,18 +30,18 @@ import Text.XML.HXT.DOM.QualifiedName
 -- -----------------------------------------------------------------------------
 
 instance Binary XNode where
-    put	(XText s)		= put (0::Word8) >> put s
-    put (XCharRef i)		= put (1::Word8) >> put i
-    put (XEntityRef n)		= put (2::Word8) >> put n
-    put (XCmt c)		= put (3::Word8) >> put c
-    put (XCdata s)		= put (4::Word8) >> put s
-    put (XPi qn ts)		= put (5::Word8) >> put qn >> put ts
-    put (XTag qn cs)		= put (6::Word8) >> put qn >> put cs
-    put (XDTD de al)		= put (7::Word8) >> put de >> put al
-    put (XAttr qn)		= put (8::Word8) >> put qn
-    put (XError n e)		= put (9::Word8) >> put n  >> put e
+    put (XText s)               = put (0::Word8) >> put s
+    put (XCharRef i)            = put (1::Word8) >> put i
+    put (XEntityRef n)          = put (2::Word8) >> put n
+    put (XCmt c)                = put (3::Word8) >> put c
+    put (XCdata s)              = put (4::Word8) >> put s
+    put (XPi qn ts)             = put (5::Word8) >> put qn >> put ts
+    put (XTag qn cs)            = put (6::Word8) >> put qn >> put cs
+    put (XDTD de al)            = put (7::Word8) >> put de >> put al
+    put (XAttr qn)              = put (8::Word8) >> put qn
+    put (XError n e)            = put (9::Word8) >> put n  >> put e
 
-    get				= do
+    get                         = do
                                   tag <- getWord8
                                   case tag of
                                     0 -> get >>= return . XText
@@ -66,8 +66,8 @@ instance Binary XNode where
 
 -- -----------------------------------------------------------------------------
 
-dtdElems			:: [DTDElem]
-dtdElems			= [ DOCTYPE
+dtdElems                        :: [DTDElem]
+dtdElems                        = [ DOCTYPE
                                   , ELEMENT
                                   , CONTENT
                                   , ATTLIST
@@ -80,27 +80,27 @@ dtdElems			= [ DOCTYPE
                                   ]
 
 instance Binary DTDElem where
---  put de			= put ((toEnum . fromEnum $ de)::Word8)		-- DTDElem is not yet instance of Enum
-    put	de			= let
+--  put de                      = put ((toEnum . fromEnum $ de)::Word8)         -- DTDElem is not yet instance of Enum
+    put de                      = let
                                   i = fromJust . elemIndex de $ dtdElems
                                   in
                                   put ((toEnum i)::Word8)
 
-    get				= do
+    get                         = do
                                   tag <- getWord8
                                   return $ dtdElems !! (fromEnum tag)
---				  return . toEnum . fromEnum $ tag		-- see above
+--                                return . toEnum . fromEnum $ tag              -- see above
 
 -- -----------------------------------------------------------------------------
 
 instance Binary QName where
-    put qn		= let
+    put qn              = let
                           px = namePrefix   qn
                           lp = localPart    qn
                           ns = namespaceUri qn
                           in
                           put px >> put lp >> put ns
-    get			= do
+    get                 = do
                           px <- get
                           lp <- get
                           ns <- get

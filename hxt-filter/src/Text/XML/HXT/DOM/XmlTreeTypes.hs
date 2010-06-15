@@ -18,26 +18,26 @@ import Text.XML.HXT.DOM.TypeDefs
 
 -- aliases for compatiblility reasons
 
-mkNode		:: node -> NTrees node -> NTree node
-mkNode		= mkTree
+mkNode          :: node -> NTrees node -> NTree node
+mkNode          = mkTree
 
-formatNTree	:: (node -> String) -> NTree node -> String
-formatNTree	= formatTree
+formatNTree     :: (node -> String) -> NTree node -> String
+formatNTree     = formatTree
 
-foldNTree	:: (a -> [b] -> b) -> NTree a -> b
-foldNTree 	= foldTree
+foldNTree       :: (a -> [b] -> b) -> NTree a -> b
+foldNTree       = foldTree
 
-mapNTree	:: (a -> b) -> NTree a -> NTree b
-mapNTree 	= fmap
+mapNTree        :: (a -> b) -> NTree a -> NTree b
+mapNTree        = fmap
 
-nTreeToList	:: NTree a -> [a]
-nTreeToList	= nodesTree
+nTreeToList     :: NTree a -> [a]
+nTreeToList     = nodesTree
 
-depthNTree	:: NTree a -> Int
-depthNTree	= depthTree
+depthNTree      :: NTree a -> Int
+depthNTree      = depthTree
 
-cardNTree	:: NTree a -> Int
-cardNTree	= cardNTree
+cardNTree       :: NTree a -> Int
+cardNTree       = cardNTree
 
 -- -----------------------------------------------------------------------------
 --
@@ -45,33 +45,33 @@ cardNTree	= cardNTree
 
 -- | A functions that takes a node and returns a list of nodes
 
-type XmlFilter	= TFilter  XNode
+type XmlFilter  = TFilter  XNode
 
 -- | A function that takes a list of nodes and returns a list of nodes
 
-type XmlSFilter	= TSFilter XNode
+type XmlSFilter = TSFilter XNode
 
 
 -- -----------------------------------------------------------------------------
 --
 
 -- | Tag name
-type TagName	= QName
+type TagName    = QName
 
 -- | Attribute name
-type AttrName	= QName
+type AttrName   = QName
 
 -- -----------------------------------------------------------------------------
 
 -- | shortcut for 'qualifiedName'
 
-tName	:: QName -> String
-tName	= qualifiedName
+tName   :: QName -> String
+tName   = qualifiedName
 
 -- | shortcut for 'qualifiedName'
 
-aName	:: QName -> String
-aName	= qualifiedName
+aName   :: QName -> String
+aName   = qualifiedName
 
 -- -----------------------------------------------------------------------------
 

@@ -49,8 +49,8 @@ import qualified Text.XML.HXT.DTDValidation.DocTransformation as DocTransformati
 --    - returns : a function which expects a complete document as XmlTree input
 --                     and returns a list of all errors found.
 
-validate 	:: XmlArrow
-validate	= validateDTD <+> validateDoc
+validate        :: XmlArrow
+validate        = validateDTD <+> validateDoc
 
 -- |
 -- Check if the DTD is valid.
@@ -59,11 +59,11 @@ validate	= validateDTD <+> validateDoc
 --    - returns : a function which expects an XmlTree from the parser as input
 --                     and returns a list of all errors found in the DTD.
 
-validateDTD	:: XmlArrow
-validateDTD	= choiceA
-		  [ getDTDSubset	:-> DTDValidation.validateDTD
-		  , this		:-> err "Can't validate DTD: There is no DOCTYPE declaration in the document."
-		  ]
+validateDTD     :: XmlArrow
+validateDTD     = choiceA
+                  [ getDTDSubset        :-> DTDValidation.validateDTD
+                  , this                :-> err "Can't validate DTD: There is no DOCTYPE declaration in the document."
+                  ]
 -- |
 -- Check if the document corresponds to the given DTD.
 --
@@ -71,20 +71,20 @@ validateDTD	= choiceA
 --    - returns : a function which expects a complete document as XmlTree input
 --                     and returns a list of all errors found in the content part.
 
-validateDoc	:: XmlArrow
+validateDoc     :: XmlArrow
 validateDoc
     = validateDoc' $< getDTD
     where
-    validateDoc' []		= err "Can't validate document: There is no DOCTYPE declaration in the document."
-    validateDoc' (dtdPart:_)	= DocValidation.validateDoc dtdPart
-				  <+>
-				  IdValidation.validateIds  dtdPart
+    validateDoc' []             = err "Can't validate document: There is no DOCTYPE declaration in the document."
+    validateDoc' (dtdPart:_)    = DocValidation.validateDoc dtdPart
+                                  <+>
+                                  IdValidation.validateIds  dtdPart
 
-getDTD		:: XmlArrowS
-getDTD		= listA ( getDTDSubset
-			  >>>
-			  removeDoublicateDefs
-			)
+getDTD          :: XmlArrowS
+getDTD          = listA ( getDTDSubset
+                          >>>
+                          removeDoublicateDefs
+                        )
 
 -- |
 -- filter for transforming a document with respect to the given DTD.
@@ -97,14 +97,14 @@ getDTD		= listA ( getDTDSubset
 --    - returns : a function which expects a complete XML document tree
 --                and returns the transformed XmlTree
 
-transform	:: XmlArrow
-transform	= choiceA
-		  [ isRoot	:-> (transformDoc $< getDTD)
-		  , this	:-> fatal "Can't transform document: No document root given"
-		  ]
+transform       :: XmlArrow
+transform       = choiceA
+                  [ isRoot      :-> (transformDoc $< getDTD)
+                  , this        :-> fatal "Can't transform document: No document root given"
+                  ]
                   where
-		  transformDoc []	= this
-		  transformDoc dtd	= DocTransformation.transform (head dtd)
+                  transformDoc []       = this
+                  transformDoc dtd      = DocTransformation.transform (head dtd)
 
 -- |
 -- Removes doublicate declarations from the DTD which first declaration is
@@ -114,17 +114,17 @@ transform	= choiceA
 --    - returns : A function that replaces the children of DOCTYPE nodes by a list
 --               where all multiple declarations are removed.
 
-removeDoublicateDefs	:: XmlArrow
-removeDoublicateDefs	= DTDValidation.removeDoublicateDefs
+removeDoublicateDefs    :: XmlArrow
+removeDoublicateDefs    = DTDValidation.removeDoublicateDefs
 
 --
 -- selects the DTD part of a document
 -- but only, if there is more than the internal part for the 4 predefined XML entities
 
-getDTDSubset		:: XmlArrow
-getDTDSubset		= getChildren
-			  >>>
-			  ( filterA $ isDTDDoctype >>> getDTDAttrl >>> isA (hasEntry a_name) )
+getDTDSubset            :: XmlArrow
+getDTDSubset            = getChildren
+                          >>>
+                          ( filterA $ isDTDDoctype >>> getDTDAttrl >>> isA (hasEntry a_name) )
 
 
 -- ------------------------------------------------------------

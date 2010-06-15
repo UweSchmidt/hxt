@@ -23,10 +23,10 @@ module Text.XML.HXT.XPath.XPathDataTypes
     )
 where
 
-import Data.Function			( on )
-import Data.Map				( Map )
+import Data.Function                    ( on )
+import Data.Map                         ( Map )
 import qualified
-       Data.Map				as M
+       Data.Map                         as M
 
 import Text.XML.HXT.XPath.NavTree
 import Text.XML.HXT.DOM.Interface
@@ -36,13 +36,13 @@ import Text.XML.HXT.DOM.Interface
 -- Expr
 
 -- | Represents expression
--- 
+--
 
 data Expr     = GenExpr Op [Expr]             -- ^ generic expression with an operator and one or more operands
               | PathExpr (Maybe Expr) (Maybe LocationPath)
-	                                      -- ^ a path expression contains an optional filter-expression
-					      -- or an optional locationpath. one expression is urgently
-					      -- necessary, both are possible
+                                              -- ^ a path expression contains an optional filter-expression
+                                              -- or an optional locationpath. one expression is urgently
+                                              -- necessary, both are possible
               | FilterExpr [Expr]             -- ^ filter-expression with zero or more predicates
               | VarExpr VarName               -- ^ variable
               | LiteralExpr Literal           -- ^ string
@@ -113,7 +113,7 @@ instance Ord XPNumber
     _       < NaN      = False
 
     _       < NegInf   = False
-    NegInf  < _	       = True
+    NegInf  < _        = True
 
     Neg0    < Neg0     = False
     Pos0    < Pos0     = False
@@ -140,23 +140,23 @@ data LocationPath = LocPath Path [XStep]
                   deriving (Show, Eq)
 
 
--- -----------------------------------------------------------------------------                  
+-- -----------------------------------------------------------------------------
 -- |
 -- A location path is either a relative or an absolute path.
 
 data Path         = Rel
-		  | Abs
+                  | Abs
                   deriving (Show, Eq)
-					
+
 
 -- | Represents location step
--- 
+--
 -- A location step consists of an axis, a node-test and zero or more predicates.
 
 data XStep        = Step AxisSpec NodeTest [Expr]
                   deriving (Show, Eq)
 
-			
+
 -- -----------------------------------------------------------------------------
 --
 -- AxisSpec
@@ -164,18 +164,18 @@ data XStep        = Step AxisSpec NodeTest [Expr]
 -- | Represents XPath axis
 
 data AxisSpec     = Ancestor
-		  | AncestorOrSelf
-		  | Attribute
-		  | Child
-		  | Descendant  
+                  | AncestorOrSelf
+                  | Attribute
+                  | Child
+                  | Descendant
                   | DescendantOrSelf
-		  | Following
-		  | FollowingSibling
+                  | Following
+                  | FollowingSibling
                   | Namespace
-		  | Parent
-		  | Preceding
-		  | PrecedingSibling
-		  | Self
+                  | Parent
+                  | Preceding
+                  | PrecedingSibling
+                  | Self
                   deriving (Show, Eq)
 
 -- -----------------------------------------------------------------------------
@@ -208,33 +208,33 @@ data XPathNode    = XPNode            -- ^ all 7 nodetypes
 --
 -- useful type definitions
 
-type Name 		= (NamePrefix, LocalName)
-type NamePrefix 	= String
-type LocalName 		= String
+type Name               = (NamePrefix, LocalName)
+type NamePrefix         = String
+type LocalName          = String
 
 -- | Variable name
-type VarName      	= Name
+type VarName            = Name
 
 -- | a string
-type Literal      	= String					
+type Literal            = String
 
 -- | Function name
-type FctName      	= String
+type FctName            = String
 
 -- | Function arguments
-type FctArguments 	= [Expr]
+type FctArguments       = [Expr]
 
 -- | Evaluation context
-type Context      	= (ConPos ,ConLen, ConNode)
+type Context            = (ConPos ,ConLen, ConNode)
 
 -- | Context position
-type ConPos       	= Int
+type ConPos             = Int
 
 -- | Context length
-type ConLen       	= Int
+type ConLen             = Int
 
 -- | Context node
-type ConNode      	= NavXmlTree
+type ConNode            = NavXmlTree
 
 
 -- -----------------------------------------------------------------------------
@@ -256,81 +256,81 @@ data XPathValue   = XPVNode NodeSet      -- ^ node-set
 
 -- | Node of navigable tree representation
 
-type NavXmlTree   	= NavTree XNode
+type NavXmlTree         = NavTree XNode
 
 -- | List of nodes of navigable tree representation
 
-type NavXmlTrees  	= [NavXmlTree]
+type NavXmlTrees        = [NavXmlTree]
 
 -- | Set of navigable trees identified by their document position (NodePath)
 
-newtype NodeSet      	= NS { unNS :: Map NodePath NavXmlTree }
-			  deriving (Show)
+newtype NodeSet         = NS { unNS :: Map NodePath NavXmlTree }
+                          deriving (Show)
 
 -- | path represented as list of indices starting at root
 
-type NodePath		= [Int]
+type NodePath           = [Int]
 
 -- | A functions that takes a XPath result and returns a XPath result
 
-type XPathFilter  	= XPathValue -> XPathValue
+type XPathFilter        = XPathValue -> XPathValue
 
 -- -----------------------------------------------------------------------------
 
-withXPVNode		:: String -> (NodeSet -> XPathValue) -> XPathFilter
-withXPVNode s f	n	= case n of
-			  XPVNode ns		-> f ns
-			  e@(XPVError _)	-> e
-			  _			-> XPVError s
+withXPVNode             :: String -> (NodeSet -> XPathValue) -> XPathFilter
+withXPVNode s f n       = case n of
+                          XPVNode ns            -> f ns
+                          e@(XPVError _)        -> e
+                          _                     -> XPVError s
 
 -- -----------------------------------------------------------------------------
 
 -- | node set functions
 
-emptyNodeSet		:: NodeSet
-emptyNodeSet		= NS M.empty
+emptyNodeSet            :: NodeSet
+emptyNodeSet            = NS M.empty
 
-singletonNodeSet	:: NavXmlTree -> NodeSet
-singletonNodeSet	= toNodeSet . (:[])
+singletonNodeSet        :: NavXmlTree -> NodeSet
+singletonNodeSet        = toNodeSet . (:[])
 
-nullNodeSet		:: NodeSet -> Bool
-nullNodeSet		= M.null . unNS
+nullNodeSet             :: NodeSet -> Bool
+nullNodeSet             = M.null . unNS
 
-cardNodeSet		:: NodeSet -> Int
-cardNodeSet		= M.size . unNS
+cardNodeSet             :: NodeSet -> Int
+cardNodeSet             = M.size . unNS
 
-deleteNodeSet		:: NodePath -> NodeSet -> NodeSet
-deleteNodeSet p		= NS . M.delete p . unNS
+deleteNodeSet           :: NodePath -> NodeSet -> NodeSet
+deleteNodeSet p         = NS . M.delete p . unNS
 
-insertNodeSet		:: NavXmlTree -> NodeSet -> NodeSet
-insertNodeSet t		= NS . M.insert (pathNT t) t . unNS
+insertNodeSet           :: NavXmlTree -> NodeSet -> NodeSet
+insertNodeSet t         = NS . M.insert (pathNT t) t . unNS
 
-unionNodeSet		:: NodeSet -> NodeSet -> NodeSet
-unionNodeSet ns1	= NS . M.union (unNS ns1) . unNS
+unionNodeSet            :: NodeSet -> NodeSet -> NodeSet
+unionNodeSet ns1        = NS . M.union (unNS ns1) . unNS
 
-unionsNodeSet		:: [NodeSet] -> NodeSet
-unionsNodeSet		= NS . foldl (\ res ns -> M.union res $ unNS ns) M.empty
+unionsNodeSet           :: [NodeSet] -> NodeSet
+unionsNodeSet           = NS . foldl (\ res ns -> M.union res $ unNS ns) M.empty
 
-elemsNodeSet		:: NodeSet -> [(NodePath, NavXmlTree)]
-elemsNodeSet		= M.toList . unNS
+elemsNodeSet            :: NodeSet -> [(NodePath, NavXmlTree)]
+elemsNodeSet            = M.toList . unNS
 
-fromNodeSet		:: NodeSet -> NavXmlTrees
-fromNodeSet		= M.elems . unNS
+fromNodeSet             :: NodeSet -> NavXmlTrees
+fromNodeSet             = M.elems . unNS
 
-toNodeSet		:: NavXmlTrees -> NodeSet
-toNodeSet		= NS . foldl (\ m t -> M.insert (pathNT t) t m) M.empty
+toNodeSet               :: NavXmlTrees -> NodeSet
+toNodeSet               = NS . foldl (\ m t -> M.insert (pathNT t) t m) M.empty
 
-headNodeSet		:: NodeSet -> NavXmlTree
-headNodeSet		= head . fromNodeSet
+headNodeSet             :: NodeSet -> NavXmlTree
+headNodeSet             = head . fromNodeSet
 
-withNodeSet		:: (NavXmlTrees -> NavXmlTrees) -> NodeSet -> NodeSet
-withNodeSet f		= toNodeSet . f . fromNodeSet
+withNodeSet             :: (NavXmlTrees -> NavXmlTrees) -> NodeSet -> NodeSet
+withNodeSet f           = toNodeSet . f . fromNodeSet
 
 instance Eq NodeSet where
-    (==)		= (==) `on` (M.keys . unNS)
+    (==)                = (==) `on` (M.keys . unNS)
 
 instance Ord NodeSet where
-    compare		= compare `on` (M.keys . unNS)
+    compare             = compare `on` (M.keys . unNS)
 
 -- -----------------------------------------------------------------------------
 --
@@ -341,14 +341,14 @@ instance Ord NodeSet where
 -- All variables are stored in the environment,
 -- each variable name is bound to a value.
 
-type VarTab       	= [(VarName, XPathValue)]
-type KeyTab       	= [(QName, String, NavXmlTree)]
+type VarTab             = [(VarName, XPathValue)]
+type KeyTab             = [(QName, String, NavXmlTree)]
 
-type Env          	= (VarTab, KeyTab)
+type Env                = (VarTab, KeyTab)
 
-varEnv 			:: Env
-varEnv 			= ( [ (("", "name"), XPVNumber NaN) ]
-			  , []
-			  )
+varEnv                  :: Env
+varEnv                  = ( [ (("", "name"), XPVNumber NaN) ]
+                          , []
+                          )
 
 -- -----------------------------------------------------------------------------

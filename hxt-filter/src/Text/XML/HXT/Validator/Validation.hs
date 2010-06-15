@@ -34,31 +34,31 @@ import Text.XML.HXT.Parser.XmlOutput
 -- Result is the single element list containing same tree but tranformed with respect to the DTD,
 -- or, in case of errors, the root with an empty list of children
 
-getValidatedDoc		:: XmlStateFilter state
+getValidatedDoc         :: XmlStateFilter state
 getValidatedDoc
     = traceMsg 1 "validating document"
       .>>
       ( ( runValidation
-	  .>>
-	  traceTree
-	  .>>
-	  traceSource
-	)
-	`whenM` (isRoot .> getChildren)
+          .>>
+          traceTree
+          .>>
+          traceSource
+        )
+        `whenM` (isRoot .> getChildren)
       )
       where
       runValidation t
-	  = ( issueError $$< res )
+          = ( issueError $$< res )
             >>
-	    ( if null errs
-	      then ( traceMsg 1 "transforming validated document"
-		     .>>
-		     liftMf transform
-		   )
-	      else liftMf (setStatus c_err "validating document")
-	      ) t
-	    where
-	    res  = validate t
-	    errs = isXError .> neg isWarning $$ res
+            ( if null errs
+              then ( traceMsg 1 "transforming validated document"
+                     .>>
+                     liftMf transform
+                   )
+              else liftMf (setStatus c_err "validating document")
+              ) t
+            where
+            res  = validate t
+            errs = isXError .> neg isWarning $$ res
 
 -- ------------------------------------------------------------

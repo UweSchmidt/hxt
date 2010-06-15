@@ -49,10 +49,10 @@ nameClassToString :: NameClass -> String
 nameClassToString AnyName
     = "AnyName"
 
-nameClassToString (AnyNameExcept nc) 
+nameClassToString (AnyNameExcept nc)
     = "AnyNameExcept " ++ nameClassToString nc
 
-nameClassToString (Name uri local) 
+nameClassToString (Name uri local)
     = "{" ++ uri ++ "}" ++ local
 
 nameClassToString (NsName uri)
@@ -87,7 +87,7 @@ Example:
 >         |       +---text
 >         |
 >         +---text
-               
+
 The function can be used to display circular ref-pattern structures.
 
 Example:
@@ -112,7 +112,7 @@ patternToStringTree
 
 xmlTreeToPatternStringTree :: LA XmlTree String
 xmlTreeToPatternStringTree
-    = createPatternFromXmlTree 
+    = createPatternFromXmlTree
       >>>
       patternToStringTree
 
@@ -123,7 +123,7 @@ pattern2PatternTree
       [ isA isRelaxEmpty      :-> (constA $ NTree "empty" [])
       , isA isRelaxNotAllowed :-> notAllowed2PatternTree
       , isA isRelaxText       :-> (constA $ NTree "text" [])
-      , isA isRelaxChoice     :-> choice2PatternTree          
+      , isA isRelaxChoice     :-> choice2PatternTree
       , isA isRelaxInterleave :-> children2PatternTree "interleave"
       , isA isRelaxGroup      :-> children2PatternTree "group"
       , isA isRelaxOneOrMore  :-> children2PatternTree "oneOrMore"
@@ -131,7 +131,7 @@ pattern2PatternTree
       , isA isRelaxData       :-> data2PatternTree
       , isA isRelaxDataExcept :-> dataExcept2PatternTree
       , isA isRelaxValue      :-> value2PatternTree
-      , isA isRelaxAttribute  :-> createPatternTreeFromElement "attribute"          
+      , isA isRelaxAttribute  :-> createPatternTreeFromElement "attribute"
       , isA isRelaxElement    :-> element2PatternTree
       , isA isRelaxAfter      :-> children2PatternTree "after"
       ]
@@ -142,22 +142,22 @@ notAllowed2PatternTree
 
 
 data2PatternTree :: SLA [NameClass] Pattern PatternTree
-data2PatternTree 
+data2PatternTree
     = arr $ \ (Data d p) -> NTree "data" [ datatype2PatternTree d
-					 , mapping2PatternTree "parameter" p
-					 ]
- 
+                                         , mapping2PatternTree "parameter" p
+                                         ]
+
 dataExcept2PatternTree :: SLA [NameClass] Pattern PatternTree
-dataExcept2PatternTree 
+dataExcept2PatternTree
     = this &&& (listA $ arrL getChildrenPattern >>> pattern2PatternTree)
       >>>
       arr2 ( \ (DataExcept d param _) pattern ->
              NTree "dataExcept" ([ datatype2PatternTree d
-				 , mapping2PatternTree "parameter" param
-				 ] ++ pattern)
+                                 , mapping2PatternTree "parameter" param
+                                 ] ++ pattern)
            )
 
-value2PatternTree :: SLA [NameClass] Pattern PatternTree 
+value2PatternTree :: SLA [NameClass] Pattern PatternTree
 value2PatternTree
     = arr $ \ (Value d v c) -> NTree ("value = " ++ v) [ datatype2PatternTree d
                                                        , context2PatternTree c
@@ -167,34 +167,34 @@ value2PatternTree
 createPatternTreeFromElement :: String -> SLA [NameClass] Pattern PatternTree
 createPatternTreeFromElement name
     = ( arr getNameClassFromPattern
-	&&&
-	listA (arrL getChildrenPattern >>> pattern2PatternTree)
+        &&&
+        listA (arrL getChildrenPattern >>> pattern2PatternTree)
       )
       >>>
       arr2 (\nc rl -> NTree (name ++ " " ++ show nc) rl)
 
 children2PatternTree :: String -> SLA [NameClass] Pattern PatternTree
-children2PatternTree name 
-    = listA (arrL getChildrenPattern >>> pattern2PatternTree) 
+children2PatternTree name
+    = listA (arrL getChildrenPattern >>> pattern2PatternTree)
       >>^
       (NTree name)
 
 choice2PatternTree :: SLA [NameClass] Pattern PatternTree
-choice2PatternTree 
-    = ifA ( -- wenn das zweite kind ein noch nicht ausgegebenes element ist, 
+choice2PatternTree
+    = ifA ( -- wenn das zweite kind ein noch nicht ausgegebenes element ist,
             -- muss dieses anders behandelt werden
             -- nur fuer bessere formatierung des outputs
             arr (last . getChildrenPattern) >>> isA (isRelaxElement) >>>
-            (arr getNameClassFromPattern &&& getState) >>> 
+            (arr getNameClassFromPattern &&& getState) >>>
             isA(\ (nc, liste) -> not $ elem nc liste)
           )
       ( -- element in status aufnehmen, wird dann nicht mehr vom erste kind ausgegeben
         arr getChildrenPattern
-	>>>
+        >>>
         changeState (\s p -> (getNameClassFromPattern (last p)) : s)
-	>>>
-        ( ( head ^>> pattern2PatternTree )		-- erstes kind normal verarbeiten
-          &&&						-- zweites kind, das element, verarbeiten
+        >>>
+        ( ( head ^>> pattern2PatternTree )              -- erstes kind normal verarbeiten
+          &&&                                           -- zweites kind, das element, verarbeiten
           ( last ^>> createPatternTreeFromElement "element" )
         )
         >>>
@@ -202,15 +202,15 @@ choice2PatternTree
       )
       ( children2PatternTree "choice" )
 
-                            
+
 element2PatternTree :: SLA [NameClass] Pattern PatternTree
-element2PatternTree 
+element2PatternTree
     = ifA ( (arr getNameClassFromPattern &&& getState)
-            >>> 
+            >>>
             isA (\ (nc, liste) -> elem nc liste)
           )
       ( arr getNameClassFromPattern
-        >>> 
+        >>>
         arr (\nc -> NTree ("reference to element " ++ show nc) [])
       )
       ( changeState (\ s p -> (getNameClassFromPattern p) : s)
@@ -241,7 +241,7 @@ context2PatternTree (base, mapping)
 -- (see also: 'createPatternFromXmlTree' and 'patternToFormatedString')
 xmlTreeToPatternFormatedString :: LA XmlTree String
 xmlTreeToPatternFormatedString
-    = createPatternFromXmlTree 
+    = createPatternFromXmlTree
       >>>
       fromSLA [] patternToFormatedString
 
@@ -251,10 +251,10 @@ Returns a formated string representation of the pattern structure.
 
 Example:
 
-> Element {}foo (Choice (Choice ( Value = abc, 
-> datatypelibrary = http://relaxng.org/ns/structure/1.0, type = token, 
-> context (base-uri =file://test.rng, 
-> parameter: xml = http://www.w3.org/XML/1998/namespaces, foo = www.bar.baz), 
+> Element {}foo (Choice (Choice ( Value = abc,
+> datatypelibrary = http://relaxng.org/ns/structure/1.0, type = token,
+> context (base-uri =file://test.rng,
+> parameter: xml = http://www.w3.org/XML/1998/namespaces, foo = www.bar.baz),
 
 The function can be used to display circular ref-pattern structures.
 -}
@@ -280,21 +280,21 @@ patternToFormatedString
 
 children2FormatedString :: String -> SLA [NameClass] Pattern String
 children2FormatedString name
-    = listA (arrL getChildrenPattern >>> patternToFormatedString) 
+    = listA (arrL getChildrenPattern >>> patternToFormatedString)
       >>^
       (\ l -> name ++ " (" ++ formatStringListPatt l ++ ") " )
 
 data2FormatedString :: SLA [NameClass] Pattern String
 data2FormatedString
     = arr ( \ (Data datatype paramList) ->
-	    "Data " ++ datatype2String datatype ++ "\n " ++ 
+            "Data " ++ datatype2String datatype ++ "\n " ++
             mapping2String "parameter" paramList ++ "\n"
-	  )
+          )
 
 dataExcept2FormatedString :: SLA [NameClass] Pattern String
-dataExcept2FormatedString 
+dataExcept2FormatedString
  = arr ( \ (DataExcept datatype paramList _) ->
-         "DataExcept " ++ show datatype ++ "\n " ++ 
+         "DataExcept " ++ show datatype ++ "\n " ++
          mapping2String "parameter" paramList ++ "\n "
        )
    &&&
@@ -304,9 +304,9 @@ dataExcept2FormatedString
 
 
 value2FormatedString :: SLA [NameClass] Pattern String
-value2FormatedString 
+value2FormatedString
  = arr $ \(Value datatype val context) ->
-           "Value = " ++ val ++ ", " ++ datatype2String datatype ++ 
+           "Value = " ++ val ++ ", " ++ datatype2String datatype ++
            "\n " ++ context2String context ++ "\n"
 
 
@@ -315,25 +315,25 @@ element2FormatedString
     = ifA ( (arr getNameClassFromPattern &&& getState)
             >>>
             isA (\ (nc, liste) -> elem nc liste)
-	  )
+          )
       ( arr getNameClassFromPattern
-	>>^ 
-	( \nc -> "reference to element " ++ nameClassToString nc ++ " " )
+        >>^
+        ( \nc -> "reference to element " ++ nameClassToString nc ++ " " )
       )
       ( changeState (\ s p -> (getNameClassFromPattern p) : s)
-	>>>
-	createFormatedStringFromElement "element"
+        >>>
+        createFormatedStringFromElement "element"
       )
 
 
 createFormatedStringFromElement :: String -> SLA [NameClass] Pattern String
 createFormatedStringFromElement name
     = ( arr getNameClassFromPattern
-	&&&
-	( listA (arrL getChildrenPattern >>> patternToFormatedString)
-	  >>^
-	  formatStringListId
-	)
+        &&&
+        ( listA (arrL getChildrenPattern >>> patternToFormatedString)
+          >>^
+          formatStringListId
+        )
       )
       >>>
       arr2 (\ nc rl -> name ++ " " ++ nameClassToString nc ++ " (" ++ rl ++ ")")
@@ -343,7 +343,7 @@ createFormatedStringFromElement name
 
 mapping2String :: String -> [(Prefix, Uri)] -> String
 mapping2String name mapping
-    = name ++ ": " ++ 
+    = name ++ ": " ++
       formatStringList id ", " (map (\(a, b) -> a ++ " = " ++ b) mapping)
 
 datatype2String :: Datatype -> String
@@ -351,10 +351,10 @@ datatype2String (lib, localName)
     = "datatypelibrary = " ++ getLib ++ ", type = " ++ localName
     where
     getLib = if lib == "" then relaxNamespace else lib
-  
+
 context2String :: Context -> String
 context2String (base, mapping)
     = "context (base-uri = " ++ base ++ ", " ++
       mapping2String "namespace environment" mapping ++ ")"
-  
+
 -- ------------------------------------------------------------

@@ -136,8 +136,8 @@
       </element>
     </choice>
   </define>
-  
-  
+
+
   <define name="grammar-content">
     <interleave>
       <ref name="other"/>

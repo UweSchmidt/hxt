@@ -48,50 +48,50 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
     -- |
     -- | example: @ a1 &&& a2 >>> arr2 f @
 
-    arr2		:: (b1 -> b2 -> c) -> a (b1, b2) c
-    arr2		= arr . uncurry
+    arr2                :: (b1 -> b2 -> c) -> a (b1, b2) c
+    arr2                = arr . uncurry
 
     -- | construction of a 3 argument arrow from a 3-ary function
     -- |
     -- | example: @ a1 &&& a2 &&& a3 >>> arr3 f @
 
-    arr3		:: (b1 -> b2 -> b3 -> c) -> a (b1, (b2, b3)) c
-    arr3 f		= arr (\ ~(x1, ~(x2, x3)) -> f x1 x2 x3)
+    arr3                :: (b1 -> b2 -> b3 -> c) -> a (b1, (b2, b3)) c
+    arr3 f              = arr (\ ~(x1, ~(x2, x3)) -> f x1 x2 x3)
 
     -- | construction of a 4 argument arrow from a 4-ary function
     -- |
     -- | example: @ a1 &&& a2 &&& a3 &&& a4 >>> arr4 f @
 
-    arr4		:: (b1 -> b2 -> b3 -> b4 -> c) -> a (b1, (b2, (b3, b4))) c
-    arr4 f		= arr (\ ~(x1, ~(x2, ~(x3, x4))) -> f x1 x2 x3 x4)
+    arr4                :: (b1 -> b2 -> b3 -> b4 -> c) -> a (b1, (b2, (b3, b4))) c
+    arr4 f              = arr (\ ~(x1, ~(x2, ~(x3, x4))) -> f x1 x2 x3 x4)
 
     -- | construction of a 2 argument arrow from a singe argument arrow
 
-    arr2A		:: (b -> a c d) -> a (b, c) d
+    arr2A               :: (b -> a c d) -> a (b, c) d
 
     -- | constructor for a list arrow from a function with a list as result
 
-    arrL		:: (b -> [c]) -> a b c
+    arrL                :: (b -> [c]) -> a b c
 
     -- | constructor for a list arrow with 2 arguments
 
-    arr2L		:: (b -> c -> [d]) -> a (b, c) d
-    arr2L		= arrL . uncurry
+    arr2L               :: (b -> c -> [d]) -> a (b, c) d
+    arr2L               = arrL . uncurry
 
     -- | constructor for a const arrow: @ constA = arr . const @
 
-    constA		:: c -> a b c
-    constA		= arr . const
+    constA              :: c -> a b c
+    constA              = arr . const
 
     -- | constructor for a const arrow: @ constL = arrL . const @
 
-    constL		:: [c] -> a b c
-    constL		= arrL . const
+    constL              :: [c] -> a b c
+    constL              = arrL . const
 
     -- | builds an arrow from a predicate.
     -- If the predicate holds, the single list containing the input is returned, else the empty list
 
-    isA			:: (b -> Bool) -> a b b
+    isA                 :: (b -> Bool) -> a b b
 
     -- | combinator for converting the result of a list arrow into another list
     --
@@ -99,12 +99,12 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
     --
     -- example: @ foo >>. take 1 @ constructs a deterministic version of foo by deleting all further results
 
-    (>>.)		:: a b c -> ([c] -> [d]) -> a b d
+    (>>.)               :: a b c -> ([c] -> [d]) -> a b d
 
     -- | combinator for converting the result of an arrow into a single element result
 
-    (>.)		:: a b c -> ([c] ->  d ) -> a b d
-    af >. f		= af >>. ((:[]) . f)
+    (>.)                :: a b c -> ([c] ->  d ) -> a b d
+    af >. f             = af >>. ((:[]) . f)
 
     -- | combinator for converting an arrow into a determinstic version with all results collected in a single element list
     --
@@ -118,8 +118,8 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
     -- >
     -- > collectAndSort collect = listA collect >>> arrL sort
 
-    listA		:: a b c -> a b [c]
-    listA af		= af >>.  (:[])
+    listA               :: a b c -> a b [c]
+    listA af            = af >>.  (:[])
 
     -- | the inverse of 'listA'
     --
@@ -127,25 +127,25 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
     --
     -- unlistA is defined as @ arrL id @
 
-    unlistA		:: a [b] b
-    unlistA		= arrL id
+    unlistA             :: a [b] b
+    unlistA             = arrL id
 
     -- | the identity arrow, alias for returnA
 
-    this		:: a b b
-    this		= returnA
+    this                :: a b b
+    this                = returnA
 
     -- | the zero arrow, alias for zeroArrow
 
-    none		:: a b c
-    none		= zeroArrow
+    none                :: a b c
+    none                = zeroArrow
 
     -- | converts an arrow, that may fail, into an arrow that always succeeds
     --
     -- example: @ withDefault none \"abc\" @ is equivalent to @ constA \"abc\" @
 
-    withDefault		:: a b c -> c -> a b c
-    withDefault	a d	= a >>. \ x -> if null x then [d] else x
+    withDefault         :: a b c -> c -> a b c
+    withDefault a d     = a >>. \ x -> if null x then [d] else x
 
     -- | makes a list arrow deterministic, the number of results is at most 1
     --
@@ -161,8 +161,8 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
     -- >         (constA "y"
     -- >          <+> this ) ) "x" == ["y"]
 
-    single		:: a b c -> a b c
-    single f		= f >>. take 1
+    single              :: a b c -> a b c
+    single f            = f >>. take 1
 
     -- | compute an arrow from the input and apply the arrow to this input
     --
@@ -176,7 +176,7 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
     --
     -- see also: '$<', '$<<', '$<<<', '$<<<<', '$<$'
 
-    applyA		:: a b (a b c) -> a b c
+    applyA              :: a b (a b c) -> a b c
     applyA f            = (f &&& this) >>> app
 
     -- | compute the parameter for an arrow with extra parameters from the input
@@ -210,8 +210,8 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
     --
     -- see also: 'applyA', '$<<', '$<<<', '$<<<<', '$<$'
 
-    ($<)		:: (c -> a b d) -> a b c -> a b d
-    g $< f		= applyA (f >>> arr g)
+    ($<)                :: (c -> a b d) -> a b c -> a b d
+    g $< f              = applyA (f >>> arr g)
 
     -- | binary version of '$<'
     --
@@ -226,8 +226,8 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
     -- > runLA ( infixString $<< constA "y"
     -- >                         &&& (constA "z" <+> this) ) "x" = ["yxz", "yxx"]
 
-    ($<<)		:: (c1 -> c2 -> a b d) -> a b (c1, c2) -> a b d
-    f $<< g		= applyA (g >>> arr2 f)
+    ($<<)               :: (c1 -> c2 -> a b d) -> a b (c1, c2) -> a b d
+    f $<< g             = applyA (g >>> arr2 f)
 
     -- | version of '$<' for arrows with 3 extra parameters
     --
@@ -235,8 +235,8 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
     --
     -- > f $<<< g1 &&& g2 &&& g3
 
-    ($<<<)		:: (c1 -> c2 -> c3 -> a b d) -> a b (c1, (c2, c3)) -> a b d
-    f $<<< g		= applyA (g >>> arr3 f)
+    ($<<<)              :: (c1 -> c2 -> c3 -> a b d) -> a b (c1, (c2, c3)) -> a b d
+    f $<<< g            = applyA (g >>> arr3 f)
 
     -- | version of '$<' for arrows with 4 extra parameters
     --
@@ -244,8 +244,8 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
     --
     -- > f $<<<< g1 &&& g2 &&& g3 &&& g4
 
-    ($<<<<)		:: (c1 -> c2 -> c3 -> c4 -> a b d) -> a b (c1, (c2, (c3, c4))) -> a b d
-    f $<<<< g		= applyA (g >>> arr4 f)
+    ($<<<<)             :: (c1 -> c2 -> c3 -> c4 -> a b d) -> a b (c1, (c2, (c3, c4))) -> a b d
+    f $<<<< g           = applyA (g >>> arr4 f)
 
     -- | compute the parameter for an arrow @f@ with an extra parameter by an arrow @g@
     -- and apply all the results from @g@ sequentially to the input
@@ -293,14 +293,14 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
     -- > g2 :: a b c2
     -- >
     -- > f          :: (c1, c2) -> a b b
-    -- > f (x1, x2) =  ... x1 ... x2 ... 
+    -- > f (x1, x2) =  ... x1 ... x2 ...
     -- >
     -- > f $<$ g1 &&& g2
     --
     -- see also: 'applyA', '$<'
 
-    ($<$)		:: (c -> (a b b)) -> a b c -> a b b
-    g $<$ f		= applyA (listA (f >>> arr g) >>> arr seqA)
+    ($<$)               :: (c -> (a b b)) -> a b c -> a b b
+    g $<$ f             = applyA (listA (f >>> arr g) >>> arr seqA)
 
     -- | merge the result pairs of an arrow with type @a a1 (b1, b2)@
     -- by combining the tuple components with the @op@ arrow
@@ -309,38 +309,38 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
     --
     -- >     a1 :: a String (XmlTree, XmlTree)
     -- >     a1 = selem "foo" [this >>> mkText]
-    -- > 	  &&&
-    -- > 	  selem "bar" [arr (++"0") >>> mkText]
-    -- > 
+    -- >          &&&
+    -- >          selem "bar" [arr (++"0") >>> mkText]
+    -- >
     -- >     runLA (a1 >>> mergeA (<+>) >>> xshow this) "42" == ["<foo>42</foo>","<bar>420</bar>"]
     -- >     runLA (a1 >>> mergeA (+=)  >>> xshow this) "42" == ["<foo>42<bar>420</bar></foo>"]
     --
     -- see also: 'applyA', '$<' and '+=' in class 'Text.XML.HXT.Arrow.ArrowXml'
 
-    mergeA		:: (a (a1, b1) a1 -> a (a1, b1) b1 -> a (a1, b1) c) ->
-			   a (a1, b1) c
-    mergeA op		= (\ x -> arr fst `op` constA (snd x)) $< this
+    mergeA              :: (a (a1, b1) a1 -> a (a1, b1) b1 -> a (a1, b1) c) ->
+                           a (a1, b1) c
+    mergeA op           = (\ x -> arr fst `op` constA (snd x)) $< this
 
     -- | useful only for arrows with side effects: perform applies an arrow to the input
     -- ignores the result and returns the input
     --
     -- example: @ ... >>> perform someTraceArrow >>> ... @
 
-    perform		:: a b c -> a b b
-    perform f		= listA f &&& this >>> arr snd
+    perform             :: a b c -> a b b
+    perform f           = listA f &&& this >>> arr snd
 
     -- | generalization of arrow combinator '<+>'
     --
     -- definition: @ catA = foldl (\<+\>) none @
 
-    catA		:: [a b c] -> a b c
-    catA		= foldl (<+>) none
+    catA                :: [a b c] -> a b c
+    catA                = foldl (<+>) none
 
     -- | generalization of arrow combinator '>>>'
     --
     -- definition: @ seqA = foldl (>>>) this @
 
-    seqA		:: [a b b] -> a b b
-    seqA		= foldl (>>>) this
+    seqA                :: [a b b] -> a b b
+    seqA                = foldl (>>>) this
 
 -- ------------------------------------------------------------

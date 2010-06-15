@@ -80,8 +80,8 @@ import Data.Char( toUpper )
 import Text.XML.HXT.DOM.Util ( swap, partitionEither )
 
 import Text.XML.HXT.DOM.IsoLatinTables
-import Text.XML.HXT.DOM.UTF8Decoding	( decodeUtf8, decodeUtf8EmbedErrors )
-import Text.XML.HXT.DOM.Util		( intToHexString )
+import Text.XML.HXT.DOM.UTF8Decoding    ( decodeUtf8, decodeUtf8EmbedErrors )
+import Text.XML.HXT.DOM.Util            ( intToHexString )
 import Text.XML.HXT.DOM.XmlKeywords
 
 -- ------------------------------------------------------------
@@ -90,19 +90,19 @@ import Text.XML.HXT.DOM.XmlKeywords
 --   Precondition for this is the support of Unicode character range
 --   in the compiler (e.g. ghc but not hugs)
 
-type Unicode	= Char
+type Unicode    = Char
 
 -- | the type for Unicode strings
 
-type UString	= [Unicode]
+type UString    = [Unicode]
 
 -- | UTF-8 charachters are represented by the Char type
 
-type UTF8Char	= Char
+type UTF8Char   = Char
 
 -- | UTF-8 strings are implemented as Haskell strings
 
-type UTF8String	= String
+type UTF8String = String
 
 -- | Decoding function with a pair containing the result string and a list of decoding errors as result
 
@@ -121,22 +121,22 @@ type DecodingFctEmbedErrors = String -> UStringWithErrors
 -- |
 -- test for a legal 1 byte XML char
 
-is1ByteXmlChar		:: Unicode -> Bool
+is1ByteXmlChar          :: Unicode -> Bool
 is1ByteXmlChar c
     = c < '\x80'
       && ( c >= ' '
-	   ||
-	   c == '\n'
-	   ||
-	   c == '\t'
-	   ||
-	   c == '\r'
-	 )
+           ||
+           c == '\n'
+           ||
+           c == '\t'
+           ||
+           c == '\r'
+         )
 
 -- |
 -- test for a legal latin1 XML char
 
-isXmlLatin1Char		:: Unicode -> Bool
+isXmlLatin1Char         :: Unicode -> Bool
 isXmlLatin1Char i
     = is1ByteXmlChar i
       ||
@@ -147,48 +147,48 @@ isXmlLatin1Char i
 -- |
 -- conversion from Unicode strings (UString) to UTF8 encoded strings.
 
-unicodeToUtf8		:: UString -> UTF8String
-unicodeToUtf8		= concatMap unicodeCharToUtf8
+unicodeToUtf8           :: UString -> UTF8String
+unicodeToUtf8           = concatMap unicodeCharToUtf8
 
 -- |
 -- conversion from Unicode (Char) to a UTF8 encoded string.
 
-unicodeCharToUtf8	:: Unicode -> UTF8String
+unicodeCharToUtf8       :: Unicode -> UTF8String
 unicodeCharToUtf8 c
-    | i >= 0          && i <= 0x0000007F	-- 1 byte UTF8 (7 bits)
-	= [ toEnum i ]
-    | i >= 0x00000080 && i <= 0x000007FF	-- 2 byte UTF8 (5 + 6 bits)
-	= [ toEnum (0xC0 + i `div` 0x40)
-	  , toEnum (0x80 + i                  `mod` 0x40)
-	  ]
-    | i >= 0x00000800 && i <= 0x0000FFFF	-- 3 byte UTF8 (4 + 6 + 6 bits)
-	= [ toEnum (0xE0 +  i `div`   0x1000)
-	  , toEnum (0x80 + (i `div`     0x40) `mod` 0x40)
-	  , toEnum (0x80 +  i                 `mod` 0x40)
-	  ]
-    | i >= 0x00010000 && i <= 0x001FFFFF	-- 4 byte UTF8 (3 + 6 + 6 + 6 bits)
-	= [ toEnum (0xF0 +  i `div`    0x40000)
-	  , toEnum (0x80 + (i `div`     0x1000) `mod` 0x40)
-	  , toEnum (0x80 + (i `div`       0x40) `mod` 0x40)
-	  , toEnum (0x80 +  i                   `mod` 0x40)
-	  ]
-    | i >= 0x00200000 && i <= 0x03FFFFFF	-- 5 byte UTF8 (2 + 6 + 6 + 6 + 6 bits)
-	= [ toEnum (0xF8 +  i `div`  0x1000000)
-	  , toEnum (0x80 + (i `div`    0x40000) `mod` 0x40)
-	  , toEnum (0x80 + (i `div`     0x1000) `mod` 0x40)
-	  , toEnum (0x80 + (i `div`       0x40) `mod` 0x40)
-	  , toEnum (0x80 +  i                   `mod` 0x40)
-	  ]
-    | i >= 0x04000000 && i <= 0x7FFFFFFF	-- 6 byte UTF8 (1 + 6 + 6 + 6 + 6 + 6 bits)
-	= [ toEnum (0xFC +  i `div` 0x40000000)
-	  , toEnum (0x80 + (i `div`  0x1000000) `mod` 0x40)
-	  , toEnum (0x80 + (i `div`    0x40000) `mod` 0x40)
-	  , toEnum (0x80 + (i `div`     0x1000) `mod` 0x40)
-	  , toEnum (0x80 + (i `div`       0x40) `mod` 0x40)
-	  , toEnum (0x80 +  i                   `mod` 0x40)
-	  ]
-    | otherwise					-- other values not supported
-	= error ("unicodeCharToUtf8: illegal integer argument " ++ show i)
+    | i >= 0          && i <= 0x0000007F        -- 1 byte UTF8 (7 bits)
+        = [ toEnum i ]
+    | i >= 0x00000080 && i <= 0x000007FF        -- 2 byte UTF8 (5 + 6 bits)
+        = [ toEnum (0xC0 + i `div` 0x40)
+          , toEnum (0x80 + i                  `mod` 0x40)
+          ]
+    | i >= 0x00000800 && i <= 0x0000FFFF        -- 3 byte UTF8 (4 + 6 + 6 bits)
+        = [ toEnum (0xE0 +  i `div`   0x1000)
+          , toEnum (0x80 + (i `div`     0x40) `mod` 0x40)
+          , toEnum (0x80 +  i                 `mod` 0x40)
+          ]
+    | i >= 0x00010000 && i <= 0x001FFFFF        -- 4 byte UTF8 (3 + 6 + 6 + 6 bits)
+        = [ toEnum (0xF0 +  i `div`    0x40000)
+          , toEnum (0x80 + (i `div`     0x1000) `mod` 0x40)
+          , toEnum (0x80 + (i `div`       0x40) `mod` 0x40)
+          , toEnum (0x80 +  i                   `mod` 0x40)
+          ]
+    | i >= 0x00200000 && i <= 0x03FFFFFF        -- 5 byte UTF8 (2 + 6 + 6 + 6 + 6 bits)
+        = [ toEnum (0xF8 +  i `div`  0x1000000)
+          , toEnum (0x80 + (i `div`    0x40000) `mod` 0x40)
+          , toEnum (0x80 + (i `div`     0x1000) `mod` 0x40)
+          , toEnum (0x80 + (i `div`       0x40) `mod` 0x40)
+          , toEnum (0x80 +  i                   `mod` 0x40)
+          ]
+    | i >= 0x04000000 && i <= 0x7FFFFFFF        -- 6 byte UTF8 (1 + 6 + 6 + 6 + 6 + 6 bits)
+        = [ toEnum (0xFC +  i `div` 0x40000000)
+          , toEnum (0x80 + (i `div`  0x1000000) `mod` 0x40)
+          , toEnum (0x80 + (i `div`    0x40000) `mod` 0x40)
+          , toEnum (0x80 + (i `div`     0x1000) `mod` 0x40)
+          , toEnum (0x80 + (i `div`       0x40) `mod` 0x40)
+          , toEnum (0x80 +  i                   `mod` 0x40)
+          ]
+    | otherwise                                 -- other values not supported
+        = error ("unicodeCharToUtf8: illegal integer argument " ++ show i)
     where
     i = fromEnum c
 
@@ -197,7 +197,7 @@ unicodeCharToUtf8 c
 -- |
 -- checking for valid XML characters
 
-isXmlChar		:: Unicode -> Bool
+isXmlChar               :: Unicode -> Bool
 isXmlChar c
     = isInList c
       [ ('\x0009', '\x000A')
@@ -210,7 +210,7 @@ isXmlChar c
 -- |
 -- checking for XML space character: \\\n, \\\r, \\\t and \" \"
 
-isXmlSpaceChar		:: Unicode -> Bool
+isXmlSpaceChar          :: Unicode -> Bool
 isXmlSpaceChar c
     = c `elem` ['\x20', '\x09', '\x0D', '\x0A']
 
@@ -219,22 +219,22 @@ isXmlSpaceChar c
 --
 -- see also : 'isXmlSpaceChar'
 
-isXml11SpaceChar		:: Unicode -> Bool
+isXml11SpaceChar                :: Unicode -> Bool
 isXml11SpaceChar c
     = c `elem` ['\x20', '\x09', '\x0D', '\x0A', '\x85', '\x2028']
 
 -- |
 -- checking for XML name character
 
-isXmlNameChar		:: Unicode -> Bool
+isXmlNameChar           :: Unicode -> Bool
 isXmlNameChar c
     = isXmlLetter c
       ||
       isXmlDigit c
       ||
-      (c == '\x2D' || c == '\x2E')		-- '-' | '.'
+      (c == '\x2D' || c == '\x2E')              -- '-' | '.'
       ||
-      (c == '\x3A' || c == '\x5F')		-- Letter | ':' | '_'
+      (c == '\x3A' || c == '\x5F')              -- Letter | ':' | '_'
       ||
       isXmlCombiningChar c
       ||
@@ -245,18 +245,18 @@ isXmlNameChar c
 --
 -- see also : 'isXmlNameChar'
 
-isXmlNameStartChar		:: Unicode -> Bool
+isXmlNameStartChar              :: Unicode -> Bool
 isXmlNameStartChar c
     = isXmlLetter c
       ||
-      (c == '\x3A' || c == '\x5F')		-- Letter | ':' | '_'
+      (c == '\x3A' || c == '\x5F')              -- Letter | ':' | '_'
 
 -- |
 -- checking for XML NCName character: no \":\" allowed
 --
 -- see also : 'isXmlNameChar'
 
-isXmlNCNameChar			:: Unicode -> Bool
+isXmlNCNameChar                 :: Unicode -> Bool
 isXmlNCNameChar c
     = c /= '\x3A'
       &&
@@ -267,7 +267,7 @@ isXmlNCNameChar c
 --
 -- see also : 'isXmlNameChar', 'isXmlNCNameChar'
 
-isXmlNCNameStartChar		:: Unicode -> Bool
+isXmlNCNameStartChar            :: Unicode -> Bool
 isXmlNCNameStartChar c
     = c /= '\x3A'
       &&
@@ -276,19 +276,19 @@ isXmlNCNameStartChar c
 -- |
 -- checking for XML public id character
 
-isXmlPubidChar		:: Unicode -> Bool
+isXmlPubidChar          :: Unicode -> Bool
 isXmlPubidChar c
     = isInList c [ ('0', '9')
-		 , ('A', 'Z')
-		 , ('a', 'z')
-		 ]
+                 , ('A', 'Z')
+                 , ('a', 'z')
+                 ]
       ||
       ( c `elem` " \r\n-'()+,./:=?;!*#@$_%" )
 
 -- |
 -- checking for XML letter
 
-isXmlLetter		:: Unicode -> Bool
+isXmlLetter             :: Unicode -> Bool
 isXmlLetter c
     = isXmlBaseChar c
       ||
@@ -297,7 +297,7 @@ isXmlLetter c
 -- |
 -- checking for XML base charater
 
-isXmlBaseChar		:: Unicode -> Bool
+isXmlBaseChar           :: Unicode -> Bool
 isXmlBaseChar c
     = isInList c
       [ ('\x0041', '\x005A')
@@ -506,7 +506,7 @@ isXmlBaseChar c
 -- |
 -- checking for XML ideographic charater
 
-isXmlIdeographicChar	:: Unicode -> Bool
+isXmlIdeographicChar    :: Unicode -> Bool
 isXmlIdeographicChar c
     = isInList c
       [ ('\x3007', '\x3007')
@@ -517,7 +517,7 @@ isXmlIdeographicChar c
 -- |
 -- checking for XML combining charater
 
-isXmlCombiningChar	:: Unicode -> Bool
+isXmlCombiningChar      :: Unicode -> Bool
 isXmlCombiningChar c
     = isInList c
       [ ('\x0300', '\x0345')
@@ -620,7 +620,7 @@ isXmlCombiningChar c
 -- |
 -- checking for XML digit
 
-isXmlDigit		:: Unicode -> Bool
+isXmlDigit              :: Unicode -> Bool
 isXmlDigit c
     = isInList c
       [ ('\x0030', '\x0039')
@@ -643,7 +643,7 @@ isXmlDigit c
 -- |
 -- checking for XML extender
 
-isXmlExtender		:: Unicode -> Bool
+isXmlExtender           :: Unicode -> Bool
 isXmlExtender c
     = isInList c
       [ ('\x00B7', '\x00B7')
@@ -670,7 +670,7 @@ isXmlExtender c
 -- They are either control characters or permanently undefined Unicode characters:
 
 
-isXmlControlOrPermanentlyUndefined	:: Unicode -> Bool
+isXmlControlOrPermanentlyUndefined      :: Unicode -> Bool
 isXmlControlOrPermanentlyUndefined c
     = isInList c
       [ ('\x7F', '\x84')
@@ -696,28 +696,28 @@ isXmlControlOrPermanentlyUndefined c
 
 -- ------------------------------------------------------------
 
-isInList	:: Unicode -> [(Unicode, Unicode)] -> Bool
+isInList        :: Unicode -> [(Unicode, Unicode)] -> Bool
 isInList i =
    foldr (\(lb, ub) b -> i >= lb && (i <= ub || b)) False
    {- The expression (i>=lb && i<=ub) || b would work more generally,
       but in a sorted list, the above one aborts the computation as early as possible. -}
 
 {-
-isInList'	:: Unicode -> [(Unicode, Unicode)] -> Bool
+isInList'       :: Unicode -> [(Unicode, Unicode)] -> Bool
 isInList' i ((lb, ub) : l)
-    | i <  lb	= False
-    | i <= ub	= True
+    | i <  lb   = False
+    | i <= ub   = True
     | otherwise = isInList' i l
 
 isInList' _ []
     = False
 
 {- works, but is not so fast -}
-isInList''	:: Unicode -> [(Unicode, Unicode)] -> Bool
+isInList''      :: Unicode -> [(Unicode, Unicode)] -> Bool
 isInList'' i = any (flip isInRange i)
 
 -- move to an Utility module?
-isInRange	:: Ord a => (a,a) -> a -> Bool
+isInRange       :: Ord a => (a,a) -> a -> Bool
 isInRange (l,r) x = l<=x && x<=r
 
 propIsInList :: Bool
@@ -736,10 +736,10 @@ propIsInList =
 -- |
 -- code conversion from latin1 to Unicode
 
-latin1ToUnicode	:: String -> UString
-latin1ToUnicode	= id
+latin1ToUnicode :: String -> UString
+latin1ToUnicode = id
 
-latinToUnicode	:: [(Char, Char)] -> String -> UString
+latinToUnicode  :: [(Char, Char)] -> String -> UString
 latinToUnicode tt
     = map charToUni
     where
@@ -754,11 +754,11 @@ latinToUnicode tt
 --
 -- Structure of decoding function copied from 'Data.Char.UTF8.decode'.
 
-decodeAscii	:: DecodingFct
+decodeAscii     :: DecodingFct
 decodeAscii
     = swap . partitionEither . decodeAsciiEmbedErrors
 
-decodeAsciiEmbedErrors	:: String -> UStringWithErrors
+decodeAsciiEmbedErrors  :: String -> UStringWithErrors
 decodeAsciiEmbedErrors str
     = map (\(c,pos) -> if isValid c
                          then Right c
@@ -766,13 +766,13 @@ decodeAsciiEmbedErrors str
     where
     posStr = zip str [(0::Int)..]
     toErrStr errChr pos
-	= " at input position " ++ show pos ++ ": none ASCII char " ++ show errChr
+        = " at input position " ++ show pos ++ ": none ASCII char " ++ show errChr
     isValid x = x < '\x80'
 
 -- |
 -- UCS-2 big endian to Unicode conversion
 
-ucs2BigEndianToUnicode	:: String -> UString
+ucs2BigEndianToUnicode  :: String -> UString
 
 ucs2BigEndianToUnicode (b : l : r)
     = toEnum (fromEnum b * 256 + fromEnum l) : ucs2BigEndianToUnicode r
@@ -781,15 +781,15 @@ ucs2BigEndianToUnicode []
     = []
 
 ucs2BigEndianToUnicode _
-    = []				-- error "illegal UCS-2 byte input sequence with odd length"
-					-- is ignored (garbage in, garbage out)
+    = []                                -- error "illegal UCS-2 byte input sequence with odd length"
+                                        -- is ignored (garbage in, garbage out)
 
 -- ------------------------------------------------------------
 
 -- |
 -- UCS-2 little endian to Unicode conversion
 
-ucs2LittleEndianToUnicode	:: String -> UString
+ucs2LittleEndianToUnicode       :: String -> UString
 
 ucs2LittleEndianToUnicode (l : b : r)
     = toEnum (fromEnum b * 256 + fromEnum l) : ucs2LittleEndianToUnicode r
@@ -798,41 +798,41 @@ ucs2LittleEndianToUnicode []
     = []
 
 ucs2LittleEndianToUnicode [_]
-    = []				-- error "illegal UCS-2 byte input sequence with odd length"
-					-- is ignored
+    = []                                -- error "illegal UCS-2 byte input sequence with odd length"
+                                        -- is ignored
 
 -- ------------------------------------------------------------
 
 -- |
 -- UCS-2 to UTF-8 conversion with byte order mark analysis
 
-ucs2ToUnicode		:: String -> UString
+ucs2ToUnicode           :: String -> UString
 
-ucs2ToUnicode ('\xFE':'\xFF':s)		-- 2 byte mark for big endian encoding
+ucs2ToUnicode ('\xFE':'\xFF':s)         -- 2 byte mark for big endian encoding
     = ucs2BigEndianToUnicode s
 
-ucs2ToUnicode ('\xFF':'\xFE':s)		-- 2 byte mark for little endian encoding
+ucs2ToUnicode ('\xFF':'\xFE':s)         -- 2 byte mark for little endian encoding
     = ucs2LittleEndianToUnicode s
 
 ucs2ToUnicode s
-    = ucs2BigEndianToUnicode s		-- default: big endian
+    = ucs2BigEndianToUnicode s          -- default: big endian
 
 -- ------------------------------------------------------------
 
 -- |
 -- UTF-8 to Unicode conversion with deletion of leading byte order mark, as described in XML standard F.1
 
-utf8ToUnicode		:: DecodingFct
+utf8ToUnicode           :: DecodingFct
 
-utf8ToUnicode ('\xEF':'\xBB':'\xBF':s)	-- remove byte order mark ( XML standard F.1 )
+utf8ToUnicode ('\xEF':'\xBB':'\xBF':s)  -- remove byte order mark ( XML standard F.1 )
     = decodeUtf8 s
 
 utf8ToUnicode s
     = decodeUtf8 s
 
-utf8ToUnicodeEmbedErrors	:: DecodingFctEmbedErrors
+utf8ToUnicodeEmbedErrors        :: DecodingFctEmbedErrors
 
-utf8ToUnicodeEmbedErrors ('\xEF':'\xBB':'\xBF':s)	-- remove byte order mark ( XML standard F.1 )
+utf8ToUnicodeEmbedErrors ('\xEF':'\xBB':'\xBF':s)       -- remove byte order mark ( XML standard F.1 )
     = decodeUtf8EmbedErrors s
 
 utf8ToUnicodeEmbedErrors s
@@ -843,9 +843,9 @@ utf8ToUnicodeEmbedErrors s
 -- |
 -- UTF-16 big endian to UTF-8 conversion with removal of byte order mark
 
-utf16beToUnicode		:: String -> UString
+utf16beToUnicode                :: String -> UString
 
-utf16beToUnicode ('\xFE':'\xFF':s)		-- remove byte order mark
+utf16beToUnicode ('\xFE':'\xFF':s)              -- remove byte order mark
     = ucs2BigEndianToUnicode s
 
 utf16beToUnicode s
@@ -856,9 +856,9 @@ utf16beToUnicode s
 -- |
 -- UTF-16 little endian to UTF-8 conversion with removal of byte order mark
 
-utf16leToUnicode		:: String -> UString
+utf16leToUnicode                :: String -> UString
 
-utf16leToUnicode ('\xFF':'\xFE':s)		-- remove byte order mark
+utf16leToUnicode ('\xFF':'\xFE':s)              -- remove byte order mark
     = ucs2LittleEndianToUnicode s
 
 utf16leToUnicode s
@@ -876,7 +876,7 @@ utf16leToUnicode s
 --
 -- see also : 'unicodeToLatin1'
 
-unicodeToXmlEntity	:: UString -> String
+unicodeToXmlEntity      :: UString -> String
 unicodeToXmlEntity
     = escape is1ByteXmlChar (intToCharRef . fromEnum)
 
@@ -889,7 +889,7 @@ unicodeToXmlEntity
 --
 -- see also : 'unicodeToXmlEntity'
 
-unicodeToLatin1	:: UString -> String
+unicodeToLatin1 :: UString -> String
 unicodeToLatin1
     = escape isXmlLatin1Char (intToCharRef . fromEnum)
 
@@ -909,7 +909,7 @@ escape check esc =
 --
 -- see also : 'unicodeRemoveNoneLatin1', 'unicodeToXmlEntity'
 
-unicodeRemoveNoneAscii	:: UString -> String
+unicodeRemoveNoneAscii  :: UString -> String
 unicodeRemoveNoneAscii
     = filter is1ByteXmlChar
 
@@ -920,7 +920,7 @@ unicodeRemoveNoneAscii
 --
 -- see also : 'unicodeRemoveNoneAscii', 'unicodeToLatin1'
 
-unicodeRemoveNoneLatin1	:: UString -> String
+unicodeRemoveNoneLatin1 :: UString -> String
 unicodeRemoveNoneLatin1
     = filter isXmlLatin1Char
 
@@ -931,7 +931,7 @@ unicodeRemoveNoneLatin1
 --
 -- see also : 'intToCharRefHex'
 
-intToCharRef		:: Int -> String
+intToCharRef            :: Int -> String
 intToCharRef i
     = "&#" ++ show i ++ ";"
 
@@ -940,14 +940,14 @@ intToCharRef i
 --
 -- see also: 'intToCharRef'
 
-intToCharRefHex		:: Int -> String
+intToCharRefHex         :: Int -> String
 intToCharRefHex i
     = "&#x" ++ h2 ++ ";"
       where
       h1 = intToHexString i
       h2 = if length h1 `mod` 2 == 1
-	   then '0': h1
-	   else h1
+           then '0': h1
+           else h1
 
 -- ------------------------------------------------------------
 --
@@ -956,11 +956,11 @@ intToCharRefHex i
 --
 -- \#x0D and \#x0D\#x0A are mapped to \#x0A
 
-normalizeNL	:: String -> String
-normalizeNL ('\r' : '\n' : rest)	= '\n' : normalizeNL rest
-normalizeNL ('\r' : rest)		= '\n' : normalizeNL rest
-normalizeNL (c : rest)			= c    : normalizeNL rest
-normalizeNL []				= []
+normalizeNL     :: String -> String
+normalizeNL ('\r' : '\n' : rest)        = '\n' : normalizeNL rest
+normalizeNL ('\r' : rest)               = '\n' : normalizeNL rest
+normalizeNL (c : rest)                  = c    : normalizeNL rest
+normalizeNL []                          = []
 
 
 -- ------------------------------------------------------------
@@ -974,31 +974,31 @@ This table could be derived from decodingTableEither,
 but this way it is certainly more efficient.
 -}
 
-decodingTable	:: [(String, DecodingFct)]
+decodingTable   :: [(String, DecodingFct)]
 decodingTable
-    = [ (utf8,		utf8ToUnicode				)
-      , (isoLatin1,	liftDecFct latin1ToUnicode		)
-      , (usAscii,	decodeAscii				)
-      , (ucs2,		liftDecFct ucs2ToUnicode		)
-      , (utf16,		liftDecFct ucs2ToUnicode		)
-      , (utf16be,	liftDecFct utf16beToUnicode		)
-      , (utf16le,	liftDecFct utf16leToUnicode		)
-      , (iso8859_2,	liftDecFct (latinToUnicode iso_8859_2)	)
-      , (iso8859_3,	liftDecFct (latinToUnicode iso_8859_3)	)
-      , (iso8859_4,	liftDecFct (latinToUnicode iso_8859_4)	)
-      , (iso8859_5,	liftDecFct (latinToUnicode iso_8859_5)	)
-      , (iso8859_6,	liftDecFct (latinToUnicode iso_8859_6)	)
-      , (iso8859_7,	liftDecFct (latinToUnicode iso_8859_7)	)
-      , (iso8859_8,	liftDecFct (latinToUnicode iso_8859_8)	)
-      , (iso8859_9,	liftDecFct (latinToUnicode iso_8859_9)	)
-      , (iso8859_10,	liftDecFct (latinToUnicode iso_8859_10)	)
-      , (iso8859_11,	liftDecFct (latinToUnicode iso_8859_11)	)
-      , (iso8859_13,	liftDecFct (latinToUnicode iso_8859_13)	)
-      , (iso8859_14,	liftDecFct (latinToUnicode iso_8859_14)	)
-      , (iso8859_15,	liftDecFct (latinToUnicode iso_8859_15)	)
-      , (iso8859_16,	liftDecFct (latinToUnicode iso_8859_16)	)
-      , (unicodeString,	liftDecFct id				)
-      , ("",		liftDecFct id				)	-- default
+    = [ (utf8,          utf8ToUnicode                           )
+      , (isoLatin1,     liftDecFct latin1ToUnicode              )
+      , (usAscii,       decodeAscii                             )
+      , (ucs2,          liftDecFct ucs2ToUnicode                )
+      , (utf16,         liftDecFct ucs2ToUnicode                )
+      , (utf16be,       liftDecFct utf16beToUnicode             )
+      , (utf16le,       liftDecFct utf16leToUnicode             )
+      , (iso8859_2,     liftDecFct (latinToUnicode iso_8859_2)  )
+      , (iso8859_3,     liftDecFct (latinToUnicode iso_8859_3)  )
+      , (iso8859_4,     liftDecFct (latinToUnicode iso_8859_4)  )
+      , (iso8859_5,     liftDecFct (latinToUnicode iso_8859_5)  )
+      , (iso8859_6,     liftDecFct (latinToUnicode iso_8859_6)  )
+      , (iso8859_7,     liftDecFct (latinToUnicode iso_8859_7)  )
+      , (iso8859_8,     liftDecFct (latinToUnicode iso_8859_8)  )
+      , (iso8859_9,     liftDecFct (latinToUnicode iso_8859_9)  )
+      , (iso8859_10,    liftDecFct (latinToUnicode iso_8859_10) )
+      , (iso8859_11,    liftDecFct (latinToUnicode iso_8859_11) )
+      , (iso8859_13,    liftDecFct (latinToUnicode iso_8859_13) )
+      , (iso8859_14,    liftDecFct (latinToUnicode iso_8859_14) )
+      , (iso8859_15,    liftDecFct (latinToUnicode iso_8859_15) )
+      , (iso8859_16,    liftDecFct (latinToUnicode iso_8859_16) )
+      , (unicodeString, liftDecFct id                           )
+      , ("",            liftDecFct id                           )       -- default
       ]
     where
     liftDecFct df = \ s -> (df s, [])
@@ -1006,7 +1006,7 @@ decodingTable
 -- |
 -- the lookup function for selecting the decoding function
 
-getDecodingFct		:: String -> Maybe DecodingFct
+getDecodingFct          :: String -> Maybe DecodingFct
 getDecodingFct enc
     = lookup (map toUpper enc) decodingTable
 
@@ -1015,31 +1015,31 @@ getDecodingFct enc
 -- Similar to 'decodingTable' but it embeds errors
 -- in the string of decoded characters.
 
-decodingTableEmbedErrors	:: [(String, DecodingFctEmbedErrors)]
+decodingTableEmbedErrors        :: [(String, DecodingFctEmbedErrors)]
 decodingTableEmbedErrors
-    = [ (utf8,		utf8ToUnicodeEmbedErrors		)
-      , (isoLatin1,	liftDecFct latin1ToUnicode		)
-      , (usAscii,	decodeAsciiEmbedErrors			)
-      , (ucs2,		liftDecFct ucs2ToUnicode		)
-      , (utf16,		liftDecFct ucs2ToUnicode		)
-      , (utf16be,	liftDecFct utf16beToUnicode		)
-      , (utf16le,	liftDecFct utf16leToUnicode		)
-      , (iso8859_2,	liftDecFct (latinToUnicode iso_8859_2)	)
-      , (iso8859_3,	liftDecFct (latinToUnicode iso_8859_3)	)
-      , (iso8859_4,	liftDecFct (latinToUnicode iso_8859_4)	)
-      , (iso8859_5,	liftDecFct (latinToUnicode iso_8859_5)	)
-      , (iso8859_6,	liftDecFct (latinToUnicode iso_8859_6)	)
-      , (iso8859_7,	liftDecFct (latinToUnicode iso_8859_7)	)
-      , (iso8859_8,	liftDecFct (latinToUnicode iso_8859_8)	)
-      , (iso8859_9,	liftDecFct (latinToUnicode iso_8859_9)	)
-      , (iso8859_10,	liftDecFct (latinToUnicode iso_8859_10)	)
-      , (iso8859_11,	liftDecFct (latinToUnicode iso_8859_11)	)
-      , (iso8859_13,	liftDecFct (latinToUnicode iso_8859_13)	)
-      , (iso8859_14,	liftDecFct (latinToUnicode iso_8859_14)	)
-      , (iso8859_15,	liftDecFct (latinToUnicode iso_8859_15)	)
-      , (iso8859_16,	liftDecFct (latinToUnicode iso_8859_16)	)
-      , (unicodeString,	liftDecFct id				)
-      , ("",		liftDecFct id				)	-- default
+    = [ (utf8,          utf8ToUnicodeEmbedErrors                )
+      , (isoLatin1,     liftDecFct latin1ToUnicode              )
+      , (usAscii,       decodeAsciiEmbedErrors                  )
+      , (ucs2,          liftDecFct ucs2ToUnicode                )
+      , (utf16,         liftDecFct ucs2ToUnicode                )
+      , (utf16be,       liftDecFct utf16beToUnicode             )
+      , (utf16le,       liftDecFct utf16leToUnicode             )
+      , (iso8859_2,     liftDecFct (latinToUnicode iso_8859_2)  )
+      , (iso8859_3,     liftDecFct (latinToUnicode iso_8859_3)  )
+      , (iso8859_4,     liftDecFct (latinToUnicode iso_8859_4)  )
+      , (iso8859_5,     liftDecFct (latinToUnicode iso_8859_5)  )
+      , (iso8859_6,     liftDecFct (latinToUnicode iso_8859_6)  )
+      , (iso8859_7,     liftDecFct (latinToUnicode iso_8859_7)  )
+      , (iso8859_8,     liftDecFct (latinToUnicode iso_8859_8)  )
+      , (iso8859_9,     liftDecFct (latinToUnicode iso_8859_9)  )
+      , (iso8859_10,    liftDecFct (latinToUnicode iso_8859_10) )
+      , (iso8859_11,    liftDecFct (latinToUnicode iso_8859_11) )
+      , (iso8859_13,    liftDecFct (latinToUnicode iso_8859_13) )
+      , (iso8859_14,    liftDecFct (latinToUnicode iso_8859_14) )
+      , (iso8859_15,    liftDecFct (latinToUnicode iso_8859_15) )
+      , (iso8859_16,    liftDecFct (latinToUnicode iso_8859_16) )
+      , (unicodeString, liftDecFct id                           )
+      , ("",            liftDecFct id                           )       -- default
       ]
     where
     liftDecFct df = map Right . df
@@ -1047,7 +1047,7 @@ decodingTableEmbedErrors
 -- |
 -- the lookup function for selecting the decoding function
 
-getDecodingFctEmbedErrors	:: String -> Maybe DecodingFctEmbedErrors
+getDecodingFctEmbedErrors       :: String -> Maybe DecodingFctEmbedErrors
 getDecodingFctEmbedErrors enc
     = lookup (map toUpper enc) decodingTableEmbedErrors
 
@@ -1057,49 +1057,49 @@ getDecodingFctEmbedErrors enc
 -- the table of supported output encoding schemes and the associated
 -- conversion functions from Unicode
 
-outputEncodingTable	:: [(String, (UString -> String))]
+outputEncodingTable     :: [(String, (UString -> String))]
 outputEncodingTable
-    = [ (utf8,		unicodeToUtf8		)
-      , (isoLatin1,	unicodeToLatin1		)
-      , (usAscii,	unicodeToXmlEntity	)
-      , (ucs2,		ucs2ToUnicode		)
-      , (unicodeString,	id			)
-      , ("",		unicodeToUtf8		)	-- default
+    = [ (utf8,          unicodeToUtf8           )
+      , (isoLatin1,     unicodeToLatin1         )
+      , (usAscii,       unicodeToXmlEntity      )
+      , (ucs2,          ucs2ToUnicode           )
+      , (unicodeString, id                      )
+      , ("",            unicodeToUtf8           )       -- default
       ]
 
 -- |
 -- the lookup function for selecting the encoding function
 
-getOutputEncodingFct		:: String -> Maybe (String -> UString)
+getOutputEncodingFct            :: String -> Maybe (String -> UString)
 getOutputEncodingFct enc
     = lookup (map toUpper enc) outputEncodingTable
 
 -- ------------------------------------------------------------
 --
 
-guessEncoding		:: String -> String
+guessEncoding           :: String -> String
 
-guessEncoding ('\xFF':'\xFE':'\x00':'\x00':_)	= "UCS-4LE"		-- with byte order mark
-guessEncoding ('\xFF':'\xFE':_)			= "UTF-16LE"		-- with byte order mark
+guessEncoding ('\xFF':'\xFE':'\x00':'\x00':_)   = "UCS-4LE"             -- with byte order mark
+guessEncoding ('\xFF':'\xFE':_)                 = "UTF-16LE"            -- with byte order mark
 
-guessEncoding ('\xFE':'\xFF':'\x00':'\x00':_)	= "UCS-4-3421"		-- with byte order mark
-guessEncoding ('\xFE':'\xFF':_)			= "UTF-16BE"		-- with byte order mark
+guessEncoding ('\xFE':'\xFF':'\x00':'\x00':_)   = "UCS-4-3421"          -- with byte order mark
+guessEncoding ('\xFE':'\xFF':_)                 = "UTF-16BE"            -- with byte order mark
 
-guessEncoding ('\xEF':'\xBB':'\xBF':_)		= utf8			-- with byte order mark
+guessEncoding ('\xEF':'\xBB':'\xBF':_)          = utf8                  -- with byte order mark
 
-guessEncoding ('\x00':'\x00':'\xFE':'\xFF':_)	= "UCS-4BE"		-- with byte order mark
-guessEncoding ('\x00':'\x00':'\xFF':'\xFE':_)	= "UCS-4-2143"		-- with byte order mark
+guessEncoding ('\x00':'\x00':'\xFE':'\xFF':_)   = "UCS-4BE"             -- with byte order mark
+guessEncoding ('\x00':'\x00':'\xFF':'\xFE':_)   = "UCS-4-2143"          -- with byte order mark
 
-guessEncoding ('\x00':'\x00':'\x00':'\x3C':_)	= "UCS-4BE"		-- "<" of "<?xml"
-guessEncoding ('\x3C':'\x00':'\x00':'\x00':_)	= "UCS-4LE"		-- "<" of "<?xml"
-guessEncoding ('\x00':'\x00':'\x3C':'\x00':_)	= "UCS-4-2143"		-- "<" of "<?xml"
-guessEncoding ('\x00':'\x3C':'\x00':'\x00':_)	= "UCS-4-3412"		-- "<" of "<?xml"
+guessEncoding ('\x00':'\x00':'\x00':'\x3C':_)   = "UCS-4BE"             -- "<" of "<?xml"
+guessEncoding ('\x3C':'\x00':'\x00':'\x00':_)   = "UCS-4LE"             -- "<" of "<?xml"
+guessEncoding ('\x00':'\x00':'\x3C':'\x00':_)   = "UCS-4-2143"          -- "<" of "<?xml"
+guessEncoding ('\x00':'\x3C':'\x00':'\x00':_)   = "UCS-4-3412"          -- "<" of "<?xml"
 
-guessEncoding ('\x00':'\x3C':'\x00':'\x3F':_)	= "UTF-16BE"		-- "<?" of "<?xml"
-guessEncoding ('\x3C':'\x00':'\x3F':'\x00':_)	= "UTF-16LE"		-- "<?" of "<?xml"
+guessEncoding ('\x00':'\x3C':'\x00':'\x3F':_)   = "UTF-16BE"            -- "<?" of "<?xml"
+guessEncoding ('\x3C':'\x00':'\x3F':'\x00':_)   = "UTF-16LE"            -- "<?" of "<?xml"
 
-guessEncoding ('\x4C':'\x6F':'\xA7':'\x94':_)	= "EBCDIC"		-- "<?xm" of "<?xml"
+guessEncoding ('\x4C':'\x6F':'\xA7':'\x94':_)   = "EBCDIC"              -- "<?xm" of "<?xml"
 
-guessEncoding _					= ""			-- no guess
+guessEncoding _                                 = ""                    -- no guess
 
 -- ------------------------------------------------------------

@@ -15,7 +15,7 @@
 
 -- ------------------------------------------------------------
 
-module Text.XML.HXT.XSLT.Compilation 
+module Text.XML.HXT.XSLT.Compilation
     ( prepareXSLTDocument        -- :: XmlTree -> XmlTree
     , assembleStylesheet         -- :: XmlTree -> [CompiledStylesheet] -> CompiledStylesheet
     )
@@ -25,10 +25,10 @@ import           Control.Monad
 
 import           Data.Maybe
 import           Data.List
-import qualified Data.Map 		as Map hiding 	( Map )
-import           Data.Map				( Map )
+import qualified Data.Map               as Map hiding   ( Map )
+import           Data.Map                               ( Map )
 
-import           Text.ParserCombinators.Parsec.Prim	( runParser )
+import           Text.ParserCombinators.Parsec.Prim     ( runParser )
 
 import           Text.XML.HXT.XSLT.Common
 import           Text.XML.HXT.XSLT.Names
@@ -38,7 +38,7 @@ import           Text.XML.HXT.XSLT.CompiledStylesheet
 
 infixl 9 ><
 
-(><)	:: XmlNode n => (UriMapping -> a ) -> n -> a
+(><)    :: XmlNode n => (UriMapping -> a ) -> n -> a
 f >< node
     = f $ getUriMap node
 
@@ -46,9 +46,9 @@ f >< node
 
 parseExpr :: UriMapping -> String -> Expr
 parseExpr uris selectStr
-    = either (error.show) id parseResult                               
+    = either (error.show) id parseResult
     where
-    parseResult = runParser parseXPath (toNsEnv . Map.toList $ uris) ("select-expr:"++selectStr) selectStr 
+    parseResult = runParser parseXPath (toNsEnv . Map.toList $ uris) ("select-expr:"++selectStr) selectStr
 
 parseSelect :: UriMapping -> String -> SelectExpr
 parseSelect uris
@@ -67,13 +67,13 @@ parseMatch uris str
     = if isMatchExpr expr
       then MatchExpr expr
       else error $ str ++ " is not a legal match-expression"
-    where 
+    where
     expr = parseExpr uris str
 
 -- --------------------------
 
 parseAVT :: UriMapping -> String -> StringExpr
-parseAVT uris str = 
+parseAVT uris str =
     StringExpr $ concatExpr $ splitAVT str ""
   where
 
@@ -88,7 +88,7 @@ parseAVT uris str =
     splitAVT ('}':_)      _   = error $ "deserted '}' in AVT."
     splitAVT (x:xs)       acc = splitAVT xs $ x:acc
 
-    acc2lit :: String -> [Expr] 
+    acc2lit :: String -> [Expr]
     acc2lit ""  = []
     acc2lit acc = [mkLiteralExpr $ reverse acc]
 
@@ -98,7 +98,7 @@ parseAVT uris str =
 compileComputedQName :: XmlTree -> ComputedQName
 compileComputedQName node =
     (CompQName><node) nameAVT nsAVT
-  where 
+  where
     nameAVT  = parseAVT><node $ fetchAttribute node xsltName
     nsAVT    = parseAVT><node $ fetchAttributeWDefault node xsltNamespace ""
 
@@ -147,35 +147,35 @@ parseExNames :: UriMapping -> String -> [ExName]
 parseExNames urm = map (parseExName urm) . words
 
 compileElement :: XmlTree -> Template
-compileElement node = 
+compileElement node =
     TemplElement compQName Map.empty attribSets template
-  where 
+  where
     compQName   = compileComputedQName node
     attribSets  = UsedAttribSets $ parseExNames><node
                   $ fetchAttributeWDefault node xsltUseAttributeSets ""
     template    = compileTemplate (getChildren node)
 
 compileAttribute :: XmlTree -> Template
-compileAttribute node = 
+compileAttribute node =
     TemplAttribute (compileComputedQName node) $ compileTemplate (getChildren node)
 
 -- compiles xsl:text
 compileText :: XmlTree -> Template
 compileText = TemplText . collectTextnodes . getChildren
 
--- compiles textNode 
+-- compiles textNode
 compileTextnode :: XmlTree -> Template
 compileTextnode = TemplText . fromJust . getText
 
 compileValueOf :: XmlTree -> Template
-compileValueOf node = 
+compileValueOf node =
     TemplValueOf $ parseStringExpr><node $ fetchAttribute node xsltSelect
 
 compileComment :: XmlTree -> Template
 compileComment = TemplComment . compileTemplate . getChildren
 
 compileProcInstr :: XmlTree -> Template
-compileProcInstr node = 
+compileProcInstr node =
    TemplProcInstr name content
   where
     name    = parseAVT><node  $ fetchAttribute node xsltName
@@ -186,7 +186,7 @@ compileProcInstr node =
 compileLiteralResultElement :: XmlTree -> Template
 compileLiteralResultElement node =
     TemplElement compQName nsUris attribSets content
-  where 
+  where
     nsUris             = extractAddUris node
     compQName          = LiteralQName   $ fromJust $ getElemName node
     attribSets         = UsedAttribSets $ parseExNames><node $ attrSetsStr
@@ -196,11 +196,11 @@ compileLiteralResultElement node =
     template           = compileTemplate (getChildren node)
 
 compileLREAttribute :: UriMapping -> XmlTree -> Maybe Template
-compileLREAttribute uris node = 
-    if isSpecial 
+compileLREAttribute uris node =
+    if isSpecial
       then Nothing
-      else Just $ TemplAttribute (LiteralQName name) val  
-  where 
+      else Just $ TemplAttribute (LiteralQName name) val
+  where
     isSpecial = namespaceUri name `elem` [xsltUri, xmlnsNamespace]
     name      = fromJust $ getAttrName node
     val       = TemplValueOf $ parseAVT uris $ collectTextnodes $ getChildren node
@@ -245,12 +245,12 @@ compileCopyOf node = TemplCopyOf $ parseExpr><node $ fetchAttribute node xsltSel
 -- -----------------------------------
 
 compileTemplate :: [XmlTree] -> Template
-compileTemplate [node]       = 
+compileTemplate [node]       =
    if isElem node
-   then let elemName = fromJust $ getElemName node in        
+   then let elemName = fromJust $ getElemName node in
         if      equivQName elemName xsltMessage        then compileMessage       node
         else if equivQName elemName xsltForEach        then compileForEach       node
-        else if equivQName elemName xsltChoose         then compileChoose        node   
+        else if equivQName elemName xsltChoose         then compileChoose        node
         else if equivQName elemName xsltIf             then compileIf            node
         else if equivQName elemName xsltElement        then compileElement       node
         else if equivQName elemName xsltAttribute      then compileAttribute     node
@@ -285,9 +285,9 @@ compileTemplate list = compileComposite list
 assembleStylesheet :: XmlTree -> [CompiledStylesheet] -> CompiledStylesheet
 assembleStylesheet xslNode imports =
     CompStylesheet matchRules namedRules variables attsets strips aliases
-  where 
+  where
     -- entire contents:
-    (namedRules,    
+    (namedRules,
      matchRules)          = assembleRules ruleElems importedMatchRules importedNamedRules
     variables             = assembleVariables varElems importedVariables
     attsets               = assembleAttrSets attsetElems importedAttribSets
@@ -315,8 +315,8 @@ assembleRules :: [XmlTree] -> [MatchRule] -> [Map ExName NamedRule] -> (Map ExNa
 assembleRules nodes importedMatches importedProcs =
     (resProcs, resMatches)
   where
-  
-  -- matches:  
+
+  -- matches:
     resMatches       = localMatches ++ importedMatches
     localMatches     = reverse $ sortBy cmp matches
     cmp rulA rulB    = compare (getRulePrio rulA) (getRulePrio rulB)
@@ -330,7 +330,7 @@ assembleRules nodes importedMatches importedProcs =
   -- compile all xsl:template's:
     (procs, matches) = catMaybes *** concat $ unzip $ map (compileRule importedMatches) nodes
 
-assembleVariables :: [XmlTree] -> [(Map ExName Variable)] -> (Map ExName Variable)       
+assembleVariables :: [XmlTree] -> [(Map ExName Variable)] -> (Map ExName Variable)
 assembleVariables varElems = Map.unions . (compileVariables varElems:)
 
 assembleAttrSets :: [XmlTree] -> [Map ExName [AttributeSet]] -> Map ExName [AttributeSet]
@@ -365,20 +365,20 @@ assembleAliases nsAliasElems =
 compileRule :: [MatchRule] -> XmlTree -> (Maybe NamedRule, [MatchRule])
 compileRule imports node =
 
-    if isNothing match && isNothing name 
+    if isNothing match && isNothing name
     then error "Error: Bogus rule (xsl:template) with neither match nor name attribute is illegal"
 
-    else if isJust mode && isNothing match 
+    else if isJust mode && isNothing match
     then error "Error: Bogus mode attribute on none-match rule is illegal"
 
-    else if isJust priority && isNothing match 
+    else if isJust priority && isNothing match
     then error "Error: Bogus priority attribute on none-match rule is illegal"
 
-    else 
+    else
       (
         liftM (\n -> NamRule n params template) name
       , concat $ maybeToList $ liftM (assembleMatchRule priority mode imports params template) match
-      ) 
+      )
 
   where
     match      = liftM (parseMatch><node)  $ tryFetchAttribute node xsltMatch
@@ -395,7 +395,7 @@ assembleMatchRule pri m imp par tmpl mtch@(MatchExpr expr) =
     if isJust pri
     then return $ MatRule mtch (fromJust pri) m imp par tmpl
     else map expand $ splitMatchByPrio expr
-  where 
+  where
     expand (pri', mtch') = MatRule (MatchExpr mtch') pri' m imp par tmpl
 
 -- -----------------------------------
@@ -411,7 +411,7 @@ compileVariables nodes =
 compileVariable :: XmlTree -> Variable
 compileVariable node =
     MkVar modus name exprOrRtf
-  where 
+  where
     modus     = isElemType xsltParam node
     name      = parseExName><node $ fetchAttribute node xsltName
     exprOrRtf = if hasAttribute node xsltSelect || null (getChildren node)
@@ -450,14 +450,14 @@ compilePreserves = compileStrips
 -- -----------------------------------
 
 compileAlias :: XmlTree -> (String, String)
-compileAlias node = 
+compileAlias node =
   (fetchAttribute node xsltStylesheetPrefix, fetchAttribute node xsltResultPrefix)
 
 -- -----------------------------------
 -- Document level preprocessing
 
-prepareXSLTDocument	:: XmlTree -> XmlTree
-prepareXSLTDocument	= expandExEx . expandNSDecls . stripStylesheet . removePiCmt
+prepareXSLTDocument     :: XmlTree -> XmlTree
+prepareXSLTDocument     = expandExEx . expandNSDecls . stripStylesheet . removePiCmt
 
 removePiCmt :: XmlTree -> XmlTree
 removePiCmt = fromJustErr "XSLT: No root element" . filterTree (\n -> not (isPi n) && not (isCmt n))
@@ -482,7 +482,7 @@ expandExExElem c@(excl, ext) node
                    then (xsltExlcudeResultPrefixes   , xsltExtensionElementPrefixes   )
                    else (xsltExlcudeResultPrefixesLRE, xsltExtensionElementPrefixesLRE)
 
--- parse a prefix list, create a list of uris: 
+-- parse a prefix list, create a list of uris:
 -- "pre1 pre2 pre3" -> ["pre1.uri","pre2.uri","pre3.uri"]
 
 parsePreList :: UriMapping -> String -> [String]
@@ -492,7 +492,7 @@ parsePreList uris = map (lookupPrefix uris) . words
 -- Extraction of contextual Information from an XML-Node
 
 extractAddUris :: XmlTree -> UriMapping
-extractAddUris node = 
+extractAddUris node =
     (Map.filter (`notElem` exclUris))><node
   where
     exclUris = words $ fetchAttributeWDefault node xsltExlcudeResultPrefixesLRE ""

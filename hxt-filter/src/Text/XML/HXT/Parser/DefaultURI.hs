@@ -36,11 +36,11 @@ setDefaultURI
        -- so this is transformed into "/c:/path/to/file"
 
        normalize wd'@(d : ':' : _)
-	   | d `elem` ['A'..'Z'] || d `elem` ['a'..'z']
-	       = '/' : concatMap win32ToUriChar wd'
+           | d `elem` ['A'..'Z'] || d `elem` ['a'..'z']
+               = '/' : concatMap win32ToUriChar wd'
        normalize wd'
-	   = concatMap escapeNonUriChar wd'
-				 
+           = concatMap escapeNonUriChar wd'
+
        win32ToUriChar '\\' = "/"
        win32ToUriChar c    = escapeNonUriChar c
 

@@ -41,9 +41,9 @@ module Text.XML.HXT.Arrow
     )
 where
 
-import Control.Arrow.ListArrows			-- arrow classes
+import Control.Arrow.ListArrows                 -- arrow classes
 
-import Data.Atom ()				-- import this explicitly
+import Data.Atom ()                             -- import this explicitly
 
 import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.DocumentInput
@@ -57,7 +57,7 @@ import Text.XML.HXT.Arrow.ReadDocument
 import Text.XML.HXT.Arrow.WriteDocument
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlIOStateArrow
-import Text.XML.HXT.Arrow.XmlRegex ()		-- import this explicitly
+import Text.XML.HXT.Arrow.XmlRegex ()           -- import this explicitly
 
 import Text.XML.HXT.Version
 

@@ -12,9 +12,9 @@
 module Main
 where
 
-import Text.XML.HXT.Parser		-- import all stuff for parsing, validating, and transforming XML
+import Text.XML.HXT.Parser              -- import all stuff for parsing, validating, and transforming XML
 
-import System.IO			-- import the IO and commandline option stuff
+import System.IO                        -- import the IO and commandline option stuff
 import System.Environment
 import System.Console.GetOpt
 import System.Exit
@@ -29,16 +29,16 @@ import Data.Maybe
 main :: IO ()
 main
     = do
-      argv <- getArgs					-- get the commandline arguments
-      al   <- cmdlineOpts argv				-- and evaluate them, return a key-value list
-      res  <- run' $ parser al emptyRoot		-- build a XML root from the list and start parsing
-      exitProg (null res)				-- set return code and terminate
+      argv <- getArgs                                   -- get the commandline arguments
+      al   <- cmdlineOpts argv                          -- and evaluate them, return a key-value list
+      res  <- run' $ parser al emptyRoot                -- build a XML root from the list and start parsing
+      exitProg (null res)                               -- set return code and terminate
 
 -- ------------------------------------------------------------
 
-exitProg	:: Bool -> IO a
-exitProg True	= exitWith (ExitFailure (-1))
-exitProg False	= exitWith ExitSuccess
+exitProg        :: Bool -> IO a
+exitProg True   = exitWith (ExitFailure (-1))
+exitProg False  = exitWith ExitSuccess
 
 -- ------------------------------------------------------------
 
@@ -48,13 +48,13 @@ exitProg False	= exitWith ExitSuccess
 -- get wellformed document, validates document, propagates and check namespaces
 -- and controls output
 
-parser	:: Attributes -> XmlStateFilter state
+parser  :: Attributes -> XmlStateFilter state
 parser al
-    = parseDocument al					-- read document
+    = parseDocument al                                  -- read document
       .>>
       traceMsg 1 "start processing"
       .>>
-      liftMf processDocument				-- process document: in this case rather simple, just apply a pure filter
+      liftMf processDocument                            -- process document: in this case rather simple, just apply a pure filter
       .>>
       traceMsg 1 "processing finished"
       .>>
@@ -62,18 +62,18 @@ parser al
       .>>
       traceTree
       .>>
-      ( writeDocument []				-- write result, all options already set with parseDocument
-	`whenNotM`
-	hasAttr "no-output"
+      ( writeDocument []                                -- write result, all options already set with parseDocument
+        `whenNotM`
+        hasAttr "no-output"
       )
       .>>
-      checkStatus					-- check status
+      checkStatus                                       -- check status
 
-processDocument	:: XmlFilter
+processDocument :: XmlFilter
 processDocument
-    = ( processChildren (deep isXText)			-- process document, just select text when option \"show-text\" is set
-	`when`
-	hasAttr "show-text"
+    = ( processChildren (deep isXText)                  -- process document, just select text when option \"show-text\" is set
+        `when`
+        hasAttr "show-text"
       )
 
 -- ------------------------------------------------------------
@@ -81,10 +81,10 @@ processDocument
 -- the options definition part
 -- see doc for System.Console.GetOpt
 
-progName	:: String
-progName	= "HXmlParser"
-    
-options 	:: [OptDescr (String, String)]
+progName        :: String
+progName        = "HXmlParser"
+
+options         :: [OptDescr (String, String)]
 options
     = generalOptions
       ++
@@ -92,45 +92,45 @@ options
       ++
       outputOptions
       ++
-      [ Option "q"	["no-output"]		(NoArg  ("no-output", "1"))	"no output of resulting document"
-      , Option "x"	["show-text"]		(NoArg	("show-text", "1"))	"output only the raw text, remove all markup"
+      [ Option "q"      ["no-output"]           (NoArg  ("no-output", "1"))     "no output of resulting document"
+      , Option "x"      ["show-text"]           (NoArg  ("show-text", "1"))     "output only the raw text, remove all markup"
       ]
       ++
       showOptions
 
-usage		:: [String] -> IO a
+usage           :: [String] -> IO a
 usage errl
     | null errl
-	= do
-	  hPutStrLn stdout use
-	  exitProg False
+        = do
+          hPutStrLn stdout use
+          exitProg False
     | otherwise
-	= do
-	  hPutStrLn stderr (concat errl ++ "\n" ++ use)
-	  exitProg True
+        = do
+          hPutStrLn stderr (concat errl ++ "\n" ++ use)
+          exitProg True
     where
     header = "HXmlParser - Validating XML Parser of the Haskell XML Toolbox\n" ++
              "XML well-formed checker and validator.\n\n" ++
              "Usage: " ++ progName ++ " [OPTION...] [URI or FILE]"
     use    = usageInfo header options
 
-cmdlineOpts 	:: [String] -> IO (Attributes)
+cmdlineOpts     :: [String] -> IO (Attributes)
 cmdlineOpts argv
     = case (getOpt Permute options argv) of
       (ol,n,[])
-	  -> do
-	     sa <- src n
-	     help (lookup a_help ol) sa
-	     return (ol ++ sa)
+          -> do
+             sa <- src n
+             help (lookup a_help ol) sa
+             return (ol ++ sa)
       (_,_,errs)
-	  -> usage errs
+          -> usage errs
     where
-    src []	= return []
-    src [uri]	= return [("source", uri)]
-    src _	= usage ["only one input uri or file allowed\n"]
+    src []      = return []
+    src [uri]   = return [("source", uri)]
+    src _       = usage ["only one input uri or file allowed\n"]
 
-    help (Just _) _	= usage []
-    help Nothing []	= usage ["no input uri or file given\n"]
-    help Nothing _	= return ()
+    help (Just _) _     = usage []
+    help Nothing []     = usage ["no input uri or file given\n"]
+    help Nothing _      = return ()
 
 -- ------------------------------------------------------------

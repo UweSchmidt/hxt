@@ -1,17 +1,21 @@
 -- arch-tag: Haskell XML Toolbox main description file
-name: hxt-filter
-version: 8.4.2
-license: OtherLicense
-license-file: LICENCE
-maintainer: Uwe Schmidt <uwe@fh-wedel.de>
-stability: stable
-category: XML
-synopsis: A collection of tools for processing XML with Haskell (Filter variant). 
-description:  The Haskell XML Toolbox bases on the ideas of HaXml and HXML. This package is a compatibitlity package for old software working with the filter approach like in HaXml. For new projects it's recomended to use the arrow based library (hxt).
-homepage: http://www.fh-wedel.de/~si/HXmlToolbox/index.html
-copyright: Copyright (c) 2005-2009 Uwe Schmidt
-build-type: Simple
-cabal-version: >=1.6
+Name:           hxt-filter
+Version:        8.4.3
+Synopsis:       A collection of tools for processing XML with Haskell (Filter variant). 
+Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML.
+                This package is a compatibitlity package for old software working with
+                the filter approach like in HaXml.
+                For new projects it's recomended to use the arrow based library (hxt).
+License:        OtherLicense
+License-file:   LICENSE
+Author:         Uwe Schmidt, Martin Schmidt
+Maintainer:     Uwe Schmidt <uwe@fh-wedel.de>
+Stability:      Stable
+Category:       XML
+Homepage:       http://www.fh-wedel.de/~si/HXmlToolbox/index.html
+Copyright:      Copyright (c) 2005-2010 Uwe Schmidt
+Build-type:     Simple
+Cabal-version:  >=1.6
 
 library
  exposed-modules:

@@ -28,22 +28,22 @@ module Data.Tree.NTree.Filter
     , satisfies
 
     -- * Filter
-    , none		-- simple filter
+    , none              -- simple filter
     , this
 
     , isOf
-    , isOfNode		-- predicate filter
+    , isOfNode          -- predicate filter
 
-    , mkNTree		-- contructor filter
+    , mkNTree           -- contructor filter
 
-    , replaceNode	-- simple editing
+    , replaceNode       -- simple editing
     , replaceChildren
 
     , modifyNode
     , modifyNode0
     , modifyChildren
     , substChildren
-    , processChildren	-- filter combinators
+    , processChildren   -- filter combinators
 
     , o
     , (.>)
@@ -52,23 +52,23 @@ module Data.Tree.NTree.Filter
     , (+++)
     , cat
 
-    , orElse		-- choices
-    , iff		-- if then else filter
+    , orElse            -- choices
+    , iff               -- if then else filter
     , choice
     , IfThen(..)
     , when
     , whenNot
     , guards
-    , neg		-- negation
-    , containing	-- previous: with, but with is keyword in haskell extensions
-    , notContaining	-- previous: without
+    , neg               -- negation
+    , containing        -- previous: with, but with is keyword in haskell extensions
+    , notContaining     -- previous: without
 
-    , (/>)		-- selectors
+    , (/>)              -- selectors
     , (</)
-    , deep		-- recursive search
+    , deep              -- recursive search
     , deepest
     , multi
-    , processBottomUp	-- recursive editing
+    , processBottomUp   -- recursive editing
     , processBottomUpIfNot
     , processTopDown
     , processTopDownUntil
@@ -76,25 +76,25 @@ module Data.Tree.NTree.Filter
     , insertChildrenAfter
 
       -- * Monadic Filter
-    , thisM		-- monadic filter
+    , thisM             -- monadic filter
     , noneM
-    , (.>>)		-- monadic composition
-    , seqM		-- generalisation of .>>
-    , (+++>>)		-- monadic parallel combination, monadic +++
-    , catM		-- monadic form of cat
-    , ifM		-- monadic if then else
-    , choiceM		-- monadic choice
-    , whenM		-- special monadic ifs
+    , (.>>)             -- monadic composition
+    , seqM              -- generalisation of .>>
+    , (+++>>)           -- monadic parallel combination, monadic +++
+    , catM              -- monadic form of cat
+    , ifM               -- monadic if then else
+    , choiceM           -- monadic choice
+    , whenM             -- special monadic ifs
     , whenNotM
     , guardsM
     , containingM
-    , processChildrenM	-- monadic versions of recursive editing
+    , processChildrenM  -- monadic versions of recursive editing
     , processTopDownM
     , processBottomUpM
-    , liftMf		-- lift a normal filter to a monadic filter
-    , ($$)		-- apply a filter to a list
-    , ($$<)		-- apply a monad filter to a list
-    , performAction	-- run a command within a filter
+    , liftMf            -- lift a normal filter to a monadic filter
+    , ($$)              -- apply a filter to a list
+    , ($$<)             -- apply a monad filter to a list
+    , performAction     -- run a command within a filter
     )
 
 where
@@ -114,12 +114,12 @@ infixr 0 $$, $$<
 --
 -- filter can be used in various ways, as predicates, selectors, transformers, ...
 
-type TFilter  node	= NTree  node -> NTrees node
+type TFilter  node      = NTree  node -> NTrees node
 
 -- |
 -- a filter for sequences
 
-type TSFilter node	= NTrees node -> NTrees node
+type TSFilter node      = NTrees node -> NTrees node
 
 -- ------------------------------------------------------------
 
@@ -136,8 +136,8 @@ type TSFilter node	= NTrees node -> NTrees node
 --
 --    - returns : @b = not (null (f t))@
 
-satisfies	:: (a -> [b]) -> a -> Bool
-satisfies f	= not . null . f
+satisfies       :: (a -> [b]) -> a -> Bool
+satisfies f     = not . null . f
 
 -- ------------------------------------------------------------
 --
@@ -146,14 +146,14 @@ satisfies f	= not . null . f
 -- |
 -- the null filter, returns the empty list
 
-none		:: a -> [b]
-none _		= []
+none            :: a -> [b]
+none _          = []
 
 -- |
 -- the unit filter, returns the single element list containing the argument
 
-this		:: a -> [a]
-this n		= [n]
+this            :: a -> [a]
+this n          = [n]
 
 -- ------------------------------------------------------------
 --
@@ -166,7 +166,7 @@ this n		= [n]
 --
 --    - returns : 'this' or 'none' depending on the predicate
 
-isOf		:: (a -> Bool) -> (a -> [a])
+isOf            :: (a -> Bool) -> (a -> [a])
 isOf p t
     = if p t then [t] else []
 
@@ -179,8 +179,8 @@ isOf p t
 --
 -- a special case of 'isOf' filter
 
-isOfNode	:: (node -> Bool) -> TFilter node
-isOfNode p	= isOf (p . getNode)
+isOfNode        :: (node -> Bool) -> TFilter node
+isOfNode p      = isOf (p . getNode)
 
 -- ------------------------------------------------------------
 --
@@ -193,8 +193,8 @@ isOfNode p	= isOf (p . getNode)
 --
 --    - returns : the filter
 
-mkNTree		:: NTree node -> TFilter node
-mkNTree t	= const [t]
+mkNTree         :: NTree node -> TFilter node
+mkNTree t       = const [t]
 
 -- |
 -- filter for replacing the node
@@ -203,7 +203,7 @@ mkNTree t	= const [t]
 --
 --    - returns : the editing filter
 
-replaceNode	:: node -> TFilter node
+replaceNode     :: node -> TFilter node
 replaceNode n (NTree _ cs)
     = [NTree n cs]
 
@@ -214,11 +214,11 @@ replaceNode n (NTree _ cs)
 --
 --    - returns : the filter
 
-replaceChildren	:: NTrees node -> TFilter node
+replaceChildren :: NTrees node -> TFilter node
 replaceChildren cs (NTree n _)
     = [NTree n cs]
 
-modifyNode	:: (node -> Maybe node) -> TFilter node
+modifyNode      :: (node -> Maybe node) -> TFilter node
 modifyNode tf (NTree n cs)
     = maybe [] (\ n' -> [NTree n' cs]) (tf n)
 
@@ -229,8 +229,8 @@ modifyNode tf (NTree n cs)
 --
 --    - returns : the filter
 
-modifyNode0	:: (node -> node) -> TFilter node
-modifyNode0 tf	= modifyNode (Just . tf)
+modifyNode0     :: (node -> node) -> TFilter node
+modifyNode0 tf  = modifyNode (Just . tf)
 
 -- |
 -- filter for editing the children
@@ -247,7 +247,7 @@ modifyNode0 tf	= modifyNode (Just . tf)
 --
 -- see also : 'processChildren'
 
-modifyChildren	:: TSFilter node -> TFilter node
+modifyChildren  :: TSFilter node -> TFilter node
 modifyChildren f -- (NTree n cs)
     -- = [NTree n (f cs)]
     = substChildren (f . getChildren)
@@ -258,7 +258,7 @@ modifyChildren f -- (NTree n cs)
 -- 'modifyChildren' can be expressed by 'substChildren':
 -- @modifyChildren f t@ is equal to @substChildren (f . getChildren)@
 
-substChildren	:: TFilter node -> TFilter node
+substChildren   :: TFilter node -> TFilter node
 substChildren f t@(NTree n _cs)
     = [NTree n (f t)]
 
@@ -278,8 +278,8 @@ substChildren f t@(NTree n _cs)
 --
 --    - returns : the fiter applying first f1 to n and then f2 to the result (like function composition)
 
-o		:: (a -> [b]) -> (c -> [a]) -> (c -> [b])
-f `o` g		= concatMap f . g
+o               :: (a -> [b]) -> (c -> [a]) -> (c -> [b])
+f `o` g         = concatMap f . g
 
 -- |
 -- pronounced \"followed by\", defined as: @f .> g = g \`o\` f@.
@@ -294,16 +294,16 @@ f `o` g		= concatMap f . g
 --
 -- see also : 'o', '(..>)'
 
-(.>)		:: (a -> [b]) -> (b -> [c]) -> (a -> [c])
-f .> g		= g `o` f
+(.>)            :: (a -> [b]) -> (b -> [c]) -> (a -> [c])
+f .> g          = g `o` f
 
 -- |
 -- apply a list of filters sequentially with '(.>)', for predicate filters the generalized AND
 --
 -- see also : '(.>)'
 
-seqF		:: [a -> [a]] -> (a -> [a])
-seqF		= foldl (.>) this
+seqF            :: [a -> [a]] -> (a -> [a])
+seqF            = foldl (.>) this
 
 -- |
 -- binary parallel composition, the logical OR for predicate filter
@@ -314,8 +314,8 @@ seqF		= foldl (.>) this
 --
 --    - returns : the filter for applying f1 and f2 both to an argument tree and concatenating the results
 
-(+++)		:: (a -> [b]) -> (a -> [b]) -> (a -> [b])
-f +++ g		= \ t -> f t ++ g t
+(+++)           :: (a -> [b]) -> (a -> [b]) -> (a -> [b])
+f +++ g         = \ t -> f t ++ g t
 
 -- |
 -- special sequential composition.
@@ -330,8 +330,8 @@ f +++ g		= \ t -> f t ++ g t
 --
 -- see also : '(.>)', 'o'
 
-(..>)		:: (a -> [b]) -> (a -> b -> [d]) -> (a -> [d])
-f ..> g		= \ t -> (g t `o` f) t
+(..>)           :: (a -> [b]) -> (a -> b -> [d]) -> (a -> [d])
+f ..> g         = \ t -> (g t `o` f) t
 
 -- |
 -- apply a list of filters, a \"union\" for lists, for predicate filters the generalized OR
@@ -340,7 +340,7 @@ f ..> g		= \ t -> (g t `o` f) t
 --
 --    - returns : the composing filter
 
-cat		:: [a -> [b]] -> (a -> [b])
+cat             :: [a -> [b]] -> (a -> [b])
 cat fs  t
     = concat [ f t | f <- fs ]
 
@@ -353,7 +353,7 @@ cat fs  t
 --
 -- see also : 'modifyChildren'
 
-processChildren	:: TFilter node -> TFilter node
+processChildren :: TFilter node -> TFilter node
 processChildren ft (NTree n cs)
     = [NTree n (ft $$ cs)]
 
@@ -366,7 +366,7 @@ processChildren ft (NTree n cs)
 --
 --    - returns : the concatenated list of results
 
-($$)		:: (a -> [b]) -> [a] -> [b]
+($$)            :: (a -> [b]) -> [a] -> [b]
 f $$ l
     = concatMap f l
 
@@ -386,14 +386,14 @@ f $$ l
 --
 --    - returns : the filter, that applies f to t, if the result is not the empty list, the result is found, else g t is the result
 
-orElse		:: (a -> [b]) -> (a -> [b]) -> (a -> [b])
+orElse          :: (a -> [b]) -> (a -> [b]) -> (a -> [b])
 f `orElse` g
     = \ t-> let
-	    res = f t
-	    in
-	    if null res
-	    then g t
-	    else res
+            res = f t
+            in
+            if null res
+            then g t
+            else res
 
 -- |
 -- if then else lifted to filters
@@ -406,8 +406,8 @@ f `orElse` g
 --
 --    - returns : the resulting conditional filter
 
-iff		:: (a -> [c]) -> (a -> [b]) -> (a -> [b]) -> (a -> [b])
-iff p f g	= \ c -> if (satisfies p) c then f c else g c
+iff             :: (a -> [c]) -> (a -> [b]) -> (a -> [b]) -> (a -> [b])
+iff p f g       = \ c -> if (satisfies p) c then f c else g c
 
 -- |
 -- when the predicate p holds, f is applied, else the identity filter this
@@ -420,8 +420,8 @@ iff p f g	= \ c -> if (satisfies p) c then f c else g c
 --
 -- see also : 'iff', 'whenNot', 'guards', 'whenM'
 
-when		:: (a -> [a]) -> (a -> [a]) -> (a -> [a])
-f `when` g	= iff g f this
+when            :: (a -> [a]) -> (a -> [a]) -> (a -> [a])
+f `when` g      = iff g f this
 
 -- |
 -- the complementary filter of when
@@ -430,8 +430,8 @@ f `when` g	= iff g f this
 --
 -- see also : 'iff', 'when', 'whenNotM', 'neg'
 
-whenNot		:: (a -> [a]) -> (a -> [a]) -> (a -> [a])
-f `whenNot` g	= iff g this f
+whenNot         :: (a -> [a]) -> (a -> [a]) -> (a -> [a])
+f `whenNot` g   = iff g this f
 
 -- |
 -- when the predicate p holds, f is applied, else the null filter none
@@ -444,8 +444,8 @@ f `whenNot` g	= iff g this f
 --
 -- see also : 'iff', 'when', 'guardsM'
 
-guards		:: (a -> [b]) -> (a -> [b]) -> (a -> [b])
-g `guards` f	= iff g f none
+guards          :: (a -> [b]) -> (a -> [b]) -> (a -> [b])
+g `guards` f    = iff g f none
 
 
 -- |
@@ -455,8 +455,8 @@ g `guards` f	= iff g f none
 --
 --    - returns : the filter, that succeeds, when f failed
 
-neg		:: (a -> [c]) -> a -> [a]
-neg f		= iff f none this
+neg             :: (a -> [c]) -> a -> [a]
+neg f           = iff f none this
 
 -- |
 -- auxiliary datatype for cases within choice filter
@@ -471,7 +471,7 @@ data IfThen a b = a :-> b
 --
 -- see also : 'iff', 'choiceM'
 
-choice	:: [IfThen (a -> [c]) (a -> [b])] -> (a -> [b])
+choice  :: [IfThen (a -> [c]) (a -> [b])] -> (a -> [b])
 choice []
     = none
 
@@ -491,7 +491,7 @@ choice ((g :-> f) : cs)
 --
 -- see also : 'notContaining'
 
-containing		:: (a -> [b]) -> (b -> [c]) -> a -> [b]
+containing              :: (a -> [b]) -> (b -> [c]) -> a -> [b]
 f `containing` g
     = filter (satisfies g) . f
 
@@ -500,7 +500,7 @@ f `containing` g
 --
 -- see also : 'containing'
 
-notContaining		:: (a -> [b]) -> (b -> [c]) -> a -> [b]
+notContaining           :: (a -> [b]) -> (b -> [c]) -> a -> [b]
 f `notContaining` g
     = filter (null . g) . f
 
@@ -517,7 +517,7 @@ f `notContaining` g
 --
 -- see also : 'notContaining'
 
-containingM		:: Monad m => (a -> m [b]) -> (b -> [c]) -> a -> m [b]
+containingM             :: Monad m => (a -> m [b]) -> (b -> [c]) -> a -> m [b]
 f `containingM` g
     = \ t -> do
              res <- f t
@@ -526,14 +526,14 @@ f `containingM` g
 -- |
 -- pronounced \"slash\", meaning g inside f
 
-(/>)		:: TFilter node -> TFilter node -> TFilter node
+(/>)            :: TFilter node -> TFilter node -> TFilter node
 f /> g
     = g `o` getChildren `o` f
 
 -- |
 -- pronounced \"outside\" meaning f containing g
 
-(</)		:: TFilter node -> TFilter node -> TFilter node
+(</)            :: TFilter node -> TFilter node -> TFilter node
 f </ g
     = f `containing` (g `o` getChildren)
 
@@ -547,7 +547,7 @@ f </ g
 -- search terminates, when filter f succeeds
 -- can e.g. be used for finding all outermost tag node of a specific kind
 
-deep		:: TFilter node -> TFilter node
+deep            :: TFilter node -> TFilter node
 deep f
     = f `orElse` (deep f `o` getChildren)
 
@@ -558,7 +558,7 @@ deep f
 -- if this does not succeed, the node itself is processed
 -- can e.g. be used for finding all innermost tag nodes of a specific kind
 
-deepest		:: TFilter node -> TFilter node
+deepest         :: TFilter node -> TFilter node
 deepest f
     = (getChildren .> deepest f) `orElse` f
 
@@ -567,7 +567,7 @@ deepest f
 --
 -- can e.g. be used for finding all nodes of a specific kind
 
-multi		:: TFilter node -> TFilter node
+multi           :: TFilter node -> TFilter node
 multi f
     = f +++ (getChildren .> multi f)
 
@@ -585,7 +585,7 @@ multi f
 --
 -- see also : 'processTopDown', 'processBottomUpIfNot'
 
-processBottomUp	:: TFilter node -> TFilter node
+processBottomUp :: TFilter node -> TFilter node
 processBottomUp f
     = processChildren (processBottomUp f) .> f
 
@@ -598,7 +598,7 @@ processBottomUp f
 --
 -- see also : 'processBottomUp'
 
-processTopDown	:: TFilter node -> TFilter node
+processTopDown  :: TFilter node -> TFilter node
 processTopDown f
     = f .> processChildren (processTopDown f)
 
@@ -613,7 +613,7 @@ processTopDown f
 --
 -- see also : 'processBottomUp'
 
-processBottomUpIfNot	:: TFilter node -> TFilter node -> TFilter node
+processBottomUpIfNot    :: TFilter node -> TFilter node -> TFilter node
 processBottomUpIfNot f p
     = (processChildren (processBottomUpIfNot f p) .> f) `whenNot` p
 
@@ -623,7 +623,7 @@ processBottomUpIfNot f p
 --    * 1.parameter f :  the /simple/ transforming filter
 --
 --    - returns : the filter that applies f first to the tree and, if the filter does not succeed,
---		  recursively to all children of the input tree.
+--                recursively to all children of the input tree.
 --
 -- Example:
 --
@@ -636,16 +636,16 @@ processBottomUpIfNot f p
 -- @processTopDownUntil (add1Attr \"border\" \"2\" \`containing\` isTag \"table\")@
 --
 -- is a filter for adding an attribute border=\"2\" in all top level table tags.
---		  The content of table tags will remain unchanged.
+--                The content of table tags will remain unchanged.
 --
 -- see also : 'processTopDown', 'processBottomUp'
 
-processTopDownUntil	:: TFilter node -> TFilter node
+processTopDownUntil     :: TFilter node -> TFilter node
 processTopDownUntil f t
     | null res
-	= processChildren (processTopDownUntil f) t
+        = processChildren (processTopDownUntil f) t
     | otherwise
-	= res
+        = res
     where
     res = f t
 
@@ -665,7 +665,7 @@ processTopDownUntil f t
 -- see also: 'insertChildrenAfter'
 
 
-insertChildrenAt	:: Int -> TFilter node -> TFilter node
+insertChildrenAt        :: Int -> TFilter node -> TFilter node
 insertChildrenAt i ins t
     = replaceChildren (cl1 ++ ins t ++ cl2) t
     where
@@ -683,7 +683,7 @@ insertChildrenAt i ins t
 --
 -- see also: 'insertChildrenAt'
 
-insertChildrenAfter	:: TFilter node -> TFilter node -> TFilter node
+insertChildrenAfter     :: TFilter node -> TFilter node -> TFilter node
 insertChildrenAfter p ins t
     = replaceChildren (cl1 ++ ins t ++ cl2) t
     where
@@ -698,16 +698,16 @@ insertChildrenAfter p ins t
 --
 -- see also : 'this'
 
-thisM		:: Monad m => (a -> m [a])
-thisM		= liftMf this
+thisM           :: Monad m => (a -> m [a])
+thisM           = liftMf this
 
 -- |
 -- the monadic version of the null filter none.
 --
 -- see also : 'none'
 
-noneM		:: Monad m => (a -> m [b])
-noneM		= liftMf none
+noneM           :: Monad m => (a -> m [b])
+noneM           = liftMf none
 
 -- |
 -- sequential composition of monadic filters, monadic version of \".>\".
@@ -720,7 +720,7 @@ noneM		= liftMf none
 --
 -- see also : '(.>)'
 
-(.>>)	:: Monad m => (a -> m[b]) -> (b -> m [c]) -> (a -> m[c])
+(.>>)   :: Monad m => (a -> m[b]) -> (b -> m [c]) -> (a -> m[c])
 cmd1 .>> cmd2
     = \ t ->
       do
@@ -731,7 +731,7 @@ cmd1 .>> cmd2
 -- |
 -- generalized sequential composition of monadic filters
 
-seqM	:: Monad m => [a -> m[a]] -> (a -> m[a])
+seqM    :: Monad m => [a -> m[a]] -> (a -> m[a])
 seqM
     = foldr (.>>) thisM
 
@@ -745,11 +745,11 @@ seqM
 --    - returns : the filter for applying f1 and f2 both to an argument tree and concatenating the results
 -- see also: 'cat', '+++', 'catM'
 
-(+++>>)		:: Monad m => (a -> m [b]) -> (a -> m [b]) -> (a -> m [b])
-f +++>> g	= \ t -> do
-			 r1 <- f t
-			 r2 <- g t
-			 return (r1 ++ r2)
+(+++>>)         :: Monad m => (a -> m [b]) -> (a -> m [b]) -> (a -> m [b])
+f +++>> g       = \ t -> do
+                         r1 <- f t
+                         r2 <- g t
+                         return (r1 ++ r2)
 
 -- |
 -- apply a list of monadic filters
@@ -759,7 +759,7 @@ f +++>> g	= \ t -> do
 --    - returns : the composing filter
 -- see also: 'cat', '+++', '+++>>'
 
-catM	:: Monad m => [a -> m [b]] -> (a -> m [b])
+catM    :: Monad m => [a -> m [b]] -> (a -> m [b])
 catM fs  t
     = do
       res <- sequence (map ($ t) fs)
@@ -776,7 +776,7 @@ catM fs  t
 --
 --    - returns : the monadic filter for the conditional
 
-ifM		:: Monad m => (a -> [b]) -> (a -> m [c]) -> (a -> m [c]) -> (a -> m [c])
+ifM             :: Monad m => (a -> [b]) -> (a -> m [c]) -> (a -> m [c]) -> (a -> m [c])
 ifM p thenPart elsePart
     = \ t ->
       if (satisfies p) t
@@ -791,7 +791,7 @@ ifM p thenPart elsePart
 --
 -- see also : 'choice', 'ifM'
 
-choiceM		:: Monad m => [IfThen (a -> [c]) (a -> m [b])] -> (a -> m [b])
+choiceM         :: Monad m => [IfThen (a -> [c]) (a -> m [b])] -> (a -> m [b])
 choiceM []
     = noneM
 
@@ -810,16 +810,16 @@ choiceM ((g :-> f) : cs)
 --
 -- see also : 'ifM', 'when', 'guardsM', 'whenNotM'
 
-whenM		:: Monad m => (a -> m [a]) -> (a -> [b]) -> (a -> m [a])
-f `whenM` g	= ifM g f thisM
+whenM           :: Monad m => (a -> m [a]) -> (a -> [b]) -> (a -> m [a])
+f `whenM` g     = ifM g f thisM
 
 -- |
 -- the complementary filter of whenM.
 --
 -- see also : 'ifM', 'whenM', 'whenNot'
 
-whenNotM	:: Monad m => (a -> m [a]) -> (a -> [b]) -> (a -> m [a])
-f `whenNotM` g	= ifM g thisM f
+whenNotM        :: Monad m => (a -> m [a]) -> (a -> [b]) -> (a -> m [a])
+f `whenNotM` g  = ifM g thisM f
 
 -- |
 -- when the predicate p holds, the monadic filter f is applied, else the null filter.
@@ -832,8 +832,8 @@ f `whenNotM` g	= ifM g thisM f
 --
 -- see also : 'ifM', 'guards', 'whenM'
 
-guardsM		:: Monad m => (a -> [b]) -> (a -> m [c]) -> (a -> m [c])
-g `guardsM` f	= ifM g f noneM
+guardsM         :: Monad m => (a -> [b]) -> (a -> m [c]) -> (a -> m [c])
+g `guardsM` f   = ifM g f noneM
 
 -- |
 -- Filter for editing the children of a tree with a monadic filter
@@ -844,7 +844,7 @@ g `guardsM` f	= ifM g f noneM
 --
 -- see also : 'processChildren'
 
-processChildrenM	:: Monad m => (NTree node -> m [NTree node]) -> (NTree node -> m [NTree node])
+processChildrenM        :: Monad m => (NTree node -> m [NTree node]) -> (NTree node -> m [NTree node])
 processChildrenM ft (NTree n cs)
     = do
       res <- ft $$< cs
@@ -853,14 +853,14 @@ processChildrenM ft (NTree n cs)
 -- |
 -- monadic variant of 'processTopDown'
 
-processTopDownM		:: Monad m => (NTree node -> m [NTree node]) -> (NTree node -> m [NTree node])
+processTopDownM         :: Monad m => (NTree node -> m [NTree node]) -> (NTree node -> m [NTree node])
 processTopDownM f
     = f .>> processChildrenM (processTopDownM f)
 
 -- |
 -- monadic variant of 'processBottomUp'
 
-processBottomUpM	:: Monad m => (NTree node -> m [NTree node]) -> (NTree node -> m [NTree node])
+processBottomUpM        :: Monad m => (NTree node -> m [NTree node]) -> (NTree node -> m [NTree node])
 processBottomUpM f
     = processChildrenM (processBottomUpM f) .>> f
 
@@ -876,7 +876,7 @@ processBottomUpM f
 --
 -- see also : '($$)'
 
-($$<)	:: Monad m => (a -> m [b]) -> [a] -> m [b]
+($$<)   :: Monad m => (a -> m [b]) -> [a] -> m [b]
 cmd $$< l
     = do
       r <- mapM cmd l
@@ -889,7 +889,7 @@ cmd $$< l
 --
 --    - returns : the lifted monadic version
 
-liftMf	:: Monad m => (a -> [b]) -> a -> m [b]
+liftMf  :: Monad m => (a -> [b]) -> a -> m [b]
 liftMf f t
     = return (f t)
 
@@ -903,7 +903,7 @@ liftMf f t
 --
 --    - returns : the unchanged tree as a single element list
 
-performAction	:: Monad m => (a -> m b) -> a -> m [a]
+performAction   :: Monad m => (a -> m b) -> a -> m [a]
 performAction cmd t
     = cmd t
       >> return [t]

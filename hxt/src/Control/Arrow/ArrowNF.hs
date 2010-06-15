@@ -28,11 +28,11 @@ import Control.DeepSeq
 -- and validation of a document, all DTD stuff is not longer in use and can be
 -- recycled by the GC.
 
-strictA	:: (Arrow a, NFData b) => a b b
-strictA	= arr $ \ x -> deepseq x x
+strictA :: (Arrow a, NFData b) => a b b
+strictA = arr $ \ x -> deepseq x x
 
 class (Arrow a) => ArrowNF a where
-    rnfA	:: (NFData c) => a b c -> a b c
-    rnfA f	= f >>> strictA
+    rnfA        :: (NFData c) => a b c -> a b c
+    rnfA f      = f >>> strictA
 
 -- ------------------------------------------------------------

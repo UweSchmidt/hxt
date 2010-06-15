@@ -12,34 +12,34 @@ import Test.HUnit
 import Text.XML.HXT.Parser
 import Data.Char
 
-aMinimalDoc	:: XmlTree
-aMinimalDoc	= mkRootTree [] (xtext "<?xml version='1.0'?><x/>")
+aMinimalDoc     :: XmlTree
+aMinimalDoc     = mkRootTree [] (xtext "<?xml version='1.0'?><x/>")
 
-aSimpleXHTMLDoc	:: XmlTree
+aSimpleXHTMLDoc :: XmlTree
 aSimpleXHTMLDoc
     = mkRootTree
       ( xattr a_source "simple.xml" )
-      ( xtext 
-	( concatMap (++ "\n")
-	  [ "<?xml version='1.0'?>"
-	  , "<html>"
-	  , " <head><title>A Simple XHTML Document</title></head>"
-	  , " <body>"
-	  , " </body>"
-	  , "</html>"
-	  ]
-	)
+      ( xtext
+        ( concatMap (++ "\n")
+          [ "<?xml version='1.0'?>"
+          , "<html>"
+          , " <head><title>A Simple XHTML Document</title></head>"
+          , " <body>"
+          , " </body>"
+          , "</html>"
+          ]
+        )
       )
 
-mkMinimalDoc	:: String -> XmlTree
+mkMinimalDoc    :: String -> XmlTree
 mkMinimalDoc cont
     = mkRootTree [] (xtext cont)
 
-mkInputDoc	:: String -> XmlTree
+mkInputDoc      :: String -> XmlTree
 mkInputDoc src
     = mkRootTree ( xattr a_source src) []
 
-mkDoc	:: String -> XmlTree
+mkDoc   :: String -> XmlTree
 mkDoc cont
     = mkRootTree
       ( xattr a_source "a test")
@@ -48,7 +48,7 @@ mkDoc cont
 -- |
 -- compare trees
 
-testEqualTrees	:: XmlTrees -> XmlTrees -> Test
+testEqualTrees  :: XmlTrees -> XmlTrees -> Test
 testEqualTrees e1 e2
     = TestCase $
       assertEqual "" e1 e2
@@ -61,7 +61,7 @@ testEqualTrees e1 e2
 --
 -- see also: 'testStateFilter' and 'testEditFilter'
 
-testDocFilter	:: String -> XmlFilter -> XmlTree -> Test
+testDocFilter   :: String -> XmlFilter -> XmlTree -> Test
 testDocFilter expected xfilter doc
     = TestCase $
       assertEqual "" expected (xshow $ xfilter doc)
@@ -74,7 +74,7 @@ testDocFilter expected xfilter doc
 --
 -- see also: 'testEditFilter' for pure functional filters
 
-testStateFilter	:: String -> XmlStateFilter () -> XmlTree -> Test
+testStateFilter :: String -> XmlStateFilter () -> XmlTree -> Test
 testStateFilter expected xfilter input
     = TestCase $
       do
@@ -89,36 +89,36 @@ testStateFilter expected xfilter input
 -- The result is transformed into the string representation and compared
 -- with the expected string.
 
-testEditFilter	:: String -> XmlFilter -> XmlTree -> Test
+testEditFilter  :: String -> XmlFilter -> XmlTree -> Test
 testEditFilter expected xfilter input
     = TestCase $
       do
       res <- run'
-	     $ ( getWellformedDoc					-- read the document
-		 .>>
-		 liftMf canonicalizeAllNodes				-- normalize the document and remove <?xml ... ?> decl
-		 .>>
-		 liftMf ( processChildren xfilter )			-- apply the editing filter only to the 'real' document
-		 .>>				  			-- nodes, not to nodes surrounding the document tag
-		 putXmlTree						-- just trace output
-		 .>>
-		 liftMf getChildren					-- just for comparing the document contents
-	       )
-	     input
+             $ ( getWellformedDoc                                       -- read the document
+                 .>>
+                 liftMf canonicalizeAllNodes                            -- normalize the document and remove <?xml ... ?> decl
+                 .>>
+                 liftMf ( processChildren xfilter )                     -- apply the editing filter only to the 'real' document
+                 .>>                                                    -- nodes, not to nodes surrounding the document tag
+                 putXmlTree                                             -- just trace output
+                 .>>
+                 liftMf getChildren                                     -- just for comparing the document contents
+               )
+             input
       assertEqual "" expected (xshow res)
 
 
 -- |
 -- ausiliary function to make haskell string constants with quotes more readable
 
-singleToDoubleQuote	:: String -> String
+singleToDoubleQuote     :: String -> String
 singleToDoubleQuote
     = map (\ c -> if c == '\'' then '"' else c)
 
 -- |
 -- the complete set of test cases
 
-allTests	:: Test
+allTests        :: Test
 allTests
     = TestList
       [ constructionTests
@@ -140,19 +140,19 @@ treeConstructionTests
     = TestLabel "tree and filter construction tests" $
       TestList $
       map (\ (t, f) -> testEqualTrees t (f undefined) )
-      [ (xtext "xyz",				txt "xyz"			)
-      , (xcmt "cmt",				cmt "cmt"			)
-      , (xtag "img" [] [],			tag "img" [] []			)
-      , (xtag "img" [] [],			etag "img"			)
+      [ (xtext "xyz",                           txt "xyz"                       )
+      , (xcmt "cmt",                            cmt "cmt"                       )
+      , (xtag "img" [] [],                      tag "img" [] []                 )
+      , (xtag "img" [] [],                      etag "img"                      )
 
-      , (xtag "img" (xattr "b" "13") [],	tag "img" [sattr "b" "13"] []	)
+      , (xtag "img" (xattr "b" "13") [],        tag "img" [sattr "b" "13"] []   )
 
-      , (xtag "img" (xattr "b" "13") [],	atag "img" [sattr "b" "13"]	)
+      , (xtag "img" (xattr "b" "13") [],        atag "img" [sattr "b" "13"]     )
 
       , (xtag "t" (xattr "a" "42" ++ xattr "b" "id")
-	          (xtext "abc"),
-						tag "t" [sattr "a" "42", sattr "b" "id"]
-	 						[txt "abc"]		)
+                  (xtext "abc"),
+                                                tag "t" [sattr "a" "42", sattr "b" "id"]
+                                                        [txt "abc"]             )
       ]
 
 -- |
@@ -162,269 +162,269 @@ treeConstructionTests
 -- this is more general than explicit construction.
 -- in more complex examples some information may be extracted from
 -- the source, some can be constant.
--- 
+--
 -- see also: 'testDocFilter'
 
-constructionTests	:: Test
+constructionTests       :: Test
 constructionTests
     = TestLabel "document construction tests" $
       TestList $
-      map (\ (res, f) -> testDocFilter res f undefined)		-- undefined or something else, e.g. emptyRoot
-      [ ("<x/>"		, mkXTag  "x" none none	)
-      , ("<x/>"		, tag "x"  [] []	)		-- syntactically more comfortable shortcut for mkXTag
-      , ("<x/>"		, stag "x" []		)		-- shortcut for tags without attributes
-      , ("<x/>"		, atag "x" []		)		-- shortcut for empty tags with attributes
-      , ("<x/>"		, etag "x"		)		-- shortcut for empty tags without attributes
+      map (\ (res, f) -> testDocFilter res f undefined)         -- undefined or something else, e.g. emptyRoot
+      [ ("<x/>"         , mkXTag  "x" none none )
+      , ("<x/>"         , tag "x"  [] []        )               -- syntactically more comfortable shortcut for mkXTag
+      , ("<x/>"         , stag "x" []           )               -- shortcut for tags without attributes
+      , ("<x/>"         , atag "x" []           )               -- shortcut for empty tags with attributes
+      , ("<x/>"         , etag "x"              )               -- shortcut for empty tags without attributes
 
       , ("<x a=\"1\"/>"
-			, mkXTag "x" (mkXAttr "a" (mkXText "1")) none	)
+                        , mkXTag "x" (mkXAttr "a" (mkXText "1")) none   )
       , ("<x a=\"1\">42</x>"
-			, mkXTag "x" (mkXAttr "a" (mkXText "1")) (mkXText "42")	)
+                        , mkXTag "x" (mkXAttr "a" (mkXText "1")) (mkXText "42") )
       , ("<x a=\"1\">42</x>"
-			, tag "x" [ attr "a" $ txt "1" ] [ txt "42" ]	)
+                        , tag "x" [ attr "a" $ txt "1" ] [ txt "42" ]   )
       , ("<x a=\"1\">42</x>"
-			, tag "x" [ sattr "a" "1" ] [ txt "42" ]	)
+                        , tag "x" [ sattr "a" "1" ] [ txt "42" ]        )
 
-      , ("<x a=\"1\"/>"	, atag "x" [ sattr "a" "1" ]	)
+      , ("<x a=\"1\"/>" , atag "x" [ sattr "a" "1" ]    )
 
       , ("<x a=\"1\" b=\"2\">42<y/>43</x>"
-			, tag "x" [ sattr "a" "1"
-				  , sattr "b" "2"
-				  ] [ txt  "42"
-				    , etag "y"
-				    , txt  "43"
-				    ]	)
+                        , tag "x" [ sattr "a" "1"
+                                  , sattr "b" "2"
+                                  ] [ txt  "42"
+                                    , etag "y"
+                                    , txt  "43"
+                                    ]   )
       , ("<!-- a comment -->"
-			, mkXCmt $ txt " a comment "	)
+                        , mkXCmt $ txt " a comment "    )
       , ("<!--a comment-->"
-			, cmt "a comment"	)		-- short cut for uncomputed comment
+                        , cmt "a comment"       )               -- short cut for uncomputed comment
 
       , ("<!-- an illegal XML comment containing 2 -- in comment text -->"
-			, cmt " an illegal XML comment containing 2 -- in comment text "	)
+                        , cmt " an illegal XML comment containing 2 -- in comment text "        )
 
-      , ("&#42;"   	, mkXCharRef 42		)
-      , ("&lt;"    	, mkXEntityRef "lt"	)
+      , ("&#42;"        , mkXCharRef 42         )
+      , ("&lt;"         , mkXEntityRef "lt"     )
       , ("<![CDATA[<abc>]]>"
-			, mkXCdata $ txt "<abc>")
-      , ("<![CDATA[<abc>]]>"			-- short cut for uncomputed cdata content
-			, cdata "<abc>")
-      , ("<?abc xyz?>"	, mkXPi "abc" $ txt "xyz"	)
-      , ("<?abc xyz?>"	, spi "abc" "xyz"	)	-- short cut for an uncomputed pi content
+                        , mkXCdata $ txt "<abc>")
+      , ("<![CDATA[<abc>]]>"                    -- short cut for uncomputed cdata content
+                        , cdata "<abc>")
+      , ("<?abc xyz?>"  , mkXPi "abc" $ txt "xyz"       )
+      , ("<?abc xyz?>"  , spi "abc" "xyz"       )       -- short cut for an uncomputed pi content
       ]
 
 -- |
 -- simple selection tests
 
-simpleSelectionTests	:: Test
+simpleSelectionTests    :: Test
 simpleSelectionTests
     = TestLabel "simple tree selection tests" $
       TestList $
       map (\ (res, f) -> testDocFilter (singleToDoubleQuote res) f simpleDoc)
-      [ (src		, this	)
-      , ("1"		, getValue "a"	)
-      , (""		, getValue "b"	)
-      , (body1		, getChildren	)
+      [ (src            , this  )
+      , ("1"            , getValue "a"  )
+      , (""             , getValue "b"  )
+      , (body1          , getChildren   )
 
-				-- text selection
-      , ("xyz"		, getChildren .> isXText	)
-      , ("xyz"		, getChildren .> isText "xyz"	)
-      , (""		, getChildren .> isText "abc"	)
-      , ("xyz"		, getChildren .> isOfText (>="x")	)
-      , (""		, getChildren .> isOfText (<"x")	)
-      , (""		, getChildren .> isWhiteSpace	)
+                                -- text selection
+      , ("xyz"          , getChildren .> isXText        )
+      , ("xyz"          , getChildren .> isText "xyz"   )
+      , (""             , getChildren .> isText "abc"   )
+      , ("xyz"          , getChildren .> isOfText (>="x")       )
+      , (""             , getChildren .> isOfText (<"x")        )
+      , (""             , getChildren .> isWhiteSpace   )
 
-				-- tag selection
+                                -- tag selection
       , ("<t a='42' b='id'>abc</t><img b='13'/><y x='0'/><z/>"
-			, getChildren .> isXTag	)
+                        , getChildren .> isXTag )
 
-				-- comment selection
-      , ("<!--cmt-->"	, getChildren .> isXCmt	)
+                                -- comment selection
+      , ("<!--cmt-->"   , getChildren .> isXCmt )
 
-				-- text OR tag selection
+                                -- text OR tag selection
       , ("<t a='42' b='id'>abc</t><img b='13'/>xyz<y x='0'/><z/>"
-			, getChildren .> (isXTag +++ isXText)	)
+                        , getChildren .> (isXTag +++ isXText)   )
 
-				-- generalised OR
+                                -- generalised OR
       , ("<t a='42' b='id'>abc</t><img b='13'/>xyz<y x='0'/><z/>"
-			, getChildren .> cat [isXTag, isXText]	)
+                        , getChildren .> cat [isXTag, isXText]  )
 
-      , ("abc"		, getChildren .> getChildren	)
+      , ("abc"          , getChildren .> getChildren    )
 
-				-- atribute value selection
-      , ("1"		, getValue "a"	)
+                                -- atribute value selection
+      , ("1"            , getValue "a"  )
 
       , ("<t a='42' b='id'>abc</t>"
-			, getChildren .> isTag "t"	)
+                        , getChildren .> isTag "t"      )
 
-				-- attribute selection
+                                -- attribute selection
       , ("<t a='42' b='id'>abc</t>"
-			, getChildren .> hasAttr "a"	)
+                        , getChildren .> hasAttr "a"    )
 
-      , ("42"		, getChildren .> getValue "a"	)
-      , ("42"		, getChildren .> hasValue "a" (all isDigit)	)
-      , ("13"		, getChildren .> hasValue "b" (all isDigit)	)
-      , (""		, getChildren .> isTag "t" .> hasValue "b" (all isDigit)	)
-      , ("42"		, getChildren .> hasValue "a" (== "42")	)
-      , (""		, getChildren .> hasValue "a" (== "43")	)
-      , ("42"		, getChildren .> hasValue "a" (\ str -> ((read str)::Int) > 40)	)
-      , ("42"		, getChildren .> hasValue "a" (not . null)	)
-      , ("id13"		, getChildren .> hasValue "b" (const True)	)
-      , ("13"		, getChildren .> isTag "img" .> hasValue "b" (const True)	)
-      , (""		, getChildren .> hasValue "c" (const True)	)
+      , ("42"           , getChildren .> getValue "a"   )
+      , ("42"           , getChildren .> hasValue "a" (all isDigit)     )
+      , ("13"           , getChildren .> hasValue "b" (all isDigit)     )
+      , (""             , getChildren .> isTag "t" .> hasValue "b" (all isDigit)        )
+      , ("42"           , getChildren .> hasValue "a" (== "42") )
+      , (""             , getChildren .> hasValue "a" (== "43") )
+      , ("42"           , getChildren .> hasValue "a" (\ str -> ((read str)::Int) > 40) )
+      , ("42"           , getChildren .> hasValue "a" (not . null)      )
+      , ("id13"         , getChildren .> hasValue "b" (const True)      )
+      , ("13"           , getChildren .> isTag "img" .> hasValue "b" (const True)       )
+      , (""             , getChildren .> hasValue "c" (const True)      )
 
       , (" a='42' b='id' b='13' x='0'"
-			, getChildren .> getAttrl	)
+                        , getChildren .> getAttrl       )
 
       , (" a='42' b='id'"
-			, getChildren .> isTag "t" .> getAttrl	)
+                        , getChildren .> isTag "t" .> getAttrl  )
 
-      , ("42id"		, getChildren .> isTag "t" .> getAttrl .> getChildren	)
+      , ("42id"         , getChildren .> isTag "t" .> getAttrl .> getChildren   )
 
       , (" b='id' b='13'"
-			, getChildren .> getAttrl .> isAttr "b"	)
+                        , getChildren .> getAttrl .> isAttr "b" )
 
-      , (" b='13'"	, getChildren .> isTag "img" .> getAttrl .> isAttr "b"	)
-      , ("13"		, getChildren .> isTag "img" .> getAttrl .> isAttr "b" .> getChildren	)
-      , ("13"		, getChildren .> isTag "img" .> getValue "b"	)
-      , ("timgyz"	, getChildren .> getName	)
-      , ("t"		, getChildren .> isTag "t" .> getName	)
-      , ("abbx"		, getChildren .> getAttrl  .> getName	)
-      , ("bb"		, getChildren .> getAttrl  .> isAttr "b" .> getName	)
-      , ("ab"		, getChildren .> isTag "t" .> getAttrl   .> getName	)
-      , ("b"		, getChildren .> isTag "t" .> getAttrl   .> isAttr "b" .> getName	)
+      , (" b='13'"      , getChildren .> isTag "img" .> getAttrl .> isAttr "b"  )
+      , ("13"           , getChildren .> isTag "img" .> getAttrl .> isAttr "b" .> getChildren   )
+      , ("13"           , getChildren .> isTag "img" .> getValue "b"    )
+      , ("timgyz"       , getChildren .> getName        )
+      , ("t"            , getChildren .> isTag "t" .> getName   )
+      , ("abbx"         , getChildren .> getAttrl  .> getName   )
+      , ("bb"           , getChildren .> getAttrl  .> isAttr "b" .> getName     )
+      , ("ab"           , getChildren .> isTag "t" .> getAttrl   .> getName     )
+      , ("b"            , getChildren .> isTag "t" .> getAttrl   .> isAttr "b" .> getName       )
 
-				-- deep search for text or tags
-      , ("abcxyz"       , deep isXText	)
-      , ("abc"	        , deep (isTag "t") .> deep isXText	)
+                                -- deep search for text or tags
+      , ("abcxyz"       , deep isXText  )
+      , ("abc"          , deep (isTag "t") .> deep isXText      )
       ]
     where
     src = "<r a='1'>" ++ body1 ++ "</r>"
     body1 = "<!--cmt-->"
-	    ++ "<t a='42' b='id'>abc</t>"
-	    ++ "<img b='13'/>"
-	    ++ "xyz"
-	    ++ "<y x='0'/>"
-	    ++ "<z/>"
+            ++ "<t a='42' b='id'>abc</t>"
+            ++ "<img b='13'/>"
+            ++ "xyz"
+            ++ "<y x='0'/>"
+            ++ "<z/>"
 
     sDocFilter
-	= tag "r" [ sattr "a" "1" ]
-	    [ cmt "cmt"
-	    , tag "t" [ sattr "a" "42", sattr "b" "id" ]
-		[ txt "abc"
-		]
-	    , atag "img" [ sattr "b" "13" ]
-	    , txt "xyz"
-	    , atag "y" [ sattr "x" "0" ]
-	    , etag "z"
-	    ]
+        = tag "r" [ sattr "a" "1" ]
+            [ cmt "cmt"
+            , tag "t" [ sattr "a" "42", sattr "b" "id" ]
+                [ txt "abc"
+                ]
+            , atag "img" [ sattr "b" "13" ]
+            , txt "xyz"
+            , atag "y" [ sattr "x" "0" ]
+            , etag "z"
+            ]
     simpleDoc = head $ sDocFilter undefined
 
 -- |
 -- simple tests with namespaces
 
-namespaceTests	:: Test
+namespaceTests  :: Test
 namespaceTests
     = TestLabel "namespace tests" $
       TestList $
       map (\ (res, f) -> testDocFilter (singleToDoubleQuote res) f simpleDoc)
-      [ (src		, this	)
-					-- select all "t" tags, even nested ones (multi) and extract the text from the body
-      , ("sssaaa"	, multi (isTag "t"                    .> getChildren .> isXText)	)
+      [ (src            , this  )
+                                        -- select all "t" tags, even nested ones (multi) and extract the text from the body
+      , ("sssaaa"       , multi (isTag "t"                    .> getChildren .> isXText)        )
 
-					-- select all text within all tags of a specific namespace
-      , ("sssaaazzzeee"	, multi (isXTag .> hasNamespace "dns" .> getChildren .> isXText)	)
-      , ("bbb"		, multi (isXTag .> hasNamespace "n1"  .> getChildren .> isXText)	)
-      , ("cccdddfffggg"	, multi (isXTag .> hasNamespace "n2"  .> getChildren .> isXText)	)
+                                        -- select all text within all tags of a specific namespace
+      , ("sssaaazzzeee" , multi (isXTag .> hasNamespace "dns" .> getChildren .> isXText)        )
+      , ("bbb"          , multi (isXTag .> hasNamespace "n1"  .> getChildren .> isXText)        )
+      , ("cccdddfffggg" , multi (isXTag .> hasNamespace "n2"  .> getChildren .> isXText)        )
 
-					-- select all text within all tags with a specific local name
+                                        -- select all text within all tags with a specific local name
       , ("sssaaabbbcccdddzzz"
-			, multi (isXTag .> hasLocalPart "t"   .> getChildren .> isXText)	)
-      , ("eee"		, multi (isXTag .> hasLocalPart "e"   .> getChildren .> isXText)	)
+                        , multi (isXTag .> hasLocalPart "t"   .> getChildren .> isXText)        )
+      , ("eee"          , multi (isXTag .> hasLocalPart "e"   .> getChildren .> isXText)        )
 
-					-- select all text within all tags with a specific prefix
-      , ("bbbddd"	, multi (isXTag .> hasPrefix "x"      .> getChildren .> isXText)	)
-      , ("ccc"		, multi (isXTag .> hasPrefix "y"      .> getChildren .> isXText)	)
-      , ("zzz"		, multi (isXTag .> hasPrefix "z"      .> getChildren .> isXText)	)
+                                        -- select all text within all tags with a specific prefix
+      , ("bbbddd"       , multi (isXTag .> hasPrefix "x"      .> getChildren .> isXText)        )
+      , ("ccc"          , multi (isXTag .> hasPrefix "y"      .> getChildren .> isXText)        )
+      , ("zzz"          , multi (isXTag .> hasPrefix "z"      .> getChildren .> isXText)        )
       , ("sssaaaeeefffggg"
-			, multi (isXTag .> hasPrefix ""       .> getChildren .> isXText)	)
+                        , multi (isXTag .> hasPrefix ""       .> getChildren .> isXText)        )
 
-					-- select all attribute values of a specific namespace
-					-- !!! the default namespace is not propagated to attribute names
-      , ("z5"		, multi (isXTag .> getAttrl .> hasNamespace "dns"   .> getChildren)	)
-      , ("2z4"		, multi (isXTag .> getAttrl .> hasNamespace "n1"    .> getChildren)	)
-      , ("x3y3u4"	, multi (isXTag .> getAttrl .> hasNamespace "n2"    .> getChildren)	)
-      , ("dnsn2"	, multi (isXTag .> getAttrl .> hasLocalPart "xmlns" .> getChildren)	)
+                                        -- select all attribute values of a specific namespace
+                                        -- !!! the default namespace is not propagated to attribute names
+      , ("z5"           , multi (isXTag .> getAttrl .> hasNamespace "dns"   .> getChildren)     )
+      , ("2z4"          , multi (isXTag .> getAttrl .> hasNamespace "n1"    .> getChildren)     )
+      , ("x3y3u4"       , multi (isXTag .> getAttrl .> hasNamespace "n2"    .> getChildren)     )
+      , ("dnsn2"        , multi (isXTag .> getAttrl .> hasLocalPart "xmlns" .> getChildren)     )
 
-					-- select namespaces from all namespace declarations
+                                        -- select namespaces from all namespace declarations
       , ("dnsn1n2dnsn2n2"
-			, multi (isXTag .> getAttrl .> isNamespaceDecl .> getChildren)	)
+                        , multi (isXTag .> getAttrl .> isNamespaceDecl .> getChildren)  )
 
-					-- all default namespace declarations
-      , ("dnsn2"	, multi (isXTag .> getAttrl .> hasLocalPart "xmlns" .> getChildren)	)
+                                        -- all default namespace declarations
+      , ("dnsn2"        , multi (isXTag .> getAttrl .> hasLocalPart "xmlns" .> getChildren)     )
 
-					-- all none default namespace declarations
-      , ("n1n2dnsn2"	, multi (isXTag .> getAttrl .> hasPrefix "xmlns" .> getChildren)	)
-      , ("n1n2"		, multi (isXTag .> getAttrl .> hasPrefix "xmlns" .> hasLocalPart "x" .> getChildren)	)
-      , ("n2"		, multi (isXTag .> getAttrl .> hasPrefix "xmlns" .> hasLocalPart "y" .> getChildren)	)
-      , ("dns"		, multi (isXTag .> getAttrl .> hasPrefix "xmlns" .> hasLocalPart "z" .> getChildren)	)
+                                        -- all none default namespace declarations
+      , ("n1n2dnsn2"    , multi (isXTag .> getAttrl .> hasPrefix "xmlns" .> getChildren)        )
+      , ("n1n2"         , multi (isXTag .> getAttrl .> hasPrefix "xmlns" .> hasLocalPart "x" .> getChildren)    )
+      , ("n2"           , multi (isXTag .> getAttrl .> hasPrefix "xmlns" .> hasLocalPart "y" .> getChildren)    )
+      , ("dns"          , multi (isXTag .> getAttrl .> hasPrefix "xmlns" .> hasLocalPart "z" .> getChildren)    )
       ]
     where
-						-- the text representation of the tree
-						-- with ' instead of " for readablility of the string constants
+                                                -- the text representation of the tree
+                                                -- with ' instead of " for readablility of the string constants
     src = "<t xmlns='dns' xmlns:x='n1' xmlns:y='n2' xmlns:z='dns'>"
-	  ++ "sss"
-	  ++ "<t a='1' x:a='2'>aaa</t>"
-	  ++ "<x:t a='x1' y:a='x3'>bbb</x:t>"
-	  ++ "<y:t a='y1' y:a='y3'>ccc</y:t>"
-	  ++ "<x:t xmlns:x='n2' x:a='u4'>ddd</x:t>"
-	  ++ "<z:t x:a='z4' z:a='z5'>zzz</z:t>"
-	  ++ "<e b='42'>eee</e>"
-	  ++ "<f xmlns='n2'>fff<g>ggg</g></f>" ++
-	  "</t>"
+          ++ "sss"
+          ++ "<t a='1' x:a='2'>aaa</t>"
+          ++ "<x:t a='x1' y:a='x3'>bbb</x:t>"
+          ++ "<y:t a='y1' y:a='y3'>ccc</y:t>"
+          ++ "<x:t xmlns:x='n2' x:a='u4'>ddd</x:t>"
+          ++ "<z:t x:a='z4' z:a='z5'>zzz</z:t>"
+          ++ "<e b='42'>eee</e>"
+          ++ "<f xmlns='n2'>fff<g>ggg</g></f>" ++
+          "</t>"
 
-						-- the filter for generating the test document
+                                                -- the filter for generating the test document
     sDocFilter
-	= tag "t" [ sattr "xmlns"   "dns"	-- 4 namespace declarations
-		  , sattr "xmlns:x" "n1"
-		  , sattr "xmlns:y" "n2"
-		  , sattr "xmlns:z" "dns"
-		  ]
+        = tag "t" [ sattr "xmlns"   "dns"       -- 4 namespace declarations
+                  , sattr "xmlns:x" "n1"
+                  , sattr "xmlns:y" "n2"
+                  , sattr "xmlns:z" "dns"
+                  ]
             [ txt "sss"
-	    , tag "t" [ sattr "a"   "1"
-		      , sattr "x:a" "2" ]
-	        [ txt "aaa"
-		]
-	    , tag "x:t" [ sattr "a"   "x1"
-			, sattr "y:a" "x3"
-			]
-	        [ txt "bbb"
-		]
-	    , tag "y:t" [ sattr "a"   "y1"
-			, sattr "y:a" "y3"
-			]
-	        [ txt "ccc"
-		]
-	    , tag "x:t" [ sattr "xmlns:x" "n2"	-- redefinition of prefix x:
-			, sattr "x:a" "u4"
-			]
-	        [ txt "ddd"
-		]
-	    , tag "z:t" [ sattr "x:a" "z4"
-			, sattr "z:a" "z5"
-			]
-	        [ txt "zzz"
-		]
-	    , tag "e" [ sattr "b" "42" ]
+            , tag "t" [ sattr "a"   "1"
+                      , sattr "x:a" "2" ]
+                [ txt "aaa"
+                ]
+            , tag "x:t" [ sattr "a"   "x1"
+                        , sattr "y:a" "x3"
+                        ]
+                [ txt "bbb"
+                ]
+            , tag "y:t" [ sattr "a"   "y1"
+                        , sattr "y:a" "y3"
+                        ]
+                [ txt "ccc"
+                ]
+            , tag "x:t" [ sattr "xmlns:x" "n2"  -- redefinition of prefix x:
+                        , sattr "x:a" "u4"
+                        ]
+                [ txt "ddd"
+                ]
+            , tag "z:t" [ sattr "x:a" "z4"
+                        , sattr "z:a" "z5"
+                        ]
+                [ txt "zzz"
+                ]
+            , tag "e" [ sattr "b" "42" ]
                 [ txt "eee"
-		]
-	    , tag "f" [ sattr "xmlns" "n2"	-- redefinition of default namespace
-		      ]
+                ]
+            , tag "f" [ sattr "xmlns" "n2"      -- redefinition of default namespace
+                      ]
                 [ txt "fff"
-		, tag "g" [ ]
-		    [ txt "ggg" ]
-		]
-	    ]
-						-- create document and propagate namespaces
+                , tag "g" [ ]
+                    [ txt "ggg" ]
+                ]
+            ]
+                                                -- create document and propagate namespaces
     simpleDoc = head $ (sDocFilter .> propagateNamespaces) undefined
 
 -- |
@@ -439,40 +439,40 @@ namespaceTests
 --
 -- see also: 'testStateFilter'
 
-parseTests	:: Test
+parseTests      :: Test
 parseTests
     = TestLabel "minimal parser tests" $
-      TestList 
-      [ testStateFilter "</><x/><//>"	parseXmlDoc				mini	-- the tree inclusive root node
-      , testStateFilter "<x/>"	(parseXmlDoc .>> liftMf getChildren)		mini	-- only the content
-      , testStateFilter "<x/>"	(parseXmlDoc .>> liftMf getChildren)		min2	-- same content
-      , testStateFilter ""	(parseXmlDoc .>> liftMf getChildren)		minErr	-- syntax error: content empty
-      , testStateFilter errr	(parseXmlDoc .>> liftMf (getValue a_status))	minErr	-- syntax error reported in a_status
+      TestList
+      [ testStateFilter "</><x/><//>"   parseXmlDoc                             mini    -- the tree inclusive root node
+      , testStateFilter "<x/>"  (parseXmlDoc .>> liftMf getChildren)            mini    -- only the content
+      , testStateFilter "<x/>"  (parseXmlDoc .>> liftMf getChildren)            min2    -- same content
+      , testStateFilter ""      (parseXmlDoc .>> liftMf getChildren)            minErr  -- syntax error: content empty
+      , testStateFilter errr    (parseXmlDoc .>> liftMf (getValue a_status))    minErr  -- syntax error reported in a_status
       ]
     where
-    errr	= show c_err
-    mini	= mkMinimalDoc "<x/>"
-    min2	= mkMinimalDoc "<x></x>"
-    minErr	= mkMinimalDoc "<x>"
+    errr        = show c_err
+    mini        = mkMinimalDoc "<x/>"
+    min2        = mkMinimalDoc "<x></x>"
+    minErr      = mkMinimalDoc "<x>"
 
 
 -- |
 -- simple external file containing one tag
 
-mini1		:: XmlTree
-mini1		= newDocument "mini1.xml"		-- test documents
+mini1           :: XmlTree
+mini1           = newDocument "mini1.xml"               -- test documents
 
 -- |
 -- simple external file containing one tag
 
-mini2		:: XmlTree
-mini2		= newDocument "mini2.xml"
+mini2           :: XmlTree
+mini2           = newDocument "mini2.xml"
 
 -- |
 -- simple not existing external file
 
-notThere	:: XmlTree
-notThere	= newDocument "notThere.xml"		-- does not exist
+notThere        :: XmlTree
+notThere        = newDocument "notThere.xml"            -- does not exist
 
 -- |
 -- These test check the access to external files
@@ -480,76 +480,76 @@ notThere	= newDocument "notThere.xml"		-- does not exist
 -- Some test issue tree like trace output of the documents read
 -- to show the internal structure and nesting
 
-inputTests	:: Test
+inputTests      :: Test
 inputTests
     = TestLabel "input tests" $
       TestList
       [ testStateFilter "mini1.xml"
-	                        ( putXmlTree .>>
-				  liftMf (getValue a_source)
-				)					mini1
-      , testStateFilter ok	( liftMf (getValue a_status)
-				)					mini1
-      , testStateFilter ""	( liftMf getChildren
-				)					mini1
-      , testStateFilter "<x/>"	( getXmlContents .>>
-				  putXmlTree .>>
-				  liftMf getChildren
-				)					mini1
-      , testStateFilter ok	( getXmlContents .>>
-				  liftMf (getValue a_status)
-				)					mini1
-      , testStateFilter "4"	( getXmlContents .>>
-				  liftMf getContentLength .>>
-				  putXmlTree .>>
-				  liftMf (getValue a_contentLength)
-				)					mini1
-      , testStateFilter ok	( getXmlContents .>>
-				  liftMf (getValue a_status)
-				)					mini2
-      , testStateFilter ""	( getXmlContents .>>
-				  putXmlTree .>>
-				  liftMf getChildren
-				)					notThere
-      , testStateFilter fat	( getXmlContents .>>
-				  liftMf (getValue a_status)
-				)					notThere
+                                ( putXmlTree .>>
+                                  liftMf (getValue a_source)
+                                )                                       mini1
+      , testStateFilter ok      ( liftMf (getValue a_status)
+                                )                                       mini1
+      , testStateFilter ""      ( liftMf getChildren
+                                )                                       mini1
+      , testStateFilter "<x/>"  ( getXmlContents .>>
+                                  putXmlTree .>>
+                                  liftMf getChildren
+                                )                                       mini1
+      , testStateFilter ok      ( getXmlContents .>>
+                                  liftMf (getValue a_status)
+                                )                                       mini1
+      , testStateFilter "4"     ( getXmlContents .>>
+                                  liftMf getContentLength .>>
+                                  putXmlTree .>>
+                                  liftMf (getValue a_contentLength)
+                                )                                       mini1
+      , testStateFilter ok      ( getXmlContents .>>
+                                  liftMf (getValue a_status)
+                                )                                       mini2
+      , testStateFilter ""      ( getXmlContents .>>
+                                  putXmlTree .>>
+                                  liftMf getChildren
+                                )                                       notThere
+      , testStateFilter fat     ( getXmlContents .>>
+                                  liftMf (getValue a_status)
+                                )                                       notThere
       ]
     where
-    ok	= show c_ok
-    fat	= show c_fatal
+    ok  = show c_ok
+    fat = show c_fatal
 
 -- |
 -- A few tests for removing parts of a document tree.
 -- As input tree the document in file mini2.xml is used.
 
-removeTests	:: Test
+removeTests     :: Test
 removeTests
     = TestLabel "document transformation tests" $
       TestList
-      [ testEditFilter allText	getAllText				mini2
-      , testEditFilter allData  (removeAllWhiteSpace .> getAllText)	mini2
-      , testEditFilter allImp	(removeIgnorableData .> getAllText)	mini2
-      , testEditFilter allDat	(removeMeta .> getAllText)		mini2
+      [ testEditFilter allText  getAllText                              mini2
+      , testEditFilter allData  (removeAllWhiteSpace .> getAllText)     mini2
+      , testEditFilter allImp   (removeIgnorableData .> getAllText)     mini2
+      , testEditFilter allDat   (removeMeta .> getAllText)              mini2
       ]
     where
-    getAllText			= deep isXText
-    containsUnknownOrIgnore	= getChildren .> ( isText "unknown"
-						   +++
-						   isText "ignore"
-						 )
-    removeIgnorableData		= processTopDown ( none
-						   `when`
-						   ( isTag "data" .> containsUnknownOrIgnore )
-						 )
-    removeMeta			= processTopDown ( none
-						   `when`
-						   ( isTag "data" .> hasValue "class" ( == "meta" ) )
-						 )
-    allText	= " ignore unknown important important "
-    allData	= "ignoreunknownimportantimportant"
-    allImp	= "   important important "
-    allDat	= " ignore  important  "
+    getAllText                  = deep isXText
+    containsUnknownOrIgnore     = getChildren .> ( isText "unknown"
+                                                   +++
+                                                   isText "ignore"
+                                                 )
+    removeIgnorableData         = processTopDown ( none
+                                                   `when`
+                                                   ( isTag "data" .> containsUnknownOrIgnore )
+                                                 )
+    removeMeta                  = processTopDown ( none
+                                                   `when`
+                                                   ( isTag "data" .> hasValue "class" ( == "meta" ) )
+                                                 )
+    allText     = " ignore unknown important important "
+    allData     = "ignoreunknownimportantimportant"
+    allImp      = "   important important "
+    allDat      = " ignore  important  "
 
 
 ys :: XmlTree
@@ -568,28 +568,28 @@ ys = head $
            ]
            [ txt "QMwcAG ..."
            ]
-	 ]
+         ]
        ],
        stag "s:Body"
        [ stag "eg:OrderCurrency"
          [ stag "eg:Name"
            [ txt "John Smith" ],
-	   tag "eg:Amount"
+           tag "eg:Amount"
            [ sattr "Currency" "'USD'" ]
-	   [ txt "1000" ],
-	   tag "eg:CreditCard"
+           [ txt "1000" ],
+           tag "eg:CreditCard"
            [ sattr "Limit" "'5000'",
-	     sattr "Currency" "'GBP'"
-	   ]
-	   [ stag "xenc:EncryptedData"
+             sattr "Currency" "'GBP'"
+           ]
+           [ stag "xenc:EncryptedData"
              [ atag "xenc:EncryptionMethod"
                [ sattr "Algorithm" "http://www.w3.org/2001/04/xmlenc#tripledes-cbc" ]
              ],
-	     stag "xenc:CipherData"
+             stag "xenc:CipherData"
              [ stag "xenc:CipherValue"
                [ txt "r5KipsDV ..." ]
              ]
-	   ]
+           ]
          ]
        ]
      ]
@@ -598,16 +598,16 @@ ys = head $
      $ undefined
 
 
-main	:: IO ()
+main    :: IO ()
 main
     = do
       c <- runTestTT allTests
       putStrLn $ show c
       let errs = errors c
-	  fails = failures c
+          fails = failures c
       System.exitWith (codeGet errs fails)
 
-codeGet	:: Int -> Int -> ExitCode
+codeGet :: Int -> Int -> ExitCode
 codeGet errs fails
     | fails > 0       = ExitFailure 2
     | errs > 0        = ExitFailure 1

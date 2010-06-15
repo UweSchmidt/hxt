@@ -27,17 +27,17 @@ import Data.Word (Word8)
 
 -- | calls 'Data.Char.UTF8.decode' for parsing and decoding UTF-8
 
-decodeUtf8	:: String -> (String, [String])
+decodeUtf8      :: String -> (String, [String])
 decodeUtf8 str
     = (res, map (uncurry toErrStr) errs)
     where
     (res, errs) = UTF8.decode . stringToByteString $ str
 
-decodeUtf8IgnoreErrors	:: String -> String
+decodeUtf8IgnoreErrors  :: String -> String
 decodeUtf8IgnoreErrors
     = fst . decodeUtf8
 
-decodeUtf8EmbedErrors	:: String -> [Either String Char]
+decodeUtf8EmbedErrors   :: String -> [Either String Char]
 decodeUtf8EmbedErrors str
     = map (either (Left . uncurry toErrStr) Right) $
       UTF8.decodeEmbedErrors $ stringToByteString $ str
@@ -47,6 +47,6 @@ stringToByteString = map (toEnum . fromEnum)
 
 toErrStr :: UTF8.Error -> Int -> String
 toErrStr err pos
-	= " at input position " ++ show pos ++ ": " ++ show err
+        = " at input position " ++ show pos ++ ": " ++ show err
 
 -- ------------------------------------------------------------

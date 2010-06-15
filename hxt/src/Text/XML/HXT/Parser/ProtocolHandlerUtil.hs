@@ -1,6 +1,6 @@
 -- ------------------------------------------------------------
 
-{- 
+{-
    Module     : Text.XML.HXT.Parser.ProtocolHandlerUtil
    Copyright  : Copyright (C) 2008 Uwe Schmidt
    License    : MIT
@@ -23,9 +23,9 @@ where
 
 import Text.XML.HXT.DOM.XmlKeywords
 
-import Text.XML.HXT.DOM.Util	( stringToUpper
-				, stringTrim
-				)
+import Text.XML.HXT.DOM.Util    ( stringToUpper
+                                , stringTrim
+                                )
 
 import qualified Text.ParserCombinators.Parsec as P
 
@@ -38,27 +38,27 @@ import qualified Text.ParserCombinators.Parsec as P
 -- Sometimes the server deliver the charset spec in quotes
 -- these are removed
 
-parseContentType	:: P.Parser [(String, String)]
+parseContentType        :: P.Parser [(String, String)]
 parseContentType
     = P.try ( do
-	      mimeType <- ( do
-			    mt <- P.many (P.noneOf ";")
-			    rtMT mt
-			  )
-	      charset  <- ( do
-			    _ <- P.char ';'
-			    _ <- P.many  (P.oneOf " \t'")
-			    _ <- P.string "charset="
-			    _ <- P.option '"' (P.oneOf "\"'")
-			    cs <- P.many1 (P.noneOf "\"'")
-			    return [ (transferEncoding, stringToUpper cs) ]
-			  )
-	      return (mimeType ++ charset)
-	    )
+              mimeType <- ( do
+                            mt <- P.many (P.noneOf ";")
+                            rtMT mt
+                          )
+              charset  <- ( do
+                            _ <- P.char ';'
+                            _ <- P.many  (P.oneOf " \t'")
+                            _ <- P.string "charset="
+                            _ <- P.option '"' (P.oneOf "\"'")
+                            cs <- P.many1 (P.noneOf "\"'")
+                            return [ (transferEncoding, stringToUpper cs) ]
+                          )
+              return (mimeType ++ charset)
+            )
       P.<|>
       ( do
-	mt <- P.many (P.noneOf ";")
-	rtMT mt
+        mt <- P.many (P.noneOf ";")
+        rtMT mt
       )
     where
     rtMT mt = return [ (transferMimeType, stringTrim mt) ]

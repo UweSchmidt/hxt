@@ -133,14 +133,14 @@
       <ref name="grammar"/>
     </choice>
   </define>
-  
+
   <define name="grammar">
     <element name="grammar">
       <ref name="common-atts"/>
       <ref name="grammar-content"/>
     </element>
   </define>
-  
+
   <define name="grammar-content">
     <interleave>
       <ref name="other"/>

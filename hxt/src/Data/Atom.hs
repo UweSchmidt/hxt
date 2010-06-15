@@ -54,9 +54,9 @@
 
 module Data.Atom (
    -- * Atom objects
-   Atom,		-- instance (Eq, Ord, Read, Show)
-   newAtom, 		-- :: String -> Atom
-   share		-- :: String -> String
+   Atom,                -- instance (Eq, Ord, Read, Show)
+   newAtom,             -- :: String -> Atom
+   share                -- :: String -> String
  ) where
 
 import           Control.Concurrent.MVar
@@ -64,75 +64,75 @@ import           Control.DeepSeq
 
 import           Data.ByteString.Internal       ( toForeignPtr, c2w, w2c )
 import           Data.ByteString                ( ByteString, pack, unpack )
-import qualified Data.Map                 	as M
+import qualified Data.Map                       as M
 import           Data.Typeable
 
 import           System.IO.Unsafe               ( unsafePerformIO )
 
-import           Text.XML.HXT.DOM.Unicode	( unicodeToUtf8 )
-import           Text.XML.HXT.DOM.UTF8Decoding	( decodeUtf8 )
+import           Text.XML.HXT.DOM.Unicode       ( unicodeToUtf8 )
+import           Text.XML.HXT.DOM.UTF8Decoding  ( decodeUtf8 )
 
 -- ------------------------------------------------------------
 
-type Atoms	= M.Map ByteString ByteString
+type Atoms      = M.Map ByteString ByteString
 
-newtype Atom	= A { bs :: ByteString }
+newtype Atom    = A { bs :: ByteString }
                   deriving (Typeable)
 
 -- ------------------------------------------------------------
 
 -- | the internal cache for the strings
 
-theAtoms	:: MVar Atoms
-theAtoms	= unsafePerformIO (newMVar M.empty)
+theAtoms        :: MVar Atoms
+theAtoms        = unsafePerformIO (newMVar M.empty)
 {-# NOINLINE theAtoms #-}
 
 -- | insert a bytestring into the atom cache
 
-insertAtom	:: ByteString -> Atoms -> (Atoms, Atom)
-insertAtom s m	= maybe (M.insert s s m, A s)
+insertAtom      :: ByteString -> Atoms -> (Atoms, Atom)
+insertAtom s m  = maybe (M.insert s s m, A s)
                         (\ s' -> (m, A s'))
-		  .
-		  M.lookup s $ m
+                  .
+                  M.lookup s $ m
 
 -- | creation of an @Atom@ from a @String@
 
-newAtom		:: String -> Atom
-newAtom		= unsafePerformIO . newAtom'
+newAtom         :: String -> Atom
+newAtom         = unsafePerformIO . newAtom'
 {-# NOINLINE newAtom #-}
 
 -- | The internal operation running in the IO monad
-newAtom'	:: String -> IO Atom
-newAtom' s	= do
-		  m <- takeMVar theAtoms
-		  let (m', a) = insertAtom (pack. map c2w . unicodeToUtf8 $ s) m
-		  putMVar theAtoms m'
-		  return a
+newAtom'        :: String -> IO Atom
+newAtom' s      = do
+                  m <- takeMVar theAtoms
+                  let (m', a) = insertAtom (pack. map c2w . unicodeToUtf8 $ s) m
+                  putMVar theAtoms m'
+                  return a
 
 -- | Insert a @String@ into the atom cache and convert the atom back into a @String@.
 --
 -- locically @share == id@ holds, but internally equal strings share the same memory.
 
-share		:: String -> String
-share		= show . newAtom
+share           :: String -> String
+share           = show . newAtom
 
 instance Eq Atom where
-    a1 == a2	= fp1 == fp2
-	          where
-		  (fp1, _, _) = toForeignPtr . bs $ a1
-		  (fp2, _, _) = toForeignPtr . bs $ a2
+    a1 == a2    = fp1 == fp2
+                  where
+                  (fp1, _, _) = toForeignPtr . bs $ a1
+                  (fp2, _, _) = toForeignPtr . bs $ a2
 
 instance Ord Atom where
     compare a1 a2
-	        | a1 == a2	= EQ
-		| otherwise     = compare (bs a1) (bs a2)
+                | a1 == a2      = EQ
+                | otherwise     = compare (bs a1) (bs a2)
 
 instance Read Atom where
     readsPrec p str = [ (newAtom x, y) | (x, y) <- readsPrec p str ]
 
 instance Show Atom where
-    show	= fst . decodeUtf8 . map w2c . unpack . bs
-    -- show	= show . toForeignPtr . bs			-- for debug only
+    show        = fst . decodeUtf8 . map w2c . unpack . bs
+    -- show     = show . toForeignPtr . bs                      -- for debug only
 
 instance NFData Atom where
 

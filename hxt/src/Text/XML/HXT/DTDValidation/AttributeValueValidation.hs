@@ -56,21 +56,21 @@ import Text.XML.HXT.DTDValidation.TypeDefs
 checkAttributeValue :: XmlTrees -> XmlTree -> XmlArrow
 checkAttributeValue dtdPart attrDecl
     | isDTDAttlistNode attrDecl
-	= choiceA
-	  [ isElem       :-> ( checkAttrVal $< getAttrValue attrName )
-	  , isDTDAttlist :-> ( checkAttrVal $< (getDTDAttrl >>^ dtd_default) )
-	  , this	     :-> none
-	  ]
+        = choiceA
+          [ isElem       :-> ( checkAttrVal $< getAttrValue attrName )
+          , isDTDAttlist :-> ( checkAttrVal $< (getDTDAttrl >>^ dtd_default) )
+          , this             :-> none
+          ]
     | otherwise
-	= none
+        = none
       where
-      al	= getDTDAttributes attrDecl
-      attrName	= dtd_value al
+      al        = getDTDAttributes attrDecl
+      attrName  = dtd_value al
       attrType  = dtd_type  al
       checkAttrVal attrValue
-	  = checkValue attrType dtdPart normalizedVal attrDecl
-	    where
-	    normalizedVal = normalizeAttributeValue (Just attrDecl) attrValue
+          = checkValue attrType dtdPart normalizedVal attrDecl
+            where
+            normalizedVal = normalizeAttributeValue (Just attrDecl) attrValue
 
 -- |
 -- Dispatches the attibute check by the attribute type.
@@ -89,17 +89,17 @@ checkAttributeValue dtdPart attrDecl
 
 checkValue :: String -> XmlTrees -> String -> XmlTree -> XmlArrow
 checkValue typ dtdPart attrValue attrDecl
-	| typ == k_cdata	= none
-	| typ == k_enumeration	= checkValueEnumeration attrDecl attrValue
-	| typ == k_entity	= checkValueEntity dtdPart attrDecl attrValue
-	| typ == k_entities	= checkValueEntities dtdPart attrDecl attrValue
-	| typ == k_id		= checkValueId attrDecl attrValue
-	| typ == k_idref	= checkValueIdref attrDecl attrValue
-	| typ == k_idrefs	= checkValueIdrefs attrDecl attrValue
-	| typ == k_nmtoken	= checkValueNmtoken attrDecl attrValue
-	| typ == k_nmtokens	= checkValueNmtokens attrDecl attrValue
-	| typ == k_notation	= checkValueEnumeration attrDecl attrValue
-	| otherwise		= error ("Attribute type " ++ show typ ++ " unknown.")
+        | typ == k_cdata        = none
+        | typ == k_enumeration  = checkValueEnumeration attrDecl attrValue
+        | typ == k_entity       = checkValueEntity dtdPart attrDecl attrValue
+        | typ == k_entities     = checkValueEntities dtdPart attrDecl attrValue
+        | typ == k_id           = checkValueId attrDecl attrValue
+        | typ == k_idref        = checkValueIdref attrDecl attrValue
+        | typ == k_idrefs       = checkValueIdrefs attrDecl attrValue
+        | typ == k_nmtoken      = checkValueNmtoken attrDecl attrValue
+        | typ == k_nmtokens     = checkValueNmtokens attrDecl attrValue
+        | typ == k_notation     = checkValueEnumeration attrDecl attrValue
+        | otherwise             = error ("Attribute type " ++ show typ ++ " unknown.")
 
 -- |
 -- Checks the value of Enumeration attribute types. (3.3.1 \/ p.27 in Spec)
@@ -113,12 +113,12 @@ checkValueEnumeration attrDecl attrValue
     | isDTDAttlistNode attrDecl
       &&
       attrValue `notElem` enumVals
-	= err ( "Attribute " ++ show (dtd_value al) ++ " for element " ++ show (dtd_name al) ++
+        = err ( "Attribute " ++ show (dtd_value al) ++ " for element " ++ show (dtd_name al) ++
                 " must have a value from list "++ show enumVals {- ++ " but has value " ++ show attrValue-} ++ ".")
     | otherwise
-	= none
+        = none
       where
-      al	= getDTDAttributes attrDecl
+      al        = getDTDAttributes attrDecl
 
       enumVals :: [String]
       enumVals = map (dtd_name . getDTDAttributes) $ (runLA getChildren attrDecl)
@@ -138,13 +138,13 @@ checkValueEntity dtdPart attrDecl attrValue
     | isDTDAttlistNode attrDecl
       &&
       attrValue `notElem` upEntities
-	= err ( "Entity " ++ show attrValue ++ " of attribute " ++ show (dtd_value al) ++
+        = err ( "Entity " ++ show attrValue ++ " of attribute " ++ show (dtd_value al) ++
                 " for element " ++ show (dtd_name al) ++ " is not unparsed. " ++
                 "The following unparsed entities exist: " ++ show upEntities ++ ".")
     | otherwise
-	= none
+        = none
       where
-      al	= getDTDAttributes attrDecl
+      al        = getDTDAttributes attrDecl
 
       upEntities :: [String]
       upEntities = map (dtd_name . getDTDAttributes) (isUnparsedEntity $$ dtdPart)
@@ -162,14 +162,14 @@ checkValueEntity dtdPart attrDecl attrValue
 checkValueEntities ::XmlTrees -> XmlTree -> String -> XmlArrow
 checkValueEntities dtdPart attrDecl attrValue
     | isDTDAttlistNode attrDecl
-	= if null valueList
-	  then err ("Attribute " ++ show (dtd_value al) ++ " of element " ++
+        = if null valueList
+          then err ("Attribute " ++ show (dtd_value al) ++ " of element " ++
                     show (dtd_name al) ++ " must be one or more names.")
           else catA . map (checkValueEntity dtdPart attrDecl) $ valueList
     | otherwise
-	= none
+        = none
       where
-      al	= getDTDAttributes attrDecl
+      al        = getDTDAttributes attrDecl
       valueList = words attrValue
 
 -- |
@@ -182,22 +182,22 @@ checkValueEntities dtdPart attrDecl attrValue
 checkValueNmtoken :: XmlTree -> String -> XmlArrow
 checkValueNmtoken attrDecl attrValue
     | isDTDAttlistNode attrDecl
-	= constA attrValue >>> checkNmtoken
+        = constA attrValue >>> checkNmtoken
     | otherwise
-	= none
+        = none
       where
-      al	= getDTDAttributes attrDecl
+      al        = getDTDAttributes attrDecl
       checkNmtoken
-	  = mkText >>> arrL (parseNMToken "")
-	    >>>
-	    isError
-	    >>>
-	    getErrorMsg
-	    >>>
-	    arr (\ s -> ( "Attribute value " ++ show attrValue ++ " of attribute " ++ show (dtd_value al) ++
-			  " for element " ++ show (dtd_name al) ++ " must be a name token, "++ (lines s) !! 1 ++".") )
+          = mkText >>> arrL (parseNMToken "")
             >>>
-	    mkError c_err
+            isError
+            >>>
+            getErrorMsg
+            >>>
+            arr (\ s -> ( "Attribute value " ++ show attrValue ++ " of attribute " ++ show (dtd_value al) ++
+                          " for element " ++ show (dtd_name al) ++ " must be a name token, "++ (lines s) !! 1 ++".") )
+            >>>
+            mkError c_err
 
 -- |
 -- Checks the value of NMTOKENS attribute types. (3.3.1 \/ p.26 in Spec)
@@ -209,14 +209,14 @@ checkValueNmtoken attrDecl attrValue
 checkValueNmtokens :: XmlTree -> String -> XmlArrow
 checkValueNmtokens attrDecl attrValue
     | isDTDAttlistNode attrDecl
-	= if null valueList
-	  then err ( "Attribute "++ show (dtd_value al) ++" of element " ++
+        = if null valueList
+          then err ( "Attribute "++ show (dtd_value al) ++" of element " ++
                      show (dtd_name al) ++ " must be one or more name tokens.")
           else catA . map (checkValueNmtoken attrDecl) $ valueList
     | otherwise
-	= none
+        = none
       where
-      al	= getDTDAttributes attrDecl
+      al        = getDTDAttributes attrDecl
       valueList = words attrValue
 
 -- |
@@ -272,22 +272,22 @@ checkValueIdrefs attrDecl attrValue
 checkForName ::  String -> XmlTree -> String -> XmlArrow
 checkForName msg attrDecl attrValue
     | isDTDAttlistNode attrDecl
-	= constA attrValue >>> checkName
+        = constA attrValue >>> checkName
     | otherwise
-	= none
+        = none
     where
-    al	= getDTDAttributes attrDecl
+    al  = getDTDAttributes attrDecl
     checkName
-	= mkText >>> arrL (parseName "")
-	  >>>
-	  isError
-	  >>>
-	  getErrorMsg
-	  >>>
-	  arr (\s -> ( msg ++ " " ++ show attrValue ++" of attribute " ++ show (dtd_value al) ++
-		       " for element "++ show (dtd_name al) ++" must be a name, " ++ (lines s) !! 1 ++ ".") )
+        = mkText >>> arrL (parseName "")
           >>>
-	  mkError c_err
+          isError
+          >>>
+          getErrorMsg
+          >>>
+          arr (\s -> ( msg ++ " " ++ show attrValue ++" of attribute " ++ show (dtd_value al) ++
+                       " for element "++ show (dtd_name al) ++" must be a name, " ++ (lines s) !! 1 ++ ".") )
+          >>>
+          mkError c_err
 
 -- -----------------------------------------------------------------------------
 
@@ -305,13 +305,13 @@ normalizeAttributeValue :: Maybe XmlTree -> String -> String
 normalizeAttributeValue (Just attrDecl) value
     = normalizeAttribute attrType
       where
-      al	     = getDTDAttributes attrDecl
+      al             = getDTDAttributes attrDecl
       attrType = dtd_type al
 
       normalizeAttribute :: String -> String
       normalizeAttribute typ
-          | typ == k_cdata	= cdataNormalization value
-          | otherwise		= otherNormalization value
+          | typ == k_cdata      = cdataNormalization value
+          | otherwise           = otherNormalization value
 
 -- Attribute not declared in DTD, normalization as CDATA
 normalizeAttributeValue Nothing value

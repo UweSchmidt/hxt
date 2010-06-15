@@ -114,7 +114,7 @@ webpage		: tarball
 # make a clean installation from distribution tar
 
 PROD_DIR	= ~/tmp
-INSTALL		= echo now run: "(" cd $(PROD_DIR)/$(DIST) ";" 
+INSTALL		= echo now run: "(" cd $(PROD_DIR)/$(DIST) ";"
 INSTEND		= ")"
 
 distbuild	: tarball

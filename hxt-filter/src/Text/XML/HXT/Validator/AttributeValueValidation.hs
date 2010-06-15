@@ -76,17 +76,17 @@ checkAttributeValue _ nd n
 
 checkValue :: String -> XmlTrees -> String -> XmlTree -> XmlFilter
 checkValue typ dtdPart attrValue attrDecl
-	| typ == k_cdata	= none
-	| typ == k_enumeration	= checkValueEnumeration attrDecl attrValue
-	| typ == k_entity	= checkValueEntity dtdPart attrDecl attrValue
-	| typ == k_entities	= checkValueEntities dtdPart attrDecl attrValue
-	| typ == k_id		= checkValueId attrDecl attrValue
-	| typ == k_idref	= checkValueIdref attrDecl attrValue
-	| typ == k_idrefs	= checkValueIdrefs attrDecl attrValue
-	| typ == k_nmtoken	= checkValueNmtoken attrDecl attrValue
-	| typ == k_nmtokens	= checkValueNmtokens attrDecl attrValue
-	| typ == k_notation	= checkValueEnumeration attrDecl attrValue
-	| otherwise		= error ("Attribute type " ++ show typ ++ " unknown.")
+        | typ == k_cdata        = none
+        | typ == k_enumeration  = checkValueEnumeration attrDecl attrValue
+        | typ == k_entity       = checkValueEntity dtdPart attrDecl attrValue
+        | typ == k_entities     = checkValueEntities dtdPart attrDecl attrValue
+        | typ == k_id           = checkValueId attrDecl attrValue
+        | typ == k_idref        = checkValueIdref attrDecl attrValue
+        | typ == k_idrefs       = checkValueIdrefs attrDecl attrValue
+        | typ == k_nmtoken      = checkValueNmtoken attrDecl attrValue
+        | typ == k_nmtokens     = checkValueNmtokens attrDecl attrValue
+        | typ == k_notation     = checkValueEnumeration attrDecl attrValue
+        | otherwise             = error ("Attribute type " ++ show typ ++ " unknown.")
 
 -- |
 -- Checks the value of Enumeration attribute types. (3.3.1 \/ p.27 in Spec)
@@ -183,7 +183,7 @@ checkValueNmtoken (NTree (XDTD ATTLIST al) _) attrValue
       checkNmtoken :: XmlTrees -> XmlFilter
       checkNmtoken ((NTree (XError _ s) _):_)
           = err ("Attribute value " ++ show attrValue ++ " of attribute " ++ show (getAttrName al) ++
-	         " for element " ++ show (getElemName al) ++ " must be a name token, "++ (lines s) !! 1 ++".")
+                 " for element " ++ show (getElemName al) ++ " must be a name token, "++ (lines s) !! 1 ++".")
 
       checkNmtoken _ = none
 
@@ -272,7 +272,7 @@ checkForName msg (NTree (XDTD ATTLIST al) _) attrValue
       checkName :: XmlTrees -> XmlFilter
       checkName ((NTree (XError _ s) _):_)
           = err (msg ++ " "++ show attrValue ++" of attribute " ++ show (getAttrName al) ++
-	    " for element "++ show (getElemName al) ++" must be a name, " ++ (lines s) !! 1 ++ ".")
+            " for element "++ show (getElemName al) ++" must be a name, " ++ (lines s) !! 1 ++ ".")
 
       checkName _ = none
 
@@ -325,8 +325,8 @@ normalizeAttributeValue (Just (NTree (XDTD ATTLIST al) _)) value
 
       normalizeAttribute :: String -> String
       normalizeAttribute typ
-          | typ == k_cdata	= cdataNormalization value
-          | otherwise		= otherNormalization value
+          | typ == k_cdata      = cdataNormalization value
+          | otherwise           = otherNormalization value
 
 
 -- Attribute not declared in DTD, normalization as CDATA

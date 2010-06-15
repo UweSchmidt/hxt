@@ -1,17 +1,27 @@
 -- arch-tag: Haskell XML Toolbox main description file
-name: hxt
-version: 8.5.2
-license: OtherLicense
-license-file: LICENCE
-maintainer: Uwe Schmidt <uwe@fh-wedel.de>
-stability: stable
-category: XML
-synopsis: A collection of tools for processing XML with Haskell. 
-description:  The Haskell XML Toolbox bases on the ideas of HaXml and HXML, but introduces a more general approach for processing XML with Haskell. The Haskell XML Toolbox uses a generic data model for representing XML documents, including the DTD subset and the document subset, in Haskell. It contains a validating XML parser, a HTML parser, namespace support, an XPath expression evaluator, an XSLT library, a RelaxNG schema validator and funtions for serialization and deserialization of user defined data. The library make extensive use of the arrow approach for processing XML. Since version 8.5 XPath and XSLT have been moved to separate packages hxt-xpath and hxt-xslt.
-homepage: http://www.fh-wedel.de/~si/HXmlToolbox/index.html
-copyright: Copyright (c) 2005-2010 Uwe Schmidt
-build-type: Simple
-cabal-version: >=1.6
+Name:           hxt
+Version:        8.5.3
+Synopsis:       A collection of tools for processing XML with Haskell. 
+Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
+                but introduces a more general approach for processing XML with Haskell.
+                The Haskell XML Toolbox uses a generic data model for representing XML documents,
+                including the DTD subset and the document subset, in Haskell.
+                It contains a validating XML parser, a HTML parser, namespace support,
+                an XPath expression evaluator, an XSLT library, a RelaxNG schema validator
+                and funtions for serialization and deserialization of user defined data.
+                The library makes extensive use of the arrow approach for processing XML.
+                Since version 8.5 XPath and XSLT have been moved to separate packages hxt-xpath and hxt-xslt,
+                serialisation is in package hxt-binary
+License:        OtherLicense
+License-file:   LICENSE
+Author:         Uwe Schmidt, Martin Schmidt, Torben Kuseler
+Maintainer:     Uwe Schmidt <uwe@fh-wedel.de>
+Stability:      Stable
+Category:       XML
+Homepage:       http://www.fh-wedel.de/~si/HXmlToolbox/index.html
+Copyright:      Copyright (c) 2005-2010 Uwe Schmidt
+Build-type:     Simple
+Cabal-version:  >=1.6
 
 extra-source-files:
  examples/arrows/absurls/AbsURIs.hs

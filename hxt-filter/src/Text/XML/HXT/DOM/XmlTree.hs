@@ -11,9 +11,9 @@ module Text.XML.HXT.DOM.XmlTree
 
 where
 
-import Text.XML.HXT.DOM.XmlTreeTypes		-- NTree and XNode types
-import Text.XML.HXT.DOM.XmlKeywords		-- keywords for DTD
-import Text.XML.HXT.DOM.XmlTreeFunctions	-- tree constructors and selector
-import Text.XML.HXT.DOM.XmlTreeFilter		-- basic filter
+import Text.XML.HXT.DOM.XmlTreeTypes            -- NTree and XNode types
+import Text.XML.HXT.DOM.XmlKeywords             -- keywords for DTD
+import Text.XML.HXT.DOM.XmlTreeFunctions        -- tree constructors and selector
+import Text.XML.HXT.DOM.XmlTreeFilter           -- basic filter
 
 

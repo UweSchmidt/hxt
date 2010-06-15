@@ -13,80 +13,80 @@ import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
 import Control.Arrow.ListArrow
 
-import Text.XML.HXT.Parser.XmlEntities	( xmlEntities   )
+import Text.XML.HXT.Parser.XmlEntities  ( xmlEntities   )
 import Text.XML.HXT.Parser.XhtmlEntities( xhtmlEntities )
 
 import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlArrow
 
-import qualified Text.XML.HXT.Parser.TagSoup		 as TS
+import qualified Text.XML.HXT.Parser.TagSoup             as TS
 import qualified Text.XML.HXT.Parser.HtmlParsec          as HP
 import qualified Text.XML.HXT.Parser.XmlParsec           as XP
-import qualified Text.XML.HXT.Parser.XmlDTDParser	 as DP
+import qualified Text.XML.HXT.Parser.XmlDTDParser        as DP
 import qualified Text.XML.HXT.DTDValidation.Validation   as VA
 
 -- ------------------------------------------------------------
 
-parseXmlDoc			:: ArrowXml a => a (String, String) XmlTree
-parseXmlDoc			=  arr2L XP.parseXmlDocument
+parseXmlDoc                     :: ArrowXml a => a (String, String) XmlTree
+parseXmlDoc                     =  arr2L XP.parseXmlDocument
 
-parseXmlDTDPart			:: ArrowXml a => a (String, XmlTree) XmlTree
-parseXmlDTDPart			=  arr2L XP.parseXmlDTDPart
+parseXmlDTDPart                 :: ArrowXml a => a (String, XmlTree) XmlTree
+parseXmlDTDPart                 =  arr2L XP.parseXmlDTDPart
 
-parseXmlContent			:: ArrowXml a => a String XmlTree
-parseXmlContent			=  arrL XP.xread
+parseXmlContent                 :: ArrowXml a => a String XmlTree
+parseXmlContent                 =  arrL XP.xread
 
 parseXmlEntityEncodingSpec
   , parseXmlDocEncodingSpec
-  , removeEncodingSpec		:: ArrowXml a => a XmlTree XmlTree
+  , removeEncodingSpec          :: ArrowXml a => a XmlTree XmlTree
 
-parseXmlDocEncodingSpec		=  arrL XP.parseXmlDocEncodingSpec
-parseXmlEntityEncodingSpec	=  arrL XP.parseXmlEntityEncodingSpec
+parseXmlDocEncodingSpec         =  arrL XP.parseXmlDocEncodingSpec
+parseXmlEntityEncodingSpec      =  arrL XP.parseXmlEntityEncodingSpec
 
-removeEncodingSpec		=  arrL XP.removeEncodingSpec
+removeEncodingSpec              =  arrL XP.removeEncodingSpec
 
-parseXmlDTDdeclPart		:: ArrowXml a => a XmlTree XmlTree
-parseXmlDTDdeclPart		=  arrL DP.parseXmlDTDdeclPart
+parseXmlDTDdeclPart             :: ArrowXml a => a XmlTree XmlTree
+parseXmlDTDdeclPart             =  arrL DP.parseXmlDTDdeclPart
 
-parseXmlDTDdecl			:: ArrowXml a => a XmlTree XmlTree
-parseXmlDTDdecl			=  arrL DP.parseXmlDTDdecl
+parseXmlDTDdecl                 :: ArrowXml a => a XmlTree XmlTree
+parseXmlDTDdecl                 =  arrL DP.parseXmlDTDdecl
 
-parseXmlDTDEntityValue		:: ArrowXml a => a XmlTree XmlTree
-parseXmlDTDEntityValue		=  arrL DP.parseXmlDTDEntityValue
+parseXmlDTDEntityValue          :: ArrowXml a => a XmlTree XmlTree
+parseXmlDTDEntityValue          =  arrL DP.parseXmlDTDEntityValue
 
-parseXmlAttrValue		:: ArrowXml a => String -> a XmlTree XmlTree
-parseXmlAttrValue context	=  arrL (XP.parseXmlAttrValue context)
+parseXmlAttrValue               :: ArrowXml a => String -> a XmlTree XmlTree
+parseXmlAttrValue context       =  arrL (XP.parseXmlAttrValue context)
 
-parseXmlGeneralEntityValue	:: ArrowXml a => String -> a XmlTree XmlTree
+parseXmlGeneralEntityValue      :: ArrowXml a => String -> a XmlTree XmlTree
 parseXmlGeneralEntityValue context
-				=  arrL (XP.parseXmlGeneralEntityValue context)
+                                =  arrL (XP.parseXmlGeneralEntityValue context)
 
 -- ------------------------------------------------------------
 
-parseHtmlDoc			:: ArrowList a => a (String, String) XmlTree
-parseHtmlDoc			= arr2L HP.parseHtmlDocument
+parseHtmlDoc                    :: ArrowList a => a (String, String) XmlTree
+parseHtmlDoc                    = arr2L HP.parseHtmlDocument
 
-parseHtmlContent		:: ArrowList a => a String XmlTree
-parseHtmlContent		= arrL  HP.parseHtmlContent
+parseHtmlContent                :: ArrowList a => a String XmlTree
+parseHtmlContent                = arrL  HP.parseHtmlContent
 
-parseHtmlTagSoup		:: ArrowList a => Bool -> Bool -> Bool -> Bool -> Bool -> a (String, String) XmlTree
+parseHtmlTagSoup                :: ArrowList a => Bool -> Bool -> Bool -> Bool -> Bool -> a (String, String) XmlTree
 parseHtmlTagSoup withNamespaces withWarnings preserveCmt removeWS asHtml
-				= arr2L (TS.parseHtmlTagSoup withNamespaces withWarnings preserveCmt removeWS asHtml)
+                                = arr2L (TS.parseHtmlTagSoup withNamespaces withWarnings preserveCmt removeWS asHtml)
 
 -- ------------------------------------------------------------
 
-validateDoc			:: ArrowList a => a XmlTree XmlTree
-validateDoc			= fromLA ( VA.validate
-					   `when`
-					   VA.getDTDSubset	-- validate only when DTD decl is present
-					 )
+validateDoc                     :: ArrowList a => a XmlTree XmlTree
+validateDoc                     = fromLA ( VA.validate
+                                           `when`
+                                           VA.getDTDSubset      -- validate only when DTD decl is present
+                                         )
 
-transformDoc			:: ArrowList a => a XmlTree XmlTree
-transformDoc			= fromLA VA.transform
+transformDoc                    :: ArrowList a => a XmlTree XmlTree
+transformDoc                    = fromLA VA.transform
 
 -- old stuff
--- validateDoc			= arrL VA.validate
--- transformDoc			= arrL VA.transform
+-- validateDoc                  = arrL VA.validate
+-- transformDoc                 = arrL VA.transform
 
 -- ------------------------------------------------------------
 
@@ -98,38 +98,38 @@ transformDoc			= fromLA VA.transform
 --
 -- Unknown entity refs remain unchanged
 
-substHtmlEntityRefs		:: ArrowList a => a XmlTree XmlTree
-substHtmlEntityRefs		= substEntityRefs xhtmlEntities
+substHtmlEntityRefs             :: ArrowList a => a XmlTree XmlTree
+substHtmlEntityRefs             = substEntityRefs xhtmlEntities
 
 
 -- | substitution of the five predefined XMT entities, works like 'substHtmlEntityRefs'
 
-substXmlEntityRefs		:: ArrowList a => a XmlTree XmlTree
-substXmlEntityRefs		= substEntityRefs xmlEntities
+substXmlEntityRefs              :: ArrowList a => a XmlTree XmlTree
+substXmlEntityRefs              = substEntityRefs xmlEntities
 
 -- | the entity substitution arrow called from 'substXmlEntityRefs' and 'substHtmlEntityRefs'
 
-substEntityRefs		:: ArrowList a => [(String, Int)] -> a XmlTree XmlTree
+substEntityRefs         :: ArrowList a => [(String, Int)] -> a XmlTree XmlTree
 substEntityRefs entities
     = fromLA substEntities
     where
-    substEntities		:: LA XmlTree XmlTree
+    substEntities               :: LA XmlTree XmlTree
     substEntities
-	= choiceA
-	  [ isEntityRef	:-> ( substEntity $< getEntityRef )
-	  , isElem	:-> ( processAttrl (processChildren substEntities)
-			      >>>
-			      processChildren substEntities
-			    )
-	  , this	:-> this
-	  ]
-	where
-	substEntity en
-	    = case (lookup en entities) of
-	      Just i
-		  -> txt [toEnum i] 	-- constA i >>> mkCharRef
-	      Nothing
-		  -> this
+        = choiceA
+          [ isEntityRef :-> ( substEntity $< getEntityRef )
+          , isElem      :-> ( processAttrl (processChildren substEntities)
+                              >>>
+                              processChildren substEntities
+                            )
+          , this        :-> this
+          ]
+        where
+        substEntity en
+            = case (lookup en entities) of
+              Just i
+                  -> txt [toEnum i]     -- constA i >>> mkCharRef
+              Nothing
+                  -> this
 
 
 -- ------------------------------------------------------------

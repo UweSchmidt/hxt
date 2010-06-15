@@ -43,22 +43,22 @@ import qualified Debug.Trace as T
 
 -- ------------------------------------------------------------
 
-splitRegex		:: Regex -> String -> Maybe (String, String)
+splitRegex              :: Regex -> String -> Maybe (String, String)
 splitRegex re ""
-    | nullable re	= Just ("", "")
-    | otherwise		= Nothing
+    | nullable re       = Just ("", "")
+    | otherwise         = Nothing
 
 splitRegex re inp@(c : inp')
-    | isZero   re	= Nothing
-    | otherwise		= evalRes . splitRegex {- (T.trace (show re') re') -} re' $ inp'
+    | isZero   re       = Nothing
+    | otherwise         = evalRes . splitRegex {- (T.trace (show re') re') -} re' $ inp'
     where
     re' = delta re c
     evalRes Nothing
-	| nullable re	= Just ("", inp)
-	| otherwise	= Nothing
+        | nullable re   = Just ("", inp)
+        | otherwise     = Nothing
 
     evalRes (Just (tok, rest))
-	    		= Just (c : tok, rest)
+                        = Just (c : tok, rest)
 
 -- ------------------------------------------------------------
 
@@ -74,7 +74,7 @@ splitRegex re inp@(c : inp')
 -- > splitRE "a+"  "bc"  = Nothing
 -- > splitRE "["   "abc" = Nothing
 
-splitRE	:: String -> String -> Maybe (String, String)
+splitRE :: String -> String -> Maybe (String, String)
 splitRE re input
     = either (const Nothing) (flip splitRegex input) . parseRegex $ re
 
@@ -82,7 +82,7 @@ splitRE re input
 --
 -- syntax errors in R.E. are interpreted as no matching prefix found
 
-split		:: String -> String -> (String, String)
+split           :: String -> String -> (String, String)
 split re input
     = fromMaybe ("", input) . splitRE re $ input
 
@@ -113,26 +113,26 @@ split re input
 -- >
 -- > tokenizeRE "[^ \t\n\r]*"    = words
 
-tokenizeRE	:: String -> String -> Maybe [String]
+tokenizeRE      :: String -> String -> Maybe [String]
 tokenizeRE regex input
     = either (const Nothing) (Just . flip token' input) $ parseRegex regex
     where
-    token'	:: Regex -> String -> [String]
+    token'      :: Regex -> String -> [String]
     token' re inp
-	| null inp	= []
-	| otherwise	= evalRes . splitRegex re $ inp
-	where
-	token''         = token' re
-	evalRes Nothing	= token'' (tail inp)		-- re does not match any prefix
-	evalRes (Just (tok, rest))
-	    | null tok	= token'' (tail rest)		-- re is nullable and only the empty prefix matches
-	    | otherwise	= tok : token'' rest		-- token found, tokenize the rest
+        | null inp      = []
+        | otherwise     = evalRes . splitRegex re $ inp
+        where
+        token''         = token' re
+        evalRes Nothing = token'' (tail inp)            -- re does not match any prefix
+        evalRes (Just (tok, rest))
+            | null tok  = token'' (tail rest)           -- re is nullable and only the empty prefix matches
+            | otherwise = tok : token'' rest            -- token found, tokenize the rest
 
 -- | convenient function for tokenizeRE a string
 --
 -- syntax errors in R.E. result in an empty list
 
-tokenize	:: String -> String -> [String]
+tokenize        :: String -> String -> [String]
 tokenize re
     = fromMaybe [] . tokenizeRE re
 
@@ -150,33 +150,33 @@ tokenize re
 --
 -- > concat . map (either id id) . fromJust . tokenizeRE' re == id
 
-tokenizeRE'	:: String -> String -> Maybe [Either String String]
+tokenizeRE'     :: String -> String -> Maybe [Either String String]
 tokenizeRE' regex input
     = either (const Nothing) (Just . flip token' input) $ parseRegex regex
     where
-    token'	:: Regex -> String -> [Either String String]
+    token'      :: Regex -> String -> [Either String String]
     token' re
-	= tok2 ""
-	where
-	tok2 :: String -> String -> [Either String String]
-	tok2 noMatchPrefix inp
-	    | null inp	= addNoMatch []
-	    | otherwise	= evalRes . splitRegex re $ inp
-	    where
-	    addNoMatch res
-		| null noMatchPrefix	= res
-		| otherwise		= (Left . reverse $ noMatchPrefix) : res
+        = tok2 ""
+        where
+        tok2 :: String -> String -> [Either String String]
+        tok2 noMatchPrefix inp
+            | null inp  = addNoMatch []
+            | otherwise = evalRes . splitRegex re $ inp
+            where
+            addNoMatch res
+                | null noMatchPrefix    = res
+                | otherwise             = (Left . reverse $ noMatchPrefix) : res
 
-	    evalRes Nothing		= tok2 (head inp : noMatchPrefix) (tail inp)		-- re does not match any prefix
-	    evalRes (Just (tok, rest))
-		| null tok		= tok2 (head rest : noMatchPrefix) (tail rest)		-- re is nullable and only the empty prefix matches
-		| otherwise		= addNoMatch . (Right tok :) . tok2 "" $ rest		-- token found, tokenize the rest
+            evalRes Nothing             = tok2 (head inp : noMatchPrefix) (tail inp)            -- re does not match any prefix
+            evalRes (Just (tok, rest))
+                | null tok              = tok2 (head rest : noMatchPrefix) (tail rest)          -- re is nullable and only the empty prefix matches
+                | otherwise             = addNoMatch . (Right tok :) . tok2 "" $ rest           -- token found, tokenize the rest
 
 -- | convenient function for tokenizeRE'
 --
 -- When the regular expression contains errors @[Left input]@ is returned, that means tokens are found
 
-tokenize'	:: String -> String -> [Either String String]
+tokenize'       :: String -> String -> [Either String String]
 tokenize' regex input
     = fromMaybe [Left input] . tokenizeRE' regex $ input
 
@@ -193,7 +193,7 @@ tokenize' regex input
 -- > sedRE (\ x -> x ++ x) "a" "xax"     = Just "xaax"
 -- > sedRE undefined       "[" undefined = Nothing
 
-sedRE		:: (String -> String) -> String -> String -> Maybe String
+sedRE           :: (String -> String) -> String -> String -> Maybe String
 sedRE edit regex input
     = maybe Nothing (Just . concatMap (either id edit)) $ tokenizeRE' regex input
 
@@ -204,7 +204,7 @@ sedRE edit regex input
 --
 -- > sed undefined "["  == id
 
-sed		:: (String -> String) -> String -> String -> String
+sed             :: (String -> String) -> String -> String -> String
 sed edit regex input
     = fromMaybe input . sedRE edit regex $ input
 
@@ -222,7 +222,7 @@ sed edit regex input
 -- > matchRE "x" "xxx"  = Just False
 -- > matchRE "[" "xxx"  = Nothing
 
-matchRE	:: String -> String -> Maybe Bool
+matchRE :: String -> String -> Maybe Bool
 matchRE regex input
     = either (const Nothing) (Just . isNothing . flip matchWithRE input) $ parseRegex regex
 
@@ -231,8 +231,8 @@ matchRE regex input
 --
 -- syntax errors in R.E. are interpreted as no match found
 
-match		:: String -> String -> Bool
-match re	= fromMaybe False . matchRE re
+match           :: String -> String -> Bool
+match re        = fromMaybe False . matchRE re
 
 -- ------------------------------------------------------------
 

@@ -50,33 +50,33 @@ validateDTD -- dtdPart
     = isDTDDoctype
       `guards`
       ( listA getChildren
-	>>>
-	( validateParts $<< (getNotationNames &&& getElemNames) )
+        >>>
+        ( validateParts $<< (getNotationNames &&& getElemNames) )
       )
     where
     validateParts notationNames elemNames
-	= validateNotations
-	  <+>
-	  validateEntities notationNames
+        = validateNotations
           <+>
-	  validateElements elemNames
-	  <+>
-	  validateAttributes elemNames notationNames
+          validateEntities notationNames
+          <+>
+          validateElements elemNames
+          <+>
+          validateAttributes elemNames notationNames
 
-    getNotationNames	:: LA [XmlTree] [String]
-    getNotationNames	= listA $ unlistA >>> isDTDNotation >>> getDTDAttrValue a_name
+    getNotationNames    :: LA [XmlTree] [String]
+    getNotationNames    = listA $ unlistA >>> isDTDNotation >>> getDTDAttrValue a_name
 
-    getElemNames	:: LA [XmlTree] [String]
-    getElemNames	= listA $ unlistA >>> isDTDElement  >>> getDTDAttrValue a_name
+    getElemNames        :: LA [XmlTree] [String]
+    getElemNames        = listA $ unlistA >>> isDTDElement  >>> getDTDAttrValue a_name
 
 -- ------------------------------------------------------------
 
-checkName	:: String -> SLA [String] XmlTree XmlTree -> SLA [String] XmlTree XmlTree
+checkName       :: String -> SLA [String] XmlTree XmlTree -> SLA [String] XmlTree XmlTree
 checkName name msg
     = ifA ( getState
-	    >>>
-	    isA (name `elem`)
-	  )
+            >>>
+            isA (name `elem`)
+          )
       msg
       (nextState (name:) >>> none)
 
@@ -93,25 +93,25 @@ checkName name msg
 validateNotations :: LA XmlTrees XmlTree
 validateNotations
     = fromSLA [] ( unlistA
-		   >>>
-		   isDTDNotation
-		   >>>
-		   (checkForUniqueNotation $< getDTDAttrl)
-		 )
+                   >>>
+                   isDTDNotation
+                   >>>
+                   (checkForUniqueNotation $< getDTDAttrl)
+                 )
       where
       checkForUniqueNotation :: Attributes -> SLA [String] XmlTree XmlTree
       checkForUniqueNotation al
-	  = checkName name $
-	    err ( "Notation "++ show name ++ " was already specified." )
-	  where
-	  name = dtd_name al
+          = checkName name $
+            err ( "Notation "++ show name ++ " was already specified." )
+          where
+          name = dtd_name al
 
 -- |
 -- Validation of Entities.
 --
 -- 1. Issues a warning if entities are declared multiple times.
 --
---    Optional warning: (4.2 \/ p.35 in Spec) 
+--    Optional warning: (4.2 \/ p.35 in Spec)
 --
 --
 -- 2. Validates that a notation is declared for an unparsed entity.
@@ -124,60 +124,60 @@ validateNotations
 --
 --    - returns : a list of errors
 
-validateEntities	:: [String] -> LA XmlTrees XmlTree
+validateEntities        :: [String] -> LA XmlTrees XmlTree
 validateEntities notationNames
     = ( fromSLA [] ( unlistA
-		     >>>
-		     isDTDEntity
-		     >>>
-		     (checkForUniqueEntity $< getDTDAttrl)
-		   )
+                     >>>
+                     isDTDEntity
+                     >>>
+                     (checkForUniqueEntity $< getDTDAttrl)
+                   )
       )
       <+>
       ( unlistA
-	>>>
-	isUnparsedEntity
-	>>>
-	(checkNotationDecl $< getDTDAttrl)
+        >>>
+        isUnparsedEntity
+        >>>
+        (checkNotationDecl $< getDTDAttrl)
       )
       where
 
       -- Check if entities are declared multiple times
 
-      checkForUniqueEntity	:: Attributes -> SLA [String] XmlTree XmlTree
+      checkForUniqueEntity      :: Attributes -> SLA [String] XmlTree XmlTree
       checkForUniqueEntity al
-	  = checkName name $
-	    warn ( "Entity "++ show name ++ " was already specified. " ++
-		    "First declaration will be used." )
-	  where
-	  name = dtd_name al
+          = checkName name $
+            warn ( "Entity "++ show name ++ " was already specified. " ++
+                    "First declaration will be used." )
+          where
+          name = dtd_name al
 
       -- Find unparsed entities for which no notation is specified
 
-      checkNotationDecl		:: Attributes -> XmlArrow
+      checkNotationDecl         :: Attributes -> XmlArrow
       checkNotationDecl al
-	  | notationName `elem` notationNames
-	      = none
-	  | otherwise
-	      = err ( "The notation " ++ show notationName ++ " must be declared " ++
-	              "when referenced in the unparsed entity declaration for " ++
-		      show upEntityName ++ "."
-		    )
-	  where
-	  notationName = lookup1 k_ndata al
-	  upEntityName = dtd_name  al
+          | notationName `elem` notationNames
+              = none
+          | otherwise
+              = err ( "The notation " ++ show notationName ++ " must be declared " ++
+                      "when referenced in the unparsed entity declaration for " ++
+                      show upEntityName ++ "."
+                    )
+          where
+          notationName = lookup1 k_ndata al
+          upEntityName = dtd_name  al
 
 -- |
 -- Validation of Element declarations.
 --
 -- 1. Validates that an element is not declared multiple times.
 --
---    Validity constraint: Unique Element Type Declaration (3.2 \/ p.21 in Spec) 
+--    Validity constraint: Unique Element Type Declaration (3.2 \/ p.21 in Spec)
 --
 --
 -- 2. Validates that an element name only appears once in a mixed-content declaration.
 --
---    Validity constraint: No Duplicate Types (3.2 \/ p.21 in Spec) 
+--    Validity constraint: No Duplicate Types (3.2 \/ p.21 in Spec)
 --
 --
 -- 3. Issues a warning if an element mentioned in a content model is not declared in the
@@ -192,28 +192,28 @@ validateEntities notationNames
 --    - returns : a list of errors
 
 
-validateElements	:: [String] -> LA XmlTrees XmlTree
+validateElements        :: [String] -> LA XmlTrees XmlTree
 validateElements elemNames -- dtdPart
     = ( fromSLA [] ( unlistA
-		     >>>
-		     isDTDElement
-		     >>>
-		     (checkForUniqueElement $< getDTDAttrl)
-		   )
+                     >>>
+                     isDTDElement
+                     >>>
+                     (checkForUniqueElement $< getDTDAttrl)
+                   )
       )
       <+>
       ( unlistA
-	>>>
-	isMixedContentElement
-	>>>
-	(checkMixedContent $< getDTDAttrl)
+        >>>
+        isMixedContentElement
+        >>>
+        (checkMixedContent $< getDTDAttrl)
       )
       <+>
       ( unlistA
-	>>>
-	isDTDElement
-	>>>
-	(checkContentModel elemNames $< getDTDAttrl)
+        >>>
+        isDTDElement
+        >>>
+        (checkContentModel elemNames $< getDTDAttrl)
       )
       where
 
@@ -221,64 +221,64 @@ validateElements elemNames -- dtdPart
 
       checkForUniqueElement :: Attributes -> SLA [String] XmlTree XmlTree
       checkForUniqueElement al
-	  = checkName name $
-	    err ( "Element type " ++ show name ++
-		  " must not be declared more than once." )
-	  where
-	  name = dtd_name al
+          = checkName name $
+            err ( "Element type " ++ show name ++
+                  " must not be declared more than once." )
+          where
+          name = dtd_name al
 
       -- Validates that an element name only appears once in a mixed-content declaration
 
-      checkMixedContent	:: Attributes -> XmlArrow
+      checkMixedContent :: Attributes -> XmlArrow
       checkMixedContent al
-	  = fromSLA [] ( getChildren
-			 >>>
-			 getChildren
-			 >>>
-			 isDTDName
-			 >>>
-			 (check $< getDTDAttrl)
-		       )
-	    where
-	    elemName = dtd_name al
-	    check al'
-		= checkName name $
-		  err ( "The element type " ++ show name ++
-			 " was already specified in the mixed-content model of the element declaration " ++
-		         show elemName ++ "." )
-		where
-		name = dtd_name al'
+          = fromSLA [] ( getChildren
+                         >>>
+                         getChildren
+                         >>>
+                         isDTDName
+                         >>>
+                         (check $< getDTDAttrl)
+                       )
+            where
+            elemName = dtd_name al
+            check al'
+                = checkName name $
+                  err ( "The element type " ++ show name ++
+                         " was already specified in the mixed-content model of the element declaration " ++
+                         show elemName ++ "." )
+                where
+                name = dtd_name al'
 
       -- Issues a warning if an element mentioned in a content model is not
       -- declared in the DTD.
       checkContentModel :: [String] -> Attributes -> XmlArrow
       checkContentModel names al
-	  | cm `elem` [v_children, v_mixed]
-	      = getChildren >>> checkContent
-	  | otherwise
-	      = none
-	  where
-	  elemName = dtd_name al
-	  cm       = dtd_type al
+          | cm `elem` [v_children, v_mixed]
+              = getChildren >>> checkContent
+          | otherwise
+              = none
+          where
+          elemName = dtd_name al
+          cm       = dtd_type al
 
-	  checkContent :: XmlArrow
-	  checkContent
-	      = choiceA
-		[ isDTDName    :-> ( checkName' $< getDTDAttrl )
-		, isDTDContent :-> ( getChildren >>> checkContent )
-		, this         :-> none
-		]
-	      where
-	      checkName' al'
-		  | childElemName `elem` names
-		      = none
-		  | otherwise
-		      = warn ( "The element type "++ show childElemName ++
-			       ", used in content model of element "++ show elemName ++
-			       ", is not declared."
-			     )
-		  where
-		  childElemName = dtd_name al'
+          checkContent :: XmlArrow
+          checkContent
+              = choiceA
+                [ isDTDName    :-> ( checkName' $< getDTDAttrl )
+                , isDTDContent :-> ( getChildren >>> checkContent )
+                , this         :-> none
+                ]
+              where
+              checkName' al'
+                  | childElemName `elem` names
+                      = none
+                  | otherwise
+                      = warn ( "The element type "++ show childElemName ++
+                               ", used in content model of element "++ show elemName ++
+                               ", is not declared."
+                             )
+                  where
+                  childElemName = dtd_name al'
 
 -- |
 -- Validation of Attribute declarations.
@@ -299,32 +299,32 @@ validateElements elemNames -- dtdPart
 -- 3. Issues a warning if the same Nmtoken occures more than once in enumerated
 --    attribute types of a single element type.
 --
---    Optional warning: (3.3.1 \/ p.27 in Spec) 
+--    Optional warning: (3.3.1 \/ p.27 in Spec)
 --
 --
 -- 4. Validates that an element type has not more than one ID attribute defined.
 --
---    Validity constraint: One ID per Element Type (3.3.1 \/ p.26 in Spec) 
+--    Validity constraint: One ID per Element Type (3.3.1 \/ p.26 in Spec)
 --
 --
 -- 5. Validates that an element type has not more than one NOTATION attribute defined.
 --
---    Validity constraint: One Notation per Element Type (3.3.1 \/ p.27 in Spec) 
+--    Validity constraint: One Notation per Element Type (3.3.1 \/ p.27 in Spec)
 --
 --
 -- 6. Validates that an ID attributes has the type #IMPLIED or #REQUIRED.
 --
---    Validity constraint: ID Attribute Default (3.3.1 \/ p.26 in Spec) 
+--    Validity constraint: ID Attribute Default (3.3.1 \/ p.26 in Spec)
 --
 --
 -- 7. Validates that all referenced notations are declared.
 --
---    Validity constraint: Notation Attributes (3.3.1 \/ p.27 in Spec) 
+--    Validity constraint: Notation Attributes (3.3.1 \/ p.27 in Spec)
 --
 --
 -- 8. Validates that notations are not declared for EMPTY elements.
 --
---    Validity constraint: No Notation on Empty Element (3.3.1 \/p.27 in Spec) 
+--    Validity constraint: No Notation on Empty Element (3.3.1 \/p.27 in Spec)
 --
 --
 -- 9. Validates that the default value matches the lexical constraints of it's type.
@@ -365,11 +365,11 @@ validateAttributes elemNames notationNames
       <+>
       -- 8. Validate that notations are not declared for EMPTY elements
       ( checkNoNotationForEmptyElements $< listA ( unlistA
-						   >>>
-						   isEmptyElement
-						   >>>
-						   getDTDAttrValue a_name
-						 )
+                                                   >>>
+                                                   isEmptyElement
+                                                   >>>
+                                                   getDTDAttrValue a_name
+                                                 )
       )
       <+>
       -- 9. Validate that the default value matches the lexical constraints of it's type
@@ -380,14 +380,14 @@ validateAttributes elemNames notationNames
       -- control structures
 
       runCheck select check
-	  = unlistA >>> isDTDAttlist
-	    >>>
-	    select
-	    >>>
-	    (check $< getDTDAttrl)
-      
+          = unlistA >>> isDTDAttlist
+            >>>
+            select
+            >>>
+            (check $< getDTDAttrl)
+
       runNameCheck select check
-	  = fromSLA [] $ runCheck select check
+          = fromSLA [] $ runCheck select check
 
       --------------------------------------------------------------------------
 
@@ -395,15 +395,15 @@ validateAttributes elemNames notationNames
 
       checkDeclaredElements :: [String] -> Attributes -> XmlArrow
       checkDeclaredElements elemNames' al
-	  | en `elem` elemNames'
-	      = none
-	  | otherwise
-	      = warn ( "The element type \""++ en ++ "\" used in dclaration "++
-		       "of attribute \""++ an ++"\" is not declared."
-		     )
-	  where
-	  en = dtd_name al
-	  an = dtd_value al
+          | en `elem` elemNames'
+              = none
+          | otherwise
+              = warn ( "The element type \""++ en ++ "\" used in dclaration "++
+                       "of attribute \""++ an ++"\" is not declared."
+                     )
+          where
+          en = dtd_name al
+          an = dtd_value al
 
       --------------------------------------------------------------------------
 
@@ -411,14 +411,14 @@ validateAttributes elemNames notationNames
 
       checkForUniqueAttributeDeclaration ::  Attributes -> SLA [String] XmlTree XmlTree
       checkForUniqueAttributeDeclaration al
-	  = checkName name $
-	    warn ( "Attribute \""++ aname ++"\" for element type \""++
-		   ename ++"\" is already declared. First "++
-		   "declaration will be used." )
-	  where
-	  ename = dtd_name al
-	  aname = dtd_value al
-	  name  = ename ++ "|" ++ aname
+          = checkName name $
+            warn ( "Attribute \""++ aname ++"\" for element type \""++
+                   ename ++"\" is already declared. First "++
+                   "declaration will be used." )
+          where
+          ename = dtd_name al
+          aname = dtd_value al
+          name  = ename ++ "|" ++ aname
 
       --------------------------------------------------------------------------
 
@@ -427,20 +427,20 @@ validateAttributes elemNames notationNames
       checkEnumeratedTypes :: Attributes -> XmlArrow
       checkEnumeratedTypes al
           = fromSLA [] ( getChildren
-			 >>>
-			 isDTDName
-			 >>>
-			 (checkForUniqueType $< getDTDAttrl)
-		       )
-	  where
-	  checkForUniqueType :: Attributes -> SLA [String] XmlTree XmlTree
+                         >>>
+                         isDTDName
+                         >>>
+                         (checkForUniqueType $< getDTDAttrl)
+                       )
+          where
+          checkForUniqueType :: Attributes -> SLA [String] XmlTree XmlTree
           checkForUniqueType al'
-	      = checkName nmtoken $
-	        warn ( "Nmtoken \""++ nmtoken ++"\" should not "++
-		       "occur more than once in attribute \""++ dtd_value al ++
-		       "\" for element \""++ dtd_name al ++ "\"." )
-	      where
-	      nmtoken = dtd_name al'
+              = checkName nmtoken $
+                warn ( "Nmtoken \""++ nmtoken ++"\" should not "++
+                       "occur more than once in attribute \""++ dtd_value al ++
+                       "\" for element \""++ dtd_name al ++ "\"." )
+              where
+              nmtoken = dtd_name al'
 
       --------------------------------------------------------------------------
 
@@ -448,12 +448,12 @@ validateAttributes elemNames notationNames
 
       checkForUniqueId :: Attributes -> SLA [String] XmlTree XmlTree
       checkForUniqueId al
-	  = checkName ename $
-	    err ( "Element \""++ ename ++ "\" already has attribute of type "++
-		  "ID, another attribute \""++ dtd_value al ++ "\" of type ID is "++
-		  "not permitted." )
-	  where
-	  ename = dtd_name al
+          = checkName ename $
+            err ( "Element \""++ ename ++ "\" already has attribute of type "++
+                  "ID, another attribute \""++ dtd_value al ++ "\" of type ID is "++
+                  "not permitted." )
+          where
+          ename = dtd_name al
 
       --------------------------------------------------------------------------
 
@@ -461,12 +461,12 @@ validateAttributes elemNames notationNames
 
       checkForUniqueNotation :: Attributes -> SLA [String] XmlTree XmlTree
       checkForUniqueNotation al
-	  = checkName ename $
-	    err ( "Element \""++ ename ++ "\" already has attribute of type "++
-		  "NOTATION, another attribute \""++ dtd_value al ++ "\" of type NOTATION "++
-		  "is not permitted." )
-	  where
-	  ename = dtd_name al
+          = checkName ename $
+            err ( "Element \""++ ename ++ "\" already has attribute of type "++
+                  "NOTATION, another attribute \""++ dtd_value al ++ "\" of type NOTATION "++
+                  "is not permitted." )
+          where
+          ename = dtd_name al
 
       --------------------------------------------------------------------------
 
@@ -474,13 +474,13 @@ validateAttributes elemNames notationNames
 
       checkIdKindConstraint :: Attributes -> XmlArrow
       checkIdKindConstraint al
-	  | attKind `elem` [k_implied, k_required]
-	      = none
-	  | otherwise
-	      = err ( "ID attribute \""++ dtd_value al ++"\" must have a declared default "++
-	              "of \"#IMPLIED\" or \"REQUIRED\"")
-	  where
-	  attKind = dtd_kind al
+          | attKind `elem` [k_implied, k_required]
+              = none
+          | otherwise
+              = err ( "ID attribute \""++ dtd_value al ++"\" must have a declared default "++
+                      "of \"#IMPLIED\" or \"REQUIRED\"")
+          where
+          attKind = dtd_kind al
 
 
       --------------------------------------------------------------------------
@@ -490,22 +490,22 @@ validateAttributes elemNames notationNames
       checkNotationDeclaration :: [String] -> Attributes -> XmlArrow
       checkNotationDeclaration notations al
           = getChildren
-	    >>>
-	    isDTDName
-	    >>>
-	    (checkNotations $< getDTDAttrl)
-	  where
-	  checkNotations :: Attributes -> XmlArrow
-	  checkNotations al'
-	      | notation `elem` notations
-		  = none
-	      | otherwise
-		  = err ( "The notation \""++ notation ++"\" must be declared when "++
-		          "referenced in the notation type list for attribute \""++ dtd_value al ++
-			  "\" of element \""++ dtd_name al ++"\"."
-			)
+            >>>
+            isDTDName
+            >>>
+            (checkNotations $< getDTDAttrl)
+          where
+          checkNotations :: Attributes -> XmlArrow
+          checkNotations al'
+              | notation `elem` notations
+                  = none
+              | otherwise
+                  = err ( "The notation \""++ notation ++"\" must be declared when "++
+                          "referenced in the notation type list for attribute \""++ dtd_value al ++
+                          "\" of element \""++ dtd_name al ++"\"."
+                        )
               where
-	      notation = dtd_name al'
+              notation = dtd_name al'
 
       --------------------------------------------------------------------------
 
@@ -513,24 +513,24 @@ validateAttributes elemNames notationNames
 
       checkNoNotationForEmptyElements :: [String] -> LA XmlTrees XmlTree
       checkNoNotationForEmptyElements emptyElems
-	  = unlistA
-	    >>>
-	    isDTDAttlist
-	    >>>
-	    isNotationAttrType
-	    >>>
-	    (checkNoNotationForEmptyElement $< getDTDAttrl)
-	  where
-	  checkNoNotationForEmptyElement :: Attributes -> XmlArrow
-	  checkNoNotationForEmptyElement al
-	      | ename `elem` emptyElems
-		  = err ( "Attribute \""++ dtd_value al ++"\" of type NOTATION must not be "++
-			  "declared on the element \""++ ename ++"\" declared EMPTY."
-			)
+          = unlistA
+            >>>
+            isDTDAttlist
+            >>>
+            isNotationAttrType
+            >>>
+            (checkNoNotationForEmptyElement $< getDTDAttrl)
+          where
+          checkNoNotationForEmptyElement :: Attributes -> XmlArrow
+          checkNoNotationForEmptyElement al
+              | ename `elem` emptyElems
+                  = err ( "Attribute \""++ dtd_value al ++"\" of type NOTATION must not be "++
+                          "declared on the element \""++ ename ++"\" declared EMPTY."
+                        )
               | otherwise
-		  = none
-	      where
-	      ename = dtd_name al
+                  = none
+              where
+              ename = dtd_name al
 
       --------------------------------------------------------------------------
 
@@ -538,10 +538,10 @@ validateAttributes elemNames notationNames
 
       checkDefaultValueTypes :: XmlTrees -> LA XmlTrees XmlTree
       checkDefaultValueTypes dtdPart'
-	  = unlistA >>> isDTDAttlist
-	    >>>
-	    isDefaultAttrKind
-	    >>>
+          = unlistA >>> isDTDAttlist
+            >>>
+            isDefaultAttrKind
+            >>>
             (checkAttributeValue dtdPart' $< this)
 
 -- ------------------------------------------------------------
@@ -557,33 +557,33 @@ removeDoublicateDefs :: XmlArrow
 removeDoublicateDefs
     = replaceChildren
       ( fromSLA [] ( getChildren
-		     >>>
-		     choiceA [ isDTDAttlist :-> (removeDoubleAttlist $< getDTDAttrl)
-			     , isDTDEntity  :-> (removeDoubleEntity  $< getDTDAttrl)
-			     , this         :-> this
-			     ]
-		   )
+                     >>>
+                     choiceA [ isDTDAttlist :-> (removeDoubleAttlist $< getDTDAttrl)
+                             , isDTDEntity  :-> (removeDoubleEntity  $< getDTDAttrl)
+                             , this         :-> this
+                             ]
+                   )
       )
       `when`
       isDTDDoctype
     where
     checkName' n'
-	= ifA ( getState
-		>>>
-		isA (n' `elem`)
-	      )
-	  none
-	  (this >>> perform (nextState (n':)))
+        = ifA ( getState
+                >>>
+                isA (n' `elem`)
+              )
+          none
+          (this >>> perform (nextState (n':)))
 
     removeDoubleAttlist :: Attributes -> SLA [String] XmlTree XmlTree
     removeDoubleAttlist al
-	= checkName' elemAttr
-	where
-	elemAttr = elemName ++ "|" ++ attrName
-	attrName = dtd_value al
-	elemName = dtd_name al
+        = checkName' elemAttr
+        where
+        elemAttr = elemName ++ "|" ++ attrName
+        attrName = dtd_value al
+        elemName = dtd_name al
 
-    removeDoubleEntity	:: Attributes -> SLA [String] XmlTree XmlTree
+    removeDoubleEntity  :: Attributes -> SLA [String] XmlTree XmlTree
     removeDoubleEntity al
         = checkName' (dtd_name al)
 

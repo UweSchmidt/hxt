@@ -28,27 +28,27 @@ where
 
 import Control.Arrow.ListArrows
 
-import Data.Char				( isDigit )
+import Data.Char                                ( isDigit )
 import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlIOStateArrow
 
-import Text.XML.HXT.Arrow.Edit			( canonicalizeAllNodes
-						, canonicalizeForXPath
-						, canonicalizeContents
+import Text.XML.HXT.Arrow.Edit                  ( canonicalizeAllNodes
+                                                , canonicalizeForXPath
+                                                , canonicalizeContents
                                                 , rememberDTDAttrl
-						, removeDocWhiteSpace
-						)
+                                                , removeDocWhiteSpace
+                                                )
 
 import Text.XML.HXT.Arrow.ParserInterface
-    
-import Text.XML.HXT.Arrow.ProcessDocument	( getDocumentContents
-						, parseXmlDocument
-						, parseHtmlDocument
-						, propagateAndValidateNamespaces
-						)
 
-import Text.XML.HXT.RelaxNG.Validator		( validateDocumentWithRelaxSchema )
+import Text.XML.HXT.Arrow.ProcessDocument       ( getDocumentContents
+                                                , parseXmlDocument
+                                                , parseHtmlDocument
+                                                , propagateAndValidateNamespaces
+                                                )
+
+import Text.XML.HXT.RelaxNG.Validator           ( validateDocumentWithRelaxSchema )
 
 -- ------------------------------------------------------------
 
@@ -65,12 +65,12 @@ available options:
 
 - 'a_parse_by_mimetype' : select the parser by the mime type of the document
                           (pulled out of the HTTP header). When the mime type is set to \"text\/html\"
-			  the HTML parser (parsec or tagsoup) is taken, when it\'s set to
-			  \"text\/xml\" or \"text\/xhtml\" the XML parser (parsec or tagsoup) is taken.
-			  If the mime type is something else no further processing is performed,
-			  the contents is given back to the application in form of a single text node.
-			  If the default document encoding ('a_encoding') is set to isoLatin1, this even enables processing
-			  of arbitray binary data.
+                          the HTML parser (parsec or tagsoup) is taken, when it\'s set to
+                          \"text\/xml\" or \"text\/xhtml\" the XML parser (parsec or tagsoup) is taken.
+                          If the mime type is something else no further processing is performed,
+                          the contents is given back to the application in form of a single text node.
+                          If the default document encoding ('a_encoding') is set to isoLatin1, this even enables processing
+                          of arbitray binary data.
 
 - 'a_validate' : validate document againsd DTD (default), else skip validation
 
@@ -107,7 +107,7 @@ available options:
 
 - 'a_strict_input' : file input is done strictly using the 'Data.ByteString' input functions. This ensures correct closing of files, especially when working with
                      the tagsoup parser and not processing the whole input data. Default is off. The @ByteString@ input usually is not faster than the buildin @hGetContents@
-		     for strings.
+                     for strings.
 
 - 'a_options_curl' : deprecated but for compatibility reasons still supported.
                      More options passed to the curl binding.
@@ -117,7 +117,7 @@ available options:
 - 'a_encoding' : default document encoding ('utf8', 'isoLatin1', 'usAscii', 'iso8859_2', ... , 'iso8859_16', ...).
                  Only XML, HTML and text documents are decoded,
                  default decoding for XML\/HTML is utf8, for text iso latin1 (no decoding).
-		 The whole content is returned in a single text node.
+                 The whole content is returned in a single text node.
 
 - 'a_mime_types' : set the mime type table for file input with given file. The format of this config file must be in the syntax of a debian linux \"mime.types\" config file
 
@@ -137,7 +137,7 @@ examples:
 
 > readDocument [ ] "test.xml"
 
-reads and validates a document \"test.xml\", no namespace propagation, only canonicalization is performed 
+reads and validates a document \"test.xml\", no namespace propagation, only canonicalization is performed
 
 > readDocument [ (a_validate, "0")
 >              , (a_encoding, isoLatin1)
@@ -182,10 +182,10 @@ read w3c home page (xhtml), validate and check namespaces, remove whitespace bet
 for minimal complete examples see 'Text.XML.HXT.Arrow.WriteDocument.writeDocument' and 'runX', the main starting point for running an XML arrow.
 -}
 
-readDocument	:: Attributes -> String -> IOStateArrow s b XmlTree
+readDocument    :: Attributes -> String -> IOStateArrow s b XmlTree
 readDocument userOptions src
     = case getTraceLev of
-      Nothing	->                    readDocument' userOptions src
+      Nothing   ->                    readDocument' userOptions src
       Just l    -> withTraceLevel l $ readDocument' userOptions src
     where
     getTraceLev = do
@@ -194,7 +194,7 @@ readDocument userOptions src
                       then return (read s)
                       else fail "not a number"
 
-readDocument'	:: Attributes -> String -> IOStateArrow s b XmlTree
+readDocument'   :: Attributes -> String -> IOStateArrow s b XmlTree
 readDocument' userOptions src
     = loadMineTypes (lookup1 a_mime_types userOptions)
       >>>
@@ -209,157 +209,157 @@ readDocument' userOptions src
       traceTree
     where
     options
- 	= addEntries userOptions defaultOptions
+        = addEntries userOptions defaultOptions
 
     defaultOptions
-	= [ ( a_parse_html,		  v_0 )
-	  , ( a_tagsoup,		  v_0 )
-	  , ( a_strict_input,		  v_0 )
-	  , ( a_validate,		  v_1 )
-	  , ( a_issue_warnings,		  v_1 )
-	  , ( a_check_namespaces,	  v_0 )
-	  , ( a_canonicalize,		  v_1 )
-	  , ( a_preserve_comment,	  v_0 )
-	  , ( a_remove_whitespace,	  v_0 )
-	  , ( a_parse_by_mimetype,	  v_0 )
-	  , ( a_ignore_encoding_errors,   v_0 )
-	  , ( a_ignore_none_xml_contents, v_0 )
-	  , ( a_accept_mimetypes,         ""  )
-	  ]
+        = [ ( a_parse_html,               v_0 )
+          , ( a_tagsoup,                  v_0 )
+          , ( a_strict_input,             v_0 )
+          , ( a_validate,                 v_1 )
+          , ( a_issue_warnings,           v_1 )
+          , ( a_check_namespaces,         v_0 )
+          , ( a_canonicalize,             v_1 )
+          , ( a_preserve_comment,         v_0 )
+          , ( a_remove_whitespace,        v_0 )
+          , ( a_parse_by_mimetype,        v_0 )
+          , ( a_ignore_encoding_errors,   v_0 )
+          , ( a_ignore_none_xml_contents, v_0 )
+          , ( a_accept_mimetypes,         ""  )
+          ]
 
-    loadMineTypes ""	= this
-    loadMineTypes f	= setMimeTypeTableFromFile f
+    loadMineTypes ""    = this
+    loadMineTypes f     = setMimeTypeTableFromFile f
 
     getMimeType
-	= getAttrValue transferMimeType >>^ stringToLower
+        = getAttrValue transferMimeType >>^ stringToLower
 
     processDoc mimeType
-	= traceMsg 1 (unwords [ "readDocument:", show src
-			      , "(mime type:", show mimeType, ") will be processed"])
-	  >>>
-	  ( if isAcceptedMimeType (lookup1 a_accept_mimetypes options) mimeType
-	    then ( ifA (fromLA hasEmptyBody)
-                   ( replaceChildren none )					-- empty response, e.g. in if-modified-since request
+        = traceMsg 1 (unwords [ "readDocument:", show src
+                              , "(mime type:", show mimeType, ") will be processed"])
+          >>>
+          ( if isAcceptedMimeType (lookup1 a_accept_mimetypes options) mimeType
+            then ( ifA (fromLA hasEmptyBody)
+                   ( replaceChildren none )                                     -- empty response, e.g. in if-modified-since request
                    ( parse
-		     >>>
-		     ( if isXmlOrHtml
-		       then ( checknamespaces
-			      >>>
+                     >>>
+                     ( if isXmlOrHtml
+                       then ( checknamespaces
+                              >>>
                               rememberDTDAttrl
                               >>>
-			      canonicalize
-			      >>>
-			      whitespace
-			      >>>
-			      relax
-			    )
-		       else this
-		     )
-		   )
+                              canonicalize
+                              >>>
+                              whitespace
+                              >>>
+                              relax
+                            )
+                       else this
+                     )
+                   )
                  )
-	    else ( traceMsg 1 (unwords [ "readDocument:", show src
-				       , "mime type:", show mimeType, "not accepted"])
-		   >>>
-		   replaceChildren none
-		 )									-- remove contents of not accepted mimetype
-	  )
-	where
-        hasEmptyBody			:: LA XmlTree XmlTree
-        hasEmptyBody			= hasAttrValue transferStatus (/= "200")	-- test on empty response body for not o.k. responses
-                                          `guards`					-- e.g. 3xx status values
+            else ( traceMsg 1 (unwords [ "readDocument:", show src
+                                       , "mime type:", show mimeType, "not accepted"])
+                   >>>
+                   replaceChildren none
+                 )                                                                      -- remove contents of not accepted mimetype
+          )
+        where
+        hasEmptyBody                    :: LA XmlTree XmlTree
+        hasEmptyBody                    = hasAttrValue transferStatus (/= "200")        -- test on empty response body for not o.k. responses
+                                          `guards`                                      -- e.g. 3xx status values
                                           ( neg getChildren
                                             <+>
                                             ( getChildren >>> isWhiteSpace )
                                           )
 
-	isAcceptedMimeType		:: String -> String -> Bool
-	isAcceptedMimeType mts mt
-	    | null mts
-	      ||
-	      null mt			= True
-	    | otherwise			= foldr (matchMt mt') False $ mts'
-	    where
-	    mt'				= parseMt mt
-	    mts'			= words
-					  >>>
-					  map parseMt
-					  $
-					  mts
-	    parseMt			= break (== '/')
-					  >>>
-					  second (drop 1)
-	    matchMt (ma,mi) (mas,mis) r	= ( (ma == mas || mas == "*")
-					    &&
-					    (mi == mis || mis == "*")
-					  )
-					  || r
-	parse
-	    | isHtml
-	      || 
-	      withTagSoup		= parseHtmlDocument			-- parse as HTML or with tagsoup XML
-					  withTagSoup
-					  withNamespaces
-					  issueW
-					  (not (hasOption a_canonicalize) && preserveCmt)
-					  removeWS
-					  isHtml
-	    | validateWithRelax		= parseXmlDocument False		-- for Relax NG use XML parser without validation
-	    | isXml			= parseXmlDocument validate		-- parse as XML
-	    | removeNoneXml		= replaceChildren none			-- don't parse, if mime type is not XML nor HTML
-	    | otherwise			= this					-- but remove contents when option is set
-	checknamespaces
-	    | (withNamespaces && not withTagSoup)
-	      ||
-	      validateWithRelax		= propagateAndValidateNamespaces
-	    | otherwise			= this
-	canonicalize
-	    | withTagSoup		= this					-- tagsoup already removes redundant stuff
-	    | validateWithRelax		= canonicalizeAllNodes
-	    | hasOption a_canonicalize
-	      &&
-	      preserveCmt		= canonicalizeForXPath
-	    | hasOption a_canonicalize	= canonicalizeAllNodes
-	    | otherwise			= this
-	relax
-	    | validateWithRelax		= validateDocumentWithRelaxSchema options relaxSchema
-	    | otherwise			= this
-	whitespace
-	    | removeWS
-	      &&
-	      not withTagSoup		= removeDocWhiteSpace			-- tagsoup already removes whitespace
-	    | otherwise			= this
-	validateWithRelax	= hasEntry a_relax_schema options
-	relaxSchema		= lookup1 a_relax_schema options
-	parseHtml		= hasOption a_parse_html
-	isHtml			= parseHtml					-- force HTML
-				  ||
-				  ( parseByMimeType && isHtmlMimeType mimeType )
-	isXml			= ( not parseByMimeType && not parseHtml )
-				  ||
-				  ( parseByMimeType
-				    &&
-				    ( isXmlMimeType mimeType
-				      ||
-				      null mimeType
-				    )						-- mime type is XML or not known
-				  )
-	isXmlOrHtml	= isHtml || isXml
-	parseByMimeType	= hasOption a_parse_by_mimetype
-	validate	= hasOption a_validate
-	withNamespaces	= hasOption a_check_namespaces
-	withTagSoup	= hasOption a_tagsoup
-	issueW		= hasOption a_issue_warnings
-	removeWS	= hasOption a_remove_whitespace
-	preserveCmt	= hasOption a_preserve_comment
-	removeNoneXml	= hasOption a_ignore_none_xml_contents
-	hasOption n	= optionIsSet n options
+        isAcceptedMimeType              :: String -> String -> Bool
+        isAcceptedMimeType mts mt
+            | null mts
+              ||
+              null mt                   = True
+            | otherwise                 = foldr (matchMt mt') False $ mts'
+            where
+            mt'                         = parseMt mt
+            mts'                        = words
+                                          >>>
+                                          map parseMt
+                                          $
+                                          mts
+            parseMt                     = break (== '/')
+                                          >>>
+                                          second (drop 1)
+            matchMt (ma,mi) (mas,mis) r = ( (ma == mas || mas == "*")
+                                            &&
+                                            (mi == mis || mis == "*")
+                                          )
+                                          || r
+        parse
+            | isHtml
+              ||
+              withTagSoup               = parseHtmlDocument                     -- parse as HTML or with tagsoup XML
+                                          withTagSoup
+                                          withNamespaces
+                                          issueW
+                                          (not (hasOption a_canonicalize) && preserveCmt)
+                                          removeWS
+                                          isHtml
+            | validateWithRelax         = parseXmlDocument False                -- for Relax NG use XML parser without validation
+            | isXml                     = parseXmlDocument validate             -- parse as XML
+            | removeNoneXml             = replaceChildren none                  -- don't parse, if mime type is not XML nor HTML
+            | otherwise                 = this                                  -- but remove contents when option is set
+        checknamespaces
+            | (withNamespaces && not withTagSoup)
+              ||
+              validateWithRelax         = propagateAndValidateNamespaces
+            | otherwise                 = this
+        canonicalize
+            | withTagSoup               = this                                  -- tagsoup already removes redundant stuff
+            | validateWithRelax         = canonicalizeAllNodes
+            | hasOption a_canonicalize
+              &&
+              preserveCmt               = canonicalizeForXPath
+            | hasOption a_canonicalize  = canonicalizeAllNodes
+            | otherwise                 = this
+        relax
+            | validateWithRelax         = validateDocumentWithRelaxSchema options relaxSchema
+            | otherwise                 = this
+        whitespace
+            | removeWS
+              &&
+              not withTagSoup           = removeDocWhiteSpace                   -- tagsoup already removes whitespace
+            | otherwise                 = this
+        validateWithRelax       = hasEntry a_relax_schema options
+        relaxSchema             = lookup1 a_relax_schema options
+        parseHtml               = hasOption a_parse_html
+        isHtml                  = parseHtml                                     -- force HTML
+                                  ||
+                                  ( parseByMimeType && isHtmlMimeType mimeType )
+        isXml                   = ( not parseByMimeType && not parseHtml )
+                                  ||
+                                  ( parseByMimeType
+                                    &&
+                                    ( isXmlMimeType mimeType
+                                      ||
+                                      null mimeType
+                                    )                                           -- mime type is XML or not known
+                                  )
+        isXmlOrHtml     = isHtml || isXml
+        parseByMimeType = hasOption a_parse_by_mimetype
+        validate        = hasOption a_validate
+        withNamespaces  = hasOption a_check_namespaces
+        withTagSoup     = hasOption a_tagsoup
+        issueW          = hasOption a_issue_warnings
+        removeWS        = hasOption a_remove_whitespace
+        preserveCmt     = hasOption a_preserve_comment
+        removeNoneXml   = hasOption a_ignore_none_xml_contents
+        hasOption n     = optionIsSet n options
 
 -- ------------------------------------------------------------
 
 -- |
 -- the arrow version of 'readDocument', the arrow input is the source URI
 
-readFromDocument	:: Attributes -> IOStateArrow s String XmlTree
+readFromDocument        :: Attributes -> IOStateArrow s String XmlTree
 readFromDocument userOptions
     = applyA ( arr $ readDocument userOptions )
 
@@ -373,7 +373,7 @@ readFromDocument userOptions
 --
 -- Default encoding: No encoding is done, the String argument is taken as Unicode string
 
-readString	:: Attributes -> String -> IOStateArrow s b XmlTree
+readString      :: Attributes -> String -> IOStateArrow s b XmlTree
 readString userOptions content
     = readDocument ( (a_encoding, unicodeString) : userOptions ) (stringProtocol ++ content)
 
@@ -382,7 +382,7 @@ readString userOptions content
 -- |
 -- the arrow version of 'readString', the arrow input is the source URI
 
-readFromString	:: Attributes -> IOStateArrow s String XmlTree
+readFromString  :: Attributes -> IOStateArrow s String XmlTree
 readFromString userOptions
     = applyA ( arr $ readString userOptions )
 
@@ -391,11 +391,11 @@ readFromString userOptions
 -- |
 -- parse a string as HTML content, substitute all HTML entity refs and canonicalize tree
 -- (substitute char refs, ...). Errors are ignored.
--- 
+--
 -- A simpler version of 'readFromString' but with less functionality.
 -- Does not run in the IO monad
 
-hread			:: ArrowXml a => a String XmlTree
+hread                   :: ArrowXml a => a String XmlTree
 hread
     = parseHtmlContent
       >>>
@@ -409,7 +409,7 @@ hread
 -- parse a string as XML content, substitute all predefined XML entity refs and canonicalize tree
 -- (substitute char refs, ...)
 
-xread			:: ArrowXml a => a String XmlTree
+xread                   :: ArrowXml a => a String XmlTree
 xread
     = parseXmlContent
       >>>

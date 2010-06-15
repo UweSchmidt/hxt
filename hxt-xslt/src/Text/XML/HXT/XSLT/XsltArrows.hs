@@ -61,50 +61,50 @@ import Text.XML.HXT.XSLT.Application
 
 -- | arrow for applying a pure partial function, catch the error case and issue the error
 
-arrWithCatch	:: (a -> b) -> IOSArrow a b
+arrWithCatch    :: (a -> b) -> IOSArrow a b
 arrWithCatch f
     = arrIO (applyf f)
       >>>
       ( (applyA (arr issueErr) >>> none)
-	|||
-	this
+        |||
+        this
       )
 
-applyf	:: (a -> b) -> a -> IO (Either String b)
+applyf  :: (a -> b) -> a -> IO (Either String b)
 applyf f x
-	= catch'  ( do
-		    res <- evaluate ( f x )
-		    return . Right $ res
-		  )
-	  (\ e -> return . Left . ("XSLT: " ++) . show $ e)
+        = catch'  ( do
+                    res <- evaluate ( f x )
+                    return . Right $ res
+                  )
+          (\ e -> return . Left . ("XSLT: " ++) . show $ e)
         where
         catch' :: IO a -> (SomeException -> IO a) -> IO a
-	catch' = catch
-	  
+        catch' = catch
+
 -- ------------------------------------------------------------
 
 -- | lift prepareXSLTDocument
 
-prepareXSLTDoc	:: IOSArrow XmlTree XmlTree
+prepareXSLTDoc  :: IOSArrow XmlTree XmlTree
 prepareXSLTDoc
     = ( arrWithCatch prepareXSLTDocument
-	>>>
-	traceDoc "prepareXSLTDocument"
+        >>>
+        traceDoc "prepareXSLTDocument"
       )
       `when`
       documentStatusOk
 
 -- | read an XSLT stylesheet
 
-readXSLTDoc	:: Attributes -> IOSArrow String XmlTree
+readXSLTDoc     :: Attributes -> IOSArrow String XmlTree
 readXSLTDoc options
     = readFromDocument (options ++ defaultOptions)
     where
     defaultOptions
-	= [ (a_check_namespaces, v_1)
-	  , (a_validate, v_0)
-	  , (a_preserve_comment, v_0)
-	  ]
+        = [ (a_check_namespaces, v_1)
+          , (a_validate, v_0)
+          , (a_preserve_comment, v_0)
+          ]
 
 -- | Normalize stylesheet, expand includes, select imports and assemble the rules
 
@@ -112,156 +112,156 @@ compileSSTWithIncludeStack :: [String] -> IOSArrow XmlTree CompiledStylesheet
 compileSSTWithIncludeStack incStack
     = traceMsg 2 "compile stylesheet"
       >>>
-      getChildren					-- remove document root
+      getChildren                                       -- remove document root
       >>>
-      isElem						-- select XSLT root element
+      isElem                                            -- select XSLT root element
       >>>
       choiceA
-      [ isXsltLREstylesheet				-- simplified syntax
-	:-> ( xsltlre2stylesheet
-	      >>>
-	      assStylesheet []
-	    )
-      , isXsltStylesheetElem				-- xsl:stylesheet or xsl:transform
-	:-> ( expStylesheet
-	      $< ( listA ( getChildren			-- take contents and expand includes
-			   >>>
-			   expandIncludes incStack
-			 )
-		   >>>
-		   partitionA isXsltImport		-- separate imports from normal rules
-		 )
-	    )
+      [ isXsltLREstylesheet                             -- simplified syntax
+        :-> ( xsltlre2stylesheet
+              >>>
+              assStylesheet []
+            )
+      , isXsltStylesheetElem                            -- xsl:stylesheet or xsl:transform
+        :-> ( expStylesheet
+              $< ( listA ( getChildren                  -- take contents and expand includes
+                           >>>
+                           expandIncludes incStack
+                         )
+                   >>>
+                   partitionA isXsltImport              -- separate imports from normal rules
+                 )
+            )
       , this
-	:-> ( issueErr "XSLT: Either xsl:stylesheet/xsl:transform or simplified syntax expected"
-	      >>>
-	      none
-	    )
+        :-> ( issueErr "XSLT: Either xsl:stylesheet/xsl:transform or simplified syntax expected"
+              >>>
+              none
+            )
       ]
       >>>
       traceValue 3 (("compiled stylesheet:\n" ++) . show)
     where
-    assStylesheet imports				-- do the assembly, the compilation
-	= arrWithCatch (flip assembleStylesheet $ imports)
+    assStylesheet imports                               -- do the assembly, the compilation
+        = arrWithCatch (flip assembleStylesheet $ imports)
 
     expStylesheet (imports, rest)
-	= traceMsg 2 "expand stylesheet"
-	  >>>
-	  setChildren rest				-- remove import rules from stylesheet
-	  >>>
-	  assStylesheet $< listA ( constL imports	-- read the imports and assemble the stylesheet
-				   >>>
-				   getXsltAttrValue xsltHRef
-				   >>>
-				   compileSSTFromUriWithIncludeStack incStack
-				 )
+        = traceMsg 2 "expand stylesheet"
+          >>>
+          setChildren rest                              -- remove import rules from stylesheet
+          >>>
+          assStylesheet $< listA ( constL imports       -- read the imports and assemble the stylesheet
+                                   >>>
+                                   getXsltAttrValue xsltHRef
+                                   >>>
+                                   compileSSTFromUriWithIncludeStack incStack
+                                 )
 
 -- | read an include and check for recursive includes
 
-readSSTWithIncludeStack	:: [String] -> IOSArrow String XmlTree
+readSSTWithIncludeStack :: [String] -> IOSArrow String XmlTree
 readSSTWithIncludeStack incStack
     = ifP (`elem` incStack)
       ( (issueErr $< arr recursiveInclude) >>> none )
       ( readXSLTDoc []
-	>>>
-	prepareXSLTDoc
-      ) 
+        >>>
+        prepareXSLTDoc
+      )
     where
     recursiveInclude uri
-	= "XSLT error: "
-	  ++ show uri ++ " is recursively imported/included." 
+        = "XSLT error: "
+          ++ show uri ++ " is recursively imported/included."
           ++ concatMap (("\n  imported/included from: " ++) . show) incStack
 
-compileSSTFromUriWithIncludeStack	:: [String] -> IOSArrow String CompiledStylesheet
+compileSSTFromUriWithIncludeStack       :: [String] -> IOSArrow String CompiledStylesheet
 compileSSTFromUriWithIncludeStack incStack
     = comp $< this
     where
     comp uri
-	= readSSTWithIncludeStack incStack
-	  >>>
-	  compileSSTWithIncludeStack (uri:incStack)
+        = readSSTWithIncludeStack incStack
+          >>>
+          compileSSTWithIncludeStack (uri:incStack)
 
-expandIncludes	:: [String] -> IOSArrow XmlTree XmlTree
+expandIncludes  :: [String] -> IOSArrow XmlTree XmlTree
 expandIncludes incStack
     = isElem
       >>>
       ( ( expandInclude $< getXsltAttrValue xsltHRef )
         `when`
-	isXsltInclude
+        isXsltInclude
       )
     where
     expandInclude href
-	= ( constA href
-	    >>>
-	    readSSTWithIncludeStack incStack
-	    >>>
-	    getChildren
-	    >>>
-	    isElem
-	    >>>
-	    choiceA
-	    [ isXsltLREstylesheet
-	      :-> xsltlre2template
+        = ( constA href
+            >>>
+            readSSTWithIncludeStack incStack
+            >>>
+            getChildren
+            >>>
+            isElem
+            >>>
+            choiceA
+            [ isXsltLREstylesheet
+              :-> xsltlre2template
 
-	    , isXsltStylesheetElem
-	      :-> ( getChildren
-		    >>>
-		    expandIncludes (href:incStack)
-		  )
+            , isXsltStylesheetElem
+              :-> ( getChildren
+                    >>>
+                    expandIncludes (href:incStack)
+                  )
 
-	    , this
+            , this
               :-> issueFatal ("XSLT error: Included file " ++ show href ++ " is not a stylesheet")
-	    ]
-	  )
+            ]
+          )
 
-isXsltElem		:: ArrowXml a => QName -> a XmlTree XmlTree
-isXsltElem qn		= isElem >>> hasNameWith (equivQName qn)
+isXsltElem              :: ArrowXml a => QName -> a XmlTree XmlTree
+isXsltElem qn           = isElem >>> hasNameWith (equivQName qn)
 
-isXsltAttr		:: ArrowXml a => QName -> a XmlTree XmlTree
-isXsltAttr qn		= isAttr >>> hasNameWith (equivQName qn)
+isXsltAttr              :: ArrowXml a => QName -> a XmlTree XmlTree
+isXsltAttr qn           = isAttr >>> hasNameWith (equivQName qn)
 
-hasXsltAttr		:: ArrowXml a => QName -> a XmlTree XmlTree
-hasXsltAttr qn		= ( getAttrl >>> isXsltAttr qn )
-			  `guards`
-			  this
+hasXsltAttr             :: ArrowXml a => QName -> a XmlTree XmlTree
+hasXsltAttr qn          = ( getAttrl >>> isXsltAttr qn )
+                          `guards`
+                          this
 
-isXsltInclude		:: ArrowXml a => a XmlTree XmlTree
-isXsltInclude		= isXsltElem xsltInclude
+isXsltInclude           :: ArrowXml a => a XmlTree XmlTree
+isXsltInclude           = isXsltElem xsltInclude
 
-isXsltImport		:: ArrowXml a => a XmlTree XmlTree
-isXsltImport		= isXsltElem xsltImport
+isXsltImport            :: ArrowXml a => a XmlTree XmlTree
+isXsltImport            = isXsltElem xsltImport
 
-isXsltLREstylesheet	:: ArrowXml a => a XmlTree XmlTree
-isXsltLREstylesheet	= hasXsltAttr xsltVersionLRE
+isXsltLREstylesheet     :: ArrowXml a => a XmlTree XmlTree
+isXsltLREstylesheet     = hasXsltAttr xsltVersionLRE
 
-isXsltStylesheetElem	:: ArrowXml a => a XmlTree XmlTree
-isXsltStylesheetElem	=  ( isXsltElem xsltTransform
-			     <+>
-			     isXsltElem xsltStylesheet
-			   )
+isXsltStylesheetElem    :: ArrowXml a => a XmlTree XmlTree
+isXsltStylesheetElem    =  ( isXsltElem xsltTransform
+                             <+>
+                             isXsltElem xsltStylesheet
+                           )
                            >>>
-			   hasXsltAttr xsltVersion
+                           hasXsltAttr xsltVersion
 
-getXsltAttrValue	:: ArrowXml a => QName -> a XmlTree String
-getXsltAttrValue qn	= getAttrl >>> isXsltAttr qn >>> xshow getChildren
+getXsltAttrValue        :: ArrowXml a => QName -> a XmlTree String
+getXsltAttrValue qn     = getAttrl >>> isXsltAttr qn >>> xshow getChildren
 
-xsltlre2template	:: ArrowXml a => a XmlTree XmlTree
-xsltlre2template	= mkqelem xsltTemplate [sqattr xsltMatch "/"] [this]
+xsltlre2template        :: ArrowXml a => a XmlTree XmlTree
+xsltlre2template        = mkqelem xsltTemplate [sqattr xsltMatch "/"] [this]
 
-xsltlre2stylesheet	:: ArrowXml a => a XmlTree XmlTree
-xsltlre2stylesheet	= mkqelem xsltTransform [] [ this >>> xsltlre2template ]
+xsltlre2stylesheet      :: ArrowXml a => a XmlTree XmlTree
+xsltlre2stylesheet      = mkqelem xsltTransform [] [ this >>> xsltlre2template ]
 
 --
 
-checkApplySST	::  IOSArrow XmlTree XmlTree -> IOSArrow XmlTree XmlTree
+checkApplySST   ::  IOSArrow XmlTree XmlTree -> IOSArrow XmlTree XmlTree
 checkApplySST appl
     = ( isRoot
-	>>>
-	replaceChildren appl
-	>>>
-	traceDoc "XSLT stylesheet applied"
-	>>>
-	setDocumentStatusFromSystemState "applying XSLT stylesheet"
+        >>>
+        replaceChildren appl
+        >>>
+        traceDoc "XSLT stylesheet applied"
+        >>>
+        setDocumentStatusFromSystemState "applying XSLT stylesheet"
       )
       `orElse`
       issueErr "XSLT: complete document with root node required for stylesheet application"
@@ -272,7 +272,7 @@ checkApplySST appl
 -- XSLT imports and includes are evaluated and the rules are normalized and prepared
 -- for easy application.
 
-xsltCompileStylesheet		:: IOSArrow XmlTree CompiledStylesheet
+xsltCompileStylesheet           :: IOSArrow XmlTree CompiledStylesheet
 xsltCompileStylesheet
     = prepareXSLTDoc
       >>>
@@ -283,15 +283,15 @@ xsltCompileStylesheet
 -- Reading an XSLT stylesheet is always done without validation but with
 -- namespace propagation. Comments are removed from the stylesheet.
 
-xsltCompileStylesheetFromURI	:: IOSArrow String CompiledStylesheet
-xsltCompileStylesheetFromURI	= compileSSTFromUriWithIncludeStack []
+xsltCompileStylesheetFromURI    :: IOSArrow String CompiledStylesheet
+xsltCompileStylesheetFromURI    = compileSSTFromUriWithIncludeStack []
 
 -- | apply a compiled XSLT stylesheet to a whole document tree
 --
 -- The compiled stylesheet must have been created with 'xsltCompileStylesheet'
 -- or 'xsltCompileStylesheetFromURI'
 
-xsltApplyStylesheet		:: CompiledStylesheet -> IOSArrow XmlTree XmlTree
+xsltApplyStylesheet             :: CompiledStylesheet -> IOSArrow XmlTree XmlTree
 xsltApplyStylesheet css
     = checkApplySST (arrWithCatch (applyStylesheet css) >>. concat)
 
@@ -302,11 +302,11 @@ xsltApplyStylesheet css
 -- all children of the root node are removed and
 -- the error status is set in the attribute list of the root node of the input document.
 
-xsltApplyStylesheetFromURI	:: String -> IOSArrow XmlTree XmlTree
+xsltApplyStylesheetFromURI      :: String -> IOSArrow XmlTree XmlTree
 xsltApplyStylesheetFromURI uri
     = xsltApplyStylesheet $< (constA uri >>> xsltCompileStylesheetFromURI)
 
 {-
-xsltApplyStylesheetWParams	:: Map ExName Expr -> CompiledStylesheet -> IOSArrow XmlTree XmlTree
-xsltApplyStylesheetWParams wp css	= arrL (applyStylesheetWParams wp css)
+xsltApplyStylesheetWParams      :: Map ExName Expr -> CompiledStylesheet -> IOSArrow XmlTree XmlTree
+xsltApplyStylesheetWParams wp css       = arrL (applyStylesheetWParams wp css)
 -}

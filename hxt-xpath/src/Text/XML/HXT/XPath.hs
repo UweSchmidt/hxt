@@ -10,7 +10,7 @@ module Text.XML.HXT.XPath
     , module Text.XML.HXT.XPath.XPathToString
     , module Text.XML.HXT.XPath.XPathParser
     , module Text.XML.HXT.XPath.Arrows
-    ) 
+    )
 where
 
 import Text.XML.HXT.XPath.XPathEval

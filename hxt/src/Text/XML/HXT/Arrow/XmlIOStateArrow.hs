@@ -63,7 +63,7 @@ module Text.XML.HXT.Arrow.XmlIOStateArrow
       getParamString,
       setParamInt,
       getParamInt,
-      
+
       -- * Error Message Handling
       clearErrStatus,
       setErrStatus,
@@ -128,48 +128,48 @@ module Text.XML.HXT.Arrow.XmlIOStateArrow
       )
 where
 
-import Control.Arrow				-- arrow classes
+import Control.Arrow                            -- arrow classes
 import Control.Arrow.ArrowList
 import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
 import Control.Arrow.ArrowIO
 import Control.Arrow.IOStateListArrow
 
-import Control.Monad			( mzero
-					, mplus )
+import Control.Monad                    ( mzero
+                                        , mplus )
 import Control.DeepSeq
 
 import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlArrow
 
-import Text.XML.HXT.Arrow.Edit		( addHeadlineToXmlDoc
-					, treeRepOfXmlDoc
-					, indentDoc
-					)
+import Text.XML.HXT.Arrow.Edit          ( addHeadlineToXmlDoc
+                                        , treeRepOfXmlDoc
+                                        , indentDoc
+                                        )
 
 import Data.Maybe
 
-import Network.URI			( URI
-					, escapeURIChar
-					, isUnescapedInURI
-					, nonStrictRelativeTo
-					, parseURIReference
-					, uriAuthority
-					, uriFragment
-					, uriPath
-					, uriPort
-					, uriQuery
-					, uriRegName
-					, uriScheme
-					, uriUserInfo
-					)
+import Network.URI                      ( URI
+                                        , escapeURIChar
+                                        , isUnescapedInURI
+                                        , nonStrictRelativeTo
+                                        , parseURIReference
+                                        , uriAuthority
+                                        , uriFragment
+                                        , uriPath
+                                        , uriPort
+                                        , uriQuery
+                                        , uriRegName
+                                        , uriScheme
+                                        , uriUserInfo
+                                        )
 
-import System.IO			( hPutStrLn
-					, hFlush
-					, stderr
-					)
+import System.IO                        ( hPutStrLn
+                                        , hFlush
+                                        , stderr
+                                        )
 
-import System.Directory			( getCurrentDirectory )
+import System.Directory                 ( getCurrentDirectory )
 
 -- ------------------------------------------------------------
 {- $datatypes -}
@@ -179,43 +179,43 @@ import System.Directory			( getCurrentDirectory )
 -- predefined system state data type with all components for the
 -- system functions, like trace, error handling, ...
 
-data XIOSysState	= XIOSys  { xio_trace			:: ! Int
-                                  , xio_traceCmd		::   Int -> String -> IO ()
-				  , xio_errorStatus		:: ! Int
-				  , xio_errorModule		:: ! String
-				  , xio_errorMsgHandler		::   String -> IO ()
-				  , xio_errorMsgCollect		:: ! Bool
-				  , xio_errorMsgList		:: ! XmlTrees
-				  , xio_baseURI			:: ! String
-				  , xio_defaultBaseURI		:: ! String
-				  , xio_attrList		:: ! (AssocList String XmlTrees)
-				  , xio_mimeTypes		::   MimeTypeTable
-				  }
+data XIOSysState        = XIOSys  { xio_trace                   :: ! Int
+                                  , xio_traceCmd                ::   Int -> String -> IO ()
+                                  , xio_errorStatus             :: ! Int
+                                  , xio_errorModule             :: ! String
+                                  , xio_errorMsgHandler         ::   String -> IO ()
+                                  , xio_errorMsgCollect         :: ! Bool
+                                  , xio_errorMsgList            :: ! XmlTrees
+                                  , xio_baseURI                 :: ! String
+                                  , xio_defaultBaseURI          :: ! String
+                                  , xio_attrList                :: ! (AssocList String XmlTrees)
+                                  , xio_mimeTypes               ::   MimeTypeTable
+                                  }
 
 instance NFData XIOSysState where
     rnf (XIOSys tr _trc es em _emh emc eml bu du al _mt)
-	= rnf tr `seq` rnf es `seq` rnf em `seq` rnf emc `seq` rnf eml `seq` rnf bu `seq` rnf du `seq` rnf al
+        = rnf tr `seq` rnf es `seq` rnf em `seq` rnf emc `seq` rnf eml `seq` rnf bu `seq` rnf du `seq` rnf al
 
 -- |
 -- state datatype consists of a system state and a user state
 -- the user state is not fixed
 
-data XIOState us	= XIOState { xio_sysState		:: ! XIOSysState
-				   , xio_userState		:: ! us
-				   }
+data XIOState us        = XIOState { xio_sysState               :: ! XIOSysState
+                                   , xio_userState              :: ! us
+                                   }
 
 instance (NFData us) => NFData (XIOState us) where
-    rnf (XIOState sys usr)	= rnf sys `seq` rnf usr
+    rnf (XIOState sys usr)      = rnf sys `seq` rnf usr
 
 -- |
 -- The arrow type for stateful arrows
 
-type IOStateArrow s b c	= IOSLA (XIOState s) b c
+type IOStateArrow s b c = IOSLA (XIOState s) b c
 
 -- |
 -- The arrow for stateful arrows with no user defined state
 
-type IOSArrow b c	= IOStateArrow () b c
+type IOSArrow b c       = IOStateArrow () b c
 
 -- ------------------------------------------------------------
 
@@ -223,24 +223,24 @@ type IOSArrow b c	= IOStateArrow () b c
 -- | the default global state, used as initial state when running an 'IOSArrow' with 'runIOSLA' or
 -- 'runX'
 
-initialState	:: us -> XIOState us
-initialState s	= XIOState { xio_sysState 	= initialSysState
-			   , xio_userState	= s
-			   }
+initialState    :: us -> XIOState us
+initialState s  = XIOState { xio_sysState       = initialSysState
+                           , xio_userState      = s
+                           }
 
-initialSysState	:: XIOSysState
-initialSysState	= XIOSys { xio_trace		= 0
-                         , xio_traceCmd		= traceOutputToStderr
-			 , xio_errorStatus	= c_ok
-			 , xio_errorModule	= ""
-			 , xio_errorMsgHandler	= hPutStrLn stderr
-			 , xio_errorMsgCollect	= False
-			 , xio_errorMsgList	= []
-			 , xio_baseURI		= ""
-			 , xio_defaultBaseURI	= ""
-			 , xio_attrList		= []
-			 , xio_mimeTypes	= defaultMimeTypeTable
-			 }
+initialSysState :: XIOSysState
+initialSysState = XIOSys { xio_trace            = 0
+                         , xio_traceCmd         = traceOutputToStderr
+                         , xio_errorStatus      = c_ok
+                         , xio_errorModule      = ""
+                         , xio_errorMsgHandler  = hPutStrLn stderr
+                         , xio_errorMsgCollect  = False
+                         , xio_errorMsgList     = []
+                         , xio_baseURI          = ""
+                         , xio_defaultBaseURI   = ""
+                         , xio_attrList         = []
+                         , xio_mimeTypes        = defaultMimeTypeTable
+                         }
 
 -- ------------------------------------------------------------
 
@@ -256,10 +256,10 @@ initialSysState	= XIOSys { xio_trace		= 0
 --
 -- if input has to be feed into the arrow use 'Control.Arrow.IOStateListArrow.runIOSLA' like in @ runIOSLA f emptyX inputDoc @
 
-runX		:: IOSArrow XmlTree c -> IO [c]
-runX		= runXIOState (initialState ())
+runX            :: IOSArrow XmlTree c -> IO [c]
+runX            = runXIOState (initialState ())
 
-runXIOState	:: XIOState s -> IOStateArrow s XmlTree c -> IO [c]
+runXIOState     :: XIOState s -> IOStateArrow s XmlTree c -> IO [c]
 runXIOState s0 f
     = do
       (_finalState, res) <- runIOSLA (emptyRoot >>> f) s0 undefined
@@ -273,14 +273,14 @@ runXIOState s0 f
 
 -- | read the user defined part of the state
 
-getUserState	:: IOStateArrow s b s
+getUserState    :: IOStateArrow s b s
 getUserState
     = IOSLA $ \ s _ ->
       return (s, [xio_userState s])
 
 -- | change the user defined part of the state
 
-changeUserState		:: (b -> s -> s) -> IOStateArrow s b b
+changeUserState         :: (b -> s -> s) -> IOStateArrow s b b
 changeUserState cf
     = IOSLA $ \ s v ->
       let s' = s { xio_userState = cf v (xio_userState s) }
@@ -288,7 +288,7 @@ changeUserState cf
 
 -- | set the user defined part of the state
 
-setUserState		:: IOStateArrow s s s
+setUserState            :: IOStateArrow s s s
 setUserState
     = changeUserState const
 
@@ -299,66 +299,66 @@ setUserState
 -- extended state, and the augmented state component is removed form the state
 -- when the arrow has finished its execution
 
-withExtendedUserState	:: s1 -> IOStateArrow (s1, s0) b c -> IOStateArrow s0 b c
+withExtendedUserState   :: s1 -> IOStateArrow (s1, s0) b c -> IOStateArrow s0 b c
 withExtendedUserState initS1 f
     = IOSLA $ \ s0 x ->
       do
       ~(finalS, res) <- runIOSLA f ( XIOState { xio_sysState  =          xio_sysState  s0
-					      , xio_userState = (initS1, xio_userState s0)
-					      }
-				   ) x
+                                              , xio_userState = (initS1, xio_userState s0)
+                                              }
+                                   ) x
       return ( XIOState { xio_sysState  =      xio_sysState  finalS
-			, xio_userState = snd (xio_userState finalS)
-			}
-	     , res
-	     )
+                        , xio_userState = snd (xio_userState finalS)
+                        }
+             , res
+             )
 
 -- | change the type of user state
 --
 -- This conversion is useful, when running a state arrow with another
 -- structure of the user state, e.g. with () when executing some IO arrows
 
-withOtherUserState	:: s1 -> IOStateArrow s1 b c -> IOStateArrow s0 b c
+withOtherUserState      :: s1 -> IOStateArrow s1 b c -> IOStateArrow s0 b c
 withOtherUserState s1 f
     = IOSLA $ \ s x ->
       do
       (s', res) <- runIOSLA f ( XIOState { xio_sysState  = xio_sysState s
-					 , xio_userState = s1
-					 }
-			      ) x
+                                         , xio_userState = s1
+                                         }
+                              ) x
       return ( XIOState { xio_sysState  = xio_sysState  s'
-			, xio_userState = xio_userState s
-			}
-	     , res
-	     )
+                        , xio_userState = xio_userState s
+                        }
+             , res
+             )
 
 -- ------------------------------------------------------------
 
 {- $system state params -}
 
-getSysParam	:: (XIOSysState -> c) -> IOStateArrow s b c
+getSysParam     :: (XIOSysState -> c) -> IOStateArrow s b c
 getSysParam f
     = IOSLA $ \ s _x ->
       return (s, (:[]) . f . xio_sysState $ s)
 
-changeSysParam		:: (b -> XIOSysState -> XIOSysState) -> IOStateArrow s b b
+changeSysParam          :: (b -> XIOSysState -> XIOSysState) -> IOStateArrow s b b
 changeSysParam cf
     = ( IOSLA $ \ s v ->
-	let s' = changeSysState (cf v) s
-	in return (s', [v])
+        let s' = changeSysState (cf v) s
+        in return (s', [v])
       )
     where
     changeSysState css s = s { xio_sysState = css (xio_sysState s) }
 
 -- | store a single XML tree in global state under a given attribute name
 
-setParam	:: String -> IOStateArrow s XmlTree XmlTree
+setParam        :: String -> IOStateArrow s XmlTree XmlTree
 setParam n
     = (:[]) ^>> setParamList n
 
 -- | store a list of XML trees in global system state under a given attribute name
 
-setParamList	:: String -> IOStateArrow s XmlTrees XmlTree
+setParamList    :: String -> IOStateArrow s XmlTrees XmlTree
 setParamList n
     = changeSysParam addE
       >>>
@@ -368,7 +368,7 @@ setParamList n
 
 -- | remove an entry in global state, arrow input remains unchanged
 
-unsetParam	:: String -> IOStateArrow s b b
+unsetParam      :: String -> IOStateArrow s b b
 unsetParam n
     = changeSysParam delE
     where
@@ -376,7 +376,7 @@ unsetParam n
 
 -- | read an attribute value from global state
 
-getParam	:: String -> IOStateArrow s b XmlTree
+getParam        :: String -> IOStateArrow s b XmlTree
 getParam n
     = getAllParams
       >>>
@@ -384,47 +384,47 @@ getParam n
 
 -- | read all attributes from global state
 
-getAllParams	:: IOStateArrow s b (AssocList String XmlTrees)
+getAllParams    :: IOStateArrow s b (AssocList String XmlTrees)
 getAllParams
     = getSysParam xio_attrList
 
 -- | read all attributes from global state
 -- and convert the values to strings
 
-getAllParamsString	:: IOStateArrow s b (AssocList String String)
+getAllParamsString      :: IOStateArrow s b (AssocList String String)
 getAllParamsString
     = getAllParams
       >>>
       listA ( unlistA
-	      >>>
-	      second (xshow unlistA)
-	    )
+              >>>
+              second (xshow unlistA)
+            )
 
-setParamString	:: String -> String -> IOStateArrow s b b
+setParamString  :: String -> String -> IOStateArrow s b b
 setParamString n v
     = perform ( txt v
-		>>>
-		setParam n
-	      )
+                >>>
+                setParam n
+              )
 
 -- | read a string value from global state,
 -- if parameter not set \"\" is returned
 
-getParamString	:: String -> IOStateArrow s b String
+getParamString  :: String -> IOStateArrow s b String
 getParamString n
     = xshow (getParam n)
 
 -- | store an int value in global state
 
-setParamInt	:: String -> Int -> IOStateArrow s b b
+setParamInt     :: String -> Int -> IOStateArrow s b b
 setParamInt n v
     = setParamString n (show v)
 
 -- | read an int value from global state
--- 
+--
 -- > getParamInt 0 myIntAttr
 
-getParamInt	:: Int -> String -> IOStateArrow s b Int
+getParamInt     :: Int -> String -> IOStateArrow s b Int
 getParamInt def n
     = getParamString n
       >>^
@@ -434,163 +434,163 @@ getParamInt def n
 
 -- | reset global error variable
 
-changeErrorStatus	:: (Int -> Int -> Int) -> IOStateArrow s Int Int
+changeErrorStatus       :: (Int -> Int -> Int) -> IOStateArrow s Int Int
 changeErrorStatus f
     = changeSysParam (\ l s -> s { xio_errorStatus = f l (xio_errorStatus s) })
 
-clearErrStatus		:: IOStateArrow s b b
+clearErrStatus          :: IOStateArrow s b b
 clearErrStatus
     = perform (constA 0 >>> changeErrorStatus min)
 
 -- | set global error variable
 
-setErrStatus		:: IOStateArrow s Int Int
+setErrStatus            :: IOStateArrow s Int Int
 setErrStatus
     = changeErrorStatus max
 
 -- | read current global error status
 
-getErrStatus		:: IOStateArrow s XmlTree Int
+getErrStatus            :: IOStateArrow s XmlTree Int
 getErrStatus
     = getSysParam xio_errorStatus
 
 -- | raise the global error status level to that of the input tree
 
-setErrMsgStatus	:: IOStateArrow s XmlTree XmlTree
+setErrMsgStatus :: IOStateArrow s XmlTree XmlTree
 setErrMsgStatus
     = perform ( getErrorLevel
-		>>>
-		setErrStatus
-	      )
+                >>>
+                setErrStatus
+              )
 
 -- | set the error message handler and the flag for collecting the errors
 
-setErrorMsgHandler	:: Bool -> (String -> IO ()) -> IOStateArrow s b b
+setErrorMsgHandler      :: Bool -> (String -> IO ()) -> IOStateArrow s b b
 setErrorMsgHandler c f
     = changeSysParam cf
     where
     cf _ s = s { xio_errorMsgHandler = f
-	       , xio_errorMsgCollect = c }
+               , xio_errorMsgCollect = c }
 
 -- | error message handler for output to stderr
-		  
-sysErrorMsg		:: IOStateArrow s XmlTree XmlTree
+
+sysErrorMsg             :: IOStateArrow s XmlTree XmlTree
 sysErrorMsg
     = perform ( getErrorLevel &&& getErrorMsg
-		>>>
-		arr formatErrorMsg
-		>>>
-		( IOSLA $ \ s e ->
-		  do
-		  (xio_errorMsgHandler . xio_sysState $ s) e
-		  return (s, undefined)
-		)
-	      )
+                >>>
+                arr formatErrorMsg
+                >>>
+                ( IOSLA $ \ s e ->
+                  do
+                  (xio_errorMsgHandler . xio_sysState $ s) e
+                  return (s, undefined)
+                )
+              )
     where
-    formatErrorMsg (level, msg)	= "\n" ++ errClass level ++ ": " ++ msg
+    formatErrorMsg (level, msg) = "\n" ++ errClass level ++ ": " ++ msg
     errClass l
-	= fromMaybe "fatal error" . lookup l $ msgList
-	  where
-	  msgList	= [ (c_ok,	"no error")
-			  , (c_warn,	"warning")
-			  , (c_err,	"error")
-			  , (c_fatal,	"fatal error")
-			  ]
+        = fromMaybe "fatal error" . lookup l $ msgList
+          where
+          msgList       = [ (c_ok,      "no error")
+                          , (c_warn,    "warning")
+                          , (c_err,     "error")
+                          , (c_fatal,   "fatal error")
+                          ]
 
 
 -- | the default error message handler: error output to stderr
 
-errorMsgStderr		:: IOStateArrow s b b
-errorMsgStderr		= setErrorMsgHandler False (hPutStrLn stderr)
+errorMsgStderr          :: IOStateArrow s b b
+errorMsgStderr          = setErrorMsgHandler False (hPutStrLn stderr)
 
 -- | error message handler for collecting errors
 
-errorMsgCollect		:: IOStateArrow s b b
-errorMsgCollect		= setErrorMsgHandler True (const $ return ())
+errorMsgCollect         :: IOStateArrow s b b
+errorMsgCollect         = setErrorMsgHandler True (const $ return ())
 
 -- | error message handler for output to stderr and collecting
 
-errorMsgStderrAndCollect	:: IOStateArrow s b b
-errorMsgStderrAndCollect	= setErrorMsgHandler True (hPutStrLn stderr)
+errorMsgStderrAndCollect        :: IOStateArrow s b b
+errorMsgStderrAndCollect        = setErrorMsgHandler True (hPutStrLn stderr)
 
 -- | error message handler for ignoring errors
 
-errorMsgIgnore		:: IOStateArrow s b b
-errorMsgIgnore		= setErrorMsgHandler False (const $ return ())
+errorMsgIgnore          :: IOStateArrow s b b
+errorMsgIgnore          = setErrorMsgHandler False (const $ return ())
 
 -- |
 -- if error messages are collected by the error handler for
 -- processing these messages by the calling application,
 -- this arrow reads the stored messages and clears the error message store
 
-getErrorMessages	:: IOStateArrow s b XmlTree
+getErrorMessages        :: IOStateArrow s b XmlTree
 getErrorMessages
-    = getSysParam (reverse . xio_errorMsgList)		-- reverse the list of errors
+    = getSysParam (reverse . xio_errorMsgList)          -- reverse the list of errors
       >>>
-      clearErrorMsgList					-- clear the error list in the system state
+      clearErrorMsgList                                 -- clear the error list in the system state
       >>>
       arrL id
 
-clearErrorMsgList	:: IOStateArrow s b b
+clearErrorMsgList       :: IOStateArrow s b b
 clearErrorMsgList
     = changeSysParam (\ _ s -> s { xio_errorMsgList = [] } )
 
-addToErrorMsgList	:: IOStateArrow s XmlTree XmlTree
+addToErrorMsgList       :: IOStateArrow s XmlTree XmlTree
 addToErrorMsgList
     = changeSysParam cf
     where
     cf t s = if xio_errorMsgCollect s
-	     then s { xio_errorMsgList = t : xio_errorMsgList s }
-	     else s
+             then s { xio_errorMsgList = t : xio_errorMsgList s }
+             else s
 
 -- ------------------------------------------------------------
 
 -- |
 -- filter error messages from input trees and issue errors
 
-filterErrorMsg		:: IOStateArrow s XmlTree XmlTree
+filterErrorMsg          :: IOStateArrow s XmlTree XmlTree
 filterErrorMsg
     = ( setErrMsgStatus
-	>>>
-	sysErrorMsg
-	>>>
-	addToErrorMsgList
-	>>>
-	none
+        >>>
+        sysErrorMsg
+        >>>
+        addToErrorMsgList
+        >>>
+        none
       )
       `when`
       isError
 
 -- | generate a warnig message
 
-issueWarn		:: String -> IOStateArrow s b b
-issueWarn msg		= perform (warn msg  >>> filterErrorMsg)
+issueWarn               :: String -> IOStateArrow s b b
+issueWarn msg           = perform (warn msg  >>> filterErrorMsg)
 
 -- | generate an error message
-issueErr		:: String -> IOStateArrow s b b
-issueErr msg		= perform (err msg   >>> filterErrorMsg)
+issueErr                :: String -> IOStateArrow s b b
+issueErr msg            = perform (err msg   >>> filterErrorMsg)
 
 -- | generate a fatal error message, e.g. document not found
 
-issueFatal		:: String -> IOStateArrow s b b
-issueFatal msg		= perform (fatal msg >>> filterErrorMsg)
+issueFatal              :: String -> IOStateArrow s b b
+issueFatal msg          = perform (fatal msg >>> filterErrorMsg)
 
 -- |
 -- add the error level and the module where the error occured
 -- to the attributes of a document root node and remove the children when level is greater or equal to 'c_err'.
 -- called by 'setDocumentStatusFromSystemState' when the system state indicates an error
 
-setDocumentStatus	:: Int -> String -> IOStateArrow s XmlTree XmlTree
+setDocumentStatus       :: Int -> String -> IOStateArrow s XmlTree XmlTree
 setDocumentStatus level msg
     = ( addAttrl ( sattr a_status (show level)
-		   <+>
-		   sattr a_module msg
-		 )
-	>>>
-	( if level >= c_err
-	  then setChildren []
-	  else this
-	)
+                   <+>
+                   sattr a_module msg
+                 )
+        >>>
+        ( if level >= c_err
+          then setChildren []
+          else this
+        )
       )
       `when`
       isRoot
@@ -601,28 +601,28 @@ setDocumentStatus level msg
 -- removed and the module name where the error occured and the error level are added as attributes with 'setDocumentStatus'
 -- else nothing is changed
 
-setDocumentStatusFromSystemState		:: String -> IOStateArrow s XmlTree XmlTree
+setDocumentStatusFromSystemState                :: String -> IOStateArrow s XmlTree XmlTree
 setDocumentStatusFromSystemState msg
     = setStatus $< getErrStatus
     where
     setStatus level
-	| level <= c_warn	= this
-	| otherwise		= setDocumentStatus level msg
+        | level <= c_warn       = this
+        | otherwise             = setDocumentStatus level msg
 
 
 -- |
 -- check whether tree is a document root and the status attribute has a value less than 'c_err'
 
-documentStatusOk	:: ArrowXml a => a XmlTree XmlTree
+documentStatusOk        :: ArrowXml a => a XmlTree XmlTree
 documentStatusOk
     = isRoot
       >>>
       ( (getAttrValue a_status
-	 >>>
-	 isA (\ v -> null v || ((read v)::Int) <= c_warn)
-	)
-	`guards`
-	this
+         >>>
+         isA (\ v -> null v || ((read v)::Int) <= c_warn)
+        )
+        `guards`
+        this
       )
 
 -- ------------------------------------------------------------
@@ -630,7 +630,7 @@ documentStatusOk
 -- | set the base URI of a document, used e.g. for reading includes, e.g. external entities,
 -- the input must be an absolute URI
 
-setBaseURI		:: IOStateArrow s String String
+setBaseURI              :: IOStateArrow s String String
 setBaseURI
     = changeSysParam (\ b s -> s { xio_baseURI = b } )
       >>>
@@ -638,18 +638,18 @@ setBaseURI
 
 -- | read the base URI from the globale state
 
-getBaseURI		:: IOStateArrow s b String
+getBaseURI              :: IOStateArrow s b String
 getBaseURI
     = getSysParam xio_baseURI
       >>>
       ( ( getDefaultBaseURI
-	  >>>
-	  setBaseURI		
-	  >>>
-	  getBaseURI
-	)
-	`when`
-	isA null				-- set and get it, if not yet done
+          >>>
+          setBaseURI
+          >>>
+          getBaseURI
+        )
+        `when`
+        isA null                                -- set and get it, if not yet done
       )
 
 -- | change the base URI with a possibly relative URI, can be used for
@@ -658,7 +658,7 @@ getBaseURI
 --
 -- see also: 'setBaseURI', 'mkAbsURI'
 
-changeBaseURI		:: IOStateArrow s String String
+changeBaseURI           :: IOStateArrow s String String
 changeBaseURI
     = mkAbsURI
       >>>
@@ -667,11 +667,11 @@ changeBaseURI
 -- | set the default base URI, if parameter is null, the system base (@ file:\/\/\/\<cwd\>\/ @) is used,
 -- else the parameter, must be called before any document is read
 
-setDefaultBaseURI	:: String -> IOStateArrow s b String
+setDefaultBaseURI       :: String -> IOStateArrow s b String
 setDefaultBaseURI base
     = ( if null base
-	then arrIO getDir
-	else constA base
+        then arrIO getDir
+        else constA base
       )
       >>>
       changeSysParam (\ b s -> s { xio_defaultBaseURI = b } )
@@ -679,19 +679,19 @@ setDefaultBaseURI base
       traceValue 2 (("setDefaultBaseURI: new default base URI is " ++) . show)
     where
     getDir _ = do
-	       cwd <- getCurrentDirectory
-	       return ("file://" ++ normalize cwd ++ "/")
+               cwd <- getCurrentDirectory
+               return ("file://" ++ normalize cwd ++ "/")
 
     -- under Windows getCurrentDirectory returns something like: "c:\path\to\file"
     -- backslaches are not allowed in URIs and paths must start with a /
     -- so this is transformed into "/c:/path/to/file"
 
     normalize wd'@(d : ':' : _)
-	| d `elem` ['A'..'Z'] || d `elem` ['a'..'z']
-	    = '/' : concatMap win32ToUriChar wd'
+        | d `elem` ['A'..'Z'] || d `elem` ['a'..'z']
+            = '/' : concatMap win32ToUriChar wd'
     normalize wd'
-	= concatMap escapeNonUriChar wd'
-				 
+        = concatMap escapeNonUriChar wd'
+
     win32ToUriChar '\\' = "/"
     win32ToUriChar c    = escapeNonUriChar c
 
@@ -700,19 +700,19 @@ setDefaultBaseURI base
 
 -- | get the default base URI
 
-getDefaultBaseURI	:: IOStateArrow s b String
+getDefaultBaseURI       :: IOStateArrow s b String
 getDefaultBaseURI
-    = getSysParam xio_defaultBaseURI		-- read default uri in system  state
+    = getSysParam xio_defaultBaseURI            -- read default uri in system  state
       >>>
-      ( setDefaultBaseURI ""			-- set the default uri in system state
-	>>>
-	getDefaultBaseURI ) `when` isA null	-- when uri not yet set
+      ( setDefaultBaseURI ""                    -- set the default uri in system state
+        >>>
+        getDefaultBaseURI ) `when` isA null     -- when uri not yet set
 
 -- ------------------------------------------------------------
 
 -- | remember base uri, run an arrow and restore the base URI, used with external entity substitution
 
-runInLocalURIContext	:: IOStateArrow s b c -> IOStateArrow s b c
+runInLocalURIContext    :: IOStateArrow s b c -> IOStateArrow s b c
 runInLocalURIContext f
     = ( getBaseURI &&& this )
       >>>
@@ -726,31 +726,31 @@ runInLocalURIContext f
 
 -- | set the global trace level
 
-setTraceLevel	:: Int -> IOStateArrow s b b
+setTraceLevel   :: Int -> IOStateArrow s b b
 setTraceLevel l
     = changeSysParam (\ _ s -> s { xio_trace = l } )
 
 -- | read the global trace level
 
-getTraceLevel	:: IOStateArrow s b Int
+getTraceLevel   :: IOStateArrow s b Int
 getTraceLevel
     = getSysParam xio_trace
 
 -- | set the global trace command. This command does the trace output
 
-setTraceCmd	:: (Int -> String -> IO ()) -> IOStateArrow s b b
+setTraceCmd     :: (Int -> String -> IO ()) -> IOStateArrow s b b
 setTraceCmd c
     = changeSysParam (\ _ s -> s { xio_traceCmd = c } )
 
 -- | acces the command for trace output
- 
-getTraceCmd	:: IOStateArrow a b (Int -> String -> IO ())
+
+getTraceCmd     :: IOStateArrow a b (Int -> String -> IO ())
 getTraceCmd
     = getSysParam xio_traceCmd
 
 -- | run an arrow with a given trace level, the old trace level is restored after the arrow execution
 
-withTraceLevel	:: Int -> IOStateArrow s b c -> IOStateArrow s b c
+withTraceLevel  :: Int -> IOStateArrow s b c -> IOStateArrow s b c
 withTraceLevel level f
     = ( getTraceLevel       &&& this )
       >>>
@@ -760,26 +760,26 @@ withTraceLevel level f
       >>>
       arrL snd
     where
-    restoreTraceLevel	:: IOStateArrow s Int Int
+    restoreTraceLevel   :: IOStateArrow s Int Int
     restoreTraceLevel
-	= setTraceLevel $< this
+        = setTraceLevel $< this
 
 -- | apply a trace arrow and issue message to stderr
 
-trace		:: Int -> IOStateArrow s b String -> IOStateArrow s b b
+trace           :: Int -> IOStateArrow s b String -> IOStateArrow s b b
 trace level trc
     = perform ( trc
-		>>>
+                >>>
                 ( getTraceCmd &&& this )
                 >>>
-		arrIO (\ (cmd, msg) -> cmd level msg)
-	      )
+                arrIO (\ (cmd, msg) -> cmd level msg)
+              )
       `when` ( getTraceLevel
-	       >>>
-	       isA (>= level)
-	     )
+               >>>
+               isA (>= level)
+             )
 
-traceOutputToStderr	:: Int -> String -> IO ()
+traceOutputToStderr     :: Int -> String -> IO ()
 traceOutputToStderr _level msg
     = do
       hPutStrLn stderr msg
@@ -790,18 +790,18 @@ traceOutputToStderr _level msg
 -- The value is formated by a string conversion function. This is a substitute for
 -- the old and less general traceString function
 
-traceValue		:: Int -> (b -> String) -> IOStateArrow s b b
+traceValue              :: Int -> (b -> String) -> IOStateArrow s b b
 traceValue level trc
     = trace level (arr $ (('-' : "- (" ++ show level ++ ") ") ++) . trc)
 
 -- | an old alias for 'traceValue'
 
-traceString		:: Int -> (b -> String) -> IOStateArrow s b b
-traceString		= traceValue
+traceString             :: Int -> (b -> String) -> IOStateArrow s b b
+traceString             = traceValue
 
 -- | issue a string message as trace
 
-traceMsg	:: Int -> String -> IOStateArrow s b b
+traceMsg        :: Int -> String -> IOStateArrow s b b
 traceMsg level msg
     = traceValue level (const msg)
 
@@ -809,38 +809,38 @@ traceMsg level msg
 --
 -- for better readability the source is formated with indentDoc
 
-traceSource	:: IOStateArrow s XmlTree XmlTree
-traceSource 
+traceSource     :: IOStateArrow s XmlTree XmlTree
+traceSource
     = trace 3 $
       xshow
       ( choiceA [ isRoot :-> ( indentDoc
-			       >>>
-			       getChildren
-			     )
-		, isElem :-> ( root [] [this]
-			       >>> indentDoc
-			       >>> getChildren
-			       >>> isElem
-			     )
-		, this   :-> this
-		]
+                               >>>
+                               getChildren
+                             )
+                , isElem :-> ( root [] [this]
+                               >>> indentDoc
+                               >>> getChildren
+                               >>> isElem
+                             )
+                , this   :-> this
+                ]
       )
 
 -- | issue the tree representation of a document if trace level >= 4
-traceTree	:: IOStateArrow s XmlTree XmlTree
+traceTree       :: IOStateArrow s XmlTree XmlTree
 traceTree
     = trace 4 $
       xshow ( treeRepOfXmlDoc
-	      >>>
-	      addHeadlineToXmlDoc
-	      >>>
-	      getChildren
-	    )
+              >>>
+              addHeadlineToXmlDoc
+              >>>
+              getChildren
+            )
 
 -- | trace a main computation step
 -- issue a message when trace level >= 1, issue document source if level >= 3, issue tree when level is >= 4
 
-traceDoc	:: String -> IOStateArrow s XmlTree XmlTree
+traceDoc        :: String -> IOStateArrow s XmlTree XmlTree
 traceDoc msg
     = traceMsg 1 msg
       >>>
@@ -850,19 +850,19 @@ traceDoc msg
 
 -- | trace the global state
 
-traceState	:: IOStateArrow s b b
+traceState      :: IOStateArrow s b b
 traceState
     = perform ( xshow ( (getAllParams >>. concat)
-			>>>
-			applyA (arr formatParam)
-		      )
-		>>>
-		traceValue 2 ("global state:\n" ++)
-	      )
+                        >>>
+                        applyA (arr formatParam)
+                      )
+                >>>
+                traceValue 2 ("global state:\n" ++)
+              )
       where
-      -- formatParam	:: (String, XmlTrees) -> IOStateArrow s b1 XmlTree
+      -- formatParam    :: (String, XmlTrees) -> IOStateArrow s b1 XmlTree
       formatParam (n, v)
-	  = mkelem "param" [sattr "name" n] [arrL (const v)] <+> txt "\n"
+          = mkelem "param" [sattr "name" n] [arrL (const v)] <+> txt "\n"
 
 -- ----------------------------------------------------------
 
@@ -870,25 +870,25 @@ traceState
 -- try to escape unescaped chars, convert backslashes to slashes for windows paths,
 -- and try parsing again
 
-parseURIReference'	:: String -> Maybe URI
+parseURIReference'      :: String -> Maybe URI
 parseURIReference' uri
     = parseURIReference uri
       `mplus`
       ( if unesc
-	then parseURIReference uri'
-	else mzero
+        then parseURIReference uri'
+        else mzero
       )
     where
-    unesc	= not . all isUnescapedInURI $ uri
+    unesc       = not . all isUnescapedInURI $ uri
 
-    escape '\\'	= "/"
-    escape c	= escapeURIChar isUnescapedInURI c
+    escape '\\' = "/"
+    escape c    = escapeURIChar isUnescapedInURI c
 
-    uri' 	= concatMap escape uri
+    uri'        = concatMap escape uri
 
 -- | compute the absolut URI for a given URI and a base URI
 
-expandURIString	:: String -> String -> Maybe String
+expandURIString :: String -> String -> Maybe String
 expandURIString uri base
     = do
       base' <- parseURIReference' base
@@ -898,13 +898,13 @@ expandURIString uri base
 
 -- | arrow variant of 'expandURIString', fails if 'expandURIString' returns Nothing
 
-expandURI		:: ArrowXml a => a (String, String) String
+expandURI               :: ArrowXml a => a (String, String) String
 expandURI
     = arrL (maybeToList . uncurry expandURIString)
 
 -- | arrow for expanding an input URI into an absolute URI using global base URI, fails if input is not a legal URI
 
-mkAbsURI		:: IOStateArrow s String String
+mkAbsURI                :: IOStateArrow s String String
 mkAbsURI
     = ( this &&& getBaseURI ) >>> expandURI
 
@@ -912,56 +912,56 @@ mkAbsURI
 --
 -- See Network.URI for URI components
 
-getSchemeFromURI	:: ArrowList a => a String String
-getSchemeFromURI	= getPartFromURI scheme
+getSchemeFromURI        :: ArrowList a => a String String
+getSchemeFromURI        = getPartFromURI scheme
     where
     scheme = init . uriScheme
 
 -- | arrow for selecting the registered name (host) of the URI, fails if input is not a legal URI
 
-getRegNameFromURI	:: ArrowList a => a String String
-getRegNameFromURI	= getPartFromURI host
+getRegNameFromURI       :: ArrowList a => a String String
+getRegNameFromURI       = getPartFromURI host
     where
     host = maybe "" uriRegName . uriAuthority
 
 -- | arrow for selecting the port number of the URI without leading \':\', fails if input is not a legal URI
 
-getPortFromURI		:: ArrowList a => a String String
-getPortFromURI		= getPartFromURI port
+getPortFromURI          :: ArrowList a => a String String
+getPortFromURI          = getPartFromURI port
     where
     port = dropWhile (==':') . maybe "" uriPort . uriAuthority
 
 -- | arrow for selecting the user info of the URI without trailing \'\@\', fails if input is not a legal URI
 
-getUserInfoFromURI		:: ArrowList a => a String String
-getUserInfoFromURI		= getPartFromURI ui
+getUserInfoFromURI              :: ArrowList a => a String String
+getUserInfoFromURI              = getPartFromURI ui
     where
     ui = reverse . dropWhile (=='@') . reverse . maybe "" uriUserInfo . uriAuthority
 
 -- | arrow for computing the path component of an URI, fails if input is not a legal URI
 
-getPathFromURI		:: ArrowList a => a String String
-getPathFromURI		= getPartFromURI uriPath
+getPathFromURI          :: ArrowList a => a String String
+getPathFromURI          = getPartFromURI uriPath
 
 -- | arrow for computing the query component of an URI, fails if input is not a legal URI
 
-getQueryFromURI		:: ArrowList a => a String String
-getQueryFromURI		= getPartFromURI uriQuery
+getQueryFromURI         :: ArrowList a => a String String
+getQueryFromURI         = getPartFromURI uriQuery
 
 -- | arrow for computing the fragment component of an URI, fails if input is not a legal URI
 
-getFragmentFromURI	:: ArrowList a => a String String
-getFragmentFromURI	= getPartFromURI uriFragment
+getFragmentFromURI      :: ArrowList a => a String String
+getFragmentFromURI      = getPartFromURI uriFragment
 
 -- | arrow for computing the path component of an URI, fails if input is not a legal URI
 
-getPartFromURI		:: ArrowList a => (URI -> String) -> a String String
+getPartFromURI          :: ArrowList a => (URI -> String) -> a String String
 getPartFromURI sel
     = arrL (maybeToList . getPart)
       where
       getPart s = do
-		  uri <- parseURIReference' s
-		  return (sel uri)
+                  uri <- parseURIReference' s
+                  return (sel uri)
 
 -- ------------------------------------------------------------
 
@@ -970,7 +970,7 @@ getPartFromURI sel
 -- Default table is defined in 'Text.XML.HXT.DOM.MimeTypeDefaults'.
 -- This table is used when reading loacl files, (file: protocol) to determine the mime type
 
-setMimeTypeTable	:: MimeTypeTable -> IOStateArrow s b b
+setMimeTypeTable        :: MimeTypeTable -> IOStateArrow s b b
 setMimeTypeTable mtt
     = changeSysParam (\ _ s -> s {xio_mimeTypes = mtt})
 
@@ -982,7 +982,7 @@ setMimeTypeTable mtt
 -- The list of extenstions and mime types overwrites the default list in the system state
 -- of the IOStateArrow
 
-setMimeTypeTableFromFile	:: FilePath -> IOStateArrow s b b
+setMimeTypeTableFromFile        :: FilePath -> IOStateArrow s b b
 setMimeTypeTableFromFile file
     = setMimeTypeTable $< arrIO0 ( readMimeTypeTable file)
 

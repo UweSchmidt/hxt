@@ -22,7 +22,7 @@ module Text.XML.HXT.Arrow.WriteDocument
     )
 where
 
-import Control.Arrow				-- arrow classes
+import Control.Arrow                            -- arrow classes
 import Control.Arrow.ArrowList
 import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
@@ -31,20 +31,20 @@ import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlIOStateArrow
 
-import Text.XML.HXT.Arrow.Edit			( escapeHtmlDoc
-						, escapeXmlDoc
-						, haskellRepOfXmlDoc
-						, indentDoc
+import Text.XML.HXT.Arrow.Edit                  ( escapeHtmlDoc
+                                                , escapeXmlDoc
+                                                , haskellRepOfXmlDoc
+                                                , indentDoc
                                                 , addDefaultDTDecl
-						, preventEmptyElements
-						, removeDocWhiteSpace
-						, treeRepOfXmlDoc
-						)
+                                                , preventEmptyElements
+                                                , removeDocWhiteSpace
+                                                , treeRepOfXmlDoc
+                                                )
 
-import Text.XML.HXT.Arrow.DocumentOutput	( putXmlDocument
-						, encodeDocument
-						, encodeDocument'
-						)
+import Text.XML.HXT.Arrow.DocumentOutput        ( putXmlDocument
+                                                , encodeDocument
+                                                , encodeDocument'
+                                                )
 
 -- ------------------------------------------------------------
 
@@ -95,9 +95,9 @@ available options are
 
 > module Main
 > where
-> 
+>
 > import Text.XML.HXT.Arrow
-> 
+>
 > main        :: IO ()
 > main
 >     = do
@@ -112,10 +112,10 @@ error code is:
 
 > module Main
 > where
-> 
+>
 > import Text.XML.HXT.Arrow
 > import System.Exit
-> 
+>
 > main        :: IO ()
 > main
 >     = do
@@ -133,20 +133,20 @@ error code is:
 >                )
 -}
 
-writeDocument	:: Attributes -> String -> IOStateArrow s XmlTree XmlTree
+writeDocument   :: Attributes -> String -> IOStateArrow s XmlTree XmlTree
 writeDocument userOptions dst
     = perform ( traceMsg 1 ("writeDocument: destination is " ++ show dst)
-		>>>
-		prepareContents userOptions encodeDocument
-		>>>
-		putXmlDocument textMode dst
-		>>>
-		traceMsg 1 "writeDocument: finished"
-	      )
+                >>>
+                prepareContents userOptions encodeDocument
+                >>>
+                putXmlDocument textMode dst
+                >>>
+                traceMsg 1 "writeDocument: finished"
+              )
       `when`
       documentStatusOk
     where
-    textMode	= optionIsSet a_text_mode userOptions
+    textMode    = optionIsSet a_text_mode userOptions
 
 -- ------------------------------------------------------------
 
@@ -162,7 +162,7 @@ writeDocument userOptions dst
 -- The XML PI is suppressed, if not explicitly turned on with an
 -- option @ (a_no_xml_pi, v_0) @
 
-writeDocumentToString	:: ArrowXml a => Attributes  -> a XmlTree String
+writeDocumentToString   :: ArrowXml a => Attributes  -> a XmlTree String
 writeDocumentToString userOptions
     = prepareContents ( addEntries
                         userOptions
@@ -178,7 +178,7 @@ writeDocumentToString userOptions
 -- |
 -- indent and format output
 
-prepareContents	:: ArrowXml a => Attributes -> (Bool -> String -> a XmlTree XmlTree) -> a XmlTree XmlTree
+prepareContents :: ArrowXml a => Attributes -> (Bool -> String -> a XmlTree XmlTree) -> a XmlTree XmlTree
 prepareContents userOptions encodeDoc
     = indent
       >>>
@@ -188,37 +188,37 @@ prepareContents userOptions encodeDoc
     where
     formatEmptyElems
         | not (null noEmptyElemFor)     = preventEmptyElements noEmptyElemFor
-	| hasOption a_no_empty_elements
+        | hasOption a_no_empty_elements
           ||
           hasOption a_output_xhtml      = preventEmptyElements []
-	| otherwise                     = const this
+        | otherwise                     = const this
     addDtd
         | hasOption a_add_default_dtd   = addDefaultDTDecl
         | otherwise                     = this
     indent
-	| hasOption a_indent		= indentDoc			-- document indentation
-	| hasOption a_remove_whitespace	= removeDocWhiteSpace		-- remove all whitespace between tags
-	| otherwise			= this
+        | hasOption a_indent            = indentDoc                     -- document indentation
+        | hasOption a_remove_whitespace = removeDocWhiteSpace           -- remove all whitespace between tags
+        | otherwise                     = this
 
     format
-	| hasOption a_show_tree		= treeRepOfXmlDoc
-	| hasOption a_show_haskell	= haskellRepOfXmlDoc
-	| hasOption a_output_html	= formatEmptyElems True
-					  >>>
-					  escapeHtmlDoc			-- escape al XML and HTML chars >= 128
-					  >>>
-					  encodeDoc			-- convert doc into text with respect to output encoding with ASCII as default
-					    suppressXmlPi ( lookupDef usAscii a_output_encoding options )
-	| hasOption a_output_xml	= formatEmptyElems (hasOption a_output_xhtml)
-					  >>>
-					  escapeXmlDoc			-- escape lt, gt, amp, quot, 
-					  >>>
-					  encodeDoc			-- convert doc into text with respect to output encoding
-					    suppressXmlPi ( lookupDef "" a_output_encoding options )
-	| otherwise			= this
+        | hasOption a_show_tree         = treeRepOfXmlDoc
+        | hasOption a_show_haskell      = haskellRepOfXmlDoc
+        | hasOption a_output_html       = formatEmptyElems True
+                                          >>>
+                                          escapeHtmlDoc                 -- escape al XML and HTML chars >= 128
+                                          >>>
+                                          encodeDoc                     -- convert doc into text with respect to output encoding with ASCII as default
+                                            suppressXmlPi ( lookupDef usAscii a_output_encoding options )
+        | hasOption a_output_xml        = formatEmptyElems (hasOption a_output_xhtml)
+                                          >>>
+                                          escapeXmlDoc                  -- escape lt, gt, amp, quot,
+                                          >>>
+                                          encodeDoc                     -- convert doc into text with respect to output encoding
+                                            suppressXmlPi ( lookupDef "" a_output_encoding options )
+        | otherwise                     = this
 
-    suppressXmlPi							-- remove <?xml ... ?> when set
-	= hasOption a_no_xml_pi
+    suppressXmlPi                                                       -- remove <?xml ... ?> when set
+        = hasOption a_no_xml_pi
 
     noEmptyElemFor
         = words
@@ -227,21 +227,21 @@ prepareContents userOptions encodeDoc
           $ options
 
     hasOption n
-	= optionIsSet n options
+        = optionIsSet n options
 
-    options = addEntries 
-              userOptions 
-	      [ ( a_indent,		v_0 )
-	      , ( a_remove_whitespace,	v_0 )
-	      , ( a_output_xml,		v_1 )
-	      , ( a_show_tree,		v_0 )
-	      , ( a_show_haskell,	v_0 )
-	      , ( a_output_html,	v_0 )
-	      , ( a_output_xhtml,	v_0 )
-	      , ( a_no_xml_pi,          v_0 )
-	      , ( a_no_empty_elements,  v_0 )
+    options = addEntries
+              userOptions
+              [ ( a_indent,             v_0 )
+              , ( a_remove_whitespace,  v_0 )
+              , ( a_output_xml,         v_1 )
+              , ( a_show_tree,          v_0 )
+              , ( a_show_haskell,       v_0 )
+              , ( a_output_html,        v_0 )
+              , ( a_output_xhtml,       v_0 )
+              , ( a_no_xml_pi,          v_0 )
+              , ( a_no_empty_elements,  v_0 )
               , ( a_no_empty_elem_for,  ""  )
               , ( a_add_default_dtd,    v_0 )
-	      ]
+              ]
 
 -- ------------------------------------------------------------

@@ -31,13 +31,13 @@ import Text.XML.HXT.Parser.ProtocolHandlerHttpCurl
 --
 -- the http protocol handler switch for internal / external access
 
-getHttpContentsNativeOrWithCurl		:: URI -> XmlStateFilter a
+getHttpContentsNativeOrWithCurl         :: URI -> XmlStateFilter a
 getHttpContentsNativeOrWithCurl uri n
     = do
       curl <- getSysParamInt a_use_curl 0
       ( if curl /= 0
-	then getHttpContentsWithCurl
-	else getHttpContentsWithHttp ) uri n
+        then getHttpContentsWithCurl
+        else getHttpContentsWithHttp ) uri n
 
 
 -- ------------------------------------------------------------

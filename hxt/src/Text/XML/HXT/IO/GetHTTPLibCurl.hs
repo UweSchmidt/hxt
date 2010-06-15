@@ -21,68 +21,68 @@ module Text.XML.HXT.IO.GetHTTPLibCurl
 
 where
 
-import Control.Arrow			( first
-					, (>>>)
-					)
+import Control.Arrow                    ( first
+                                        , (>>>)
+                                        )
 import Control.Concurrent.MVar
-import Control.Monad			( when )
+import Control.Monad                    ( when )
 
 import qualified Data.ByteString        as B
 import qualified Data.ByteString.Char8  as C
 
-import Data.Char			( isDigit
-					, isSpace
-					)
-import Data.List			( isPrefixOf )
+import Data.Char                        ( isDigit
+                                        , isSpace
+                                        )
+import Data.List                        ( isPrefixOf )
 
 import Network.Curl
 
 import System.IO
-import System.IO.Unsafe			( unsafePerformIO )
+import System.IO.Unsafe                 ( unsafePerformIO )
 
-import Text.ParserCombinators.Parsec	( parse )
+import Text.ParserCombinators.Parsec    ( parse )
 
-import Text.XML.HXT.DOM.Util		( stringToLower )
+import Text.XML.HXT.DOM.Util            ( stringToLower )
 import Text.XML.HXT.DOM.XmlKeywords
-import Text.XML.HXT.DOM.XmlOptions	( isTrueValue )
+import Text.XML.HXT.DOM.XmlOptions      ( isTrueValue )
 
 import Text.XML.HXT.Parser.ProtocolHandlerUtil
-					( parseContentType )
+                                        ( parseContentType )
 import Text.XML.HXT.Version
 
 -- ------------------------------------------------------------
 --
 -- the global flag for initializing curl in the 1. call
 
-isInitCurl	:: MVar Bool
-isInitCurl	= unsafePerformIO $ newMVar False
+isInitCurl      :: MVar Bool
+isInitCurl      = unsafePerformIO $ newMVar False
 
 {-# NOINLINE isInitCurl #-}
 
-initCurl	:: IO ()
+initCurl        :: IO ()
 initCurl
     = do
       i <- takeMVar isInitCurl
       when (not i) ( do
-		     _ <- curl_global_init 3
-		     return ()
-		   )
+                     _ <- curl_global_init 3
+                     return ()
+                   )
       putMVar isInitCurl True
 
 -- ------------------------------------------------------------
 
 -- The curl lib is not thread save
 
-curlResource	:: MVar ()
-curlResource	= unsafePerformIO $ newMVar ()
+curlResource    :: MVar ()
+curlResource    = unsafePerformIO $ newMVar ()
 
 {-# NOINLINE curlResource #-}
 
-requestCurl	:: IO ()
-requestCurl	= takeMVar curlResource
+requestCurl     :: IO ()
+requestCurl     = takeMVar curlResource
 
-releaseCurl	:: IO ()
-releaseCurl	= putMVar curlResource ()
+releaseCurl     :: IO ()
+releaseCurl     = putMVar curlResource ()
 
 -- ------------------------------------------------------------
 
@@ -102,8 +102,8 @@ releaseCurl	= putMVar curlResource ()
 --
 -- will set the user agent and the referer URL for this request.
 
-getCont		:: [(String, String)] -> String -> IO (Either ([(String, String)], String)
-						              ([(String, String)], String))
+getCont         :: [(String, String)] -> String -> IO (Either ([(String, String)], String)
+                                                              ([(String, String)], String))
 getCont options uri
     = do
       initCurl
@@ -116,195 +116,195 @@ getCont options uri
       return resp'
     where
     _dumpResponse r
-	= do
-	  hPutStrLn stderr $ show $ respCurlCode   r
-	  hPutStrLn stderr $ show $ respStatus     r
-	  hPutStrLn stderr $        respStatusLine r
-	  hPutStrLn stderr $ show $ respHeaders    r
-	  hPutStrLn stderr $        respBody       r
+        = do
+          hPutStrLn stderr $ show $ respCurlCode   r
+          hPutStrLn stderr $ show $ respStatus     r
+          hPutStrLn stderr $        respStatusLine r
+          hPutStrLn stderr $ show $ respHeaders    r
+          hPutStrLn stderr $        respBody       r
 
     curlOptions
-	= defaultOptions ++ concatMap (uncurry copt) options ++ standardOptions
+        = defaultOptions ++ concatMap (uncurry copt) options ++ standardOptions
 
-    defaultOptions						-- these options may be overwritten
-	= [ CurlUserAgent ("hxt/" ++ hxt_version ++ " via libcurl")
-	  , CurlFollowLocation True
-	  ]
+    defaultOptions                                              -- these options may be overwritten
+        = [ CurlUserAgent ("hxt/" ++ hxt_version ++ " via libcurl")
+          , CurlFollowLocation True
+          ]
 
-    standardOptions						-- these options can't be overwritten
-	= [ CurlFailOnError    False
-	  , CurlHeader         False
-	  , CurlNoProgress     True
-	  ]
+    standardOptions                                             -- these options can't be overwritten
+        = [ CurlFailOnError    False
+          , CurlHeader         False
+          , CurlNoProgress     True
+          ]
     evalResponse r
-	| rc /= CurlOK
-	    = Left ( [ mkH transferStatus    "999"
-		     , mkH transferMessage $ "curl library rc: " ++ show rc
-		     ]
-		   , "curl library error when requesting URI "
-		     ++ show uri
-		     ++ ": (curl return code=" ++ show rc ++ ") "
-		   )
-	| rs < 200 && rs >= 300
-	    = Left ( contentT rsh ++ headers
-		   , "http error when accessing URI "
-		     ++ show uri
-		     ++ ": "
-		     ++ show rsl
-		   )
-	| otherwise
-	    = B.length body
+        | rc /= CurlOK
+            = Left ( [ mkH transferStatus    "999"
+                     , mkH transferMessage $ "curl library rc: " ++ show rc
+                     ]
+                   , "curl library error when requesting URI "
+                     ++ show uri
+                     ++ ": (curl return code=" ++ show rc ++ ") "
+                   )
+        | rs < 200 && rs >= 300
+            = Left ( contentT rsh ++ headers
+                   , "http error when accessing URI "
+                     ++ show uri
+                     ++ ": "
+                     ++ show rsl
+                   )
+        | otherwise
+            = B.length body
               `seq`
               Right ( contentT rsh ++ headers
                     , C.unpack body
-		    )
-	where
+                    )
+        where
         body :: B.ByteString
         body = respBody r
 
-	mkH x y	= (x, dropWhile isSpace y)
+        mkH x y = (x, dropWhile isSpace y)
 
-	headers
-	    = map (\ (k, v) -> mkH (httpPrefix ++ stringToLower k) v) rsh
-	      ++
+        headers
+            = map (\ (k, v) -> mkH (httpPrefix ++ stringToLower k) v) rsh
+              ++
               statusLine (words rsl)
 
-	contentT
-	    = map (first stringToLower)			-- all header names to lowercase
-	      >>>
-	      filter ((== "content-type") . fst)	-- select content-type header
-	      >>>
-	      reverse					-- when libcurl is called with automatic redirects, there are more than one content-type headers
-	      >>>
-	      take 1					-- take the last one, (if at leat one is found)
-	      >>>
-	      map snd					-- select content-type value
-	      >>>
-	      map ( either (const []) id
-		    . parse parseContentType ""		-- parse the content-type for mimetype and charset
-		  )
-	      >>>
-	      concat
+        contentT
+            = map (first stringToLower)                 -- all header names to lowercase
+              >>>
+              filter ((== "content-type") . fst)        -- select content-type header
+              >>>
+              reverse                                   -- when libcurl is called with automatic redirects, there are more than one content-type headers
+              >>>
+              take 1                                    -- take the last one, (if at leat one is found)
+              >>>
+              map snd                                   -- select content-type value
+              >>>
+              map ( either (const []) id
+                    . parse parseContentType ""         -- parse the content-type for mimetype and charset
+                  )
+              >>>
+              concat
 
-	statusLine (vers : _code : msg)			-- the status line of the curl response can be an old one, e.g. in the case of a redirect,
-	    = [ mkH transferVersion   vers		-- so the return code is taken from the status field, which is contains the last status
-	      , mkH transferMessage $ unwords msg
-	      , mkH transferStatus  $ show rs
-	      ]
+        statusLine (vers : _code : msg)                 -- the status line of the curl response can be an old one, e.g. in the case of a redirect,
+            = [ mkH transferVersion   vers              -- so the return code is taken from the status field, which is contains the last status
+              , mkH transferMessage $ unwords msg
+              , mkH transferStatus  $ show rs
+              ]
         statusLine _
-	    = []
+            = []
 
-	rc  = respCurlCode    r
-	rs  = respStatus      r
-	rsl = respStatusLine  r
-	rsh = respHeaders     r
+        rc  = respCurlCode    r
+        rs  = respStatus      r
+        rsl = respStatusLine  r
+        rsh = respHeaders     r
 
 -- ------------------------------------------------------------
 
-copt	:: String -> String -> [CurlOption]
+copt    :: String -> String -> [CurlOption]
 copt k v
     | "curl" `isPrefixOf` k
-	= opt2copt (drop 4 k) v
+        = opt2copt (drop 4 k) v
 
     | k `elem` [a_proxy, a_redirect]
-	= opt2copt k v
+        = opt2copt k v
 
     | k == a_options_curl
-	= curlOptionString v
+        = curlOptionString v
 
     | otherwise
-	= []
+        = []
 
-opt2copt	:: String -> String -> [CurlOption]
+opt2copt        :: String -> String -> [CurlOption]
 opt2copt k v
-    | k `elem` ["-A", "--user-agent"]	= [CurlUserAgent v]
-    | k `elem` ["-b", "--cookie"]	= [CurlCookie v]
+    | k `elem` ["-A", "--user-agent"]   = [CurlUserAgent v]
+    | k `elem` ["-b", "--cookie"]       = [CurlCookie v]
     | k == "--connect-timeout"
       &&
-      isIntArg v			= [CurlConnectTimeout      $ read    v]
-    | k == "--crlf"			= [CurlCRLF                $ isTrue  v]
-    | k `elem` ["-d", "--data"]		= [CurlPostFields          $ lines   v]
-    | k `elem` ["-e", "--referer"]	= [CurlReferer                       v]
-    | k `elem` ["-H", "--header"]	= [CurlHttpHeaders         $ lines   v]
-    | k == "--ignore-content-length"	= [CurlIgnoreContentLength $ isTrue  v]
-    | k `elem` ["-I", "--head"]		= [CurlNoBody              $ isTrue  v]
+      isIntArg v                        = [CurlConnectTimeout      $ read    v]
+    | k == "--crlf"                     = [CurlCRLF                $ isTrue  v]
+    | k `elem` ["-d", "--data"]         = [CurlPostFields          $ lines   v]
+    | k `elem` ["-e", "--referer"]      = [CurlReferer                       v]
+    | k `elem` ["-H", "--header"]       = [CurlHttpHeaders         $ lines   v]
+    | k == "--ignore-content-length"    = [CurlIgnoreContentLength $ isTrue  v]
+    | k `elem` ["-I", "--head"]         = [CurlNoBody              $ isTrue  v]
     | k `elem` ["-L", "--location", a_redirect]
-					= [CurlFollowLocation      $ isTrue  v]
+                                        = [CurlFollowLocation      $ isTrue  v]
     | k == "--max-filesize"
       &&
-      isIntArg v			= [CurlMaxFileSizeLarge    $ read    v]
+      isIntArg v                        = [CurlMaxFileSizeLarge    $ read    v]
     | k `elem` ["-m", "--max-time"]
       &&
-      isIntArg v			= [CurlTimeoutMS           $ read    v]
-    | k `elem` ["-n", "--netrc"]	= [CurlNetrcFile                     v]
-    | k `elem` ["--ssl-verify-peer"]	= [CurlSSLVerifyPeer $ read v]
+      isIntArg v                        = [CurlTimeoutMS           $ read    v]
+    | k `elem` ["-n", "--netrc"]        = [CurlNetrcFile                     v]
+    | k `elem` ["--ssl-verify-peer"]    = [CurlSSLVerifyPeer $ read v]
     | k `elem` ["-R", "--remote-time"]  = [CurlFiletime            $ isTrue  v]
-    | k `elem` ["-u", "--user"]		= [CurlUserPwd                       v]
-    | k `elem` ["-U", "--proxy-user"]	= [CurlProxyUserPwd                  v]
+    | k `elem` ["-u", "--user"]         = [CurlUserPwd                       v]
+    | k `elem` ["-U", "--proxy-user"]   = [CurlProxyUserPwd                  v]
     | k `elem` ["-x", "--proxy", a_proxy]
-				        =  proxyOptions
+                                        =  proxyOptions
     | k `elem` ["-X", "--request"]      = [CurlCustomRequest                 v]
     | k `elem` ["-y", "--speed-time"]
       &&
       isIntArg v                        = [CurlLowSpeedTime        $ read    v]
     | k `elem` ["-Y", "--speed-limit"]
       &&
-      isIntArg v			= [CurlLowSpeed            $ read    v]
+      isIntArg v                        = [CurlLowSpeed            $ read    v]
     | k `elem` ["-z", "--time-cond", a_if_modified_since]
-					=  ifModifiedOptions
+                                        =  ifModifiedOptions
 
-    | k == a_if_modified_since		= [CurlHttpHeaders	   $ ["If-Modified-Since: " ++ v] ]
-					-- CurlTimeValue seems to be buggy, therefore this workaround
+    | k == a_if_modified_since          = [CurlHttpHeaders         $ ["If-Modified-Since: " ++ v] ]
+                                        -- CurlTimeValue seems to be buggy, therefore this workaround
     | k == "--max-redirs"
       &&
-      isIntArg v			= [CurlMaxRedirs           $ read    v]
-    | k `elem` ["-0", "--http1.0"]	= [CurlHttpVersion       HttpVersion10]
-    | otherwise				= []
+      isIntArg v                        = [CurlMaxRedirs           $ read    v]
+    | k `elem` ["-0", "--http1.0"]      = [CurlHttpVersion       HttpVersion10]
+    | otherwise                         = []
     where
     ifModifiedOptions
-	| "-" `isPrefixOf` v
-	  &&
-	  isIntArg v'			= [CurlTimeCondition TimeCondIfUnmodSince
-					  ,CurlTimeValue           $ read   v'
-					  ]
-	| isIntArg v			= [CurlTimeCondition TimeCondIfModSince
-					  ,CurlTimeValue           $ read   v'
-					  ]
-	| otherwise			= []
-	where
-	v' = tail v
+        | "-" `isPrefixOf` v
+          &&
+          isIntArg v'                   = [CurlTimeCondition TimeCondIfUnmodSince
+                                          ,CurlTimeValue           $ read   v'
+                                          ]
+        | isIntArg v                    = [CurlTimeCondition TimeCondIfModSince
+                                          ,CurlTimeValue           $ read   v'
+                                          ]
+        | otherwise                     = []
+        where
+        v' = tail v
 
     proxyOptions
-	= [ CurlProxyPort pport
-	  , CurlProxy     phost
-	  ]
-	where
-	pport
-	    | isIntArg ppp	= read v
-	    | otherwise		= 1080
-	(phost, pp) 		= span (/=':') v
-	ppp      		= drop 1 pp
+        = [ CurlProxyPort pport
+          , CurlProxy     phost
+          ]
+        where
+        pport
+            | isIntArg ppp      = read v
+            | otherwise         = 1080
+        (phost, pp)             = span (/=':') v
+        ppp                     = drop 1 pp
 
 
 
-isTrue		:: String -> Bool
-isTrue s  	= null s || isTrueValue s
+isTrue          :: String -> Bool
+isTrue s        = null s || isTrueValue s
 
-isIntArg	:: String -> Bool
-isIntArg s 	= not (null s) && all isDigit s
+isIntArg        :: String -> Bool
+isIntArg s      = not (null s) && all isDigit s
 
-curlOptionString	:: String -> [CurlOption]
+curlOptionString        :: String -> [CurlOption]
 curlOptionString
     = concatMap (uncurry copt) . opts . words
     where
     opts l
-	| null l			= []
-	| not ("-" `isPrefixOf` k)	= opts l1		-- k not an option: ignore
-	| null l1			= opts (k:"":l1)	-- last option
-	| "-" `isPrefixOf` v		= (k, "") : opts (v:l)	-- k option without arg
-	| otherwise			= (k, v) : opts l2	-- k with value
-	where
-	(k:l1) = l
-	(v:l2) = l1
+        | null l                        = []
+        | not ("-" `isPrefixOf` k)      = opts l1               -- k not an option: ignore
+        | null l1                       = opts (k:"":l1)        -- last option
+        | "-" `isPrefixOf` v            = (k, "") : opts (v:l)  -- k option without arg
+        | otherwise                     = (k, v) : opts l2      -- k with value
+        where
+        (k:l1) = l
+        (v:l2) = l1
 
 -- ------------------------------------------------------------

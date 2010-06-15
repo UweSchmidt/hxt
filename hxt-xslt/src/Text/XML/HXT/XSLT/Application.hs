@@ -18,7 +18,7 @@
 
 -- ------------------------------------------------------------
 
-module Text.XML.HXT.XSLT.Application 
+module Text.XML.HXT.XSLT.Application
     ( applyStylesheet        -- CompiledStylesheet -> XmlTree -> [XmlTree]
     , applyStylesheetWParams -- Map ExName Expr -> CompiledStylesheet -> XmlTree -> [XmlTree]
     , XPathParams
@@ -31,7 +31,7 @@ import Text.XML.HXT.XSLT.CompiledStylesheet
 import           Data.Char
 import           Data.List
 import           Data.Map                     (Map)
-import qualified Data.Map 	as Map hiding (Map)
+import qualified Data.Map       as Map hiding (Map)
 import           Data.Maybe
 
 -- just for debugging
@@ -47,7 +47,7 @@ type VariableSet = Map ExName XPathValue
 type ParamSet = VariableSet
 
 data Context = Ctx NavXmlTree               -- current node
-                   [NavXmlTree]             -- current node list 
+                   [NavXmlTree]             -- current node list
                    Int                      -- pos. of curr-node 1..length
                    Int                      -- length of node list
                    VariableSet              -- glob. Var
@@ -98,10 +98,10 @@ processContext :: Context -> (Context->[XmlTree]) -> [XmlTree]
 processContext CtxEmpty _f = []
 processContext ctx@(Ctx _node nodeList pos len globVar locVar cs rl rd) f
     | pos > len
-	= []
+        = []
     | otherwise
-	= f ctx ++ processContext (Ctx (nodeList!!pos) nodeList (pos+1) len globVar locVar cs rl rd) f
-                 
+        = f ctx ++ processContext (Ctx (nodeList!!pos) nodeList (pos+1) len globVar locVar cs rl rd) f
+
 incRecDepth :: Context -> Context
 incRecDepth CtxEmpty = CtxEmpty
 incRecDepth (Ctx n nl p l gl lc cs rl rd) = Ctx n nl p l gl lc cs rl (rd+1)
@@ -109,13 +109,13 @@ incRecDepth (Ctx n nl p l gl lc cs rl rd) = Ctx n nl p l gl lc cs rl (rd+1)
 recDepth :: Context -> Int
 recDepth (Ctx _ _ _ _ _ _ _ _ rd) = rd
 recDepth CtxEmpty = 0
-                 
+
 -- ----------------
 
 evalXPathExpr :: Expr -> Context -> XPathValue
 evalXPathExpr expr (Ctx node _ pos len globVars locVars _ _ _)
     = filterXPath $ evalExpr (vars,[]) (pos, len, node) expr (XPVNode . singletonNodeSet $ node)
-    where 
+    where
     filterXPath (XPVError err)    = error err
     -- filterXPath (XPVNode nodes)   = XPVNode $ (\x -> fst x ++ snd x) $ partition (isAttr . subtreeNT) nodes
     -- this has been moved to applySelect, that's the point where the node set is converted inot a list of trees
@@ -137,8 +137,8 @@ evalRtf template rtfId ctx = XPVNode $ singletonNodeSet (ntree rtfRoot)
 
 -- ------------------------------------------------------------
 
-applySelect 				:: SelectExpr -> Context -> [NavXmlTree]
-applySelect				= applySelect'
+applySelect                             :: SelectExpr -> Context -> [NavXmlTree]
+applySelect                             = applySelect'
 
 {- just for debugging
 applySelect e@(SelectExpr expr) ctx = trace msg2 $ res
@@ -151,16 +151,16 @@ applySelect e@(SelectExpr expr) ctx = trace msg2 $ res
 -}
 
 applySelect' :: SelectExpr -> Context -> [NavXmlTree]
-applySelect' (SelectExpr expr) ctx = 
+applySelect' (SelectExpr expr) ctx =
     extractNodes xpathResult
-  where 
+  where
     xpathResult                  = evalXPathExpr expr ctx
 
     extractNodes (XPVNode nodes) = attributesFirst . fromNodeSet $ nodes
-    extractNodes r               = error $ "XPATH-Expression in select or match attribute returned a value of the wrong type ("              
+    extractNodes r               = error $ "XPATH-Expression in select or match attribute returned a value of the wrong type ("
                                            ++ take 15 (show r)  ++ "...)"
 
-    attributesFirst		 = uncurry (++) . partition (isAttr . subtreeNT)
+    attributesFirst              = uncurry (++) . partition (isAttr . subtreeNT)
 
 -- ------------------------------------------------------------
 
@@ -178,35 +178,35 @@ applyMatch (MatchExpr expr) ctx
     where
     matchBySelect :: SelectExpr -> NavXmlTree -> Context -> Bool
     matchBySelect _ _ CtxEmpty = False
-    matchBySelect expr' matchNode ctx'  
-	| matchNode `isNotInNodeList` applySelect expr' ctx'
-	    = matchBySelect expr' matchNode $ ctxSetNodes (maybeToList $ upNT $ ctxGetNode ctx') ctx'
+    matchBySelect expr' matchNode ctx'
+        | matchNode `isNotInNodeList` applySelect expr' ctx'
+            = matchBySelect expr' matchNode $ ctxSetNodes (maybeToList $ upNT $ ctxGetNode ctx') ctx'
         | otherwise
-	    = True   
+            = True
 
 -- ------------------------------------
 
 applyComputedQName :: ComputedQName -> Context -> QName
 
-applyComputedQName (LiteralQName qName) ctx = 
+applyComputedQName (LiteralQName qName) ctx =
     lookupAlias (getAliases $ ctxGetStylesheet ctx) qName
 
 applyComputedQName (CompQName uris nameATV nsATV) ctx =
     if null nsuri && not (null pref)
     then mkQName pref loc $ lookupPrefix uris pref
     else mkQName pref loc nsuri
-  where       
-    nsuri         = applyStringExpr nsATV ctx   
-    (pref, loc)   = if null loc' then ("", pref') 
+  where
+    nsuri         = applyStringExpr nsATV ctx
+    (pref, loc)   = if null loc' then ("", pref')
                                  else (pref', tail loc')
     (pref', loc') = span (/=':') $ applyStringExpr nameATV ctx
 
 -- ------------------------------------
- 
+
 applyComposite :: Template -> Context -> [XmlTree]
 applyComposite (TemplComposite templates) ctx
     = concat $ reverse $ fst $ foldl applyElem ([], ctx) templates
-    where 
+    where
     applyElem :: ([[XmlTree]], Context) -> Template -> ([[XmlTree]], Context)
     applyElem (nodes, ctx') (TemplVariable v) = (nodes, processLocalVariable v Map.empty ctx')
     applyElem (nodes, ctx') t                 = (applyTemplate t ctx' : nodes, ctx')
@@ -217,14 +217,14 @@ applyComposite _ _ = []
 applyForEach :: Template -> Context -> [XmlTree]
 applyForEach (TemplForEach expr sorting template) ctx
     = processContext sortedCtx $ applyTemplate template
-    where 
+    where
     sortedCtx = applySorting sorting ctxWOrule nodes
     ctxWOrule = ctxSetRule Nothing $ ctx
     nodes     = applySelect expr ctx
 
 applyForEach _ _ = []
 
-         
+
 applyChoose :: Template -> Context -> [XmlTree]
 applyChoose (TemplChoose whenList) ctx
     = applyWhenList whenList ctx
@@ -236,16 +236,16 @@ applyWhenList :: [When] -> Context -> [XmlTree]
 applyWhenList []  _ = []
 applyWhenList ((WhenPart expr template):xs) ctx
     | applyTest expr ctx
-	= applyTemplate template ctx
+        = applyTemplate template ctx
     | otherwise
-	= applyWhenList xs ctx
+        = applyWhenList xs ctx
 
 applyMessage :: Template -> Context -> [XmlTree]
 applyMessage (TemplMessage halt template) ctx
     | halt
-	= error $ "Message(fatal): " ++ msg
+        = error $ "Message(fatal): " ++ msg
     | otherwise
-	= []	-- trace ("Message(trace): " ++ msg) []
+        = []    -- trace ("Message(trace): " ++ msg) []
     where
     msg     = showTrees content
     content = applyTemplate template ctx
@@ -257,7 +257,7 @@ applyMessage _ _ = []
 applyElement :: Template -> Context -> [XmlTree]
 applyElement (TemplElement compQName uris attribSets template) ctx =
     return $ createElement name uris aliases fullcontent
-  where 
+  where
     aliases     = getAliases $ ctxGetStylesheet ctx
     name        = applyComputedQName compQName ctx
     fullcontent = applyAttribSets [] attribSets ctx ++ applyTemplate template ctx
@@ -270,23 +270,23 @@ applyElement _ _ = []
 createElement :: QName -> UriMapping -> NSAliasing -> [XmlTree] -> XmlTree
 createElement name uris aliases fullcontent =
     mkElement name (nsAttrs ++ distinctAttribs) content
-  where 
+  where
     nsAttrs            = uriMap2Attrs $ aliasUriMapping aliases uris
-    distinctAttribs    = nubBy eqAttr $ reverse attribs 
+    distinctAttribs    = nubBy eqAttr $ reverse attribs
     (attribs, content) = span (isAttr) fullcontent
-    eqAttr node1 node2 = equivQName (fromJust $ getAttrName node1) (fromJust $ getAttrName node2)  
+    eqAttr node1 node2 = equivQName (fromJust $ getAttrName node1) (fromJust $ getAttrName node2)
 
 
 applyAttribute :: Template -> Context -> [XmlTree]
 applyAttribute (TemplAttribute compQName template) ctx =
     return $ mkAttr qName content
-  where 
+  where
     qName   = applyComputedQName compQName ctx
     content = applyTemplate template ctx
 
 applyAttribute _ _ = []
 
-  
+
 applyText :: Template -> Context -> [XmlTree]
 applyText (TemplText s) _
     = [mkText s]
@@ -302,7 +302,7 @@ applyValueOf _ _ = []
 
 
 applyComment :: Template -> Context -> [XmlTree]
-applyComment (TemplComment content) ctx = 
+applyComment (TemplComment content) ctx =
     return $ mkCmt $ format $ collectTextnodes $ applyTemplate content ctx
   where
     format ""           = ""               -- could probably move to hxt...?
@@ -316,7 +316,7 @@ applyProcInstr :: Template -> Context -> [XmlTree]
 applyProcInstr (TemplProcInstr nameExpr template) ctx =
     return $ mkPi (mkName name) [mkText . format . collectTextnodes . applyTemplate template $ ctx]
   where
-    name      = applyStringExpr nameExpr ctx      
+    name      = applyStringExpr nameExpr ctx
     format ""           = ""                       -- In a better Haskell: format = replaceAll "?>" "? >"
     format ('?':'>':xs) = '?':' ':'>':format xs    -- could probably move to hxt...?
     format (x:xs)       = x:format xs
@@ -328,7 +328,7 @@ applyProcInstr _ _ = []
 applyApplTempl :: Template -> Context -> [XmlTree]
 applyApplTempl (TemplApply expr mode args sorting) ctx =
     applyMatchRulesToEntireContext params rules mode sortedCtx
-  where 
+  where
     params      = createParamSet args ctx
     sortedCtx   = applySorting sorting ctx nodes
     nodes       = maybe (getChildrenNT $ ctxGetNode ctx)
@@ -340,7 +340,7 @@ applyApplTempl _ _ = []
 
 
 applyImports :: Template -> Context -> [XmlTree]
-applyImports (TemplApplyImports) ctx= 
+applyImports (TemplApplyImports) ctx=
     applyMatchRules Map.empty rules mode ctx
   where
     rules    = getRuleImports currRule
@@ -365,12 +365,12 @@ applyCallTempl _ _ = []
 
 applyCopy :: Template -> Context -> [XmlTree]
 applyCopy (TemplCopy attrsets template) ctx
-    | isRoot currNode			-- Case 1: Root node => just use the content template
-	= applyTemplate template ctx
-    | isElem currNode			-- Case 2: Any other element-node
-	= return $ createElement name (getUriMap currNode) Map.empty fullcontent
-    | otherwise				-- Just return the current node as result
-	= return currNode        
+    | isRoot currNode                   -- Case 1: Root node => just use the content template
+        = applyTemplate template ctx
+    | isElem currNode                   -- Case 2: Any other element-node
+        = return $ createElement name (getUriMap currNode) Map.empty fullcontent
+    | otherwise                         -- Just return the current node as result
+        = return currNode
   where
     currNode    = subtreeNT $ ctxGetNode ctx
     name        = fromJust $ getElemName currNode
@@ -383,19 +383,19 @@ applyCopyOf (TemplCopyOf expr)
     = concatMap expandRoot . xPValue2XmlTrees . evalXPathExpr expr
     where
     expandRoot node
-	| isRoot node	= getChildren node
-        | otherwise	= return node
+        | isRoot node   = getChildren node
+        | otherwise     = return node
 
 applyCopyOf _ = const []
 
 -- ------------------------------------------------------------
 
 applyTemplate :: Template -> Context -> [XmlTree]
-applyTemplate				= applyTemplate'
+applyTemplate                           = applyTemplate'
 
 {- just for debugging
 applyTemplate t ctx
-					= trace msg2 $ res
+                                        = trace msg2 $ res
                                           where
                                           res = applyTemplate' t $ trace msg1 ctx
                                           msg1 = unlines [ "applyTemplate begin"
@@ -424,13 +424,13 @@ applyTemplate' t@(TemplApplyImports)    = applyImports t
 applyTemplate' t@(TemplCall _ _)        = applyCallTempl t
 applyTemplate' t@(TemplCopy _ _)        = applyCopy t
 applyTemplate' t@(TemplCopyOf _)        = applyCopyOf t
-applyTemplate'   (TemplVariable _)      = const []	-- trace ("Warning: Unreacheable variable: " ++ show (getVarName v)) const []
+applyTemplate'   (TemplVariable _)      = const []      -- trace ("Warning: Unreacheable variable: " ++ show (getVarName v)) const []
 
 -- ------------------------------------------------------------
 -- "Main" :
 
 applyStylesheetWParams :: XPathParams -> CompiledStylesheet -> XmlTree -> [XmlTree]
-applyStylesheetWParams inputParams cs@(CompStylesheet matchRules _ vars _ strips _) rawDoc = 
+applyStylesheetWParams inputParams cs@(CompStylesheet matchRules _ vars _ strips _) rawDoc =
     map fixupNS $ applyMatchRules Map.empty matchRules Nothing ctxRoot
   where
     ctxRoot   = Ctx docNode [docNode] 1 1 gloVars Map.empty cs Nothing 0
@@ -445,7 +445,7 @@ applyStylesheet  = applyStylesheetWParams Map.empty
 -- calling named- and applying match-rules
 
 applyMatchRulesToChildren :: ParamSet -> [MatchRule] -> (Maybe ExName) -> Context -> [XmlTree]
-applyMatchRulesToChildren args rules mode ctx = 
+applyMatchRulesToChildren args rules mode ctx =
     applyMatchRulesToEntireContext args rules mode childCtx
   where
     childCtx = ctxSetNodes (getChildrenNT $ ctxGetNode ctx) ctx
@@ -455,8 +455,8 @@ applyMatchRulesToEntireContext args rules mode ctx = processContext ctx (applyMa
 
 applyMatchRules :: ParamSet -> [MatchRule] -> (Maybe ExName) -> Context -> [XmlTree]
 applyMatchRules _    []           mode ctx = matchDefaultRules mode ctx
-applyMatchRules args (rule:rules) mode ctx = 
-    maybe (applyMatchRules args rules mode ctx) 
+applyMatchRules args (rule:rules) mode ctx =
+    maybe (applyMatchRules args rules mode ctx)
           id
           (applyMatchRule args rule mode ctx)
 
@@ -470,33 +470,33 @@ applyMatchRule args rule@(MatRule expr _ ruleMode _ _ _) mode ctx =
 instantiateMatchRule :: ParamSet -> MatchRule -> Context -> [XmlTree]
 instantiateMatchRule args (MatRule _ _ _ _ params content) ctx =
     applyTemplate content ctxNew
-  where 
+  where
     ctxNew = incRecDepth $ processParameters params args $ clearLocalVariables ctx
 
 instantiateNamedRule :: ParamSet -> NamedRule -> Context -> [XmlTree]
 instantiateNamedRule args (NamRule _ params content) ctx =
     applyTemplate content ctxNew
-  where 
+  where
     ctxNew = incRecDepth $ processParameters params args $ clearLocalVariables ctx
 
 -- ------------------------------------
-    
+
 matchDefaultRules :: (Maybe ExName) -> Context -> [XmlTree]
 matchDefaultRules mode ctx@(Ctx ctxNavNode _ _ _ _ _ stylesheet _ _)
-    | isElem ctxNode				-- rules for match="*|/"
-	= applyMatchRulesToChildren Map.empty rules mode ctx 
-    | isText ctxNode				-- rule for match="text()"
-	= [ctxNode]
-    | isAttr ctxNode				-- rule for match="@*"
-	= [mkText $ collectTextnodes $ getChildren ctxNode]
-    | otherwise					-- the glorious rest (PIs and comments):
-	= []
-    where 
+    | isElem ctxNode                            -- rules for match="*|/"
+        = applyMatchRulesToChildren Map.empty rules mode ctx
+    | isText ctxNode                            -- rule for match="text()"
+        = [ctxNode]
+    | isAttr ctxNode                            -- rule for match="@*"
+        = [mkText $ collectTextnodes $ getChildren ctxNode]
+    | otherwise                                 -- the glorious rest (PIs and comments):
+        = []
+    where
     rules   = getMatchRules stylesheet
     ctxNode = subtreeNT ctxNavNode
 
 matchDefaultRules _ _ = []
-  
+
 -- ------------------------------------
 
 -- Variables and Parameters
@@ -505,7 +505,7 @@ matchDefaultRules _ _ = []
 -- created local variable to the context
 
 processLocalVariable :: Variable -> ParamSet -> Context -> Context
-processLocalVariable var@(MkVar _ name _) arguments ctx =    
+processLocalVariable var@(MkVar _ name _) arguments ctx =
     addVariableBinding name val ctx
   where
     val = evalVariableWParamSet arguments ctx var
@@ -517,9 +517,9 @@ processParameters params arguments ctx
 evalVariableWParamSet :: ParamSet -> Context -> Variable -> XPathValue
 evalVariableWParamSet ps ctx (MkVar isPar name exprOrRtf)
     | isPar
-	= maybe (resultFromVar exprOrRtf) id $ Map.lookup name ps 
+        = maybe (resultFromVar exprOrRtf) id $ Map.lookup name ps
     | otherwise
-	= resultFromVar exprOrRtf
+        = resultFromVar exprOrRtf
   where
     resultFromVar (Left expr) = evalXPathExpr expr ctx
     resultFromVar (Right rtf) = evalRtf rtf (show (recDepth ctx) ++ " " ++ show name) ctx
@@ -540,25 +540,25 @@ applyAllAttrSetForName callstack name ctx =
     if name `elem` callstack
     then error $ "Attribute-Set " ++ show name ++ " is recursively used." ++
                  concatMap (("\n  used in "++) . show) callstack
-    
+
     else if isNothing attrset
     then error $ "No attribute set with name: " ++ show name
-    
+
     else concatMap (flip (applyAttribSet (name:callstack)) ctx) $ fromJust attrset
 
   where
     attrset = Map.lookup name $ getAttributeSets $ ctxGetStylesheet ctx
 
 applyAttribSet :: [ExName] -> AttributeSet -> Context -> [XmlTree]
-applyAttribSet callstack (AttribSet _ usedSets content) ctx = 
+applyAttribSet callstack (AttribSet _ usedSets content) ctx =
     applyAttribSets callstack usedSets ctx ++ applyTemplate content ctx
-    
+
 -- ------------------------------------
 -- Sorting
 
 applySorting :: [SortKey] -> Context -> [NavXmlTree] -> Context
 applySorting [] ctx nodes = ctxSetNodes nodes ctx
-applySorting sortKeys ctx nodes = 
+applySorting sortKeys ctx nodes =
     ctxSetNodes resultOrder ctx
   where
     resultOrder          = snd $ unzip sortedKVs
@@ -580,14 +580,14 @@ applySortKey :: SortKey -> Context -> ( Context -> SortVal
 applySortKey (SortK expr typeATV orderATV) ctx
     | typ /= "number"
       &&
-      typ /= "text" 
-	  = error $ "unsupported type in xsl:sort: " ++ typ
+      typ /= "text"
+          = error $ "unsupported type in xsl:sort: " ++ typ
     | ordering /="ascending"
       &&
       ordering /="descending"
-	  = error $ "order in xsl:sort element must be ascending or descending. Found: " ++ ordering
+          = error $ "order in xsl:sort element must be ascending or descending. Found: " ++ ordering
     | otherwise
-	= (extractFct, cmpFct)
+        = (extractFct, cmpFct)
     where
     isNum          = typ == "number"
     isDesc         = ordering == "descending"
@@ -595,27 +595,27 @@ applySortKey (SortK expr typeATV orderATV) ctx
     typ            = applyStringExpr typeATV ctx
 
     extractFct ctx'
-	= let
-	  val = applyStringExpr expr ctx'
-	  in
+        = let
+          val = applyStringExpr expr ctx'
+          in
           if isNum
           then Left $ readWDefault (-1.0 / 0.0) val
           else Right val
 
     cmpFct a
-	= ( if isDesc then invertOrd else id ) 
+        = ( if isDesc then invertOrd else id )
           .
           ( if isNum then cmpNum a else cmpString a )
 
     cmpNum (Left n1)  (Left n2)
-	= compare n1 n2
+        = compare n1 n2
     cmpNum _ _
-	= error "internal error in cmpNum in applySortKey"
+        = error "internal error in cmpNum in applySortKey"
 
     cmpString (Right s1) (Right s2)
-	= compare (map toLower s1) (map toLower s2)      -- The text comparison still needs to be improved...
+        = compare (map toLower s1) (map toLower s2)      -- The text comparison still needs to be improved...
     cmpString _ _
-	= error "internal error in cmpString in applySortKey"
+        = error "internal error in cmpString in applySortKey"
 
 invertOrd :: Ordering -> Ordering
 invertOrd EQ = EQ
@@ -629,20 +629,20 @@ fixupNS :: XmlTree -> XmlTree
 fixupNS = compressNS . disambigNS
 
 compressNS :: XmlTree -> XmlTree
-compressNS = 
+compressNS =
     mapTreeCtx compressElem $ Map.fromAscList [("xml", xmlNamespace), ("xmlns", xmlnsNamespace)]
-  
+
 compressElem :: UriMapping -> XNode -> (UriMapping, XNode)
 compressElem uris node
   | isElem node = (newUris, changeAttrl (filter $ isImportant) node)
   | otherwise   = (uris, node)
   where
     newUris       = uris `Map.union` getUriMap node
-    isImportant n = not (isNsAttr n) 
+    isImportant n = not (isNsAttr n)
                          || not ((localPart $ fromJust $ getAttrName n) `Map.member` uris)
 
 disambigNS :: XmlTree -> XmlTree
-disambigNS = 
+disambigNS =
     mapTreeCtx step $ Map.fromAscList [("xml", xmlNamespace), ("xmlns", xmlnsNamespace)]
   where
     step uris node
@@ -652,8 +652,8 @@ disambigNS =
       | otherwise   = (uris, node)
 
 disambigElem :: UriMapping -> XNode -> (UriMapping, XNode)
-disambigElem nsMap element =    
-    (newNsMap, XTag                  
+disambigElem nsMap element =
+    (newNsMap, XTag
                  (remapNsName newNsMap $ fromJust $ getElemName element)
                  $ map (changeName $ remapNsName newNsMap) $ fromJust $ getAttrl element )
   where
@@ -663,7 +663,7 @@ disambigElem nsMap element =
                    (element : map getNode (fromJust $ getAttrl element))
     newPrefs   = filter (`notElem` oldPrefs) ["ns" ++ show i | i <- [(1::Int)..]]
     oldPrefs   = Map.keys nsMap
-    oldUris    = Map.elems nsMap  
+    oldUris    = Map.elems nsMap
 
 remapNsName :: UriMapping -> QName -> QName
 remapNsName nsMap name
@@ -672,8 +672,8 @@ remapNsName nsMap name
       ( isJust luUri
         &&
         fromJust luUri == nsUri
-      )			= name
-    | otherwise		= mkQName newPref (localPart name) nsUri
+      )                 = name
+    | otherwise         = mkQName newPref (localPart name) nsUri
 {-
     if maybe (nsUri=="") (== nsUri) luUri
     then name
@@ -682,7 +682,7 @@ remapNsName nsMap name
 -}
   where
     luUri   = Map.lookup (namePrefix name) nsMap
-    newPref = head $ (++ (error $ "int. error: No prefix for " ++ show name ++ " " ++ show nsMap ++ " " ++ show luUri ++ " " ++ show nsUri)) 
+    newPref = head $ (++ (error $ "int. error: No prefix for " ++ show name ++ " " ++ show nsMap ++ " " ++ show luUri ++ " " ++ show nsUri))
                 $ Map.keys $ Map.filter (==namespaceUri name) nsMap
     nsUri   = namespaceUri name
 

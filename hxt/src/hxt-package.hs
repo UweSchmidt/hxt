@@ -6,17 +6,17 @@ import Data.List
 import System.Environment
 import System.IO
 
-part1	:: [String]
+part1   :: [String]
 part1
     = [ "-- arch-tag: Haskell XML Toolbox main description file"
       , "name: hxt"
       ]
 
-version	:: String
+version :: String
 version
     = "version: "
 
-part2	:: [String]
+part2   :: [String]
 part2
     = [ "license: OtherLicense"
       , "license-file: LICENCE"
@@ -25,17 +25,17 @@ part2
       , "category: XML"
       , "synopsis: A collection of tools for processing XML with Haskell. "
       , "description:  The Haskell XML Toolbox bases on the ideas of HaXml and HXML," ++
-	" but introduces a more general approach for processing XML with Haskell. The Haskell XML Toolbox" ++
-	" uses a generic data model for representing XML documents, including the DTD subset and the document" ++
-	" subset, in Haskell. It contains a validating XML parser, a HTML parser, namespace support," ++
-	" an XPath expression evaluator, an XSLT library, a RelaxNG schema validator" ++
-	" and funtions for serialization and deserialization of user defined data." ++
-	" The libraray make extensive use of the arrow approach for processing XML."
+        " but introduces a more general approach for processing XML with Haskell. The Haskell XML Toolbox" ++
+        " uses a generic data model for representing XML documents, including the DTD subset and the document" ++
+        " subset, in Haskell. It contains a validating XML parser, a HTML parser, namespace support," ++
+        " an XPath expression evaluator, an XSLT library, a RelaxNG schema validator" ++
+        " and funtions for serialization and deserialization of user defined data." ++
+        " The libraray make extensive use of the arrow approach for processing XML."
       , "homepage: http://www.fh-wedel.de/~si/HXmlToolbox/index.html"
       , "copyright: Copyright (c) 2005-2008 Uwe Schmidt"
       ]
 
-part3a	:: [String]
+part3a  :: [String]
 part3a
     = [ "tested-with: ghc-6.12.1"
       , "exposed: True"
@@ -51,7 +51,7 @@ part3b
       , " exposed-modules:"
       ]
 
-part4a	:: String -> [String]
+part4a  :: String -> [String]
 part4a dir
     = [ "hs-source-dirs: ."
       , "ghc-options: -Wall -fglasgow-exts"
@@ -100,27 +100,27 @@ part4b
       , "                curl       >= 1.3 && < 2"
       ]
 
-main	:: IO()
+main    :: IO()
 main
     = do
       vers : cabal : installdir : modules <- getArgs
       putStrLn (cabalFile vers cabal installdir modules)
       hFlush stdout
 
-cabalFile	:: String -> String -> String -> [String] -> String
+cabalFile       :: String -> String -> String -> [String] -> String
 cabalFile vers cabal installdir modules
     = unlines $
       part1 ++
       [ version ++ vers ] ++
       part2 ++
       ( if isCabal
-	then part3b
-	else part3a
+        then part3b
+        else part3a
       ) ++
       [ml modules] ++
       ( if isCabal
-	then part4b
-	else part4a installdir
+        then part4b
+        else part4a installdir
       )
     where
     isCabal = cabal == "cabal"
@@ -128,5 +128,5 @@ cabalFile vers cabal installdir modules
     editPath = ("  " ++) . map slash2dot . reverse . drop 1 . dropWhile (/= '.') . reverse . removeLeadingDot
     slash2dot '/' = '.'
     slash2dot c   = c
-    removeLeadingDot ('.':'/':path)	= path
-    removeLeadingDot path		= path
+    removeLeadingDot ('.':'/':path)     = path
+    removeLeadingDot path               = path

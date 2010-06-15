@@ -37,7 +37,7 @@ of the picklers for a none trivial data structure.
 -- ------------------------------------------------------------
 
 module Text.XML.HXT.Arrow.Pickle
-    ( xpickleDocument		 -- from this module Text.XML.HXT.Arrow.Pickle
+    ( xpickleDocument            -- from this module Text.XML.HXT.Arrow.Pickle
     , xunpickleDocument
     , xpickleWriteDTD
     , xpickleDTD
@@ -123,26 +123,26 @@ import           Text.XML.HXT.Arrow.Pickle.DTD
 -- An option evaluated by this arrow is 'a_addDTD'.
 -- If 'a_addDTD' is set ('v_1'), the pickler DTD is added as an inline DTD into the document.
 
-xpickleDocument		:: PU a -> Attributes -> String -> IOStateArrow s a XmlTree
+xpickleDocument         :: PU a -> Attributes -> String -> IOStateArrow s a XmlTree
 xpickleDocument xp al dest
     = xpickleVal xp
       >>>
       traceMsg 1 "xpickleVal applied"
       >>>
       ( if lookup1 a_addDTD al == v_1
-	then replaceChildren ( (constA undefined >>> xpickleDTD xp >>> getChildren)
-			       <+>
-			       getChildren
-			     )
-	else this
+        then replaceChildren ( (constA undefined >>> xpickleDTD xp >>> getChildren)
+                               <+>
+                               getChildren
+                             )
+        else this
       )
       >>>
       writeDocument al dest
 
 -- | Option for generating and adding DTD when document is pickled
 
-a_addDTD	:: String
-a_addDTD	= "addDTD"
+a_addDTD        :: String
+a_addDTD        = "addDTD"
 
 -- | read an arbitray value from an XML document
 --
@@ -154,34 +154,34 @@ a_addDTD	= "addDTD"
 -- when applied with the appropriate options. When during pickling indentation is switched on,
 -- the whitespace must be removed during unpickling.
 
-xunpickleDocument	:: PU a -> Attributes -> String -> IOStateArrow s b a
+xunpickleDocument       :: PU a -> Attributes -> String -> IOStateArrow s b a
 xunpickleDocument xp al src
-			= readDocument al src
-			  >>>
-			  traceMsg 1 ("xunpickleVal for " ++ show src ++ " started")
-			  >>>
-			  xunpickleVal xp
-			  >>>
-			  traceMsg 1 ("xunpickleVal for " ++ show src ++ " finished")
+                        = readDocument al src
+                          >>>
+                          traceMsg 1 ("xunpickleVal for " ++ show src ++ " started")
+                          >>>
+                          xunpickleVal xp
+                          >>>
+                          traceMsg 1 ("xunpickleVal for " ++ show src ++ " finished")
 
 -- | Write out the DTD generated out of a pickler. Calls 'xpicklerDTD'
 
-xpickleWriteDTD		:: PU b -> Attributes -> String -> IOStateArrow s b XmlTree
-xpickleWriteDTD	xp al dest
-			= xpickleDTD xp
-			  >>>
-			  writeDocument al dest
+xpickleWriteDTD         :: PU b -> Attributes -> String -> IOStateArrow s b XmlTree
+xpickleWriteDTD xp al dest
+                        = xpickleDTD xp
+                          >>>
+                          writeDocument al dest
 
 -- | The arrow for generating the DTD out of a pickler
 --
 -- A DTD is generated from a pickler and check for consistency.
 -- Errors concerning the DTD are issued.
 
-xpickleDTD		:: PU b -> IOStateArrow s b XmlTree
-xpickleDTD xp		= root [] [ constL (thePicklerDTD xp)
-				    >>>
-				    filterErrorMsg
-				  ]
+xpickleDTD              :: PU b -> IOStateArrow s b XmlTree
+xpickleDTD xp           = root [] [ constL (thePicklerDTD xp)
+                                    >>>
+                                    filterErrorMsg
+                                  ]
 
 -- | An arrow for checking picklers
 --
@@ -194,50 +194,50 @@ xpickleDTD xp		= root [] [ constL (thePicklerDTD xp)
 --
 -- If the check succeeds, the arrow works like this, else it fails.
 
-checkPickler		:: Eq a => PU a -> IOStateArrow s a a
-checkPickler xp		= ( ( ( ( xpickleVal xp
-				  >>>
-				  replaceChildren ( (constA undefined >>> xpickleDTD xp >>> getChildren)
-						    <+>
-						    getChildren
-						  )
-				  >>>
-				  writeDocumentToString []
-				  >>>
-				  readFromString [(a_validate, v_1)]
-				  >>>
-				  ( xunpickleVal xp
-				    `orElse`
-				    ( issueErr "unpickling the document failed"
-				      >>>
-				      none
-				    )
-				  )
-				)
-				&&& 
-				this
-			      )
-			      >>> isA (uncurry (==))
-			    )
-			    `guards` this
-			  )
-			  `orElse` issueErr "pickle/unpickle combinators failed"
+checkPickler            :: Eq a => PU a -> IOStateArrow s a a
+checkPickler xp         = ( ( ( ( xpickleVal xp
+                                  >>>
+                                  replaceChildren ( (constA undefined >>> xpickleDTD xp >>> getChildren)
+                                                    <+>
+                                                    getChildren
+                                                  )
+                                  >>>
+                                  writeDocumentToString []
+                                  >>>
+                                  readFromString [(a_validate, v_1)]
+                                  >>>
+                                  ( xunpickleVal xp
+                                    `orElse`
+                                    ( issueErr "unpickling the document failed"
+                                      >>>
+                                      none
+                                    )
+                                  )
+                                )
+                                &&&
+                                this
+                              )
+                              >>> isA (uncurry (==))
+                            )
+                            `guards` this
+                          )
+                          `orElse` issueErr "pickle/unpickle combinators failed"
 
 -- | The arrow version of the pickler function
 
-xpickleVal		:: ArrowXml a => PU b -> a b XmlTree
-xpickleVal xp		= arr (pickleDoc xp)
+xpickleVal              :: ArrowXml a => PU b -> a b XmlTree
+xpickleVal xp           = arr (pickleDoc xp)
 
 -- | The arrow version of the unpickler function
 
-xunpickleVal		:: ArrowXml a => PU b -> a XmlTree b
-xunpickleVal xp		= arrL (maybeToList . unpickleDoc xp)
+xunpickleVal            :: ArrowXml a => PU b -> a XmlTree b
+xunpickleVal xp         = arrL (maybeToList . unpickleDoc xp)
 
 
 -- | Compute the associated DTD of a pickler
 
-thePicklerDTD		:: PU b -> XmlTrees
-thePicklerDTD		= dtdDescrToXml . dtdDescr . theSchema
+thePicklerDTD           :: PU b -> XmlTrees
+thePicklerDTD           = dtdDescrToXml . dtdDescr . theSchema
 
 -- ------------------------------------------------------------
 

@@ -112,19 +112,19 @@ import Text.XML.HXT.Parser.XmlCharParser
 
 -- ------------------------------------------------------------
 
-sPace		:: GenParser Char state String
+sPace           :: GenParser Char state String
 sPace
     = many1 xmlSpaceChar
 
-sPace0		:: GenParser Char state String
+sPace0          :: GenParser Char state String
 sPace0
     = many xmlSpaceChar
 
-skipS		:: GenParser Char state ()
+skipS           :: GenParser Char state ()
 skipS
     = skipMany1 xmlSpaceChar
 
-skipS0		:: GenParser Char state ()
+skipS0          :: GenParser Char state ()
 skipS0
     = skipMany xmlSpaceChar
 
@@ -132,55 +132,55 @@ skipS0
 --
 -- Names and Tokens (2.3)
 
-asciiLetter		:: GenParser Char state Char
+asciiLetter             :: GenParser Char state Char
 asciiLetter
     = satisfy (\ c -> ( c >= 'A' && c <= 'Z' ||
-			c >= 'a' && c <= 'z' )
-	      )
+                        c >= 'a' && c <= 'z' )
+              )
       <?> "ASCII letter"
 
-name		:: GenParser Char state String
+name            :: GenParser Char state String
 name
     = try ( do
-	    s1 <- xmlNameStartChar
-	    sl <- many xmlNameChar
-	    return (s1 : sl)
-	  )
+            s1 <- xmlNameStartChar
+            sl <- many xmlNameChar
+            return (s1 : sl)
+          )
       <?> "Name"
 
 -- Namespaces in XML: Rules [4-5] NCName:
 
-ncName		:: GenParser Char state String
+ncName          :: GenParser Char state String
 ncName
     = try ( do
-	    s1 <- xmlNCNameStartChar
-	    sl <- many xmlNCNameChar
-	    return (s1 : sl)
-	  )
+            s1 <- xmlNCNameStartChar
+            sl <- many xmlNCNameChar
+            return (s1 : sl)
+          )
       <?> "NCName"
 
 -- Namespaces in XML: Rules [6-8] QName:
 
-qName		:: GenParser Char state (String, String)
+qName           :: GenParser Char state (String, String)
 qName
     = do
       s1 <- ncName
       s2 <- option "" ( do
-			_ <- char ':'
-			ncName
-		      )
+                        _ <- char ':'
+                        ncName
+                      )
       return ( if null s2 then (s2, s1) else (s1, s2) )
 
-nmtoken		:: GenParser Char state String
+nmtoken         :: GenParser Char state String
 nmtoken
     = try (many1 xmlNameChar)
       <?> "Nmtoken"
 
-names		:: GenParser Char state [String]
+names           :: GenParser Char state [String]
 names
     = sepBy1 name sPace
 
-nmtokens	:: GenParser Char state [String]
+nmtokens        :: GenParser Char state [String]
 nmtokens
     = sepBy1 nmtoken sPace
 
@@ -188,40 +188,40 @@ nmtokens
 --
 -- Literals (2.3)
 
-singleChar		:: String -> GenParser Char state Char
+singleChar              :: String -> GenParser Char state Char
 singleChar notAllowed
     = satisfy (\ c -> isXmlChar c && not (c `elem` notAllowed))
 
-singleChars		:: String -> GenParser Char state String
+singleChars             :: String -> GenParser Char state String
 singleChars notAllowed
     = many1 (singleChar notAllowed)
 
-entityValue	:: GenParser Char state String
+entityValue     :: GenParser Char state String
 entityValue
     = attrValue
 
-attrValueDQ	:: GenParser Char state String
+attrValueDQ     :: GenParser Char state String
 attrValueDQ
     = between dq dq (concRes $ many $ attrChar "<&\"")
 
-attrValueSQ	:: GenParser Char state String
+attrValueSQ     :: GenParser Char state String
 attrValueSQ
     = between sq sq (concRes $ many $ attrChar "<&\'")
 
-attrValue	:: GenParser Char state String
+attrValue       :: GenParser Char state String
 attrValue
     = ( do
-	v <- attrValueDQ
-	return ("\"" ++ v ++ "\"")
+        v <- attrValueDQ
+        return ("\"" ++ v ++ "\"")
       )
       <|>
       ( do
-	v <- attrValueSQ
-	return ("'" ++ v ++ "'")
+        v <- attrValueSQ
+        return ("'" ++ v ++ "'")
       )
       <?> "attribute value (in quotes)"
 
-attrChar	:: String -> GenParser Char state String
+attrChar        :: String -> GenParser Char state String
 attrChar notAllowed
     = reference
       <|>
@@ -229,58 +229,58 @@ attrChar notAllowed
       <?> "legal attribute character or reference"
 
 
-systemLiteral		:: GenParser Char state String
+systemLiteral           :: GenParser Char state String
 systemLiteral
     = between dq dq (many $ noneOf "\"")
       <|>
       between sq sq (many $ noneOf "\'")
       <?> "system literal (in quotes)"
 
-pubidLiteral		:: GenParser Char state String
+pubidLiteral            :: GenParser Char state String
 pubidLiteral
     = between dq dq (many $ pubidChar "\'")
       <|>
       between sq sq (many $ pubidChar "")
       <?> "pubid literal (in quotes)"
       where
-      pubidChar		:: String -> GenParser Char state Char
+      pubidChar         :: String -> GenParser Char state Char
       pubidChar quoteChars
-	  = asciiLetter
-	    <|>
-	    digit
-	    <|>
-	    oneOf " \r\n"		-- no "\t" allowed, so xmlSpaceChar parser not used
-	    <|>
-	    oneOf "-()+,./:=?;!*#@$_%"
+          = asciiLetter
             <|>
-	    oneOf quoteChars
+            digit
+            <|>
+            oneOf " \r\n"               -- no "\t" allowed, so xmlSpaceChar parser not used
+            <|>
+            oneOf "-()+,./:=?;!*#@$_%"
+            <|>
+            oneOf quoteChars
 
 -- ------------------------------------------------------------
 --
 -- Character and Entity References (4.1)
 
-reference	:: GenParser Char state String
+reference       :: GenParser Char state String
 reference
     = ( do
-	i <- charRef
-	return ("&#" ++ show i ++ ";")
+        i <- charRef
+        return ("&#" ++ show i ++ ";")
       )
       <|>
       ( do
         n <- entityRef
         return ("&" ++ n ++ ";")
       )
-      
 
-checkCharRef	:: Int -> GenParser Char state Int
+
+checkCharRef    :: Int -> GenParser Char state Int
 checkCharRef i
     = if ( i <= fromEnum (maxBound::Char)
-	   && isXmlChar (toEnum i)
-	 )
+           && isXmlChar (toEnum i)
+         )
         then return i
-	else unexpected ("illegal value in character reference: " ++ intToCharRef i ++ " , in hex: " ++ intToCharRefHex i)
+        else unexpected ("illegal value in character reference: " ++ intToCharRef i ++ " , in hex: " ++ intToCharRefHex i)
 
-charRef		:: GenParser Char state Int
+charRef         :: GenParser Char state Int
 charRef
     = do
       _ <- try (string "&#x")
@@ -296,7 +296,7 @@ charRef
       <?> "character reference"
 
 
-entityRef	:: GenParser Char state String
+entityRef       :: GenParser Char state String
 entityRef
     = do
       _ <- char '&'
@@ -305,28 +305,28 @@ entityRef
       return n
       <?> "entity reference"
 
-peReference	:: GenParser Char state String
+peReference     :: GenParser Char state String
 peReference
     = try ( do
-	    _ <- char '%'
-	    n <- name
-	    _ <- semi
-	    return n
-	  )
+            _ <- char '%'
+            n <- name
+            _ <- semi
+            return n
+          )
       <?> "parameter-entity reference"
 
 -- ------------------------------------------------------------
 --
 -- 4.3
 
-encName		:: GenParser Char state String
+encName         :: GenParser Char state String
 encName
     = do
       c <- asciiLetter
       r <- many (asciiLetter <|> digit <|> oneOf "._-")
       return (c:r)
 
-versionNum	:: GenParser Char state String
+versionNum      :: GenParser Char state String
 versionNum
     = many1 xmlNameChar
 
@@ -335,17 +335,17 @@ versionNum
 --
 -- keywords
 
-keyword		:: String -> GenParser Char state String
+keyword         :: String -> GenParser Char state String
 keyword kw
     = try ( do
-	    n <- name
-	    if n == kw
-	      then return n
-	      else unexpected n
-	  )
+            n <- name
+            if n == kw
+              then return n
+              else unexpected n
+          )
       <?> kw
 
-keywords	:: [String] -> GenParser Char state String
+keywords        :: [String] -> GenParser Char state String
 keywords
     = foldr1 (<|>) . map keyword
 
@@ -353,7 +353,7 @@ keywords
 --
 -- parser for quoted attribute values
 
-quoted		:: GenParser Char state a -> GenParser Char state a
+quoted          :: GenParser Char state a -> GenParser Char state a
 quoted p
     = between dq dq p
       <|>
@@ -363,29 +363,29 @@ quoted p
 --
 -- simple char parsers
 
-dq, sq, lt, gt, semi	:: GenParser Char state Char
+dq, sq, lt, gt, semi    :: GenParser Char state Char
 
-dq	= char '\"'
-sq	= char '\''
-lt	= char '<'
-gt	= char '>'
-semi	= char ';'
+dq      = char '\"'
+sq      = char '\''
+lt      = char '<'
+gt      = char '>'
+semi    = char ';'
 
-separator	:: Char -> GenParser Char state ()
+separator       :: Char -> GenParser Char state ()
 separator c
     = do
       _ <- try ( do
-		 skipS0
-		 char c
-	       )
+                 skipS0
+                 char c
+               )
       skipS0
       <?> [c]
 
-bar, comma, eq, lpar, rpar	:: GenParser Char state ()
+bar, comma, eq, lpar, rpar      :: GenParser Char state ()
 
-bar	= separator '|'
-comma	= separator ','
-eq	= separator '='
+bar     = separator '|'
+comma   = separator ','
+eq      = separator '='
 
 lpar
     = do
@@ -403,23 +403,23 @@ rpar
 --
 -- all chars but not a special substring
 
-allBut		:: (GenParser Char state Char -> GenParser Char state String) -> String -> GenParser Char state String
+allBut          :: (GenParser Char state Char -> GenParser Char state String) -> String -> GenParser Char state String
 allBut p str
     = allBut1 p (const True) str
 
-allBut1		:: (GenParser Char state Char -> GenParser Char state String) -> (Char -> Bool) -> String -> GenParser Char state String
+allBut1         :: (GenParser Char state Char -> GenParser Char state String) -> (Char -> Bool) -> String -> GenParser Char state String
 allBut1 p prd (c:rest)
     = p ( satisfy (\ x -> isXmlChar x && prd x && not (x == c) )
-	  <|>
-	  try ( do
-		_ <- char c
-		notFollowedBy ( do
-				_ <- try (string rest)
-				return c
-			      )
-		return c
-	      )
-	)
+          <|>
+          try ( do
+                _ <- char c
+                notFollowedBy ( do
+                                _ <- try (string rest)
+                                return c
+                              )
+                return c
+              )
+        )
 
 allBut1 _p _prd str
     = error ("allBut1 _ _ " ++ show str ++ " is undefined")
@@ -428,13 +428,13 @@ allBut1 _p _prd str
 --
 -- concatenate parse results
 
-concRes		:: GenParser Char state [[a]] -> GenParser Char state [a]
+concRes         :: GenParser Char state [[a]] -> GenParser Char state [a]
 concRes p
     = do
       sl <- p
       return (concat sl)
 
-mkList		:: GenParser Char state a -> GenParser Char state [a]
+mkList          :: GenParser Char state a -> GenParser Char state [a]
 mkList p
     = do
       r <- p
@@ -448,20 +448,20 @@ mkList p
 --
 -- Literals (2.3)
 
-nameT		:: GenParser Char state XmlTree
+nameT           :: GenParser Char state XmlTree
 nameT
     = do
       n <- name
       return (mkDTDElem NAME [(a_name, n)] [])
 
-nmtokenT	:: GenParser Char state XmlTree
+nmtokenT        :: GenParser Char state XmlTree
 nmtokenT
     = do
       n <- nmtoken
       return (mkDTDElem NAME [(a_name, n)] [])
 
 
-entityValueT	:: GenParser Char state XmlTrees
+entityValueT    :: GenParser Char state XmlTrees
 entityValueT
     =  do
        sl <- between dq dq (entityTokensT "%&\"")
@@ -472,11 +472,11 @@ entityValueT
        return sl
        <?> "entity value (in quotes)"
 
-entityTokensT	:: String -> GenParser Char state XmlTrees
+entityTokensT   :: String -> GenParser Char state XmlTrees
 entityTokensT notAllowed
     = many (entityCharT notAllowed)
 
-entityCharT	:: String -> GenParser Char state XmlTree
+entityCharT     :: String -> GenParser Char state XmlTree
 entityCharT notAllowed
     = peReferenceT
       <|>
@@ -485,22 +485,22 @@ entityCharT notAllowed
       bypassedEntityRefT
       <|>
       ( do
-	cs <- many1 (singleChar notAllowed)
-	return (mkText cs)
+        cs <- many1 (singleChar notAllowed)
+        return (mkText cs)
       )
 
-attrValueT	:: GenParser Char state XmlTrees
+attrValueT      :: GenParser Char state XmlTrees
 attrValueT
     = between dq dq (attrValueT' "<&\"")
       <|>
       between sq sq (attrValueT' "<&\'")
       <?> "attribute value (in quotes)"
 
-attrValueT'	:: String -> GenParser Char state XmlTrees
+attrValueT'     :: String -> GenParser Char state XmlTrees
 attrValueT' notAllowed
     = many ( referenceT <|> singleCharsT notAllowed)
 
-singleCharsT	:: String -> GenParser Char state XmlTree
+singleCharsT    :: String -> GenParser Char state XmlTree
 singleCharsT notAllowed
     = do
       cs <- singleChars notAllowed
@@ -510,31 +510,31 @@ singleCharsT notAllowed
 --
 -- Character and Entity References (4.1)
 
-referenceT	:: GenParser Char state XmlTree
+referenceT      :: GenParser Char state XmlTree
 referenceT
     = charRefT
       <|>
       entityRefT
 
-charRefT	:: GenParser Char state XmlTree
+charRefT        :: GenParser Char state XmlTree
 charRefT
     = do
       i <- charRef
       return $! (mkCharRef $! i)
 
-entityRefT	:: GenParser Char state XmlTree
+entityRefT      :: GenParser Char state XmlTree
 entityRefT
     = do
       n <- entityRef
       return $! (mkEntityRef $! n)
 
-bypassedEntityRefT	:: GenParser Char state XmlTree
+bypassedEntityRefT      :: GenParser Char state XmlTree
 bypassedEntityRefT
     = do
       n <- entityRef
       return $! (mkText ("&" ++ n ++ ";"))
 
-peReferenceT	:: GenParser Char state XmlTree
+peReferenceT    :: GenParser Char state XmlTree
 peReferenceT
     = do
       r <- peReference

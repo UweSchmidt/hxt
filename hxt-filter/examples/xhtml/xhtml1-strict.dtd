@@ -9,7 +9,7 @@
    For further information, see: http://www.w3.org/TR/xhtml1
 
    Copyright (c) 1998-2000 W3C (MIT, INRIA, Keio),
-   All Rights Reserved. 
+   All Rights Reserved.
 
    This DTD module is identified by the PUBLIC and SYSTEM identifiers:
 
@@ -803,7 +803,7 @@
 
 <!--
  Content is %Flow; excluding a, form and form controls
---> 
+-->
 <!ELEMENT button %button.content;>  <!-- push button -->
 <!ATTLIST button
   %attrs;
@@ -839,7 +839,7 @@
 -->
 
 <!ENTITY % TRules "(none | groups | rows | cols | all)">
-  
+
 <!-- horizontal placement of table relative to document -->
 <!ENTITY % TAlign "(left|center|right)">
 

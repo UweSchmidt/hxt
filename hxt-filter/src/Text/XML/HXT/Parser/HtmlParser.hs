@@ -12,7 +12,7 @@
    This parser tries to interprete everything as HTML
    no errors are emitted during parsing. If something looks
    weired, warning messages are inserted in the document tree.
-  
+
    Module contains state filter for easy parsing and error handling
    real work is done in 'Text.XML.HXT.Parser.HtmlParsec'
 
@@ -53,13 +53,13 @@ import Text.XML.HXT.Parser.XhtmlEntities
 -- |
 -- read a document and parse it with 'parseHtmlDoc'. The main entry point of this module
 --
--- The input tree must be a root tree like in '	Text.XML.HXT.Parser.MainFunctions.getXmlDoc'. The content is read with 'Text.XML.HXT.Parser.XmlInput.getXmlContents',
+-- The input tree must be a root tree like in ' Text.XML.HXT.Parser.MainFunctions.getXmlDoc'. The content is read with 'Text.XML.HXT.Parser.XmlInput.getXmlContents',
 -- is parsed with 'parseHtmlDoc' and canonicalized (char refs are substituted in content and attributes,
 -- but comment is preserved)
 --
 -- see also : 'Text.XML.HXT.Parser.DTDProcessing.getWellformedDoc'
 
-getHtmlDoc	:: XmlStateFilter state
+getHtmlDoc      :: XmlStateFilter state
 getHtmlDoc
     = setSystemParams
       .>>
@@ -80,62 +80,62 @@ getHtmlDoc
 -- The warnings are issued, if the 1. parameter noWarnings is set to True,
 -- afterwards all are removed from the resulting tree.
 
-parseHtmlDoc	:: XmlStateFilter a
+parseHtmlDoc    :: XmlStateFilter a
 parseHtmlDoc
     = parseDoc
       `whenM` ( isRoot .> getChildren .> isXText )
       where
       parseDoc t'
-	  = ( traceMsg 2 ("parseHtmlDoc: parse HTML document " ++ show loc)
-	      .>>
-	      runHtmlParser
-	      .>>
-	      liftMf (processTopDown substHtmlEntities)
-	      .>>
-	      removeWarnings
-	      .>>
-	      traceTree
-	      .>>
-	      traceSource
+          = ( traceMsg 2 ("parseHtmlDoc: parse HTML document " ++ show loc)
+              .>>
+              runHtmlParser
+              .>>
+              liftMf (processTopDown substHtmlEntities)
+              .>>
+              removeWarnings
+              .>>
+              traceTree
+              .>>
+              traceSource
               ) $ t'
-	  where
-	  loc    = valueOf a_source t'			-- get document source uri
+          where
+          loc    = valueOf a_source t'                  -- get document source uri
 
-      removeWarnings	:: XmlStateFilter a
+      removeWarnings    :: XmlStateFilter a
       removeWarnings t'
-	  = let
-	    noWarnings  = not (satisfies (hasOption a_issue_warnings) t')
-	    selWarnings = deep
-			  ( choice [ isWarning :-> this
-				   , isXTag    :-> (getAttrl .> selWarnings)
-				   ]
-			  )
-	    remWarnings = processTopDown
-			  ( choice [ isWarning :-> none
-				   , isXTag    :-> (processAttrl (remWarnings $$))
-				   , this      :-> this
-				   ]
-			  )
-	    warnings = selWarnings t'
-	    in do 
-	       if null warnings
-		  then thisM t'
-		  else (  if noWarnings
-			  then return []
-			  else do
-			       issueError $$< warnings
+          = let
+            noWarnings  = not (satisfies (hasOption a_issue_warnings) t')
+            selWarnings = deep
+                          ( choice [ isWarning :-> this
+                                   , isXTag    :-> (getAttrl .> selWarnings)
+                                   ]
+                          )
+            remWarnings = processTopDown
+                          ( choice [ isWarning :-> none
+                                   , isXTag    :-> (processAttrl (remWarnings $$))
+                                   , this      :-> this
+                                   ]
+                          )
+            warnings = selWarnings t'
+            in do
+               if null warnings
+                  then thisM t'
+                  else (  if noWarnings
+                          then return []
+                          else do
+                               issueError $$< warnings
                        ) >>
-		       return (remWarnings t')
+                       return (remWarnings t')
 
 -- | The pure HTML parser, usually called via 'parseHtmlDoc'.
 --
 
-runHtmlParser	:: XmlStateFilter a
+runHtmlParser   :: XmlStateFilter a
 runHtmlParser t
     = if null errs
       then return (replaceChildren res t)
       else (issueError $$< errs)
-	   >> return (setStatus c_err "parsing HTML" t)
+           >> return (setStatus c_err "parsing HTML" t)
       where
       res  = getChildren .> parseHtmlText loc $ t
       errs = isXError .> neg isWarning $$ res
@@ -146,23 +146,23 @@ runHtmlParser t
 --
 -- XHTML entities
 
-substHtmlEntities	:: XmlTree -> XmlTrees
+substHtmlEntities       :: XmlTree -> XmlTrees
 substHtmlEntities
-    = choice [ isXEntityRef	:-> substEntity
-	     , isXTag		:-> processAttr (processChildren substHtmlEntities)
-	     , this		:-> this
-	     ]
+    = choice [ isXEntityRef     :-> substEntity
+             , isXTag           :-> processAttr (processChildren substHtmlEntities)
+             , this             :-> this
+             ]
       where
       substEntity t'@(NTree (XEntityRef en) _)
-	  = case (lookup en xhtmlEntities) of
-	    Just i
-		-> [mkXCharRefTree i]
-	    Nothing
-		-> xwarn ("no XHTML entity found for reference: \"&" ++ en ++ ";\"")
-		   ++
-		   (xmlTreesToText [t'])
+          = case (lookup en xhtmlEntities) of
+            Just i
+                -> [mkXCharRefTree i]
+            Nothing
+                -> xwarn ("no XHTML entity found for reference: \"&" ++ en ++ ";\"")
+                   ++
+                   (xmlTreesToText [t'])
 
       substEntity _
-	  = error "substHtmlEntities: illegal argument"
+          = error "substHtmlEntities: illegal argument"
 
 -- ------------------------------------------------------------

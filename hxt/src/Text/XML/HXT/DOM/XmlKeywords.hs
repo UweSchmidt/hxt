@@ -23,13 +23,13 @@ where
 --
 -- string constants for representing DTD keywords and attributes
 
-t_xml,				-- tag names
- t_root		:: String
+t_xml,                          -- tag names
+ t_root         :: String
 
 a_accept_mimetypes,
  a_add_default_dtd,
  a_canonicalize,
- a_default,			-- attribute names
+ a_default,                     -- attribute names
  a_check_namespaces,
  a_contentLength,
  a_collect_errors,
@@ -95,9 +95,9 @@ a_accept_mimetypes,
  a_verbose,
  a_version,
  a_xml,
- a_xmlns	:: String
+ a_xmlns        :: String
 
-v_0,				-- attribute values
+v_0,                            -- attribute values
  v_1,
  v_2,
  v_yes,
@@ -112,9 +112,9 @@ v_0,				-- attribute values
  v_option,
  v_pcdata,
  v_star,
- v_plus		:: String
+ v_plus         :: String
 
-k_any,				-- DTD keywords
+k_any,                          -- DTD keywords
  k_cdata,
  k_empty,
  k_entity,
@@ -136,131 +136,131 @@ k_any,				-- DTD keywords
  k_notation,
  k_pcdata,
  k_required,
- k_default	:: String
+ k_default      :: String
 
 -- ------------------------------------------------------------
 
-t_xml		= "xml"
-t_root		= "/"		-- name of root node tag
+t_xml           = "xml"
+t_root          = "/"           -- name of root node tag
 
-a_accept_mimetypes		= "accept-mimetypes"
+a_accept_mimetypes              = "accept-mimetypes"
 a_add_default_dtd               = "add-default-dtd"
-a_canonicalize			= "canonicalize"
-a_check_namespaces		= "check-namespaces"
-a_collect_errors		= "collect-errors"
-a_column			= "column"
-a_contentLength			= "Content-Length"
-a_default			= "default"
-a_default_baseuri		= "default-base-URI"
-a_do_not_canonicalize		= "do-not-canonicalize"
-a_do_not_check_namespaces	= "do-not-check-namespaces"
-a_do_not_issue_errors		= "do-not-issue-errors"
-a_do_not_issue_warnings		= "do-not-issue-warnings"
-a_do_not_preserve_comment	= "do-not-preserve-comment"
-a_do_not_remove_whitespace	= "do-not-remove-whitespace"
-a_do_not_use_curl		= "do-not-use-curl"
-a_do_not_validate		= "do-not-validate"
-a_encoding			= "encoding"
-a_error				= "error"
-a_error_log			= "errorLog"
-a_help				= "help"
-a_if_modified_since		= "if-modified-since"
-a_ignore_encoding_errors	= "ignore-encoding-errors"
-a_ignore_none_xml_contents	= "ignore-none-xml-contents"
-a_indent			= "indent"
-a_issue_warnings		= "issue-warnings"
-a_issue_errors			= "issue-errors"
-a_kind				= "kind"
-a_line				= "line"
-a_mime_types			= "mimetypes"
-a_module			= "module"
-a_modifier			= "modifier"
-a_name				= "name"
-a_no_empty_elements		= "no-empty-elements"
+a_canonicalize                  = "canonicalize"
+a_check_namespaces              = "check-namespaces"
+a_collect_errors                = "collect-errors"
+a_column                        = "column"
+a_contentLength                 = "Content-Length"
+a_default                       = "default"
+a_default_baseuri               = "default-base-URI"
+a_do_not_canonicalize           = "do-not-canonicalize"
+a_do_not_check_namespaces       = "do-not-check-namespaces"
+a_do_not_issue_errors           = "do-not-issue-errors"
+a_do_not_issue_warnings         = "do-not-issue-warnings"
+a_do_not_preserve_comment       = "do-not-preserve-comment"
+a_do_not_remove_whitespace      = "do-not-remove-whitespace"
+a_do_not_use_curl               = "do-not-use-curl"
+a_do_not_validate               = "do-not-validate"
+a_encoding                      = "encoding"
+a_error                         = "error"
+a_error_log                     = "errorLog"
+a_help                          = "help"
+a_if_modified_since             = "if-modified-since"
+a_ignore_encoding_errors        = "ignore-encoding-errors"
+a_ignore_none_xml_contents      = "ignore-none-xml-contents"
+a_indent                        = "indent"
+a_issue_warnings                = "issue-warnings"
+a_issue_errors                  = "issue-errors"
+a_kind                          = "kind"
+a_line                          = "line"
+a_mime_types                    = "mimetypes"
+a_module                        = "module"
+a_modifier                      = "modifier"
+a_name                          = "name"
+a_no_empty_elements             = "no-empty-elements"
 a_no_empty_elem_for             = "no-empty-elem-for"
-a_no_redirect	 		= "no-redirect"
+a_no_redirect                   = "no-redirect"
 a_no_xml_pi                     = "no-xml-pi"
-a_options_curl			= "options-curl"
-a_output_file			= "output-file"
-a_output_encoding		= "output-encoding"
-a_output_html			= "output-html"
-a_output_xhtml			= "output-xhtml"
-a_output_xml			= "output-xml"
-a_parse_by_mimetype		= "parse-by-mimetype"
-a_parse_html			= "parse-html"
-a_parse_xml			= "parse-xml"
-a_peref				= k_peref
-a_preserve_comment 		= "preserve-comment"
-a_propagate_errors		= "propagate-errors"
-a_proxy				= "proxy"
-a_redirect	 		= "redirect"
-a_remove_whitespace 		= "remove-whitespace"
-a_show_haskell			= "show-haskell"
-a_show_tree			= "show-tree"
-a_source			= "source"
-a_standalone			= "standalone"
-a_status			= "status"
-a_strict_input			= "strict-input"
-a_tagsoup			= "tagsoup"
-a_text_mode			= "text-mode"
-a_trace				= "trace"
-a_type				= "type"
-a_url				= "url"
-a_use_curl			= "use-curl"
-a_validate			= "validate"
-a_value				= "value"
-a_verbose			= "verbose"
-a_version			= "version"
-a_xml				= "xml"
-a_xmlns				= "xmlns"
+a_options_curl                  = "options-curl"
+a_output_file                   = "output-file"
+a_output_encoding               = "output-encoding"
+a_output_html                   = "output-html"
+a_output_xhtml                  = "output-xhtml"
+a_output_xml                    = "output-xml"
+a_parse_by_mimetype             = "parse-by-mimetype"
+a_parse_html                    = "parse-html"
+a_parse_xml                     = "parse-xml"
+a_peref                         = k_peref
+a_preserve_comment              = "preserve-comment"
+a_propagate_errors              = "propagate-errors"
+a_proxy                         = "proxy"
+a_redirect                      = "redirect"
+a_remove_whitespace             = "remove-whitespace"
+a_show_haskell                  = "show-haskell"
+a_show_tree                     = "show-tree"
+a_source                        = "source"
+a_standalone                    = "standalone"
+a_status                        = "status"
+a_strict_input                  = "strict-input"
+a_tagsoup                       = "tagsoup"
+a_text_mode                     = "text-mode"
+a_trace                         = "trace"
+a_type                          = "type"
+a_url                           = "url"
+a_use_curl                      = "use-curl"
+a_validate                      = "validate"
+a_value                         = "value"
+a_verbose                       = "verbose"
+a_version                       = "version"
+a_xml                           = "xml"
+a_xmlns                         = "xmlns"
 
-v_yes		= "yes"
-v_no		= "no"
-v_0		= "0"
-v_1		= "1"
-v_2		= "2"
+v_yes           = "yes"
+v_no            = "no"
+v_0             = "0"
+v_1             = "1"
+v_2             = "2"
 
-v_any		= k_any
-v_children	= "children"
-v_choice	= "choice"
-v_empty		= k_empty
-v_pcdata	= k_pcdata
-v_mixed		= "mixed"
-v_seq		= "seq"
+v_any           = k_any
+v_children      = "children"
+v_choice        = "choice"
+v_empty         = k_empty
+v_pcdata        = k_pcdata
+v_mixed         = "mixed"
+v_seq           = "seq"
 
-v_null		= ""
-v_option	= "?"
-v_star		= "*"
-v_plus		= "+"
+v_null          = ""
+v_option        = "?"
+v_star          = "*"
+v_plus          = "+"
 
-k_any		= "ANY"
-k_cdata		= "CDATA"
-k_empty		= "EMPTY"
-k_entity	= "ENTITY"
-k_entities	= "ENTITIES"
-k_id		= "ID"
-k_idref		= "IDREF"
-k_idrefs	= "IDREFS"
-k_include	= "INCLUDE"
-k_ignore	= "IGNORE"
-k_nmtoken	= "NMTOKEN"
-k_nmtokens	= "NMTOKENS"
-k_peref		= "PERef"
-k_public	= "PUBLIC"
-k_system	= "SYSTEM"
+k_any           = "ANY"
+k_cdata         = "CDATA"
+k_empty         = "EMPTY"
+k_entity        = "ENTITY"
+k_entities      = "ENTITIES"
+k_id            = "ID"
+k_idref         = "IDREF"
+k_idrefs        = "IDREFS"
+k_include       = "INCLUDE"
+k_ignore        = "IGNORE"
+k_nmtoken       = "NMTOKEN"
+k_nmtokens      = "NMTOKENS"
+k_peref         = "PERef"
+k_public        = "PUBLIC"
+k_system        = "SYSTEM"
 
-k_enumeration	= "#ENUMERATION"
-k_fixed		= "#FIXED"
-k_implied	= "#IMPLIED"
-k_ndata		= "NDATA"
-k_notation	= "NOTATION"
-k_pcdata	= "#PCDATA"
-k_required	= "#REQUIRED"
-k_default	= "#DEFAULT"
+k_enumeration   = "#ENUMERATION"
+k_fixed         = "#FIXED"
+k_implied       = "#IMPLIED"
+k_ndata         = "NDATA"
+k_notation      = "NOTATION"
+k_pcdata        = "#PCDATA"
+k_required      = "#REQUIRED"
+k_default       = "#DEFAULT"
 
 
-dtdPrefix	:: String
-dtdPrefix	= "doctype-"
+dtdPrefix       :: String
+dtdPrefix       = "doctype-"
 
 -- ------------------------------------------------------------
 --
@@ -279,25 +279,25 @@ transferPrefix
  , transferMessage
  , transferVersion :: String
 
-transferPrefix		= "transfer-"
+transferPrefix          = "transfer-"
 
-transferProtocol	= transferPrefix ++ "Protocol"
-transferVersion		= transferPrefix ++ "Version"
-transferMimeType	= transferPrefix ++ "MimeType"
-transferEncoding	= transferPrefix ++ "Encoding"
-transferDefaultURI	= transferPrefix ++ "DefaultURI"
-transferStatus		= transferPrefix ++ "Status"
-transferMessage		= transferPrefix ++ "Message"
-transferURI		= transferPrefix ++ "URI"
+transferProtocol        = transferPrefix ++ "Protocol"
+transferVersion         = transferPrefix ++ "Version"
+transferMimeType        = transferPrefix ++ "MimeType"
+transferEncoding        = transferPrefix ++ "Encoding"
+transferDefaultURI      = transferPrefix ++ "DefaultURI"
+transferStatus          = transferPrefix ++ "Status"
+transferMessage         = transferPrefix ++ "Message"
+transferURI             = transferPrefix ++ "URI"
 
 -- ------------------------------------------------------------
 --
 
-httpPrefix	:: String
-httpPrefix	= "http-"
+httpPrefix      :: String
+httpPrefix      = "http-"
 
-stringProtocol	:: String
-stringProtocol	= "string:"
+stringProtocol  :: String
+stringProtocol  = "string:"
 
 -- ------------------------------------------------------------
 --
@@ -307,31 +307,31 @@ isoLatin1
   , iso8859_1, iso8859_2, iso8859_3, iso8859_4, iso8859_5
   , iso8859_6, iso8859_7, iso8859_8, iso8859_9, iso8859_10
   , iso8859_11, iso8859_13, iso8859_14, iso8859_15, iso8859_16
-  , usAscii, ucs2, utf8, utf16, utf16be, utf16le, unicodeString	:: String
+  , usAscii, ucs2, utf8, utf16, utf16be, utf16le, unicodeString :: String
 
-isoLatin1	= iso8859_1
-iso8859_1	= "ISO-8859-1"
-iso8859_2	= "ISO-8859-2"
-iso8859_3	= "ISO-8859-3"
-iso8859_4	= "ISO-8859-4"
-iso8859_5	= "ISO-8859-5"
-iso8859_6	= "ISO-8859-6"
-iso8859_7	= "ISO-8859-7"
-iso8859_8	= "ISO-8859-8"
-iso8859_9	= "ISO-8859-9"
-iso8859_10	= "ISO-8859-10"
-iso8859_11	= "ISO-8859-11"
-iso8859_13	= "ISO-8859-13"
-iso8859_14	= "ISO-8859-14"
-iso8859_15	= "ISO-8859-15"
-iso8859_16	= "ISO-8859-16"
-usAscii		= "US-ASCII"
-ucs2		= "ISO-10646-UCS-2"
-utf8		= "UTF-8"
-utf16		= "UTF-16"
-utf16be		= "UTF-16BE"
-utf16le		= "UTF-16LE"
-unicodeString	= "UNICODE"
+isoLatin1       = iso8859_1
+iso8859_1       = "ISO-8859-1"
+iso8859_2       = "ISO-8859-2"
+iso8859_3       = "ISO-8859-3"
+iso8859_4       = "ISO-8859-4"
+iso8859_5       = "ISO-8859-5"
+iso8859_6       = "ISO-8859-6"
+iso8859_7       = "ISO-8859-7"
+iso8859_8       = "ISO-8859-8"
+iso8859_9       = "ISO-8859-9"
+iso8859_10      = "ISO-8859-10"
+iso8859_11      = "ISO-8859-11"
+iso8859_13      = "ISO-8859-13"
+iso8859_14      = "ISO-8859-14"
+iso8859_15      = "ISO-8859-15"
+iso8859_16      = "ISO-8859-16"
+usAscii         = "US-ASCII"
+ucs2            = "ISO-10646-UCS-2"
+utf8            = "UTF-8"
+utf16           = "UTF-16"
+utf16be         = "UTF-16BE"
+utf16le         = "UTF-16LE"
+unicodeString   = "UNICODE"
 
 -- ------------------------------------------------------------
 --
@@ -340,37 +340,37 @@ unicodeString	= "UNICODE"
 -- |
 -- the predefined namespace uri for xml: \"http:\/\/www.w3.org\/XML\/1998\/namespace\"
 
-xmlNamespace	:: String
-xmlNamespace	= "http://www.w3.org/XML/1998/namespace"
+xmlNamespace    :: String
+xmlNamespace    = "http://www.w3.org/XML/1998/namespace"
 
 -- |
 -- the predefined namespace uri for xmlns: \"http:\/\/www.w3.org\/2000\/xmlns\/\"
 
-xmlnsNamespace	:: String
-xmlnsNamespace	= "http://www.w3.org/2000/xmlns/"
+xmlnsNamespace  :: String
+xmlnsNamespace  = "http://www.w3.org/2000/xmlns/"
 
 -- | Relax NG namespace
-relaxNamespace	:: String
-relaxNamespace	= "http://relaxng.org/ns/structure/1.0"
+relaxNamespace  :: String
+relaxNamespace  = "http://relaxng.org/ns/structure/1.0"
 
 -- ------------------------------------------------------------
 -- option for Relax NG
 
 a_relax_schema,
- a_do_not_check_restrictions,  
+ a_do_not_check_restrictions,
  a_check_restrictions,
  a_do_not_validate_externalRef,
  a_validate_externalRef,
  a_do_not_validate_include,
  a_validate_include,
- a_output_changes, 
- a_do_not_collect_errors :: String 
+ a_output_changes,
+ a_do_not_collect_errors :: String
 
-a_relax_schema		      = "relax-schema"
+a_relax_schema                = "relax-schema"
 a_do_not_check_restrictions   = "do-not-check-restrictions"
 a_check_restrictions          = "check-restrictions"
 a_do_not_validate_externalRef = "do-not-validate-externalRef"
-a_validate_externalRef        = "validate-externalRef" 
+a_validate_externalRef        = "validate-externalRef"
 a_do_not_validate_include     = "do-not-validate-include"
 a_validate_include            = "validate-include"
 a_output_changes              = "output-pattern-transformations"

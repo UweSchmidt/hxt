@@ -11,4 +11,4 @@ test	: $(PROG)
 clean	:
 	rm -f *.o *.hi t.bin t.bin.bz $(PROG)
 
- 
+

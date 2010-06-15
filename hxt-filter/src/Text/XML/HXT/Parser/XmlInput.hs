@@ -77,28 +77,28 @@ import Data.Maybe
 --
 -- attribute a_proxy    ("proxy")    for proxy tob be used in http access
 
-getXmlContents'		:: XmlFilter -> XmlStateFilter a
+getXmlContents'         :: XmlFilter -> XmlStateFilter a
 getXmlContents' parseEncodingSpec
     = getContent'
       `whenM` isRoot
       where
       getContent' t'
-	  = ( liftMf (setStatus c_ok "getXmlContents")
-	      .>>
-	      getUrlContents
-	      .>>
-	      liftF parseEncodingSpec
-	      .>>
-	      guessDocEncoding
-	      .>>
-	      traceMsg 1 ("getXmlContents: content read and decoded from " ++ show input')
-	      .>>
-	      traceTree
-	      .>>
-	      traceSource
-	    ) t'
-	    where
-	    input' = valueOf a_source t'
+          = ( liftMf (setStatus c_ok "getXmlContents")
+              .>>
+              getUrlContents
+              .>>
+              liftF parseEncodingSpec
+              .>>
+              guessDocEncoding
+              .>>
+              traceMsg 1 ("getXmlContents: content read and decoded from " ++ show input')
+              .>>
+              traceTree
+              .>>
+              traceSource
+            ) t'
+            where
+            input' = valueOf a_source t'
 
 -- |
 -- filter for reading the content of a XML document
@@ -107,7 +107,7 @@ getXmlContents' parseEncodingSpec
 -- the text is read, the encoding scheme is parsed and selected
 -- and the input is translated into the internal UTF-8 string representation
 
-getXmlContents		:: XmlStateFilter a
+getXmlContents          :: XmlStateFilter a
 getXmlContents
     = getXmlContents' parseXmlDocEncodingSpec
       .>>
@@ -121,17 +121,17 @@ getXmlContents
 --
 -- see also : 'getXmlContents'
 
-getXmlEntityContents	:: XmlStateFilter a
+getXmlEntityContents    :: XmlStateFilter a
 getXmlEntityContents
     = getXmlContents' parseXmlEntityEncodingSpec
       .>>
-      liftF (processChildren removeEncodingSpec)	-- remove encoding spec, it's not part of the entity value
-      .>> 
+      liftF (processChildren removeEncodingSpec)        -- remove encoding spec, it's not part of the entity value
+      .>>
       setBaseURIFilter
 
 -- ------------------------------------------------------------
 
-setBaseURIFilter	:: XmlStateFilter a
+setBaseURIFilter        :: XmlStateFilter a
 setBaseURIFilter
     = performAction (\ t -> setBaseURI (valueOf transferURI t))
       `whenM` isRoot
@@ -145,7 +145,7 @@ setBaseURIFilter
 --
 --    - returns : a filter with the same effect as f, that restores the base URI after application of f
 
-runInLocalURIContext		:: XmlStateFilter a -> XmlStateFilter a
+runInLocalURIContext            :: XmlStateFilter a -> XmlStateFilter a
 runInLocalURIContext f t
     = do
       oldContext <- getBaseURI
@@ -158,18 +158,18 @@ runInLocalURIContext f t
 -- |
 -- filter command for running an action in a new URI context
 
-runInNewURIContext	:: String -> XmlStateFilter a -> XmlStateFilter a
+runInNewURIContext      :: String -> XmlStateFilter a -> XmlStateFilter a
 runInNewURIContext uri f
     | null uri
-	= f
+        = f
     | otherwise
-	= runInLocalURIContext
-	  ( \ t -> ( do
-		     trace 2 ("runInNewURIContext: new base URI " ++ show uri)
-		     setBaseURI uri
-		     f t
-		   )
-	  )
+        = runInLocalURIContext
+          ( \ t -> ( do
+                     trace 2 ("runInNewURIContext: new base URI " ++ show uri)
+                     setBaseURI uri
+                     f t
+                   )
+          )
 
 -- ------------------------------------------------------------
 -- |
@@ -183,58 +183,58 @@ runInNewURIContext uri f
 -- other supported encodings are ISO-8859-1 (also known as ISO-Latin-1),
 -- US-ASCII, UTF-16 or ISO-10646-UCS-2, UTF-16BE, UTF-16LE
 
-guessDocEncoding	:: XmlStateFilter a
+guessDocEncoding        :: XmlStateFilter a
 guessDocEncoding
     = addDocEncoding
       `whenM` isRoot
     where
     addDocEncoding n'
-	= do
-	  trace 2 ( "guessDocEncoding: encoding is " ++ show guess)
-	  ( encFilter (getDecodingFct guess)
-	    .>>
-	    issueError
-	    .>>
-	    liftMf (addAttr transferEncoding guess) ) n'
-	  where
-	  guess	:: String
-	  guess	= head . filter (not . null)
-		  $ [ (guessEncoding . showXText . getChildren) n'
-		    , valueOf transferEncoding n'
-		    , valueOf a_encoding n'
-		    , utf8
-		    ]
-	  encFilter (Just fct)
-	      = decodeDoc fct
+        = do
+          trace 2 ( "guessDocEncoding: encoding is " ++ show guess)
+          ( encFilter (getDecodingFct guess)
+            .>>
+            issueError
+            .>>
+            liftMf (addAttr transferEncoding guess) ) n'
+          where
+          guess :: String
+          guess = head . filter (not . null)
+                  $ [ (guessEncoding . showXText . getChildren) n'
+                    , valueOf transferEncoding n'
+                    , valueOf a_encoding n'
+                    , utf8
+                    ]
+          encFilter (Just fct)
+              = decodeDoc fct
 
-	  encFilter Nothing
-	      = addFatal ("encoding scheme not supported: " ++ show guess)
+          encFilter Nothing
+              = addFatal ("encoding scheme not supported: " ++ show guess)
 
-	  decodeDoc df n''
-	      | null errs	= liftMf (replaceChildren (xtext (normalizeNL res))) $ n''
-	      | otherwise	= ( liftMf (replaceChildren (xtext ""))
-				    .>>
-				    ( issueDecodingErrs
-				      +++>>
-				      addFatal "decoding errors detected"
-				    )
-				  ) n''
-	      where
-	      str = xshow . getChildren $ n''
-	      (res, errs) = df str
-	      issueDecodingErrs = catM . map (issueErr . (guess ++) . (" encoding error" ++)) $ errs
+          decodeDoc df n''
+              | null errs       = liftMf (replaceChildren (xtext (normalizeNL res))) $ n''
+              | otherwise       = ( liftMf (replaceChildren (xtext ""))
+                                    .>>
+                                    ( issueDecodingErrs
+                                      +++>>
+                                      addFatal "decoding errors detected"
+                                    )
+                                  ) n''
+              where
+              str = xshow . getChildren $ n''
+              (res, errs) = df str
+              issueDecodingErrs = catM . map (issueErr . (guess ++) . (" encoding error" ++)) $ errs
 
 -- ------------------------------------------------------------
 
-getDefaultURI	:: XState state String
+getDefaultURI   :: XState state String
 getDefaultURI
     = do
       uri <- getSysParam transferDefaultURI
       if null uri
-	 then do
-	      setDefaultURI
-	      getDefaultURI
-	 else return uri
+         then do
+              setDefaultURI
+              getDefaultURI
+         else return uri
 
 -- |
 -- set the base URI, all other URIs are handled relative to this base URI
@@ -243,7 +243,7 @@ getDefaultURI
 --
 -- see also : 'getBaseURI'
 
-setBaseURI	:: String -> XState state ()
+setBaseURI      :: String -> XState state ()
 setBaseURI str
     = do
       trace 2 ("setBaseURI: new base URI: " ++ show str)
@@ -254,16 +254,16 @@ setBaseURI str
 --
 -- see also : 'setBaseURI'
 
-getBaseURI	:: XState state String
+getBaseURI      :: XState state String
 getBaseURI
     = do
       uri <- getSysParam transferURI
       if null uri
-	 then do
-	      res <- getDefaultURI
-	      setBaseURI res
-	      getBaseURI
-	 else return uri
+         then do
+              res <- getDefaultURI
+              setBaseURI res
+              getBaseURI
+         else return uri
 
 -- |
 -- transform an URI into an absolut URI using the current base URI
@@ -274,43 +274,43 @@ getBaseURI
 --
 --    - returns : the absolut URI as string or \"\" in case of an error
 
-getAbsolutURI	:: String -> XState state String
+getAbsolutURI   :: String -> XState state String
 getAbsolutURI uri
     = do
       baseUri <- getBaseURI
       return $ expandURI uri baseUri
 
-expandURI	:: String -> String -> String
+expandURI       :: String -> String -> String
 expandURI uri base
     = fromMaybe "" $ expand
     where
     expand = do
-	     base' <- parseURIReference base
-	     uri'  <- parseURIReference uri
-	     abs'  <- relativeTo uri' base'
-	     return $ show abs'
+             base' <- parseURIReference base
+             uri'  <- parseURIReference uri
+             abs'  <- relativeTo uri' base'
+             return $ show abs'
 
 -- ------------------------------------------------------------
 
-setStandAloneFilter	:: XmlStateFilter a
+setStandAloneFilter     :: XmlStateFilter a
 setStandAloneFilter
     = performAction setStandAlone
       where
       setStandAlone t
-	  = do
-	    if null standalone
-	       then return ()
-	       else do
-		    trace 2 ("setStandAloneFilter: standalone=" ++ show standaloneVal)
-		    setSysParam a_standalone standaloneVal
-	    where
-	    standalone	= getValue a_standalone t
-	    standaloneVal	= showXText standalone
+          = do
+            if null standalone
+               then return ()
+               else do
+                    trace 2 ("setStandAloneFilter: standalone=" ++ show standaloneVal)
+                    setSysParam a_standalone standaloneVal
+            where
+            standalone  = getValue a_standalone t
+            standaloneVal       = showXText standalone
 
 -- |
 -- predicate for testing the standalone document attribute
 
-isStandaloneDocument	:: XState state Bool
+isStandaloneDocument    :: XState state Bool
 isStandaloneDocument
     = do
       val <- getSysParam a_standalone
@@ -324,32 +324,32 @@ isStandaloneDocument
 -- for reading a file or accessing a document via http
 -- input must be a root node with a @source@ attribute specifying the URI
 
-getUrlContents	:: XmlStateFilter a
+getUrlContents  :: XmlStateFilter a
 getUrlContents
     =  getCont
       `whenM` isRoot
     where
     getCont n'
-	= do
-	  trace 1 ("getUrlContent: reading " ++ show src)
-	  uri <- getAbsolutURI src
-	  if null uri
-	     then urlErr ( "illegal URI for input: " ++ show src )
-	     else let
-		  uri'     = fromJust $ parseURIReference uri
-		  proto    = init . uriScheme $ uri'
-		  handler  = getProtocolHandler proto
-		  in
-		  ( liftMf (addAttr transferProtocol proto
-			   .>
-			   addAttr transferURI uri
-			  )
-		    .>>
-		    handler uri'
-		  ) $ n'
-	where
-	src        = valueOf a_source n'
-	urlErr msg = addFatal msg n'
+        = do
+          trace 1 ("getUrlContent: reading " ++ show src)
+          uri <- getAbsolutURI src
+          if null uri
+             then urlErr ( "illegal URI for input: " ++ show src )
+             else let
+                  uri'     = fromJust $ parseURIReference uri
+                  proto    = init . uriScheme $ uri'
+                  handler  = getProtocolHandler proto
+                  in
+                  ( liftMf (addAttr transferProtocol proto
+                           .>
+                           addAttr transferURI uri
+                          )
+                    .>>
+                    handler uri'
+                  ) $ n'
+        where
+        src        = valueOf a_source n'
+        urlErr msg = addFatal msg n'
 
 -- ------------------------------------------------------------
 
@@ -358,25 +358,25 @@ getUrlContents
 -- by a call of 'getUrlContents. The result is stored as an attribute
 -- value in the document root node. the attribute name is 'a_contentLength'
 
-getContentLength	:: XmlFilter
+getContentLength        :: XmlFilter
 getContentLength
     = addAttrl contentLengthAttr
       `when` isRoot
       where
-      http_contentLength	= httpPrefix ++ "Content-Length"
+      http_contentLength        = httpPrefix ++ "Content-Length"
 
-      contentLengthAttr		:: XmlFilter
+      contentLengthAttr         :: XmlFilter
       contentLengthAttr t
-	  = choice [ hasAttr a_contentLength
-		     :-> none
-		   , hasAttr http_contentLength
-		     :-> mkXAttr a_contentLength (getValue http_contentLength)
-		   , this
+          = choice [ hasAttr a_contentLength
+                     :-> none
+                   , hasAttr http_contentLength
+                     :-> mkXAttr a_contentLength (getValue http_contentLength)
+                   , this
                      :-> mkXAttr a_contentLength getLength
-		   ] t
+                   ] t
 
-      getLength			:: XmlFilter
+      getLength                 :: XmlFilter
       getLength t
-	  = xtext (show . length . xshow . getChildren $ t)
+          = xtext (show . length . xshow . getChildren $ t)
 
 -- ------------------------------------------------------------

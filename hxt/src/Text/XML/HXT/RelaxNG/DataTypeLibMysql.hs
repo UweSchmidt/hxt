@@ -9,7 +9,7 @@ module Text.XML.HXT.RelaxNG.DataTypeLibMysql
   )
 where
 
-import Text.XML.HXT.RelaxNG.DataTypeLibUtils  
+import Text.XML.HXT.RelaxNG.DataTypeLibUtils
 
 import Data.Maybe
 
@@ -44,36 +44,36 @@ mysqlDatatypes = [ -- numeric types
                  , ("UNSIGNED-INT", numericParams)
                  , ("SIGNED-BIGINT", numericParams)
                  , ("UNSIGNED-BIGINT", numericParams)
-                 
+
                  -- string types
                  , ("CHAR", stringParams)
-                 , ("VARCHAR", stringParams)                 
+                 , ("VARCHAR", stringParams)
                  , ("BINARY", stringParams)
-                 , ("VARBINARY", stringParams)                 
+                 , ("VARBINARY", stringParams)
                  , ("TINYTEXT", stringParams)
-                 , ("TINYBLOB", stringParams)                 
+                 , ("TINYBLOB", stringParams)
                  , ("TEXT", stringParams)
-                 , ("BLOB", stringParams)                 
+                 , ("BLOB", stringParams)
                  , ("MEDIUMTEXT", stringParams)
-                 , ("MEDIUMBLOB", stringParams)                 
+                 , ("MEDIUMBLOB", stringParams)
                  , ("LONGTEXT", stringParams)
-                 , ("LONGBLOB", stringParams)                 
+                 , ("LONGBLOB", stringParams)
                  ]
 
 
 -- | List of supported string datatypes
 stringTypes :: [String]
 stringTypes = [ "CHAR"
-	      , "VARCHAR"
-	      , "BINARY"
-	      , "VARBINARY"
+              , "VARCHAR"
+              , "BINARY"
+              , "VARBINARY"
               , "TINYTEXT"
-	      , "TINYBLOB"
-	      , "TEXT"
-	      , "BLOB"
+              , "TINYBLOB"
+              , "TEXT"
+              , "BLOB"
               , "MEDIUMTEXT"
-	      , "MEDIUMBLOB"
-	      , "LONGTEXT"
+              , "MEDIUMBLOB"
+              , "LONGTEXT"
               , "LONGBLOB"
               ]
 
@@ -81,74 +81,74 @@ stringTypes = [ "CHAR"
 -- | List of supported numeric datatypes
 numericTypes :: [String]
 numericTypes = [ "SIGNED-TINYINT"
-	       , "UNSIGNED-TINYINT"
-	       , "SIGNED-SMALLINT"
+               , "UNSIGNED-TINYINT"
+               , "SIGNED-SMALLINT"
                , "UNSIGNED-SMALLINT"
-	       , "SIGNED-MEDIUMINT"
+               , "SIGNED-MEDIUMINT"
                , "UNSIGNED-MEDIUMINT"
-	       , "SIGNED-INT"
-	       , "UNSIGNED-INT"
+               , "SIGNED-INT"
+               , "UNSIGNED-INT"
                , "SIGNED-BIGINT"
-	       , "UNSIGNED-BIGINT"
+               , "UNSIGNED-BIGINT"
                ]
 
 
 -- | List of allowed params for the numeric datatypes
 numericParams :: AllowedParams
 numericParams = [ rng_maxExclusive
-		, rng_minExclusive
+                , rng_minExclusive
                 , rng_maxInclusive
-		, rng_minInclusive
+                , rng_minInclusive
                 ]
-                
+
 
 -- | List of allowed params for the string datatypes
 stringParams :: AllowedParams
 stringParams = [ rng_length
-	       , rng_maxLength
-	       , rng_minLength
-	       ]
+               , rng_maxLength
+               , rng_minLength
+               ]
 
 -- ------------------------------------------------------------
 --
 -- | Tests whether a XML instance value matches a data-pattern.
-                
+
 datatypeAllowsMysql :: DatatypeAllows
 datatypeAllowsMysql d params value _
     = performCheck check value
     where
     check
-	| isJust ndt	= checkNum (fromJust ndt)
-	| isJust sdt	= checkStr (fromJust sdt)
-	| otherwise	= failure $ errorMsgDataTypeNotAllowed mysqlNS d params
-    checkNum r	= uncurry (numberValid d) r params
-    checkStr r	= uncurry (stringValid d) r params
+        | isJust ndt    = checkNum (fromJust ndt)
+        | isJust sdt    = checkStr (fromJust sdt)
+        | otherwise     = failure $ errorMsgDataTypeNotAllowed mysqlNS d params
+    checkNum r  = uncurry (numberValid d) r params
+    checkStr r  = uncurry (stringValid d) r params
     ndt = lookup d $
-	  [ ("SIGNED-TINYINT", ((-128), 127))
-	  , ("UNSIGNED-TINYINT", (0, 255))
-	  , ("SIGNED-SMALLINT", ((-32768), 32767))
-	  , ("UNSIGNED-SMALLINT", (0, 65535))
-	  , ("SIGNED-MEDIUMINT", ((-8388608), 8388607))
-	  , ("UNSIGNED-MEDIUMINT", (0, 16777215))
-	  , ("SIGNED-INT", ((-2147483648), 2147483647))
-	  , ("UNSIGNED-INT", (0, 4294967295))
-	  , ("SIGNED-BIGINT", ((-9223372036854775808), 9223372036854775807))
-	  , ("UNSIGNED-BIGINT", (0, 18446744073709551615))
-	  ]
+          [ ("SIGNED-TINYINT", ((-128), 127))
+          , ("UNSIGNED-TINYINT", (0, 255))
+          , ("SIGNED-SMALLINT", ((-32768), 32767))
+          , ("UNSIGNED-SMALLINT", (0, 65535))
+          , ("SIGNED-MEDIUMINT", ((-8388608), 8388607))
+          , ("UNSIGNED-MEDIUMINT", (0, 16777215))
+          , ("SIGNED-INT", ((-2147483648), 2147483647))
+          , ("UNSIGNED-INT", (0, 4294967295))
+          , ("SIGNED-BIGINT", ((-9223372036854775808), 9223372036854775807))
+          , ("UNSIGNED-BIGINT", (0, 18446744073709551615))
+          ]
     sdt = lookup d $
-	  [ ("CHAR", (0, 255))
-	  , ("VARCHAR", (0, 65535))
-	  , ("BINARY", (0, 255))    
-	  , ("VARBINARY", (0, 65535))
-	  , ("TINYTEXT", (0, 256))
-	  , ("TINYBLOB", (0, 256))    
-	  , ("TEXT", (0, 65536))
-	  , ("BLOB", (0, 65536))
-	  , ("MEDIUMTEXT", (0, 16777216))
-	  , ("MEDIUMBLOB", (0, 16777216))
-	  , ("LONGTEXT", (0, 4294967296))
-	  , ("LONGBLOB", (0, 4294967296))
-	  ]
+          [ ("CHAR", (0, 255))
+          , ("VARCHAR", (0, 65535))
+          , ("BINARY", (0, 255))
+          , ("VARBINARY", (0, 65535))
+          , ("TINYTEXT", (0, 256))
+          , ("TINYBLOB", (0, 256))
+          , ("TEXT", (0, 65536))
+          , ("BLOB", (0, 65536))
+          , ("MEDIUMTEXT", (0, 16777216))
+          , ("MEDIUMBLOB", (0, 16777216))
+          , ("LONGTEXT", (0, 4294967296))
+          , ("LONGBLOB", (0, 4294967296))
+          ]
 
 -- ------------------------------------------------------------
 
@@ -158,12 +158,12 @@ datatypeEqualMysql :: DatatypeEqual
 datatypeEqualMysql d s1 _ s2 _
     = performCheck check (s1, s2)
       where
-      cmp nf	= arr (\ (x1, x2) -> (nf x1, nf x2))
-		  >>>
-		  assert (uncurry (==)) (uncurry $ errorMsgEqual d)
+      cmp nf    = arr (\ (x1, x2) -> (nf x1, nf x2))
+                  >>>
+                  assert (uncurry (==)) (uncurry $ errorMsgEqual d)
       check
-	  | d `elem` stringTypes	= cmp id
-	  | d `elem` numericTypes	= cmp normalizeNumber
-	  | otherwise			= failure $ const (errorMsgDataTypeNotAllowed0 mysqlNS d)
+          | d `elem` stringTypes        = cmp id
+          | d `elem` numericTypes       = cmp normalizeNumber
+          | otherwise                   = failure $ const (errorMsgDataTypeNotAllowed0 mysqlNS d)
 
 -- ------------------------------------------------------------

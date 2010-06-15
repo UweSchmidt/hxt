@@ -30,35 +30,35 @@ main
       c <- readFile "UnicodeData.txt"
       putStr $ genCharProps c
 
-genCharProps	:: String -> String
+genCharProps    :: String -> String
 genCharProps
     = unlines
       . processCharProps
       . concatMap parseCharDescr
       . lines
     where
-    parseCharDescr	:: String -> [(String, Char)]
+    parseCharDescr      :: String -> [(String, Char)]
     parseCharDescr l
-	| length cols < 3
-	    = []
-	| otherwise
-	    =  [(nn,c),(n,c)]
-	where
-	cols = columns (== ';') l
-	c    :: Char
-	c    = read ("'\\x" ++ head  cols ++ "'")
-	nn   = cols !! 2
-	n    = take 1 nn
+        | length cols < 3
+            = []
+        | otherwise
+            =  [(nn,c),(n,c)]
+        where
+        cols = columns (== ';') l
+        c    :: Char
+        c    = read ("'\\x" ++ head  cols ++ "'")
+        nn   = cols !! 2
+        n    = take 1 nn
     processCharProps l
-	= ( header1
-	    ++
-	    [ genExp . map fst $ l1 ]
-	    ++
-	    header2
-	    ++
-	    map (uncurry genPred) l1
-	  )
-	where
+        = ( header1
+            ++
+            [ genExp . map fst $ l1 ]
+            ++
+            header2
+            ++
+            map (uncurry genPred) l1
+          )
+        where
         l1 = mkRng . M.toAscList . mkCharMap $ l
 
 header1, header2 :: [String]
@@ -102,38 +102,38 @@ header2
 
 cmt :: String
 cmt = "-- " ++ replicate 60 '-'
-	
-columns	:: (Char -> Bool) -> String -> [String]
+
+columns :: (Char -> Bool) -> String -> [String]
 columns _ [] = []
 columns p xs
     = c : columns p (drop 1 r)
     where
     (c, r) = break p xs
 
-type CharMap	= M.Map String [Char]
+type CharMap    = M.Map String [Char]
 
-mkCharMap	:: [(String, Char)] -> CharMap
+mkCharMap       :: [(String, Char)] -> CharMap
 mkCharMap
     = foldl ins M.empty
     where
     ins :: CharMap -> (String, Char) -> CharMap
     ins m (k, v)
-	= M.insertWith (++) k [v] m
+        = M.insertWith (++) k [v] m
 
-mkRng	:: [(String,[Char])] -> [(String,[(Char, Char)])]
+mkRng   :: [(String,[Char])] -> [(String,[(Char, Char)])]
 mkRng l
     = zip (map fst l) (map (charRngs . L.sort . snd) l)
 
-charRngs	:: [Char] -> [(Char, Char)]
-charRngs []	= []
-charRngs (x:xs)	= charRng x xs
+charRngs        :: [Char] -> [(Char, Char)]
+charRngs []     = []
+charRngs (x:xs) = charRng x xs
                   where
-		  charRng y []		= (x,y) : []
-		  charRng y xs'@(x1:xs1)
-		      | x1 == succ y	= charRng x1 xs1
-		      | otherwise	= (x,y) : charRngs xs'
+                  charRng y []          = (x,y) : []
+                  charRng y xs'@(x1:xs1)
+                      | x1 == succ y    = charRng x1 xs1
+                      | otherwise       = (x,y) : charRngs xs'
 
-genPred	:: String -> [(Char, Char)] -> String
+genPred :: String -> [(Char, Char)] -> String
 genPred n rngs
     = unlines $
       [ "isUnicode" ++ n ++ "\t:: Char -> Bool"
@@ -145,10 +145,10 @@ genPred n rngs
       , cmt
       ]
 
-join	:: String -> [String] -> String
+join    :: String -> [String] -> String
 join js
     = foldr1 (\ x y -> x ++ js ++ y)
 
-genExp	:: [String] -> String
+genExp  :: [String] -> String
 genExp ns
     = "  ( " ++ join "\n  , " (map ("isUnicode" ++) ns) ++ "\n  )"

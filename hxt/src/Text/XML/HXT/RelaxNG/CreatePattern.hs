@@ -1,6 +1,6 @@
 -- |
--- 
--- Creates the 'Pattern' datastructure from a simplified Relax NG schema. 
+--
+-- Creates the 'Pattern' datastructure from a simplified Relax NG schema.
 -- The created datastructure is used in the validation algorithm
 -- (see also: "Text.XML.HXT.RelaxNG.Validation")
 
@@ -40,8 +40,8 @@ createPatternFromXmlTree = createPatternFromXml $< createEnv
  -- Each list entry maps the define name to the children of the define-pattern.
  -- The map is used to replace a ref-pattern with the referenced define-pattern.
  createEnv :: LA XmlTree Env
- createEnv = listA $ deep isRngDefine 
-                     >>> 
+ createEnv = listA $ deep isRngDefine
+                     >>>
                      (getRngAttrName &&& getChildren)
 
 
@@ -67,11 +67,11 @@ createPatternFromXml env
      this                              :-> mkRelaxError ""
    ]
 
-              
+
 processRoot :: Env -> LA XmlTree Pattern
 processRoot env
   = getChildren
-    >>> 
+    >>>
     choiceA [
       isRngRelaxError :-> (mkRelaxError $< getRngAttrDescr),
       isRngGrammar    :-> (processGrammar env),
@@ -82,7 +82,7 @@ processRoot env
 processGrammar :: Env -> LA XmlTree Pattern
 processGrammar env
   = getChildren
-    >>> 
+    >>>
     choiceA [
       isRngDefine     :-> none,
       isRngRelaxError :-> (mkRelaxError $< getAttrValue "desc"),
@@ -94,7 +94,7 @@ processGrammar env
 {- |
   Transforms a ref-element.
   The value of the name-attribute is looked up in the environment list
-  to find the corresponding define-pattern. 
+  to find the corresponding define-pattern.
   Haskells lazy-evaluation is used to transform circular structures.
 -}
 mkRelaxRef :: Env -> LA XmlTree Pattern
@@ -108,7 +108,7 @@ mkRelaxRef e
  transformEnv :: [(String, XmlTree)] -> [(String, Pattern)]
  transformEnv env = [ (treeName, (transformEnvElem tree env)) | (treeName, tree) <- env]
  transformEnvElem :: XmlTree -> [(String, XmlTree)] -> Pattern
- transformEnvElem tree env = head $ runLA (createPatternFromXml env) tree 
+ transformEnvElem tree env = head $ runLA (createPatternFromXml env) tree
 
 
 -- | Transforms a notAllowed-element.
@@ -123,17 +123,17 @@ mkRelaxError errStr
      isRngRelaxError :-> (getRngAttrDescr >>> arr notAllowed),
      isElem  :-> ( getName
                    >>>
-                   arr (\n -> notAllowed $ "Pattern " ++ n ++ 
+                   arr (\n -> notAllowed $ "Pattern " ++ n ++
                                            " is not allowed in Relax NG schema"
                        )
                  ),
      isAttr  :-> ( getName
                    >>>
-                   arr (\n -> notAllowed $ "Attribute " ++ n ++ 
+                   arr (\n -> notAllowed $ "Attribute " ++ n ++
                                            " is not allowed in Relax NG schema"
                        )
                  ),
-     isError :-> (getErrorMsg >>> arr notAllowed),                          
+     isError :-> (getErrorMsg >>> arr notAllowed),
      this    :-> (arr (\e -> notAllowed $ if errStr /= ""
                                           then errStr
                                           else "Can't create pattern from " ++ show e)
@@ -145,8 +145,8 @@ mkRelaxError errStr
 mkRelaxChoice :: Env -> LA XmlTree Pattern
 mkRelaxChoice env
     = ifA ( getChildren >>.
-	    ( \ l -> if length l == 1 then l else [] )
-	  )
+            ( \ l -> if length l == 1 then l else [] )
+          )
       ( createPatternFromXml env )
       ( getTwoChildrenPattern env >>> arr2 Choice )
 
@@ -154,7 +154,7 @@ mkRelaxChoice env
 mkRelaxInterleave :: Env -> LA XmlTree Pattern
 mkRelaxInterleave env
     = getTwoChildrenPattern env
-      >>> 
+      >>>
       arr2 Interleave
 
 
@@ -170,7 +170,7 @@ mkRelaxGroup env
 mkRelaxOneOrMore :: Env -> LA XmlTree Pattern
 mkRelaxOneOrMore env
     = getOneChildPattern env
-      >>> 
+      >>>
       arr OneOrMore
 
 
@@ -184,17 +184,17 @@ mkRelaxList env
 
 -- | Transforms a data- or dataExcept-element.
 mkRelaxData :: Env -> LA XmlTree Pattern
-mkRelaxData env 
+mkRelaxData env
   = ifA (getChildren >>> isRngExcept)
      (processDataExcept >>> arr3 DataExcept)
      (processData >>> arr2 Data)
   where
   processDataExcept :: LA XmlTree (Datatype, (ParamList, Pattern))
-  processDataExcept = getDatatype &&& getParamList &&& 
+  processDataExcept = getDatatype &&& getParamList &&&
                       ( getChildren
-                        >>> 
+                        >>>
                         isRngExcept
-                        >>> 
+                        >>>
                         getChildren
                         >>>
                         createPatternFromXml env
@@ -205,23 +205,23 @@ mkRelaxData env
   getParamList = listA $ getChildren
                          >>>
                          isRngParam
-                         >>> 
+                         >>>
                          (getRngAttrName &&& (getChildren >>> getText))
-         
+
 
 -- | Transforms a value-element.
-mkRelaxValue :: LA XmlTree Pattern         
+mkRelaxValue :: LA XmlTree Pattern
 mkRelaxValue = getDatatype &&& getValue &&& getContext
                >>>
-               arr3 Value 
+               arr3 Value
   where
   getContext :: LA XmlTree Context
   getContext = getAttrValue contextBaseAttr &&& getMapping
   getMapping :: LA XmlTree [(Prefix, Uri)]
-  getMapping = listA $ getAttrl >>> 
+  getMapping = listA $ getAttrl >>>
                        ( (getName >>> isA (contextAttributes `isPrefixOf`))
                          `guards`
-                         ( (getName >>> arr (drop $ length contextAttributes)) 
+                         ( (getName >>> arr (drop $ length contextAttributes))
                            &&&
                            (getChildren >>> getText)
                          )
@@ -242,8 +242,8 @@ getDatatype = getRngAttrDatatypeLibrary
 mkRelaxAttribute :: Env -> LA XmlTree Pattern
 mkRelaxAttribute env
     = ( ( firstChild >>> createNameClass )
-	&&&
-	( lastChild >>> createPatternFromXml env )
+        &&&
+        ( lastChild >>> createPatternFromXml env )
       )
       >>>
       arr2 Attribute
@@ -253,14 +253,14 @@ mkRelaxAttribute env
 mkRelaxElement :: Env -> LA XmlTree Pattern
 mkRelaxElement env
     = ( ( firstChild >>> createNameClass )
-	&&&
-	( lastChild >>> createPatternFromXml env )
+        &&&
+        ( lastChild >>> createPatternFromXml env )
       )
       >>>
       arr2 Element
 
 
--- | Creates a 'NameClass' from an \"anyName\"-, \"nsName\"- or  \"name\"-Pattern, 
+-- | Creates a 'NameClass' from an \"anyName\"-, \"nsName\"- or  \"name\"-Pattern,
 createNameClass :: LA XmlTree NameClass
 createNameClass
     = choiceA
@@ -273,60 +273,60 @@ createNameClass
     where
     processAnyName :: LA XmlTree NameClass
     processAnyName
-	= ifA (getChildren >>> isRngExcept)
+        = ifA (getChildren >>> isRngExcept)
           ( getChildren
-	    >>> getChildren
-	    >>> createNameClass
-	    >>> arr AnyNameExcept
+            >>> getChildren
+            >>> createNameClass
+            >>> arr AnyNameExcept
           )
          ( constA AnyName )
 
     processNsName :: LA XmlTree NameClass
     processNsName
-	= ifA (getChildren >>> isRngExcept)
-          ( ( getRngAttrNs 
+        = ifA (getChildren >>> isRngExcept)
+          ( ( getRngAttrNs
               &&&
               ( getChildren >>> getChildren >>> createNameClass )
             )
-            >>> 
+            >>>
             arr2 NsNameExcept
           )
-          ( getRngAttrNs >>> arr NsName ) 
+          ( getRngAttrNs >>> arr NsName )
 
     processName :: LA XmlTree NameClass
     processName
-	= (getRngAttrNs &&& (getChildren >>> getText)) >>> arr2 Name
+        = (getRngAttrNs &&& (getChildren >>> getText)) >>> arr2 Name
 
     processChoice :: LA XmlTree NameClass
     processChoice
-	= ( ( firstChild >>> createNameClass )
-	    &&&
-	    ( lastChild  >>> createNameClass )
-	  )
+        = ( ( firstChild >>> createNameClass )
+            &&&
+            ( lastChild  >>> createNameClass )
+          )
           >>>
-	  arr2 NameClassChoice
-                        
+          arr2 NameClassChoice
+
 mkNameClassError :: LA XmlTree NameClass
-mkNameClassError 
+mkNameClassError
     = choiceA [ isRngRelaxError
                         :-> ( getRngAttrDescr
-			      >>>
-			      arr NCError
-			 )
-	      , isElem  :-> ( getName
-			      >>>
-			      arr (\n -> NCError ("Can't create name class from element " ++ n))
-			    )
-	      , isAttr  :-> ( getName
-			      >>>
-			      arr (\n -> NCError ("Can't create name class from attribute: " ++ n))
-			    )
-	      , isError :-> ( getErrorMsg
-			      >>>
-			      arr NCError
-			    )
-	      , this    :-> ( arr (\e ->  NCError $ "Can't create name class from " ++ show e) )      
-	      ]
+                              >>>
+                              arr NCError
+                         )
+              , isElem  :-> ( getName
+                              >>>
+                              arr (\n -> NCError ("Can't create name class from element " ++ n))
+                            )
+              , isAttr  :-> ( getName
+                              >>>
+                              arr (\n -> NCError ("Can't create name class from attribute: " ++ n))
+                            )
+              , isError :-> ( getErrorMsg
+                              >>>
+                              arr NCError
+                            )
+              , this    :-> ( arr (\e ->  NCError $ "Can't create name class from " ++ show e) )
+              ]
 
 
 getOneChildPattern :: Env -> LA XmlTree Pattern
@@ -337,13 +337,13 @@ getOneChildPattern env
 getTwoChildrenPattern :: Env -> LA XmlTree (Pattern, Pattern)
 getTwoChildrenPattern env
     = ( getOneChildPattern env )
-	&&&
-	( lastChild  >>> createPatternFromXml env )
+        &&&
+        ( lastChild  >>> createPatternFromXml env )
 
 -- | Simple access arrows
 
-firstChild	:: (ArrowTree a, Tree t) => a (t b) (t b)
-firstChild	= single getChildren
+firstChild      :: (ArrowTree a, Tree t) => a (t b) (t b)
+firstChild      = single getChildren
 
-lastChild	:: (ArrowTree a, Tree t) => a (t b) (t b)
-lastChild	= getChildren >>. (take 1 . reverse)
+lastChild       :: (ArrowTree a, Tree t) => a (t b) (t b)
+lastChild       = getChildren >>. (take 1 . reverse)

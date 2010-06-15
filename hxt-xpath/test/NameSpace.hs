@@ -28,11 +28,11 @@ evalXPath xpath xml =
           )
         ) xml
 
-t1 = evalXPath "//s:Body"    simpleXml		-- o.k.
-t2 = evalXPath "//soap:Body" simpleXml		-- o.k.
-t3 = evalXPath "???"         simpleXml		-- syntax error in xpath
-t4 = evalXPath "//xxx:Body"  simpleXml		-- syntax error in xpath: no namespace given for xxx
-t5 = evalXPath "//soap:Body" wrongXml		-- syntax error in doc
+t1 = evalXPath "//s:Body"    simpleXml          -- o.k.
+t2 = evalXPath "//soap:Body" simpleXml          -- o.k.
+t3 = evalXPath "???"         simpleXml          -- syntax error in xpath
+t4 = evalXPath "//xxx:Body"  simpleXml          -- syntax error in xpath: no namespace given for xxx
+t5 = evalXPath "//soap:Body" wrongXml           -- syntax error in doc
 
 t6 = runLA xread wrongXml
 

@@ -69,35 +69,35 @@ delta :: RE String -> XmlTree -> RE String
 delta re el
     | not (allowed el) = re
     | otherwise        = case re of
-        RE_ZERO m		 -> re_zero m
-        RE_UNIT			 -> re_zero (elemName el ++" unexpected.")
+        RE_ZERO m                -> re_zero m
+        RE_UNIT                  -> re_zero (elemName el ++" unexpected.")
         RE_SYM sym
-    	    | sym == k_pcdata	 -> let node = getNode el in
-	                            if ((isXTextNode node) || (isXCdataNode node))
-				    then re_unit
-				    else re_zero ("Character data expected, but "++ elemName el ++" found.")
-       	    | expectedNode el sym -> re_unit
-	    | otherwise           -> re_zero ("Element "++ show sym ++" expected, but "++ elemName el ++" found.")
+            | sym == k_pcdata    -> let node = getNode el in
+                                    if ((isXTextNode node) || (isXCdataNode node))
+                                    then re_unit
+                                    else re_zero ("Character data expected, but "++ elemName el ++" found.")
+            | expectedNode el sym -> re_unit
+            | otherwise           -> re_zero ("Element "++ show sym ++" expected, but "++ elemName el ++" found.")
         RE_REP e                  -> re_seq (delta e el) (re_rep e)
         RE_PLUS e                 -> re_seq (delta e el) (re_rep e)
         RE_OPT e                  -> delta e el
         RE_SEQ e f
-       	    | nullable e          -> re_alt (re_seq (delta e el) f) (delta f el)
-       	    | otherwise           -> re_seq (delta e el) f
+            | nullable e          -> re_alt (re_seq (delta e el) f) (delta f el)
+            | otherwise           -> re_seq (delta e el) f
         RE_ALT e f                -> re_alt (delta e el) (delta f el)
         RE_DOT                    -> re_unit
 
     where
     expectedNode :: XmlTree -> String -> Bool
     expectedNode (NTree (XTag n _) _) sym = (qualifiedName n) == sym
-    expectedNode _ _			  = False
+    expectedNode _ _                      = False
 
     elemName :: XmlTree -> String
-    elemName (NTree (XTag n _) _)	= "element "++ show (qualifiedName n)
-    elemName _				= "character data"
+    elemName (NTree (XTag n _) _)       = "element "++ show (qualifiedName n)
+    elemName _                          = "character data"
 
     allowed :: XmlTree -> Bool
-    allowed (NTree (XTag _ _) _)	= True
-    allowed (NTree (XText _) _)		= True
-    allowed (NTree (XCdata _) _)	= True
-    allowed _				= False
+    allowed (NTree (XTag _ _) _)        = True
+    allowed (NTree (XText _) _)         = True
+    allowed (NTree (XCdata _) _)        = True
+    allowed _                           = False

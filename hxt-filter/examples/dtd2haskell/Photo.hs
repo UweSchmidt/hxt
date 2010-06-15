@@ -19,7 +19,7 @@ nsArchive :: String
 
 -- ----------------------------------------
 --
--- 
+--
 
 nsArchive =  "http://muehle.welt.all/photos.dtd"
 
@@ -42,7 +42,7 @@ tagSize    :: String
 
 -- ----------------------------------------
 --
--- 
+--
 
 tagAlbum   =  "album"
 tagArchive =  "archive"
@@ -76,7 +76,7 @@ isSize    :: XmlFilter
 
 -- ----------------------------------------
 --
--- 
+--
 
 isAlbum   =  X.isTag tagAlbum
 isArchive =  X.isTag tagArchive
@@ -110,7 +110,7 @@ tSize    :: XmlFilter
 
 -- ----------------------------------------
 --
--- 
+--
 
 tAlbum   = X.etag tagAlbum
 tArchive = X.etag tagArchive
@@ -144,7 +144,7 @@ attrXmlns    :: String
 
 -- ----------------------------------------
 --
--- 
+--
 
 attrBase     =  "base"
 attrEntity   =  "entity"
@@ -178,7 +178,7 @@ getXmlns    :: XmlFilter
 
 -- ----------------------------------------
 --
--- 
+--
 
 getBase     =  X.getValue attrBase
 getEntity   =  X.getValue attrEntity
@@ -212,7 +212,7 @@ hasXmlns    :: XmlFilter
 
 -- ----------------------------------------
 --
--- 
+--
 
 hasBase     = X.hasAttr attrBase
 hasEntity   = X.hasAttr attrEntity
@@ -246,7 +246,7 @@ afXmlns    :: XmlFilter -> XmlFilter
 
 -- ----------------------------------------
 --
--- 
+--
 
 afBase     = X.mkXAttr attrBase
 afEntity   = X.mkXAttr attrEntity
@@ -280,7 +280,7 @@ aXmlns    :: String -> XmlFilter
 
 -- ----------------------------------------
 --
--- 
+--
 
 aBase     = \ v -> X.mkXAttr attrBase (X.txt v)
 aEntity   = \ v -> X.mkXAttr attrEntity (X.txt v)

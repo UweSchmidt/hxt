@@ -43,10 +43,10 @@ import Data.List
 -- Lookup-table which maps element names to their transformation functions. The
 -- transformation functions are XmlFilters.
 
-type TransEnvTable	= [TransEnv]
-type TransEnv 		= (ElemName, TransFct)
-type ElemName		= String
-type TransFct		= XmlFilter
+type TransEnvTable      = [TransEnv]
+type TransEnv           = (ElemName, TransFct)
+type ElemName           = String
+type TransFct           = XmlFilter
 
 
 -- ------------------------------------------------------------
@@ -82,7 +82,7 @@ traverseTree transEnv n@(NTree (XTag name _) cs)
       where
       transFct = case (lookup (qualifiedName name) transEnv) of
           Nothing -> this   -- element not in DTD, can't be transformed
-	  Just f  -> f
+          Just f  -> f
 
 traverseTree _ n = [n]
 
@@ -134,9 +134,9 @@ buildTransformationFunctions dtdPart n@(NTree (XDTD ELEMENT al) _)
     name = lookup1 a_name al
     transFct = lexicographicAttributeOrder
                `o`
-	       normalizeAttributeValues n dtdPart
-	       `o`
-	       setDefaultAttributeValues n dtdPart
+               normalizeAttributeValues n dtdPart
+               `o`
+               setDefaultAttributeValues n dtdPart
 
 buildTransformationFunctions _ n
     = error ("buildTransformationFunctions: illegeal parameter:\n" ++ show n)
@@ -157,10 +157,10 @@ lexicographicAttributeOrder
     = processAttrl sortAttrl
       where
       sortAttrl al
-	  = map (al !!) ixs
-	    where
-	    ns  = map nameOf al
-	    ixs = map snd . sort . zip ns $ [(0::Int)..]
+          = map (al !!) ixs
+            where
+            ns  = map nameOf al
+            ixs = map snd . sort . zip ns $ [(0::Int)..]
 
 -- |
 -- Normalize attribute values.
@@ -177,15 +177,15 @@ normalizeAttributeValues elemDescr@(NTree (XDTD ELEMENT _) _) dtdPart
 
       normalizeAttr :: XmlFilter
       normalizeAttr att
-	  = normalizeAttrValue (if null attDescr
-				then Nothing
-				else Just (head attDescr)) att
-	    where
-	    attDescr = filter (\ x -> (valueOfDTD a_value x) == nameOf att) declaredAtts
+          = normalizeAttrValue (if null attDescr
+                                then Nothing
+                                else Just (head attDescr)) att
+            where
+            attDescr = filter (\ x -> (valueOfDTD a_value x) == nameOf att) declaredAtts
 
       normalizeAttrValue :: Maybe XmlTree -> XmlFilter
       normalizeAttrValue descr
-	  = modifyChildren ((modifyText (normalizeAttributeValue descr) $$) . xmlTreesToText)
+          = modifyChildren ((modifyText (normalizeAttributeValue descr) $$) . xmlTreesToText)
 
 normalizeAttributeValues n _
     = error ("normalizeAttributeValues: illegeal parameter:\n" ++ show n)
@@ -202,27 +202,27 @@ setDefaultAttributeValues :: XmlTree -> XmlTrees -> XmlFilter
 setDefaultAttributeValues elemDescr@(NTree (XDTD ELEMENT _) _) dtdPart
     = seqF (map setDefault defaultAtts)
       where
-						-- select the element name from the dtd
+                                                -- select the element name from the dtd
       elemName = valueOfDTD a_name elemDescr
 
-      defaultAtts = ( isFixedAttrKind		-- select attributes with default values
-		      `orElse`
-		      isDefaultAttrKind
-		    )
+      defaultAtts = ( isFixedAttrKind           -- select attributes with default values
+                      `orElse`
+                      isDefaultAttrKind
+                    )
                     $$
-		    (isAttlistOfElement elemName $$ dtdPart)
+                    (isAttlistOfElement elemName $$ dtdPart)
 
-      setDefault	:: XmlTree -> XmlFilter
-      setDefault attrDescr			-- add the default attributes
-	  = ( addAttr attName defaultValue	-- to tag nodes with missing attributes
-	      `whenNot`
-	      hasAttr attName
-	    )
-	    `when`
-	    isXTag
-	    where
-	    attName      = valueOfDTD a_value   attrDescr
-	    defaultValue = valueOfDTD a_default attrDescr
+      setDefault        :: XmlTree -> XmlFilter
+      setDefault attrDescr                      -- add the default attributes
+          = ( addAttr attName defaultValue      -- to tag nodes with missing attributes
+              `whenNot`
+              hasAttr attName
+            )
+            `when`
+            isXTag
+            where
+            attName      = valueOfDTD a_value   attrDescr
+            defaultValue = valueOfDTD a_default attrDescr
 
 
 setDefaultAttributeValues n _

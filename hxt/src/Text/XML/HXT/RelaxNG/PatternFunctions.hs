@@ -11,63 +11,63 @@ import Text.XML.HXT.RelaxNG.DataTypes
 -- ------------------------------------------------------------
 
 isRelaxEmpty :: Pattern -> Bool
-isRelaxEmpty Empty = True          
+isRelaxEmpty Empty = True
 isRelaxEmpty _     = False
 
 isRelaxNotAllowed :: Pattern -> Bool
-isRelaxNotAllowed (NotAllowed _) = True          
+isRelaxNotAllowed (NotAllowed _) = True
 isRelaxNotAllowed _              = False
 
 isRelaxText :: Pattern -> Bool
-isRelaxText Text = True          
+isRelaxText Text = True
 isRelaxText _    = False
 
 isRelaxChoice :: Pattern -> Bool
-isRelaxChoice (Choice _ _) = True          
+isRelaxChoice (Choice _ _) = True
 isRelaxChoice _            = False
 
 isRelaxInterleave :: Pattern -> Bool
-isRelaxInterleave (Interleave _ _) = True          
+isRelaxInterleave (Interleave _ _) = True
 isRelaxInterleave _                = False
 
 isRelaxGroup :: Pattern -> Bool
-isRelaxGroup (Group _ _) = True          
+isRelaxGroup (Group _ _) = True
 isRelaxGroup _           = False
 
 isRelaxOneOrMore :: Pattern -> Bool
-isRelaxOneOrMore (OneOrMore _) = True          
+isRelaxOneOrMore (OneOrMore _) = True
 isRelaxOneOrMore _             = False
 
 isRelaxList :: Pattern -> Bool
-isRelaxList (List _) = True          
+isRelaxList (List _) = True
 isRelaxList _        = False
 
 isRelaxData :: Pattern -> Bool
-isRelaxData (Data _ _) = True          
+isRelaxData (Data _ _) = True
 isRelaxData _          = False
 
 isRelaxDataExcept :: Pattern -> Bool
-isRelaxDataExcept (DataExcept _ _ _) = True          
+isRelaxDataExcept (DataExcept _ _ _) = True
 isRelaxDataExcept _                  = False
 
 isRelaxValue :: Pattern -> Bool
-isRelaxValue (Value _ _ _) = True          
+isRelaxValue (Value _ _ _) = True
 isRelaxValue _             = False
 
 isRelaxAttribute :: Pattern -> Bool
-isRelaxAttribute (Attribute _ _) = True          
+isRelaxAttribute (Attribute _ _) = True
 isRelaxAttribute _               = False
 
 isRelaxElement :: Pattern -> Bool
-isRelaxElement (Element _ _) = True          
+isRelaxElement (Element _ _) = True
 isRelaxElement _             = False
-             
+
 isRelaxAfter :: Pattern -> Bool
-isRelaxAfter (After _ _) = True          
+isRelaxAfter (After _ _) = True
 isRelaxAfter _           = False
 
 
--- | Returns a list of children pattern for each pattern, 
+-- | Returns a list of children pattern for each pattern,
 -- e.g. (Choice p1 p2) = [p1, p2]
 getChildrenPattern :: Pattern -> [Pattern]
 getChildrenPattern (Choice p1 p2) = [p1, p2]

@@ -28,7 +28,7 @@ import Text.XML.HXT.DOM.TypeDefs
 import Text.XML.HXT.XPath.XPathKeywords
 import Text.XML.HXT.XPath.XPathDataTypes
 
-import Text.XML.HXT.Parser.XmlTokenParser	( separator
+import Text.XML.HXT.Parser.XmlTokenParser       ( separator
                                                 , systemLiteral
                                                 , skipS0
                                                 , ncName
@@ -37,28 +37,28 @@ import Text.XML.HXT.Parser.XmlTokenParser	( separator
 
 -- ------------------------------------------------------------
 
-lookupNs				:: NsEnv -> XName -> Maybe XName
+lookupNs                                :: NsEnv -> XName -> Maybe XName
 lookupNs uris prefix
-    | null uris				= Just nullXName		-- not namespace aware XPath
-    | isNullXName prefix		= maybe (Just nullXName) Just $	-- no default namespace given
+    | null uris                         = Just nullXName                -- not namespace aware XPath
+    | isNullXName prefix                = maybe (Just nullXName) Just $ -- no default namespace given
                                           lookup prefix uris
-    | otherwise				= lookup prefix uris		-- namespace aware
+    | otherwise                         = lookup prefix uris            -- namespace aware
 
-enhanceAttrQName			:: NsEnv -> QName -> Maybe QName
+enhanceAttrQName                        :: NsEnv -> QName -> Maybe QName
 enhanceAttrQName uris qn
-    | isNullXName (namePrefix' qn)	= Just qn
-    | otherwise				= enhanceQName uris qn
+    | isNullXName (namePrefix' qn)      = Just qn
+    | otherwise                         = enhanceQName uris qn
 
-enhanceQName 				:: NsEnv -> QName -> Maybe QName
-enhanceQName uris qn			= do
-					  nsu <- lookupNs uris (namePrefix' qn)
+enhanceQName                            :: NsEnv -> QName -> Maybe QName
+enhanceQName uris qn                    = do
+                                          nsu <- lookupNs uris (namePrefix' qn)
                                           return $ setNamespaceUri' nsu qn
 
-enhanceQN				::  AxisSpec -> NsEnv -> QName -> Maybe QName
-enhanceQN Attribute			= enhanceAttrQName
-enhanceQN _				= enhanceQName
+enhanceQN                               ::  AxisSpec -> NsEnv -> QName -> Maybe QName
+enhanceQN Attribute                     = enhanceAttrQName
+enhanceQN _                             = enhanceQName
 
-type XParser a 				= GenParser Char NsEnv a
+type XParser a                          = GenParser Char NsEnv a
 
 -- ------------------------------------------------------------
 -- parse functions which are used in the XPathFct module
@@ -105,7 +105,7 @@ parseXPath
 
 
 -- some useful token and symbol parser
-lpar, rpar, lbra, rbra, slash, dslash	:: XParser ()
+lpar, rpar, lbra, rbra, slash, dslash   :: XParser ()
 
 lpar   = tokenParser (symbol "(")
 rpar   = tokenParser (symbol ")")
@@ -140,11 +140,11 @@ symbol s = try (string s)
 orOp, andOp, eqOp, relOp, addOp, multiOp, unionOp :: XParser Op
 
 orOp  = symbolParser ("or", Or)
-andOp =	symbolParser ("and", And)
+andOp = symbolParser ("and", And)
 
 eqOp
     = symbolParser ("=", Eq)
-      <|> 
+      <|>
       symbolParser ("!=", NEq)
 
 relOp
@@ -156,7 +156,7 @@ relOp
 
 addOp
     = symbolParser ("+", Plus)
-      <|> 
+      <|>
       symbolParser ("-", Minus)
 
 
@@ -167,19 +167,19 @@ multiOp
              ]
 
 
-unionOp	= symbolParser ("|", Union)
+unionOp = symbolParser ("|", Union)
 
 -- ------------------------------------------------------------
 
 mkExprNode :: Expr -> [(Op, Expr)] -> Expr
 mkExprNode e1 [] = e1
-mkExprNode e1 l@((op, _): _) = 
+mkExprNode e1 l@((op, _): _) =
     if null rest
       then GenExpr op (e1:(map snd l))
       else GenExpr op $ (e1:(map snd $ init same)) ++ [mkExprNode (snd $ last same) rest]
-  where 
+  where
     (same, rest) = span ((==op) . fst) l
-    
+
 -- Tim Walkenhorst, original expr. below:
 -- It seems mkExprNode is called only with operators of the same precedence, that should make it fixable
 -- FIXED, see above!
@@ -200,18 +200,18 @@ exprRest parserOp parserExpr
 -- ------------------------------------------------------------
 
 -- abbreviation of "//"
-descOrSelfStep :: XStep 
+descOrSelfStep :: XStep
 descOrSelfStep = (Step DescendantOrSelf (TypeTest XPNode) [])
 
 -- ------------------------------------------------------------
 -- Location Paths (2)
 
 
--- [1] LocationPath 
+-- [1] LocationPath
 locPath :: XParser LocationPath
 locPath
     = absLocPath
-      <|> 
+      <|>
       relLocPath'
 
 
@@ -222,7 +222,7 @@ absLocPath
       dslash
       s <- relLocPath
       return (LocPath Abs ([descOrSelfStep] ++ s))
-      <|> 
+      <|>
       do
       slash
       s <- option [] relLocPath
@@ -346,7 +346,7 @@ pI
 -- [8] Predicate
 -- [9] PredicateExpr
 predicate :: XParser Expr
-predicate 
+predicate
     = do
       ex <- between lbra rbra expr
       return ex
@@ -359,7 +359,7 @@ predicate
 
 -- [12] AbbreviatedStep
 abbrStep :: XParser XStep
-abbrStep 
+abbrStep
     = do
       tokenParser (symbol "..")
       return (Step Parent (TypeTest XPNode) [])
@@ -397,7 +397,7 @@ primaryExpr
       do
       li <- literal
       return (LiteralExpr li)
-      <|> 
+      <|>
       do
       num <- number
       return (NumberExpr (Float $ read num))
@@ -579,7 +579,7 @@ number
 --   Change in String encoding for function name
 --
 --         previoulsy:      new:
---           
+--
 --         name             name
 --         pref:name        {http://uri-for-pref}name
 
@@ -621,7 +621,7 @@ nameTest axs
          enhanceName axs $ mkPrefixLocalPart pre local
       <?> "nameTest"
 
-enhanceName	:: AxisSpec -> QName -> XParser QName
+enhanceName     :: AxisSpec -> QName -> XParser QName
 enhanceName axs qn
     = do uris <- getState
          case enhanceQN axs uris qn of
@@ -631,16 +631,16 @@ enhanceName axs qn
 
 -- [38] NodeType
 nodeType' :: XParser XPathNode
-nodeType' 
+nodeType'
     = do
       nt <- nodeType
       lpar
       rpar
       return nt
       <?> "nodeType'"
-	
+
 nodeType :: XParser XPathNode
-nodeType 
+nodeType
     = choice [ symbolParser (n_comment, XPCommentNode)
              , symbolParser (n_text, XPTextNode)
              , symbolParser (n_processing_instruction, XPPINode)

@@ -51,8 +51,8 @@ module Text.XML.HXT.XSLT.Common
     -- Namespace functions
     , ExName(ExName)             -- String (local) -> String (uri) -> ExName
     , mkExName                   -- QName -> ExName
-    , exLocal		         -- ExName -> String
-    , exUri		         -- ExName -> String
+    , exLocal                    -- ExName -> String
+    , exUri                      -- ExName -> String
     , parseExName                -- UriMapping -> String -> ExName
     , UriMapping                 -- Map String String
     , getUriMap                  -- XmlNode n => n -> UriMapping (extract an Ns-Uri Map from an Element node)
@@ -85,59 +85,59 @@ import Control.Arrow
 import Control.Arrow.ListArrow
 import Control.Arrow.ArrowList
 
-import Text.XML.HXT.Arrow.XmlArrow	( xshow
-					)
+import Text.XML.HXT.Arrow.XmlArrow      ( xshow
+                                        )
 import Text.XML.HXT.DOM.XmlKeywords
-import Text.XML.HXT.DOM.XmlNode		( XmlNode (..)
-					, mkElement
-					, mkRoot
-					, mkAttr
-					, mergeAttrl
-					)
+import Text.XML.HXT.DOM.XmlNode         ( XmlNode (..)
+                                        , mkElement
+                                        , mkRoot
+                                        , mkAttr
+                                        , mergeAttrl
+                                        )
 
-import Text.XML.HXT.DOM.TypeDefs	( XmlTree
-					, XNode(XTag, XAttr)
-					, QName
-					, toNsEnv
-					, namePrefix
-					, localPart
-					, namespaceUri
-					, equivQName
-					, mkName
-					, mkQName
-					)
-import Text.XML.HXT.DOM.FormatXmlTree	( formatXmlTree
-					)
+import Text.XML.HXT.DOM.TypeDefs        ( XmlTree
+                                        , XNode(XTag, XAttr)
+                                        , QName
+                                        , toNsEnv
+                                        , namePrefix
+                                        , localPart
+                                        , namespaceUri
+                                        , equivQName
+                                        , mkName
+                                        , mkQName
+                                        )
+import Text.XML.HXT.DOM.FormatXmlTree   ( formatXmlTree
+                                        )
 
 import Text.XML.HXT.XPath.XPathDataTypes( NavTree
-					, ntree
-					, subtreeNT
-					, upNT
-					, downNT
-					, rightNT
-					, leftNT
-					, getChildrenNT
+                                        , ntree
+                                        , subtreeNT
+                                        , upNT
+                                        , downNT
+                                        , rightNT
+                                        , leftNT
+                                        , getChildrenNT
 
-                                        , Expr		( LiteralExpr
-							, FctExpr
-							, GenExpr
-							, PathExpr
-							)
-					, Op		( Union )
-					, LocationPath	( LocPath )
-					, Path		( Rel )
-					, XStep 	( Step )
-					, NodeTest	( NameTest
-							, PI
-							, TypeTest
-							)
-                                        , NodeSet	(..)
-					, NavXmlTree
-					, XPathValue	( XPVNode
-							, XPVBool
-							, XPVString
-							, XPVError
-							)
+                                        , Expr          ( LiteralExpr
+                                                        , FctExpr
+                                                        , GenExpr
+                                                        , PathExpr
+                                                        )
+                                        , Op            ( Union )
+                                        , LocationPath  ( LocPath )
+                                        , Path          ( Rel )
+                                        , XStep         ( Step )
+                                        , NodeTest      ( NameTest
+                                                        , PI
+                                                        , TypeTest
+                                                        )
+                                        , NodeSet       (..)
+                                        , NavXmlTree
+                                        , XPathValue    ( XPVNode
+                                                        , XPVBool
+                                                        , XPVString
+                                                        , XPVError
+                                                        )
                                         , emptyNodeSet
                                         , singletonNodeSet
                                         , nullNodeSet
@@ -150,38 +150,38 @@ import Text.XML.HXT.XPath.XPathDataTypes( NavTree
                                         , toNodeSet
                                         , headNodeSet
                                         , withNodeSet
-					)
-import Text.XML.HXT.XPath.XPathParser	( parseXPath
-					)
-import Text.XML.HXT.XPath.XPathEval	( evalExpr
-					)
-import Text.XML.HXT.XPath.XPathFct	( isNotInNodeList
-					)
+                                        )
+import Text.XML.HXT.XPath.XPathParser   ( parseXPath
+                                        )
+import Text.XML.HXT.XPath.XPathEval     ( evalExpr
+                                        )
+import Text.XML.HXT.XPath.XPathFct      ( isNotInNodeList
+                                        )
 import Text.XML.HXT.XPath.XPathToString ( xPValue2XmlTrees
-					)
+                                        )
 
 import           Data.Map (Map)
 import qualified Data.Map as Map hiding (Map)
 
-import Data.Tree.Class 
+import Data.Tree.Class
 
 import Data.Maybe
 import Data.List
 import Data.Char
 
---------------------------- 
+---------------------------
 -- Tree functions
 
 -- mapTree :: Functor t => (a -> b) -> t a -> t b
 -- mapTree = fmap
 
--- "map" on a tree with a context. 
+-- "map" on a tree with a context.
 -- Contextual information from the ancestors of the current node can be collected in the context
 
 mapTreeCtx :: Tree t => (c -> a -> (c, b)) -> c -> t a -> t b
-mapTreeCtx f c tree = 
+mapTreeCtx f c tree =
     mkTree b $ map (mapTreeCtx f cN) $ getChildren tree
-  where 
+  where
     (cN, b) = f c $ getNode tree
 
 filterTree :: Tree t => (a -> Bool) -> t a -> Maybe (t a)
@@ -190,19 +190,19 @@ filterTree p tree = if p node
                       else Nothing
                     where node = getNode tree
 
--- "filter" on a tree with a context. 
+-- "filter" on a tree with a context.
 -- Contextual information from the ancestors of the current node can be collected in the context
 filterTreeCtx :: Tree t => (c -> a -> (c, Bool)) -> c -> t a -> Maybe (t a)
 filterTreeCtx p c tree =
-  if b 
+  if b
     then Just $ mkTree node $ mapMaybe (filterTreeCtx p cN) $ getChildren tree
     else Nothing
-  where 
+  where
     (cN, b) = p c node
     node    = getNode tree
 
 zipTreeWith   :: Tree t => (a -> b -> c) -> t a -> t b -> t c
-zipTreeWith f a b = mkTree (f (getNode a) (getNode b)) 
+zipTreeWith f a b = mkTree (f (getNode a) (getNode b))
                        $ zipWith (zipTreeWith f) (getChildren a) $ getChildren b
 
 zipTree     :: Tree t => t a -> t b -> t (a,b)
@@ -211,12 +211,12 @@ zipTree      = zipTreeWith (,)
 unzipTree  :: Functor t => t (a,b) -> (t a, t b)
 unzipTree   = fmap fst &&& fmap snd
 
-showTrees	:: [XmlTree] -> String
+showTrees       :: [XmlTree] -> String
 showTrees ts
-    = concat 
+    = concat
       (runLA (xshow (constL ts)) $ undefined)
 
---------------------------- 
+---------------------------
 -- Xml Functions
 
 collectTextnodes :: [XmlTree] -> String
@@ -239,7 +239,7 @@ tryFetchAttribute :: XmlNode n => n -> QName -> Maybe String
 tryFetchAttribute node qn
   | isElem node =
 
-      if null candidates 
+      if null candidates
       then Nothing
 
       else if length candidates > 1
@@ -247,8 +247,8 @@ tryFetchAttribute node qn
 
       else Just $ collectTextnodes $ getChildren $ head candidates
 
-  | otherwise = Nothing    
-  where 
+  | otherwise = Nothing
+  where
     candidates = filter (isAttrType qn) $ fromJust $ getAttrl node
 
 fetchAttributeWDefault ::  XmlNode n => n -> QName -> String -> String
@@ -264,14 +264,14 @@ setAttribute :: XmlNode n => QName -> String -> n -> n
 setAttribute qn val node
   | isElem node = setElemAttrl (newA : attrs) node
   | otherwise   = error $ "setAttribute on none-element node"             -- how print an XmlNode...
-  where 
+  where
     attrs = filter (not . isAttrType qn) $ fromJust $ getAttrl node
     newA  = mkTree (XAttr qn) [mkText val]
 
 isWhitespaceNode :: (XmlNode n) => n -> Bool
 isWhitespaceNode = maybe False (all isSpace) . getText
 
---------------------------- 
+---------------------------
 -- Namespace Functions
 
 -- Expanded name, is unique can therefore be used as a key (unlike QName)
@@ -288,11 +288,11 @@ exUri   (ExName _ u) = u
 
 parseExName :: UriMapping -> String -> ExName
 parseExName uris str
-    | noPrefix	= ExName str ""
-    | otherwise	= ExName loc $ lookupPrefix uris prefix
+    | noPrefix  = ExName str ""
+    | otherwise = ExName loc $ lookupPrefix uris prefix
     where
-    noPrefix       = null loc 
-    loc            = drop 1 loc'                
+    noPrefix       = null loc
+    loc            = drop 1 loc'
     (prefix, loc') = span (/= ':') str
 
 -- Mapping from namespace-Prefixes to namespace-URIs
@@ -379,7 +379,7 @@ unionExpr es  = GenExpr Union es
 -- Intelligent splitting: Split an expression into subexpressions with equal priority
 -- for example: "a|c/d|e|f/g"  => [(0.0, "a|e"), (0.5, "c/d|f/g")]
 splitMatchByPrio :: Expr -> [(Float, Expr)]
-splitMatchByPrio = 
+splitMatchByPrio =
     map compress . groupBy eq . sortBy cmp . map (computePriority &&& id) . splitExpr
   where
     eq  x y  = fst x == fst y
@@ -393,7 +393,7 @@ computePriority _ = 0.5
 computeNTestPriority :: NodeTest -> Float
 computeNTestPriority (PI _)        =  0.0
 computeNTestPriority (TypeTest _)  = -0.5
-computeNTestPriority (NameTest nt) 
+computeNTestPriority (NameTest nt)
   | namePrefix nt /= ""
     && localPart nt == "*"        = -0.25
   | localPart nt == "*"           = -0.5
@@ -406,13 +406,13 @@ isMatchExpr (FctExpr "id" [LiteralExpr _])                 = True
 isMatchExpr (FctExpr "key" [LiteralExpr _, LiteralExpr _]) = True
 isMatchExpr _                                              = False
 
---------------------------- 
+---------------------------
 -- Misc:
 
 fromJustErr :: String -> Maybe a -> a
-fromJustErr msg = maybe (error msg) id 
+fromJustErr msg = maybe (error msg) id
 
 readWDefault :: Read a => a -> String -> a
 readWDefault a str = fst $ head $ reads str ++ [(a, "")]
 
---------------------------- 
+---------------------------

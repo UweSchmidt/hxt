@@ -40,10 +40,10 @@ import Text.XML.HXT.Validator.AttributeValueValidation
 -- Lookup-table which maps element names to their validation functions. The
 -- validation functions are XmlFilters.
 
-type IdEnvTable		= [IdEnv]
-type IdEnv 		= (ElemName, IdFct)
-type ElemName		= String
-type IdFct		= XmlFilter
+type IdEnvTable         = [IdEnv]
+type IdEnv              = (ElemName, IdFct)
+type ElemName           = String
+type IdFct              = XmlFilter
 
 
 
@@ -82,8 +82,8 @@ traverseTree idEnv n@(NTree (XTag name _) cs)
       idFct :: XmlFilter
       idFct
           = case (lookup (qualifiedName name) idEnv) of
-	    Nothing -> none
-	    Just f  -> f
+            Nothing -> none
+            Just f  -> f
 
 traverseTree _ _ = []
 
@@ -164,9 +164,9 @@ buildIdrefValidationFcts dtdPart idNodeList
       buildElemValidationFct :: XmlTree -> IdEnv
       buildElemValidationFct (NTree (XDTD ELEMENT al) _)
           = (elemName, buildIdrefValidationFct idRefAttrTypes)
-	  where
-	  elemName = lookup1 a_name al
-	  idRefAttrTypes = isIdRefAttrType $$ (isAttlistOfElement elemName) $$ dtdPart
+          where
+          elemName = lookup1 a_name al
+          idRefAttrTypes = isIdRefAttrType $$ (isAttlistOfElement elemName) $$ dtdPart
 
       buildElemValidationFct nd
           = error ("buildIdrefValidationFct: illegeal parameter:\n" ++ show nd)
@@ -177,32 +177,32 @@ buildIdrefValidationFcts dtdPart idNodeList
           = checkIdref +++ buildIdrefValidationFct xs
             where
             attrName = lookup1 a_value al
-	    attrType = lookup1 a_type al
+            attrType = lookup1 a_type al
 
             checkIdref :: XmlFilter
             checkIdref n@(NTree (XTag name _) _)
                 = if satisfies (hasAttr attrName) n
-	          then if attrType == k_idref
-		       then checkValueDeclared n attrValue
-		       else let valueList = words attrValue
-		            in if null valueList
-		               then err ("Attribute " ++ show attrName ++
-					 " of Element " ++ show (qualifiedName name) ++
-					 " must have at least one name.") n
-		               else concatMap (checkValueDeclared n) (words attrValue)
-	          else []
-		  where
-		  attrValue = normalizeAttributeValue (Just nd) (valueOf attrName n)
+                  then if attrType == k_idref
+                       then checkValueDeclared n attrValue
+                       else let valueList = words attrValue
+                            in if null valueList
+                               then err ("Attribute " ++ show attrName ++
+                                         " of Element " ++ show (qualifiedName name) ++
+                                         " must have at least one name.") n
+                               else concatMap (checkValueDeclared n) (words attrValue)
+                  else []
+                  where
+                  attrValue = normalizeAttributeValue (Just nd) (valueOf attrName n)
 
-	    checkIdref _ = []
+            checkIdref _ = []
 
 
-	    checkValueDeclared :: XmlTree -> String -> XmlTrees
-	    checkValueDeclared n@(NTree (XTag _ _) _) attrValue
-	        = if attrValue `elem` idValueList
-		  then []
-		  else err ("An Element with identifier " ++ show attrValue ++
-		            " must appear in the document.") n
+            checkValueDeclared :: XmlTree -> String -> XmlTrees
+            checkValueDeclared n@(NTree (XTag _ _) _) attrValue
+                = if attrValue `elem` idValueList
+                  then []
+                  else err ("An Element with identifier " ++ show attrValue ++
+                            " must appear in the document.") n
 
             checkValueDeclared _ _ = []
 
@@ -235,14 +235,14 @@ checkForUniqueIds idNodeList dtdPart
       checkForUniqueId :: XmlTrees -> [String] -> XmlTrees
       checkForUniqueId (x@(NTree (XTag name _) _):xs) used
           = if attrValue `elem` used
-	    then err ("Attribute value " ++ show attrValue ++ " of type ID for element " ++
-	              show (qualifiedName name) ++ " must be unique within the document.") x
-		 ++
-		 checkForUniqueId xs used
+            then err ("Attribute value " ++ show attrValue ++ " of type ID for element " ++
+                      show (qualifiedName name) ++ " must be unique within the document.") x
+                 ++
+                 checkForUniqueId xs used
 
-	    else checkForUniqueId xs (attrValue : used)
-	    where
-	    attrValue = getIdValue (isAttlistOfElement (qualifiedName name) $$ idAttrTypes) x
+            else checkForUniqueId xs (attrValue : used)
+            where
+            attrValue = getIdValue (isAttlistOfElement (qualifiedName name) $$ idAttrTypes) x
 
       checkForUniqueId _ _ = []
 

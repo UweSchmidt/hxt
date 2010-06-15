@@ -61,12 +61,12 @@ import Data.Char
 -- | Tests whether a URI matches the Relax NG anyURI symbol
 
 isRelaxAnyURI :: String -> Bool
-isRelaxAnyURI s 
+isRelaxAnyURI s
     = s == "" ||
       ( isURI s && not (isRelativeReference s) &&
-	( let (URI _ _ path _ frag) = fromMaybe (URI "" Nothing "" "" "") $ parseURI s
+        ( let (URI _ _ path _ frag) = fromMaybe (URI "" Nothing "" "" "") $ parseURI s
           in (frag == "" && path /= "")
-	)
+        )
       )
 
 
@@ -77,26 +77,26 @@ compareURI uri1 uri2
     = normalizeURI uri1 == normalizeURI uri2
 
 
--- |  Converts all letters to the corresponding lower-case letter 
--- and removes a trailing \"\/\" 
+-- |  Converts all letters to the corresponding lower-case letter
+-- and removes a trailing \"\/\"
 
 normalizeURI :: String -> String
 normalizeURI ""
     = ""
 normalizeURI uri
     = map toLower ( if last uri == '/'
-		    then init uri
-		    else uri
-		  )
+                    then init uri
+                    else uri
+                  )
 
-checkByParsing	:: Parser String -> String -> Bool
+checkByParsing  :: Parser String -> String -> Bool
 checkByParsing p s
     = either (const False) (const True) (parse p' "" s)
       where
       p' = do
-	   r <- p
-	   eof
-	   return r
+           r <- p
+           eof
+           return r
 
 -- | Tests whether a string matches a number [-](0-9)*
 isNumber :: String -> Bool
@@ -105,20 +105,20 @@ isNumber
     where
     parseNumber' :: Parser String
     parseNumber'
-	= do
-	  skipS0
-	  m <- option "" (string "-")
-	  n <- many1 digit
-	  skipS0
-	  return $ m ++ n
+        = do
+          skipS0
+          m <- option "" (string "-")
+          n <- many1 digit
+          skipS0
+          return $ m ++ n
 
-isNmtoken	:: String -> Bool
+isNmtoken       :: String -> Bool
 isNmtoken    = checkByParsing nmtoken
 
-isName	:: String -> Bool
-isName	= checkByParsing name
+isName  :: String -> Bool
+isName  = checkByParsing name
 
-{- | 
+{- |
 
 Formats a list of strings into a single string.
 The first parameter formats the elements, the 2. is inserted
@@ -155,7 +155,7 @@ formatStringList :: (String -> String) -> String -> [String] -> String
 formatStringList _sf _sp []
     = ""
 formatStringList sf spacer l
-    = reverse $ drop (length spacer) $ reverse $ 
+    = reverse $ drop (length spacer) $ reverse $
       foldr (\e -> ((if e /= "" then sf e ++ spacer else "") ++)) "" l
 
 -- ----------------------------------------

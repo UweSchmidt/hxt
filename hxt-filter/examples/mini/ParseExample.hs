@@ -21,8 +21,8 @@ main :: IO ()
 main
     = do
       argv <- getArgs
-			      -- take the first cmdline argument as source name
-			      -- start the XState monad with the runParser command
+                              -- take the first cmdline argument as source name
+                              -- start the XState monad with the runParser command
       res  <- run' $ parser [(a_source, head argv)] emptyRoot
       exitProg res
 
@@ -33,18 +33,18 @@ main
 -- There are more general run commands: run, run0 in case of a proccessing
 -- function, that requires e.g. an environment
 
-parser	:: Attributes -> XmlStateFilter ()
+parser  :: Attributes -> XmlStateFilter ()
 parser al
     = parseDocument al
       .>>
-      writeDocument [(a_indent, v_1)]	-- indent document and output to stdout
+      writeDocument [(a_indent, v_1)]   -- indent document and output to stdout
       .>>
-      checkStatus			-- check status
+      checkStatus                       -- check status
 
 -- ------------------------------------------------------------
 
-exitProg	:: [a] -> IO ()
-exitProg []	= exitWith (ExitFailure (-1))
-exitProg _	= exitWith ExitSuccess
+exitProg        :: [a] -> IO ()
+exitProg []     = exitWith (ExitFailure (-1))
+exitProg _      = exitWith ExitSuccess
 
 -- ------------------------------------------------------------

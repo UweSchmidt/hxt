@@ -33,30 +33,30 @@ import Data.Maybe
 -- The error handling method can be controlled by an error handler filter,
 -- the default filter issues the errors on stderr
 
-data SysState			= SysState { sysStateAttrs		:: ! SysStateAttrs
-					   , sysStateErrorHandler	:: ! (XmlStateFilter ())
-					   }
+data SysState                   = SysState { sysStateAttrs              :: ! SysStateAttrs
+                                           , sysStateErrorHandler       :: ! (XmlStateFilter ())
+                                           }
 
-type SysStateAttrs		= AssocList String XmlTrees
+type SysStateAttrs              = AssocList String XmlTrees
 
 -- |
 -- The State has a system and a user part
 -- the user state is a type parameter
 
-data XmlState state		= XmlState { sysState	:: ! SysState
-					   , userState	:: ! state
-					   }
+data XmlState state             = XmlState { sysState   :: ! SysState
+                                           , userState  :: ! state
+                                           }
 
 -- |
 -- The monad type for commands. It is an instance of "StateIO" from the
 -- general module "Control.Monad.MonadStateIO".
 
-type XState state res		= MonadStateIO.StateIO (XmlState state) res
+type XState state res           = MonadStateIO.StateIO (XmlState state) res
 
 -- |
 -- The "XmlFilter" type for filters working on a state
 
-type XmlStateFilter state	= XmlTree -> XState state XmlTrees
+type XmlStateFilter state       = XmlTree -> XState state XmlTrees
 
 -- ------------------------------------------------------------
 --
@@ -70,7 +70,7 @@ type XmlStateFilter state	= XmlTree -> XState state XmlTrees
 --
 --    - returns : the new state
 
-changeState	:: (state -> state) -> XState state state
+changeState     :: (state -> state) -> XState state state
 changeState f
     = do
       ns <- MonadStateIO.changeState f'
@@ -85,7 +85,7 @@ changeState f
 --
 --    - returns : the new state
 
-setState	:: state -> XState state state
+setState        :: state -> XState state state
 setState s
     = changeState ( \_ -> s )
 
@@ -94,7 +94,7 @@ setState s
 --
 --    - returns : the current state
 
-getState	:: XState state state
+getState        :: XState state state
 getState
     = changeState id
 
@@ -105,7 +105,7 @@ getState
 --
 -- see also : 'changeState'
 
-changeSysState	:: (SysState -> SysState) -> XState state SysState
+changeSysState  :: (SysState -> SysState) -> XState state SysState
 changeSysState f
     = do
       ns <- MonadStateIO.changeState f'
@@ -118,7 +118,7 @@ changeSysState f
 --
 -- see also : 'setState'
 
-setSysState		:: SysState -> XState state SysState
+setSysState             :: SysState -> XState state SysState
 setSysState s
     = changeSysState ( \_ -> s )
 
@@ -127,7 +127,7 @@ setSysState s
 --
 -- see also : 'getState'
 
-getSysState		:: XState state SysState
+getSysState             :: XState state SysState
 getSysState
     = changeSysState id
 
@@ -136,16 +136,16 @@ getSysState
 --
 -- an empty list of attribute value pairs
 
-initialSysState		:: SysState
+initialSysState         :: SysState
 initialSysState
     = SysState { sysStateAttrs        = []
-	       , sysStateErrorHandler = errorMsgToStderr
-	       }
+               , sysStateErrorHandler = errorMsgToStderr
+               }
 
 -- |
 -- change the attributes in the system state
 
-changeSysStateAttrs		:: (SysStateAttrs -> SysStateAttrs) -> (SysState -> SysState)
+changeSysStateAttrs             :: (SysStateAttrs -> SysStateAttrs) -> (SysState -> SysState)
 changeSysStateAttrs cf sstate
     = sstate { sysStateAttrs = cf (sysStateAttrs sstate) }
 
@@ -153,7 +153,7 @@ changeSysStateAttrs cf sstate
 -- |
 -- set the error message handler
 
-setSysErrorHandler		:: XmlStateFilter () -> XState state ()
+setSysErrorHandler              :: XmlStateFilter () -> XState state ()
 setSysErrorHandler ehf
     = changeSysState (\ s -> s { sysStateErrorHandler = ehf })
       >> return ()
@@ -161,7 +161,7 @@ setSysErrorHandler ehf
 -- |
 -- get the error handler
 
-getSysErrorHandler		:: XState state (XmlStateFilter ())
+getSysErrorHandler              :: XState state (XmlStateFilter ())
 getSysErrorHandler
     = do
       s <- getSysState
@@ -180,7 +180,7 @@ getSysErrorHandler
 --
 -- see also : 'setSysParam', 'setSysParamInt'
 
-setSysParamTree		:: String -> XmlTrees -> XState state ()
+setSysParamTree         :: String -> XmlTrees -> XState state ()
 setSysParamTree name val
     = changeSysState (changeSysStateAttrs (addEntry name val))
       >> return ()
@@ -196,7 +196,7 @@ setSysParamTree name val
 --
 -- see also : 'setSysParamTree', setSysParamInt
 
-setSysParam		:: String -> String -> XState state ()
+setSysParam             :: String -> String -> XState state ()
 setSysParam name val
     = setSysParamTree name (xtext val)
 
@@ -205,14 +205,14 @@ setSysParam name val
 --
 -- see also : 'setSysParam'
 
-setSysParamInt		:: String -> Int -> XState state ()
-setSysParamInt name val	= setSysParam name (show val)
+setSysParamInt          :: String -> Int -> XState state ()
+setSysParamInt name val = setSysParam name (show val)
 
 -- |
 -- add (or change) all attributes of the document root to the system state
 --     - returns : this
 
-setSystemParams	:: XmlStateFilter state
+setSystemParams :: XmlStateFilter state
 setSystemParams t
     = changeSysState (changeSysStateAttrs (addEntries (toTreel . getAttrl $ t)))
       >> thisM t
@@ -226,7 +226,7 @@ setSystemParams t
 --
 --    - returns : the list of tres associated with the key, or the empty list for unknown parameters
 
-getSysParamTree		:: String -> XState state XmlTrees
+getSysParamTree         :: String -> XState state XmlTrees
 getSysParamTree name
     = do
       s <- getSysState
@@ -239,7 +239,7 @@ getSysParamTree name
 --
 --    - returns : the value, or the empty string for unknown parameters
 
-getSysParam		:: String -> XState state String
+getSysParam             :: String -> XState state String
 getSysParam name
     = do
       ts <- getSysParamTree name
@@ -254,25 +254,25 @@ getSysParam name
 --
 --    - returns : the value if found, else the default
 
-getSysParamWithDefault	:: String -> String -> XState state String
+getSysParamWithDefault  :: String -> String -> XState state String
 getSysParamWithDefault name def
     = do
       val <- getSysParam name
       return ( if null val
-	       then def
-	       else val
-	     )
+               then def
+               else val
+             )
 
 -- |
 -- read an integer system parameter
 --
---    * 1.parameter name : 
+--    * 1.parameter name :
 --
---    - 2.parameter default : 
+--    - 2.parameter default :
 --
 -- see also : 'getSysParamWithDefault'
 
-getSysParamInt	:: String -> Int -> XState state Int
+getSysParamInt  :: String -> Int -> XState state Int
 getSysParamInt var def
     = do
       val <- getSysParamWithDefault var (show def)
@@ -289,7 +289,7 @@ getSysParamInt var def
 --
 --    - returns : the i\/o command with result and user state
 
-run0		:: XmlState state -> XState state res -> IO (res, XmlState state)
+run0            :: XmlState state -> XState state res -> IO (res, XmlState state)
 run0 initialState (MonadStateIO.STIO cmd)
     = do
       (res, finalState) <- cmd initialState
@@ -300,7 +300,7 @@ run0 initialState (MonadStateIO.STIO cmd)
 -- ignore final user state.
 -- like run0, but ignore the resulting user state
 
-run		:: state -> XState state res -> IO res
+run             :: state -> XState state res -> IO res
 run initialUserState cmd
     = do
       (res, _finalState) <- run0 (XmlState initialSysState initialUserState) cmd
@@ -310,8 +310,8 @@ run initialUserState cmd
 -- exec a XState command in th IO monad.
 -- like run with the empty state ().
 
-run'		:: XState () res -> IO res
-run'		= run ()
+run'            :: XState () res -> IO res
+run'            = run ()
 
 -- ------------------------------------------------------------
 
@@ -327,7 +327,7 @@ run'		= run ()
 --
 --    - returns : the result of executing cmd and the final state
 
-chain'		:: state1 -> XState state1 res -> XState state0 (res, state1)
+chain'          :: state1 -> XState state1 res -> XState state0 (res, state1)
 chain' initialUserState1 cmd1
     = do
       sysState0 <- getSysState
@@ -344,7 +344,7 @@ chain' initialUserState1 cmd1
 --
 --    - returns : only the result of executing cmd
 
-chain		:: state1 -> XState state1 res -> XState state0 res
+chain           :: state1 -> XState state1 res -> XState state0 res
 chain initialUserState1 cmd1
     = do
       (res, _) <- chain' initialUserState1 cmd1
@@ -363,10 +363,10 @@ chain initialUserState1 cmd1
 --
 --    - returns : the filter running in the state monad
 --
---		  all errors are filtered from the result and issued on stderr
+--                all errors are filtered from the result and issued on stderr
 
-liftF		:: XmlFilter -> XmlStateFilter state
-liftF f		= liftMf f .>> issueError
+liftF           :: XmlFilter -> XmlStateFilter state
+liftF f         = liftMf f .>> issueError
 
 -- |
 -- lift an I\/O command
@@ -375,8 +375,8 @@ liftF f		= liftMf f .>> issueError
 --
 --    - returns : the i\/o command lifted to the XML state monad
 
-io		:: IO a -> XState state a
-io		= MonadStateIO.io
+io              :: IO a -> XState state a
+io              = MonadStateIO.io
 
 -- ------------------------------------------------------------
 --
@@ -400,36 +400,36 @@ io		= MonadStateIO.io
 --
 --    - returns : nothing
 
-setTraceLevel	:: Int -> XState state ()
-setTraceLevel l	= setSysParamInt a_trace l
+setTraceLevel   :: Int -> XState state ()
+setTraceLevel l = setSysParamInt a_trace l
 
 -- |
 -- get the current trace level.
 --
 --    - returns : the current trace level
 
-getTraceLevel	:: XState state Int
-getTraceLevel	= getSysParamInt a_trace 0
+getTraceLevel   :: XState state Int
+getTraceLevel   = getSysParamInt a_trace 0
 
 -- |
 -- trace output for arbitray commands.
 --
 --    * 1.parameter level :  the trace level,
---			  for which the command will be execuded
---			  if level \<= current trace level
+--                        for which the command will be execuded
+--                        if level \<= current trace level
 --
 --    - 2.parameter cmd :  the command to be executed
 --
 --    - returns : nothing
 
-traceCmd	:: Int -> XState state a -> XState state ()
+traceCmd        :: Int -> XState state a -> XState state ()
 traceCmd level cmd
     = do
       trcLevel <- getTraceLevel
       if level <= trcLevel
         then do
-	     _ <- cmd
-	     return ()
+             _ <- cmd
+             return ()
         else return ()
 
 -- |
@@ -441,11 +441,11 @@ traceCmd level cmd
 --
 --    - returns : nothing
 
-trace		:: Int -> String -> XState state ()
+trace           :: Int -> String -> XState state ()
 trace level str
     = traceCmd level
       $ do
-	io $ hPutStrLn stderr ("-- (" ++ show level ++ ") " ++ str)
+        io $ hPutStrLn stderr ("-- (" ++ show level ++ ") " ++ str)
 
 -- |
 -- trace output of the user part of the program state.
@@ -456,12 +456,12 @@ trace level str
 --
 --    - returns : nothing
 
-traceState	:: Int -> (state -> String) -> XState state ()
+traceState      :: Int -> (state -> String) -> XState state ()
 traceState level fct
     = traceCmd level
       $ do
-	s <- getState
-	io $ hPutStrLn stderr (fct s)
+        s <- getState
+        io $ hPutStrLn stderr (fct s)
 
 -- ------------------------------------------------------------
 --
@@ -471,7 +471,7 @@ traceState level fct
 -- filter to reset the state attribute 'a_status'
 --    - returns : this
 
-clearStatus	:: XmlStateFilter state
+clearStatus     :: XmlStateFilter state
 clearStatus t
     = do
       setSysParamInt a_status c_ok
@@ -481,47 +481,47 @@ clearStatus t
 -- report an error message.
 --
 --    - returns : if the input tree n represents an error, @res = []@
---		  and the error is processed by the errror handler filter (default: error is issued on stderr)
---		  else @res = [n]@
+--                and the error is processed by the errror handler filter (default: error is issued on stderr)
+--                else @res = [n]@
 --
 -- see also : 'issueErr'
 
-issueError	:: XmlStateFilter state
+issueError      :: XmlStateFilter state
 issueError
     = (setErrorMsgLevel .>> errorMsgHandler .>> noneM)
       `whenM`
       isXError
 
-errorMsgHandler	:: XmlStateFilter state
+errorMsgHandler :: XmlStateFilter state
 errorMsgHandler
     = performAction
       ( \ t -> chain' () ( do
-			   ehf <- getSysErrorHandler
-			   _ <- ehf t
-			   return ()
-			 )
+                           ehf <- getSysErrorHandler
+                           _ <- ehf t
+                           return ()
+                         )
       )
 
 -- |
 -- set the error level in system state
 
-setErrorMsgLevel	:: XmlStateFilter state
+setErrorMsgLevel        :: XmlStateFilter state
 setErrorMsgLevel
     = performAction
       ( \ (NTree (XError level _str) _cs) ->
-	do
-	errLevel <- getSysParamInt a_status 0
-	setSysParamInt a_status (max errLevel level)
+        do
+        errLevel <- getSysParamInt a_status 0
+        setSysParamInt a_status (max errLevel level)
       )
 
 -- |
 -- default error handler for writing errors to stderr
 
-errorMsgToStderr	:: XmlStateFilter state
+errorMsgToStderr        :: XmlStateFilter state
 errorMsgToStderr
     = performAction
       ( \ (NTree (XError level str) _cs) ->
-	io $ hPutStrLn stderr ("\n" ++ errClass level ++ ": " ++ str)
+        io $ hPutStrLn stderr ("\n" ++ errClass level ++ ": " ++ str)
       )
 
 -- |
@@ -530,24 +530,24 @@ errorMsgToStderr
 -- they can be read with @getSysParamTree a_error_log@ or by
 -- applying the filter 'getErrorMsg' to the root node
 
-errorMsgLogging		:: XmlStateFilter state
+errorMsgLogging         :: XmlStateFilter state
 errorMsgLogging
     = performAction
       ( \ t ->
-	do
-	errLog <- getSysParamTree a_error_log
-	setSysParamTree a_error_log (t : errLog)
+        do
+        errLog <- getSysParamTree a_error_log
+        setSysParamTree a_error_log (t : errLog)
       )
 
 errorMsgLoggingAndToStderr      :: XmlStateFilter state
-errorMsgLoggingAndToStderr	= errorMsgLogging.>> errorMsgToStderr
+errorMsgLoggingAndToStderr      = errorMsgLogging.>> errorMsgToStderr
 
 -- |
 -- the filter for reading all collected error mesages
 --
 -- result is the list of error messages, the input tree is ignored
 
-getErrorMsg	:: XmlStateFilter state
+getErrorMsg     :: XmlStateFilter state
 getErrorMsg _t
     = do
       el <- getSysParamTree a_error_log
@@ -560,39 +560,39 @@ getErrorMsg _t
 -- 'c_err' (2): error (e.g. parse error, validation error, ...),
 -- 'c_fatal' (3) : fatal error (document access error, internal error, ...)
 
-errClass	:: Int -> String
+errClass        :: Int -> String
 errClass l
     = fromMaybe "fatal error" . lookup l $ msgList
       where
-      msgList	= [ (c_ok,	"no error")
-		  , (c_warn,	"warning")
-		  , (c_err,	"error")
-		  , (c_fatal,	"fatal error")
-		  ]
+      msgList   = [ (c_ok,      "no error")
+                  , (c_warn,    "warning")
+                  , (c_err,     "error")
+                  , (c_fatal,   "fatal error")
+                  ]
 
 -- |
 -- short cut for issuing a warning
 --
 -- see also : 'issueError', 'issueErr'
 
-issueWarn	:: String -> XmlStateFilter state
-issueWarn msg	= liftMf (warn msg) .>> issueError
+issueWarn       :: String -> XmlStateFilter state
+issueWarn msg   = liftMf (warn msg) .>> issueError
 
 -- |
 -- short cut for issuing an error
 --
 -- see also : 'issueError'
 
-issueErr	:: String -> XmlStateFilter state
-issueErr msg	= liftMf (err msg) .>> issueError
+issueErr        :: String -> XmlStateFilter state
+issueErr msg    = liftMf (err msg) .>> issueError
 
 -- |
 -- short cut for issuing a fatal error
 --
 -- see also : 'issueError', 'issueErr'
 
-issueFatal	:: String -> XmlStateFilter state
-issueFatal msg	= liftMf (fatal msg) .>> issueError
+issueFatal      :: String -> XmlStateFilter state
+issueFatal msg  = liftMf (fatal msg) .>> issueError
 
 
 -- ------------------------------------------------------------
@@ -600,12 +600,12 @@ issueFatal msg	= liftMf (fatal msg) .>> issueError
 -- issue an error, add the error to the document root tree
 -- and return the tree
 
-addFatal	:: String -> XmlStateFilter state
+addFatal        :: String -> XmlStateFilter state
 addFatal msg
     = liftF ( fatal msg
-	      +++
-	      setStatus c_fatal "accessing documents"
-	    )
+              +++
+              setStatus c_fatal "accessing documents"
+            )
 
 -- ------------------------------------------------------------
 
@@ -615,12 +615,12 @@ addFatal msg
 -- stored in attribute 'a_module' is issued and the filter acts as the 'noneM' filter
 -- else its the 'thisM' filter
 
-checkStatus	:: XmlStateFilter state
+checkStatus     :: XmlStateFilter state
 checkStatus t
     = if status >= c_err
       then errorMsgHandler (mkXErrorTree c_warn (errClass status ++ "s detected in " ++ msg) [])
-	   >> noneM t
-	else
+           >> noneM t
+        else
            thisM t
     where
     status = intValueOf a_status t
@@ -630,23 +630,23 @@ checkStatus t
 -- add the error level and the module where the error occured
 -- to the attributes of a document root node and remove the children when level is greater or equal to 'c_err'
 
-setStatus	:: Int -> String -> XmlFilter
+setStatus       :: Int -> String -> XmlFilter
 setStatus level msg
     = ( addAttrInt a_status level
-	.>
-	addAttr a_module msg
-	.>
-	( if level >= c_err
-	  then replaceChildren []
-	  else this
-	)
+        .>
+        addAttr a_module msg
+        .>
+        ( if level >= c_err
+          then replaceChildren []
+          else this
+        )
       )
       `when` isRoot
 
 -- |
 -- check whether tree is a document root and the status attribute has a value less than 'c_err'
 
-statusOk	:: XmlFilter
+statusOk        :: XmlFilter
 statusOk
     = isRoot
       .>
@@ -657,13 +657,13 @@ statusOk
 -- removed and error info is added as attributes with 'setStatus'
 -- else nothing is changed
 
-checkResult	:: String -> XmlStateFilter state
+checkResult     :: String -> XmlStateFilter state
 checkResult msg t
     = do
       level <- getSysParamInt a_status 0
       ( if level <= c_warn
-	then thisM
-	else liftMf ( setStatus level msg )
+        then thisM
+        else liftMf ( setStatus level msg )
         ) t
 
 -- |
@@ -672,7 +672,7 @@ checkResult msg t
 --
 -- see also : 'processAttr', 'processAttrl'
 
-processAttrM				:: XmlStateFilter a -> XmlStateFilter a
+processAttrM                            :: XmlStateFilter a -> XmlStateFilter a
 processAttrM f t
     = do
       res <- f $$< al

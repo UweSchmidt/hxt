@@ -136,7 +136,7 @@ type NsEnv = AssocList XName XName
 -- | Two QNames are equal if (1. case) namespaces are both empty and the qualified names
 -- (prefix:localpart) are the same or (2. case) namespaces are set and namespaces and
 -- local parts both are equal
-    
+
 instance Eq QName where
     (LP lp1)     == (LP lp2)            = lp1 == lp2
     (PX px1 qn1) == (PX px2 qn2)        = px1 == px2 && qn1== qn2
@@ -289,10 +289,10 @@ mkPrefixLocalPart px lp
 -- a prefix and a local part.
 
 mkName                          :: String -> QName
-mkName n                        
+mkName n
     | (':' `elem` n)
       &&
-      not (null px)			-- more restrictive: isWellformedQualifiedName n
+      not (null px)                     -- more restrictive: isWellformedQualifiedName n
                                 = mkPrefixLocalPart px lp
     | otherwise                 = mkPrefixLocalPart "" n
     where
@@ -467,7 +467,7 @@ isNameSpaceName (PX px _)       = px == xmlnsXName
 isNameSpaceName (NS _  n)       = isNameSpaceName n
 
 -- |
--- 
+--
 -- predicate is used in filter 'valdateNamespaces'.
 
 isDeclaredNamespace             :: QName -> Bool

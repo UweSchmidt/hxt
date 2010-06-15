@@ -70,49 +70,49 @@ import Data.List
 import System.Directory
   ( doesFileExist )
 
-  
+
 -- ------------------------------------------------------------
 
-{- 
+{-
 - 4.1. Annotations: Foreign attributes and elements are removed.
 - 4.2. Whitespace:
-    - For each element other than value and param, each child that is a string 
+    - For each element other than value and param, each child that is a string
       containing only whitespace characters is removed. -> fertig
     - Leading and trailing whitespace characters are removed from the value of each name,
       type and combine attribute and from the content of each name element. -> fertig
 - 4.3. datatypeLibrary attribute:
     - The value of each datatypeLibary attribute is transformed by escaping disallowed characters
-    - For any data or value element that does not have a datatypeLibrary attribute, 
+    - For any data or value element that does not have a datatypeLibrary attribute,
       a datatypeLibrary attribute is added.
     - Any datatypeLibrary attribute that is on an element other than data or value is removed.
 - 4.4. type attribute of value element
 -}
 simplificationStep1 :: IOSArrow XmlTree XmlTree
 simplificationStep1
-    = ( {- 
-	- 4.5. href attribute
-        - The value of the href attribute on an externalRef or include element is first 
+    = ( {-
+        - 4.5. href attribute
+        - The value of the href attribute on an externalRef or include element is first
         - transformed by escaping disallowed characters
         - The URI reference is then resolved into an absolute form
         - The value of the href attribute will be used to construct an element.
-	-}
-	( processHref $< getBaseURI )
-	>>>
-	-- 4.10 QNames
-	processWithNsEnv processEnvNames (toNsEnv [("xml",xmlNamespace)])
-	>>>
-	-- 4.4 For any data or value element that does not have a datatypeLibrary attribute,
-	-- a datatypeLibrary attribute is added.
-	-- Wird vorgezogen, da danach der Rest in einem Baumdurchlauf erledigt werden kann
-	processdatatypeLib ""
-	>>>
-	processTopDownWithAttrl
-	(
-	 ( -- 4.1 Foreign attributes and elements are removed
+        -}
+        ( processHref $< getBaseURI )
+        >>>
+        -- 4.10 QNames
+        processWithNsEnv processEnvNames (toNsEnv [("xml",xmlNamespace)])
+        >>>
+        -- 4.4 For any data or value element that does not have a datatypeLibrary attribute,
+        -- a datatypeLibrary attribute is added.
+        -- Wird vorgezogen, da danach der Rest in einem Baumdurchlauf erledigt werden kann
+        processdatatypeLib ""
+        >>>
+        processTopDownWithAttrl
+        (
+         ( -- 4.1 Foreign attributes and elements are removed
            none
-           `when` 
-           ( ( isElem >>> neg isRoot 
-               >>> 
+           `when`
+           ( ( isElem >>> neg isRoot
+               >>>
                getNamespaceUri
                >>>
                isA (\ uri -> (not $ compareURI uri relaxNamespace))
@@ -125,206 +125,206 @@ simplificationStep1
                isA (\ uri -> (uri /= "" && (not $ compareURI uri relaxNamespace)))
              )
            )
-	 )
-	 >>>
-	 ( -- 4.2 For each element other than value and param, each child that 
+         )
+         >>>
+         ( -- 4.2 For each element other than value and param, each child that
            -- is a string containing only whitespace characters is removed.
            ( processChildren removeWhiteSpace
-             `whenNot` 
+             `whenNot`
              (isRngParam `orElse` isRngValue)
            )
-           `when` isElem 
-	 )
-	 >>>       
-	 ( -- 4.2 Leading and trailing whitespace characters are removed from the value 
+           `when` isElem
+         )
+         >>>
+         ( -- 4.2 Leading and trailing whitespace characters are removed from the value
            -- of each name, type and combine attribute ...
            changeAttrValue normalizeWhitespace
            `when`
            ( isRngAttrName `orElse` isRngAttrType `orElse` isRngAttrCombine)
-	 )
-	 >>>
-	 ( -- 4.2 ... and from the content of each name element.
+         )
+         >>>
+         ( -- 4.2 ... and from the content of each name element.
            processChildren (changeText normalizeWhitespace)
            `when`
            isRngName
-	 )
-	 >>>
-	 ( -- 4.3 The value of each datatypeLibary attribute is transformed
+         )
+         >>>
+         ( -- 4.3 The value of each datatypeLibary attribute is transformed
            -- by escaping disallowed characters
            changeAttrValue escapeURI
            `when`
            isRngAttrDatatypeLibrary
-	 )
-	 >>>
-	 ( -- The value of the datatypeLibary attribute has to be a valid URI
+         )
+         >>>
+         ( -- The value of the datatypeLibary attribute has to be a valid URI
            ( mkRelaxError "" $< ( getRngAttrDatatypeLibrary
-				  >>> 
-				  arr (\ a -> ( "datatypeLibrary attribute: " ++ 
-						a ++ " is not a valid URI"
-					      )
+                                  >>>
+                                  arr (\ a -> ( "datatypeLibrary attribute: " ++
+                                                a ++ " is not a valid URI"
+                                              )
                                       )
-				)
+                                )
            )
            `when`
            ( isElem
-	     >>>
-	     hasRngAttrDatatypeLibrary
-             >>> 
+             >>>
+             hasRngAttrDatatypeLibrary
+             >>>
              getRngAttrDatatypeLibrary >>> isA (not . isRelaxAnyURI)
            )
-	 )
-	 >>>       
-	 ( -- 4.3 Any datatypeLibrary attribute that is on an element 
+         )
+         >>>
+         ( -- 4.3 Any datatypeLibrary attribute that is on an element
            -- other than data or value is removed.
            removeAttr "datatypeLibrary"
            `when`
            ( isElem
-	     >>>
-	     neg (isRngData `orElse` isRngValue) 
-             >>> 
+             >>>
+             neg (isRngData `orElse` isRngValue)
+             >>>
              hasRngAttrDatatypeLibrary
            )
-	 )
-	 >>>       
-	 ( -- 4.4 For any value element that does not have a type attribute,
-           -- a type attribute is added with value token and the value of 
+         )
+         >>>
+         ( -- 4.4 For any value element that does not have a type attribute,
+           -- a type attribute is added with value token and the value of
            -- the datatypeLibrary attribute is changed to the empty string.
            ( addAttr "type" "token"
-	     >>>
-	     addAttr "datatypeLibrary" ""
-	   )
+             >>>
+             addAttr "datatypeLibrary" ""
+           )
            `when`
            ( isRngValue >>> neg hasRngAttrType )
-	 ) 
-	)    
+         )
+        )
       ) `when` collectErrors
     where
     processHref :: String -> IOSArrow XmlTree XmlTree
     processHref uri
-	= processChildren
-	  ( choiceA
-	    [ ( isElem >>> hasAttr "xml:base" )
+        = processChildren
+          ( choiceA
+            [ ( isElem >>> hasAttr "xml:base" )
               :-> ( ifA ( isExternalRefInclude >>> hasRngAttrHref )
                     ( -- The value of the href attribute is transformed by
                       -- escaping disallowed characters
                       (processAttrl (changeAttrValue escapeURI `when` isRngAttrHref))
                       >>> -- compute the new base uri from the old uri and the href attribute
                       (addAttr "href" $< (absURI "href" $< (absURI "xml:base" uri)))
-                      >>> 
+                      >>>
                       (processHref $< absURI "xml:base" uri)
                     ) -- element without a href attribute, just compute the new base uri
                     (processHref $< absURI "xml:base" uri)
                   )
-	    , ( isExternalRefInclude >>> hasRngAttrHref )
-              :-> ( -- The value of the href attribute is transformed by 
+            , ( isExternalRefInclude >>> hasRngAttrHref )
+              :-> ( -- The value of the href attribute is transformed by
                     -- escaping disallowed characters
                     (processAttrl (changeAttrValue escapeURI `when` isRngAttrHref))
                     >>>
                     (addAttr "href" $< absURI "href" uri)
                   )
-	    , this
-	      :-> processHref uri
+            , this
+              :-> processHref uri
             ]
-	  )
-	where
-	absURI :: String -> String -> IOSArrow XmlTree String
-	absURI attrName u
-	    = ( getAttrValue attrName
-		>>> 
+          )
+        where
+        absURI :: String -> String -> IOSArrow XmlTree String
+        absURI attrName u
+            = ( getAttrValue attrName
+                >>>
                 arr (\ a -> fromMaybe "" (expandURIString a u))
                 >>> -- the uri should not have a fragment-identifier (4.5)
                 ( arr ("illegal URI, fragment identifier not allowed: " ++)
                   `whenNot`
                   (getFragmentFromURI >>> isA null)
                 )
-	      )
+              )
 
     processEnvNames :: NsEnv -> IOSArrow XmlTree XmlTree
     processEnvNames env
-	= ( ( (replaceQNames env $< getAttrValue "name")
+        = ( ( (replaceQNames env $< getAttrValue "name")
               `when`
               ( (isRngElement `orElse` isRngAttribute)
-		>>>
-		getRngAttrName
-		>>>
-		isA (elem ':')
+                >>>
+                getRngAttrName
+                >>>
+                isA (elem ':')
               )
-	    )
-	    >>>
-	    ( (addAttrl (getBaseURI >>> createAttrL))      
+            )
+            >>>
+            ( (addAttrl (getBaseURI >>> createAttrL))
               `when`
               isRngValue
-	    )
-	  )
-	where
-	createAttrL :: IOSArrow String XmlTree
-	createAttrL
-	    = setBaseUri &&& constA (map createAttr env) >>> arr2L (:)
-	    where
+            )
+          )
+        where
+        createAttrL :: IOSArrow String XmlTree
+        createAttrL
+            = setBaseUri &&& constA (map createAttr env) >>> arr2L (:)
+            where
 
-	    createAttr :: (XName, XName) -> XmlTree
-	    createAttr (pre, uri)
-		= XN.mkAttr (mkName nm) [XN.mkText (show uri)]
-		where
-		nm  | isNullXName pre	= "RelaxContextDefault"
-		    | otherwise		= contextAttributes ++ show pre
+            createAttr :: (XName, XName) -> XmlTree
+            createAttr (pre, uri)
+                = XN.mkAttr (mkName nm) [XN.mkText (show uri)]
+                where
+                nm  | isNullXName pre   = "RelaxContextDefault"
+                    | otherwise         = contextAttributes ++ show pre
 
-	    setBaseUri :: IOSArrow String XmlTree
-	    setBaseUri = mkAttr (mkName contextBaseAttr) (txt $< this)
+            setBaseUri :: IOSArrow String XmlTree
+            setBaseUri = mkAttr (mkName contextBaseAttr) (txt $< this)
 
-	replaceQNames :: NsEnv -> String -> IOSArrow XmlTree XmlTree                        
-	replaceQNames e name
-	    | isNothing uri
-		= mkRelaxError "" ( "No Namespace-Mapping for the prefix " ++ show pre ++ 
-				    " in the Context of Element: " ++ show name
-				  )
-	    | otherwise
-		= addAttr "name" ( "{" ++ (show . fromJust $ uri) ++ "}" ++ local )
-	    where
-	    (pre, local') = span (/= ':') name
-	    local         = tail local'
-	    uri 	:: Maybe XName
-	    uri           = lookup (newXName pre) e
+        replaceQNames :: NsEnv -> String -> IOSArrow XmlTree XmlTree
+        replaceQNames e name
+            | isNothing uri
+                = mkRelaxError "" ( "No Namespace-Mapping for the prefix " ++ show pre ++
+                                    " in the Context of Element: " ++ show name
+                                  )
+            | otherwise
+                = addAttr "name" ( "{" ++ (show . fromJust $ uri) ++ "}" ++ local )
+            where
+            (pre, local') = span (/= ':') name
+            local         = tail local'
+            uri         :: Maybe XName
+            uri           = lookup (newXName pre) e
 
-    -- The value of the added datatypeLibrary attribute is the value of the 
-    -- datatypeLibrary attribute of the nearest ancestor element that 
-    -- has a datatypeLibrary attribute, or the empty string 
+    -- The value of the added datatypeLibrary attribute is the value of the
+    -- datatypeLibrary attribute of the nearest ancestor element that
+    -- has a datatypeLibrary attribute, or the empty string
     -- if there is no such ancestor.
     processdatatypeLib :: (ArrowXml a) => String -> a XmlTree XmlTree
-    processdatatypeLib lib 
-	= processChildren $
+    processdatatypeLib lib
+        = processChildren $
           choiceA
-	  [ ( isElem >>> hasRngAttrDatatypeLibrary
+          [ ( isElem >>> hasRngAttrDatatypeLibrary
             -- set the new datatypeLibrary value
             )
-	    :->
-	    ( processdatatypeLib $< getRngAttrDatatypeLibrary )
-	  , ( (isRngData `orElse` isRngValue)
-              >>> 
+            :->
+            ( processdatatypeLib $< getRngAttrDatatypeLibrary )
+          , ( (isRngData `orElse` isRngValue)
+              >>>
               neg hasRngAttrDatatypeLibrary
               -- add a datatypeLibrary attribute
-	    )
-	    :->
-	    ( addAttr "datatypeLibrary" lib >>> processdatatypeLib lib )
-	  , this
-	    :->
-	    processdatatypeLib lib
+            )
+            :->
+            ( addAttr "datatypeLibrary" lib >>> processdatatypeLib lib )
+          , this
+            :->
+            processdatatypeLib lib
           ]
 
 -- ------------------------------------------------------------
 
 
-{- 
+{-
 - 4.5. href attribute
     - see simplificationStep1
 - 4.6. externalRef element
-    - An element is constructed using the URI reference 
+    - An element is constructed using the URI reference
       that is the value of href attribute
     - This element must match the syntax for pattern.
-    - The element is transformed by recursively applying the rules from 
+    - The element is transformed by recursively applying the rules from
       this subsection and from previous subsections of this section.
     - This must not result in a loop.
-    - Any ns attribute on the externalRef element is transferred 
+    - Any ns attribute on the externalRef element is transferred
       to the referenced element if the referenced element does
       not already have an ns attribute.
     - The externalRef element is then replaced by the referenced element.
@@ -332,10 +332,10 @@ simplificationStep1
     - An element is constructed using the URI reference that is the
       value of href attribute
     - This element must be a grammar element, matching the syntax for grammar.
-    - This grammar element is transformed by recursively applying the rules 
+    - This grammar element is transformed by recursively applying the rules
       from this subsection and from previous subsections of this section.
     - This must not result in a loop.
-    
+
     - If the include element has a start component, then the grammar element
       must have a start component.
     - If the include element has a start component, then all start components
@@ -344,9 +344,9 @@ simplificationStep1
       must have a define component with the same name.
     - For every define component of the include element, all define components
       with the same name are removed from the grammar element.
-    
+
     - The include element is transformed into a div element.
-    - The attributes of the div element are the attributes of the 
+    - The attributes of the div element are the attributes of the
       include element other than the href attribute.
     - The children of the div element are the grammar element
     - The grammar element is then renamed to div.
@@ -377,31 +377,31 @@ simplificationStep2 readOptions validateExternalRef validateInclude extHRefs inc
                       )
           )
         ( mkRelaxError ""
-	  ( show href ++
-	    ": can't read URI, referenced in externalRef-Pattern"
-	  )
-	)
+          ( show href ++
+            ": can't read URI, referenced in externalRef-Pattern"
+          )
+        )
         ( ifP (const $ elem href extHRefs)
            -- if the referenced name already exists in the list of processed ref attributes
            -- we have found a loop
             ( mkRelaxError ""
-	      (  "loop in externalRef-Pattern, " ++ 
+              (  "loop in externalRef-Pattern, " ++
                  formatStringListArr (reverse $ href:extHRefs)
-	      )
+              )
             )
-            ( ifA ( if validateExternalRef 					-- if validation parameters are set
-		    then validateDocWithRelax S.relaxSchemaArrow [] href	-- the referenced schema is validated with respect to
-		    else none							-- the Relax NG specification
+            ( ifA ( if validateExternalRef                                      -- if validation parameters are set
+                    then validateDocWithRelax S.relaxSchemaArrow [] href        -- the referenced schema is validated with respect to
+                    else none                                                   -- the Relax NG specification
                   )
                 ( mkRelaxError ""
-		  ( "The content of the schema " ++ show href ++ 
-		    ", referenced in externalRef does not " ++
-		    "match the syntax for pattern"
-		  )
+                  ( "The content of the schema " ++ show href ++
+                    ", referenced in externalRef does not " ++
+                    "match the syntax for pattern"
+                  )
                 )
                 ( readForRelax readOptions href
                   >>>
-                  simplificationStep1						-- perform the transformations from previous steps
+                  simplificationStep1                                           -- perform the transformations from previous steps
                   >>>
                   simplificationStep2 readOptions validateExternalRef validateInclude (href:extHRefs) includeHRefs
                   >>>
@@ -416,66 +416,66 @@ simplificationStep2 readOptions validateExternalRef validateInclude extHRefs inc
                 )
             )
         )
-  
+
   importInclude :: String -> IOSArrow XmlTree XmlTree
   importInclude href
     = ifA ( -- test whether the referenced schema exists
             neg $ constA href >>> getPathFromURI >>> isIOA doesFileExist
           )
         ( mkRelaxError ""
-	  ( "Can't read " ++ show href ++
+          ( "Can't read " ++ show href ++
             ", referenced in include-Pattern"
-	  )
+          )
         )
         ( ifP (const $ elem href includeHRefs)
            -- if the referenced name still exists in the list of processed
            -- ref attributes we have found a loop
             ( mkRelaxError ""
-	      ( "loop in include-Pattern, " ++ 
+              ( "loop in include-Pattern, " ++
                 formatStringListArr (reverse $ href:includeHRefs)
-	      )
+              )
             )
-            ( ifA ( if validateInclude						-- if the parameter is set
-		    then validateDocWithRelax SG.relaxSchemaArrow [] href	-- the referenced schema is validated with respect to
-                    else none							-- the Relax NG grammar element
+            ( ifA ( if validateInclude                                          -- if the parameter is set
+                    then validateDocWithRelax SG.relaxSchemaArrow [] href       -- the referenced schema is validated with respect to
+                    else none                                                   -- the Relax NG grammar element
                   )
                 ( mkRelaxError ""
-		  ( "The content of the schema " ++ show href ++ 
+                  ( "The content of the schema " ++ show href ++
                     ", referenced in include does not match " ++
                     "the syntax for grammar"
-		  )
+                  )
                 )
                 ( processInclude href $< ( readForRelax readOptions href
                                            >>>
-                                           simplificationStep1				-- perform the transformations from previous steps
-                                           >>> 
+                                           simplificationStep1                          -- perform the transformations from previous steps
+                                           >>>
                                            simplificationStep2 readOptions validateExternalRef validateInclude extHRefs (href:includeHRefs)
                                            >>>
-                                           getChildren					-- remove the root node
+                                           getChildren                                  -- remove the root node
                                          )
                 )
             )
         )
-  
+
   processInclude :: String -> XmlTree -> IOSArrow XmlTree XmlTree
   processInclude href newDoc
     = -- The include element is transformed into a div element.
       setRngNameDiv
       >>>
-      -- The attributes of the div element are the attributes of 
+      -- The attributes of the div element are the attributes of
       -- the include element other than the href attribute.
       removeAttr "href"
-      >>> 
+      >>>
       checkInclude href newDoc
-  
-  
+
+
   insertNewDoc :: XmlTree -> Bool -> [String] -> IOSArrow XmlTree XmlTree
   insertNewDoc newDoc hasStart defNames
     = insertChildrenAt 0 $
         constA newDoc
         >>>
         -- If the include element has a start component, then all start components
-        -- are removed from the grammar element.        
+        -- are removed from the grammar element.
         (removeStartComponent `whenP` (const hasStart))
         >>>
         -- For every define component of the include element, all define components
@@ -485,32 +485,32 @@ simplificationStep2 readOptions validateExternalRef validateInclude extHRefs inc
         -- The grammar element is then renamed to div.
         setRngNameDiv
 
-  
+
   checkInclude :: String -> XmlTree -> IOSArrow XmlTree XmlTree
   checkInclude href newDoc
     = ifA ( -- If the include element has a start component, then the grammar element
             -- must have a start component.
             hasStartComponent &&& (constA newDoc >>> hasStartComponent)
-            >>> 
+            >>>
             isA (\ (a, b) -> if a then b else True)
           )
         ( ifA ( -- If the include element has a define component, then the grammar element
                 -- must have a define component with the same name.
                 getDefineComponents &&& (constA newDoc >>> getDefineComponents)
-                >>> 
+                >>>
                 isA (\ (a, b) -> (diff a b) == [])
               )
             (insertNewDoc newDoc $<< hasStartComponent &&& getDefineComponents)
             ( mkRelaxError ""
-	      ( "Define-pattern missing in schema " ++ show href ++ 
+              ( "Define-pattern missing in schema " ++ show href ++
                 ", referenced in include-pattern"
-	      )
+              )
             )
-	)
+        )
         ( mkRelaxError ""
-	  ( "Grammar-element without a start-pattern in schema " ++
+          ( "Grammar-element without a start-pattern in schema " ++
             show href ++ ", referenced in include-pattern"
-	  )
+          )
         )
     where
     diff a b = (noDoubles a) \\ (noDoubles b)
@@ -531,12 +531,12 @@ simplificationStep2 readOptions validateExternalRef validateInclude extHRefs inc
           ( isRngDefine
             >>>
             getRngAttrName
-            >>> 
+            >>>
             isA (\n -> elem n defNames))          :-> none,
           (isElem >>> getName >>> isA (== "div")) :-> (removeDefineComponent defNames),
           (constA "foo" >>> isA (== "foo"))       :-> this
         ]
-  
+
   hasStartComponent :: IOSArrow XmlTree Bool
   hasStartComponent = listA hasStartComponent' >>> arr (any id)
     where
@@ -552,7 +552,7 @@ simplificationStep2 readOptions validateExternalRef validateInclude extHRefs inc
 
   getDefineComponents :: IOSArrow XmlTree [String]
   getDefineComponents = listA getDefineComponents'
-                        >>> 
+                        >>>
                         arr (\xs -> [x | x <- xs, x /= ""])
     where
     getDefineComponents' :: IOSArrow XmlTree String
@@ -560,11 +560,11 @@ simplificationStep2 readOptions validateExternalRef validateInclude extHRefs inc
       = getChildren
         >>>
         choiceA
-	[ isRngDefine :-> getRngAttrName
-	, isRngDiv    :-> getDefineComponents'
-	, this        :-> constA ""
+        [ isRngDefine :-> getRngAttrName
+        , isRngDiv    :-> getDefineComponents'
+        , this        :-> constA ""
         ]
-  
+
 
 -- ------------------------------------------------------------
 
@@ -589,7 +589,7 @@ simplificationStep2 readOptions validateExternalRef validateInclude extHRefs inc
 -}
 simplificationStep3 :: IOSArrow XmlTree XmlTree
 simplificationStep3 =
-  ( processTopDown ( 
+  ( processTopDown (
       ( -- 4.8 The name attribute on an element or attribute
         -- element is transformed into a name child element
         ( insertChildrenAt 0 (mkRngName none (txt $< getRngAttrName))
@@ -598,29 +598,29 @@ simplificationStep3 =
         ( -- 4.8 If an attribute element has a name attribute but no ns attribute,
           --  then an ns="" attribute is added to the name child element
            (processChildren (addAttr "ns" "" `when` isRngName))
-           `when` 
+           `when`
            (isRngAttribute >>> hasRngAttrName >>> neg hasRngAttrNs)
         )
         >>>
-        removeAttr "name"      
+        removeAttr "name"
       )
       `when`
       ( (isRngElement `orElse` isRngAttribute) >>> hasRngAttrName )
     )
     >>>
-    -- 4.9 For any name, nsName or value element that does not have 
+    -- 4.9 For any name, nsName or value element that does not have
     -- an ns attribute, an ns attribute is added.
     processnsAttribute ""
     >>>
-    processTopDown (        
-      ( -- 4.9 any ns attribute that is on an element other than name, 
+    processTopDown (
+      ( -- 4.9 any ns attribute that is on an element other than name,
         -- nsName or value is removed.
         (removeAttr "ns")
         `when`
         (isElem >>> neg (isRngName `orElse` isRngNsName `orElse` isRngValue))
       )
       >>>
-      ( -- 4.10 For any name element containing a prefix, the prefix is removed and an ns attribute 
+      ( -- 4.10 For any name element containing a prefix, the prefix is removed and an ns attribute
         -- is added replacing any existing ns attribute.
         (replaceNameAttr $< (getChildren >>> isText >>> getText))
         `when`
@@ -630,37 +630,37 @@ simplificationStep3 =
   ) `when` collectErrors
   where
   replaceNameAttr :: (ArrowXml a) => String -> a XmlTree XmlTree
-  replaceNameAttr name 
+  replaceNameAttr name
     = (addAttr "ns" pre >>> processChildren (changeText $ const local))
       `whenP`
       (const $ elem '}' name)
-    where 
+    where
     (pre', local') = span (/= '}') name
     pre            = tail pre'
     local          = tail local'
-          
-  processnsAttribute :: String -> IOSArrow XmlTree XmlTree        
-  processnsAttribute name 
+
+  processnsAttribute :: String -> IOSArrow XmlTree XmlTree
+  processnsAttribute name
     = processChildren $
         choiceA [
           -- set the new ns attribute value
-          (isElem >>> hasRngAttrNs) 
+          (isElem >>> hasRngAttrNs)
                :-> (processnsAttribute $< getRngAttrNs),
           -- For any name, nsName or value element that does not have
-          -- an ns attribute, an ns attribute is added.               
+          -- an ns attribute, an ns attribute is added.
           ( isNameNsNameValue >>> neg hasRngAttrNs)
                :-> (addAttr "ns" name >>> processnsAttribute name),
           this :-> (processnsAttribute name)
         ]
 
 
--- ------------------------------------------------------------    
+-- ------------------------------------------------------------
 
 
 {-
 - 4.11 Each div element is replaced by its children
 - 4.12 Number of child elements
-    - A define, oneOrMore, zeroOrMore, optional, list or mixed element 
+    - A define, oneOrMore, zeroOrMore, optional, list or mixed element
       is transformed so that it has exactly one child element
     - An element element is transformed so that it has exactly two child elements
     - A except element is transformed so that it has exactly one child element
@@ -673,17 +673,17 @@ simplificationStep3 =
     - An except element that is a child of an anyName element must not have any anyName descendant elements.
     - An except element that is a child of an nsName element must not have any nsName or anyName
       descendant elements.
-    - A name element that occurs as the first child of an attribute element or as the descendant of the 
-      first child of an attribute element and that has an ns attribute with value equal to the empty 
+    - A name element that occurs as the first child of an attribute element or as the descendant of the
+      first child of an attribute element and that has an ns attribute with value equal to the empty
       string must not have content equal to xmlns.
-    - A name or nsName element that occurs as the first child of an attribute element or as the 
-      descendant of the first child of an attribute element must not have an ns attribute with 
+    - A name or nsName element that occurs as the first child of an attribute element or as the
+      descendant of the first child of an attribute element must not have an ns attribute with
       value http://www.w3.org/2000/xmlns.
     - A data or value element must be correct in its use of datatypes.
 -}
 simplificationStep4 :: IOSArrow XmlTree XmlTree
 simplificationStep4 =
-  ( processTopDown ( 
+  ( processTopDown (
       ( -- Each div element is replaced by its children.
         (getChildren >>> simplificationStep4)
         `when`
@@ -693,29 +693,29 @@ simplificationStep4 =
       ( -- A define, oneOrMore, zeroOrMore, optional, list or mixed element
         -- is transformed so that it has exactly one child element
         ( replaceChildren
-	  ( mkRngGroup
-            (setChangesAttr $< (getName >>> arr ("group-Pattern: " ++)))  
+          ( mkRngGroup
+            (setChangesAttr $< (getName >>> arr ("group-Pattern: " ++)))
             getChildren
-	  )
+          )
         )
         `when`
         (  isDefineOneOrMoreZeroOrMoreOptionalListMixed
            >>>
-	   noOfChildren (> 1)
+           noOfChildren (> 1)
         )
       )
       >>>
-      ( -- An element element is transformed so that it has exactly two child elements       
+      ( -- An element element is transformed so that it has exactly two child elements
         ( replaceChildren
-	  ( ( getChildren >>> isNameAnyNameNsName )
-            <+> 
-            ( mkRngGroup none 
+          ( ( getChildren >>> isNameAnyNameNsName )
+            <+>
+            ( mkRngGroup none
               ( getChildren
                 >>>
                 neg isNameAnyNameNsName
               )
             )
-	  )
+          )
         )
         `when`
         ( isRngElement >>> noOfChildren (> 2) )
@@ -727,7 +727,7 @@ simplificationStep4 =
         ( isRngExcept >>> noOfChildren (> 1) )
       )
       >>>
-      ( -- If an attribute element has only one child element 
+      ( -- If an attribute element has only one child element
         -- (a name class), then a text element is added.
         insertChildrenAt 1 (mkRngText none)
         `when`
@@ -737,38 +737,38 @@ simplificationStep4 =
       ( -- A choice, group or interleave element is transformed so
         -- that it has exactly two child elements.
         ((wrapPattern2Two $< getName) >>> simplificationStep4)
-        `when` 
+        `when`
         (  isChoiceGroupInterleave
            >>>
            noOfChildren (\ i -> i > 2 || i == 1)
         )
       )
       >>>
-      ( -- A mixed element is transformed into an interleaving with a text element     
-        ( mkRngInterleave 
+      ( -- A mixed element is transformed into an interleaving with a text element
+        ( mkRngInterleave
           ( setChangesAttr "mixed is transformed into an interleave" )
           ( getChildren
             <+>
-            mkRngText 
+            mkRngText
             ( setChangesAttr ( "new text-Pattern: mixed is transformed into " ++
                                   " an interleave with text"
-			     )
+                             )
             )
           )
         )
         `when`
         isRngMixed
       )
-      >>>  
-      ( -- An optional element is transformed into a choice with empty     
-        ( mkRngChoice 
+      >>>
+      ( -- An optional element is transformed into a choice with empty
+        ( mkRngChoice
           ( setChangesAttr "optional is transformed into a choice" )
           ( getChildren
             <+>
-            mkRngEmpty 
+            mkRngEmpty
             ( setChangesAttr ( "new empty-Pattern: optional is transformed " ++
                                " into a choice with empty"
-			     )
+                             )
             )
           )
         )
@@ -777,20 +777,20 @@ simplificationStep4 =
       )
       >>>
       ( -- A zeroOrMore element is transformed into a choice between oneOrMore and empty
-        ( mkRngChoice 
+        ( mkRngChoice
           ( setChangesAttr "zeroOrMore is transformed into a choice" )
-          ( ( mkRngOneOrMore 
+          ( ( mkRngOneOrMore
               ( setChangesAttr ( "zeroOrMore is transformed into a " ++
                                    "choice between oneOrMore and empty"
-			       )
+                               )
               )
               getChildren
             )
             <+>
-            ( mkRngEmpty 
+            ( mkRngEmpty
               ( setChangesAttr ( "new empty-Pattern: zeroOrMore is transformed " ++
                                    "into a choice between oneOrMore and empty"
-			       )
+                               )
               )
             )
           )
@@ -809,14 +809,14 @@ restrictionsStep1 :: IOSArrow XmlTree XmlTree
 restrictionsStep1 =
   ( processTopDown (
       ( ( mkRelaxError ""
-	  ( "An except element that is a child of an anyName " ++
+          ( "An except element that is a child of an anyName " ++
             "element must not have any anyName descendant elements"
-	  )
-	)
-        `when` 
+          )
+        )
+        `when`
         ( isRngAnyName
           >>>
-	  getChildren
+          getChildren
           >>>
           isRngExcept
           >>>
@@ -825,28 +825,28 @@ restrictionsStep1 =
       )
       >>>
       ( ( mkRelaxError ""
-	  ( "An except element that is a child of an nsName element " ++
+          ( "An except element that is a child of an nsName element " ++
             "must not have any nsName or anyName descendant elements."
-	  )
+          )
         )
-        `when` 
+        `when`
         ( isRngNsName
           >>>
           getChildren
-          >>> 
+          >>>
           isRngExcept
-          >>> 
+          >>>
           deep (isRngAnyName `orElse` isRngNsName)
         )
       )
       >>>
       ( ( mkRelaxError ""
-	  ( "A name element that occurs as the first child or descendant of " ++
+          ( "A name element that occurs as the first child or descendant of " ++
             "an attribute and has an ns attribute with an empty value must " ++
             "not have content equal to \"xmlns\""
-	  )
+          )
         )
-        `when` 
+        `when`
         ( isRngAttribute
           >>>
           firstChild
@@ -858,15 +858,15 @@ restrictionsStep1 =
             (getChildren >>> getText >>> isA (== "xmlns"))
           )
         )
-      ) 
+      )
       >>>
       ( ( mkRelaxError ""
-	  ( "A name or nsName element that occurs as the first child or " ++
+          ( "A name or nsName element that occurs as the first child or " ++
             "descendant of an attribute must not have an ns attribute " ++
             "with value http://www.w3.org/2000/xmlns"
-	  )
+          )
         )
-        `when` 
+        `when`
         ( isRngAttribute
           >>>
           firstChild
@@ -877,7 +877,7 @@ restrictionsStep1 =
           >>>
           isA (compareURI xmlnsNamespace)
         )
-      ) 
+      )
       >>> -- A data or value element must be correct in its use of datatypes.
       ( ( checkDatatype $<< getRngAttrDatatypeLibrary &&& getRngAttrType )
         `when`
@@ -885,57 +885,57 @@ restrictionsStep1 =
       )
     )
   ) `when` collectErrors
-  where 
+  where
 
   -- the datatypeLibrary attribute must identify a valid datatype library
 
   checkDatatype :: Uri -> DatatypeName -> IOSArrow XmlTree XmlTree
-  checkDatatype libName typeName 
-      = ifP (const $ elem libName $ map fst datatypeLibraries)    
+  checkDatatype libName typeName
+      = ifP (const $ elem libName $ map fst datatypeLibraries)
         ( checkType libName typeName allowedDataTypes )
         ( mkRelaxError ""
-	  ( "DatatypeLibrary " ++ show libName ++ " not found" )
-	)
+          ( "DatatypeLibrary " ++ show libName ++ " not found" )
+        )
     where
     DTC _ _ allowedDataTypes = fromJust $ lookup libName datatypeLibraries
-            
+
   -- the type attribute must identify a datatype within the datatype library identified
   -- by the value of the datatypeLibrary attribute.
 
   checkType :: Uri -> DatatypeName -> AllowedDatatypes -> IOSArrow XmlTree XmlTree
   checkType libName typeName allowedTypes
       = ifP (const $ elem typeName $ map fst allowedTypes)
-        ( checkParams typeName libName getParams $< 
+        ( checkParams typeName libName getParams $<
           ( listA (getChildren >>> isRngParam >>> getRngAttrName) )
         )
        ( mkRelaxError ""
-	 ( "Datatype " ++ show typeName ++ 
+         ( "Datatype " ++ show typeName ++
            " not declared for DatatypeLibrary " ++ show libName
-	 )
+         )
        )
     where
     getParams = fromJust $ lookup typeName allowedTypes
-            
+
   -- For a data element, the parameter list must be one that is allowed by the datatype
 
   checkParams :: DatatypeName -> Uri -> AllowedParams -> [ParamName] -> IOSArrow XmlTree XmlTree
   checkParams typeName libName allowedParams paramNames
       = ( mkRelaxError ""
-	  ( "Param(s): " ++ formatStringListQuot diff ++ 
-            " not allowed for Datatype " ++ show typeName ++ 
+          ( "Param(s): " ++ formatStringListQuot diff ++
+            " not allowed for Datatype " ++ show typeName ++
             " in Library " ++
-	    show ( if null libName
-		   then relaxNamespace
-		   else libName
-		 )
-	  )
-	)
+            show ( if null libName
+                   then relaxNamespace
+                   else libName
+                 )
+          )
+        )
         `when`
-	( isRngData >>> isA (const $ diff /= []) ) 
+        ( isRngData >>> isA (const $ diff /= []) )
       where
       diff = filter (\param -> not $ elem param allowedParams) paramNames
 
-          
+
 -- ------------------------------------------------------------
 
 
@@ -946,7 +946,7 @@ restrictionsStep1 =
 - 4.18. grammar element
     - A grammar must have a start child element.
     - Transform the top-level pattern p into <grammar><start>p</start></grammar>.
-    - Rename define elements so that no two define elements anywhere in the schema 
+    - Rename define elements so that no two define elements anywhere in the schema
       have the same name. To rename a define element, change the value of its name
       attribute and change the value of the name attribute of all ref and parentRef
       elements that refer to that define element.
@@ -957,310 +957,310 @@ restrictionsStep1 =
 simplificationStep5 :: IOSArrow XmlTree XmlTree
 simplificationStep5
     = ( processTopDown
-	( ( ( ( (deep isRngRelaxError)               
-		<+>
-		( mkRelaxError "" "A grammar must have a start child element" )
+        ( ( ( ( (deep isRngRelaxError)
+                <+>
+                ( mkRelaxError "" "A grammar must have a start child element" )
               )
               `when`
               (neg (getChildren >>> isRngStart))
             )
             >>>
-            -- For each grammar element, all define elements with the same 
+            -- For each grammar element, all define elements with the same
             -- name are combined together.
             ( combinePatternList "define" $< (getPatternNamesInGrammar "define" >>> arr nub) )
             >>>
-            -- Similarly, for each grammar element all start elements 
+            -- Similarly, for each grammar element all start elements
             -- are combined together.
             ( combinePatternList "start" $< (getPatternNamesInGrammar "start" >>> arr nub) )
-	  )  
-	  `when`
-	  isRngGrammar
-	)
-	>>>
-	( -- transform the top-level pattern p into <grammar><start>p</start></grammar>.
-	  ( replaceChildren
-	    ( mkRngGrammar none 
+          )
+          `when`
+          isRngGrammar
+        )
+        >>>
+        ( -- transform the top-level pattern p into <grammar><start>p</start></grammar>.
+          ( replaceChildren
+            ( mkRngGrammar none
               ( mkRngStart none getChildren )
             )
-	  )
-	  `when`
-	  neg (getChildren >>> isRngGrammar)
-	)
-	>>>
-	( renameDefines $<<
-	  ( getPatternNamesInGrammar "define"
+          )
+          `when`
+          neg (getChildren >>> isRngGrammar)
+        )
+        >>>
+        ( renameDefines $<<
+          ( getPatternNamesInGrammar "define"
             >>>
             (createUniqueNames $< (getAndSetCounter "define_id" >>> arr read))
             &&&
             constA []
           )
-	)
-	>>>
-	-- Move all define elements to be children of the top-level grammar element
-	( processChildren
-	  ( -- root node
+        )
+        >>>
+        -- Move all define elements to be children of the top-level grammar element
+        ( processChildren
+          ( -- root node
             processChildren
-	    ( -- the first grammar pattern remains unchanged
-	      ( deleteAllDefines
-		<+>
-		( getAllDefines >>> processChildren deleteAllDefines )
+            ( -- the first grammar pattern remains unchanged
+              ( deleteAllDefines
+                <+>
+                ( getAllDefines >>> processChildren deleteAllDefines )
               )
               >>>
               processTopDown
-	      ( ( -- Replace each nested grammar element by the child of its start element
-		  ( getChildren >>> isRngStart >>> getChildren )
-		  `when`
-		  isRngGrammar
-		)
-		>>> 
-		( -- Rename each parentRef element to ref.
-		  ( setRngNameRef
-		    `when`
-		    isRngParentRef
-		  )
-		)
-              )  
-	    )
-	  )
-	)
+              ( ( -- Replace each nested grammar element by the child of its start element
+                  ( getChildren >>> isRngStart >>> getChildren )
+                  `when`
+                  isRngGrammar
+                )
+                >>>
+                ( -- Rename each parentRef element to ref.
+                  ( setRngNameRef
+                    `when`
+                    isRngParentRef
+                  )
+                )
+              )
+            )
+          )
+        )
       ) `when` collectErrors
     where
     getPatternNamesInGrammar :: (ArrowXml a) => String -> a XmlTree [String]
     getPatternNamesInGrammar pattern
-	= processChildren
-	  ( processTopDown ( none `when` isRngGrammar ) )
-	  >>>
-	  listA ( (multi (isElem >>> hasRngName pattern))
-		  >>> 
-		  getRngAttrName
-		)
+        = processChildren
+          ( processTopDown ( none `when` isRngGrammar ) )
+          >>>
+          listA ( (multi (isElem >>> hasRngName pattern))
+                  >>>
+                  getRngAttrName
+                )
 
     createUniqueNames :: Int -> IOSArrow [String] RefList
     createUniqueNames num
-	= arr (\ l -> unique l num)
-	  >>>
-	  perform (setParamInt "define_id" $< arr (max num . getNextValue))
-	where
-	unique :: [String] -> Int -> RefList
-	unique []     _    = []
-	unique (x:xs) num' = (x, (show num')):(unique xs (num'+1))
-	getNextValue :: RefList -> Int
-	getNextValue [] = 0
-	getNextValue rl = maximum (map (read . snd) rl) + 1    
+        = arr (\ l -> unique l num)
+          >>>
+          perform (setParamInt "define_id" $< arr (max num . getNextValue))
+        where
+        unique :: [String] -> Int -> RefList
+        unique []     _    = []
+        unique (x:xs) num' = (x, (show num')):(unique xs (num'+1))
+        getNextValue :: RefList -> Int
+        getNextValue [] = 0
+        getNextValue rl = maximum (map (read . snd) rl) + 1
 
     renameDefines :: RefList -> RefList -> IOSArrow XmlTree XmlTree
     renameDefines ref parentRef
-	= processChildren
-	  ( choiceA
-	    [ isRngDefine
+        = processChildren
+          ( choiceA
+            [ isRngDefine
               :-> ( -- the original name is needed for error messages
                     addAttr defineOrigName $< getRngAttrName
                     >>>
                     -- rename the define-pattern
                     -- the new name is looked up in the ref table
                     addAttr "name" $< ( getRngAttrName
-					>>>
-					arr (\n -> fromJust $ lookup n ref)
+                                        >>>
+                                        arr (\n -> fromJust $ lookup n ref)
                                       )
                     >>>
                     renameDefines ref parentRef
-		  )
-	    , isRngGrammar 
+                  )
+            , isRngGrammar
               :-> ( renameDefines $<< ( ( -- compute all define names in the grammar
-					  getPatternNamesInGrammar "define"
-					  >>>
-					  -- create a new (unique) name for all define names
-					  (createUniqueNames $< (getParamInt 0 "define_id"))
-					)
-					&&&
-					-- set the old ref list to be the new parentRef list
-					constA ref
-				      )
-		  )
-	    , isRngRef
+                                          getPatternNamesInGrammar "define"
+                                          >>>
+                                          -- create a new (unique) name for all define names
+                                          (createUniqueNames $< (getParamInt 0 "define_id"))
+                                        )
+                                        &&&
+                                        -- set the old ref list to be the new parentRef list
+                                        constA ref
+                                      )
+                  )
+            , isRngRef
               :-> ( ifA ( getRngAttrName
-			  >>>
-			  isA (\name -> (elem name (map fst ref)))
-			)
+                          >>>
+                          isA (\name -> (elem name (map fst ref)))
+                        )
                     ( -- the original name is needed for error messages
                       addAttr defineOrigName $< getRngAttrName
                       >>>
                       -- rename the ref-pattern
                       -- the new name is looked up in the ref table
                       addAttr "name" $< ( getRngAttrName
-					  >>>
-					  arr (\n -> fromJust $ lookup n ref)
-					)
+                                          >>>
+                                          arr (\n -> fromJust $ lookup n ref)
+                                        )
                     )
                     ( -- the referenced pattern does not exist in the schema
                       mkRelaxError "" $< ( getRngAttrName
-					   >>>
-					   arr (\ n -> ( "Define-Pattern with name " ++ show n ++ 
-							 " referenced in ref-Pattern not " ++
-							 "found in schema"
-						       )
+                                           >>>
+                                           arr (\ n -> ( "Define-Pattern with name " ++ show n ++
+                                                         " referenced in ref-Pattern not " ++
+                                                         "found in schema"
+                                                       )
                                                )
-					 )
+                                         )
                     )
-		  )
-	    , isRngParentRef -- same as ref, but the parentRef list is used
+                  )
+            , isRngParentRef -- same as ref, but the parentRef list is used
               :-> ( ifA ( getRngAttrName
-			  >>>
-			  isA (\name -> (elem name (map fst parentRef)))
-			)
+                          >>>
+                          isA (\name -> (elem name (map fst parentRef)))
+                        )
                     ( addAttr defineOrigName $< getRngAttrName
                       >>>
                       addAttr "name" $< ( getRngAttrName
-					  >>>
-					  arr (\n -> fromJust $ lookup n parentRef)
-					)
+                                          >>>
+                                          arr (\n -> fromJust $ lookup n parentRef)
+                                        )
                     )
                     ( mkRelaxError "" $<
-		      ( getRngAttrName
-			>>> 
-			arr (\ n -> ( "Define-Pattern with name " ++ show n ++ 
+                      ( getRngAttrName
+                        >>>
+                        arr (\ n -> ( "Define-Pattern with name " ++ show n ++
                                       " referenced in parentRef-Pattern " ++
                                       "not found in schema"
                                     )
-			    )
+                            )
                       )
                     )
-		  )
-	    , this
-	      :-> renameDefines ref parentRef
+                  )
+            , this
+              :-> renameDefines ref parentRef
             ]
-	  )
+          )
 
 
     getAllDefines :: IOSArrow XmlTree XmlTree
     getAllDefines = multi isRngDefine
 
-    deleteAllDefines :: IOSArrow XmlTree XmlTree      
+    deleteAllDefines :: IOSArrow XmlTree XmlTree
     deleteAllDefines = processTopDown $ none `when` isRngDefine
 
     combinePatternList :: String -> [String] -> IOSArrow XmlTree XmlTree
     combinePatternList _ [] = this
     combinePatternList pattern (x:xs)
-	= (replaceChildren $ combinePattern pattern x)
-	  >>>
-	  combinePatternList pattern xs
-        
+        = (replaceChildren $ combinePattern pattern x)
+          >>>
+          combinePatternList pattern xs
+
     -- combine a define- or start-pattern (first parameter) with a
     -- specific name (second parameter)
-    combinePattern :: String -> String -> IOSArrow XmlTree XmlTree 
+    combinePattern :: String -> String -> IOSArrow XmlTree XmlTree
     combinePattern pattern name
-	= createPatternElems pattern name
-	  <+>
-	  (getChildren >>> deletePatternElems pattern name)           
+        = createPatternElems pattern name
+          <+>
+          (getChildren >>> deletePatternElems pattern name)
 
-    createPatternElems :: String -> String -> IOSArrow XmlTree XmlTree 
-    createPatternElems pattern name 
-	= ( ( (listA (getElems pattern name >>> getRngAttrCombine))
+    createPatternElems :: String -> String -> IOSArrow XmlTree XmlTree
+    createPatternElems pattern name
+        = ( ( (listA (getElems pattern name >>> getRngAttrCombine))
               >>>
               checkPatternCombine pattern name
-            ) 
+            )
             -- After determining this unique value, the combine attributes are removed.
             &&&
-            (listA (getElems pattern name >>> removeAttr "combine")))                      
+            (listA (getElems pattern name >>> removeAttr "combine")))
           >>> -- ((errorCode::Int,errorMessage::String), result::XmlTrees)
           choiceA
-	  [ isA (\ ((code,_) , _)   -> code == 0)
+          [ isA (\ ((code,_) , _)   -> code == 0)
             :->
-	    (mkRelaxError "" $< arr (snd . fst))
-	  , isA (\ ((code,str) , _) -> code == 1 && str == "")
+            (mkRelaxError "" $< arr (snd . fst))
+          , isA (\ ((code,str) , _) -> code == 1 && str == "")
             :->
-	    arrL snd
-	  , isA (\ ((code,str) , _) -> code == 1 && str /= "")
+            arrL snd
+          , isA (\ ((code,str) , _) -> code == 1 && str /= "")
             :->
-	    ( createPatternElem pattern name $<< 
+            ( createPatternElem pattern name $<<
               ( arr (snd . fst) &&& (arr snd) )
             )
-	  , this
-	    :->
-	    ( mkRelaxError ""
-	      ( "Can't create Pattern: " ++ show pattern ++ 
+          , this
+            :->
+            ( mkRelaxError ""
+              ( "Can't create Pattern: " ++ show pattern ++
                 " with name " ++ show name ++ " in createPatternElems"
-	      )
+              )
             )
           ]
 
-    createPatternElem :: (ArrowXml a) => String -> String -> String -> XmlTrees -> a n XmlTree  
+    createPatternElem :: (ArrowXml a) => String -> String -> String -> XmlTrees -> a n XmlTree
     createPatternElem pattern name combine trees
-	= mkRngElement pattern (mkAttr (mkName "name") (txt name)) 
-	  ( ( mkRngElement combine none 
+        = mkRngElement pattern (mkAttr (mkName "name") (txt name))
+          ( ( mkRngElement combine none
               (arrL (const trees) >>> getChildren)
             )
             >>>
             wrapPattern2Two combine
-	  )
-                                         
+          )
+
     checkPatternCombine :: (ArrowXml a) => String -> String -> a [String] (Int, String)
-    checkPatternCombine pattern name 
-	= choiceA
-	  [ -- just one pattern with that name -> ok, no combine is needed
+    checkPatternCombine pattern name
+        = choiceA
+          [ -- just one pattern with that name -> ok, no combine is needed
             (isA (\ cl -> length cl == 1))
-	    :->
-	    constA (1, "")
-	  , (isA (\ cl -> (length $ elemIndices "" cl) > 1)) 
             :->
-	    constA ( 0
-		   , "More than one " ++ pattern ++ "-Pattern: " ++ show name ++ 
+            constA (1, "")
+          , (isA (\ cl -> (length $ elemIndices "" cl) > 1))
+            :->
+            constA ( 0
+                   , "More than one " ++ pattern ++ "-Pattern: " ++ show name ++
                      " without an combine-attribute in the same grammar"
-		   )
-	  , (isA (\ cl -> (length $ nub $ deleteBy (==) "" cl) > 1)) 
+                   )
+          , (isA (\ cl -> (length $ nub $ deleteBy (==) "" cl) > 1))
             :->
-	    arr (\ cl -> ( 0
-			 , "Different combine-Attributes: " ++ 
+            arr (\ cl -> ( 0
+                         , "Different combine-Attributes: " ++
                            (formatStringListQuot $ noDoubles cl) ++
                            " for the " ++ pattern ++ "-Pattern " ++
                            show name ++ " in the same grammar"
-			 )
+                         )
                 )
-	  , -- ok -> combine value is returned
+          , -- ok -> combine value is returned
             this
-	    :->
-	    arr (\ cl -> (1, fromJust $ find (/= "") cl))
-	  ]
+            :->
+            arr (\ cl -> (1, fromJust $ find (/= "") cl))
+          ]
 
-    isElemWithNameValue	:: (ArrowXml a) => String -> String -> a XmlTree XmlTree
+    isElemWithNameValue :: (ArrowXml a) => String -> String -> a XmlTree XmlTree
     isElemWithNameValue ename nvalue
-	= ( isElem
-	    >>>
-	    hasRngName ename
-	    >>>
-	    getRngAttrName
-	    >>>
-	    isA (== nvalue)
-	  )
+        = ( isElem
+            >>>
+            hasRngName ename
+            >>>
+            getRngAttrName
+            >>>
+            isA (== nvalue)
+          )
           `guards` this
 
     getElems :: (ArrowXml a) => String -> String -> a XmlTree XmlTree
     getElems pattern name
-	= getChildren
-	  >>> 
-	  choiceA
-	  [ isElemWithNameValue pattern name
-	    :->
-	    (this <+> getElems pattern name)
-	  , isRngGrammar
-	    :-> none
-	  , this
+        = getChildren
+          >>>
+          choiceA
+          [ isElemWithNameValue pattern name
             :->
-	    getElems pattern name
-	  ]
+            (this <+> getElems pattern name)
+          , isRngGrammar
+            :-> none
+          , this
+            :->
+            getElems pattern name
+          ]
 
     deletePatternElems :: (ArrowXml a) => String -> String -> a XmlTree XmlTree
     deletePatternElems pattern name
-	= choiceA
-	  [ isElemWithNameValue pattern name
+        = choiceA
+          [ isElemWithNameValue pattern name
             :->
-	    none
-	  , isRngGrammar
+            none
+          , isRngGrammar
             :-> this
-	  , this
-	    :->
-	    processChildren ( deletePatternElems pattern name )
-	  ]
+          , this
+            :->
+            processChildren ( deletePatternElems pattern name )
+          ]
 
 
 -- ------------------------------------------------------------
@@ -1270,7 +1270,7 @@ simplificationStep5
 - 4.19. define and ref elements
     - Remove any define element that is not reachable.
     - Now, for each element element that is not the child of a define element,
-      add a define element to the grammar element, 
+      add a define element to the grammar element,
       and replace the element element by a ref element referring
       to the added define element.
     - For each ref element that is expandable and is a descendant
@@ -1282,22 +1282,22 @@ simplificationStep5
 simplificationStep6 :: IOSArrow XmlTree XmlTree
 simplificationStep6 =
   ( -- Remove any define element that is not reachable.
-    (removeUnreachableDefines $<<< getAllDeepDefines 
-                                   &&& 
+    (removeUnreachableDefines $<<< getAllDeepDefines
+                                   &&&
                                    constA []
                                    &&&
                                    getRefsFromStartPattern
     )
     >>>
     -- for each element element that is not the child of a define element,
-    -- add a define element to the grammar element, 
+    -- add a define element to the grammar element,
     ( processElements False
       >>>
       processChildren (insertChildrenAt 1 (getParam "elementTable"))
     )
     >>>
-    -- For each ref element that is expandable... 
-    -- Remove any define element whose child is not an element element      
+    -- For each ref element that is expandable...
+    -- Remove any define element whose child is not an element element
     (replaceExpandableRefs [] $< getExpandableDefines >>> deleteExpandableDefines)
   ) `when` collectErrors
   where
@@ -1312,9 +1312,9 @@ simplificationStep6 =
                     -- we have found a loop if the name is in the list
                     (mkRelaxError "" $< ( getAttrValue defineOrigName
                                           >>>
-                                          arr (\ n -> ( "Recursion in ref-Pattern: " ++ 
-							formatStringListArr (reverse $ (n:) $ map snd foundNames)
-						      )
+                                          arr (\ n -> ( "Recursion in ref-Pattern: " ++
+                                                        formatStringListArr (reverse $ (n:) $ map snd foundNames)
+                                                      )
                                               )
                                         )
                     )
@@ -1322,7 +1322,7 @@ simplificationStep6 =
                  ),
         this :-> (processChildren $ replaceExpandableRefs foundNames defTable)
       ]
-    where                                               
+    where
     replaceRef :: NewName -> OldName -> IOSArrow XmlTree XmlTree
     replaceRef name oldname
       = ( constA (fromJust $ lookup name defTable)
@@ -1339,38 +1339,38 @@ simplificationStep6 =
   processElements parentIsDefine
     = processChildren
       ( choiceA
-	[ isRngElement
+        [ isRngElement
           :-> ( ifP (const parentIsDefine)
                 (processElements False)
-                ( processElements' $<< ( getAndSetCounter "define_id" 
-					 &&&
-					 getDefineName
-				       )
+                ( processElements' $<< ( getAndSetCounter "define_id"
+                                         &&&
+                                         getDefineName
+                                       )
                 )
               )
-	, isRngDefine
-	  :-> processElements True
+        , isRngDefine
+          :-> processElements True
         , this
           :-> processElements False
         ])
     where
     getDefineName :: IOSArrow XmlTree String
     getDefineName
-	= firstChild
+        = firstChild
           >>>
           fromLA createNameClass
           >>>
           arr show
-    
+
     processElements' :: NewName -> OldName -> IOSArrow XmlTree XmlTree
     processElements' name oldname
       = storeElement name oldname
-        >>> 
+        >>>
         mkRngRef (createAttr name oldname) none
 
     storeElement :: NewName -> OldName -> IOSArrow XmlTree XmlTree
     storeElement name oldname
-      = perform $ 
+      = perform $
           ( mkRngDefine
              (createAttr name oldname) (processElements False)
           )
@@ -1383,12 +1383,12 @@ simplificationStep6 =
 
     createAttr :: NewName -> OldName -> IOSArrow XmlTree XmlTree
     createAttr name oldname
-      = mkAttr (mkName "name") (txt name) 
+      = mkAttr (mkName "name") (txt name)
         <+>
         mkAttr (mkName defineOrigName) (txt $ "created for element " ++ oldname)
-       
-  getExpandableDefines :: (ArrowXml a) => a XmlTree Env 
-  getExpandableDefines 
+
+  getExpandableDefines :: (ArrowXml a) => a XmlTree Env
+  getExpandableDefines
     = listA $ (multi ( ( isRngDefine
                          >>>
                          getChildren
@@ -1399,15 +1399,15 @@ simplificationStep6 =
                        this
                      )
               )
-              >>> 
+              >>>
               (getRngAttrName &&& this)
-  
+
   deleteExpandableDefines :: (ArrowXml a) => a XmlTree XmlTree
-  deleteExpandableDefines 
+  deleteExpandableDefines
     = processTopDown $ none
-                       `when` 
+                       `when`
                        ( isRngDefine
-                         >>> 
+                         >>>
                          getChildren
                          >>>
                          neg isRngElement
@@ -1421,7 +1421,7 @@ simplificationStep6 =
 - 4.20. notAllowed element
     - An attribute, list, group, interleave, or oneOrMore element that has
       a notAllowed child element is transformed into a notAllowed element.
-    - A choice element that has two notAllowed child elements 
+    - A choice element that has two notAllowed child elements
       is transformed into a notAllowed element
     - A choice element that has one notAllowed child element
       is transformed into its other child element.
@@ -1444,16 +1444,16 @@ simplificationStep6 =
 
 simplificationStep7 :: IOSArrow XmlTree XmlTree
 simplificationStep7
-    = ( markTreeChanged 0			 	-- 0 = no changes, 1 = changes performed
-	>>>
-	processTopDownWithAttrl
-	( ( -- An attribute, list, group, interleave, or oneOrMore element that has a 
-            -- notAllowed child element is transformed into a notAllowed element.       
+    = ( markTreeChanged 0                               -- 0 = no changes, 1 = changes performed
+        >>>
+        processTopDownWithAttrl
+        ( ( -- An attribute, list, group, interleave, or oneOrMore element that has a
+            -- notAllowed child element is transformed into a notAllowed element.
             ( ( mkRngNotAllowed none none
-		>>>
-		markTreeChanged 1
+                >>>
+                markTreeChanged 1
               )
-              `whenNot` 				-- keep all errors
+              `whenNot`                                 -- keep all errors
               (deep isRngRelaxError)
             )
             `when`
@@ -1463,9 +1463,9 @@ simplificationStep7
               >>>
               isRngNotAllowed
             )
-	  )
-	  >>>                                   
-	  ( -- A choice element that has two notAllowed child elements is 
+          )
+          >>>
+          ( -- A choice element that has two notAllowed child elements is
             -- transformed into a notAllowed element
             ( mkRngNotAllowed none none
               >>>
@@ -1475,34 +1475,34 @@ simplificationStep7
             ( isRngChoice
               >>>
               listA (getChildren >>> isRngNotAllowed)
-              >>> 
+              >>>
               isA (\s -> length s == 2)
             )
-	  )
-	  >>>
-	  ( -- A choice element that has one notAllowed child element is 
-            -- transformed into its other child element.        
+          )
+          >>>
+          ( -- A choice element that has one notAllowed child element is
+            -- transformed into its other child element.
             ( getChildren >>> neg isRngNotAllowed
               >>>
               markTreeChanged 1
             )
             `when`
             ( isRngChoice >>> getChildren >>> isRngNotAllowed )
-	  )
-	  >>>       
-	  ( -- An except element that has a notAllowed child element is removed.
+          )
+          >>>
+          ( -- An except element that has a notAllowed child element is removed.
             ( ( markTreeChanged 1
-		>>>
-		none
-	      ) 
-              `whenNot`			 -- keep all errors
+                >>>
+                none
+              )
+              `whenNot`                  -- keep all errors
               deep isRngRelaxError
             )
             `when`
             ( isRngExcept >>> getChildren >>> isRngNotAllowed )
-	  )
-	  >>> -- transforming the empty pattern (4.21)
-	  ( -- A group, interleave or choice element that has two empty child elements
+          )
+          >>> -- transforming the empty pattern (4.21)
+          ( -- A group, interleave or choice element that has two empty child elements
             -- is transformed into an empty element.
             ( mkRngEmpty none
               >>>
@@ -1515,28 +1515,28 @@ simplificationStep7
               >>>
               isA (\s -> length s == 2)
             )
-	  )
-	  >>>
-	  ( -- A group or interleave element that has one empty child element 
+          )
+          >>>
+          ( -- A group or interleave element that has one empty child element
             -- is transformed into its other child element.
             ( getChildren
-	      >>>
-	      neg isRngEmpty
-	      >>>
-	      markTreeChanged 1
-	    )
+              >>>
+              neg isRngEmpty
+              >>>
+              markTreeChanged 1
+            )
             `when`
             ( isGroupInterleave >>> getChildren >>> isRngEmpty )
-	  )
-	  >>>
-	  ( -- A choice element whose second child element is an empty element is transformed 
+          )
+          >>>
+          ( -- A choice element whose second child element is an empty element is transformed
             -- by interchanging its two child elements.
             changeChoiceChildren
             `when`
             ( isRngChoice >>> getChildren >>> isRngEmpty )
-	  )
-	  >>>
-	  ( -- A oneOrMore element that has an empty child element
+          )
+          >>>
+          ( -- A oneOrMore element that has an empty child element
             -- is transformed into an empty element.
             ( mkRngEmpty none
               >>>
@@ -1544,35 +1544,35 @@ simplificationStep7
             )
             `when`
             ( isRngOneOrMore >>> getChildren >>> isRngEmpty )
-	  )
-	)
-	>>>
-	-- The preceding transformations are applied repeatedly
-	-- until none of them is applicable any more.
-	( simplificationStep7
-	  `when`
-	  hasTreeChanged
-	)
+          )
+        )
+        >>>
+        -- The preceding transformations are applied repeatedly
+        -- until none of them is applicable any more.
+        ( simplificationStep7
+          `when`
+          hasTreeChanged
+        )
       ) `when` collectErrors
     where
     changeChoiceChildren :: IOSArrow XmlTree XmlTree
     changeChoiceChildren
-	= ( ( replaceChildren
-	      ( mkRngEmpty none
-		<+> 
-		(getChildren >>> neg isRngEmpty)
-              ) 
+        = ( ( replaceChildren
+              ( mkRngEmpty none
+                <+>
+                (getChildren >>> neg isRngEmpty)
+              )
               >>>
               markTreeChanged 1
-	    )
-	    `when`
-	    ( single (getChildren >>> isElem)		-- first child not "empty" elem
+            )
+            `when`
+            ( single (getChildren >>> isElem)           -- first child not "empty" elem
               >>>
               neg isRngEmpty
-	    )
-	  )
+            )
+          )
 
-hasTreeChanged	:: IOSArrow b Int
+hasTreeChanged  :: IOSArrow b Int
 hasTreeChanged
     = getParamInt 0 "rng:changeTree"
       >>>
@@ -1586,18 +1586,18 @@ markTreeChanged i
 
 
 simplificationStep8 :: IOSArrow XmlTree XmlTree
-simplificationStep8			-- Remove any define element that is not reachable.
+simplificationStep8                     -- Remove any define element that is not reachable.
     = ( ( removeUnreachableDefines $<<<
-	  ( getAllDeepDefines
+          ( getAllDeepDefines
             &&&
             constA []
             &&&
             getRefsFromStartPattern
-	  )
-	)
-	`when` collectErrors
+          )
+        )
+        `when` collectErrors
       )
-               
+
 
 -- ------------------------------------------------------------
 
@@ -1608,27 +1608,27 @@ restrictionsStep2 =
     choiceA [
 -- 7.1.1. attribute pattern, the following paths are prohibited:
 --        attribute//(ref | attribute)
-      isRngAttribute :-> 
+      isRngAttribute :->
         ( ( deep isRngRelaxError
             <+>
             ( mkRelaxError $<< (getChangesAttr
                                 &&&
                                 ( listA ( getChildren
-                                          >>> 
+                                          >>>
                                           deep isAttributeRef
                                           >>>
                                           (getName &&& getChangesAttr >>> arr2 (++))
                                         )
                                   >>>
-                                  arr (\n -> formatStringListPatt n ++ 
+                                  arr (\n -> formatStringListPatt n ++
                                              "Pattern not allowed as descendent(s)" ++
                                              " of a attribute-Pattern"
                                       )
                                 )
                                )
-            ) 
+            )
           )
-          `when` 
+          `when`
           ( getChildren >>> deep isAttributeRef )
         ),
 
@@ -1640,7 +1640,7 @@ restrictionsStep2 =
             ( mkRelaxError $<< (getChangesAttr
                                 &&&
                                 ( listA ( getChildren
-                                          >>> 
+                                          >>>
                                           deep isGroupInterleave
                                           >>>
                                           (getName &&& getChangesAttr >>> arr2 (++))
@@ -1648,114 +1648,114 @@ restrictionsStep2 =
                                   &&&
                                   getChangesAttr
                                   >>>
-                                  arr2 (\ n c -> ( formatStringListPatt n ++ 
+                                  arr2 (\ n c -> ( formatStringListPatt n ++
                                                    "Pattern not allowed as descendent(s) " ++
                                                    "of a oneOrMore-Pattern" ++
-						   (if null c then "" else " " ++ show c) ++ 
+                                                   (if null c then "" else " " ++ show c) ++
                                                    " followed by an attribute descendent"
-						 )
+                                                 )
                                        )
                                 )
                                )
-            ) 
+            )
           )
-          `when` 
+          `when`
           ( getChildren >>> deep isGroupInterleave
-            >>> 
+            >>>
             getChildren >>> deep isRngAttribute
           )
         ),
 
 -- 7.1.3. list pattern, the following paths are prohibited:
 --        list//( list | ref | attribute | text | interleave)
-      isRngList :-> 
+      isRngList :->
         ( ( deep isRngRelaxError
             <+>
             ( mkRelaxError $<< (getChangesAttr
                                 &&&
                                 ( listA ( getChildren
-                                          >>> 
+                                          >>>
                                           deep isAttributeRefTextListInterleave
                                           >>>
                                           (getName &&& getChangesAttr >>> arr2 (++))
                                         )
-                                  >>> 
-                                  arr (\n -> formatStringListPatt n ++ 
+                                  >>>
+                                  arr (\n -> formatStringListPatt n ++
                                              "Pattern not allowed as descendent(s) of a list-Pattern")
                                 )
                                )
-            ) 
+            )
           )
-          `when` 
+          `when`
           ( getChildren
             >>>
             deep isAttributeRefTextListInterleave
           )
-        ), 
+        ),
 
 -- 7.1.4. except in data pattern, the following paths are prohibited:
 --        data/except//(attribute | ref | text | list | group | interleave | oneOrMore | empty)
-      isRngData :-> 
-        ( ( deep isRngRelaxError              
+      isRngData :->
+        ( ( deep isRngRelaxError
             <+>
             ( mkRelaxError $<< (getChangesAttr
                                 &&&
                                 ( listA (getChildren
-                                         >>> 
+                                         >>>
                                          deep isAttributeRefTextListGroupInterleaveOneOrMoreEmpty
                                          >>>
                                          (getName &&& getChangesAttr >>> arr2 (++))
                                         )
                                   >>>
-                                  arr (\n -> formatStringListPatt n ++ 
+                                  arr (\n -> formatStringListPatt n ++
                                              "Pattern not allowed as descendent(s) of a data/except-Pattern")
                                 )
                                )
-            ) 
+            )
           )
-          `when` 
+          `when`
           ( getChildren
-	    >>>
-	    isRngExcept
-	    >>> 
+            >>>
+            isRngExcept
+            >>>
             deep isAttributeRefTextListGroupInterleaveOneOrMoreEmpty
           )
         ),
 
 -- 7.1.5. start element, the following paths are prohibited:
 --        start//(attribute | data | value | text | list | group | interleave | oneOrMore | empty)
-      isRngStart :-> 
+      isRngStart :->
         ( ( deep isRngRelaxError
             <+>
             ( mkRelaxError $<< (getChangesAttr
                                 &&&
                                 ( listA (getChildren
                                          >>>
-                                         deep (checkElemName [ "attribute", "data", "value", "text", "list", 
+                                         deep (checkElemName [ "attribute", "data", "value", "text", "list",
                                                                "group", "interleave", "oneOrMore", "empty"])
                                          >>>
                                          (getName &&& getChangesAttr >>> arr2 (++))
                                         )
-                                  >>> 
-                                  arr (\n -> formatStringListPatt n ++ 
+                                  >>>
+                                  arr (\n -> formatStringListPatt n ++
                                              "Pattern not allowed as descendent(s) of a start-Pattern")
                                 )
                                )
-            ) 
+            )
           )
-          `when` 
+          `when`
           ( getChildren
             >>>
-            deep (checkElemName [ "attribute", "data", "value", "text", "list", 
+            deep (checkElemName [ "attribute", "data", "value", "text", "list",
                                   "group", "interleave", "oneOrMore", "empty"])
-          )  
+          )
         ),
-            
+
         this :-> this
       ]
   ) `when` collectErrors
 
-     
+
 -- ------------------------------------------------------------
 
 
@@ -1764,28 +1764,28 @@ restrictionsStep3
     = processTopDown
       ( ( deep isRngRelaxError
           <+>
-          ( mkRelaxError "" $< 
+          ( mkRelaxError "" $<
             ( -- getRngAttrName
               ( getChildren >>> isRngName >>> getChildren >>> getText )
-              >>> 
+              >>>
               arr (\ n -> ( "Content of element " ++ show n ++ " contains a pattern that can match " ++
                             "a child and a pattern that matches a single string"
-			  )
-		  )
+                          )
+                  )
             )
           )
-	)
-	`when`
-	( isRngElement
+        )
+        `when`
+        ( isRngElement
           >>>
           ( getChildren >>. (take 1 . reverse) )
           >>>
           getContentType >>> isA (== CTNone)
-	)
+        )
       ) `when` collectErrors
 
-    
-    
+
+
 getContentType :: IOSArrow XmlTree ContentType
 getContentType
     = choiceA
@@ -1804,7 +1804,7 @@ getContentType
     where
     processData :: IOSArrow XmlTree ContentType
     processData
-	= ifA (neg (getChildren >>> isRngExcept))
+        = ifA (neg (getChildren >>> isRngExcept))
           (constA CTSimple)
           ( getChildren
             >>>
@@ -1818,49 +1818,49 @@ getContentType
           )
     processAttribute :: IOSArrow XmlTree ContentType
     processAttribute
-	= ifA ( lastChild
-		>>>
-		getContentType
-		>>>
-		isA (/= CTNone)
+        = ifA ( lastChild
+                >>>
+                getContentType
+                >>>
+                isA (/= CTNone)
               )
           (constA CTEmpty)
           (constA CTNone)
-  
+
     processGroup :: IOSArrow XmlTree ContentType
     processGroup
-	= get2ContentTypes
-	  >>>
-	  arr2 (\a b -> if isGroupable a b then max a b else CTNone)
-  
+        = get2ContentTypes
+          >>>
+          arr2 (\a b -> if isGroupable a b then max a b else CTNone)
+
     processInterleave :: IOSArrow XmlTree ContentType
     processInterleave
-	= get2ContentTypes
-	  >>>
-	  arr2 (\a b -> if isGroupable a b then max a b else CTNone)
-  
+        = get2ContentTypes
+          >>>
+          arr2 (\a b -> if isGroupable a b then max a b else CTNone)
+
     processOneOrMore :: IOSArrow XmlTree ContentType
     processOneOrMore
-	= ifA ( getChildren
-		>>>
-		getContentType >>> isA (/= CTNone)
-		>>>
-		isA (\t -> isGroupable t t)
+        = ifA ( getChildren
+                >>>
+                getContentType >>> isA (/= CTNone)
+                >>>
+                isA (\t -> isGroupable t t)
               )
           ( getChildren >>> getContentType )
           ( constA CTNone )
-  
+
     processChoice :: IOSArrow XmlTree ContentType
     processChoice
-	= get2ContentTypes
-	  >>> 
-	  arr2 max
+        = get2ContentTypes
+          >>>
+          arr2 max
 
     isGroupable :: ContentType -> ContentType -> Bool
     isGroupable CTEmpty   _         = True
     isGroupable _         CTEmpty   = True
     isGroupable CTComplex CTComplex = True
-    isGroupable _         _         = False   
+    isGroupable _         _         = False
 
 
 checkPattern :: IOSArrow (XmlTree, ([NameClass], [NameClass])) XmlTree
@@ -1877,98 +1877,98 @@ occur :: String -> IOSArrow XmlTree XmlTree -> IOSArrow XmlTree XmlTree
 occur name fct
     = choiceA
       [ ( isElem >>> hasRngName name )
-	:->
-	fct
+        :->
+        fct
       , isChoiceGroupInterleaveOneOrMore
-	:->
-	(getChildren >>> occur name fct)
+        :->
+        (getChildren >>> occur name fct)
       ]
 
 get2ContentTypes :: IOSArrow XmlTree (ContentType, ContentType)
 get2ContentTypes
     = ( ( firstChild >>> getContentType )
-	&&&
-	( lastChild  >>> getContentType )
+        &&&
+        ( lastChild  >>> getContentType )
       )
 
--- ------------------------------------------------------------            
+-- ------------------------------------------------------------
 
 
 -- Duplicate attributes are not allowed. -> fertig
--- Attributes using infinite name classes must be repeated; an attribute element that 
+-- Attributes using infinite name classes must be repeated; an attribute element that
 -- has an anyName or nsName descendant element must have a oneOrMore ancestor element. -> fertig
 
 -- berechnet alle define-Namen (fuer ref-Pattern) und Nameclasses der element-Pattern
 
-restrictionsStep4 :: IOSArrow XmlTree XmlTree          
+restrictionsStep4 :: IOSArrow XmlTree XmlTree
 restrictionsStep4
     = ( restrictionsStep4' $<
-	listA ( deep isRngDefine				-- get all defines
-		>>>
-		( getRngAttrName				-- get define name
-		  &&& 
-		  ( single ( getChildren
-			     >>>
-			     getChildren
-			     >>> 
-			     fromLA createNameClass		-- compute the name class from 1. grandchild
-			   )
-		    `orElse`
-		    (constA AnyName)
-		  )
-		)
+        listA ( deep isRngDefine                                -- get all defines
+                >>>
+                ( getRngAttrName                                -- get define name
+                  &&&
+                  ( single ( getChildren
+                             >>>
+                             getChildren
+                             >>>
+                             fromLA createNameClass             -- compute the name class from 1. grandchild
+                           )
+                    `orElse`
+                    (constA AnyName)
+                  )
+                )
               )
       ) `when` collectErrors
 
-restrictionsStep4' :: [(String, NameClass)] -> IOSArrow XmlTree XmlTree          
+restrictionsStep4' :: [(String, NameClass)] -> IOSArrow XmlTree XmlTree
 restrictionsStep4' nc =
   processTopDown (
-    ( 
+    (
       ( deep isRngRelaxError
         <+>
-        ( mkRelaxError "" $< 
+        ( mkRelaxError "" $<
           ( getRngAttrName
             >>>
-            arr (\ n -> ( "Both attribute-pattern occuring in an " ++ 
-			  show n ++ " belong to the same name-class"
-			)
-		)
+            arr (\ n -> ( "Both attribute-pattern occuring in an " ++
+                          show n ++ " belong to the same name-class"
+                        )
+                )
           )
         )
-      )    
-      `when` 
+      )
+      `when`
       ( (isRngGroup `orElse` isRngInterleave)
         >>>
         ( getChildren
-          &&& 
-          ( firstChild
-            >>> 
-            listA ( occur "attribute" (single getChildren)
-                    >>> 
-                    fromLA createNameClass
-                  )
-          ) 
           &&&
-          ( lastChild
-            >>> 
+          ( firstChild
+            >>>
             listA ( occur "attribute" (single getChildren)
-                    >>> 
+                    >>>
                     fromLA createNameClass
                   )
           )
-        ) 
+          &&&
+          ( lastChild
+            >>>
+            listA ( occur "attribute" (single getChildren)
+                    >>>
+                    fromLA createNameClass
+                  )
+          )
+        )
         >>> checkPattern
-      )           
-    )     
+      )
+    )
     >>>
-    (  
+    (
       ( deep isRngRelaxError
         <+>
         ( mkRelaxError ""
-	  ( "An attribute that has an anyName or nsName descendant element " ++
+          ( "An attribute that has an anyName or nsName descendant element " ++
             "must have a oneOrMore ancestor element"
-	  )
-	)
+          )
+        )
       )
       `when`
       (isRngElement >>> checkInfiniteAttribute)
@@ -1977,17 +1977,17 @@ restrictionsStep4' nc =
     ( ( deep isRngRelaxError
         <+>
         ( mkRelaxError ""
-	  ( "Both element-pattern occuring in an interleave " ++
+          ( "Both element-pattern occuring in an interleave " ++
             "belong to the same name-class"
-	  )
+          )
         )
       )
-      `when` 
+      `when`
       ( isRngInterleave
-        >>> 
+        >>>
         ( getChildren
           &&&
-          (firstChild >>> listA (occur "ref" this >>> getRngAttrName)) 
+          (firstChild >>> listA (occur "ref" this >>> getRngAttrName))
           &&&
           (lastChild  >>> listA (occur "ref" this >>> getRngAttrName))
         )
@@ -1995,12 +1995,12 @@ restrictionsStep4' nc =
         checkNames
       )
     )
-    >>>     
+    >>>
     ( ( deep isRngRelaxError
-        <+> 
+        <+>
         ( mkRelaxError "" "A text pattern must not occur in both children of an interleave" )
       )
-      `when` 
+      `when`
       (isRngInterleave >>> checkText)
     )
   )
@@ -2021,7 +2021,7 @@ restrictionsStep4' nc =
   checkNames :: IOSArrow (XmlTree, ([String], [String])) XmlTree
   checkNames = (arr fst)
                &&&
-               (arr (\(_, (a, _)) -> getNameClasses nc a)) 
+               (arr (\(_, (a, _)) -> getNameClasses nc a))
                &&&
                (arr (\(_, (_, b)) -> getNameClasses nc b))
                >>>
@@ -2029,31 +2029,31 @@ restrictionsStep4' nc =
     where
     getNameClasses :: [(String, NameClass)] -> [String] -> [NameClass]
     getNameClasses nc' l = map (\x -> fromJust $ lookup x nc') l
-    
+
   checkText :: IOSArrow XmlTree XmlTree
   checkText
       = ( firstChild >>> occur "text" this )
-        `guards` 
+        `guards`
         ( lastChild  >>> occur "text" this )
-       
+
 -- ------------------------------------------------------------
 
 
-overlap		:: NameClass -> NameClass -> Bool
+overlap         :: NameClass -> NameClass -> Bool
 overlap nc1 nc2
     = any (bothContain nc1 nc2) (representatives nc1 ++ representatives nc2)
 
-bothContain	:: NameClass -> NameClass -> QName -> Bool
+bothContain     :: NameClass -> NameClass -> QName -> Bool
 bothContain nc1 nc2 qn
     = contains nc1 qn && contains nc2 qn
 
-illegalLocalName	:: LocalName
-illegalLocalName	= ""
+illegalLocalName        :: LocalName
+illegalLocalName        = ""
 
-illegalUri		:: Uri
-illegalUri		= "\x1"
+illegalUri              :: Uri
+illegalUri              = "\x1"
 
-representatives		:: NameClass -> [QName]
+representatives         :: NameClass -> [QName]
 representatives AnyName
     = [mkQName "" illegalLocalName illegalUri]
 
@@ -2075,21 +2075,21 @@ representatives (NameClassChoice nc1 nc2)
 representatives _
     = []
 
--- -------------------------------------------------------------------------------------------------------            
+-- -------------------------------------------------------------------------------------------------------
 resetStates :: IOSArrow XmlTree XmlTree
 resetStates
     = ( perform (constA $ setParamInt "define_id" 0)
-	>>>
-	perform (constA [] >>> setParamList "elementTable" )
-	>>>
-	perform (constA $ setParamInt a_numberOfErrors 0)
+        >>>
+        perform (constA [] >>> setParamList "elementTable" )
+        >>>
+        perform (constA $ setParamInt a_numberOfErrors 0)
       )
 
 
 getAllDeepDefines :: IOSArrow XmlTree Env
 getAllDeepDefines
     = listA $ deep isRngDefine
-      >>> 
+      >>>
       ( getRngAttrName &&& this )
 
 
@@ -2105,7 +2105,7 @@ getRefsFromStartPattern
       getChildren
       >>>
       isRngStart
-      >>> 
+      >>>
       deep isRngRef
       >>>
       getRngAttrName
@@ -2117,25 +2117,25 @@ removeUnreachableDefines allDefs processedDefs reachableDefs
       ( removeUnreachableDefines allDefs (nextTreeName : processedDefs) $< newReachableDefs )
       ( processChildren $ -- root node
         processChildren $ -- first grammar
-        ( none 
+        ( none
           `when`
           ( isRngDefine
             >>>
             getRngAttrName
-            >>> 
+            >>>
             isA (\n -> not $ elem n reachableDefs)
           )
-	)
+        )
       )
     where
     unprocessedDefs :: [String]
     unprocessedDefs
-	= reachableDefs \\ processedDefs
+        = reachableDefs \\ processedDefs
 
     newReachableDefs :: IOSArrow n [String]
     newReachableDefs
-	= constA getTree
-          >>> 
+        = constA getTree
+          >>>
           listA ( deep isRngRef
                   >>>
                   getRngAttrName
@@ -2145,15 +2145,15 @@ removeUnreachableDefines allDefs processedDefs reachableDefs
 
     getTree :: XmlTree
     getTree
-	= fromJust $ lookup nextTreeName allDefs
+        = fromJust $ lookup nextTreeName allDefs
 
     nextTreeName :: String
     nextTreeName
-	= head unprocessedDefs
+        = head unprocessedDefs
 
 
--- -------------------------------------------------------------------------------------------------------    
-    
+-- -------------------------------------------------------------------------------------------------------
+
 
 checkElemName :: [String] -> IOSArrow XmlTree XmlTree
 checkElemName l
@@ -2162,13 +2162,13 @@ checkElemName l
       this
 
 wrapPattern2Two :: (ArrowXml a) => String -> a XmlTree XmlTree
-wrapPattern2Two name 
+wrapPattern2Two name
   = choiceA
     [ noOfChildren (> 2)
-      :-> ( replaceChildren ( (mkRngElement name none 
+      :-> ( replaceChildren ( (mkRngElement name none
                                (getChildren >>. take 2)
-                              ) 
-                              <+> 
+                              )
+                              <+>
                               (getChildren >>. drop 2)
                             )
             >>>
@@ -2205,7 +2205,7 @@ collectErrors
   stopAfterFirstError = getParamString a_do_not_collect_errors
                         >>>
                         isA (== "1")
- 
+
 
 -- | Returns the list of simplification errors or 'none'
 getErrors :: IOSArrow XmlTree XmlTree
@@ -2226,24 +2226,24 @@ setChangesAttr str
 
 getChangesAttr :: IOSArrow XmlTree String
 getChangesAttr
-  = getAttrValue a_relaxSimplificationChanges 
-    &&& 
+  = getAttrValue a_relaxSimplificationChanges
+    &&&
     getParamString a_output_changes
     >>>
     ifP (\(changes, param) -> changes /= "" && param == "1")
       (arr2 $ \l _ -> " (" ++ l ++ ")")
       (constA "")
-      
+
 
 getAndSetCounter :: String -> IOSArrow b String
-getAndSetCounter name   
+getAndSetCounter name
   = genNewId $< getParamInt 0 name
   where
   genNewId :: Int -> IOSArrow b String
   genNewId i = setParamInt name (i+1) >>> constA (show i)
 
-     
--- -------------------------------------------------------------------------------------------------------            
+
+-- -------------------------------------------------------------------------------------------------------
 
 -- | Creates the simple form of a Relax NG schema
 -- (see also: 'relaxOptions')
@@ -2253,69 +2253,69 @@ createSimpleForm remainingOptions checkRestrictions validateExternalRef validate
     = traceMsg 2 ("createSimpleForm: " ++ show (remainingOptions, checkRestrictions,validateExternalRef, validateInclude))
       >>>
       ( if checkRestrictions
-	then createSimpleWithRest
-	else createSimpleWithoutRest
+        then createSimpleWithRest
+        else createSimpleWithoutRest
       )
     where
 
     createSimpleWithRest :: IOSArrow XmlTree XmlTree
     createSimpleWithRest
-	= seqA $ concat [ simplificationPart1
-			, return $ traceDoc "relax NG: simplificationPart1 done"
-			, restrictionsPart1
-			, return $ traceDoc "relax NG: restrictionsPart1 done"
-			, simplificationPart2
-			, return $ traceDoc "relax NG simplificationPart2 done"
-			, restrictionsPart2
-			, return $ traceDoc "relax NG: restrictionsPart2 done"
-			, finalCleanUp
-			, return $ traceDoc "relax NG: finalCleanUp done"
-			]
+        = seqA $ concat [ simplificationPart1
+                        , return $ traceDoc "relax NG: simplificationPart1 done"
+                        , restrictionsPart1
+                        , return $ traceDoc "relax NG: restrictionsPart1 done"
+                        , simplificationPart2
+                        , return $ traceDoc "relax NG simplificationPart2 done"
+                        , restrictionsPart2
+                        , return $ traceDoc "relax NG: restrictionsPart2 done"
+                        , finalCleanUp
+                        , return $ traceDoc "relax NG: finalCleanUp done"
+                        ]
 
     createSimpleWithoutRest :: IOSArrow XmlTree XmlTree
     createSimpleWithoutRest
-	= seqA $ concat [ simplificationPart1
-			, simplificationPart2
-			, finalCleanUp
-			]
+        = seqA $ concat [ simplificationPart1
+                        , simplificationPart2
+                        , finalCleanUp
+                        ]
     simplificationPart1 :: [IOSArrow XmlTree XmlTree]
     simplificationPart1
-	= [ propagateNamespaces
-	  , simplificationStep1
-	  , simplificationStep2 remainingOptions validateExternalRef validateInclude [] []
-	  , simplificationStep3
-	  , simplificationStep4
-	  ]
+        = [ propagateNamespaces
+          , simplificationStep1
+          , simplificationStep2 remainingOptions validateExternalRef validateInclude [] []
+          , simplificationStep3
+          , simplificationStep4
+          ]
 
     simplificationPart2 :: [IOSArrow XmlTree XmlTree]
     simplificationPart2
-	= [ simplificationStep5
-	  , simplificationStep6
-	  , simplificationStep7
-	  , simplificationStep8
-	  ]
+        = [ simplificationStep5
+          , simplificationStep6
+          , simplificationStep7
+          , simplificationStep8
+          ]
 
     restrictionsPart1 :: [IOSArrow XmlTree XmlTree]
     restrictionsPart1
-	= [ restrictionsStep1 ]
+        = [ restrictionsStep1 ]
 
     restrictionsPart2 :: [IOSArrow XmlTree XmlTree]
     restrictionsPart2
-	= [ restrictionsStep2
-	  , restrictionsStep3
-	  , restrictionsStep4                    
-	  ]
+        = [ restrictionsStep2
+          , restrictionsStep3
+          , restrictionsStep4
+          ]
 
-    finalCleanUp :: [IOSArrow XmlTree XmlTree]                    
+    finalCleanUp :: [IOSArrow XmlTree XmlTree]
     finalCleanUp
-	= [ cleanUp
-	  , resetStates
-	  ]
+        = [ cleanUp
+          , resetStates
+          ]
 
     cleanUp :: IOSArrow XmlTree XmlTree
-    cleanUp = processTopDown $ 
+    cleanUp = processTopDown $
               removeAttr a_relaxSimplificationChanges
-	      >>>
+              >>>
               removeAttr defineOrigName
 
--- -------------------------------------------------------------------------------------------------------            
+-- -------------------------------------------------------------------------------------------------------

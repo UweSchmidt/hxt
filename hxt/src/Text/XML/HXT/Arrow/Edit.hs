@@ -34,7 +34,7 @@ module Text.XML.HXT.Arrow.Edit
     , indentDoc
     , numberLinesInXmlDoc
     , preventEmptyElements
- 
+
     , removeComment
     , removeAllComment
     , removeWhiteSpace
@@ -64,19 +64,19 @@ import           Control.Arrow
 import           Control.Arrow.ArrowList
 import           Control.Arrow.ArrowIf
 import           Control.Arrow.ArrowTree
-import 		 Control.Arrow.ListArrow
+import           Control.Arrow.ListArrow
 
 import           Text.XML.HXT.Arrow.XmlArrow
 import           Text.XML.HXT.DOM.Interface
-import qualified Text.XML.HXT.DOM.XmlNode 	as XN
-import           Text.XML.HXT.DOM.Unicode		( isXmlSpaceChar )
-import           Text.XML.HXT.DOM.FormatXmlTree 	( formatXmlTree )
+import qualified Text.XML.HXT.DOM.XmlNode       as XN
+import           Text.XML.HXT.DOM.Unicode               ( isXmlSpaceChar )
+import           Text.XML.HXT.DOM.FormatXmlTree         ( formatXmlTree )
 import           Text.XML.HXT.Parser.HtmlParsec         ( emptyHtmlTags )
-import           Text.XML.HXT.Parser.XmlEntities	( xmlEntities )
-import           Text.XML.HXT.Parser.XhtmlEntities	( xhtmlEntities )
+import           Text.XML.HXT.Parser.XmlEntities        ( xmlEntities )
+import           Text.XML.HXT.Parser.XhtmlEntities      ( xhtmlEntities )
 
 import           Data.List                              ( isPrefixOf )
-import qualified Data.Map 			as M
+import qualified Data.Map                       as M
 import           Data.Maybe
 
 -- ------------------------------------------------------------
@@ -100,30 +100,30 @@ import           Data.Maybe
 --
 -- see 'canonicalizeAllNodes' and 'canonicalizeForXPath'
 
-canonicalizeTree'	:: LA XmlTree XmlTree -> LA XmlTree XmlTree
+canonicalizeTree'       :: LA XmlTree XmlTree -> LA XmlTree XmlTree
 canonicalizeTree' toBeRemoved
     = processChildren (none `when` isText)
       >>>
       processBottomUp canonicalize1Node
       where
-      canonicalize1Node	:: LA XmlTree XmlTree
+      canonicalize1Node :: LA XmlTree XmlTree
       canonicalize1Node
-	  = (deep isPi `when` isDTD)		-- remove DTD parts, except PIs
-	    >>>
-	    (none `when` toBeRemoved)		-- remove unintersting nodes
-	    >>>
-	    ( processAttrl ( processChildren transfCharRef
-			     >>>
-			     collapseXText
-			   )
-	      `when` isElem
-	    )
-	    >>>
-	    transfCdata				-- CDATA -> text
-	    >>>
-	    transfCharRef			-- Char refs -> text
-	    >>>
-	    collapseXText			-- combine text
+          = (deep isPi `when` isDTD)            -- remove DTD parts, except PIs
+            >>>
+            (none `when` toBeRemoved)           -- remove unintersting nodes
+            >>>
+            ( processAttrl ( processChildren transfCharRef
+                             >>>
+                             collapseXText
+                           )
+              `when` isElem
+            )
+            >>>
+            transfCdata                         -- CDATA -> text
+            >>>
+            transfCharRef                       -- Char refs -> text
+            >>>
+            collapseXText                       -- combine text
 
 
 -- |
@@ -145,13 +145,13 @@ canonicalizeTree' toBeRemoved
 --
 --  - Special characters in attribute values and character content are replaced by character references
 
-canonicalizeAllNodes	:: ArrowList a => a XmlTree XmlTree
+canonicalizeAllNodes    :: ArrowList a => a XmlTree XmlTree
 canonicalizeAllNodes
     = fromLA $
-      canonicalizeTree' ( isCmt		-- remove comment
-			  <+>
-			  isXmlPi	-- remove xml declaration
-			)
+      canonicalizeTree' ( isCmt         -- remove comment
+                          <+>
+                          isXmlPi       -- remove xml declaration
+                        )
 
 -- |
 -- Canonicalize a tree for XPath
@@ -159,7 +159,7 @@ canonicalizeAllNodes
 --
 -- see 'canonicalizeAllNodes'
 
-canonicalizeForXPath	:: ArrowList a => a XmlTree XmlTree
+canonicalizeForXPath    :: ArrowList a => a XmlTree XmlTree
 canonicalizeForXPath
     = fromLA $
       canonicalizeTree' isXmlPi
@@ -173,49 +173,49 @@ canonicalizeForXPath
 --
 -- see 'canonicalizeAllNodes'
 
-canonicalizeContents	:: ArrowList a => a XmlTree XmlTree
+canonicalizeContents    :: ArrowList a => a XmlTree XmlTree
 canonicalizeContents
     = fromLA $
       processBottomUp canonicalize1Node
       where
-      canonicalize1Node	:: LA XmlTree XmlTree
+      canonicalize1Node :: LA XmlTree XmlTree
       canonicalize1Node
-	  = ( processAttrl ( processChildren transfCharRef
-			     >>>
-			     collapseXText
-			   )
-	      `when` isElem
-	    )
-	    >>>
-	    transfCdata				-- CDATA -> text
-	    >>>
-	    transfCharRef			-- Char refs -> text
-	    >>>
-	    collapseXText			-- combine text
+          = ( processAttrl ( processChildren transfCharRef
+                             >>>
+                             collapseXText
+                           )
+              `when` isElem
+            )
+            >>>
+            transfCdata                         -- CDATA -> text
+            >>>
+            transfCharRef                       -- Char refs -> text
+            >>>
+            collapseXText                       -- combine text
 
 -- ------------------------------------------------------------
 
-collapseXText'		:: LA XmlTree XmlTree
+collapseXText'          :: LA XmlTree XmlTree
 collapseXText'
     = replaceChildren ( listA getChildren >>> arrL (foldr mergeText' []) )
     where
-    mergeText'	:: XmlTree -> XmlTrees -> XmlTrees
+    mergeText'  :: XmlTree -> XmlTrees -> XmlTrees
     mergeText' t1 (t2 : ts2)
-	| XN.isText t1 && XN.isText t2
-	    = let
-	      s1 = fromJust . XN.getText $ t1
-	      s2 = fromJust . XN.getText $ t2
-	      t  = XN.mkText (s1 ++ s2)
-	      in
-	      t : ts2
+        | XN.isText t1 && XN.isText t2
+            = let
+              s1 = fromJust . XN.getText $ t1
+              s2 = fromJust . XN.getText $ t2
+              t  = XN.mkText (s1 ++ s2)
+              in
+              t : ts2
     mergeText' t1 ts
-	= t1 : ts
+        = t1 : ts
 
 -- |
 -- Collects sequences of text nodes in the list of children of a node into one single text node.
 -- This is useful, e.g. after char and entity reference substitution
 
-collapseXText		:: ArrowList a => a XmlTree XmlTree
+collapseXText           :: ArrowList a => a XmlTree XmlTree
 collapseXText
     = fromLA $
       collapseXText'
@@ -226,7 +226,7 @@ collapseXText
 --
 -- see also : 'collapseXText'
 
-collapseAllXText	:: ArrowList a => a XmlTree XmlTree
+collapseAllXText        :: ArrowList a => a XmlTree XmlTree
 collapseAllXText
     = fromLA $
       processBottomUp collapseXText'
@@ -243,8 +243,8 @@ collapseAllXText
 --
 -- > xshowEscape f >>> xread == f
 
-xshowEscapeXml		:: ArrowXml a => a n XmlTree -> a n String
-xshowEscapeXml f	= xshow (f >>> escapeXmlDoc)
+xshowEscapeXml          :: ArrowXml a => a n XmlTree -> a n String
+xshowEscapeXml f        = xshow (f >>> escapeXmlDoc)
 
 -- ------------------------------------------------------------
 
@@ -252,50 +252,50 @@ xshowEscapeXml f	= xshow (f >>> escapeXmlDoc)
 -- escape XmlText,
 -- transform all special XML chars into char- or entity- refs
 
-type EntityRefTable	= M.Map Int String
+type EntityRefTable     = M.Map Int String
 
 xmlEntityRefTable
- , xhtmlEntityRefTable	:: EntityRefTable
+ , xhtmlEntityRefTable  :: EntityRefTable
 
 xmlEntityRefTable   = buildEntityRefTable $ xmlEntities
 xhtmlEntityRefTable = buildEntityRefTable $ xhtmlEntities
 
-buildEntityRefTable	:: [(String, Int)] -> EntityRefTable
-buildEntityRefTable	= M.fromList . map (\ (x,y) -> (y,x) )
+buildEntityRefTable     :: [(String, Int)] -> EntityRefTable
+buildEntityRefTable     = M.fromList . map (\ (x,y) -> (y,x) )
 
-escapeText''	:: (Char -> XmlTree) -> (Char -> Bool) -> XmlTree -> XmlTrees
+escapeText''    :: (Char -> XmlTree) -> (Char -> Bool) -> XmlTree -> XmlTrees
 escapeText'' escChar isEsc t
     = maybe [t] escape' . XN.getText $ t
     where
-    escape' "" = [t]		-- empty text nodes remain empty text nodes
-    escape' s  = escape s	-- they do not disapear
+    escape' "" = [t]            -- empty text nodes remain empty text nodes
+    escape' s  = escape s       -- they do not disapear
 
     escape ""
-	= []
+        = []
     escape (c:s1)
-	| isEsc c
-	    = escChar c : escape s1
+        | isEsc c
+            = escChar c : escape s1
     escape s
-	= XN.mkText s1 : escape s2
-	where
-	(s1, s2) = break isEsc s
+        = XN.mkText s1 : escape s2
+        where
+        (s1, s2) = break isEsc s
 
 {-
-escapeCharRef	:: Char -> XmlTree
-escapeCharRef	= XN.mkCharRef . fromEnum
+escapeCharRef   :: Char -> XmlTree
+escapeCharRef   = XN.mkCharRef . fromEnum
 -}
 
-escapeEntityRef	:: EntityRefTable -> Char -> XmlTree
+escapeEntityRef :: EntityRefTable -> Char -> XmlTree
 escapeEntityRef entityTable c
     = maybe (XN.mkCharRef c') XN.mkEntityRef . M.lookup c' $ entityTable
     where
     c' = fromEnum c
 
-escapeXmlEntityRef	:: Char -> XmlTree
-escapeXmlEntityRef	= escapeEntityRef xmlEntityRefTable
+escapeXmlEntityRef      :: Char -> XmlTree
+escapeXmlEntityRef      = escapeEntityRef xmlEntityRefTable
 
-escapeHtmlEntityRef	:: Char -> XmlTree
-escapeHtmlEntityRef	= escapeEntityRef xhtmlEntityRefTable
+escapeHtmlEntityRef     :: Char -> XmlTree
+escapeHtmlEntityRef     = escapeEntityRef xhtmlEntityRefTable
 
 -- ------------------------------------------------------------
 
@@ -306,12 +306,12 @@ escapeHtmlEntityRef	= escapeEntityRef xhtmlEntityRefTable
 -- in attribute values also \', \", \>, \\n, \\r and \\t are converted into entity or char references,
 -- in comments nothing is converted (see XML standard 2.4, useful e.g. for JavaScript).
 
-escapeXmlDoc		:: ArrowList a => a XmlTree XmlTree
+escapeXmlDoc            :: ArrowList a => a XmlTree XmlTree
 escapeXmlDoc
     = fromLA $ escapeDoc escXmlText escXmlAttrValue
     where
     escXmlText
-	= arrL $ escapeText'' escapeXmlEntityRef (`elem` "<&")		-- no escape for ", ' and > required: XML standard 2.4
+        = arrL $ escapeText'' escapeXmlEntityRef (`elem` "<&")          -- no escape for ", ' and > required: XML standard 2.4
     escXmlAttrValue
         = arrL $ escapeText'' escapeXmlEntityRef (`elem` "<>\"\'&\n\r\t")
 
@@ -325,62 +325,62 @@ escapeXmlDoc
 
 -- ------------------------------------------------------------
 
-escapeHtmlDoc		:: ArrowList a => a XmlTree XmlTree
+escapeHtmlDoc           :: ArrowList a => a XmlTree XmlTree
 escapeHtmlDoc
     = fromLA $ escapeDoc escHtmlText escHtmlAttrValue
     where
     escHtmlText
-	= arrL $ escapeText'' escapeHtmlEntityRef isHtmlTextEsc
+        = arrL $ escapeText'' escapeHtmlEntityRef isHtmlTextEsc
     escHtmlAttrValue
         = arrL $ escapeText'' escapeHtmlEntityRef isHtmlAttrEsc
 
     isHtmlTextEsc c
-	= c >= toEnum(128) || ( c `elem` "<&" )
+        = c >= toEnum(128) || ( c `elem` "<&" )
     isHtmlAttrEsc c
-	= c >= toEnum(128) || ( c `elem` "<>\"\'&\n\r\t" )
+        = c >= toEnum(128) || ( c `elem` "<>\"\'&\n\r\t" )
 
 -- ------------------------------------------------------------
 
-escapeDoc		:: LA XmlTree XmlTree -> LA XmlTree XmlTree -> LA XmlTree XmlTree
+escapeDoc               :: LA XmlTree XmlTree -> LA XmlTree XmlTree -> LA XmlTree XmlTree
 escapeDoc escText escAttr
     = escape
     where
     escape
-	= choiceA
-	  [ isElem  :-> ( processChildren escape
-			  >>>
-			  processAttrl escVal
-			)
-	  , isText  :-> escText
-	  -- , isCmt   :-> escCmt
-	  , isDTD   :-> processTopDown escDTD
-	  , this    :-> this
-	  ]
+        = choiceA
+          [ isElem  :-> ( processChildren escape
+                          >>>
+                          processAttrl escVal
+                        )
+          , isText  :-> escText
+          -- , isCmt   :-> escCmt
+          , isDTD   :-> processTopDown escDTD
+          , this    :-> this
+          ]
     escVal   = processChildren escAttr
     escDTD   = escVal `when` ( isDTDEntity <+> isDTDPEntity )
 
 -- ------------------------------------------------------------
 
-preventEmptyElements	:: ArrowList a => [String] -> Bool -> a XmlTree XmlTree
+preventEmptyElements    :: ArrowList a => [String] -> Bool -> a XmlTree XmlTree
 preventEmptyElements ns isHtml
     = fromLA $ insertDummyElem
     where
     isNoneEmpty
         | not (null ns) = hasNameWith (localPart >>> (`elem` ns))
-	| isHtml	= hasNameWith (localPart >>> (`notElem` emptyHtmlTags))
-	| otherwise	= this
+        | isHtml        = hasNameWith (localPart >>> (`notElem` emptyHtmlTags))
+        | otherwise     = this
 
     insertDummyElem
-	= processBottomUp
-	  ( replaceChildren (txt "")
-	    `when`
-	    ( isElem
-	      >>>
-	      isNoneEmpty
-	      >>>
-	      neg getChildren
-	    )
-	  )
+        = processBottomUp
+          ( replaceChildren (txt "")
+            `when`
+            ( isElem
+              >>>
+              isNoneEmpty
+              >>>
+              neg getChildren
+            )
+          )
 
 -- ------------------------------------------------------------
 
@@ -390,30 +390,30 @@ preventEmptyElements ns isHtml
 -- Useful for debugging and trace output.
 -- see also : 'treeRepOfXmlDoc', 'numberLinesInXmlDoc'
 
-haskellRepOfXmlDoc	:: ArrowList a => a XmlTree XmlTree
+haskellRepOfXmlDoc      :: ArrowList a => a XmlTree XmlTree
 haskellRepOfXmlDoc
     = fromLA $
       root [getAttrl] [show ^>> mkText]
 
 -- |
 -- convert a document into a text and add line numbers to the text representation.
--- 
+--
 -- Result is a root node with a single text node as child.
 -- Useful for debugging and trace output.
 -- see also : 'haskellRepOfXmlDoc', 'treeRepOfXmlDoc'
 
-numberLinesInXmlDoc	:: ArrowList a => a XmlTree XmlTree
+numberLinesInXmlDoc     :: ArrowList a => a XmlTree XmlTree
 numberLinesInXmlDoc
     = fromLA $
       processChildren (changeText numberLines)
     where
-    numberLines	:: String -> String
+    numberLines :: String -> String
     numberLines str
-	= concat $
-	  zipWith (\ n l -> lineNr n ++ l ++ "\n") [1..] (lines str)
-	where
-	lineNr	 :: Int -> String
-	lineNr n = (reverse (take 6 (reverse (show n) ++ replicate 6 ' '))) ++ "  "
+        = concat $
+          zipWith (\ n l -> lineNr n ++ l ++ "\n") [1..] (lines str)
+        where
+        lineNr   :: Int -> String
+        lineNr n = (reverse (take 6 (reverse (show n) ++ replicate 6 ' '))) ++ "  "
 
 -- |
 -- convert a document into a text representation in tree form.
@@ -421,44 +421,44 @@ numberLinesInXmlDoc
 -- Useful for debugging and trace output.
 -- see also : 'haskellRepOfXmlDoc', 'numberLinesInXmlDoc'
 
-treeRepOfXmlDoc	:: ArrowList a => a XmlTree XmlTree
+treeRepOfXmlDoc :: ArrowList a => a XmlTree XmlTree
 treeRepOfXmlDoc
     = fromLA $
       root [getAttrl] [formatXmlTree ^>> mkText]
 
-addHeadlineToXmlDoc	:: ArrowXml a => a XmlTree XmlTree
+addHeadlineToXmlDoc     :: ArrowXml a => a XmlTree XmlTree
 addHeadlineToXmlDoc
     = fromLA $ ( addTitle $< (getAttrValue a_source >>^ formatTitle) )
     where
     addTitle str
-	= replaceChildren ( txt str <+> getChildren <+> txt "\n" )
+        = replaceChildren ( txt str <+> getChildren <+> txt "\n" )
     formatTitle str
-	= "\n" ++ headline ++ "\n" ++ underline ++ "\n\n"
-	where
-	headline  = "content of: " ++ str
+        = "\n" ++ headline ++ "\n" ++ underline ++ "\n\n"
+        where
+        headline  = "content of: " ++ str
         underline = map (const '=') headline
 
 -- ------------------------------------------------------------
 
-removeComment'		:: LA XmlTree XmlTree
-removeComment'		= none `when` isCmt
+removeComment'          :: LA XmlTree XmlTree
+removeComment'          = none `when` isCmt
 
 -- |
 -- remove Comments: @none `when` isCmt@
 
-removeComment		:: ArrowXml a => a XmlTree XmlTree
-removeComment		= fromLA $ removeComment'
+removeComment           :: ArrowXml a => a XmlTree XmlTree
+removeComment           = fromLA $ removeComment'
 
 -- |
 -- remove all comments recursively
 
-removeAllComment	:: ArrowXml a => a XmlTree XmlTree
-removeAllComment	= fromLA $ processBottomUp removeComment'
+removeAllComment        :: ArrowXml a => a XmlTree XmlTree
+removeAllComment        = fromLA $ processBottomUp removeComment'
 
 -- ----------
 
-removeWhiteSpace'	:: LA XmlTree XmlTree
-removeWhiteSpace'	= none `when` isWhiteSpace
+removeWhiteSpace'       :: LA XmlTree XmlTree
+removeWhiteSpace'       = none `when` isWhiteSpace
 
 -- |
 -- simple filter for removing whitespace.
@@ -468,8 +468,8 @@ removeWhiteSpace'	= none `when` isWhiteSpace
 --
 -- see also : 'removeAllWhiteSpace', 'removeDocWhiteSpace'
 
-removeWhiteSpace	:: ArrowXml a => a XmlTree XmlTree
-removeWhiteSpace	= fromLA $ removeWhiteSpace'
+removeWhiteSpace        :: ArrowXml a => a XmlTree XmlTree
+removeWhiteSpace        = fromLA $ removeWhiteSpace'
 
 -- |
 -- simple recursive filter for removing all whitespace.
@@ -479,8 +479,8 @@ removeWhiteSpace	= fromLA $ removeWhiteSpace'
 --
 -- see also : 'removeWhiteSpace', 'removeDocWhiteSpace'
 
-removeAllWhiteSpace	:: ArrowXml a => a XmlTree XmlTree
-removeAllWhiteSpace	= fromLA $ processBottomUp removeWhiteSpace'
+removeAllWhiteSpace     :: ArrowXml a => a XmlTree XmlTree
+removeAllWhiteSpace     = fromLA $ processBottomUp removeWhiteSpace'
 
 -- |
 -- filter for removing all not significant whitespace.
@@ -499,28 +499,28 @@ removeAllWhiteSpace	= fromLA $ processBottomUp removeWhiteSpace'
 --
 -- see also : 'indentDoc', 'removeAllWhiteSpace'
 
-removeDocWhiteSpace	:: ArrowXml a => a XmlTree XmlTree
-removeDocWhiteSpace	= fromLA $ removeRootWhiteSpace
+removeDocWhiteSpace     :: ArrowXml a => a XmlTree XmlTree
+removeDocWhiteSpace     = fromLA $ removeRootWhiteSpace
 
 
-removeRootWhiteSpace	:: LA XmlTree XmlTree
+removeRootWhiteSpace    :: LA XmlTree XmlTree
 removeRootWhiteSpace
     =  processChildren processRootElement
        `when`
        isRoot
     where
-    processRootElement	:: LA XmlTree XmlTree
+    processRootElement  :: LA XmlTree XmlTree
     processRootElement
-	= removeWhiteSpace >>> processChild
-	where
-	processChild
-	    = choiceA [ isDTD
-			:-> removeAllWhiteSpace			-- whitespace in DTD is redundant
-		      , this
-			:-> replaceChildren ( getChildren
-					      >>. indentTrees insertNothing False 1
-					    )
-		      ]
+        = removeWhiteSpace >>> processChild
+        where
+        processChild
+            = choiceA [ isDTD
+                        :-> removeAllWhiteSpace                 -- whitespace in DTD is redundant
+                      , this
+                        :-> replaceChildren ( getChildren
+                                              >>. indentTrees insertNothing False 1
+                                            )
+                      ]
 
 -- ------------------------------------------------------------
 
@@ -544,37 +544,37 @@ removeRootWhiteSpace
 --
 -- see also : 'removeDocWhiteSpace'
 
-indentDoc		:: ArrowXml a => a XmlTree XmlTree
-indentDoc		= fromLA $
-			  ( ( isRoot `guards` indentRoot )
-			    `orElse`
-			    (root [] [this] >>> indentRoot >>> getChildren)
-			  )
+indentDoc               :: ArrowXml a => a XmlTree XmlTree
+indentDoc               = fromLA $
+                          ( ( isRoot `guards` indentRoot )
+                            `orElse`
+                            (root [] [this] >>> indentRoot >>> getChildren)
+                          )
 
 -- ------------------------------------------------------------
 
-indentRoot		:: LA XmlTree XmlTree
-indentRoot		= processChildren indentRootChildren
+indentRoot              :: LA XmlTree XmlTree
+indentRoot              = processChildren indentRootChildren
     where
     indentRootChildren
-	= removeText >>> indentChild >>> insertNL
-	where
-	removeText	= none `when` isText
-	insertNL	= this <+> txt "\n"
-	indentChild	= ( replaceChildren
-			    ( getChildren
-			      >>.
-			      indentTrees (insertIndentation 2) False 1
-			    )
-			    `whenNot` isDTD
-			  )
+        = removeText >>> indentChild >>> insertNL
+        where
+        removeText      = none `when` isText
+        insertNL        = this <+> txt "\n"
+        indentChild     = ( replaceChildren
+                            ( getChildren
+                              >>.
+                              indentTrees (insertIndentation 2) False 1
+                            )
+                            `whenNot` isDTD
+                          )
 
 -- ------------------------------------------------------------
 --
 -- copied from EditFilter and rewritten for arrows
 -- to remove dependency to the filter module
 
-indentTrees	:: (Int -> LA XmlTree XmlTree) -> Bool -> Int -> XmlTrees -> XmlTrees
+indentTrees     :: (Int -> LA XmlTree XmlTree) -> Bool -> Int -> XmlTrees -> XmlTrees
 indentTrees _ _ _ []
     = []
 indentTrees indentFilter preserveSpace level ts
@@ -583,136 +583,136 @@ indentTrees indentFilter preserveSpace level ts
       indentRest rs
       where
       runLAs f l
-	  = runLA (constL l >>> f) undefined
+          = runLA (constL l >>> f) undefined
 
       (ls, rs)
-	  = break XN.isElem ts
+          = break XN.isElem ts
 
-      isSignificant	:: Bool
+      isSignificant     :: Bool
       isSignificant
-	  = preserveSpace
-	    ||
-	    (not . null . runLAs isSignificantPart) ls
+          = preserveSpace
+            ||
+            (not . null . runLAs isSignificantPart) ls
 
-      isSignificantPart	:: LA XmlTree XmlTree
+      isSignificantPart :: LA XmlTree XmlTree
       isSignificantPart
-	  = catA
-	    [ isText `guards` neg isWhiteSpace
-	    , isCdata
-	    , isCharRef
-	    , isEntityRef
-	    ]
+          = catA
+            [ isText `guards` neg isWhiteSpace
+            , isCdata
+            , isCharRef
+            , isEntityRef
+            ]
 
-      lsf	:: LA XmlTree XmlTree
+      lsf       :: LA XmlTree XmlTree
       lsf
-	  | isSignificant
-	      = this
-	  | otherwise
-	      = (none `when` isWhiteSpace)
+          | isSignificant
+              = this
+          | otherwise
+              = (none `when` isWhiteSpace)
                 >>>
                 (indentFilter level <+> this)
 
-      indentRest	:: XmlTrees -> XmlTrees
+      indentRest        :: XmlTrees -> XmlTrees
       indentRest []
-	  | isSignificant
-	      = []
-	  | otherwise
-	      = runLA (indentFilter (level - 1)) undefined
+          | isSignificant
+              = []
+          | otherwise
+              = runLA (indentFilter (level - 1)) undefined
 
       indentRest (t':ts')
-	  = runLA ( ( indentElem
-		      >>>
-		      lsf
-		    )
-		    `when` isElem
-		  ) t'
+          = runLA ( ( indentElem
+                      >>>
+                      lsf
+                    )
+                    `when` isElem
+                  ) t'
             ++
-	    ( if null ts'
-	      then indentRest
-	      else indentTrees indentFilter preserveSpace level
-	    ) ts'
-	  where
-	  indentElem
-	      = replaceChildren	( getChildren
-				  >>.
-				  indentChildren
-				)
+            ( if null ts'
+              then indentRest
+              else indentTrees indentFilter preserveSpace level
+            ) ts'
+          where
+          indentElem
+              = replaceChildren ( getChildren
+                                  >>.
+                                  indentChildren
+                                )
 
-	  xmlSpaceAttrValue	:: String
-	  xmlSpaceAttrValue
-	      = concat . runLA (getAttrValue "xml:space") $ t'
+          xmlSpaceAttrValue     :: String
+          xmlSpaceAttrValue
+              = concat . runLA (getAttrValue "xml:space") $ t'
 
-	  preserveSpace'	:: Bool
-	  preserveSpace'
-	      = ( fromMaybe preserveSpace
-		  .
-		  lookup xmlSpaceAttrValue
-	        ) [ ("preserve", True)
-		  , ("default",  False)
-		  ]
+          preserveSpace'        :: Bool
+          preserveSpace'
+              = ( fromMaybe preserveSpace
+                  .
+                  lookup xmlSpaceAttrValue
+                ) [ ("preserve", True)
+                  , ("default",  False)
+                  ]
 
-	  indentChildren	:: XmlTrees -> XmlTrees
-	  indentChildren cs'
-	      | all (maybe False (all isXmlSpaceChar) . XN.getText) cs'
-		  = []
-	      | otherwise
-		  = indentTrees indentFilter preserveSpace' (level + 1) cs'
+          indentChildren        :: XmlTrees -> XmlTrees
+          indentChildren cs'
+              | all (maybe False (all isXmlSpaceChar) . XN.getText) cs'
+                  = []
+              | otherwise
+                  = indentTrees indentFilter preserveSpace' (level + 1) cs'
 
-	
+
 -- filter for indenting elements
 
-insertIndentation	:: Int -> Int -> LA a XmlTree
+insertIndentation       :: Int -> Int -> LA a XmlTree
 insertIndentation indentWidth level
     = txt ('\n' : replicate (level * indentWidth) ' ')
 
 -- filter for removing all whitespace
 
-insertNothing		:: Int -> LA a XmlTree
-insertNothing _		= none
+insertNothing           :: Int -> LA a XmlTree
+insertNothing _         = none
 
 -- ------------------------------------------------------------
 
-transfCdata'		:: LA XmlTree XmlTree
-transfCdata'		= (getCdata >>> mkText) `when` isCdata
+transfCdata'            :: LA XmlTree XmlTree
+transfCdata'            = (getCdata >>> mkText) `when` isCdata
 
 -- |
 -- converts a CDATA section node into a normal text node
 
-transfCdata		:: ArrowXml a => a XmlTree XmlTree
-transfCdata		= fromLA $
-			  transfCdata'
+transfCdata             :: ArrowXml a => a XmlTree XmlTree
+transfCdata             = fromLA $
+                          transfCdata'
 
 -- |
 -- converts CDATA sections in whole document tree into normal text nodes
 
-transfAllCdata		:: ArrowXml a => a XmlTree XmlTree
-transfAllCdata		= fromLA $
-			  processBottomUp transfCdata'
-			  
+transfAllCdata          :: ArrowXml a => a XmlTree XmlTree
+transfAllCdata          = fromLA $
+                          processBottomUp transfCdata'
+
 --
 
-transfCharRef'		:: LA XmlTree XmlTree
-transfCharRef'		= ( getCharRef >>> arr (\ i -> [toEnum i]) >>> mkText )
-		          `when`
-			  isCharRef
+transfCharRef'          :: LA XmlTree XmlTree
+transfCharRef'          = ( getCharRef >>> arr (\ i -> [toEnum i]) >>> mkText )
+                          `when`
+                          isCharRef
 
 -- |
 -- converts character references to normal text
 
-transfCharRef		:: ArrowXml a => a XmlTree XmlTree
-transfCharRef		= fromLA $
-			  transfCharRef'
+transfCharRef           :: ArrowXml a => a XmlTree XmlTree
+transfCharRef           = fromLA $
+                          transfCharRef'
 
 -- |
 -- recursively converts all character references to normal text
 
-transfAllCharRef	:: ArrowXml a => a XmlTree XmlTree
-transfAllCharRef	= fromLA $
-			  processBottomUp transfCharRef'
+transfAllCharRef        :: ArrowXml a => a XmlTree XmlTree
+transfAllCharRef        = fromLA $
+                          processBottomUp transfCharRef'
 
 -- ------------------------------------------------------------
 
-rememberDTDAttrl	:: ArrowList a => a XmlTree XmlTree
+rememberDTDAttrl        :: ArrowList a => a XmlTree XmlTree
 rememberDTDAttrl
     = fromLA $
       ( ( addDTDAttrl $< ( getChildren >>> isDTDDoctype >>> getDTDAttrl ) )
@@ -723,7 +723,7 @@ rememberDTDAttrl
     addDTDAttrl al
         = seqA . map (uncurry addAttr) . map (first (dtdPrefix ++)) $ al
 
-addDefaultDTDecl	:: ArrowList a => a XmlTree XmlTree
+addDefaultDTDecl        :: ArrowList a => a XmlTree XmlTree
 addDefaultDTDecl
     = fromLA $
       ( addDTD $< listA (getAttrl >>> (getName &&& xshow getChildren) >>> hasDtdPrefix) )
@@ -740,53 +740,53 @@ addDefaultDTDecl
             <+>
             txt "\n"
             <+>
-            ( getChildren >>> (none `when` isDTDDoctype) )	-- remove old DTD stuff
+            ( getChildren >>> (none `when` isDTDDoctype) )      -- remove old DTD stuff
           )
 
 -- ------------------------------------------------------------
 
-hasXmlPi		:: ArrowXml a => a XmlTree XmlTree
+hasXmlPi                :: ArrowXml a => a XmlTree XmlTree
 hasXmlPi
     = fromLA
       ( getChildren
-	>>>
-	isPi
-	>>>
-	hasName t_xml
+        >>>
+        isPi
+        >>>
+        hasName t_xml
       )
 
 -- | add an \<?xml version=\"1.0\"?\> processing instruction
 -- if it's not already there
 
-addXmlPi		:: ArrowXml a => a XmlTree XmlTree
+addXmlPi                :: ArrowXml a => a XmlTree XmlTree
 addXmlPi
     = fromLA
       ( insertChildrenAt 0 ( ( mkPi (mkSNsName t_xml) none
-			       >>>
-			       addAttr a_version "1.0"
-			     )
-			     <+>
-			     txt "\n"
-			   )
-	`whenNot`
-	hasXmlPi
+                               >>>
+                               addAttr a_version "1.0"
+                             )
+                             <+>
+                             txt "\n"
+                           )
+        `whenNot`
+        hasXmlPi
       )
 
 -- | add an encoding spec to the \<?xml version=\"1.0\"?\> processing instruction
 
-addXmlPiEncoding	:: ArrowXml a => String -> a XmlTree XmlTree
+addXmlPiEncoding        :: ArrowXml a => String -> a XmlTree XmlTree
 addXmlPiEncoding enc
     = fromLA $
       processChildren ( addAttr a_encoding enc
-		        `when`
-			( isPi >>> hasName t_xml )
-		      )
+                        `when`
+                        ( isPi >>> hasName t_xml )
+                      )
 
 -- | add an XHTML strict doctype declaration to a document
 
 addXHtmlDoctypeStrict
   , addXHtmlDoctypeTransitional
-  , addXHtmlDoctypeFrameset	:: ArrowXml a => a XmlTree XmlTree
+  , addXHtmlDoctypeFrameset     :: ArrowXml a => a XmlTree XmlTree
 
 -- | add an XHTML strict doctype declaration to a document
 
@@ -807,19 +807,19 @@ addXHtmlDoctypeFrameset
 --
 -- The arguments are the root element name, the PUBLIC id and the SYSTEM id
 
-addDoctypeDecl	:: ArrowXml a => String -> String -> String -> a XmlTree XmlTree
+addDoctypeDecl  :: ArrowXml a => String -> String -> String -> a XmlTree XmlTree
 addDoctypeDecl rootElem public system
     = fromLA $
       replaceChildren
       ( mkDTDDoctype ( ( if null public then id else ( (k_public, public) : ) )
-		       .
-		       ( if null system then id else ( (k_system, system) : ) )
-		       $  [ (a_name, rootElem) ]
-		     ) none
-	<+>
-	txt "\n"
-	<+>
-	getChildren
+                       .
+                       ( if null system then id else ( (k_system, system) : ) )
+                       $  [ (a_name, rootElem) ]
+                     ) none
+        <+>
+        txt "\n"
+        <+>
+        getChildren
       )
 
 -- ------------------------------------------------------------

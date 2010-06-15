@@ -44,10 +44,10 @@ import Text.XML.HXT.DTDValidation.AttributeValueValidation
 -- Lookup-table which maps element names to their validation functions. The
 -- validation functions are XmlFilters.
 
-type IdEnvTable		= [IdEnv]
-type IdEnv 		= (ElemName, IdFct)
-type ElemName		= String
-type IdFct		= XmlArrow
+type IdEnvTable         = [IdEnv]
+type IdEnv              = (ElemName, IdFct)
+type ElemName           = String
+type IdFct              = XmlArrow
 
 -- ------------------------------------------------------------
 
@@ -65,17 +65,17 @@ validateIds dtdPart
     = validateIds' $< listA (traverseTree idEnv)
       where
       idAttrTypes = runLA (getChildren >>> isIdAttrType) dtdPart
-      elements	  = runLA (getChildren >>> isDTDElement) dtdPart
+      elements    = runLA (getChildren >>> isDTDElement) dtdPart
       atts        = runLA (getChildren >>> isDTDAttlist) dtdPart
-      idEnv	  = buildIdCollectorFcts idAttrTypes
+      idEnv       = buildIdCollectorFcts idAttrTypes
 
-      validateIds'	:: XmlTrees -> XmlArrow
+      validateIds'      :: XmlTrees -> XmlArrow
       validateIds' idNodeList
-	  = ( constA idNodeList >>> checkForUniqueIds idAttrTypes )
-	    <+>
-	    checkIdReferences idRefEnv
-	  where
-	  idRefEnv   = buildIdrefValidationFcts idAttrTypes elements atts idNodeList
+          = ( constA idNodeList >>> checkForUniqueIds idAttrTypes )
+            <+>
+            checkIdReferences idRefEnv
+          where
+          idRefEnv   = buildIdrefValidationFcts idAttrTypes elements atts idNodeList
 
 
 
@@ -90,8 +90,8 @@ traverseTree :: IdEnvTable -> XmlArrow
 traverseTree idEnv
     = multi (isElem `guards` (idFct $< getName))
       where
-      idFct 		:: String -> XmlArrow
-      idFct name	= fromMaybe none . lookup name $ idEnv
+      idFct             :: String -> XmlArrow
+      idFct name        = fromMaybe none . lookup name $ idEnv
 
 -- |
 -- Returns the value of an element's ID attribute. The attribute name has to be
@@ -103,26 +103,26 @@ traverseTree idEnv
 --
 --    - returns : normalized value of the ID attribute
 
-getIdValue	:: XmlTrees -> XmlTree -> String
+getIdValue      :: XmlTrees -> XmlTree -> String
 getIdValue dns
     = concat . runLA (single getIdValue')
     where
-    getIdValue'	:: LA XmlTree String
+    getIdValue' :: LA XmlTree String
     getIdValue'
-	= isElem `guards` catA (map getIdVal dns)
-	where
-	getIdVal dn
-	    | isDTDAttlistNode dn	= hasName elemName
-					  `guards`
-					  ( getAttrValue0 attrName
-					    >>>
-					    arr (normalizeAttributeValue (Just dn))
-					  )
-	    | otherwise			= none
-	    where
-	    al       = getDTDAttributes dn
-	    elemName = dtd_name  al
-	    attrName = dtd_value al
+        = isElem `guards` catA (map getIdVal dns)
+        where
+        getIdVal dn
+            | isDTDAttlistNode dn       = hasName elemName
+                                          `guards`
+                                          ( getAttrValue0 attrName
+                                            >>>
+                                            arr (normalizeAttributeValue (Just dn))
+                                          )
+            | otherwise                 = none
+            where
+            al       = getDTDAttributes dn
+            elemName = dtd_name  al
+            attrName = dtd_value al
 
 -- ------------------------------------------------------------
 
@@ -141,12 +141,12 @@ buildIdCollectorFcts idAttrTypes
       where
       buildIdCollectorFct :: XmlTree -> [IdEnv]
       buildIdCollectorFct dn
-	  | isDTDAttlistNode dn	= [(elemName, hasAttr attrName)]
-	  | otherwise		= []
-	  where
-	  al       = getDTDAttributes dn
+          | isDTDAttlistNode dn = [(elemName, hasAttr attrName)]
+          | otherwise           = []
+          where
+          al       = getDTDAttributes dn
           elemName = dtd_name  al
-	  attrName = dtd_value al
+          attrName = dtd_value al
 
 -- |
 -- Build validation functions for checking if IDREF\/IDREFS values match a value
@@ -166,54 +166,54 @@ buildIdrefValidationFcts idAttrTypes elements atts idNodeList
 
       buildElemValidationFct :: XmlTree -> [IdEnv]
       buildElemValidationFct dn
-	  | isDTDElementNode dn	= [(elemName, buildIdrefValidationFct idRefAttrTypes)]
-	  | otherwise		= []
-	  where
-	  al             = getDTDAttributes dn
-	  elemName       = dtd_name al
-	  idRefAttrTypes = (isAttlistOfElement elemName >>> isIdRefAttrType) $$ atts
+          | isDTDElementNode dn = [(elemName, buildIdrefValidationFct idRefAttrTypes)]
+          | otherwise           = []
+          where
+          al             = getDTDAttributes dn
+          elemName       = dtd_name al
+          idRefAttrTypes = (isAttlistOfElement elemName >>> isIdRefAttrType) $$ atts
 
       buildIdrefValidationFct :: XmlTrees -> XmlArrow
       buildIdrefValidationFct
-	  = catA . map buildIdref
+          = catA . map buildIdref
 
-      buildIdref	:: XmlTree -> XmlArrow
+      buildIdref        :: XmlTree -> XmlArrow
       buildIdref dn
-	  | isDTDAttlistNode dn	= isElem >>> (checkIdref $< getName)
-	  | otherwise		= none
-	  where
-	  al             = getDTDAttributes dn
-	  attrName = dtd_value al
-	  attrType = dtd_type  al
+          | isDTDAttlistNode dn = isElem >>> (checkIdref $< getName)
+          | otherwise           = none
+          where
+          al             = getDTDAttributes dn
+          attrName = dtd_value al
+          attrType = dtd_type  al
 
-	  checkIdref :: String -> XmlArrow
-	  checkIdref name
-	      = hasAttr attrName
-		`guards`
-		( checkIdVal $< getAttrValue attrName )
-	      where
-	      checkIdVal	:: String -> XmlArrow
-	      checkIdVal av
-		  | attrType == k_idref
-		      = checkValueDeclared attrValue
-		  | null valueList
-		      = err ( "Attribute " ++ show attrName ++
-			      " of Element " ++ show name ++
-			      " must have at least one name."
-			    )
-		  | otherwise
-		      = catA . map checkValueDeclared $ valueList
-		  where
-		  valueList = words attrValue
-		  attrValue = normalizeAttributeValue (Just dn) av
+          checkIdref :: String -> XmlArrow
+          checkIdref name
+              = hasAttr attrName
+                `guards`
+                ( checkIdVal $< getAttrValue attrName )
+              where
+              checkIdVal        :: String -> XmlArrow
+              checkIdVal av
+                  | attrType == k_idref
+                      = checkValueDeclared attrValue
+                  | null valueList
+                      = err ( "Attribute " ++ show attrName ++
+                              " of Element " ++ show name ++
+                              " must have at least one name."
+                            )
+                  | otherwise
+                      = catA . map checkValueDeclared $ valueList
+                  where
+                  valueList = words attrValue
+                  attrValue = normalizeAttributeValue (Just dn) av
 
-	  checkValueDeclared :: String -> XmlArrow
-	  checkValueDeclared  attrValue
-	      = if attrValue `elem` idValueList
-		then none
-		else err ( "An Element with identifier " ++ show attrValue ++
-		           " must appear in the document."
-			 )
+          checkValueDeclared :: String -> XmlArrow
+          checkValueDeclared  attrValue
+              = if attrValue `elem` idValueList
+                then none
+                else err ( "An Element with identifier " ++ show attrValue ++
+                           " must appear in the document."
+                         )
 
 -- ------------------------------------------------------------
 
@@ -229,25 +229,25 @@ buildIdrefValidationFcts idAttrTypes elements atts idNodeList
 --    - returns : a list of errors
 
 checkForUniqueIds :: XmlTrees -> LA XmlTrees XmlTree
-checkForUniqueIds idAttrTypes		 -- idNodeList
+checkForUniqueIds idAttrTypes            -- idNodeList
     = fromSLA [] ( unlistA
-		   >>>
-		   isElem
-		   >>>
-		   (checkForUniqueId $<< getName &&& this)
-		 )
+                   >>>
+                   isElem
+                   >>>
+                   (checkForUniqueId $<< getName &&& this)
+                 )
       where
       checkForUniqueId :: String -> XmlTree -> SLA [String] XmlTree XmlTree
       checkForUniqueId name x
-	  = ifA ( getState
-		  >>>
-		  isA (attrValue `elem`)
-		)
-	    (err ( "Attribute value " ++ show attrValue ++ " of type ID for element " ++
-	           show name ++ " must be unique within the document." ))
+          = ifA ( getState
+                  >>>
+                  isA (attrValue `elem`)
+                )
+            (err ( "Attribute value " ++ show attrValue ++ " of type ID for element " ++
+                   show name ++ " must be unique within the document." ))
             (nextState (attrValue:) >>> none)
-	  where
-	  attrValue = getIdValue (isAttlistOfElement name $$ idAttrTypes) x
+          where
+          attrValue = getIdValue (isAttlistOfElement name $$ idAttrTypes) x
 
 -- |
 -- Validate that all IDREF\/IDREFS values match the value of some ID attribute.

@@ -57,7 +57,7 @@ import Text.XML.HXT.Parser.ProtocolHandlerHttpNativeOrCurl
 -- ------------------------------------------------------------
 --
 
-getProtocolHandler	:: String -> (URI -> XmlStateFilter a)
+getProtocolHandler      :: String -> (URI -> XmlStateFilter a)
 getProtocolHandler proto
     = fromMaybe getUnsupported handler
       where
@@ -66,32 +66,32 @@ getProtocolHandler proto
 --
 -- the fall back protocol handler
 
-getUnsupported	:: URI -> XmlStateFilter a
+getUnsupported  :: URI -> XmlStateFilter a
 getUnsupported uri
     = addFatal ( "unsupported protocol "
-		 ++ show (uriScheme uri)
-		 ++ " in URI: "
-		 ++ show uri
-	       )
+                 ++ show (uriScheme uri)
+                 ++ " in URI: "
+                 ++ show uri
+               )
 
 -- ------------------------------------------------------------
 --
 -- the table of potocol handlers
 -- looked up in getProtocolHandler
 
-protocolHandler	:: [(String, URI -> XmlStateFilter a)]
+protocolHandler :: [(String, URI -> XmlStateFilter a)]
 protocolHandler
     = [ ("file", getFileContents)
       , ("http",
 
 #ifdef ONLY_NATIVE_HTTP
 
-	 getHttpContentsWithHttp
+         getHttpContentsWithHttp
 
 #else
 #ifdef ONLY_CURL_HTTP
 
-	 getHttpContentsWithCurl
+         getHttpContentsWithCurl
 
 #else
 #ifdef NO_HTTP
@@ -100,12 +100,12 @@ protocolHandler
 
 #else
 
-	 getHttpContentsNativeOrWithCurl
+         getHttpContentsNativeOrWithCurl
 
 #endif
 #endif
 #endif
-	)
+        )
       ]
 
 -- ------------------------------------------------------------

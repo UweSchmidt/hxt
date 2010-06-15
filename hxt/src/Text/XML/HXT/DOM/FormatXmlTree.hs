@@ -30,43 +30,43 @@ import Data.Maybe
 -- ------------------------------------------------------------
 
 
-formatXmlContents	:: XmlTree -> XmlTrees
+formatXmlContents       :: XmlTree -> XmlTrees
 formatXmlContents t
     = [mkText (formatXmlTree t)]
 
-formatXmlTree		:: XmlTree  -> String
+formatXmlTree           :: XmlTree  -> String
 formatXmlTree
     = formatTree xnode2String
 
-xnode2String	:: XNode -> String
+xnode2String    :: XNode -> String
 xnode2String n
     | isElem n
-	= "XTag " ++ showName n ++ showAtts n
+        = "XTag " ++ showName n ++ showAtts n
     | isPi n
-	= "XPi "  ++ showName n ++ showAtts n
+        = "XPi "  ++ showName n ++ showAtts n
     | otherwise
-	= show n
+        = show n
     where
 
-showName	:: XNode -> String
-showName	= maybe "" showQn . getName
+showName        :: XNode -> String
+showName        = maybe "" showQn . getName
 
-showAtts	:: XNode -> String
-showAtts	= concatMap showAl . fromMaybe [] . getAttrl
+showAtts        :: XNode -> String
+showAtts        = concatMap showAl . fromMaybe [] . getAttrl
 
-showAl		:: XmlTree -> String
-showAl t	-- (NTree (XAttr an) av)
+showAl          :: XmlTree -> String
+showAl t        -- (NTree (XAttr an) av)
     | isAttr t
-	= "\n|   " ++ (maybe "" showQn . getName $ t) ++ "=" ++ show (xshow . getChildren $ t)
+        = "\n|   " ++ (maybe "" showQn . getName $ t) ++ "=" ++ show (xshow . getChildren $ t)
     | otherwise
-	= show t
+        = show t
 
-showQn		:: QName -> String
+showQn          :: QName -> String
 showQn n
     | null ns
-	= show $ qualifiedName n
+        = show $ qualifiedName n
     | otherwise
-	= show $ "{" ++ ns ++ "}" ++ qualifiedName n
+        = show $ "{" ++ ns ++ "}" ++ qualifiedName n
     where
     ns = namespaceUri n
 

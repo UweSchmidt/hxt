@@ -12,7 +12,7 @@
    This parser tries to interprete everything as HTML
    no errors are emitted during parsing. If something looks
    weired, warning messages are inserted in the document tree.
-  
+
    All filter are pure XmlFilter,
    errror handling and IO is done in 'Text.XML.HXT.Parser.HtmlParser'
    or other modules
@@ -102,25 +102,25 @@ import Data.Char
 
 -- ------------------------------------------------------------
 
-parseHtmlText	:: String -> XmlTree -> XmlTrees
+parseHtmlText   :: String -> XmlTree -> XmlTrees
 parseHtmlText loc t
     = parseXmlText htmlDocument loc $ t
 
 -- ------------------------------------------------------------
 
-parseHtmlFromString	:: Parser XmlTrees -> String -> String -> XmlTrees
+parseHtmlFromString     :: Parser XmlTrees -> String -> String -> XmlTrees
 parseHtmlFromString parser loc
     = either ((:[]) . mkError c_err . (++ "\n") . show) id . parse parser loc
 
-parseHtmlDocument	:: String -> String -> XmlTrees
-parseHtmlDocument	= parseHtmlFromString htmlDocument
+parseHtmlDocument       :: String -> String -> XmlTrees
+parseHtmlDocument       = parseHtmlFromString htmlDocument
 
-parseHtmlContent	:: String -> XmlTrees
-parseHtmlContent	= parseHtmlFromString htmlContent "text"
+parseHtmlContent        :: String -> XmlTrees
+parseHtmlContent        = parseHtmlFromString htmlContent "text"
 
 -- ------------------------------------------------------------
 
-htmlDocument	:: Parser XmlTrees
+htmlDocument    :: Parser XmlTrees
 htmlDocument
     = do
       pl <- htmlProlog
@@ -128,114 +128,114 @@ htmlDocument
       eof
       return (pl ++ el)
 
-htmlProlog	:: Parser XmlTrees
+htmlProlog      :: Parser XmlTrees
 htmlProlog
     = do
       xml <- option []
-	     ( try xMLDecl'
-	       <|>
-	       ( do
-		 pos <- getPosition
-		 _ <- try (string "<?")
-		 return $ [mkError c_warn (show pos ++ " wrong XML declaration")]
-	       )
-	     )
+             ( try xMLDecl'
+               <|>
+               ( do
+                 pos <- getPosition
+                 _ <- try (string "<?")
+                 return $ [mkError c_warn (show pos ++ " wrong XML declaration")]
+               )
+             )
       misc1   <- many misc
       dtdPart <- option []
-		 ( try doctypedecl
-		   <|>
-		   ( do
-		     pos <- getPosition
-		     _ <- try (upperCaseString "<!DOCTYPE")
-		     return $ [mkError c_warn (show pos ++ " HTML DOCTYPE declaration ignored")]
-		   )
-		 )
+                 ( try doctypedecl
+                   <|>
+                   ( do
+                     pos <- getPosition
+                     _ <- try (upperCaseString "<!DOCTYPE")
+                     return $ [mkError c_warn (show pos ++ " HTML DOCTYPE declaration ignored")]
+                   )
+                 )
       return (xml ++ misc1 ++ dtdPart)
 
-doctypedecl	:: Parser XmlTrees
+doctypedecl     :: Parser XmlTrees
 doctypedecl
     = between (try $ upperCaseString "<!DOCTYPE") (char '>')
       ( do
-	skipS
-	n <- name
-	exId <- ( do
-	          skipS
-		  option [] externalID
-		)
-	skipS0
-	return [mkDTDElem DOCTYPE ((a_name, n) : exId) []]
+        skipS
+        n <- name
+        exId <- ( do
+                  skipS
+                  option [] externalID
+                )
+        skipS0
+        return [mkDTDElem DOCTYPE ((a_name, n) : exId) []]
       )
 
-externalID	:: Parser Attributes
+externalID      :: Parser Attributes
 externalID
     = do
       _ <- try (upperCaseString k_public)
       skipS
       pl <- pubidLiteral
       sl <- option "" $ try ( do
-			      skipS
-			      systemLiteral
-			    )
+                              skipS
+                              systemLiteral
+                            )
       return $ (k_public, pl) : if null sl then [] else [(k_system, sl)]
 
-htmlContent	:: Parser XmlTrees
+htmlContent     :: Parser XmlTrees
 htmlContent
     = option []
       ( do
-	context <- hContent ([], [])
-	pos     <- getPosition
-	return $ closeTags pos context
+        context <- hContent ([], [])
+        pos     <- getPosition
+        return $ closeTags pos context
       )
       where
       closeTags _ (body, [])
-	  = reverse body
+          = reverse body
       closeTags pos' (body, ((tn, al, body1) : restOpen))
-	  = closeTags pos' (addHtmlWarn (show pos' ++ ": no closing tag found for \"<" ++ tn ++ " ...>\"")
-			    .
-			    addHtmlTag tn al body
-			    $
-			    (body1, restOpen)
-			   )
+          = closeTags pos' (addHtmlWarn (show pos' ++ ": no closing tag found for \"<" ++ tn ++ " ...>\"")
+                            .
+                            addHtmlTag tn al body
+                            $
+                            (body1, restOpen)
+                           )
 
-type OpenTags	= [(String, XmlTrees, XmlTrees)]
-type Context	= (XmlTrees, OpenTags)
+type OpenTags   = [(String, XmlTrees, XmlTrees)]
+type Context    = (XmlTrees, OpenTags)
 
-hElement	:: Context -> Parser Context
+hElement        :: Context -> Parser Context
 hElement context
     = ( do
-	t <- hSimpleData
-	return (addHtmlElems [t] context)
+        t <- hSimpleData
+        return (addHtmlElems [t] context)
       )
       <|>
       hOpenTag context
       <|>
       hCloseTag context
       <|>
-      ( do			-- wrong tag, take it as text
-	pos <- getPosition
-	c   <- xmlChar
-	return ( addHtmlWarn (show pos ++ " markup char " ++ show c ++ " not allowed in this context")
-		 .
-		 addHtmlElems [mkText [c]]
-		 $
-		 context
-	       )
+      ( do                      -- wrong tag, take it as text
+        pos <- getPosition
+        c   <- xmlChar
+        return ( addHtmlWarn (show pos ++ " markup char " ++ show c ++ " not allowed in this context")
+                 .
+                 addHtmlElems [mkText [c]]
+                 $
+                 context
+               )
       )
       <|>
       ( do
-	pos <- getPosition
-	c <- anyChar
-	return ( addHtmlWarn ( show pos
-			       ++ " illegal data in input or illegal XML char "
-			       ++ show c
-			       ++ " found and ignored, possibly wrong encoding scheme used")
-		 $
-		 context
-	       )
+        pos <- getPosition
+        c <- anyChar
+        return ( addHtmlWarn ( show pos
+                               ++ " illegal data in input or illegal XML char "
+                               ++ show c
+                               ++ " found and ignored, possibly wrong encoding scheme used")
+                 $
+                 context
+               )
       )
 
 
-hSimpleData	:: Parser XmlTree
+hSimpleData     :: Parser XmlTree
 hSimpleData
     = charData'
       <|>
@@ -247,207 +247,207 @@ hSimpleData
       <|>
       try cDSect
 
-hCloseTag	:: Context -> Parser Context
+hCloseTag       :: Context -> Parser Context
 hCloseTag context
     = do
       n <- try ( do
-		 _ <- string "</"
-		 lowerCaseName
-	       )
+                 _ <- string "</"
+                 lowerCaseName
+               )
       skipS0
       pos <- getPosition
       checkSymbol gt ("closing > in tag \"</" ++ n ++ "\" expected") (closeTag pos n context)
 
-hOpenTag	:: Context -> Parser Context
+hOpenTag        :: Context -> Parser Context
 hOpenTag context
     = ( do
-	pos <- getPosition
-	e   <- hOpenTagStart
-	hOpenTagRest pos e context
+        pos <- getPosition
+        e   <- hOpenTagStart
+        hOpenTagRest pos e context
       )
 
-hOpenTagStart	:: Parser (String, XmlTrees)
+hOpenTagStart   :: Parser (String, XmlTrees)
 hOpenTagStart
     = do
       n <- try ( do
-		 _ <- char '<'
-		 n <- lowerCaseName
-		 return n
-	       )
+                 _ <- char '<'
+                 n <- lowerCaseName
+                 return n
+               )
       skipS0
       as <- hAttrList
       return (n, as)
 
-hOpenTagRest	:: SourcePos -> (String, XmlTrees) -> Context -> Parser Context
+hOpenTagRest    :: SourcePos -> (String, XmlTrees) -> Context -> Parser Context
 hOpenTagRest pos (tn, al) context
     = ( do
-	_ <- try $ string "/>"
-	return (addHtmlTag tn al [] context)
+        _ <- try $ string "/>"
+        return (addHtmlTag tn al [] context)
       )
       <|>
       ( do
-	context1 <- checkSymbol gt ("closing > in tag \"<" ++ tn ++ "...\" expected") context
-	return ( let context2 = closePrevTag pos tn context1
-		 in
-		 ( if isEmptyHtmlTag tn
-		   then addHtmlTag tn al []
-		   else openTag tn al
-		 ) context2
-	       )
+        context1 <- checkSymbol gt ("closing > in tag \"<" ++ tn ++ "...\" expected") context
+        return ( let context2 = closePrevTag pos tn context1
+                 in
+                 ( if isEmptyHtmlTag tn
+                   then addHtmlTag tn al []
+                   else openTag tn al
+                 ) context2
+               )
       )
 
-hAttrList	:: Parser XmlTrees
+hAttrList       :: Parser XmlTrees
 hAttrList
     = many (try hAttribute)
       where
       hAttribute
-	  = do
-	    n <- lowerCaseName
-	    v <- hAttrValue
-	    skipS0
-	    return $ mkAttr (mkName n) v
+          = do
+            n <- lowerCaseName
+            v <- hAttrValue
+            skipS0
+            return $ mkAttr (mkName n) v
 
-hAttrValue	:: Parser XmlTrees
+hAttrValue      :: Parser XmlTrees
 hAttrValue
     = option []
       ( try ( do
-	      eq
-	      hAttrValue'
-	    )
+              eq
+              hAttrValue'
+            )
       )
 
-hAttrValue'	:: Parser XmlTrees
+hAttrValue'     :: Parser XmlTrees
 hAttrValue'
     = try ( between dq dq (hAttrValue'' "&\"") )
       <|>
       try ( between sq sq (hAttrValue'' "&\'") )
       <|>
-      ( do			-- HTML allows unquoted attribute values
-	cs <- many (noneOf " \r\t\n>\"\'")
-	return [mkText cs]
+      ( do                      -- HTML allows unquoted attribute values
+        cs <- many (noneOf " \r\t\n>\"\'")
+        return [mkText cs]
       )
 
-hAttrValue''	:: String -> Parser XmlTrees
+hAttrValue''    :: String -> Parser XmlTrees
 hAttrValue'' notAllowed
     = many ( hReference' <|> singleCharsT notAllowed)
 
-hReference'	:: Parser XmlTree
+hReference'     :: Parser XmlTree
 hReference'
     = try referenceT
       <|>
       ( do
-	_ <- char '&'
-	return (mkText "&")
+        _ <- char '&'
+        return (mkText "&")
       )
 
-hContent	:: Context -> Parser Context
+hContent        :: Context -> Parser Context
 hContent context
     = option context
       ( do
-	context1 <- hElement context
-	hContent context1
+        context1 <- hElement context
+        hContent context1
       )
 
 -- hComment allows "--" in comments
 -- comment from XML spec does not
 
-hComment		:: Parser XmlTree
+hComment                :: Parser XmlTree
 hComment
     = do
       c <- between (try $ string "<!--") (string "-->") (allBut many "-->")
       return (mkCmt c)
 
-checkSymbol	:: Parser a -> String -> Context -> Parser Context
+checkSymbol     :: Parser a -> String -> Context -> Parser Context
 checkSymbol p msg context
     = do
       pos <- getPosition
       option (addHtmlWarn (show pos ++ " " ++ msg) context)
-       ( do 
-	 _ <- try p
-	 return context
+       ( do
+         _ <- try p
+         return context
        )
 
-lowerCaseName	:: Parser String
+lowerCaseName   :: Parser String
 lowerCaseName
     = do
       n <- name
       return (map toLower n)
 
-upperCaseString	:: String -> Parser String
+upperCaseString :: String -> Parser String
 upperCaseString
     = sequence . map (\ c -> satisfy (( == c) . toUpper))
 
 -- ------------------------------------------------------------
 
-addHtmlTag	:: String -> XmlTrees -> XmlTrees -> Context -> Context
+addHtmlTag      :: String -> XmlTrees -> XmlTrees -> Context -> Context
 addHtmlTag tn al body (body1, openTags)
     = ([mkElement (mkName tn) al (reverse body)] ++ body1, openTags)
 
-addHtmlWarn	:: String -> Context -> Context
+addHtmlWarn     :: String -> Context -> Context
 addHtmlWarn msg
     = addHtmlElems [mkError c_warn msg]
 
-addHtmlElems	:: XmlTrees -> Context -> Context
+addHtmlElems    :: XmlTrees -> Context -> Context
 addHtmlElems elems (body, openTags)
     = (reverse elems ++ body, openTags)
 
-openTag		:: String -> XmlTrees -> Context -> Context
+openTag         :: String -> XmlTrees -> Context -> Context
 openTag tn al (body, openTags)
     = ([], (tn, al, body) : openTags)
 
-closeTag	:: SourcePos -> String -> Context -> Context
+closeTag        :: SourcePos -> String -> Context -> Context
 closeTag pos n context
     | n `elem` (map ( \ (n1, _, _) -> n1) $ snd context)
-	= closeTag' n context
+        = closeTag' n context
     | otherwise
-	= addHtmlWarn (show pos ++ " no opening tag found for </" ++ n ++ ">")
-	  .
-	  addHtmlTag n [] []
+        = addHtmlWarn (show pos ++ " no opening tag found for </" ++ n ++ ">")
+          .
+          addHtmlTag n [] []
           $
-	  context
+          context
     where
     closeTag' n' (body', (n1, al1, body1) : restOpen)
-	= close context1
-	  where
-	  context1
-	      = addHtmlTag n1 al1 body' (body1, restOpen)
-	  close
-	      | n' == n1
-		= id
-	      | n1 `isInnerHtmlTagOf` n'
-		  = closeTag pos n'
-	      | otherwise
-		= addHtmlWarn (show pos ++ " no closing tag found for \"<" ++ n1 ++ " ...>\"")
-		  .
-		  closeTag' n'
+        = close context1
+          where
+          context1
+              = addHtmlTag n1 al1 body' (body1, restOpen)
+          close
+              | n' == n1
+                = id
+              | n1 `isInnerHtmlTagOf` n'
+                  = closeTag pos n'
+              | otherwise
+                = addHtmlWarn (show pos ++ " no closing tag found for \"<" ++ n1 ++ " ...>\"")
+                  .
+                  closeTag' n'
     closeTag' _ _
-	= error "illegal argument for closeTag'"
+        = error "illegal argument for closeTag'"
 
-closePrevTag	:: SourcePos -> String -> Context -> Context
+closePrevTag    :: SourcePos -> String -> Context -> Context
 closePrevTag _pos _n context@(_body, [])
     = context
 closePrevTag pos n context@(body, (n1, al1, body1) : restOpen)
     | n `closes` n1
-	= closePrevTag pos n
-	  ( addHtmlWarn (show pos ++ " tag \"<" ++ n1 ++ " ...>\" implicitly closed by opening tag \"<" ++ n ++ " ...>\"")
-	    .
-	    addHtmlTag n1 al1 body
-	    $
-	    (body1, restOpen)
-	  )
+        = closePrevTag pos n
+          ( addHtmlWarn (show pos ++ " tag \"<" ++ n1 ++ " ...>\" implicitly closed by opening tag \"<" ++ n ++ " ...>\"")
+            .
+            addHtmlTag n1 al1 body
+            $
+            (body1, restOpen)
+          )
     | otherwise
-	= context
+        = context
 
 -- ------------------------------------------------------------
 --
 -- taken from HaXml and extended
 
-isEmptyHtmlTag	:: String -> Bool
+isEmptyHtmlTag  :: String -> Bool
 isEmptyHtmlTag n
     = n `elem`
       emptyHtmlTags
 
-emptyHtmlTags	:: [String]
+emptyHtmlTags   :: [String]
 emptyHtmlTags
     = [ "area"
       , "base"
@@ -462,76 +462,76 @@ emptyHtmlTags
       , "param"
       ]
 
-isInnerHtmlTagOf	:: String -> String -> Bool
+isInnerHtmlTagOf        :: String -> String -> Bool
 n `isInnerHtmlTagOf` tn
     = n `elem`
       ( fromMaybe [] . lookup tn
       $ [ ("body",    ["p"])
-	, ("caption", ["p"])
-	, ("dd",      ["p"])
-	, ("div",     ["p"])
-	, ("dl",      ["dt","dd"])
-	, ("dt",      ["p"])
-	, ("li",      ["p"])
-	, ("map",     ["p"])
-	, ("object",  ["p"])
-	, ("ol",      ["li"])
-	, ("table",   ["th","tr","td","thead","tfoot","tbody"])
-	, ("tbody",   ["th","tr","td"])
-	, ("td",      ["p"])
-	, ("tfoot",   ["th","tr","td"])
-	, ("th",      ["p"])
-	, ("thead",   ["th","tr","td"])
-	, ("tr",      ["th","td"])
-	, ("ul",      ["li"])
-	]
+        , ("caption", ["p"])
+        , ("dd",      ["p"])
+        , ("div",     ["p"])
+        , ("dl",      ["dt","dd"])
+        , ("dt",      ["p"])
+        , ("li",      ["p"])
+        , ("map",     ["p"])
+        , ("object",  ["p"])
+        , ("ol",      ["li"])
+        , ("table",   ["th","tr","td","thead","tfoot","tbody"])
+        , ("tbody",   ["th","tr","td"])
+        , ("td",      ["p"])
+        , ("tfoot",   ["th","tr","td"])
+        , ("th",      ["p"])
+        , ("thead",   ["th","tr","td"])
+        , ("tr",      ["th","td"])
+        , ("ul",      ["li"])
+        ]
       )
 
 closesHtmlTag
   , closes :: String -> String -> Bool
 
-closesHtmlTag	= closes
+closesHtmlTag   = closes
 
-"a"	`closes` "a"					= True
-"li"	`closes` "li"					= True
-"th"	`closes`  t    | t `elem` ["th","td"]		= True
-"td"	`closes`  t    | t `elem` ["th","td"]		= True
-"tr"	`closes`  t    | t `elem` ["th","td","tr"]	= True
-"dt"	`closes`  t    | t `elem` ["dt","dd"]		= True
-"dd"	`closes`  t    | t `elem` ["dt","dd"]		= True
-"hr"	`closes`  "p"                                   = True
-"colgroup" 
-	`closes` "colgroup"				= True
-"form"	`closes` "form"					= True
-"label"	`closes` "label"				= True
-"map"	`closes` "map"					= True
+"a"     `closes` "a"                                    = True
+"li"    `closes` "li"                                   = True
+"th"    `closes`  t    | t `elem` ["th","td"]           = True
+"td"    `closes`  t    | t `elem` ["th","td"]           = True
+"tr"    `closes`  t    | t `elem` ["th","td","tr"]      = True
+"dt"    `closes`  t    | t `elem` ["dt","dd"]           = True
+"dd"    `closes`  t    | t `elem` ["dt","dd"]           = True
+"hr"    `closes`  "p"                                   = True
+"colgroup"
+        `closes` "colgroup"                             = True
+"form"  `closes` "form"                                 = True
+"label" `closes` "label"                                = True
+"map"   `closes` "map"                                  = True
 "object"
-	`closes` "object"				= True
-_	`closes` t  | t `elem` ["option"
-			       ,"script"
-			       ,"style"
-			       ,"textarea"
-			       ,"title"
-			       ]			= True
-t	`closes` "select" | t /= "option"		= True
-"thead"	`closes` t  | t `elem` ["colgroup"]		= True
-"tfoot"	`closes` t  | t `elem` ["thead"
-			       ,"colgroup"]		= True
-"tbody"	`closes` t  | t `elem` ["tbody"
-			       ,"tfoot"
-			       ,"thead"
-			       ,"colgroup"]		= True
-t	`closes` t2 | t `elem` ["h1","h2","h3"
-			       ,"h4","h5","h6"
-			       ,"dl","ol","ul"
-			       ,"table"
-			       ,"div","p"
-			       ]
-		      &&
+        `closes` "object"                               = True
+_       `closes` t  | t `elem` ["option"
+                               ,"script"
+                               ,"style"
+                               ,"textarea"
+                               ,"title"
+                               ]                        = True
+t       `closes` "select" | t /= "option"               = True
+"thead" `closes` t  | t `elem` ["colgroup"]             = True
+"tfoot" `closes` t  | t `elem` ["thead"
+                               ,"colgroup"]             = True
+"tbody" `closes` t  | t `elem` ["tbody"
+                               ,"tfoot"
+                               ,"thead"
+                               ,"colgroup"]             = True
+t       `closes` t2 | t `elem` ["h1","h2","h3"
+                               ,"h4","h5","h6"
+                               ,"dl","ol","ul"
+                               ,"table"
+                               ,"div","p"
+                               ]
+                      &&
                       t2 `elem` ["h1","h2","h3"
-				,"h4","h5","h6"
-				,"p"			-- not "div"
-				]			= True
-_	`closes` _					= False
+                                ,"h4","h5","h6"
+                                ,"p"                    -- not "div"
+                                ]                       = True
+_       `closes` _                                      = False
 
 -- ------------------------------------------------------------

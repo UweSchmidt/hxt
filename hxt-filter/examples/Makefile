@@ -14,7 +14,7 @@ all		:
 		if [ -f $(HXT_HOME)/lib/$(SOFTWARE)/package.conf ] ; \
 		then $(MAKE) alllocal ; \
 		else $(MAKE) alldist ; \
-		fi 
+		fi
 
 alllocal		:
 		$(foreach i,$(EXAMPLES),$(MAKE) -C $i PKGFLAGS="-ignore-package $(SOFTWARE)-$(LASTVERSION) -package-conf `pwd`/$(HXT_HOME)/lib/$(SOFTWARE)/package.conf -package $(SOFTWARE)" all ;)

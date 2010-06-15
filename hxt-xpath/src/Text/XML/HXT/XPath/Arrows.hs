@@ -48,14 +48,14 @@ where
 
 import Control.Arrow.ListArrows
 
-import Text.XML.HXT.XPath.XPathEval	( getXPathSubTreesWithNsEnv
+import Text.XML.HXT.XPath.XPathEval     ( getXPathSubTreesWithNsEnv
                                         , getXPathNodeSetWithNsEnv'
                                         , addRoot'
                                         )
 import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlArrow
-import Text.XML.HXT.Arrow.Edit		( canonicalizeForXPath )
+import Text.XML.HXT.Arrow.Edit          ( canonicalizeForXPath )
 
 -- ------------------------------------------------------------
 
@@ -74,15 +74,15 @@ import Text.XML.HXT.Arrow.Edit		( canonicalizeForXPath )
 -- XPath values other than XmlTrees (numbers, attributes, tagnames, ...)
 -- are convertet to text nodes.
 
-getXPathTreesInDoc			:: ArrowXml a => String -> a XmlTree XmlTree
-getXPathTreesInDoc			= getXPathTreesInDocWithNsEnv []
+getXPathTreesInDoc                      :: ArrowXml a => String -> a XmlTree XmlTree
+getXPathTreesInDoc                      = getXPathTreesInDocWithNsEnv []
 
 -- | Same as 'getXPathTreesInDoc' but with namespace environment for the XPath names
 
-getXPathTreesInDocWithNsEnv		:: ArrowXml a => Attributes -> String -> a XmlTree XmlTree
-getXPathTreesInDocWithNsEnv env query	= canonicalizeForXPath
-					  >>>
-					  arrL (getXPathSubTreesWithNsEnv env query)
+getXPathTreesInDocWithNsEnv             :: ArrowXml a => Attributes -> String -> a XmlTree XmlTree
+getXPathTreesInDocWithNsEnv env query   = canonicalizeForXPath
+                                          >>>
+                                          arrL (getXPathSubTreesWithNsEnv env query)
 
 -- |
 -- Select parts of an arbitrary XML tree by a XPath expression.
@@ -97,13 +97,13 @@ getXPathTreesInDocWithNsEnv env query	= canonicalizeForXPath
 -- XPath values other than XmlTrees (numbers, attributes, tagnames, ...)
 -- are convertet to text nodes.
 
-getXPathTrees				:: ArrowXml a => String -> a XmlTree XmlTree
-getXPathTrees				= getXPathTreesWithNsEnv []
+getXPathTrees                           :: ArrowXml a => String -> a XmlTree XmlTree
+getXPathTrees                           = getXPathTreesWithNsEnv []
 
 -- | Same as 'getXPathTrees' but with namespace environment for the XPath names
 
-getXPathTreesWithNsEnv			:: ArrowXml a => Attributes -> String -> a XmlTree XmlTree
-getXPathTreesWithNsEnv env query	= arrL (getXPathSubTreesWithNsEnv env query)
+getXPathTreesWithNsEnv                  :: ArrowXml a => Attributes -> String -> a XmlTree XmlTree
+getXPathTreesWithNsEnv env query        = arrL (getXPathSubTreesWithNsEnv env query)
 
 -- | Select a set of nodes via an XPath expression from an arbitray XML tree
 --
@@ -113,37 +113,37 @@ getXPathTreesWithNsEnv env query	= arrL (getXPathSubTreesWithNsEnv env query)
 -- This function enables for parsing an XPath expressions and traversing the tree for node selection once
 -- and reuse this result possibly many times for later selection and modification operations.
 
-getXPathNodeSet				:: ArrowXml a => String -> a XmlTree XmlNodeSet
-getXPathNodeSet				= getXPathNodeSetWithNsEnv []
+getXPathNodeSet                         :: ArrowXml a => String -> a XmlTree XmlNodeSet
+getXPathNodeSet                         = getXPathNodeSetWithNsEnv []
 
 -- | Same as 'getXPathNodeSet' but with namespace environment for the XPath names
 
-getXPathNodeSetWithNsEnv		:: ArrowXml a => Attributes -> String -> a XmlTree XmlNodeSet
-getXPathNodeSetWithNsEnv nsEnv query	= arr (getXPathNodeSetWithNsEnv' nsEnv query)
+getXPathNodeSetWithNsEnv                :: ArrowXml a => Attributes -> String -> a XmlTree XmlNodeSet
+getXPathNodeSetWithNsEnv nsEnv query    = arr (getXPathNodeSetWithNsEnv' nsEnv query)
 
 -- ------------------------------------------------------------
 
-getNodeSet				:: ArrowXml a => a XmlTree QName -> a XmlTree XmlTree -> a XmlTree XmlNodeSet
-getNodeSet af f				= ( ( listA ( getChildren
-		                                      >>>
-		                                      getNodeSet af f
-		                                    )
-	                                      >>>
-	                                      arr filterNodeSet
-	                                    )
-	                                    &&&
-	                                    listA af
-	                                    &&&
-	                                    listA f
+getNodeSet                              :: ArrowXml a => a XmlTree QName -> a XmlTree XmlTree -> a XmlTree XmlNodeSet
+getNodeSet af f                         = ( ( listA ( getChildren
+                                                      >>>
+                                                      getNodeSet af f
+                                                    )
+                                              >>>
+                                              arr filterNodeSet
+                                            )
+                                            &&&
+                                            listA af
+                                            &&&
+                                            listA f
                                           )
                                           >>^ (\ ~(cl, (al, n)) -> XNS (not . null $ n) al cl)
     where
-    filterNodeSet			:: [XmlNodeSet] -> ChildNodes
-    filterNodeSet			= concat . zipWith filterIx [0..]
+    filterNodeSet                       :: [XmlNodeSet] -> ChildNodes
+    filterNodeSet                       = concat . zipWith filterIx [0..]
 
-    filterIx				:: Int -> XmlNodeSet -> ChildNodes
-    filterIx _ix (XNS False [] [])	= []
-    filterIx ix ps			= [(ix, ps)]
+    filterIx                            :: Int -> XmlNodeSet -> ChildNodes
+    filterIx _ix (XNS False [] [])      = []
+    filterIx ix ps                      = [(ix, ps)]
 
 -- |
 -- compute a node set from a tree, containing all nodes selected by the predicate arrow
@@ -152,18 +152,18 @@ getNodeSet af f				= ( ( listA ( getChildren
 --
 -- > getElemNodeSet (hasName "a")
 
-getElemNodeSet				:: ArrowXml a => a XmlTree XmlTree -> a XmlTree XmlNodeSet
-getElemNodeSet f			= getNodeSet none f
+getElemNodeSet                          :: ArrowXml a => a XmlTree XmlTree -> a XmlTree XmlNodeSet
+getElemNodeSet f                        = getNodeSet none f
 
 -- |
 -- compute a node set from a tree, containing all nodes including attribute nodes
 -- elected by the predicate arrow
 
-getElemAndAttrNodeSet			:: ArrowXml a => a XmlTree XmlTree -> a XmlTree XmlNodeSet
-getElemAndAttrNodeSet f			= getNodeSet ( getAttrl
-		                                       >>>
-		                                       ( f `guards` getAttrName )
-		                                     ) f
+getElemAndAttrNodeSet                   :: ArrowXml a => a XmlTree XmlTree -> a XmlTree XmlNodeSet
+getElemAndAttrNodeSet f                 = getNodeSet ( getAttrl
+                                                       >>>
+                                                       ( f `guards` getAttrName )
+                                                     ) f
 
 -- ------------------------------------------------------------
 
@@ -174,11 +174,11 @@ getElemAndAttrNodeSet f			= getNodeSet ( getAttrl
 --
 -- > getFromNodeSet $< getElemNodeSet f == multi f
 
-getFromNodeSet		:: ArrowXml a => XmlNodeSet -> a XmlTree XmlTree
-getFromNodeSet xns	= fromLA $
+getFromNodeSet          :: ArrowXml a => XmlNodeSet -> a XmlTree XmlTree
+getFromNodeSet xns      = fromLA $
                           arr addRoot' >>> getFromNodeSet' xns
 
-getFromNodeSet'		:: XmlNodeSet -> LA XmlTree XmlTree
+getFromNodeSet'         :: XmlNodeSet -> LA XmlTree XmlTree
 getFromNodeSet' (XNS t al cl)
     = fromLA $
       ( if t then this else none )
@@ -188,22 +188,22 @@ getFromNodeSet' (XNS t al cl)
       ( getFromChildren (0-1) cl $< listA getChildren )
     where
 
-    getFromAttrl	:: [QName] -> LA XmlTree XmlTree
+    getFromAttrl        :: [QName] -> LA XmlTree XmlTree
     getFromAttrl l
-	= ( catA . map hasQName $ l)
-	  `guards`
-	  this
+        = ( catA . map hasQName $ l)
+          `guards`
+          this
 
-    getFromChildren	:: Int -> ChildNodes -> XmlTrees -> LA XmlTree XmlTree
+    getFromChildren     :: Int -> ChildNodes -> XmlTrees -> LA XmlTree XmlTree
     getFromChildren _ [] _
-	= none
+        = none
 
     getFromChildren i' ((i, sp) : sps) ts
-	= ( arrL (const t') >>> getFromNodeSet' sp )
-	  <+>
-	  getFromChildren i sps ts'
-	  where
-	  (t', ts') = splitAt 1 . drop (i-i'-1) $ ts
+        = ( arrL (const t') >>> getFromNodeSet' sp )
+          <+>
+          getFromChildren i sps ts'
+          where
+          (t', ts') = splitAt 1 . drop (i-i'-1) $ ts
 
 -- ------------------------------------------------------------
 
@@ -214,12 +214,12 @@ getFromNodeSet' (XNS t al cl)
 --
 -- > processXPathTrees p xpathExpr == processFromNodeSet p $< getXPathNodeSet xpathExpr
 
-processXPathTrees		:: ArrowXml a => a XmlTree XmlTree  -> String -> a XmlTree XmlTree
-processXPathTrees f		= processXPathTreesWithNsEnv f []
+processXPathTrees               :: ArrowXml a => a XmlTree XmlTree  -> String -> a XmlTree XmlTree
+processXPathTrees f             = processXPathTreesWithNsEnv f []
 
 -- | Same as 'processXPathTrees' but with namespace environment for the XPath names
 
-processXPathTreesWithNsEnv	:: ArrowXml a => a XmlTree XmlTree  -> Attributes -> String -> a XmlTree XmlTree
+processXPathTreesWithNsEnv      :: ArrowXml a => a XmlTree XmlTree  -> Attributes -> String -> a XmlTree XmlTree
 processXPathTreesWithNsEnv f nsEnv query
     = choiceA
       [ isRoot :-> processChildren pns
@@ -242,8 +242,8 @@ processXPathTreesWithNsEnv f nsEnv query
 -- the advantage of processFromNodeSet is the separation of the selection of set of nodes to be processed (e.g. modified)
 -- from the real proccessing. The selection sometimes can be done once, the processing possibly many times.
 
-processFromNodeSet			:: ArrowXml a => a XmlTree XmlTree  -> XmlNodeSet -> a XmlTree XmlTree
-processFromNodeSet f xns		= ( isRoot
+processFromNodeSet                      :: ArrowXml a => a XmlTree XmlTree  -> XmlNodeSet -> a XmlTree XmlTree
+processFromNodeSet f xns                = ( isRoot
                                             `guards` processFromNodeSet' f xns
                                           )
                                           `orElse`
@@ -253,40 +253,40 @@ processFromNodeSet f xns		= ( isRoot
                                           )
 
 
-processFromNodeSet'	:: ArrowXml a => a XmlTree XmlTree  -> XmlNodeSet -> a XmlTree XmlTree
+processFromNodeSet'     :: ArrowXml a => a XmlTree XmlTree  -> XmlNodeSet -> a XmlTree XmlTree
 processFromNodeSet' f (XNS t al cl)
     = ( if null cl
-	then this
-	else replaceChildren ( processC (0-1) cl $< listA getChildren )
+        then this
+        else replaceChildren ( processC (0-1) cl $< listA getChildren )
       )
       >>>
       ( if null al
-	then this
-	else processAttrl (processA al)
+        then this
+        else processAttrl (processA al)
       )
       >>>
       ( if not t
-	then this
-	else f
+        then this
+        else f
       )
     where
 
-    -- processA		:: ChildNodes -> a XmlTree XmlTree
+    -- processA         :: ChildNodes -> a XmlTree XmlTree
     processA l
-	= f `when` ( catA . map hasQName $ l)
+        = f `when` ( catA . map hasQName $ l)
 
-    -- processC		:: ChildNodes -> XmlTrees -> a XmlTree XmlTree
+    -- processC         :: ChildNodes -> XmlTrees -> a XmlTree XmlTree
     processC _ [] ts
-	= arrL (const ts)
+        = arrL (const ts)
 
     processC i' ((i, sp) : sps) ts
-	= arrL (const ts1)
-	  <+>
-	  ( arrL (const ti) >>> processFromNodeSet' f sp)
-	  <+>
-	  processC i sps ts21
-	  where
-	  (ts1, ts2) = splitAt (i-i'-1) ts
-	  (ti, ts21) = splitAt 1 ts2
+        = arrL (const ts1)
+          <+>
+          ( arrL (const ti) >>> processFromNodeSet' f sp)
+          <+>
+          processC i sps ts21
+          where
+          (ts1, ts2) = splitAt (i-i'-1) ts
+          (ti, ts21) = splitAt 1 ts2
 
 -- ------------------------------------------------------------

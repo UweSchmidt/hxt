@@ -50,7 +50,7 @@ import Data.Char
 --
 -- the http protocol handler implemented by calling external program curl
 
-getHttpContentsWithCurl	:: URI -> XmlStateFilter a
+getHttpContentsWithCurl :: URI -> XmlStateFilter a
 getHttpContentsWithCurl uri n
     = do
       trace 2 ( "getHttpContentWithCurl: reading from URL " ++ show uri )
@@ -69,43 +69,43 @@ getHttpContentsWithCurl uri n
       trace 4 ( "getHttpContentWithCurl: stderr: " ++ show errs )
 
       if rc /= 0
-	 then addFatal ( "http error when requesting URI (rc=" ++ show rc ++ ") "
-			 ++ show uri
-			 ++ ": "
-			 ++ errs
-		       ) n
-	 else let
-	      (st, al, contents) = parseResponse res
-	      in
-	      liftMf ( addAttrl (const al)
-		       .>
-		       replaceChildren (xtext contents)
-		     )
-	      .>> ( if st >= 200 && st < 300
-		    then thisM
-		    else
-		    addFatal ( "http error when accessing URI "
-			       ++ show uri
-			       ++ ": "
-			       ++ show st
-			       ++ " "
-			       ++ (valueOf transferMessage $ newRoot al)
-			     )
-		  )
-	      $ n
+         then addFatal ( "http error when requesting URI (rc=" ++ show rc ++ ") "
+                         ++ show uri
+                         ++ ": "
+                         ++ errs
+                       ) n
+         else let
+              (st, al, contents) = parseResponse res
+              in
+              liftMf ( addAttrl (const al)
+                       .>
+                       replaceChildren (xtext contents)
+                     )
+              .>> ( if st >= 200 && st < 300
+                    then thisM
+                    else
+                    addFatal ( "http error when accessing URI "
+                               ++ show uri
+                               ++ ": "
+                               ++ show st
+                               ++ " "
+                               ++ (valueOf transferMessage $ newRoot al)
+                             )
+                  )
+              $ n
     where
     cmd  = "curl"
     args = [ "--silent"
-	   , "--show-error"
-	   , "--dump-header", "-"
-	   , show uri
-	   ]
+           , "--show-error"
+           , "--dump-header", "-"
+           , show uri
+           ]
     proxyArgs ""
-	= []
+        = []
     proxyArgs prx
-	= [ "--proxy", prx ]
+        = [ "--proxy", prx ]
 
-parseResponse	:: String -> (Int, XmlTrees, String)
+parseResponse   :: String -> (Int, XmlTrees, String)
 parseResponse inp
     = case (parse parseHttpResponse "HTTP Header" inp) of
       Right res -> res
@@ -115,78 +115,78 @@ parseResponse inp
 --
 -- parsers for HTTP response
 
-parseHttpResponse		:: Parser (Int, XmlTrees, String)
+parseHttpResponse               :: Parser (Int, XmlTrees, String)
 parseHttpResponse
     = do
       allResponses <- many1
-		      ( do
-			(rc, rh) <- parseResp
-			rhs      <- parseHeaders
-			return (rc, rh, rhs)
-		      )
+                      ( do
+                        (rc, rh) <- parseResp
+                        rhs      <- parseHeaders
+                        return (rc, rh, rhs)
+                      )
       let (rc, rh, rhs) = last allResponses
       content  <- getInput
       return (rc, rh ++ rhs, content)
     where
 
-    crlf		:: Parser ()
+    crlf                :: Parser ()
     crlf
-	= do
-	  _ <- ( Text.ParserCombinators.Parsec.try (string "\r\n") <|> string "\n" )
-	  return ()
+        = do
+          _ <- ( Text.ParserCombinators.Parsec.try (string "\r\n") <|> string "\n" )
+          return ()
 
-    parseResp		:: Parser (Int, XmlTrees)
+    parseResp           :: Parser (Int, XmlTrees)
     parseResp
-	= do
-	  vers <- ( do
-		    http <- string "HTTP/"
-		    mav <- many1 digit
-		    _ <- char '.'
-		    miv <- many1 digit
-		    return (http ++ mav ++ "." ++ miv)
-		  )
-	  spaces
-	  ds <- many1 digit
-	  spaces
-	  reason <- manyTill anyChar crlf
-	  return ( read ds,
-		   xattr transferMessage reason ++ xattr transferVersion vers
-		 )
+        = do
+          vers <- ( do
+                    http <- string "HTTP/"
+                    mav <- many1 digit
+                    _ <- char '.'
+                    miv <- many1 digit
+                    return (http ++ mav ++ "." ++ miv)
+                  )
+          spaces
+          ds <- many1 digit
+          spaces
+          reason <- manyTill anyChar crlf
+          return ( read ds,
+                   xattr transferMessage reason ++ xattr transferVersion vers
+                 )
 
-    parseHeaders	:: Parser XmlTrees
+    parseHeaders        :: Parser XmlTrees
     parseHeaders
-	= ( do
-	    crlf
-	    return []
-	  )
-	  <|>
-	  ( do
-	    header1 <- parse1Header
-	    rest    <- parseHeaders
-	    return $ header1 ++ rest
-	  )
-	  <|>
-	  ( do
-	    return $ xattr (httpPrefix ++ "IllegalHeaders") ""
-	  )
+        = ( do
+            crlf
+            return []
+          )
+          <|>
+          ( do
+            header1 <- parse1Header
+            rest    <- parseHeaders
+            return $ header1 ++ rest
+          )
+          <|>
+          ( do
+            return $ xattr (httpPrefix ++ "IllegalHeaders") ""
+          )
 
-    parse1Header	:: Parser XmlTrees
+    parse1Header        :: Parser XmlTrees
     parse1Header
-	= do
-	  header <- manyTill anyChar (char ':')
-	  spaces
-	  value  <- manyTill anyChar crlf
-	  let ct = parseCT header value
-	  return $ ct ++ xattr (httpPrefix ++ header) value
-	where
-	parseCT	:: String -> String -> XmlTrees
-	parseCT h v
-	    | map toLower h == "content-type"
-		= ( case (parse parseContentType h v) of
-		    Right res -> concatMap (uncurry xattr) res
-		    Left  _   -> []
-		  )
-	    | otherwise
-		= []
+        = do
+          header <- manyTill anyChar (char ':')
+          spaces
+          value  <- manyTill anyChar crlf
+          let ct = parseCT header value
+          return $ ct ++ xattr (httpPrefix ++ header) value
+        where
+        parseCT :: String -> String -> XmlTrees
+        parseCT h v
+            | map toLower h == "content-type"
+                = ( case (parse parseContentType h v) of
+                    Right res -> concatMap (uncurry xattr) res
+                    Left  _   -> []
+                  )
+            | otherwise
+                = []
 
 -- ------------------------------------------------------------

@@ -33,10 +33,10 @@ import Text.XML.HXT.Validator.XmlRE
 -- Lookup-table which maps element names to their validation functions. The
 -- validation functions are XmlFilters.
 
-type ValiEnvTable	= [ValiEnv]
-type ValiEnv 		= (ElemName, ValFct)
-type ElemName		= String
-type ValFct		= XmlFilter
+type ValiEnvTable       = [ValiEnv]
+type ValiEnv            = (ElemName, ValFct)
+type ElemName           = String
+type ValFct             = XmlFilter
 
 
 
@@ -73,8 +73,8 @@ traverseTree valiEnv n@(NTree (XTag name _) cs)
       valFct :: XmlFilter
       valFct
           = case (lookup (qualifiedName name) valiEnv) of
-	    Nothing -> err ("Element " ++ show (qualifiedName name) ++ " not declared in DTD.")
-	    Just f  -> f
+            Nothing -> err ("Element " ++ show (qualifiedName name) ++ " not declared in DTD.")
+            Just f  -> f
 
 traverseTree _ _ = []
 
@@ -119,9 +119,9 @@ buildValidateRoot (NTree (XDTD DOCTYPE al) _)
           = if msg == ""
             then []
             else err ("Root Element must be " ++ show name ++ ". " ++ msg) nd
-	    where
-	    re = re_sym (name)
-	    msg = checkRE (matches re cs)
+            where
+            re = re_sym (name)
+            msg = checkRE (matches re cs)
 
       valFct n = error ("buildValidateRoot: illegeal parameter:\n" ++ show n)
 
@@ -149,7 +149,7 @@ buildValidateFunctions dtdPart nd@(NTree (XDTD ELEMENT al) _)
       valFct :: XmlFilter
       valFct = buildContentValidation nd
                +++
-	       buildAttributeValidation dtdPart nd
+               buildAttributeValidation dtdPart nd
 
 buildValidateFunctions _ nd
     = error ("buildValidateFunctions: illegeal parameter:\n" ++ show nd)
@@ -196,10 +196,10 @@ buildContentValidation nd@(NTree (XDTD ELEMENT al) _)
           = if msg == ""
             then []
             else err ("The content of element "++ show (qualifiedName name) ++
-	              " must match (#PCDATA). "++ msg) n
-	    where
-	    re = re_rep (re_sym k_pcdata)
-	    msg = checkRE (matches re cs)
+                      " must match (#PCDATA). "++ msg) n
+            where
+            re = re_rep (re_sym k_pcdata)
+            msg = checkRE (matches re cs)
 
       contentValidationPcdata n
           = error ("contentValidationPcdata: illegeal parameter:\n" ++ show n)
@@ -211,10 +211,10 @@ buildContentValidation nd@(NTree (XDTD ELEMENT al) _)
           = if msg == ""
             then []
             else err ("The content of element " ++ show (qualifiedName name) ++
-	              " must match EMPTY. " ++ msg) n
-	    where
-	    re = re_unit
-	    msg = checkRE (matches re cs)
+                      " must match EMPTY. " ++ msg) n
+            where
+            re = re_unit
+            msg = checkRE (matches re cs)
 
       contentValidationEmpty n
           = error ("contentValidationEmpty: illegeal parameter:\n" ++ show n)
@@ -226,10 +226,10 @@ buildContentValidation nd@(NTree (XDTD ELEMENT al) _)
           = if msg == ""
             then []
             else err ("The content of element " ++ show (qualifiedName name) ++
-	              " must match ANY. " ++ msg) n
-	    where
-	    re = re_rep (re_dot)
-	    msg = checkRE (matches re cs)
+                      " must match ANY. " ++ msg) n
+            where
+            re = re_rep (re_dot)
+            msg = checkRE (matches re cs)
 
       contentValidationAny n
           = error ("contentValidationAny: illegeal parameter:\n" ++ show n)
@@ -241,10 +241,10 @@ buildContentValidation nd@(NTree (XDTD ELEMENT al) _)
           = if msg == ""
             then []
             else err ("The content of element " ++ show (qualifiedName name) ++
-	              " must match " ++ printRE re ++ ". " ++ msg) n
-	    where
-	    re = createRE (head cm)
-	    msg = checkRE (matches re cs)
+                      " must match " ++ printRE re ++ ". " ++ msg) n
+            where
+            re = createRE (head cm)
+            msg = checkRE (matches re cs)
 
       contentValidationChildren _ n
           = error ("contentValidationChildren: illegeal parameter:\n" ++ show n)
@@ -256,10 +256,10 @@ buildContentValidation nd@(NTree (XDTD ELEMENT al) _)
           = if msg == ""
             then []
             else err ("The content of element "++ show (qualifiedName name) ++
-	              " must match " ++ printRE re ++ ". " ++ msg) n
-	    where
-	    re = re_rep (re_alt (re_sym k_pcdata) (createRE (head cm)))
-	    msg = checkRE (matches re cs)
+                      " must match " ++ printRE re ++ ". " ++ msg) n
+            where
+            re = re_rep (re_alt (re_sym k_pcdata) (createRE (head cm)))
+            msg = checkRE (matches re cs)
 
       contentValidationMixed _ n
           = error ("contentValidationMixed: illegeal parameter:\n" ++ show n)
@@ -288,17 +288,17 @@ createRE (NTree (XDTD CONTENT al) cs)
 
       processModifier :: String -> RE String
       processModifier m
-          | m == v_plus	  = re_plus (processKind kind)
-	  | m == v_star	  = re_rep  (processKind kind)
-	  | m == v_option = re_opt  (processKind kind)
-	  | m == v_null	  = processKind kind
-	  | otherwise     = error ("Unknown modifier: " ++ show m)
+          | m == v_plus   = re_plus (processKind kind)
+          | m == v_star   = re_rep  (processKind kind)
+          | m == v_option = re_opt  (processKind kind)
+          | m == v_null   = processKind kind
+          | otherwise     = error ("Unknown modifier: " ++ show m)
 
       processKind :: String -> RE String
       processKind k
-          | k == v_seq	  = makeSequence cs
-	  | k == v_choice = makeChoice cs
-	  | otherwise	  = error ("Unknown kind: " ++ show k)
+          | k == v_seq    = makeSequence cs
+          | k == v_choice = makeChoice cs
+          | otherwise     = error ("Unknown kind: " ++ show k)
 
       makeSequence :: XmlTrees -> RE String
       makeSequence []     = re_unit
@@ -362,12 +362,12 @@ noDoublicateAttributes n@(NTree (XTag _ _) _)
 
       doubles :: [String] -> XmlTrees
       doubles []
-	  = []
+          = []
       doubles (n1:ns)
-	  = ( if n1 `elem` ns
-	      then err ("Attribute " ++ show n1 ++ " was already specified for element " ++ show tagname ++ ".") n
-	      else []
-	    ) ++ doubles ns
+          = ( if n1 `elem` ns
+              then err ("Attribute " ++ show n1 ++ " was already specified for element " ++ show tagname ++ ".") n
+              else []
+            ) ++ doubles ns
 
 noDoublicateAttributes n
     = error ("noDoublicateAttributes: illegeal parameter:\n" ++ show n)
@@ -395,13 +395,13 @@ checkRequiredAttributes attrDecls (NTree (XDTD ELEMENT al) _)
       checkRequired :: XmlTrees -> XmlFilter
       checkRequired ((NTree (XDTD ATTLIST al') _):xs) n@(NTree (XTag name _) _)
           = if satisfies (hasAttr attName) n
-	    then checkRequired xs n
-	    else err ("Attribute " ++ show attName ++ " must be declared for element type " ++
-	             show (qualifiedName name) ++ ".") n
-	         ++
-		 checkRequired xs n
-	    where
-	    attName = lookup1 a_value al'
+            then checkRequired xs n
+            else err ("Attribute " ++ show attName ++ " must be declared for element type " ++
+                     show (qualifiedName name) ++ ".") n
+                 ++
+                 checkRequired xs n
+            where
+            attName = lookup1 a_value al'
 
       checkRequired [] _ = []
 
@@ -436,18 +436,18 @@ checkFixedAttributes attrDecls (NTree (XDTD ELEMENT al) _)
       checkFixed :: XmlTrees -> XmlFilter
       checkFixed (x@(NTree (XDTD ATTLIST al') _):xs) n@(NTree (XTag name _) _)
           = if satisfies (hasAttr attName) n
-	    then if attValue == fixedValue
-	         then checkFixed xs n
-	         else err ("Attribute " ++ show attName ++ " of element " ++ show (qualifiedName name) ++
-		           " with value " ++ show attValue ++ " must have a value of " ++
-			   show fixedValue ++ ".") n
-	              ++
-		      checkFixed xs n
-	    else checkFixed xs n
-	    where
-	    attName    = lookup1 a_value al'
-	    fixedValue = normalizeAttributeValue (Just x) (lookup1 a_default al')
-	    attValue   = normalizeAttributeValue (Just x) (valueOf attName n)
+            then if attValue == fixedValue
+                 then checkFixed xs n
+                 else err ("Attribute " ++ show attName ++ " of element " ++ show (qualifiedName name) ++
+                           " with value " ++ show attValue ++ " must have a value of " ++
+                           show fixedValue ++ ".") n
+                      ++
+                      checkFixed xs n
+            else checkFixed xs n
+            where
+            attName    = lookup1 a_value al'
+            fixedValue = normalizeAttributeValue (Just x) (lookup1 a_default al')
+            attValue   = normalizeAttributeValue (Just x) (valueOf attName n)
 
       checkFixed [] _ = []
 
@@ -479,16 +479,16 @@ checkNotDeclardAttributes attrDecls elemDescr
 
       checkNotDeclared :: XmlFilter
       checkNotDeclared n
-	  = ( isXTag
-	      `guards`
-	      cat (map (searchForDeclaredAtt elemName decls) (getAttrl n))
-	    ) n
+          = ( isXTag
+              `guards`
+              cat (map (searchForDeclaredAtt elemName decls) (getAttrl n))
+            ) n
 
       searchForDeclaredAtt :: String -> XmlTrees -> XmlTree -> XmlFilter
       searchForDeclaredAtt name ((NTree (XDTD ATTLIST al') _):xs) att
           = if (lookup1 a_value al') == nameOf att
             then none
-	    else searchForDeclaredAtt name xs att
+            else searchForDeclaredAtt name xs att
 
       searchForDeclaredAtt name [] (NTree (XAttr attrName) _)
           = err ("Attribute " ++ show (qualifiedName attrName) ++ " of element " ++ show name ++ " is not declared in DTD.")
@@ -517,15 +517,15 @@ checkValuesOfAttributes attrDecls dtdPart elemDescr
       checkValues :: XmlFilter
       checkValues n
           = ( isXTag
-	      `guards`
-	      cat (map (checkValue decls) (getAttrl n))
-	    ) n
+              `guards`
+              cat (map (checkValue decls) (getAttrl n))
+            ) n
 
       checkValue :: XmlTrees -> XmlTree -> XmlFilter
       checkValue (attrDecl@(NTree (XDTD ATTLIST al') _):xs) att
           = if (lookup1 a_value al') == nameOf att
             then checkAttributeValue dtdPart attrDecl
-	    else checkValue xs att
+            else checkValue xs att
 
       checkValue [] _
           = none  -- undeclared attribute, reported by separate function

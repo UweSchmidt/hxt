@@ -17,7 +17,7 @@
 -- ------------------------------------------------------------
 
 module Text.XML.HXT.XSLT.CompiledStylesheet
-where  
+where
 
 import           Text.XML.HXT.XSLT.Common
 import           Text.XML.HXT.XSLT.Names
@@ -31,14 +31,14 @@ import qualified Data.Map as Map hiding (Map)
 
 -- compiled-Stylesheet:
 
-data CompiledStylesheet = 
+data CompiledStylesheet =
   CompStylesheet
-    [MatchRule]                
+    [MatchRule]
     (Map ExName NamedRule)
-    (Map ExName Variable)       
-    (Map ExName [AttributeSet]) 
-    [Strips]                   
-    NSAliasing                  
+    (Map ExName Variable)
+    (Map ExName [AttributeSet])
+    [Strips]
+    NSAliasing
   deriving Show
 
 getMatchRules :: CompiledStylesheet -> [MatchRule]
@@ -62,7 +62,7 @@ getAliases (CompStylesheet _ _ _ _ _ aliases) = aliases
 -- -------------------
 -- Match-Rules:
 
-data MatchRule = 
+data MatchRule =
   MatRule MatchExpr
           Float           -- priority
           (Maybe ExName)  -- mode
@@ -73,8 +73,8 @@ data MatchRule =
 
 instance Show MatchRule where
     show (MatRule expr prio mode imprules params content)
-	= "MkRule expr: " ++ show expr ++ "\n  prio: " ++ show prio ++ "\n  mode: "++ show mode 
-	  ++ "\n  no. imported rules: " ++ show (length imprules) ++ "\n  xsl-params: " ++ show params 
+        = "MkRule expr: " ++ show expr ++ "\n  prio: " ++ show prio ++ "\n  mode: "++ show mode
+          ++ "\n  no. imported rules: " ++ show (length imprules) ++ "\n  xsl-params: " ++ show params
           ++ "\n  content: " ++ show content ++"\n"
 
 getRulePrio :: MatchRule -> Float
@@ -96,13 +96,13 @@ getRuleName :: NamedRule -> ExName
 getRuleName (NamRule name _ _)  = name
 
 -- -------------------
--- Variables 
+-- Variables
 
-data Variable = MkVar 
+data Variable = MkVar
                   Bool                   -- modus: False => xsl:variable, True => xsl:param
                   ExName                 -- name
                   (Either Expr Template) -- select-expression or result tree fragment
-		deriving Show
+                deriving Show
 
 getVarName :: Variable -> ExName
 getVarName (MkVar _ name _) = name
@@ -122,7 +122,7 @@ data AttributeSet = AttribSet ExName UsedAttribSets Template
 -- -------------------
 -- Whitespace-stripping
 
-type NTest = ExName 
+type NTest = ExName
 
 parseNTest :: UriMapping -> String -> NTest
 parseNTest = parseExName
@@ -139,7 +139,7 @@ lookupStrip name
 -- Try to match a qualified name with a set of strip- and preserve-space attributes of the same import precedence:
 
 lookupStrip1 :: ExName -> Strips -> Maybe Bool
-lookupStrip1 name spec = 
+lookupStrip1 name spec =
     if      isJust nameMatch then nameMatch
     else if isJust prefMatch then prefMatch
     else if isJust globMatch then globMatch
@@ -150,7 +150,7 @@ lookupStrip1 name spec =
     globMatch = Map.lookup (ExName "*"  ""          ) spec
 
 feedSpaces :: Bool -> [NTest] -> Strips -> Strips
-feedSpaces strip tests = 
+feedSpaces strip tests =
     Map.unionWithKey feedErr $ Map.fromListWithKey feedErr $ zip tests $ repeat strip
   where
     feedErr k = error $ "Ambiguous strip- or preserve-space rules for " ++ show k
@@ -168,15 +168,15 @@ stripStylesheet
     = stripSpaces isStrip True
     where
     isStrip strip' node
-	= not (isElemType xsltText node)
-	  &&
-	  ( maybe strip' (=="default") $ tryFetchAttribute node xmlSpace )
+        = not (isElemType xsltText node)
+          &&
+          ( maybe strip' (=="default") $ tryFetchAttribute node xmlSpace )
 
 stripSpaces :: (Bool -> XNode -> Bool) -> Bool -> XmlTree -> XmlTree
-stripSpaces f def = 
+stripSpaces f def =
     fromJustErr "stripSpaces (internal error)" . filterTreeCtx step def
   where
-    step strip node 
+    step strip node
      | isElem node           = (f strip node, True)
      | isWhitespaceNode node = (strip       , not strip)
      | otherwise             = (strip       , True)
@@ -200,10 +200,10 @@ addAlias uris oldPr newPr
 
 lookupAlias :: NSAliasing -> QName -> QName
 lookupAlias nsm qn
-    = mkQName (namePrefix qn) (localPart qn) 
+    = mkQName (namePrefix qn) (localPart qn)
       $ maybe (namespaceUri qn) id
       $ Map.lookup (namespaceUri qn) nsm
- 
+
 aliasUriMapping :: NSAliasing -> UriMapping -> UriMapping
 aliasUriMapping nsm = Map.map (\uri -> Map.findWithDefault uri uri nsm)
 
@@ -211,14 +211,14 @@ aliasUriMapping nsm = Map.map (\uri -> Map.findWithDefault uri uri nsm)
 -- Templates:
 
 data Template
-    = TemplComposite [Template]   
+    = TemplComposite [Template]
     | TemplForEach SelectExpr [SortKey] Template
     | TemplChoose [When]    -- otherwise will be represented by <xsl:when test="true()"/> in the abstract Syntax
     | TemplMessage Bool     -- halt?
-                   Template -- content            
+                   Template -- content
     | TemplElement ComputedQName
                    UriMapping              -- Namespaces which *must* be added
-                   UsedAttribSets          -- 
+                   UsedAttribSets          --
                    Template                -- content
     | TemplAttribute ComputedQName
                      Template              -- content
@@ -227,7 +227,7 @@ data Template
     | TemplComment Template
     | TemplProcInstr StringExpr       -- name
                      Template               -- content
-    | TemplApply (Maybe SelectExpr) 
+    | TemplApply (Maybe SelectExpr)
                  (Maybe ExName)  -- mode
                  (Map ExName Variable) -- passed arguments
                  [SortKey]
@@ -247,7 +247,7 @@ data SortKey
     deriving Show
 
 data When
-    = WhenPart TestExpr Template 
+    = WhenPart TestExpr Template
     deriving Show
 
 data ComputedQName

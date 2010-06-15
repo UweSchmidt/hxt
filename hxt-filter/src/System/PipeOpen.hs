@@ -37,7 +37,7 @@ import System.Process
 -- | call an external program with a list of command line arguments
 -- and return content of stdout, content of stderr and return code
 
-popen	:: String -> [String] -> IO (String, String, Int)
+popen   :: String -> [String] -> IO (String, String, Int)
 popen prg argl
     = do
       (inpH, outH, errH, pH) <- runInteractiveProcess prg argl Nothing Nothing
@@ -51,10 +51,10 @@ popen prg argl
 
       rc <- waitForProcess pH
       return ( res
-	     , errs
-	     , case rc of
-	       ExitSuccess -> 0
-	       ExitFailure i -> i
-	     )
+             , errs
+             , case rc of
+               ExitSuccess -> 0
+               ExitFailure i -> i
+             )
 
 -- eof ------------------------------------------------------------

@@ -49,10 +49,10 @@ import Data.Ord
 -- Lookup-table which maps element names to their transformation functions. The
 -- transformation functions are XmlArrows.
 
-type TransEnvTable	= [TransEnv]
-type TransEnv 		= (ElemName, TransFct)
-type ElemName		= String
-type TransFct		= XmlArrow
+type TransEnvTable      = [TransEnv]
+type TransEnv           = (ElemName, TransFct)
+type ElemName           = String
+type TransFct           = XmlArrow
 
 
 -- ------------------------------------------------------------
@@ -83,15 +83,15 @@ traverseTree :: TransEnvTable -> XmlArrow
 traverseTree transEnv
     = processTopDown
       ( ( (transFct $< getName)
-	  >>>
-	  processChildren (traverseTree transEnv)
-	)
+          >>>
+          processChildren (traverseTree transEnv)
+        )
        `when`
        isElem
       )
     where
-    transFct		:: String -> XmlArrow
-    transFct name	= fromMaybe this . lookup name $ transEnv
+    transFct            :: String -> XmlArrow
+    transFct name       = fromMaybe this . lookup name $ transEnv
 
 -- |
 -- Build all transformation functions.
@@ -119,16 +119,16 @@ buildAllTransformationFunctions dtdNodes
 buildTransformationFunctions :: XmlTrees -> XmlTree -> [TransEnv]
 
 buildTransformationFunctions dtdPart dn
-    | isDTDElementNode dn	= [(name, transFct)]
-    | otherwise			= []
+    | isDTDElementNode dn       = [(name, transFct)]
+    | otherwise                 = []
     where
-    al		= getDTDAttributes dn
-    name	= dtd_name al
-    transFct	= setDefaultAttributeValues dtdPart dn
-		  >>>
-		  normalizeAttributeValues dtdPart dn
-		  >>>
-		  lexicographicAttributeOrder
+    al          = getDTDAttributes dn
+    name        = dtd_name al
+    transFct    = setDefaultAttributeValues dtdPart dn
+                  >>>
+                  normalizeAttributeValues dtdPart dn
+                  >>>
+                  lexicographicAttributeOrder
 
 -- ------------------------------------------------------------
 
@@ -142,8 +142,8 @@ lexicographicAttributeOrder :: XmlArrow
 lexicographicAttributeOrder
     = setAttrl (getAttrl >>. sortAttrl)
       where
-      sortAttrl		:: XmlTrees -> XmlTrees
-      sortAttrl		= sortBy (comparing nameOfAttr)
+      sortAttrl         :: XmlTrees -> XmlTrees
+      sortAttrl         = sortBy (comparing nameOfAttr)
 
 -- |
 -- Normalize attribute values.
@@ -153,25 +153,25 @@ lexicographicAttributeOrder
 
 normalizeAttributeValues :: XmlTrees -> XmlTree -> XmlArrow
 normalizeAttributeValues dtdPart dn
-    | isDTDElementNode dn	= processAttrl (normalizeAttr $< getName)
-    | otherwise			= this
+    | isDTDElementNode dn       = processAttrl (normalizeAttr $< getName)
+    | otherwise                 = this
     where
-    al		 = getDTDAttributes dn
-    elemName	 = dtd_name al
+    al           = getDTDAttributes dn
+    elemName     = dtd_name al
     declaredAtts = isAttlistOfElement elemName $$ dtdPart
 
     normalizeAttr :: String -> XmlArrow
     normalizeAttr nameOfAtt
-	= normalizeAttrValue ( if null attDescr
-			       then Nothing
-			       else Just (head attDescr)
-			     )
-	  where
-	  attDescr = filter ((== nameOfAtt) . valueOfDTD a_value) declaredAtts
+        = normalizeAttrValue ( if null attDescr
+                               then Nothing
+                               else Just (head attDescr)
+                             )
+          where
+          attDescr = filter ((== nameOfAtt) . valueOfDTD a_value) declaredAtts
 
     normalizeAttrValue :: Maybe XmlTree -> XmlArrow
     normalizeAttrValue descr
-	= replaceChildren ((xshow getChildren >>^ normalizeAttributeValue descr) >>> mkText)
+        = replaceChildren ((xshow getChildren >>^ normalizeAttributeValue descr) >>> mkText)
 
 -- |
 -- Set default attribute values if they are not set.
@@ -181,30 +181,30 @@ normalizeAttributeValues dtdPart dn
 
 setDefaultAttributeValues :: XmlTrees -> XmlTree -> XmlArrow
 setDefaultAttributeValues dtdPart dn
-    | isDTDElementNode dn	= seqA (map setDefault defaultAtts)
-    | otherwise			= this
+    | isDTDElementNode dn       = seqA (map setDefault defaultAtts)
+    | otherwise                 = this
     where
-    elemName	= dtd_name . getDTDAttributes $ dn
-    defaultAtts	= ( isAttlistOfElement elemName
-		    >>>
-		    ( isFixedAttrKind		-- select attributes with default values
-		      `orElse`
-		      isDefaultAttrKind
-		    )
-		  ) $$ dtdPart
+    elemName    = dtd_name . getDTDAttributes $ dn
+    defaultAtts = ( isAttlistOfElement elemName
+                    >>>
+                    ( isFixedAttrKind           -- select attributes with default values
+                      `orElse`
+                      isDefaultAttrKind
+                    )
+                  ) $$ dtdPart
 
-    setDefault	:: XmlTree -> XmlArrow
-    setDefault attrDescr			-- add the default attributes
-	  = ( addAttr attName defaultValue	-- to tag nodes with missing attributes
-	      `whenNot`
-	      hasAttr attName
-	    )
-	    `when`
-	    isElem
-	where
-	al		= getDTDAttributes attrDescr
-	attName		= dtd_value   al
-	defaultValue	= dtd_default al
+    setDefault  :: XmlTree -> XmlArrow
+    setDefault attrDescr                        -- add the default attributes
+          = ( addAttr attName defaultValue      -- to tag nodes with missing attributes
+              `whenNot`
+              hasAttr attName
+            )
+            `when`
+            isElem
+        where
+        al              = getDTDAttributes attrDescr
+        attName         = dtd_value   al
+        defaultValue    = dtd_default al
 
 -- ------------------------------------------------------------
 

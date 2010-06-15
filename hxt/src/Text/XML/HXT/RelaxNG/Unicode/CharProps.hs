@@ -67,7 +67,7 @@ isInList i      =
 
 -- ------------------------------------------------------------
 
-isUnicodeC	:: Char -> Bool
+isUnicodeC      :: Char -> Bool
 isUnicodeC c
   = isInList c
     [ ('\NUL','\US')
@@ -100,7 +100,7 @@ isUnicodeC c
 
 -- ------------------------------------------------------------
 
-isUnicodeCc	:: Char -> Bool
+isUnicodeCc     :: Char -> Bool
 isUnicodeCc c
   = isInList c
     [ ('\NUL','\US')
@@ -109,7 +109,7 @@ isUnicodeCc c
 
 -- ------------------------------------------------------------
 
-isUnicodeCf	:: Char -> Bool
+isUnicodeCf     :: Char -> Bool
 isUnicodeCf c
   = isInList c
     [ ('\173','\173')
@@ -131,7 +131,7 @@ isUnicodeCf c
 
 -- ------------------------------------------------------------
 
-isUnicodeCo	:: Char -> Bool
+isUnicodeCo     :: Char -> Bool
 isUnicodeCo c
   = isInList c
     [ ('\57344','\57344')
@@ -144,7 +144,7 @@ isUnicodeCo c
 
 -- ------------------------------------------------------------
 
-isUnicodeCs	:: Char -> Bool
+isUnicodeCs     :: Char -> Bool
 isUnicodeCs c
   = isInList c
     [ ('\55296','\55296')
@@ -155,7 +155,7 @@ isUnicodeCs c
 
 -- ------------------------------------------------------------
 
-isUnicodeL	:: Char -> Bool
+isUnicodeL      :: Char -> Bool
 isUnicodeL c
   = isInList c
     [ ('A','Z')
@@ -589,7 +589,7 @@ isUnicodeL c
 
 -- ------------------------------------------------------------
 
-isUnicodeLl	:: Char -> Bool
+isUnicodeLl     :: Char -> Bool
 isUnicodeLl c
   = isInList c
     [ ('a','z')
@@ -1195,7 +1195,7 @@ isUnicodeLl c
 
 -- ------------------------------------------------------------
 
-isUnicodeLm	:: Char -> Bool
+isUnicodeLm     :: Char -> Bool
 isUnicodeLm c
   = isInList c
     [ ('\688','\705')
@@ -1251,7 +1251,7 @@ isUnicodeLm c
 
 -- ------------------------------------------------------------
 
-isUnicodeLo	:: Char -> Bool
+isUnicodeLo     :: Char -> Bool
 isUnicodeLo c
   = isInList c
     [ ('\443','\443')
@@ -1574,7 +1574,7 @@ isUnicodeLo c
 
 -- ------------------------------------------------------------
 
-isUnicodeLt	:: Char -> Bool
+isUnicodeLt     :: Char -> Bool
 isUnicodeLt c
   = isInList c
     [ ('\453','\453')
@@ -1591,7 +1591,7 @@ isUnicodeLt c
 
 -- ------------------------------------------------------------
 
-isUnicodeLu	:: Char -> Bool
+isUnicodeLu     :: Char -> Bool
 isUnicodeLu c
   = isInList c
     [ ('A','Z')
@@ -2192,7 +2192,7 @@ isUnicodeLu c
 
 -- ------------------------------------------------------------
 
-isUnicodeM	:: Char -> Bool
+isUnicodeM      :: Char -> Bool
 isUnicodeM c
   = isInList c
     [ ('\768','\879')
@@ -2387,7 +2387,7 @@ isUnicodeM c
 
 -- ------------------------------------------------------------
 
-isUnicodeMc	:: Char -> Bool
+isUnicodeMc     :: Char -> Bool
 isUnicodeMc c
   = isInList c
     [ ('\2307','\2307')
@@ -2500,7 +2500,7 @@ isUnicodeMc c
 
 -- ------------------------------------------------------------
 
-isUnicodeMe	:: Char -> Bool
+isUnicodeMe     :: Char -> Bool
 isUnicodeMe c
   = isInList c
     [ ('\1160','\1161')
@@ -2512,7 +2512,7 @@ isUnicodeMe c
 
 -- ------------------------------------------------------------
 
-isUnicodeMn	:: Char -> Bool
+isUnicodeMn     :: Char -> Bool
 isUnicodeMn c
   = isInList c
     [ ('\768','\879')
@@ -2713,7 +2713,7 @@ isUnicodeMn c
 
 -- ------------------------------------------------------------
 
-isUnicodeN	:: Char -> Bool
+isUnicodeN      :: Char -> Bool
 isUnicodeN c
   = isInList c
     [ ('0','9')
@@ -2801,7 +2801,7 @@ isUnicodeN c
 
 -- ------------------------------------------------------------
 
-isUnicodeNd	:: Char -> Bool
+isUnicodeNd     :: Char -> Bool
 isUnicodeNd c
   = isInList c
     [ ('0','9')
@@ -2845,7 +2845,7 @@ isUnicodeNd c
 
 -- ------------------------------------------------------------
 
-isUnicodeNl	:: Char -> Bool
+isUnicodeNl     :: Char -> Bool
 isUnicodeNl c
   = isInList c
     [ ('\5870','\5872')
@@ -2864,7 +2864,7 @@ isUnicodeNl c
 
 -- ------------------------------------------------------------
 
-isUnicodeNo	:: Char -> Bool
+isUnicodeNo     :: Char -> Bool
 isUnicodeNo c
   = isInList c
     [ ('\178','\179')
@@ -2909,7 +2909,7 @@ isUnicodeNo c
 
 -- ------------------------------------------------------------
 
-isUnicodeP	:: Char -> Bool
+isUnicodeP      :: Char -> Bool
 isUnicodeP c
   = isInList c
     [ ('!','#')
@@ -3045,7 +3045,7 @@ isUnicodeP c
 
 -- ------------------------------------------------------------
 
-isUnicodePc	:: Char -> Bool
+isUnicodePc     :: Char -> Bool
 isUnicodePc c
   = isInList c
     [ ('_','_')
@@ -3058,7 +3058,7 @@ isUnicodePc c
 
 -- ------------------------------------------------------------
 
-isUnicodePd	:: Char -> Bool
+isUnicodePd     :: Char -> Bool
 isUnicodePd c
   = isInList c
     [ ('-','-')
@@ -3080,7 +3080,7 @@ isUnicodePd c
 
 -- ------------------------------------------------------------
 
-isUnicodePe	:: Char -> Bool
+isUnicodePe     :: Char -> Bool
 isUnicodePe c
   = isInList c
     [ (')',')')
@@ -3157,7 +3157,7 @@ isUnicodePe c
 
 -- ------------------------------------------------------------
 
-isUnicodePf	:: Char -> Bool
+isUnicodePf     :: Char -> Bool
 isUnicodePf c
   = isInList c
     [ ('\187','\187')
@@ -3174,7 +3174,7 @@ isUnicodePf c
 
 -- ------------------------------------------------------------
 
-isUnicodePi	:: Char -> Bool
+isUnicodePi     :: Char -> Bool
 isUnicodePi c
   = isInList c
     [ ('\171','\171')
@@ -3192,7 +3192,7 @@ isUnicodePi c
 
 -- ------------------------------------------------------------
 
-isUnicodePo	:: Char -> Bool
+isUnicodePo     :: Char -> Bool
 isUnicodePo c
   = isInList c
     [ ('!','#')
@@ -3323,7 +3323,7 @@ isUnicodePo c
 
 -- ------------------------------------------------------------
 
-isUnicodePs	:: Char -> Bool
+isUnicodePs     :: Char -> Bool
 isUnicodePs c
   = isInList c
     [ ('(','(')
@@ -3402,7 +3402,7 @@ isUnicodePs c
 
 -- ------------------------------------------------------------
 
-isUnicodeS	:: Char -> Bool
+isUnicodeS      :: Char -> Bool
 isUnicodeS c
   = isInList c
     [ ('$','$')
@@ -3607,7 +3607,7 @@ isUnicodeS c
 
 -- ------------------------------------------------------------
 
-isUnicodeSc	:: Char -> Bool
+isUnicodeSc     :: Char -> Bool
 isUnicodeSc c
   = isInList c
     [ ('$','$')
@@ -3630,7 +3630,7 @@ isUnicodeSc c
 
 -- ------------------------------------------------------------
 
-isUnicodeSk	:: Char -> Bool
+isUnicodeSk     :: Char -> Bool
 isUnicodeSk c
   = isInList c
     [ ('^','^')
@@ -3663,7 +3663,7 @@ isUnicodeSk c
 
 -- ------------------------------------------------------------
 
-isUnicodeSm	:: Char -> Bool
+isUnicodeSm     :: Char -> Bool
 isUnicodeSm c
   = isInList c
     [ ('+','+')
@@ -3735,7 +3735,7 @@ isUnicodeSm c
 
 -- ------------------------------------------------------------
 
-isUnicodeSo	:: Char -> Bool
+isUnicodeSo     :: Char -> Bool
 isUnicodeSo c
   = isInList c
     [ ('\166','\167')
@@ -3896,7 +3896,7 @@ isUnicodeSo c
 
 -- ------------------------------------------------------------
 
-isUnicodeZ	:: Char -> Bool
+isUnicodeZ      :: Char -> Bool
 isUnicodeZ c
   = isInList c
     [ (' ',' ')
@@ -3912,7 +3912,7 @@ isUnicodeZ c
 
 -- ------------------------------------------------------------
 
-isUnicodeZl	:: Char -> Bool
+isUnicodeZl     :: Char -> Bool
 isUnicodeZl c
   = isInList c
     [ ('\8232','\8232')
@@ -3920,7 +3920,7 @@ isUnicodeZl c
 
 -- ------------------------------------------------------------
 
-isUnicodeZp	:: Char -> Bool
+isUnicodeZp     :: Char -> Bool
 isUnicodeZp c
   = isInList c
     [ ('\8233','\8233')
@@ -3928,7 +3928,7 @@ isUnicodeZp c
 
 -- ------------------------------------------------------------
 
-isUnicodeZs	:: Char -> Bool
+isUnicodeZs     :: Char -> Bool
 isUnicodeZs c
   = isInList c
     [ (' ',' ')
