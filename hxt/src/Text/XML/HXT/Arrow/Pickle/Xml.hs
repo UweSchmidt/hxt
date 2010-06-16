@@ -354,9 +354,9 @@ xpTree  = PU { appPickle   = \ (s, st) -> addCont s st
           t <- getCont st
           return (Just t, dropCont st)
 
--- | Pickle a whole list of XmlTrees by just adding the list, unpickle is done by taking all element contens.
+-- | Pickle a whole list of XmlTrees by just adding the list, unpickle is done by taking all element contents.
 --
--- This pickler should always combined with 'xpElem' for taking the whole contents of an element.
+-- This pickler should always be combined with 'xpElem' for taking the whole contents of an element.
 
 xpTrees :: PU [XmlTree]
 xpTrees = (xpList xpTree) { theSchema = Any }

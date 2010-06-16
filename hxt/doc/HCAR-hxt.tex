@@ -1,7 +1,7 @@
 \begin{hcarentry}[updated]{Haskell XML Toolbox}
 \label{hxt}
-\report{Uwe Schmidt}%10/09
-\status{seventh major release (current release: 8.3.2)}
+\report{Uwe Schmidt}%05/10
+\status{seventh major release (current release: 8.5.2)}
 \makeheader
 
 \subsubsection*{Description}
@@ -20,11 +20,12 @@ than the filter approach taken in the earlier HXT versions and in HaXml.
 It is also safer; type checking of combinators becomes possible with the arrow
 approach.
 
-HXT consists of two packages, the old first approach (hxt-filter)
-based on filters and the newer and more flexible and save approach
-using arrows (hxt). The old package hxt-filter, will further be maintained to work
-with the latest ghc version, but new development will only be done
-with the arrow based hxt package.
+HXT is partitioned into 6 packages: The base package {\tt hxt}, the package for the
+old approach working with filter {\tt hxt-filter} (this one will not be further
+developed), the package {\tt hxt-xpath} for XPath functionality, {\tt hxt-xslt}
+for the XSLT interpreter, {\tt hxt-binary} a small package for binary (de-)serialization
+of HXT DOM trees, and {\tt hxt-cache}, a package for caching XML/HTML documents in parsed
+format.
 
 \subsubsection*{Features}
 
@@ -43,8 +44,8 @@ with the arrow based hxt package.
 \item Relax~NG schema validator
 \item An HXT Cookbook for using the toolbox and the arrow interface
 \item Basic XSLT support
-\item Darcs repository with current development version (8.3.1) under
-  \url{http://darcs2.fh-wedel.de/hxt}
+\item Git repository with current development versions of all packages
+  \url{http://git.fh-wedel.de/repos/hxt.git}
 \end{itemize}
 
 \subsubsection*{Current Work}
@@ -54,6 +55,7 @@ space and runtime optimizations.
 
 The HXT library is extensively used in the Holumbus
 project~\cref{holumbus}, there it forms the basis for the index generation.
+Development is currently driven by the needs of the Holumbus project.
 
 \FurtherReading
 The Haskell XML Toolbox Web page

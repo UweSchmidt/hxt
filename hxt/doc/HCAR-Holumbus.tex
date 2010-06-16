@@ -1,8 +1,8 @@
 \begin{hcarentry}[updated]{Holumbus Search Engine Framework}
 \label{holumbus}
-\report{Uwe Schmidt}%10/09
-\participants{Timo~B.\ H\"ubel, Sebastian Reese, Sebastian Schlatt,
-  Stefan Schmidt, Bj\"orn Peem\"oller, Stefan Roggensack, Alexander Treptow}
+\report{Uwe Schmidt}%05/10
+\participants{Timo~B.\ H\"ubel, Sebastian Gauck,
+  Stefan Schmidt, Bj\"orn Peem\"oller, Stefan Roggensack, Sebastian Reese, Alexander Treptow, Uwe Schmidt}
 \status{first release}
 \makeheader
 
@@ -50,29 +50,32 @@ and a distributed storage system.
 \item Fuzzy queries
 \item Customizable result ranking
 \item Index structure designed for distributed search
-\item Darcs repository with current development version under
-  \url{http://darcs2.fh-wedel.de/holumbus}
+\item Git repository containing the current development version of all packages under
+  \url{http://holumbus.fh-wedel.de/src.git}
 \item Distributed building of search indexes
 \end{itemize}
 
 \subsubsection*{Current Work}
 
-The indexer and search module will be used and extended
-to support the Hayoo!\ engine for searching the hackage package library
-(http://holumbus.fh-wedel.de/hayoo/hayoo.html).
+The data structures of the Holumbus indexes have been optimized
+for space and time. There is a new and efficient prefix tree structure,
+which further enables index updates.
 
-In a follow-up project of Stefan Schmidts system,
-Sebasian Reese is working on a {\em cookbook}
-for programming with the MapReduce framework and for giving
+The indexer and search module is used
+to support the Hayoo!\ engine for searching the hackage package library
+(http://holumbus.fh-wedel.de/hayoo/hayoo.html). Because of the fast growing number
+of packages on hackage, the Hayoo! search engine will be extended by a package search.
+
+Sebastian Reese has finished his work on applying the
+the MapReduce framework and for giving
 tuning and configuration hints. Benchmarks for various small problems
 and for generating search indexes have shown, that the architecture
-scales very well. The thesis with the final results will be finished
-end of March 2010. 
+scales very well.
 
-In a further subproject, the so called Hawk system, 
-Bj\"orn Peem\"oller and Stefan Roggensack developped a web framework
-for Haskell. The results of this master thesis will be published soon
-on the Holumbus web site.
+In the subproject of Holumbus, the so called Hawk framework, 
+Bj\"orn Peem\"oller and Stefan Roggensack have developed a web framework
+for Haskell. Currently Alexander Treptow is applying, testing and extending the
+framework. A first application is a customizable search for Hayoo!
 
 The Hawk system is comparable in functionality and architecture with Ruby on Rail
 and other web frameworks. Its architecture follows the MVC pattern.
@@ -82,25 +85,22 @@ interesting features: Fist the templates are valid XHTML documents. The parts,
 where data has to be filled in, are marked with Hawk specific elements and attributes.
 These parts are in a different namespace, so they do not destroy the XHTML structure.
 The second interesting feature is, that the templates contain type descriptions for
-the values to be filled in. This type information enables a static check, whether
+the values to be filled in. This type information enables a static type check, whether
 the models and views fit together.
 
 The Hawk framework is independent of the Holumbus search engine.
-It will be applicable for the development of arbitrary web applications,
-but one of the first applications is the reimplementation of the web interface
-for Hayoo! search engine. This project will be done by Alexander Treptow within
-the next six months.
+It will be applicable for the development of arbitrary web applications.
 
 \FurtherReading
 
 The Holumbus web page
 (\url{http://holumbus.fh-wedel.de/})
-includes downloads, Darcs web interface, current status, requirements, 
+includes downloads, Git web interface, current status, requirements, 
 and documentation.
 Timo H\"ubel's master thesis describing the Holumbus index structure and
 the search engine is available at
 \url{http://holumbus.fh-wedel.de/branches/develop/doc/thesis-searching.pdf}.
-Sebastian Schlatt's thesis dealing with the crawler component is
+Sebastian Gauck's  thesis dealing with the crawler component is
 available at
 \url{http://holumbus.fh-wedel.de/src/doc/thesis-indexing.pdf}
 The thesis of Stefan Schmidt describing the Holumbus MapReduce is
