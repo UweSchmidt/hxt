@@ -24,11 +24,14 @@ module Text.XML.HXT.RelaxNG.XmlSchema.RegexMatch
     , sedRE
     , tokenizeRE
     , tokenizeRE'
+
     , match
     , tokenize
     , tokenize'
     , sed
     , split
+
+    , splitRegex
     )
 where
 
