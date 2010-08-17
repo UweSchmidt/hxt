@@ -240,33 +240,48 @@ extendNsEnv withNamespaces al1 env
 
 -- own entity lookup to prevent problems with &amp; and tagsoup hack for IE
 
-lookupEntity    :: Bool -> Bool -> String -> Tags
-lookupEntity withWarnings _asHtml e0@('#':e)
+lookupEntity    :: Bool -> Bool -> (String, Bool) -> Tags
+lookupEntity withWarnings _asHtml (e0@('#':e), withSemicolon)
     = case lookupNumericEntity e of
-      Just c  -> [ TagText [c] ]
-      Nothing -> ( TagText $ "&" ++ e0 ++ ";") :
-                 if withWarnings
-                 then [TagWarning $ "illegal char reference: &" ++ e ++ ";"]
-                 else []
+      Just c  -> (TagText [c])
+		 : missingSemi
+      Nothing -> ( TagText $ "&" ++ e0 ++ [';' | withSemicolon])
+		 : if withWarnings
+                   then (TagWarning $ "illegal char reference: &" ++ e ++ ";")
+		        : missingSemi
+		   else []
+    where
+    missingSemi
+	| withWarnings
+	  &&
+	  not withSemicolon = [TagWarning $ "missing \";\" at end of char reference: &" ++ e]
+        | otherwise         = []
 
-lookupEntity withWarnings asHtml e
+lookupEntity withWarnings asHtml (e, withSemicolon)
     = case (lookup e entities) of
-      Just x  -> [TagText [toEnum x]]
-      Nothing -> (TagText $ "&" ++ e ++ ";") :
-                 if withWarnings
-                 then [TagWarning $ "Unknown entity reference: &" ++ e ++ ";"]
-                 else []
+      Just x  -> (TagText [toEnum x])
+		 : missingSemi
+      Nothing -> (TagText $ "&" ++ e ++ [';' | withSemicolon])
+		 : if withWarnings
+                   then (TagWarning $ "Unknown entity reference: &" ++ e ++ ";")
+			: missingSemi
+		   else []
     where
     entities
         | asHtml    = xhtmlEntities
         | otherwise = xhtmlEntities -- xmlEntities (TODO: xhtml is xml and html)
+    missingSemi
+	| withWarnings
+	  &&
+	  not withSemicolon = [TagWarning $ "missing \";\" at end of entity reference: &" ++ e]
+        | otherwise         = []
 
 lookupEntityAttr        :: Bool -> Bool -> (String, Bool) -> (String, Tags)
 lookupEntityAttr withWarnings asHtml (e, b)
     | null r    = (s,                   r)
-    | otherwise = ("&" ++ s ++ [';'|b], r)
+    | otherwise = ("&" ++ s ++ [';' | b], r)
     where
-    (TagText s) : r = lookupEntity withWarnings asHtml e
+    (TagText s) : r = lookupEntity withWarnings asHtml (e, b)
 
 -- ----------------------------------------
 {-
@@ -317,7 +332,7 @@ parseHtmlTagSoup withNamespaces withWarnings withComment removeWhiteSpace asHtml
     tagsoupParse        = parseTagsOptions tagsoupOptions
 
     tagsoupOptions      :: ParseOptions String
-    tagsoupOptions      = parseOptions' { optTagWarning     = withWarnings
+    tagsoupOptions      = parseOptions' { optTagWarning   = withWarnings
                                         , optEntityData   = lookupEntity     withWarnings asHtml
                                         , optEntityAttrib = lookupEntityAttr withWarnings asHtml
                                         }

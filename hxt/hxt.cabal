@@ -1,6 +1,6 @@
 -- arch-tag: Haskell XML Toolbox main description file
 Name:           hxt
-Version:        8.5.3
+Version:        8.5.4
 Synopsis:       A collection of tools for processing XML with Haskell. 
 Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
                 but introduces a more general approach for processing XML with Haskell.
@@ -183,5 +183,5 @@ library
                 network    >= 2.1 && < 3,
                 deepseq    >= 1.1 && < 2,
                 bytestring >= 0.9 && < 1,
-                tagsoup    >= 0.8 && < 0.9,
+                tagsoup    >= 0.10 && < 0.11,
                 curl       >= 1.3 && < 2

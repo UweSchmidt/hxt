@@ -140,6 +140,8 @@ test5		:
 
 test6		:
 		@echo "===> tagsoup parsing examples" ; echo ; sleep 2
+		@echo "===> lousy HTML document" ; echo ; sleep 2
+		$(prog) --tagsoup --parse-html lousy.html
 		@echo "===> www.w3c.org homepage (valid XHTML)" ; echo ; sleep 2
 		$(prog) --tagsoup http://www.w3c.org/
 		@echo "===> same again with removed whitespace and tree output" ; echo ; sleep 2
