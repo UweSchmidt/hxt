@@ -327,15 +327,25 @@ seRange
 
 charOrEsc'      :: Parser Char
 charOrEsc'
-    = satisfy (`notElem` "\\-[]")
+    = ( do
+        _ <- char '\\'
+        singleCharEsc'
+      )
       <|>
-      singleCharEsc'
+      satisfy (`notElem` "\\-[]")
 
 xmlCharIncDash  :: Parser Regex
 xmlCharIncDash
-    = do
-      c <- satisfy (`notElem` "\\[]")
-      return $ mkSym1 c
+    = try ( do				-- dash is only allowed if not followed by a [, else charGroup differences do not parse correctly
+            _ <- char '-'
+            notFollowedBy (char '[')
+            return $ mkSym1 '-'
+          )
+      <|>
+      ( do
+        c <- satisfy (`notElem` "-\\[]")
+        return $ mkSym1 c
+      )
 
 negCharGroup    :: Parser Regex
 negCharGroup
