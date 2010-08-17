@@ -275,7 +275,7 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
     -- > insertTreeTemplateTest
     -- >     = doc
     -- >       >>>
-    -- >       insertTemplate template pattern
+    -- >       insertTreeTemplate template pattern
     -- >     where
     -- >     doc                                                                -- the input data
     -- >        = constA "<x><y>The Title</y><z>The content</z></x>"
