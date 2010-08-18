@@ -85,11 +85,7 @@ header1
 header2
     = [ "where"
       , ""
-      , cmt
-      , ""
-      , "isInList        :: Char -> [(Char, Char)] -> Bool"
-      , "isInList i      ="
-      , "   foldr (\\ (lb, ub) b -> i >= lb && (i <= ub || b)) False"
+      , "import Data.Set.CharSet"
       , ""
       , cmt
       , ""
@@ -133,9 +129,9 @@ genPred n rngs
     = unlines $
       [ "isUnicode" ++ n ++ " :: Char -> Bool"
       , "isUnicode" ++ n ++ " c"
-      , "  = isInList c charProp" ++ n
+      , "  = elemCS c charProp" ++ n
       , ""
-      , "charProp" ++ n ++ " :: [(Char, Char)]"
+      , "charProp" ++ n ++ " :: CharSet"
       , "charProp" ++ n
       , "  = [ " ++ (join "\n    , " . map show) rngs
       , "    ]"

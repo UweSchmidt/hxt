@@ -36,7 +36,8 @@ genBlocks
             )
             &&&
             ( head
-              >>> drop 2
+              >>> dropWhile (/= '-')
+              >>> drop 1
               >>> reverse
               >>> drop 4
               >>> reverse
@@ -73,7 +74,7 @@ genBlocks
           , "module Data.Char.Properties.UnicodeBlocks"
           , "  ( codeBlocks"
           , "  , elemCodeBlock"
-          , "  , versionCodeBlocks"
+          , "  , versionUnicode"
           ]
 
     header2
@@ -115,8 +116,8 @@ genBlocks
 
     processVersion vers
         = unlines
-          [ "versionCodeBlocks :: String"
-          , "versionCodeBlocks = " ++ show vers
+          [ "versionUnicode :: String"
+          , "versionUnicode = " ++ show vers
           , ""
           ]
 

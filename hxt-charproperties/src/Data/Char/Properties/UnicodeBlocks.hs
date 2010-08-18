@@ -20,7 +20,7 @@
 module Data.Char.Properties.UnicodeBlocks
   ( codeBlocks
   , elemCodeBlock
-  , versionCodeBlocks
+  , versionUnicode
   , isBasicLatin
   , isLatin1Supplement
   , isLatinExtendedA
@@ -223,8 +223,8 @@ where
 
 -- ------------------------------------------------------------
 
-versionCodeBlocks :: String
-versionCodeBlocks = "Blocks-5.2.0"
+versionUnicode :: String
+versionUnicode = "5.2.0"
 
 elemCodeBlock     :: Char -> String -> Bool
 elemCodeBlock c b = maybe False (\ (lb, ub) -> c >= lb && c <= ub) $ lookup b codeBlocks

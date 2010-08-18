@@ -4,7 +4,7 @@ Synopsis:            character properties and classes for XML and Unicode
 Description:         Character proprties defined by XML and Unicode standards.
                      These modules contain predicates for Unicode blocks and char proprties
                      and character predicates defined by XML.
-                     Supported Unicode version for blocks is 5.2.0.
+                     Supported Unicode version is 5.2.0.
 Homepage:            http://www.fh-wedel.de/~si/HXmlToolbox/index.html
 License:             OtherLicense
 License-file:        LICENSE
@@ -32,15 +32,14 @@ Library
   Exposed-modules:     
     Data.Char.Properties.UnicodeBlocks
     Data.Char.Properties.UnicodeCharProps
+    Data.Char.Properties.XMLCharProps
+    Data.Set.CharSet
 
   Build-depends:      base >= 4 && < 5 
   
   -- Modules not exported by this package.
   -- Other-modules:       
   
-  -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
-  -- Build-tools:         
-
   hs-source-dirs: src
 
   ghc-options: -Wall
