@@ -54,42 +54,42 @@ module Data.Char.Properties.UnicodeCharProps
   , isUnicodeZl
   , isUnicodeZp
   , isUnicodeZs
-  , charPropC
-  , charPropCc
-  , charPropCf
-  , charPropCo
-  , charPropCs
-  , charPropL
-  , charPropLl
-  , charPropLm
-  , charPropLo
-  , charPropLt
-  , charPropLu
-  , charPropM
-  , charPropMc
-  , charPropMe
-  , charPropMn
-  , charPropN
-  , charPropNd
-  , charPropNl
-  , charPropNo
-  , charPropP
-  , charPropPc
-  , charPropPd
-  , charPropPe
-  , charPropPf
-  , charPropPi
-  , charPropPo
-  , charPropPs
-  , charPropS
-  , charPropSc
-  , charPropSk
-  , charPropSm
-  , charPropSo
-  , charPropZ
-  , charPropZl
-  , charPropZp
-  , charPropZs
+  , charPropUnicodeC
+  , charPropUnicodeCc
+  , charPropUnicodeCf
+  , charPropUnicodeCo
+  , charPropUnicodeCs
+  , charPropUnicodeL
+  , charPropUnicodeLl
+  , charPropUnicodeLm
+  , charPropUnicodeLo
+  , charPropUnicodeLt
+  , charPropUnicodeLu
+  , charPropUnicodeM
+  , charPropUnicodeMc
+  , charPropUnicodeMe
+  , charPropUnicodeMn
+  , charPropUnicodeN
+  , charPropUnicodeNd
+  , charPropUnicodeNl
+  , charPropUnicodeNo
+  , charPropUnicodeP
+  , charPropUnicodePc
+  , charPropUnicodePd
+  , charPropUnicodePe
+  , charPropUnicodePf
+  , charPropUnicodePi
+  , charPropUnicodePo
+  , charPropUnicodePs
+  , charPropUnicodeS
+  , charPropUnicodeSc
+  , charPropUnicodeSk
+  , charPropUnicodeSm
+  , charPropUnicodeSo
+  , charPropUnicodeZ
+  , charPropUnicodeZl
+  , charPropUnicodeZp
+  , charPropUnicodeZs
   )
 where
 
@@ -99,10 +99,10 @@ import Data.Set.CharSet
 
 isUnicodeC :: Char -> Bool
 isUnicodeC c
-  = elemCS c charPropC
+  = elemCS c charPropUnicodeC
 
-charPropC :: CharSet
-charPropC
+charPropUnicodeC :: CharSet
+charPropUnicodeC
   = [ ('\NUL','\US')
     , ('\DEL','\159')
     , ('\173','\173')
@@ -135,10 +135,10 @@ charPropC
 
 isUnicodeCc :: Char -> Bool
 isUnicodeCc c
-  = elemCS c charPropCc
+  = elemCS c charPropUnicodeCc
 
-charPropCc :: CharSet
-charPropCc
+charPropUnicodeCc :: CharSet
+charPropUnicodeCc
   = [ ('\NUL','\US')
     , ('\DEL','\159')
     ]
@@ -147,10 +147,10 @@ charPropCc
 
 isUnicodeCf :: Char -> Bool
 isUnicodeCf c
-  = elemCS c charPropCf
+  = elemCS c charPropUnicodeCf
 
-charPropCf :: CharSet
-charPropCf
+charPropUnicodeCf :: CharSet
+charPropUnicodeCf
   = [ ('\173','\173')
     , ('\1536','\1539')
     , ('\1757','\1757')
@@ -172,10 +172,10 @@ charPropCf
 
 isUnicodeCo :: Char -> Bool
 isUnicodeCo c
-  = elemCS c charPropCo
+  = elemCS c charPropUnicodeCo
 
-charPropCo :: CharSet
-charPropCo
+charPropUnicodeCo :: CharSet
+charPropUnicodeCo
   = [ ('\57344','\57344')
     , ('\63743','\63743')
     , ('\983040','\983040')
@@ -188,10 +188,10 @@ charPropCo
 
 isUnicodeCs :: Char -> Bool
 isUnicodeCs c
-  = elemCS c charPropCs
+  = elemCS c charPropUnicodeCs
 
-charPropCs :: CharSet
-charPropCs
+charPropUnicodeCs :: CharSet
+charPropUnicodeCs
   = [ ('\55296','\55296')
     , ('\56191','\56192')
     , ('\56319','\56320')
@@ -202,10 +202,10 @@ charPropCs
 
 isUnicodeL :: Char -> Bool
 isUnicodeL c
-  = elemCS c charPropL
+  = elemCS c charPropUnicodeL
 
-charPropL :: CharSet
-charPropL
+charPropUnicodeL :: CharSet
+charPropUnicodeL
   = [ ('A','Z')
     , ('a','z')
     , ('\170','\170')
@@ -639,10 +639,10 @@ charPropL
 
 isUnicodeLl :: Char -> Bool
 isUnicodeLl c
-  = elemCS c charPropLl
+  = elemCS c charPropUnicodeLl
 
-charPropLl :: CharSet
-charPropLl
+charPropUnicodeLl :: CharSet
+charPropUnicodeLl
   = [ ('a','z')
     , ('\170','\170')
     , ('\181','\181')
@@ -1248,10 +1248,10 @@ charPropLl
 
 isUnicodeLm :: Char -> Bool
 isUnicodeLm c
-  = elemCS c charPropLm
+  = elemCS c charPropUnicodeLm
 
-charPropLm :: CharSet
-charPropLm
+charPropUnicodeLm :: CharSet
+charPropUnicodeLm
   = [ ('\688','\705')
     , ('\710','\721')
     , ('\736','\740')
@@ -1307,10 +1307,10 @@ charPropLm
 
 isUnicodeLo :: Char -> Bool
 isUnicodeLo c
-  = elemCS c charPropLo
+  = elemCS c charPropUnicodeLo
 
-charPropLo :: CharSet
-charPropLo
+charPropUnicodeLo :: CharSet
+charPropUnicodeLo
   = [ ('\443','\443')
     , ('\448','\451')
     , ('\660','\660')
@@ -1633,10 +1633,10 @@ charPropLo
 
 isUnicodeLt :: Char -> Bool
 isUnicodeLt c
-  = elemCS c charPropLt
+  = elemCS c charPropUnicodeLt
 
-charPropLt :: CharSet
-charPropLt
+charPropUnicodeLt :: CharSet
+charPropUnicodeLt
   = [ ('\453','\453')
     , ('\456','\456')
     , ('\459','\459')
@@ -1653,10 +1653,10 @@ charPropLt
 
 isUnicodeLu :: Char -> Bool
 isUnicodeLu c
-  = elemCS c charPropLu
+  = elemCS c charPropUnicodeLu
 
-charPropLu :: CharSet
-charPropLu
+charPropUnicodeLu :: CharSet
+charPropUnicodeLu
   = [ ('A','Z')
     , ('\192','\214')
     , ('\216','\222')
@@ -2257,10 +2257,10 @@ charPropLu
 
 isUnicodeM :: Char -> Bool
 isUnicodeM c
-  = elemCS c charPropM
+  = elemCS c charPropUnicodeM
 
-charPropM :: CharSet
-charPropM
+charPropUnicodeM :: CharSet
+charPropUnicodeM
   = [ ('\768','\879')
     , ('\1155','\1161')
     , ('\1425','\1469')
@@ -2455,10 +2455,10 @@ charPropM
 
 isUnicodeMc :: Char -> Bool
 isUnicodeMc c
-  = elemCS c charPropMc
+  = elemCS c charPropUnicodeMc
 
-charPropMc :: CharSet
-charPropMc
+charPropUnicodeMc :: CharSet
+charPropUnicodeMc
   = [ ('\2307','\2307')
     , ('\2366','\2368')
     , ('\2377','\2380')
@@ -2571,10 +2571,10 @@ charPropMc
 
 isUnicodeMe :: Char -> Bool
 isUnicodeMe c
-  = elemCS c charPropMe
+  = elemCS c charPropUnicodeMe
 
-charPropMe :: CharSet
-charPropMe
+charPropUnicodeMe :: CharSet
+charPropUnicodeMe
   = [ ('\1160','\1161')
     , ('\1758','\1758')
     , ('\8413','\8416')
@@ -2586,10 +2586,10 @@ charPropMe
 
 isUnicodeMn :: Char -> Bool
 isUnicodeMn c
-  = elemCS c charPropMn
+  = elemCS c charPropUnicodeMn
 
-charPropMn :: CharSet
-charPropMn
+charPropUnicodeMn :: CharSet
+charPropUnicodeMn
   = [ ('\768','\879')
     , ('\1155','\1159')
     , ('\1425','\1469')
@@ -2790,10 +2790,10 @@ charPropMn
 
 isUnicodeN :: Char -> Bool
 isUnicodeN c
-  = elemCS c charPropN
+  = elemCS c charPropUnicodeN
 
-charPropN :: CharSet
-charPropN
+charPropUnicodeN :: CharSet
+charPropUnicodeN
   = [ ('0','9')
     , ('\178','\179')
     , ('\185','\185')
@@ -2881,10 +2881,10 @@ charPropN
 
 isUnicodeNd :: Char -> Bool
 isUnicodeNd c
-  = elemCS c charPropNd
+  = elemCS c charPropUnicodeNd
 
-charPropNd :: CharSet
-charPropNd
+charPropUnicodeNd :: CharSet
+charPropUnicodeNd
   = [ ('0','9')
     , ('\1632','\1641')
     , ('\1776','\1785')
@@ -2928,10 +2928,10 @@ charPropNd
 
 isUnicodeNl :: Char -> Bool
 isUnicodeNl c
-  = elemCS c charPropNl
+  = elemCS c charPropUnicodeNl
 
-charPropNl :: CharSet
-charPropNl
+charPropUnicodeNl :: CharSet
+charPropUnicodeNl
   = [ ('\5870','\5872')
     , ('\8544','\8578')
     , ('\8581','\8584')
@@ -2950,10 +2950,10 @@ charPropNl
 
 isUnicodeNo :: Char -> Bool
 isUnicodeNo c
-  = elemCS c charPropNo
+  = elemCS c charPropUnicodeNo
 
-charPropNo :: CharSet
-charPropNo
+charPropUnicodeNo :: CharSet
+charPropUnicodeNo
   = [ ('\178','\179')
     , ('\185','\185')
     , ('\188','\190')
@@ -2998,10 +2998,10 @@ charPropNo
 
 isUnicodeP :: Char -> Bool
 isUnicodeP c
-  = elemCS c charPropP
+  = elemCS c charPropUnicodeP
 
-charPropP :: CharSet
-charPropP
+charPropUnicodeP :: CharSet
+charPropUnicodeP
   = [ ('!','#')
     , ('%','*')
     , (',','/')
@@ -3137,10 +3137,10 @@ charPropP
 
 isUnicodePc :: Char -> Bool
 isUnicodePc c
-  = elemCS c charPropPc
+  = elemCS c charPropUnicodePc
 
-charPropPc :: CharSet
-charPropPc
+charPropUnicodePc :: CharSet
+charPropUnicodePc
   = [ ('_','_')
     , ('\8255','\8256')
     , ('\8276','\8276')
@@ -3153,10 +3153,10 @@ charPropPc
 
 isUnicodePd :: Char -> Bool
 isUnicodePd c
-  = elemCS c charPropPd
+  = elemCS c charPropUnicodePd
 
-charPropPd :: CharSet
-charPropPd
+charPropUnicodePd :: CharSet
+charPropUnicodePd
   = [ ('-','-')
     , ('\1418','\1418')
     , ('\1470','\1470')
@@ -3178,10 +3178,10 @@ charPropPd
 
 isUnicodePe :: Char -> Bool
 isUnicodePe c
-  = elemCS c charPropPe
+  = elemCS c charPropUnicodePe
 
-charPropPe :: CharSet
-charPropPe
+charPropUnicodePe :: CharSet
+charPropUnicodePe
   = [ (')',')')
     , (']',']')
     , ('}','}')
@@ -3258,10 +3258,10 @@ charPropPe
 
 isUnicodePf :: Char -> Bool
 isUnicodePf c
-  = elemCS c charPropPf
+  = elemCS c charPropUnicodePf
 
-charPropPf :: CharSet
-charPropPf
+charPropUnicodePf :: CharSet
+charPropUnicodePf
   = [ ('\187','\187')
     , ('\8217','\8217')
     , ('\8221','\8221')
@@ -3278,10 +3278,10 @@ charPropPf
 
 isUnicodePi :: Char -> Bool
 isUnicodePi c
-  = elemCS c charPropPi
+  = elemCS c charPropUnicodePi
 
-charPropPi :: CharSet
-charPropPi
+charPropUnicodePi :: CharSet
+charPropUnicodePi
   = [ ('\171','\171')
     , ('\8216','\8216')
     , ('\8219','\8220')
@@ -3299,10 +3299,10 @@ charPropPi
 
 isUnicodePo :: Char -> Bool
 isUnicodePo c
-  = elemCS c charPropPo
+  = elemCS c charPropUnicodePo
 
-charPropPo :: CharSet
-charPropPo
+charPropUnicodePo :: CharSet
+charPropUnicodePo
   = [ ('!','#')
     , ('%','\'')
     , ('*','*')
@@ -3433,10 +3433,10 @@ charPropPo
 
 isUnicodePs :: Char -> Bool
 isUnicodePs c
-  = elemCS c charPropPs
+  = elemCS c charPropUnicodePs
 
-charPropPs :: CharSet
-charPropPs
+charPropUnicodePs :: CharSet
+charPropUnicodePs
   = [ ('(','(')
     , ('[','[')
     , ('{','{')
@@ -3515,10 +3515,10 @@ charPropPs
 
 isUnicodeS :: Char -> Bool
 isUnicodeS c
-  = elemCS c charPropS
+  = elemCS c charPropUnicodeS
 
-charPropS :: CharSet
-charPropS
+charPropUnicodeS :: CharSet
+charPropUnicodeS
   = [ ('$','$')
     , ('+','+')
     , ('<','>')
@@ -3723,10 +3723,10 @@ charPropS
 
 isUnicodeSc :: Char -> Bool
 isUnicodeSc c
-  = elemCS c charPropSc
+  = elemCS c charPropUnicodeSc
 
-charPropSc :: CharSet
-charPropSc
+charPropUnicodeSc :: CharSet
+charPropUnicodeSc
   = [ ('$','$')
     , ('\162','\165')
     , ('\1547','\1547')
@@ -3749,10 +3749,10 @@ charPropSc
 
 isUnicodeSk :: Char -> Bool
 isUnicodeSk c
-  = elemCS c charPropSk
+  = elemCS c charPropUnicodeSk
 
-charPropSk :: CharSet
-charPropSk
+charPropUnicodeSk :: CharSet
+charPropUnicodeSk
   = [ ('^','^')
     , ('`','`')
     , ('\168','\168')
@@ -3785,10 +3785,10 @@ charPropSk
 
 isUnicodeSm :: Char -> Bool
 isUnicodeSm c
-  = elemCS c charPropSm
+  = elemCS c charPropUnicodeSm
 
-charPropSm :: CharSet
-charPropSm
+charPropUnicodeSm :: CharSet
+charPropUnicodeSm
   = [ ('+','+')
     , ('<','>')
     , ('|','|')
@@ -3860,10 +3860,10 @@ charPropSm
 
 isUnicodeSo :: Char -> Bool
 isUnicodeSo c
-  = elemCS c charPropSo
+  = elemCS c charPropUnicodeSo
 
-charPropSo :: CharSet
-charPropSo
+charPropUnicodeSo :: CharSet
+charPropUnicodeSo
   = [ ('\166','\167')
     , ('\169','\169')
     , ('\174','\174')
@@ -4024,10 +4024,10 @@ charPropSo
 
 isUnicodeZ :: Char -> Bool
 isUnicodeZ c
-  = elemCS c charPropZ
+  = elemCS c charPropUnicodeZ
 
-charPropZ :: CharSet
-charPropZ
+charPropUnicodeZ :: CharSet
+charPropUnicodeZ
   = [ (' ',' ')
     , ('\160','\160')
     , ('\5760','\5760')
@@ -4043,10 +4043,10 @@ charPropZ
 
 isUnicodeZl :: Char -> Bool
 isUnicodeZl c
-  = elemCS c charPropZl
+  = elemCS c charPropUnicodeZl
 
-charPropZl :: CharSet
-charPropZl
+charPropUnicodeZl :: CharSet
+charPropUnicodeZl
   = [ ('\8232','\8232')
     ]
 
@@ -4054,10 +4054,10 @@ charPropZl
 
 isUnicodeZp :: Char -> Bool
 isUnicodeZp c
-  = elemCS c charPropZp
+  = elemCS c charPropUnicodeZp
 
-charPropZp :: CharSet
-charPropZp
+charPropUnicodeZp :: CharSet
+charPropUnicodeZp
   = [ ('\8233','\8233')
     ]
 
@@ -4065,10 +4065,10 @@ charPropZp
 
 isUnicodeZs :: Char -> Bool
 isUnicodeZs c
-  = elemCS c charPropZs
+  = elemCS c charPropUnicodeZs
 
-charPropZs :: CharSet
-charPropZs
+charPropUnicodeZs :: CharSet
+charPropUnicodeZs
   = [ (' ',' ')
     , ('\160','\160')
     , ('\5760','\5760')

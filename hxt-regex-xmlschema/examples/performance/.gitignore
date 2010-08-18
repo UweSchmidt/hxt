@@ -1,0 +1,11 @@
+Copy
+Lines
+RElines
+REtest
+REwords
+SElines
+SEwords
+Words
+lines-[0-9]*.txt
+lines-[0-9]*.txt.*
+

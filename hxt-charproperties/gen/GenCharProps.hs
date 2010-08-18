@@ -129,10 +129,10 @@ genPred n rngs
     = unlines $
       [ "isUnicode" ++ n ++ " :: Char -> Bool"
       , "isUnicode" ++ n ++ " c"
-      , "  = elemCS c charProp" ++ n
+      , "  = elemCS c charPropUnicode" ++ n
       , ""
-      , "charProp" ++ n ++ " :: CharSet"
-      , "charProp" ++ n
+      , "charPropUnicode" ++ n ++ " :: CharSet"
+      , "charPropUnicode" ++ n
       , "  = [ " ++ (join "\n    , " . map show) rngs
       , "    ]"
       , ""
@@ -145,4 +145,4 @@ join js
 
 genExp  :: [String] -> String
 genExp ns
-    = "  ( " ++ join "\n  , " (map ("isUnicode" ++) ns ++ map ("charProp" ++) ns) ++ "\n  )"
+    = "  ( " ++ join "\n  , " (map ("isUnicode" ++) ns ++ map ("charPropUnicode" ++) ns) ++ "\n  )"
