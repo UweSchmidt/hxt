@@ -79,23 +79,23 @@ module Text.XML.HXT.Parser.XmlTokenParser
     )
 where
 
+import Data.Char.Properties.XMLCharProps
+    ( isXmlChar
+    )
+import Data.String.Unicode
+    ( intToCharRef
+    , intToCharRefHex
+    )
+
 import Text.ParserCombinators.Parsec
 
 import Text.XML.HXT.DOM.Interface
-
 import Text.XML.HXT.DOM.XmlNode
     ( mkDTDElem
     , mkText
     , mkCharRef
     , mkEntityRef
     )
-
-import Text.XML.HXT.DOM.Unicode
-    ( isXmlChar
-    , intToCharRef
-    , intToCharRefHex
-    )
-
 import Text.XML.HXT.Parser.XmlCharParser
     ( xmlNameChar
     , xmlNameStartChar

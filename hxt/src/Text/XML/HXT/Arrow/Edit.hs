@@ -66,10 +66,11 @@ import           Control.Arrow.ArrowIf
 import           Control.Arrow.ArrowTree
 import           Control.Arrow.ListArrow
 
+import           Data.Char.Properties.XMLCharProps      ( isXmlSpaceChar )
+
 import           Text.XML.HXT.Arrow.XmlArrow
 import           Text.XML.HXT.DOM.Interface
 import qualified Text.XML.HXT.DOM.XmlNode       as XN
-import           Text.XML.HXT.DOM.Unicode               ( isXmlSpaceChar )
 import           Text.XML.HXT.DOM.FormatXmlTree         ( formatXmlTree )
 import           Text.XML.HXT.Parser.HtmlParsec         ( emptyHtmlTags )
 import           Text.XML.HXT.Parser.XmlEntities        ( xmlEntities )

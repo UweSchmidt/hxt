@@ -63,11 +63,11 @@ import Text.XML.HXT.DOM.QualifiedName           ( isWellformedQualifiedName
                                                 , isNCName
                                                 )
 import Text.XML.HXT.RelaxNG.DataTypeLibUtils
-import Text.XML.HXT.RelaxNG.XmlSchema.Regex     ( Regex
-                                                , matchWithRE
-                                                )
-import Text.XML.HXT.RelaxNG.XmlSchema.RegexParser
-                                                ( parseRegex
+
+import Text.Regex.XMLSchema.String              ( Regex
+                                                , matchRE
+                                                , parseRegex
+                                                , isZero
                                                 )
 
 -- ------------------------------------------------------------
@@ -237,9 +237,10 @@ patternValid params
 
 patParamValid :: String -> String -> Bool
 patParamValid regex a
-    = case parseRegex regex of
-      (Left _  )        -> False
-      (Right ex)        -> isNothing . matchWithRE ex $ a
+    | isZero ex = False
+    | otherwise = matchRE ex a
+    where
+    ex = parseRegex regex
 
 -- ----------------------------------------
 
@@ -356,11 +357,12 @@ isNameList p w
 -- ----------------------------------------
 
 rex             :: String -> Regex
-rex             = either undefined id . parseRegex
-
-isRex           :: Regex -> String -> Bool
-isRex ex        = isNothing . matchWithRE ex
-
+rex regex
+    | isZero ex = error $ "syntax error in regexp " ++ show regex
+    | otherwise = ex
+    where
+    ex = parseRegex regex
+          
 -- ----------------------------------------
 
 rexLanguage
@@ -384,11 +386,11 @@ isLanguage
   , isDecimal
   , isInteger   :: String -> Bool
 
-isLanguage      = isRex rexLanguage
-isHexBinary     = isRex rexHexBinary
-isBase64Binary  = isRex rexBase64Binary
-isDecimal       = isRex rexDecimal
-isInteger       = isRex rexInteger
+isLanguage      = matchRE rexLanguage
+isHexBinary     = matchRE rexHexBinary
+isBase64Binary  = matchRE rexBase64Binary
+isDecimal       = matchRE rexDecimal
+isInteger       = matchRE rexInteger
 
 -- ----------------------------------------
 

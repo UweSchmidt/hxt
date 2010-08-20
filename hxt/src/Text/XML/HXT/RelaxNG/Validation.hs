@@ -28,41 +28,33 @@ module Text.XML.HXT.RelaxNG.Validation
     )
 where
 
-import Control.Arrow.ListArrows
+import           Control.Arrow.ListArrows
+
+import           Data.Char.Properties.XMLCharProps      ( isXmlSpaceChar )
+import           Data.Maybe                             ( fromJust )
 
 import           Text.XML.HXT.DOM.Interface
 import qualified Text.XML.HXT.DOM.XmlNode as XN
-import           Text.XML.HXT.DOM.Unicode
-    ( isXmlSpaceChar
-    )
 
+import           Text.XML.HXT.Arrow.XmlArrow
+import           Text.XML.HXT.Arrow.XmlIOStateArrow
 
-import Text.XML.HXT.Arrow.XmlArrow
-import Text.XML.HXT.Arrow.XmlIOStateArrow
+import           Text.XML.HXT.Arrow.Edit                ( canonicalizeAllNodes
+                                                        , collapseAllXText
+                                                        )
 
-import Text.XML.HXT.Arrow.Edit
-    ( canonicalizeAllNodes
-    , collapseAllXText
-    )
+import           Text.XML.HXT.Arrow.ProcessDocument     ( propagateAndValidateNamespaces
+                                                        , getDocumentContents
+                                                        , parseXmlDocument
+                                                        )
 
-import Text.XML.HXT.Arrow.ProcessDocument
-    ( propagateAndValidateNamespaces
-    , getDocumentContents
-    , parseXmlDocument
-    )
-
-import Text.XML.HXT.RelaxNG.DataTypes
-import Text.XML.HXT.RelaxNG.CreatePattern
-import Text.XML.HXT.RelaxNG.PatternToString
-import Text.XML.HXT.RelaxNG.DataTypeLibraries
-import Text.XML.HXT.RelaxNG.Utils
-    ( formatStringListQuot
-    , compareURI
-    )
-
-import Data.Maybe
-    ( fromJust
-    )
+import           Text.XML.HXT.RelaxNG.DataTypes
+import           Text.XML.HXT.RelaxNG.CreatePattern
+import           Text.XML.HXT.RelaxNG.PatternToString
+import           Text.XML.HXT.RelaxNG.DataTypeLibraries
+import           Text.XML.HXT.RelaxNG.Utils             ( formatStringListQuot
+                                                        , compareURI
+                                                        )
 
 {-
 import qualified Debug.Trace as T

@@ -23,13 +23,14 @@ where
 
 -- ------------------------------------------------------------
 
-import Data.Char (toLower)
+import Data.Char                        ( toLower
+                                        )
+import Data.Char.Properties.XMLCharProps( isXmlSpaceChar
+                                        )
 import Data.Maybe
 
 import Text.HTML.TagSoup
 import Text.HTML.TagSoup.Entity         ( lookupNumericEntity
-                                        )
-import Text.XML.HXT.DOM.Unicode         ( isXmlSpaceChar
                                         )
 import Text.XML.HXT.Parser.HtmlParsec   ( isEmptyHtmlTag
                                         , isInnerHtmlTagOf

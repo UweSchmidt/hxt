@@ -1,8 +1,8 @@
 -- ------------------------------------------------------------
 
 {- |
-   Module     : Text.XML.HXT.DOM.UTF8Decoding
-   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   Module     : Data.String.UTF8Decoding
+   Copyright  : Copyright (C) 2010- Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
@@ -15,15 +15,15 @@
 
 -- ------------------------------------------------------------
 
-module Text.XML.HXT.DOM.UTF8Decoding (
+module Data.String.UTF8Decoding (
    decodeUtf8,
    decodeUtf8EmbedErrors,
    decodeUtf8IgnoreErrors,
    )
 where
 
-import qualified Data.Char.UTF8 as UTF8
-import Data.Word (Word8)
+import qualified Data.String.UTF8 as UTF8
+import           Data.Word (Word8)
 
 -- | calls 'Data.Char.UTF8.decode' for parsing and decoding UTF-8
 

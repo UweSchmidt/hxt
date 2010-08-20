@@ -1,4 +1,4 @@
-module Text.XML.HXT.DOM.IsoLatinTables
+module Data.Char.IsoLatinTables
 where
 
 iso_8859_2      :: [(Char, Char)]

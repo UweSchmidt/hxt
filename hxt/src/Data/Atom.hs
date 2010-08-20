@@ -65,12 +65,11 @@ import           Control.DeepSeq
 import           Data.ByteString.Internal       ( toForeignPtr, c2w, w2c )
 import           Data.ByteString                ( ByteString, pack, unpack )
 import qualified Data.Map                       as M
+import           Data.String.UTF8Decoding       ( decodeUtf8 )
+import           Data.String.Unicode            ( unicodeToUtf8 )
 import           Data.Typeable
 
 import           System.IO.Unsafe               ( unsafePerformIO )
-
-import           Text.XML.HXT.DOM.Unicode       ( unicodeToUtf8 )
-import           Text.XML.HXT.DOM.UTF8Decoding  ( decodeUtf8 )
 
 -- ------------------------------------------------------------
 

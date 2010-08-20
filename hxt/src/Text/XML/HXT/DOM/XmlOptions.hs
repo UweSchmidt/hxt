@@ -24,6 +24,7 @@ import Text.XML.HXT.DOM.XmlKeywords
 import Text.XML.HXT.DOM.TypeDefs
 
 import Data.Maybe
+import Data.String.EncodingNames
 
 import System.Console.GetOpt
 

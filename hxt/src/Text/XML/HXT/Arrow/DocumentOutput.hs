@@ -31,12 +31,11 @@ import Control.Arrow.ArrowTree
 import Control.Arrow.ArrowIO
 import Control.Arrow.ListArrow
 
-import Text.XML.HXT.DOM.Unicode                 ( getOutputEncodingFct )
-import Text.XML.HXT.DOM.Interface
+import Data.String.Unicode                      ( getOutputEncodingFct )
 
+import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlIOStateArrow
-
 import Text.XML.HXT.Arrow.Edit                  ( addHeadlineToXmlDoc
                                                 , addXmlPi
                                                 , addXmlPiEncoding
@@ -44,7 +43,6 @@ import Text.XML.HXT.Arrow.Edit                  ( addHeadlineToXmlDoc
                                                 , numberLinesInXmlDoc
                                                 , treeRepOfXmlDoc
                                                 )
-
 import System.IO                                ( Handle
                                                 , IOMode(..)
                                                 , openFile
@@ -54,7 +52,6 @@ import System.IO                                ( Handle
                                                 , hClose
                                                 , stdout
                                                 )
-
 import System.IO.Error                          ( try )
 
 -- ------------------------------------------------------------

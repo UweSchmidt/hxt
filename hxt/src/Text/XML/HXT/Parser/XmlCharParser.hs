@@ -14,7 +14,17 @@ module Text.XML.HXT.Parser.XmlCharParser
     )
 where
 
-import Text.XML.HXT.DOM.Unicode
+import Data.Char.Properties.XMLCharProps( isXmlChar
+                                        , isXmlNameChar
+                                        , isXmlNameStartChar
+                                        , isXmlNCNameChar
+                                        , isXmlNCNameStartChar
+                                        , isXmlLetter
+                                        , isXmlSpaceChar
+                                        )
+
+import Data.String.Unicode
+
 import Text.ParserCombinators.Parsec
 
 -- ------------------------------------------------------------

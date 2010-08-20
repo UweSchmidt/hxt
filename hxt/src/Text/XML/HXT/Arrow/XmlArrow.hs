@@ -31,11 +31,10 @@ import           Control.Arrow.StateListArrow
 import           Control.Arrow.IOListArrow
 import           Control.Arrow.IOStateListArrow
 
+import           Data.Char.Properties.XMLCharProps        ( isXmlSpaceChar )
 import           Data.Maybe
 
 import           Text.XML.HXT.DOM.Interface
-import           Text.XML.HXT.DOM.Unicode       ( isXmlSpaceChar
-                                                )
 import qualified Text.XML.HXT.DOM.XmlNode as XN
 import qualified Text.XML.HXT.DOM.ShowXml as XS
 

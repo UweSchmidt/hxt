@@ -43,12 +43,15 @@ and thus had memory leaks.
 
 -}
 
-module Data.Char.UTF8
-  ( encode, decode,
-    decodeEmbedErrors,
-    encodeOne, decodeOne,
-    Error, -- Haddock does not want to document signatures with private types
-    -- these functions should be moved to a utility module
+module Data.String.UTF8
+  ( encode
+  , decode
+  , decodeEmbedErrors
+  , encodeOne
+  , decodeOne
+  , Error
+         -- Haddock does not want to document signatures with private types
+         -- these functions should be moved to a utility module
   ) where
 
 import Data.Char (ord, chr)
@@ -56,10 +59,6 @@ import Data.Word (Word8, Word16, Word32)
 import Data.Bits (Bits, shiftL, shiftR, (.&.), (.|.))
 
 import Data.List (unfoldr)
-
-import Text.XML.HXT.DOM.Util (partitionEither, swap, toMaybe)
-
-
 
 -- - UTF-8 in General -
 
@@ -361,3 +360,19 @@ decodeEmbedErrors =
            in  (either (\err -> Left (err,pos)) Right c,
                 (pos+n,rest)))) .
    (,) 0
+
+swap :: (a,b) -> (b,a)
+swap (x,y) = (y,x)
+{-# INLINE swap #-}
+
+partitionEither :: [Either a b] -> ([a], [b])
+partitionEither =
+   foldr (\x ~(ls,rs) -> either (\l -> (l:ls,rs)) (\r -> (ls,r:rs)) x) ([],[])
+{-# INLINE partitionEither #-}
+
+toMaybe :: Bool -> a -> Maybe a
+toMaybe False _ = Nothing
+toMaybe True  x = Just x
+{-# INLINE toMaybe #-}
+
+-- ------------------------------------------------------------

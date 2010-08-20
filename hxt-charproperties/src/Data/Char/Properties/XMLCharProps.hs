@@ -17,6 +17,8 @@
 
 module Data.Char.Properties.XMLCharProps
     ( isXmlChar
+    , isXml1ByteChar
+    , isXmlLatin1Char
     , isXmlSpaceChar
     , isXml11SpaceChar
     , isXmlNameChar
@@ -31,7 +33,10 @@ module Data.Char.Properties.XMLCharProps
     , isXmlDigit
     , isXmlExtender
     , isXmlControlOrPermanentlyUndefined
+
     , charPropXmlChar
+    , charPropXml1ByteChar
+    , charPropXmlLatin1Char
     , charPropXmlSpaceChar
     , charPropXml11SpaceChar
     , charPropXmlNameChar
@@ -59,7 +64,7 @@ import Data.Set.CharSet
 isXmlChar :: Char -> Bool
 isXmlChar c = c `elemCS` charPropXmlChar
 
-charPropXmlChar               :: CharSet
+charPropXmlChar :: CharSet
 charPropXmlChar
     = [ ('\x0009', '\x000A')
       , ('\x000D', '\x000D')
@@ -67,6 +72,30 @@ charPropXmlChar
       , ('\xE000', '\xFFFD')
       , ('\x10000', '\x10FFFF')
       ]
+
+-- |
+-- check for a legal 1 byte XML char
+
+isXml1ByteChar :: Char -> Bool
+isXml1ByteChar c = c `elemCS` charPropXml1ByteChar
+
+charPropXml1ByteChar :: CharSet
+charPropXml1ByteChar
+    = stringCS ['\x20', '\x09', '\x0D', '\x0A']
+      `unionCS`
+      [ ('\x20', '\x7F') ]
+
+-- |
+-- test for a legal latin1 XML char
+
+isXmlLatin1Char :: Char -> Bool
+isXmlLatin1Char c = c `elemCS` charPropXmlLatin1Char
+
+charPropXmlLatin1Char :: CharSet
+charPropXmlLatin1Char
+    = charPropXml1ByteChar
+      `unionCS`
+      [ ('\x80', '\xFF') ]
 
 -- |
 -- checking for XML space character: \\\n, \\\r, \\\t and \" \"

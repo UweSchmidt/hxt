@@ -13,7 +13,6 @@ module Text.XML.HXT.RelaxNG
   , module Text.XML.HXT.RelaxNG.Validator
   , module Text.XML.HXT.RelaxNG.DataTypes
   , module Text.XML.HXT.RelaxNG.CreatePattern
-  , module Text.XML.HXT.RelaxNG.XmlSchema.RegexMatch
   )
 where
 
@@ -21,4 +20,3 @@ import Text.XML.HXT.RelaxNG.PatternToString
 import Text.XML.HXT.RelaxNG.Validator
 import Text.XML.HXT.RelaxNG.DataTypes
 import Text.XML.HXT.RelaxNG.CreatePattern
-import Text.XML.HXT.RelaxNG.XmlSchema.RegexMatch

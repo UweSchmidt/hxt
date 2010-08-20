@@ -25,33 +25,33 @@ module Text.XML.HXT.Arrow.DocumentInput
     )
 where
 
-import Control.Arrow                            -- arrow classes
-import Control.Arrow.ArrowList
-import Control.Arrow.ArrowIf
-import Control.Arrow.ArrowTree
-import Control.Arrow.ArrowIO
-import Control.Arrow.ListArrow
+import           Control.Arrow                            -- arrow classes
+import           Control.Arrow.ArrowList
+import           Control.Arrow.ArrowIf
+import           Control.Arrow.ArrowTree
+import           Control.Arrow.ArrowIO
+import           Control.Arrow.ListArrow
 
-import Data.List                                ( isPrefixOf )
-
-import System.FilePath                          ( takeExtension )
-
-import Text.XML.HXT.DOM.Unicode                 ( getDecodingFct
+import           Data.List                      ( isPrefixOf )
+import           Data.String.Unicode            ( getDecodingFct
                                                 , guessEncoding
                                                 , normalizeNL
                                                 )
 
+import           System.FilePath                ( takeExtension )
+
 import qualified Text.XML.HXT.IO.GetFILE        as FILE
 import qualified Text.XML.HXT.IO.GetHTTPLibCurl as LibCURL
 
-import Text.XML.HXT.DOM.Interface
+import           Text.XML.HXT.DOM.Interface
 
-import Text.XML.HXT.Arrow.ParserInterface       ( parseXmlDocEncodingSpec
+import           Text.XML.HXT.Arrow.ParserInterface
+                                                ( parseXmlDocEncodingSpec
                                                 , parseXmlEntityEncodingSpec
                                                 , removeEncodingSpec
                                                 )
-import Text.XML.HXT.Arrow.XmlArrow
-import Text.XML.HXT.Arrow.XmlIOStateArrow
+import           Text.XML.HXT.Arrow.XmlArrow
+import           Text.XML.HXT.Arrow.XmlIOStateArrow
 
 -- ----------------------------------------------------------
 

@@ -99,7 +99,7 @@ import           Text.XML.HXT.DOM.XmlKeywords   ( a_xml
                                                 , xmlnsNamespace
                                                 )
 
-import           Text.XML.HXT.DOM.Unicode       ( isXmlNCNameStartChar
+import Data.Char.Properties.XMLCharProps        ( isXmlNCNameStartChar
                                                 , isXmlNCNameChar
                                                 )
 

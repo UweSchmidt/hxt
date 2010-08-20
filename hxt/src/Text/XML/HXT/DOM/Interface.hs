@@ -23,6 +23,7 @@ module Text.XML.HXT.DOM.Interface
     , module Text.XML.HXT.DOM.Util
     , module Text.XML.HXT.DOM.XmlOptions
     , module Text.XML.HXT.DOM.MimeTypes
+    , module Data.String.EncodingNames
     )
 where
 
@@ -31,6 +32,6 @@ import Text.XML.HXT.DOM.TypeDefs                -- XML Tree types
 import Text.XML.HXT.DOM.Util
 import Text.XML.HXT.DOM.XmlOptions              -- predefined options
 import Text.XML.HXT.DOM.MimeTypes               -- mime types related stuff
-
+import Data.String.EncodingNames                -- char encoding names for readDocument
 
 -- ------------------------------------------------------------
