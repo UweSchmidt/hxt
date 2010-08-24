@@ -109,14 +109,14 @@ collectPrefixUriPairs
 
 -- ------------------------------------------------------------
 
--- | generate unique namespaces and add all namespace declarations to the root element
+-- | generate unique namespaces and add all namespace declarations to all top nodes containing a namespace declaration
+-- Usually the top node containing namespace declarations is the root node, but this isn't mandatory.
 --
 -- Calls 'cleanupNamespaces' with 'collectNamespaceDecl'
 
-uniqueNamespaces                :: ArrowXml a => a XmlTree XmlTree
-uniqueNamespaces
-    = fromLA $
-      cleanupNamespaces collectNamespaceDecl
+uniqueNamespaces                	:: ArrowXml a => a XmlTree XmlTree
+uniqueNamespaces                	= fromLA $
+					  cleanupNamespaces' collectNamespaceDecl
 
 -- | generate unique namespaces and add all namespace declarations for all prefix-uri pairs in all qualified names
 --
@@ -124,9 +124,21 @@ uniqueNamespaces
 -- Calls 'cleanupNamespaces' with @ collectNamespaceDecl \<+> collectPrefixUriPairs @
 
 uniqueNamespacesFromDeclAndQNames       :: ArrowXml a => a XmlTree XmlTree
-uniqueNamespacesFromDeclAndQNames
-    = fromLA $
-      cleanupNamespaces (collectNamespaceDecl <+> collectPrefixUriPairs)
+uniqueNamespacesFromDeclAndQNames       = fromLA $
+					  cleanupNamespaces' ( collectNamespaceDecl
+							       <+>
+							       collectPrefixUriPairs
+							     )
+
+cleanupNamespaces' 			:: LA XmlTree (String, String) -> LA XmlTree XmlTree
+cleanupNamespaces' collectNamespaces	= processTopDownUntil
+					  ( hasNamespaceDecl `guards` cleanupNamespaces collectNamespaces )
+    where
+    hasNamespaceDecl			= isElem
+					  >>>
+					  getAttrl
+					  >>>
+					  isNamespaceDeclAttr
 
 -- | does the real work for namespace cleanup.
 --
@@ -148,7 +160,7 @@ cleanupNamespaces collectNamespaces
             changeQName renamePrefix                    -- update namespace prefix of element names
           )
           >>>
-          attachEnv env1                                -- all all namespaces as attributes to the root node attribute list
+          attachEnv env1                                -- add all namespaces as attributes to the root node attribute list
         where
         renamePrefix    :: QName -> QName
         renamePrefix n
