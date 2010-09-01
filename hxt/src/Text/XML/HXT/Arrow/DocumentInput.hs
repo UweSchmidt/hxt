@@ -172,7 +172,7 @@ getHttpContents
                     &&&
                     ( ( getAttrlAsAssoc         -- get all attributes of root node
                         &&&
-                        getAllParamsString      -- get all system params
+                        getAllParams            -- get all system params
                       )
                       >>^ uncurry addEntries    -- merge them, attributes overwrite system params
                     )
@@ -349,7 +349,7 @@ getEncoding
              arr guessEncoding
            , getAttrValue transferEncoding      -- 2. guess: take the transfer encoding
            , getAttrValue a_encoding            -- 3. guess: take encoding parameter in root node
-           , getParamString a_encoding          -- 4. guess: take encoding parameter in global state
+           , getParam     a_encoding            -- 4. guess: take encoding parameter in global state
            , constA utf8                        -- default : utf8
            ]
       >. (head . filter (not . null))           -- make the filter deterministic: take 1. entry from list of guesses
@@ -358,7 +358,7 @@ getTextEncoding :: IOStateArrow s XmlTree String
 getTextEncoding
     = catA [ getAttrValue transferEncoding      -- 1. guess: take the transfer encoding
            , getAttrValue a_encoding            -- 2. guess: take encoding parameter in root node
-           , getParamString a_encoding          -- 3. guess: take encoding parameter in global state
+           , getParam     a_encoding            -- 3. guess: take encoding parameter in global state
            , constA isoLatin1                   -- default : no encoding
            ]
       >. (head . filter (not . null))           -- make the filter deterministic: take 1. entry from list of guesses

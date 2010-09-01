@@ -990,7 +990,7 @@ simplificationStep5
         ( renameDefines $<<
           ( getPatternNamesInGrammar "define"
             >>>
-            (createUniqueNames $< (getAndSetCounter "define_id" >>> arr read))
+            (createUniqueNames $< incrSysParam theRelaxDefineId)
             &&&
             constA []
           )
@@ -1293,7 +1293,7 @@ simplificationStep6 =
     -- add a define element to the grammar element,
     ( processElements False
       >>>
-      processChildren (insertChildrenAt 1 (getParam "elementTable"))
+      processChildren (insertChildrenAt 1 (getRelaxParam "elementTable"))
     )
     >>>
     -- For each ref element that is expandable...
@@ -1342,7 +1342,7 @@ simplificationStep6 =
         [ isRngElement
           :-> ( ifP (const parentIsDefine)
                 (processElements False)
-                ( processElements' $<< ( getAndSetCounter "define_id"
+                ( processElements' $<< ( (incrSysParam theRelaxDefineId >>^ show)
                                          &&&
                                          getDefineName
                                        )
@@ -1375,11 +1375,11 @@ simplificationStep6 =
              (createAttr name oldname) (processElements False)
           )
           &&&
-          (listA $ getParam "elementTable")
+          (listA $ getRelaxParam "elementTable")
           >>>
           arr2 (:)
           >>>
-          setParamList "elementTable"
+          setRelaxParam "elementTable"
 
     createAttr :: NewName -> OldName -> IOSArrow XmlTree XmlTree
     createAttr name oldname
@@ -2076,13 +2076,14 @@ representatives _
     = []
 
 -- -------------------------------------------------------------------------------------------------------
+
 resetStates :: IOSArrow XmlTree XmlTree
 resetStates
-    = ( perform (constA $ setParamInt "define_id" 0)
+    = ( perform (constA 0  >>> setSysParam theRelaxDefineId)
         >>>
-        perform (constA [] >>> setParamList "elementTable" )
+        perform (constA 0  >>> setSysParam theRelaxNoOfErrors)
         >>>
-        perform (constA $ setParamInt a_numberOfErrors 0)
+        perform (constA [] >>> setRelaxParam "elementTable" )
       )
 
 
@@ -2182,7 +2183,7 @@ wrapPattern2Two name
 
 mkRelaxError :: String -> String -> IOSArrow n XmlTree
 mkRelaxError changesStr errStr
-  = perform (getAndSetCounter a_numberOfErrors)
+  = perform (constA 1 >>> chgSysParam theRelaxNoOfErrors (+))
     >>>
     mkRngRelaxError none none
     >>>
@@ -2197,19 +2198,14 @@ collectErrors :: IOSArrow XmlTree XmlTree
 collectErrors
   = none
     `when`
-    ( stopAfterFirstError
+    ( (getSysParam theRelaxCollectErrors >>> isA not)
       >>>
-      getParamInt 0 a_numberOfErrors >>> isA (>0)
+      (getSysParam theRelaxNoOfErrors    >>> isA (>0))
     )
-  where
-  stopAfterFirstError = getParamString a_do_not_collect_errors
-                        >>>
-                        isA (== "1")
-
 
 -- | Returns the list of simplification errors or 'none'
 getErrors :: IOSArrow XmlTree XmlTree
-getErrors = (getParamInt 0 a_numberOfErrors >>> isA (>0))
+getErrors = (getSysParam theRelaxNoOfErrors >>> isA (>0))
             `guards`
             (root [] [multi isRngRelaxError])
 
@@ -2228,20 +2224,11 @@ getChangesAttr :: IOSArrow XmlTree String
 getChangesAttr
   = getAttrValue a_relaxSimplificationChanges
     &&&
-    getParamString a_output_changes
+    getParam a_output_changes
     >>>
     ifP (\(changes, param) -> changes /= "" && param == "1")
       (arr2 $ \l _ -> " (" ++ l ++ ")")
       (constA "")
-
-
-getAndSetCounter :: String -> IOSArrow b String
-getAndSetCounter name
-  = genNewId $< getParamInt 0 name
-  where
-  genNewId :: Int -> IOSArrow b String
-  genNewId i = setParamInt name (i+1) >>> constA (show i)
-
 
 -- -------------------------------------------------------------------------------------------------------
 

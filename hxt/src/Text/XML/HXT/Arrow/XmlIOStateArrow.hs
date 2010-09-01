@@ -59,18 +59,20 @@ module Text.XML.HXT.Arrow.XmlIOStateArrow
       configSysParam,
       configSysParams,
       localSysParam,
+      incrSysParam,
       getSysConfigOption,
 
-      setParamList,
       setParam,
       unsetParam,
       getParam,
       getAllParams,
-      getAllParamsString,
       setParamString,
-      getParamString,
       setParamInt,
       getParamInt,
+
+      -- * RelaxNG Handling
+      setRelaxParam,
+      getRelaxParam,
 
       -- * Error Message Handling
       clearErrStatus,
@@ -115,7 +117,6 @@ module Text.XML.HXT.Arrow.XmlIOStateArrow
       traceSource,
       traceTree,
       traceDoc,
-      traceState,
 
       -- * URI Manipulation
       expandURIString,
@@ -165,6 +166,9 @@ module Text.XML.HXT.Arrow.XmlIOStateArrow
       , theIgnoreNoneXmlContents
       , theTagSoup
       , theTagSoupParser
+      , theRelaxCollectErrors
+      , theRelaxNoOfErrors
+      , theRelaxDefineId
 
       , withAcceptedMimeTypes
       , withWarnings
@@ -406,8 +410,9 @@ data XIOSysState        = XIOSys  { xio_traceLevel              :: ! Int
                                   , xio_errorMsgList            :: ! XmlTrees
                                   , xio_baseURI                 :: ! String
                                   , xio_defaultBaseURI          :: ! String
-                                  , xio_attrList                :: ! (AssocList String XmlTrees)
+                                  , xio_attrList                :: ! Attributes
                                   , xio_readConfig              :: ! XIOParseConfig
+                                  , xio_relaxConfig             ::   XIORelaxConfig
                                   }
 
 data XIOParseConfig	= XIOPcfg { xio_mimeTypes               ::   MimeTypeTable
@@ -427,6 +432,13 @@ data XIOParseConfig	= XIOPcfg { xio_mimeTypes               ::   MimeTypeTable
                                   , xio_tagSoupParser           ::   IOSArrow XmlTree XmlTree 
                                   }
 
+data XIORelaxConfig     = XIORxc  { xio_relaxTrees              ::   AssocList String XmlTrees
+                                  , xio_relaxSchema             ::   String
+                                  , xio_relaxValidate           :: ! Bool
+                                  , xio_relaxCollectErrors      :: ! Bool
+                                  , xio_relaxNoOfErrors         :: ! Int
+                                  , xio_relaxDefineId           :: ! Int                                  }
+
 instance NFData XIOSysState		-- all fields of interest are strict
 
 type SysConfig          	= XIOSysState -> XIOSysState
@@ -442,6 +454,25 @@ theUserState                    = ( xio_userState,       \ x s -> s { xio_userSt
 
 theReadConfig                   :: Selector XIOSysState XIOParseConfig
 theReadConfig                   = ( xio_readConfig,      \ x s -> s { xio_readConfig = x} )
+
+theRelaxConfig                  :: Selector XIOSysState XIORelaxConfig
+theRelaxConfig                  = ( xio_relaxConfig,      \ x s -> s { xio_relaxConfig = x} )
+
+theRelaxAttrList                :: Selector XIOSysState (AssocList String XmlTrees)
+theRelaxAttrList                = ( xio_relaxTrees,      \ x s -> s { xio_relaxTrees = x} )
+                                  `subS` theRelaxConfig
+
+theRelaxCollectErrors           :: Selector XIOSysState Bool
+theRelaxCollectErrors           = ( xio_relaxCollectErrors, \ x s -> s { xio_relaxCollectErrors = x} )
+                                  `subS` theRelaxConfig
+
+theRelaxNoOfErrors              :: Selector XIOSysState Int
+theRelaxNoOfErrors              = ( xio_relaxNoOfErrors, \ x s -> s { xio_relaxNoOfErrors = x} )
+                                  `subS` theRelaxConfig
+
+theRelaxDefineId                :: Selector XIOSysState Int
+theRelaxDefineId                = ( xio_relaxDefineId, \ x s -> s { xio_relaxDefineId = x} )
+                                  `subS` theRelaxConfig
 
 theErrorStatus                  :: Selector XIOSysState Int
 theErrorStatus                  = ( xio_errorStatus,     \ x s -> s { xio_errorStatus = x } )
@@ -470,7 +501,7 @@ theTraceCmd                     = ( xio_traceCmd,        \ x s -> s { xio_traceC
 theTrace			:: Selector XIOSysState (Int, Int -> String -> IO ())
 theTrace                        = theTraceLevel `pairS` theTraceCmd
 
-theAttrList			:: Selector XIOSysState (AssocList String XmlTrees)
+theAttrList			:: Selector XIOSysState Attributes
 theAttrList                     = ( xio_attrList,        \ x s -> s { xio_attrList = x } )
 
 theMimeTypes			:: Selector XIOSysState MimeTypeTable
@@ -587,7 +618,7 @@ withIgnoreNoneXmlContents    	= putS theIgnoreNoneXmlContents
 
 optionToSysConfig		:: (String, String) -> SysConfig
 optionToSysConfig (n, v)
-    | n == a_trace              	= putS theTraceLevel      	(toInt v)
+    | n == a_trace              	= putS theTraceLevel      	(toInt 0 v)
     | n == a_issue_warnings		= putS theWarnings        	(isTrueValue v)
     | n == a_remove_whitespace		= putS theRemoveWS        	(isTrueValue v)
     | n == a_preserve_comment   	= putS thePreserveComment 	(isTrueValue v) 
@@ -600,22 +631,24 @@ optionToSysConfig (n, v)
     | n == a_ignore_none_xml_contents   = putS theIgnoreNoneXmlContents (isTrueValue v)
     | n == a_accept_mimetypes           = putS theAcceptedMimeTypes     (words v)
     | n == a_tagsoup                    = putS theTagSoup               (isTrueValue v)
-    | otherwise				= chgS theAttrList        	(addEntry n (mkt v))
+    | otherwise				= chgS theAttrList        	(addEntry n v)
     where
     a_tagsoup				= "tagsoup"
-    mkt                                 = runLA mkText
-    toInt s
+    -- mkt                                 = runLA mkText	-- TODO
+
+toInt				:: Int -> String -> Int
+toInt def s
         | not (null s) && all isDigit s	= read s
-        | otherwise                     = 0
+        | otherwise                     = def
 
 -- ------------------------------------------------------------
 
 getSysConfigOption	:: String -> SysConfigList -> String
-getSysConfigOption n c	= t2s . lookup1 n $ tl
+getSysConfigOption n c	= lookup1 n $ tl
     where
     s  = (foldr (.) id c) initialSysState
     tl = getS theAttrList s
-    t2s = concat . runLA ( xshow unlistA )
+    -- t2s = concat . runLA ( xshow unlistA ) -- TODO
 
 -- ------------------------------------------------------------
 
@@ -631,6 +664,7 @@ initialSysState 		= XIOSys
                                   , xio_defaultBaseURI   = ""
                                   , xio_attrList         = []
                                   , xio_readConfig       = initialReadConfig
+                                  , xio_relaxConfig      = initialRelaxConfig
                                   }
 
 initialReadConfig		:: XIOParseConfig
@@ -655,6 +689,16 @@ initialReadConfig		= XIOPcfg
     dummyTagSoupParser		= issueFatal $
                                   "TagSoup parser not configured, " ++
                                   "please install package hxt-tagsoup and use 'withTagSoup' system config option"
+
+initialRelaxConfig              :: XIORelaxConfig
+initialRelaxConfig              = XIORxc
+                                  { xio_relaxTrees              = []
+                                  , xio_relaxSchema             = ""
+                                  , xio_relaxValidate           = False
+                                  , xio_relaxCollectErrors      = True
+                                  , xio_relaxNoOfErrors         = 0
+                                  , xio_relaxDefineId           = 0
+                                  }
 
 -- ------------------------------
 
@@ -682,20 +726,22 @@ localSysParam sel f		= IOSLA $ \ s0 v ->
                                   do
                                   (s1, res) <- runIOSLA f s0 v
                                   return (putS sel' c0 s1, res)
+
+incrSysParam                    :: Selector XIOSysState Int -> IOStateArrow s a Int
+incrSysParam cnt                = getSysParam cnt
+                                  >>>
+                                  arr (+1)
+                                  >>>
+                                  setSysParam cnt
+                                  >>>
+                                  arr (\ x -> x - 1)
                                   
 -- ------------------------------
 
--- | store a single XML tree in global state under a given attribute name
+-- | store a string in global state under a given attribute name
 
-setParam        	:: String -> IOStateArrow s XmlTree XmlTree
-setParam n              = (:[]) ^>> setParamList n
-
--- | store a list of XML trees in global system state under a given attribute name
-
-setParamList    	:: String -> IOStateArrow s XmlTrees XmlTree
-setParamList n  	= chgSysParam theAttrList (addEntry n)
-                          >>>
-                          arrL id
+setParam        	:: String -> IOStateArrow s String String
+setParam n              = chgSysParam theAttrList (addEntry n)
 
 -- | remove an entry in global state, arrow input remains unchanged
 
@@ -704,38 +750,22 @@ unsetParam n    	= configSysParam $ chgS theAttrList (delEntry n)
 
 -- | read an attribute value from global state
 
-getParam        	:: String -> IOStateArrow s b XmlTree
-getParam n	        = getAllParams
-                          >>>
-                          arrL (lookup1 n)
+getParam        	:: String -> IOStateArrow s b String
+getParam n	        = getSysParam theAttrList
+                          >>^
+                          lookup1 n
 
 -- | read all attributes from global state
 
-getAllParams    	:: IOStateArrow s b (AssocList String XmlTrees)
+getAllParams    	:: IOStateArrow s b Attributes
 getAllParams		= getSysParam theAttrList
 
--- | read all attributes from global state
--- and convert the values to strings
-
-getAllParamsString      :: IOStateArrow s b (AssocList String String)
-getAllParamsString      = getAllParams
-                          >>>
-                          listA ( unlistA
-                                  >>>
-                                  second (xshow unlistA)
-                                )
 
 setParamString  	:: String -> String -> IOStateArrow s b b
-setParamString n v      = perform ( txt v
+setParamString n v      = perform ( constA v
                                     >>>
                                     setParam n
                                   )
-
--- | read a string value from global state,
--- if parameter not set \"\" is returned
-
-getParamString  	:: String -> IOStateArrow s b String
-getParamString n        = xshow (getParam n)
 
 -- | store an int value in global state
 
@@ -747,9 +777,19 @@ setParamInt n v         = setParamString n (show v)
 -- > getParamInt 0 myIntAttr
 
 getParamInt     	:: Int -> String -> IOStateArrow s b Int
-getParamInt def n       = getParamString n
+getParamInt def n       = getParam n
                           >>^
-                          (\ x -> if null x then def else read x)
+                          toInt def
+
+setRelaxParam        	:: String -> IOStateArrow s XmlTrees XmlTree
+setRelaxParam n         = chgSysParam theRelaxAttrList (addEntry n)
+                          >>>
+                          arrL id
+
+getRelaxParam        	:: String -> IOStateArrow s b XmlTree
+getRelaxParam n	        = getSysParam theRelaxAttrList
+                          >>>
+                          arrL (lookup1 n)
 
 -- ------------------------------------------------------------
 
@@ -1114,21 +1154,6 @@ traceDoc msg            = traceMsg 1 msg
                           traceSource
                           >>>
                           traceTree
-
--- | trace the global state
-
-traceState      	:: IOStateArrow s b b
-traceState              = perform $
-                          xshow ( (getAllParams >>. concat)
-                                  >>>
-                                  applyA (arr formatParam)
-                                )
-                          >>>
-                          traceValue 2 ("global state:\n" ++)
-      where
-      -- formatParam    :: (String, XmlTrees) -> IOStateArrow s b1 XmlTree
-      formatParam (n, v)
-                        = mkelem "param" [sattr "name" n] [arrL (const v)] <+> txt "\n"
 
 -- ----------------------------------------------------------
 

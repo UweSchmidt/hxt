@@ -132,8 +132,8 @@ putXmlSource dst
 
 getEncodingParam        :: IOStateArrow s XmlTree String
 getEncodingParam
-    = catA [ getParamString a_output_encoding   -- 4. guess: take output encoding parameter from global state
-           , getParamString a_encoding          -- 5. guess: take encoding parameter from global state
+    = catA [ getParam a_output_encoding   -- 4. guess: take output encoding parameter from global state
+           , getParam a_encoding          -- 5. guess: take encoding parameter from global state
            , constA utf8                        -- default : utf8
            ]
       >. (head . filter (not . null))

@@ -193,7 +193,7 @@ readDocument'   :: SysConfigList -> String -> IOStateArrow s b XmlTree
 readDocument' config src
     = configSysParams config
       >>>
-      ( getCont $< getAllParamsString ) -- TODO
+      ( getCont $< getAllParams ) -- TODO
       >>>
       ( processDoc $<<< ( getMimeType
                           &&&
@@ -203,7 +203,7 @@ readDocument' config src
                                        )
                                       )
                           &&&
-                          getAllParamsString	-- TODO
+                          getAllParams	-- TODO
                         )
       )
       >>>
