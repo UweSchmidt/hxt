@@ -37,7 +37,7 @@ import System.Console.GetOpt
 -- can be used for option definition with haskell getopt
 --
 -- defines options: 'a_trace', 'a_proxy', 'a_use_curl', 'a_do_not_use_curl', 'a_options_curl', 'a_encoding',
--- 'a_issue_errors', 'a_do_not_issue_errors', 'a_parse_html', 'a_parse_by_mimetype', 'a_tagsoup' 'a_issue_warnings', 'a_do_not_issue_warnings',
+-- 'a_issue_errors', 'a_do_not_issue_errors', 'a_parse_html', 'a_parse_by_mimetype', 'a_issue_warnings', 'a_do_not_issue_warnings',
 -- 'a_parse_xml', 'a_validate', 'a_do_not_validate', 'a_canonicalize', 'a_do_not_canonicalize',
 --- 'a_preserve_comment', 'a_do_not_preserve_comment', 'a_check_namespaces', 'a_do_not_check_namespaces',
 -- 'a_remove_whitespace', 'a_do_not_remove_whitespace'
@@ -63,7 +63,6 @@ inputOptions
       , Option "M"      [a_parse_by_mimetype]           (NoArg  (att a_parse_by_mimetype v_1))  "parse dependent on mime type: text/html as HTML, text/xml and text/xhtml and others as XML, else no parse"
       , Option ""       [a_parse_xml]                   (NoArg  (att a_parse_html        v_0))  "parse input as XML, (default)"
       , Option ""       [a_strict_input]                (NoArg  (att a_strict_input      v_1))  "read input files strictly, this ensures closing the files correctly even if not read completely"
-      , Option "T"      [a_tagsoup]                     (NoArg  (att a_tagsoup           v_1))  "lazy tagsoup parser, for HTML and XML, no DTD, no validation, no PIs, only XHTML entityrefs"
       , Option ""       [a_issue_warnings]              (NoArg  (att a_issue_warnings    v_1))  "issue warnings, when parsing HTML (default)"
       , Option "Q"      [a_do_not_issue_warnings]       (NoArg  (att a_issue_warnings    v_0))  "ignore warnings, when parsing HTML"
       , Option ""       [a_validate]                    (NoArg  (att a_validate          v_1))  "document validation when parsing XML (default)"

@@ -47,6 +47,8 @@ module Text.XML.HXT.Arrow.Pickle
     , thePicklerDTD
     , a_addDTD
 
+    , xunpickleDocumentOld
+
       -- from Text.XML.HXT.Arrow.Pickle.Xml
     , pickleDoc
     , unpickleDoc
@@ -154,9 +156,9 @@ a_addDTD        = "addDTD"
 -- when applied with the appropriate options. When during pickling indentation is switched on,
 -- the whitespace must be removed during unpickling.
 
-xunpickleDocument       :: PU a -> Attributes -> String -> IOStateArrow s b a
-xunpickleDocument xp al src
-                        = readDocument al src
+xunpickleDocument       :: PU a -> SysConfigList -> String -> IOStateArrow s b a
+xunpickleDocument xp conf src
+                        = readDocument conf src
                           >>>
                           traceMsg 1 ("xunpickleVal for " ++ show src ++ " started")
                           >>>
@@ -204,7 +206,7 @@ checkPickler xp         = ( ( ( ( xpickleVal xp
                                   >>>
                                   writeDocumentToString []
                                   >>>
-                                  readFromString [(a_validate, v_1)]
+                                  readFromString [withValidate True]
                                   >>>
                                   ( xunpickleVal xp
                                     `orElse`
@@ -241,4 +243,17 @@ thePicklerDTD           = dtdDescrToXml . dtdDescr . theSchema
 
 -- ------------------------------------------------------------
 
+{-# DEPRECATED xunpickleDocumentOld "Please use the new xunpickleDocument function" #-}
+
+xunpickleDocumentOld    :: PU a -> Attributes -> String -> IOStateArrow s b a
+xunpickleDocumentOld xp al src
+                        = readDocumentOld al src
+                          >>>
+                          traceMsg 1 ("xunpickleVal for " ++ show src ++ " started")
+                          >>>
+                          xunpickleVal xp
+                          >>>
+                          traceMsg 1 ("xunpickleVal for " ++ show src ++ " finished")
+
+-- ------------------------------------------------------------
 

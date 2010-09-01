@@ -107,9 +107,6 @@ test4		:
 		cat $(EX4)
 		@sleep 2 ; echo ; echo "===> parser accepts this document and tries to build a document tree" ; echo ; sleep 2
 		$(prog) --indent --preserve-comment --parse-html $(EX4)
-		@sleep 2 ; echo ; echo "===> same with lazy parser with tagsoup" ; echo ; sleep 2
-		$(prog) -H -T -r --indent $(EX4)
-		@echo
 		@echo "===> the source of another lousy html document containing empty elements" ; echo ; sleep 2
 		cat $(EX4a)
 		@sleep 2 ; echo ; echo "===> parser accepts this document and tries to format this as a HTML document without any dangarous empty elements" ; echo ; sleep 2

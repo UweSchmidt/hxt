@@ -150,7 +150,7 @@ addMimeType     :: IOStateArrow s XmlTree XmlTree
 addMimeType
     = addMime $< ( getAttrValue transferURI
                    >>>
-                   ( uriToMime $< getSysParam xio_mimeTypes )
+                   ( uriToMime $< getMimeTypeTable )
                  )
     where
     addMime mt

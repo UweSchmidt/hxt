@@ -6,11 +6,10 @@
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
-   Stability  : experimental
+   Stability  : stable
    Portability: portable
-   Version    : $Id: ReadDocument.hs,v 1.10 2006/11/24 07:41:37 hxml Exp $
 
-Compound arrows for reading an XML\/HTML document or an XML\/HTML string
+   Compound arrows for reading an XML\/HTML document or an XML\/HTML string
 
 -}
 
@@ -23,12 +22,15 @@ module Text.XML.HXT.Arrow.ReadDocument
     , readFromString
     , hread
     , xread
+    , readDocumentOld	-- TODO throw away
+    , readFromDocumentOld
+    , readStringOld
+    , readFromStringOld
     )
 where
 
 import Control.Arrow.ListArrows
 
-import Data.Char                                ( isDigit )
 import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlIOStateArrow
@@ -182,25 +184,28 @@ read w3c home page (xhtml), validate and check namespaces, remove whitespace bet
 for minimal complete examples see 'Text.XML.HXT.Arrow.WriteDocument.writeDocument' and 'runX', the main starting point for running an XML arrow.
 -}
 
-readDocument    :: Attributes -> String -> IOStateArrow s b XmlTree
-readDocument userOptions src
-    = case getTraceLev of
-      Nothing   ->                    readDocument' userOptions src
-      Just l    -> withTraceLevel l $ readDocument' userOptions src
-    where
-    getTraceLev = do
-                  s <- lookup a_trace $ userOptions
-                  if not (null s) && all isDigit s
-                      then return (read s)
-                      else fail "not a number"
+readDocument    :: SysConfigList -> String -> IOStateArrow s b XmlTree
+readDocument config src
+    = localSysParam (theTrace `pairS` theReadConfig) $
+      readDocument' config src
 
-readDocument'   :: Attributes -> String -> IOStateArrow s b XmlTree
-readDocument' userOptions src
-    = loadMineTypes (lookup1 a_mime_types userOptions)
+readDocument'   :: SysConfigList -> String -> IOStateArrow s b XmlTree
+readDocument' config src
+    = configSysParams config
       >>>
-      getDocumentContents options src
+      ( getCont $< getAllParamsString ) -- TODO
       >>>
-      ( processDoc $< getMimeType )
+      ( processDoc $<<< ( getMimeType
+                          &&&
+                          getSysParam (theParseByMimeType `pairS`
+                                       (theParseHTML `pairS`
+                                        theAcceptedMimeTypes
+                                       )
+                                      )
+                          &&&
+                          getAllParamsString	-- TODO
+                        )
+      )
       >>>
       traceMsg 1 ("readDocument: " ++ show src ++ " processed")
       >>>
@@ -208,48 +213,50 @@ readDocument' userOptions src
       >>>
       traceTree
     where
-    options
-        = addEntries userOptions defaultOptions
-
-    defaultOptions
-        = [ ( a_parse_html,               v_0 )
-          , ( a_tagsoup,                  v_0 )
-          , ( a_strict_input,             v_0 )
-          , ( a_validate,                 v_1 )
-          , ( a_issue_warnings,           v_1 )
-          , ( a_check_namespaces,         v_0 )
-          , ( a_canonicalize,             v_1 )
-          , ( a_preserve_comment,         v_0 )
-          , ( a_remove_whitespace,        v_0 )
-          , ( a_parse_by_mimetype,        v_0 )
-          , ( a_ignore_encoding_errors,   v_0 )
-          , ( a_ignore_none_xml_contents, v_0 )
-          , ( a_accept_mimetypes,         ""  )
-          ]
-
-    loadMineTypes ""    = this
-    loadMineTypes f     = setMimeTypeTableFromFile f
+    getCont userOptions					-- TODO
+        = getDocumentContents (addEntries userOptions defaultOptions) src
+        where
+        defaultOptions
+            = [ ( a_strict_input,             v_0 )
+              , ( a_ignore_encoding_errors,   v_0 )
+              ]
 
     getMimeType
         = getAttrValue transferMimeType >>^ stringToLower
 
-    processDoc mimeType
+    processDoc mimeType (parseByMimeType, (parseHtml, acceptedMimeTypes)) options
         = traceMsg 1 (unwords [ "readDocument:", show src
                               , "(mime type:", show mimeType, ") will be processed"])
           >>>
-          ( if isAcceptedMimeType (lookup1 a_accept_mimetypes options) mimeType
+          ( if isAcceptedMimeType acceptedMimeTypes mimeType
             then ( ifA (fromLA hasEmptyBody)
                    ( replaceChildren none )                                     -- empty response, e.g. in if-modified-since request
-                   ( parse
+                   ( ( parse $< getSysParam (theValidate `pairS`
+                                             (theIgnoreNoneXmlContents `pairS`
+                                              theTagSoup
+                                             )
+                                            )
+                     )
                      >>>
                      ( if isXmlOrHtml
-                       then ( checknamespaces
+                       then ( ( checknamespaces $< getSysParam (theCheckNamespaces `pairS`
+                                                                theTagSoup
+                                                               )
+                              )
                               >>>
                               rememberDTDAttrl
                               >>>
-                              canonicalize
+                              ( canonicalize $< getSysParam (thePreserveComment `pairS`
+                                                             (theCanonicalize `pairS`
+                                                              theTagSoup
+                                                             )
+                                                            )
+                              )
                               >>>
-                              whitespace
+                              ( whitespace $< getSysParam (theRemoveWS `pairS`
+                                                           theTagSoup
+                                                          )
+                              )
                               >>>
                               relax
                             )
@@ -272,7 +279,7 @@ readDocument' userOptions src
                                             ( getChildren >>> isWhiteSpace )
                                           )
 
-        isAcceptedMimeType              :: String -> String -> Bool
+        isAcceptedMimeType              :: [String] -> String -> Bool
         isAcceptedMimeType mts mt
             | null mts
               ||
@@ -280,9 +287,7 @@ readDocument' userOptions src
             | otherwise                 = foldr (matchMt mt') False $ mts'
             where
             mt'                         = parseMt mt
-            mts'                        = words
-                                          >>>
-                                          map parseMt
+            mts'                        = map parseMt
                                           $
                                           mts
             parseMt                     = break (== '/')
@@ -293,47 +298,49 @@ readDocument' userOptions src
                                             (mi == mis || mis == "*")
                                           )
                                           || r
-        parse
+        parse (validate, (removeNoneXml, withTagSoup'))
             | isHtml
               ||
-              withTagSoup               = parseHtmlDocument                     -- parse as HTML or with tagsoup XML
-                                          withTagSoup
-                                          withNamespaces
-                                          issueW
-                                          (not (hasOption a_canonicalize) && preserveCmt)
-                                          removeWS
-                                          isHtml
+              withTagSoup'              = configSysParam (putS theLowerCaseNames isHtml)
+                                          >>>
+                                          parseHtmlDocument                     -- parse as HTML or with tagsoup XML
             | validateWithRelax         = parseXmlDocument False                -- for Relax NG use XML parser without validation
             | isXml                     = parseXmlDocument validate             -- parse as XML
             | removeNoneXml             = replaceChildren none                  -- don't parse, if mime type is not XML nor HTML
             | otherwise                 = this                                  -- but remove contents when option is set
-        checknamespaces
-            | (withNamespaces && not withTagSoup)
+
+        checknamespaces (withNamespaces, withTagSoup')
+            | (withNamespaces && not withTagSoup')
               ||
               validateWithRelax         = propagateAndValidateNamespaces
             | otherwise                 = this
-        canonicalize
-            | withTagSoup               = this                                  -- tagsoup already removes redundant stuff
+
+        canonicalize (preserveCmt, (canonicalize', withTagSoup'))
+            | withTagSoup'              = this                                  -- tagsoup already removes redundant stuff
             | validateWithRelax         = canonicalizeAllNodes
-            | hasOption a_canonicalize
+            | canonicalize'
               &&
               preserveCmt               = canonicalizeForXPath
-            | hasOption a_canonicalize  = canonicalizeAllNodes
+            | canonicalize'             = canonicalizeAllNodes
             | otherwise                 = this
+
         relax
             | validateWithRelax         = validateDocumentWithRelaxSchema options relaxSchema
             | otherwise                 = this
-        whitespace
+
+        whitespace (removeWS, withTagSoup')
             | removeWS
               &&
-              not withTagSoup           = removeDocWhiteSpace                   -- tagsoup already removes whitespace
+              not withTagSoup'          = removeDocWhiteSpace                   -- tagsoup already removes whitespace
             | otherwise                 = this
+
         validateWithRelax       = hasEntry a_relax_schema options
         relaxSchema             = lookup1 a_relax_schema options
-        parseHtml               = hasOption a_parse_html
+
         isHtml                  = parseHtml                                     -- force HTML
                                   ||
                                   ( parseByMimeType && isHtmlMimeType mimeType )
+
         isXml                   = ( not parseByMimeType && not parseHtml )
                                   ||
                                   ( parseByMimeType
@@ -343,25 +350,16 @@ readDocument' userOptions src
                                       null mimeType
                                     )                                           -- mime type is XML or not known
                                   )
+
         isXmlOrHtml     = isHtml || isXml
-        parseByMimeType = hasOption a_parse_by_mimetype
-        validate        = hasOption a_validate
-        withNamespaces  = hasOption a_check_namespaces
-        withTagSoup     = hasOption a_tagsoup
-        issueW          = hasOption a_issue_warnings
-        removeWS        = hasOption a_remove_whitespace
-        preserveCmt     = hasOption a_preserve_comment
-        removeNoneXml   = hasOption a_ignore_none_xml_contents
-        hasOption n     = optionIsSet n options
 
 -- ------------------------------------------------------------
 
 -- |
 -- the arrow version of 'readDocument', the arrow input is the source URI
 
-readFromDocument        :: Attributes -> IOStateArrow s String XmlTree
-readFromDocument userOptions
-    = applyA ( arr $ readDocument userOptions )
+readFromDocument        :: SysConfigList -> IOStateArrow s String XmlTree
+readFromDocument config	= applyA ( arr $ readDocument config )
 
 -- ------------------------------------------------------------
 
@@ -373,18 +371,19 @@ readFromDocument userOptions
 --
 -- Default encoding: No encoding is done, the String argument is taken as Unicode string
 
-readString      :: Attributes -> String -> IOStateArrow s b XmlTree
-readString userOptions content
-    = readDocument ( (a_encoding, unicodeString) : userOptions ) (stringProtocol ++ content)
+readString      	:: SysConfigList -> String -> IOStateArrow s b XmlTree
+readString config content
+    			= readDocument (optionToSysConfig (a_encoding, unicodeString) : config)
+                          (stringProtocol ++ content)
 
 -- ------------------------------------------------------------
 
 -- |
 -- the arrow version of 'readString', the arrow input is the source URI
 
-readFromString  :: Attributes -> IOStateArrow s String XmlTree
-readFromString userOptions
-    = applyA ( arr $ readString userOptions )
+readFromString  	:: SysConfigList -> IOStateArrow s String XmlTree
+readFromString config
+    			= applyA ( arr $ readString config )
 
 -- ------------------------------------------------------------
 
@@ -416,6 +415,27 @@ xread
       substXmlEntityRefs
       >>>
       canonicalizeContents
+
+-- ------------------------------------------------------------
+
+{-# DEPRECATED readDocumentOld, readFromDocumentOld, readStringOld, readFromStringOld "Please use the new read functions" #-}
+
+readDocumentOld    :: Attributes -> String -> IOStateArrow s b XmlTree
+readDocumentOld userOptions src
+    = readDocument (map optionToSysConfig $ userOptions) src
+
+readFromDocumentOld        :: Attributes -> IOStateArrow s String XmlTree
+readFromDocumentOld userOptions
+    = applyA ( arr $ readDocumentOld userOptions )
+
+readStringOld      :: Attributes -> String -> IOStateArrow s b XmlTree
+readStringOld userOptions content
+    = readDocumentOld ( (a_encoding, unicodeString) : userOptions ) (stringProtocol ++ content)
+
+readFromStringOld  :: Attributes -> IOStateArrow s String XmlTree
+readFromStringOld userOptions
+    = applyA ( arr $ readStringOld userOptions )
+
 
 -- ------------------------------------------------------------
 

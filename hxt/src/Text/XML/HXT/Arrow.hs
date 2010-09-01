@@ -32,10 +32,11 @@ module Text.XML.HXT.Arrow
     , module Text.XML.HXT.Arrow.Edit
     , module Text.XML.HXT.Arrow.GeneralEntitySubstitution
     , module Text.XML.HXT.Arrow.Namespace
+    , module Text.XML.HXT.Arrow.Pickle
     , module Text.XML.HXT.Arrow.ProcessDocument
     , module Text.XML.HXT.Arrow.ReadDocument
     , module Text.XML.HXT.Arrow.WriteDocument
-    , module Text.XML.HXT.Arrow.Pickle
+    , module Text.XML.HXT.Arrow.SystemConfig
 
     , module Text.XML.HXT.Version
     )
@@ -54,6 +55,7 @@ import Text.XML.HXT.Arrow.Namespace
 import Text.XML.HXT.Arrow.Pickle
 import Text.XML.HXT.Arrow.ProcessDocument
 import Text.XML.HXT.Arrow.ReadDocument
+import Text.XML.HXT.Arrow.SystemConfig
 import Text.XML.HXT.Arrow.WriteDocument
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlIOStateArrow

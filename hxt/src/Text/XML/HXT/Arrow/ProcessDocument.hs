@@ -38,12 +38,15 @@ import Text.XML.HXT.Arrow.XmlIOStateArrow
 import Text.XML.HXT.Arrow.ParserInterface
     ( parseXmlDoc
     , parseHtmlDoc
-    , parseHtmlTagSoup
     , substHtmlEntityRefs
     , validateDoc
     , transformDoc
     )
-
+{- TODO
+import Text.XML.HXT.Arrow.TagSoupInterface
+    ( parseHtmlTagSoup
+    )
+-}
 import Text.XML.HXT.Arrow.Edit
     ( transfAllCharRef
     )
@@ -129,19 +132,14 @@ arbitray errors, but the application is only interested in parts of the document
 
 -}
 
-parseHtmlDocument       :: Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> IOStateArrow s XmlTree XmlTree
-parseHtmlDocument withTagSoup withNamespaces warnings preserveCmt removeWhitespace asHtml
+parseHtmlDocument       :: IOStateArrow s XmlTree XmlTree
+parseHtmlDocument
     = ( perform ( getAttrValue a_source >>> traceValue 1 (("parseHtmlDoc: parse HTML document " ++) . show) )
         >>>
-        replaceChildren ( ( getAttrValue a_source               -- get source name
-                            &&&
-                            xshow getChildren
-                          )                                     -- get string to be parsed
-                          >>>
-                          parseHtml
-                        )
+        ( parseHtml $< getSysParam theTagSoup )
         >>>
-        removeWarnings
+        ( removeWarnings $< getSysParam (theWarnings `pairS` theTagSoup )
+        )
         >>>
         setDocumentStatusFromSystemState "parse HTML document"
         >>>
@@ -156,20 +154,24 @@ parseHtmlDocument withTagSoup withNamespaces warnings preserveCmt removeWhitespa
       )
       `when` documentStatusOk
     where
-    parseHtml
-        | withTagSoup   = traceMsg 1 ("parse document with tagsoup " ++
-                                      ( if asHtml then "HT" else "X" ) ++ "ML parser"
-                                     )
-                          >>>
-                          parseHtmlTagSoup withNamespaces warnings preserveCmt removeWhitespace asHtml
+    parseHtml withTagSoup'
+        | withTagSoup'  = withoutUserState $< getSysParam theTagSoupParser -- withoutUserState parseHtmlTagSoup
 
         | otherwise     = traceMsg 1 ("parse document with parsec HTML parser")
                           >>>
-                          parseHtmlDoc                          -- run parser
+                          replaceChildren
+                          ( ( getAttrValue a_source             -- get source name
+                              &&&
+                              xshow getChildren
+                            )                                   -- get string to be parsed
+                            >>>
+                            parseHtmlDoc                        -- run parser
+                          )
                           >>>
                           substHtmlEntityRefs                   -- substitute entity refs
-    removeWarnings
-        | withTagSoup
+
+    removeWarnings (warnings, withTagSoup')
+        | withTagSoup'
           &&
           not warnings  = this
         | otherwise     = processTopDownWithAttrl
