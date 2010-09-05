@@ -15,17 +15,13 @@ Stability:           Stable
 Category:            Text
 Build-type:          Simple
 
--- Extra files to be distributed with the package, such as examples or
--- a README.
--- Extra-source-files:  
-
 Cabal-version:       >=1.2
 
 Extra-source-files:
   gen/Makefile
   gen/Blocks.txt
   gen/UnicodeData.txt
-  gen/GenBlocks.hsxf
+  gen/GenBlocks.hs
   gen/GenCharProps.hs
 
 Library

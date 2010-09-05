@@ -1,4 +1,12 @@
-HXTPACKAGES	= hxt-charproperties hxt-regex-xmlschema hxt-unicode hxt hxt-xpath hxt-xslt hxt-filter hxt-binary hxt-cache janus/janus-library
+HXTPACKAGES	= hxt-charproperties \
+                  hxt-regex-xmlschema \
+                  hxt-unicode \
+                  hxt \
+                  hxt-curl \
+                  hxt-tagsoup \
+                  hxt-xpath \
+
+# hxt-xslt hxt-filter hxt-binary hxt-cache janus/janus-library
 
 all	:
 	$(foreach i,$(HXTPACKAGES), ( cd $i && cabal configure && cabal build && cabal install && cabal sdist; ); )

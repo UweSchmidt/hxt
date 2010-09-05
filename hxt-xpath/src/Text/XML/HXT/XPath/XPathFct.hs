@@ -52,8 +52,11 @@ import Control.Arrow.ArrowTree                  ( deep )
 import Control.Arrow.ListArrow                  ( LA, runLA )
 
 import Text.XML.HXT.Arrow.XmlArrow
-import Text.XML.HXT.Arrow.ReadDocument          (readDocument)
-import Text.XML.HXT.Arrow.XmlIOStateArrow       (runX)
+import Text.XML.HXT.Arrow.ReadDocument          ( readDocument )
+import Text.XML.HXT.Arrow.XmlState              ( runX
+                                                , withValidate
+                                                , no
+                                                )
 
 import           Text.XML.HXT.DOM.Interface
 import qualified Text.XML.HXT.DOM.XmlNode as XN
@@ -809,7 +812,7 @@ xdocument c e val                       = XPVNode . toNodeSet . (\ (XPVString s)
 xdocument'                              :: String -> [NavXmlTree]
 xdocument' uri                          = map ntree $
                                           unsafePerformIO $
-                                          runX ( readDocument [(a_validate, v_0)] uri
+                                          runX ( readDocument [withValidate no] uri
                                                  >>>
                                                  addAttr "rootId" ("doc " ++ uri)
                                                )

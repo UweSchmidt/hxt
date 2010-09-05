@@ -1,11 +1,10 @@
 Name:                hxt-unicode
 Version:             9.0.0
-Synopsis:            Unicode encoding and decoding functions for utf8, iso-latin-* and somes other encodings
+Synopsis:            Unicode en-/decoding functions for utf8, iso-latin-* and other encodings
 Description:         Unicode encoding and decoding functions for utf8, iso-latin-* and somes other encodings,
                      used in the Haskell XML Toolbox.
                      ISO Latin 1 - 16, utf8, utf16, ASCII are supported. Decoding
                      is done with lasy functions, errors may be detected or ignored.
-
 Homepage:            http://www.fh-wedel.de/~si/HXmlToolbox/index.html
 License:             OtherLicense
 License-file:        LICENSE

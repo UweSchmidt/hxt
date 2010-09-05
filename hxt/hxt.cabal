@@ -1,6 +1,6 @@
 -- arch-tag: Haskell XML Toolbox main description file
 Name:           hxt
-Version:        8.5.5
+Version:        9.0.0
 Synopsis:       A collection of tools for processing XML with Haskell. 
 Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
                 but introduces a more general approach for processing XML with Haskell.
@@ -10,8 +10,11 @@ Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
                 an XPath expression evaluator, an XSLT library, a RelaxNG schema validator
                 and funtions for serialization and deserialization of user defined data.
                 The library makes extensive use of the arrow approach for processing XML.
-                Since version 8.5 XPath and XSLT have been moved to separate packages hxt-xpath and hxt-xslt,
-                serialisation is in package hxt-binary
+                Since version 9 the toolbox is partitioned into various (sub-)packages.
+                This package contains the core functionality,
+                hxt-curl, hxt-tagsoup, hxt-relaxng, hxt-xpath, hxt-xslt, hxt-regex-xmlschema contain the extensions.
+                hxt-unicode contains encoding and decoding functions,
+                hxt-charproperties char properties for unicode and XML.
 License:        OtherLicense
 License-file:   LICENSE
 Author:         Uwe Schmidt, Martin Schmidt, Torben Kuseler
@@ -88,10 +91,8 @@ library
   Control.Arrow.StateListArrow,
   Data.AssocList,
   Data.Atom,
-  -- Data.Char.UTF8,
   Data.Tree.Class,
   Data.Tree.NTree.TypeDefs,
-  Text.XML.HXT.Arrow,
   Text.XML.HXT.Arrow.DTDProcessing,
   Text.XML.HXT.Arrow.DocumentInput,
   Text.XML.HXT.Arrow.DocumentOutput,
@@ -105,11 +106,18 @@ library
   Text.XML.HXT.Arrow.Pickle.Xml,
   Text.XML.HXT.Arrow.ProcessDocument,
   Text.XML.HXT.Arrow.ReadDocument,
-  Text.XML.HXT.Arrow.SystemConfig,
+  Text.XML.HXT.Arrow.XmlState,
+  Text.XML.HXT.Arrow.XmlState.ErrorHandling,
+  Text.XML.HXT.Arrow.XmlState.MimeTypeTable,
+  Text.XML.HXT.Arrow.XmlState.RunIOStateArrow,
+  Text.XML.HXT.Arrow.XmlState.TraceHandling,
+  Text.XML.HXT.Arrow.XmlState.TypeDefs,
+  Text.XML.HXT.Arrow.XmlState.URIHandling,
+  Text.XML.HXT.Arrow.XmlState.SystemConfig,
   Text.XML.HXT.Arrow.WriteDocument,
   Text.XML.HXT.Arrow.XmlArrow,
-  Text.XML.HXT.Arrow.XmlIOStateArrow,
   Text.XML.HXT.Arrow.XmlRegex,
+  Text.XML.HXT.Core,
   Text.XML.HXT.DOM.FormatXmlTree,
   Text.XML.HXT.DOM.Interface,
   Text.XML.HXT.DOM.MimeTypeDefaults,
@@ -131,10 +139,8 @@ library
   Text.XML.HXT.DTDValidation.Validation,
   Text.XML.HXT.DTDValidation.XmlRE,
   Text.XML.HXT.IO.GetFILE,
-  Text.XML.HXT.IO.GetHTTPLibCurl,
   Text.XML.HXT.Parser.HtmlParsec,
   Text.XML.HXT.Parser.ProtocolHandlerUtil,
-  -- Text.XML.HXT.Parser.TagSoup,
   Text.XML.HXT.Parser.XhtmlEntities,
   Text.XML.HXT.Parser.XmlCharParser,
   Text.XML.HXT.Parser.XmlDTDParser,
@@ -154,8 +160,6 @@ library
   Text.XML.HXT.RelaxNG.Schema,
   Text.XML.HXT.RelaxNG.SchemaGrammar,
   Text.XML.HXT.RelaxNG.Simplification,
-  Text.XML.HXT.RelaxNG.Unicode.Blocks,
-  Text.XML.HXT.RelaxNG.Unicode.CharProps,
   Text.XML.HXT.RelaxNG.Utils,
   Text.XML.HXT.RelaxNG.Validation,
   Text.XML.HXT.RelaxNG.Validator,
@@ -178,8 +182,6 @@ library
                 network    >= 2.1 && < 3,
                 deepseq    >= 1.1 && < 2,
                 bytestring >= 0.9 && < 1,
-                -- tagsoup    >= 0.10 && < 0.11,
-                curl       >= 1.3 && < 2,
                 hxt-charproperties  >= 9 && < 10,
                 hxt-unicode         >= 9 && < 10,
                 hxt-regex-xmlschema >= 9 && < 10
