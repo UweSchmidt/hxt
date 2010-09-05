@@ -24,7 +24,7 @@ where
 import System.Console.GetOpt
 
 import Text.XML.HXT.Arrow.TagSoupInterface
-import Text.XML.HXT.Arrow.XmlIOStateArrow
+import Text.XML.HXT.Arrow.XmlState
 
 -- ------------------------------------------------------------
 

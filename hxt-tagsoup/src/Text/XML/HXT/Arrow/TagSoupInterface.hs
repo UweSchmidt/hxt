@@ -23,8 +23,9 @@ import Control.Arrow.ArrowList
 import Control.Arrow.ArrowTree
 
 import Text.XML.HXT.DOM.Interface
+
 import Text.XML.HXT.Arrow.XmlArrow
-import Text.XML.HXT.Arrow.XmlIOStateArrow
+import Text.XML.HXT.Arrow.XmlState
 
 import qualified Text.XML.HXT.Parser.TagSoup as TS
 

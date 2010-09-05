@@ -10,7 +10,7 @@ Maintainer:     Uwe Schmidt <uwe@fh-wedel.de>
 Stability:      Stable
 Category:       XML
 Homepage:       http://www.fh-wedel.de/~si/HXmlToolbox/index.html
-Copyright:      Copyright (c) 2005-2010 Uwe Schmidt
+Copyright:      Copyright (c) 2010 Uwe Schmidt
 Build-type:     Simple
 Cabal-version:  >=1.6
 
@@ -29,10 +29,10 @@ library
 
  ghc-options: -Wall
 
- -- extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances
+ extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances
 
  build-depends: base               >= 4    && < 5,
                 haskell98          >= 1    && < 2,
                 tagsoup            >= 0.10 && < 0.11,
                 hxt-charproperties >= 9    && < 10,
-                hxt                >= 8.5.5     && < 10
+                hxt                >= 9    && < 10
