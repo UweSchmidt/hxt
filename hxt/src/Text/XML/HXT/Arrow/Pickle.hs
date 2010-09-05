@@ -8,7 +8,6 @@
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id$
 
 Pickler functions for converting between user defined data types
 and XmlTree data. Usefull for persistent storage and retreival
@@ -46,8 +45,6 @@ module Text.XML.HXT.Arrow.Pickle
     , xunpickleVal
     , thePicklerDTD
     , a_addDTD
-
-    , xunpickleDocumentOld
 
       -- from Text.XML.HXT.Arrow.Pickle.Xml
     , pickleDoc
@@ -104,8 +101,9 @@ import           Data.Maybe
 import           Control.Arrow.ListArrows
 
 import           Text.XML.HXT.DOM.Interface
+
 import           Text.XML.HXT.Arrow.XmlArrow
-import           Text.XML.HXT.Arrow.XmlIOStateArrow
+import           Text.XML.HXT.Arrow.XmlState
 import           Text.XML.HXT.Arrow.ReadDocument
 import           Text.XML.HXT.Arrow.WriteDocument
 
@@ -125,13 +123,13 @@ import           Text.XML.HXT.Arrow.Pickle.DTD
 -- An option evaluated by this arrow is 'a_addDTD'.
 -- If 'a_addDTD' is set ('v_1'), the pickler DTD is added as an inline DTD into the document.
 
-xpickleDocument         :: PU a -> Attributes -> String -> IOStateArrow s a XmlTree
-xpickleDocument xp al dest
+xpickleDocument         :: PU a -> SysConfigList -> String -> IOStateArrow s a XmlTree
+xpickleDocument xp config dest
     = xpickleVal xp
       >>>
       traceMsg 1 "xpickleVal applied"
       >>>
-      ( if lookup1 a_addDTD al == v_1
+      ( if getSysConfigOption a_addDTD config == v_1
         then replaceChildren ( (constA undefined >>> xpickleDTD xp >>> getChildren)
                                <+>
                                getChildren
@@ -139,7 +137,7 @@ xpickleDocument xp al dest
         else this
       )
       >>>
-      writeDocument al dest
+      writeDocument config dest
 
 -- | Option for generating and adding DTD when document is pickled
 
@@ -168,11 +166,11 @@ xunpickleDocument xp conf src
 
 -- | Write out the DTD generated out of a pickler. Calls 'xpicklerDTD'
 
-xpickleWriteDTD         :: PU b -> Attributes -> String -> IOStateArrow s b XmlTree
-xpickleWriteDTD xp al dest
+xpickleWriteDTD         :: PU b -> SysConfigList -> String -> IOStateArrow s b XmlTree
+xpickleWriteDTD xp config dest
                         = xpickleDTD xp
                           >>>
-                          writeDocument al dest
+                          writeDocument config dest
 
 -- | The arrow for generating the DTD out of a pickler
 --
@@ -240,20 +238,6 @@ xunpickleVal xp         = arrL (maybeToList . unpickleDoc xp)
 
 thePicklerDTD           :: PU b -> XmlTrees
 thePicklerDTD           = dtdDescrToXml . dtdDescr . theSchema
-
--- ------------------------------------------------------------
-
-{-# DEPRECATED xunpickleDocumentOld "Please use the new xunpickleDocument function" #-}
-
-xunpickleDocumentOld    :: PU a -> Attributes -> String -> IOStateArrow s b a
-xunpickleDocumentOld xp al src
-                        = readDocumentOld al src
-                          >>>
-                          traceMsg 1 ("xunpickleVal for " ++ show src ++ " started")
-                          >>>
-                          xunpickleVal xp
-                          >>>
-                          traceMsg 1 ("xunpickleVal for " ++ show src ++ " finished")
 
 -- ------------------------------------------------------------
 

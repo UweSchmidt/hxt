@@ -21,7 +21,6 @@ module Text.XML.HXT.RelaxNG.Validation
     ( validateWithRelaxAndHandleErrors
     , validateDocWithRelax
     , validateRelax
-    , validateXMLDoc
     , readForRelax
     , normalizeForRelaxValidation
     , contains
@@ -37,7 +36,7 @@ import           Text.XML.HXT.DOM.Interface
 import qualified Text.XML.HXT.DOM.XmlNode as XN
 
 import           Text.XML.HXT.Arrow.XmlArrow
-import           Text.XML.HXT.Arrow.XmlIOStateArrow
+import           Text.XML.HXT.Arrow.XmlState
 
 import           Text.XML.HXT.Arrow.Edit                ( canonicalizeAllNodes
                                                         , collapseAllXText
@@ -129,7 +128,7 @@ normalizeForRelaxValidation
 
    * 1.parameter  :  the arrow for computing the Relax NG schema
 
-   - 2.parameter  :  list of options for reading and validating
+   - 2.parameter  :  list of configuration options for reading and validating
 
    - 3.parameter  :  XML document URI
 
@@ -138,16 +137,20 @@ normalizeForRelaxValidation
    - arrow-output :  list of errors or 'none'
 -}
 
-validateDocWithRelax :: IOSArrow XmlTree XmlTree -> Attributes -> String -> IOSArrow XmlTree XmlTree
-validateDocWithRelax theSchema al doc
-  = ( if null doc
-      then root [] []
-      else readForRelax al doc
-    )
-    >>>
-    validateWithRelax theSchema
-    >>>
-    perform handleErrors
+validateDocWithRelax :: IOSArrow XmlTree XmlTree -> SysConfigList -> String -> IOSArrow XmlTree XmlTree
+validateDocWithRelax theSchema config doc
+    = localSysParam (theInputConfig `pairS` theParseConfig)
+      $
+      configSysParams config
+      >>>
+      ( if null doc
+        then root [] []
+        else readForRelax doc
+      )
+      >>>
+      validateWithRelax theSchema
+      >>>
+      perform handleErrors
 
 
 {- | Validates a xml document with respect to a Relax NG schema
@@ -175,31 +178,15 @@ validateRelax xmlDoc
 
 -- ------------------------------------------------------------
 
-readForRelax    :: Attributes -> String -> IOSArrow b XmlTree
-readForRelax options schema
-    = getDocumentContents options schema
+readForRelax    :: String -> IOSArrow b XmlTree
+readForRelax schema
+    = getDocumentContents schema
       >>>
       parseXmlDocument False
       >>>
       canonicalizeAllNodes
       >>>
       propagateAndValidateNamespaces
-
--- ------------------------------------------------------------
-
-{- old stuff -}
-
-validateXMLDoc :: Attributes -> String -> IOSArrow XmlTree XmlTree
-validateXMLDoc al xmlDoc
-  = validateRelax
-    $<
-    ( readForRelax al xmlDoc
-      >>>
-      normalizeForRelaxValidation
-      >>>
-      getChildren
-    )
-
 
 -- ------------------------------------------------------------
 --

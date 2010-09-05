@@ -36,7 +36,7 @@ import System.Console.GetOpt
 --
 -- can be used for option definition with haskell getopt
 --
--- defines options: 'a_trace', 'a_proxy', 'a_use_curl', 'a_do_not_use_curl', 'a_options_curl', 'a_encoding',
+-- defines options: 'a_trace', 'a_proxy', 'a_encoding',
 -- 'a_issue_errors', 'a_do_not_issue_errors', 'a_parse_html', 'a_parse_by_mimetype', 'a_issue_warnings', 'a_do_not_issue_warnings',
 -- 'a_parse_xml', 'a_validate', 'a_do_not_validate', 'a_canonicalize', 'a_do_not_canonicalize',
 --- 'a_preserve_comment', 'a_do_not_preserve_comment', 'a_check_namespaces', 'a_do_not_check_namespaces',
@@ -48,9 +48,6 @@ inputOptions
       , Option "p"      [a_proxy]                       (ReqArg (att a_proxy)         "PROXY")  "proxy for http access (e.g. \"www-cache:3128\")"
       , Option ""       [a_redirect]                    (NoArg  (att a_redirect          v_1))  "automatically follow redirected URIs"
       , Option ""       [a_no_redirect]                 (NoArg  (att a_redirect          v_0))  "switch off following redirected URIs"
-      , Option ""       [a_use_curl]                    (NoArg  (att a_use_curl          v_1))  "obsolete, since hxt-8.1 HTTP access is always done with curl bindings"
-      , Option ""       [a_do_not_use_curl]             (NoArg  (att a_use_curl          v_0))  "obsolete, since hxt-8.1 HTTP access is always done with curl bindings"
-      , Option ""       [a_options_curl]                (ReqArg (att a_options_curl)    "STR")  "additional curl options, e.g. for timeout, ..."
       , Option ""       [a_default_baseuri]             (ReqArg (att transferURI)       "URI")  "default base URI, default: \"file:///<cwd>/\""
       , Option "e"      [a_encoding]                    (ReqArg (att a_encoding)    "CHARSET")  ( "default document encoding (" ++ utf8 ++ ", " ++ isoLatin1 ++ ", " ++ usAscii ++ ", ...)" )
       , Option ""       [a_mime_types]                  (ReqArg (att a_mime_types)     "FILE")  "set mime type configuration file, e.g. \"/etc/mime.types\""

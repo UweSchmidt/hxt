@@ -34,7 +34,7 @@ import           Text.XML.HXT.DOM.Interface
 import qualified Text.XML.HXT.DOM.XmlNode as XN
 
 import Text.XML.HXT.Arrow.XmlArrow
-import Text.XML.HXT.Arrow.XmlIOStateArrow
+import Text.XML.HXT.Arrow.XmlState
 
 import Text.XML.HXT.Arrow.ParserInterface
     ( parseXmlDTDdecl

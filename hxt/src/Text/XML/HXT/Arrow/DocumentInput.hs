@@ -8,7 +8,6 @@
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id$
 
    State arrows for document input
 -}
@@ -22,6 +21,7 @@ module Text.XML.HXT.Arrow.DocumentInput
     , getEncoding
     , getTextEncoding
     , decodeDocument
+    , addInputError
     )
 where
 
@@ -41,7 +41,6 @@ import           Data.String.Unicode            ( getDecodingFct
 import           System.FilePath                ( takeExtension )
 
 import qualified Text.XML.HXT.IO.GetFILE        as FILE
-import qualified Text.XML.HXT.IO.GetHTTPLibCurl as LibCURL
 
 import           Text.XML.HXT.DOM.Interface
 
@@ -51,7 +50,7 @@ import           Text.XML.HXT.Arrow.ParserInterface
                                                 , removeEncodingSpec
                                                 )
 import           Text.XML.HXT.Arrow.XmlArrow
-import           Text.XML.HXT.Arrow.XmlIOStateArrow
+import           Text.XML.HXT.Arrow.XmlState
 
 -- ----------------------------------------------------------
 
@@ -101,10 +100,7 @@ getStringContents
 
 getFileContents         :: IOStateArrow s XmlTree XmlTree
 getFileContents
-    = applyA ( ( ( getAttrValue  a_strict_input
-                   >>>
-                   arr isTrueValue
-                 )
+    = applyA ( ( getSysParam theStrictInput
                  &&&
                  ( getAttrValue transferURI
                    >>>
@@ -116,7 +112,7 @@ getFileContents
                >>>
                arrIO (uncurry FILE.getCont)
                >>>
-               ( arr (uncurry addError) -- io error occured
+               ( arr (uncurry addInputError) -- io error occured
                  |||
                  arr addTxtContent      -- content read
                )
@@ -126,20 +122,18 @@ getFileContents
 
 getStdinContents                :: IOStateArrow s XmlTree XmlTree
 getStdinContents
-    = applyA (  getAttrValue  a_strict_input
-                >>>
-                arr isTrueValue
+    = applyA (  getSysParam theStrictInput
                 >>>
                 arrIO FILE.getStdinCont
                >>>
-               ( arr (uncurry addError) -- io error occured
+               ( arr (uncurry addInputError) -- io error occured
                  |||
                  arr addTxtContent      -- content read
                )
              )
 
-addError                :: [(String, String)] -> String -> IOStateArrow s XmlTree XmlTree
-addError al e
+addInputError                :: Attributes -> String -> IOStateArrow s XmlTree XmlTree
+addInputError al e
     = issueFatal e
       >>>
       seqA (map (uncurry addAttr) al)
@@ -168,41 +162,7 @@ addTxtContent c
 
 getHttpContents         :: IOStateArrow s XmlTree XmlTree
 getHttpContents
-    = getCont $<< ( getAttrValue transferURI
-                    &&&
-                    ( ( getAttrlAsAssoc         -- get all attributes of root node
-                        &&&
-                        getAllParams            -- get all system params
-                      )
-                      >>^ uncurry addEntries    -- merge them, attributes overwrite system params
-                    )
-                  )
-      where
-      getAttrlAsAssoc                           -- get the attributes as assoc list
-          = listA ( getAttrl
-                    >>> ( getName
-                          &&&
-                          xshow getChildren
-                        )
-                  )
-
-      getCont uri options
-          = applyA ( ( traceMsg 2 ( "get HTTP via libcurl, uri=" ++ show uri ++ " options=" ++ show options )
-                       >>>
-                       arrIO0 ( LibCURL.getCont options uri )
-                     )
-                     >>>
-                     ( arr (uncurry addError)
-                       |||
-                       arr addContent
-                     )
-                   )
-
-      addContent        :: (AssocList String String, String) -> IOStateArrow s XmlTree XmlTree
-      addContent (al, c)
-          = replaceChildren (txt c)
-            >>>
-            seqA (map (uncurry addAttr) al)
+    = withoutUserState $ applyA $ getSysParam theHttpHandler
 
 getURIContents          :: IOStateArrow s XmlTree XmlTree
 getURIContents
@@ -349,7 +309,7 @@ getEncoding
              arr guessEncoding
            , getAttrValue transferEncoding      -- 2. guess: take the transfer encoding
            , getAttrValue a_encoding            -- 3. guess: take encoding parameter in root node
-           , getParam     a_encoding            -- 4. guess: take encoding parameter in global state
+           , getSysParam  theInputEncoding      -- 4. guess: take encoding parameter in global state
            , constA utf8                        -- default : utf8
            ]
       >. (head . filter (not . null))           -- make the filter deterministic: take 1. entry from list of guesses
@@ -358,7 +318,7 @@ getTextEncoding :: IOStateArrow s XmlTree String
 getTextEncoding
     = catA [ getAttrValue transferEncoding      -- 1. guess: take the transfer encoding
            , getAttrValue a_encoding            -- 2. guess: take encoding parameter in root node
-           , getParam     a_encoding            -- 3. guess: take encoding parameter in global state
+           , getSysParam  theInputEncoding      -- 3. guess: take encoding parameter in global state
            , constA isoLatin1                   -- default : no encoding
            ]
       >. (head . filter (not . null))           -- make the filter deterministic: take 1. entry from list of guesses
@@ -379,7 +339,7 @@ decodeDocument
         found df
             = traceMsg 2 ("decodeDocument: encoding is " ++ show enc)
               >>>
-              ( decodeText df $< getAttrValue a_ignore_encoding_errors )
+              ( decodeText df $< getSysParam theEncodingErrors )
               >>>
               addAttr transferEncoding enc
 
@@ -388,7 +348,7 @@ decodeDocument
               >>>
               setDocumentStatusFromSystemState "decoding document"
 
-        decodeText df ignoreErrs
+        decodeText df withEncErrors
             = processChildren
               ( getText                                                 -- get the document content
                 >>> arr df                                              -- decode the text, result is (string, [errMsg])
@@ -396,9 +356,8 @@ decodeDocument
                         ^>> mkText
                       )
                       <+>
-                      ( if isTrueValue ignoreErrs
-                        then none                                       -- encoding errors are ignored
-                        else
+                      ( if withEncErrors
+                        then
                         ( arrL snd                                      -- take the error messages
                           >>>
                           arr ((enc ++) . (" encoding error" ++))       -- prefix with enc error
@@ -407,6 +366,7 @@ decodeDocument
                           >>>
                           none                                          -- neccessary for type match with <+>
                         )
+                        else none
                       )
                     )
               )

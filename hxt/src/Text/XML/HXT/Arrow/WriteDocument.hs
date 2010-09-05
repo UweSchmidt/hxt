@@ -28,9 +28,13 @@ import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
 
 import Text.XML.HXT.DOM.Interface
-import Text.XML.HXT.Arrow.XmlArrow
-import Text.XML.HXT.Arrow.XmlIOStateArrow
 
+import Text.XML.HXT.Arrow.XmlArrow
+import Text.XML.HXT.Arrow.XmlState
+import Text.XML.HXT.Arrow.XmlState.TypeDefs
+import Text.XML.HXT.Arrow.XmlState.RunIOStateArrow
+                                                ( initialSysState
+                                                )
 import Text.XML.HXT.Arrow.Edit                  ( escapeHtmlDoc
                                                 , escapeXmlDoc
                                                 , haskellRepOfXmlDoc
@@ -40,13 +44,13 @@ import Text.XML.HXT.Arrow.Edit                  ( escapeHtmlDoc
                                                 , removeDocWhiteSpace
                                                 , treeRepOfXmlDoc
                                                 )
-
 import Text.XML.HXT.Arrow.DocumentOutput        ( putXmlDocument
                                                 , encodeDocument
                                                 , encodeDocument'
                                                 )
 
 -- ------------------------------------------------------------
+-- TODO
 
 {- |
 the main filter for writing documents
@@ -57,13 +61,8 @@ usage: @ writeDocument optionList destination @
 
 if @ destination @ is the empty string or \"-\", stdout is used as output device
 
-available options are
+for available options see 'Text.XML.HXT.Arrow.XmlState.SystemConfig'
 
-* 'a_indent' : indent document for readability, (default: no indentation)
-
-- 'a_remove_whitespace' : remove all redundant whitespace for shorten text (default: no removal)
-
-- 'a_output_encoding' : encoding of document, default is 'a_encoding' or 'utf8'
 
 - 'a_output_xml' : (default) issue XML: quote special XML chars \>,\<,\",\',& where neccessary
                    add XML processing instruction
@@ -96,7 +95,7 @@ available options are
 > module Main
 > where
 >
-> import Text.XML.HXT.Arrow
+> import Text.XML.HXT.Core
 >
 > main        :: IO ()
 > main
@@ -107,22 +106,27 @@ available options are
 >            )
 >       return ()
 
-an example for copying a document to standard output with tracing and evaluation of
+an example for copying a document to standard output with global trace level 1, input trace level 2,
+output encoding isoLatin1,
+and evaluation of
 error code is:
 
 > module Main
 > where
 >
-> import Text.XML.HXT.Arrow
+> import Text.XML.HXT.Core
 > import System.Exit
 >
 > main        :: IO ()
 > main
 >     = do
->       [rc] <- runX ( readDocument  [ (a_trace, "1")
->                                    ] "hello.xml"
+>       [rc] <- runX ( configSysParams [ withTrace 1 ]
+                       >>>
+                       readDocument    [ withTrace    2
+                                       , withValidate no
+>                                      ] "hello.xml"
 >                      >>>
->                      writeDocument [ (a_output_encoding, isoLatin1)
+>                      writeDocument [ withOutputEncoding isoLatin1
 >                                    ] "-"        -- output to stdout
 >                      >>>
 >                      getErrStatus
@@ -133,20 +137,26 @@ error code is:
 >                )
 -}
 
-writeDocument   :: Attributes -> String -> IOStateArrow s XmlTree XmlTree
-writeDocument userOptions dst
-    = perform ( traceMsg 1 ("writeDocument: destination is " ++ show dst)
-                >>>
-                prepareContents userOptions encodeDocument
-                >>>
-                putXmlDocument textMode dst
-                >>>
-                traceMsg 1 "writeDocument: finished"
-              )
+writeDocument   	:: SysConfigList -> String -> IOStateArrow s XmlTree XmlTree
+writeDocument config dst
+    = localSysParam (theTrace `pairS` theOutputConfig)
+      $
+      configSysParams (withOutputFile dst : config)
+      >>>
+      perform (uncurry writeDocument' $< getSysParam (theTextMode `pairS` theOutputFile))
+
+writeDocument'  	:: Bool -> String -> IOStateArrow s XmlTree XmlTree
+writeDocument' textMode dst
+    = ( traceMsg 1 ("writeDocument: destination is " ++ show dst)
+        >>>
+        ( (flip prepareContents) encodeDocument $< getSysParam idS )
+        >>>
+        putXmlDocument textMode dst
+        >>>
+        traceMsg 1 "writeDocument: finished"
+      )
       `when`
       documentStatusOk
-    where
-    textMode    = optionIsSet a_text_mode userOptions
 
 -- ------------------------------------------------------------
 
@@ -154,7 +164,7 @@ writeDocument userOptions dst
 -- Convert a document into a string. Formating is done the same way
 -- and with the same options as in 'writeDocument'. Default output encoding is
 -- no encoding, that means the result is a normal unicode encode haskell string.
--- The default may be overwritten with the 'Text.XML.HXT.XmlKeywords.a_output_encoding' option.
+-- The default may be overwritten with the 'Text.XML.HXT.Arrow.XmlState.SystemConfig.withOutputEncoding' option.
 -- The XML PI can be suppressed by the 'Text.XML.HXT.XmlKeywords.a_no_xml_pi' option.
 --
 -- This arrow fails, when the encoding scheme is not supported.
@@ -162,13 +172,13 @@ writeDocument userOptions dst
 -- The XML PI is suppressed, if not explicitly turned on with an
 -- option @ (a_no_xml_pi, v_0) @
 
-writeDocumentToString   :: ArrowXml a => Attributes  -> a XmlTree String
-writeDocumentToString userOptions
-    = prepareContents ( addEntries
-                        userOptions
-                        [ (a_output_encoding, unicodeString)
-                        , (a_no_xml_pi, v_1)
-                        ]
+writeDocumentToString   :: ArrowXml a => SysConfigList  -> a XmlTree String
+writeDocumentToString config
+    = prepareContents ( foldr (>>>) id (withOutputEncoding unicodeString :
+                                        withNoXmlPi        yes           :
+                                        config
+                                       )
+                        $ initialSysState
                       ) encodeDocument'
       >>>
       xshow getChildren
@@ -178,70 +188,56 @@ writeDocumentToString userOptions
 -- |
 -- indent and format output
 
-prepareContents :: ArrowXml a => Attributes -> (Bool -> String -> a XmlTree XmlTree) -> a XmlTree XmlTree
-prepareContents userOptions encodeDoc
+prepareContents :: ArrowXml a => XIOSysState -> (Bool -> String -> a XmlTree XmlTree) -> a XmlTree XmlTree
+prepareContents config encodeDoc
     = indent
       >>>
       addDtd
       >>>
       format
     where
+    indent'	 = getS theIndent      config
+    removeWS'    = getS theRemoveWS    config
+    showTree'    = getS theShowTree    config
+    showHaskell' = getS theShowHaskell config
+    outHtml'     = getS theOutputFmt   config ==  HTMLoutput
+    outXhtml'    = getS theOutputFmt   config == XHTMLoutput
+    outXml'      = getS theOutputFmt   config ==   XMLoutput
+    noPi'        = getS theNoXmlPi     config
+    noEEs'       = getS theNoEmptyElements config
+    noEEsFor'    = getS theNoEmptyElemFor  config
+    addDDTD'     = getS theAddDefaultDTD   config
+    outEnc'      = getS theOutputEncoding  config
+
     formatEmptyElems
-        | not (null noEmptyElemFor)     = preventEmptyElements noEmptyElemFor
-        | hasOption a_no_empty_elements
+        | not (null noEEsFor')          = preventEmptyElements noEEsFor'
+        | noEEs'
           ||
-          hasOption a_output_xhtml      = preventEmptyElements []
+          outXhtml'                     = preventEmptyElements []
         | otherwise                     = const this
     addDtd
-        | hasOption a_add_default_dtd   = addDefaultDTDecl
+        | addDDTD'                      = addDefaultDTDecl
         | otherwise                     = this
     indent
-        | hasOption a_indent            = indentDoc                     -- document indentation
-        | hasOption a_remove_whitespace = removeDocWhiteSpace           -- remove all whitespace between tags
+        | indent'                       = indentDoc                     -- document indentation
+        | removeWS'                     = removeDocWhiteSpace           -- remove all whitespace between tags
         | otherwise                     = this
 
     format
-        | hasOption a_show_tree         = treeRepOfXmlDoc
-        | hasOption a_show_haskell      = haskellRepOfXmlDoc
-        | hasOption a_output_html       = formatEmptyElems True
+        | showTree'                     = treeRepOfXmlDoc
+        | showHaskell'                  = haskellRepOfXmlDoc
+        | outHtml'                      = formatEmptyElems True
                                           >>>
                                           escapeHtmlDoc                 -- escape al XML and HTML chars >= 128
                                           >>>
                                           encodeDoc                     -- convert doc into text with respect to output encoding with ASCII as default
-                                            suppressXmlPi ( lookupDef usAscii a_output_encoding options )
-        | hasOption a_output_xml        = formatEmptyElems (hasOption a_output_xhtml)
+                                            noPi' ( if null outEnc' then usAscii else outEnc' )
+        | outXml'                       = formatEmptyElems outXhtml'
                                           >>>
                                           escapeXmlDoc                  -- escape lt, gt, amp, quot,
                                           >>>
                                           encodeDoc                     -- convert doc into text with respect to output encoding
-                                            suppressXmlPi ( lookupDef "" a_output_encoding options )
+                                            noPi' outEnc'
         | otherwise                     = this
-
-    suppressXmlPi                                                       -- remove <?xml ... ?> when set
-        = hasOption a_no_xml_pi
-
-    noEmptyElemFor
-        = words
-          . map (\ c -> if c == ',' then ' ' else c)
-          . lookup1 a_no_empty_elem_for
-          $ options
-
-    hasOption n
-        = optionIsSet n options
-
-    options = addEntries
-              userOptions
-              [ ( a_indent,             v_0 )
-              , ( a_remove_whitespace,  v_0 )
-              , ( a_output_xml,         v_1 )
-              , ( a_show_tree,          v_0 )
-              , ( a_show_haskell,       v_0 )
-              , ( a_output_html,        v_0 )
-              , ( a_output_xhtml,       v_0 )
-              , ( a_no_xml_pi,          v_0 )
-              , ( a_no_empty_elements,  v_0 )
-              , ( a_no_empty_elem_for,  ""  )
-              , ( a_add_default_dtd,    v_0 )
-              ]
 
 -- ------------------------------------------------------------

@@ -32,8 +32,9 @@ import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
 
 import Text.XML.HXT.DOM.Interface
+
 import Text.XML.HXT.Arrow.XmlArrow
-import Text.XML.HXT.Arrow.XmlIOStateArrow
+import Text.XML.HXT.Arrow.XmlState
 
 import Text.XML.HXT.Arrow.ParserInterface
     ( parseXmlDoc
@@ -42,11 +43,7 @@ import Text.XML.HXT.Arrow.ParserInterface
     , validateDoc
     , transformDoc
     )
-{- TODO
-import Text.XML.HXT.Arrow.TagSoupInterface
-    ( parseHtmlTagSoup
-    )
--}
+
 import Text.XML.HXT.Arrow.Edit
     ( transfAllCharRef
     )
@@ -271,14 +268,12 @@ propagateAndValidateNamespaces
    For supported protocols see 'Text.XML.HXT.Arrow.DocumentInput.getXmlContents'
 -}
 
-getDocumentContents     :: Attributes -> String -> IOStateArrow s b XmlTree
-getDocumentContents options src
+getDocumentContents     :: String -> IOStateArrow s b XmlTree
+getDocumentContents src
     = root [] []
       >>>
       addAttr a_source src
       >>>
-      seqA (map (uncurry addAttr) options)                                      -- add all options to doc root
-      >>>                                                                       -- e.g. getXmlContents needs some of these
       traceMsg 1 ("readDocument: start processing document " ++ show src)
       >>>
       getXmlContents

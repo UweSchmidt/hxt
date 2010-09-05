@@ -33,7 +33,7 @@ import qualified Text.XML.HXT.DOM.XmlNode as XN
     )
 
 import Text.XML.HXT.Arrow.XmlArrow
-import Text.XML.HXT.Arrow.XmlIOStateArrow
+import Text.XML.HXT.Arrow.XmlState
 
 import Text.XML.HXT.Arrow.Namespace
     ( processWithNsEnv
@@ -352,8 +352,8 @@ simplificationStep1
     - The grammar element is then renamed to div.
 -}
 
-simplificationStep2 :: Attributes -> Bool -> Bool -> [Uri] -> [Uri] -> IOSArrow XmlTree XmlTree
-simplificationStep2 readOptions validateExternalRef validateInclude extHRefs includeHRefs =
+simplificationStep2 :: Bool -> Bool -> [Uri] -> [Uri] -> IOSArrow XmlTree XmlTree
+simplificationStep2 validateExternalRef validateInclude extHRefs includeHRefs =
   ( processTopDown (
       ( (importExternalRef $<< (getRngAttrNs &&& getRngAttrHref))
         `when`
@@ -399,11 +399,11 @@ simplificationStep2 readOptions validateExternalRef validateInclude extHRefs inc
                     "match the syntax for pattern"
                   )
                 )
-                ( readForRelax readOptions href
+                ( readForRelax href
                   >>>
                   simplificationStep1                                           -- perform the transformations from previous steps
                   >>>
-                  simplificationStep2 readOptions validateExternalRef validateInclude (href:extHRefs) includeHRefs
+                  simplificationStep2 validateExternalRef validateInclude (href:extHRefs) includeHRefs
                   >>>
                   getChildren -- remove the root node
                   >>>
@@ -445,11 +445,11 @@ simplificationStep2 readOptions validateExternalRef validateInclude extHRefs inc
                     "the syntax for grammar"
                   )
                 )
-                ( processInclude href $< ( readForRelax readOptions href
+                ( processInclude href $< ( readForRelax href
                                            >>>
                                            simplificationStep1                          -- perform the transformations from previous steps
                                            >>>
-                                           simplificationStep2 readOptions validateExternalRef validateInclude extHRefs (href:includeHRefs)
+                                           simplificationStep2 validateExternalRef validateInclude extHRefs (href:includeHRefs)
                                            >>>
                                            getChildren                                  -- remove the root node
                                          )
@@ -2235,9 +2235,9 @@ getChangesAttr
 -- | Creates the simple form of a Relax NG schema
 -- (see also: 'relaxOptions')
 
-createSimpleForm :: Attributes -> Bool -> Bool -> Bool -> IOSArrow XmlTree XmlTree
-createSimpleForm remainingOptions checkRestrictions validateExternalRef validateInclude
-    = traceMsg 2 ("createSimpleForm: " ++ show (remainingOptions, checkRestrictions,validateExternalRef, validateInclude))
+createSimpleForm :: Bool -> Bool -> Bool -> IOSArrow XmlTree XmlTree
+createSimpleForm checkRestrictions validateExternalRef validateInclude
+    = traceMsg 2 ("createSimpleForm: " ++ show (checkRestrictions,validateExternalRef, validateInclude))
       >>>
       ( if checkRestrictions
         then createSimpleWithRest
@@ -2269,7 +2269,7 @@ createSimpleForm remainingOptions checkRestrictions validateExternalRef validate
     simplificationPart1
         = [ propagateNamespaces
           , simplificationStep1
-          , simplificationStep2 remainingOptions validateExternalRef validateInclude [] []
+          , simplificationStep2 validateExternalRef validateInclude [] []
           , simplificationStep3
           , simplificationStep4
           ]

@@ -34,8 +34,9 @@ import Control.Arrow.ListArrow
 import Data.String.Unicode                      ( getOutputEncodingFct )
 
 import Text.XML.HXT.DOM.Interface
+
 import Text.XML.HXT.Arrow.XmlArrow
-import Text.XML.HXT.Arrow.XmlIOStateArrow
+import Text.XML.HXT.Arrow.XmlState
 import Text.XML.HXT.Arrow.Edit                  ( addHeadlineToXmlDoc
                                                 , addXmlPi
                                                 , addXmlPiEncoding
@@ -60,45 +61,47 @@ import System.IO.Error                          ( try )
 
 putXmlDocument  :: Bool -> String -> IOStateArrow s XmlTree XmlTree
 putXmlDocument textMode dst
-    = perform ( xshow getChildren
-                >>>
-                arrIO (\ s -> try ( hPutDocument (\h -> hPutStrLn h s)))
-                >>>
-                ( ( traceMsg 1 ("io error, document not written to " ++ outFile)
-                    >>>
-                    arr show >>> mkError c_fatal
-                    >>>
-                    filterErrorMsg
-                  )
-                  |||
-                  ( traceMsg 2 ("document written to " ++ outFile)
-                    >>>
-                    none
-                  )
-                )
-              )
+    = perform putDoc
       where
-      isStdout  = null dst || dst == "-"
+      putDoc
+          = xshow getChildren
+            >>>
+            arrIO (\ s -> try ( hPutDocument (\h -> hPutStrLn h s)))
+            >>>
+            ( ( traceMsg 1 ("io error, document not written to " ++ outFile)
+                >>>
+                arr show >>> mkError c_fatal
+                >>>
+                filterErrorMsg
+              )
+              |||
+              ( traceMsg 2 ("document written to " ++ outFile)
+                >>>
+                none
+              )
+            )
+          where
+          isStdout  = null dst || dst == "-"
 
-      outFile   = if isStdout
-                  then "stdout"
-                       else show dst
+          outFile   = if isStdout
+                      then "stdout"
+                      else show dst
 
-      hPutDocument      :: (Handle -> IO ()) -> IO ()
-      hPutDocument action
-          | isStdout
-              = do
-                hSetBinaryMode stdout (not textMode)
-                action stdout
-                hSetBinaryMode stdout False
-          | otherwise
-              = do
-                handle <- ( if textMode
-                            then openFile
-                            else openBinaryFile
-                          ) dst WriteMode
-                action handle
-                hClose handle
+          hPutDocument      :: (Handle -> IO ()) -> IO ()
+          hPutDocument action
+              | isStdout
+                  = do
+                    hSetBinaryMode stdout (not textMode)
+                    action stdout
+                    hSetBinaryMode stdout False
+              | otherwise
+                  = do
+                    handle <- ( if textMode
+                                then openFile
+                                else openBinaryFile
+                              ) dst WriteMode
+                    action handle
+                    hClose handle
 
 -- |
 -- write the tree representation of a document to a file

@@ -41,7 +41,6 @@ a_accept_mimetypes,
  a_do_not_issue_warnings,
  a_do_not_preserve_comment,
  a_do_not_remove_whitespace,
- a_do_not_use_curl,
  a_do_not_validate,
  a_encoding,
  a_error,
@@ -63,12 +62,12 @@ a_accept_mimetypes,
  a_no_empty_elem_for,
  a_no_redirect,
  a_no_xml_pi,
- a_options_curl,
  a_output_encoding,
  a_output_file,
  a_output_xml,
  a_output_html,
  a_output_xhtml,
+ a_output_plain,
  a_parse_by_mimetype,
  a_parse_html,
  a_parse_xml,
@@ -87,7 +86,6 @@ a_accept_mimetypes,
  a_text_mode,
  a_trace,
  a_type,
- a_use_curl,
  a_url,
  a_validate,
  a_value,
@@ -157,7 +155,6 @@ a_do_not_issue_errors           = "do-not-issue-errors"
 a_do_not_issue_warnings         = "do-not-issue-warnings"
 a_do_not_preserve_comment       = "do-not-preserve-comment"
 a_do_not_remove_whitespace      = "do-not-remove-whitespace"
-a_do_not_use_curl               = "do-not-use-curl"
 a_do_not_validate               = "do-not-validate"
 a_encoding                      = "encoding"
 a_error                         = "error"
@@ -179,12 +176,12 @@ a_no_empty_elements             = "no-empty-elements"
 a_no_empty_elem_for             = "no-empty-elem-for"
 a_no_redirect                   = "no-redirect"
 a_no_xml_pi                     = "no-xml-pi"
-a_options_curl                  = "options-curl"
 a_output_file                   = "output-file"
 a_output_encoding               = "output-encoding"
 a_output_html                   = "output-html"
 a_output_xhtml                  = "output-xhtml"
 a_output_xml                    = "output-xml"
+a_output_plain                  = "output-plain"
 a_parse_by_mimetype             = "parse-by-mimetype"
 a_parse_html                    = "parse-html"
 a_parse_xml                     = "parse-xml"
@@ -204,7 +201,6 @@ a_text_mode                     = "text-mode"
 a_trace                         = "trace"
 a_type                          = "type"
 a_url                           = "url"
-a_use_curl                      = "use-curl"
 a_validate                      = "validate"
 a_value                         = "value"
 a_verbose                       = "verbose"

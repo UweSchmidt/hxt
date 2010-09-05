@@ -19,8 +19,9 @@ where
 import Control.Arrow.ListArrows
 
 import Text.XML.HXT.DOM.Interface
+
 import Text.XML.HXT.Arrow.XmlArrow
-import Text.XML.HXT.Arrow.XmlIOStateArrow
+import Text.XML.HXT.Arrow.XmlState
 
 import Text.XML.HXT.RelaxNG.Validation
 import Text.XML.HXT.RelaxNG.Simplification
@@ -31,7 +32,7 @@ import Text.XML.HXT.RelaxNG.Schema        as S
 {- |
    validate a document with a Relax NG schema
 
-   * 1.parameter  : the option list for validation
+   * 1.parameter  : the system configuration option list for validation
 
    - 2.parameter  : the URI of the Relax NG Schema
 
@@ -39,30 +40,33 @@ import Text.XML.HXT.RelaxNG.Schema        as S
 
    - arrow-output : the input document, or in case of validation errors, an empty document with status information in the root
 
-options evaluated by validateDocumentWithRelaxSchema:
+configuration options evaluated by validateDocumentWithRelaxSchema:
 
-    * 'a_check_restrictions'   : check Relax NG schema restrictions when simplifying the schema (default: on)
+    * 'withRelaxCheckRestr'      : check Relax NG schema restrictions when simplifying the schema (default: on)
 
-    - 'a_validate_externalRef' : validate a Relax NG schema referenced by a externalRef-Pattern (default: on)
+    - 'withRelaxValidateExtRef'  : validate a Relax NG schema referenced by a externalRef-Pattern (default: on)
 
-    - 'a_validate_include'     : validate a Relax NG schema referenced by a include-Pattern (default: on)
-
-all other options are propagated to the read functions for schema input
+    - 'withRelaxValidateInclude' : validate a Relax NG schema referenced by a include-Pattern (default: on)
 
 example:
 
-> validateDocumentWithRelaxSchema [(a_check_restrictions, "0")] "testSchema.rng"
+> validateDocumentWithRelaxSchema [withRelaxCheckRestr yes, withRelaxValidateExtRef no] "testSchema.rng"
 
 
 -}
 
-validateDocumentWithRelaxSchema :: Attributes -> String -> IOStateArrow s XmlTree XmlTree
-validateDocumentWithRelaxSchema userOptions relaxSchema
-    = withOtherUserState ()
-      $
-      ( ( validate' $< validSchema )    -- try to validate, only possible if schema is o.k.
-        `orElse`
-        this
+validateDocumentWithRelaxSchema :: SysConfigList -> String -> IOStateArrow s XmlTree XmlTree
+validateDocumentWithRelaxSchema config relaxSchema
+    = ( withoutUserState
+        $
+        localSysParam (theInputConfig `pairS` theParseConfig `pairS` theRelaxConfig)
+        $
+        configSysParams config
+        >>>
+        ( ( validate' $< validSchema )    -- try to validate, only possible if schema is o.k.
+          `orElse`
+          this
+        )
       )
       `when`
       documentStatusOk                  -- only do something when document status is ok
@@ -75,7 +79,7 @@ validateDocumentWithRelaxSchema userOptions relaxSchema
     validSchema
         = traceMsg 2 ( "read Relax NG schema document: " ++ show relaxSchema )
           >>>
-          readForRelax remainingOptions relaxSchema
+          readForRelax relaxSchema
           >>>
           perform ( let checkSchema = True in           -- test option in al
                     if checkSchema
@@ -85,10 +89,14 @@ validateDocumentWithRelaxSchema userOptions relaxSchema
           >>>
           traceMsg 2 "create simplified schema"
           >>>
-          createSimpleForm remainingOptions
-            ( hasOption a_check_restrictions   )
-            ( hasOption a_validate_externalRef )
-            ( hasOption a_validate_include     )
+          ( (\ (b1, (b2, b3)) -> createSimpleForm b1 b2 b3)
+            $<
+            getSysParam (theRelaxCheckRestr `pairS`
+                         (theRelaxValidateExtRef `pairS`
+                          theRelaxValidateInclude
+                         )
+                        )
+          )
           >>>
           traceDoc "simplified schema"
           >>>
@@ -96,21 +104,6 @@ validateDocumentWithRelaxSchema userOptions relaxSchema
                     >>>
                     handleSimplificationErrors
                   )
-    hasOption n
-        = optionIsSet n options
-
-    options = addEntries userOptions defaultOptions
-
-    defaultOptions
-        = [ ( a_check_restrictions,     v_1 )
-          , ( a_validate_externalRef,   v_1 )
-          , ( a_validate_include,       v_1 )
-          ]
-
-    remainingOptions
-         = filter (not . flip hasEntry defaultOptions . fst) options
-
-
 
 handleSimplificationErrors      :: IOSArrow XmlTree XmlTree
 handleSimplificationErrors
@@ -194,11 +187,11 @@ example:
 > validate [(a_do_not_check_restrictions, "1")] "test.xml" "testSchema.rng"
 
 -}
-validate :: Attributes -> String -> String -> IOSArrow n XmlTree
-validate al xmlDocument relaxSchema
+validate :: String -> String -> IOSArrow n XmlTree
+validate xmlDocument relaxSchema
   = S.relaxSchemaArrow
     >>>
-    validateWithSpezification al xmlDocument relaxSchema
+    validateWithSpezification xmlDocument relaxSchema
 
 
 
@@ -207,14 +200,12 @@ validate al xmlDocument relaxSchema
 
 Validates a Relax NG schema with respect to the Relax NG Spezification.
 
-   * 1.parameter :  list of available options (see also: 'validate')
-
-   - 2.parameter :  Relax NG schema file
+   * 1.parameter :  Relax NG schema file
 
 -}
-validateSchema :: Attributes -> String -> IOSArrow n XmlTree
-validateSchema al relaxSchema
-  = validate al "" relaxSchema
+validateSchema :: String -> IOSArrow n XmlTree
+validateSchema relaxSchema
+  = validate "" relaxSchema
 
 
 
@@ -222,11 +213,9 @@ validateSchema al relaxSchema
 
 Validates a xml document with respect to a Relax NG schema. Similar to 'validate', but the Relax NG Specification is not created. Can be used, to check a list of documents more efficiently.
 
-   * 1.parameter :  list of available options (see also: 'validate')
+   * 1.parameter :  XML document
 
-   - 2.parameter :  XML document
-
-   - 3.parameter :  Relax NG schema file
+   - 2.parameter :  Relax NG schema file
 
    - arrow-input  :  Relax NG Specification in simple form
 
@@ -234,19 +223,19 @@ example:
 
 > Text.XML.HXT.RelaxNG.Schema.relaxSchemaArrow
 > >>>
-> ( validateWithSpezification [] "foo.xml" "foo.rng"
+> ( validateWithSpezification "foo.xml" "foo.rng"
 >   &&&
->   validateWithSpezification [] "bar.xml" "bar.rng"
+>   validateWithSpezification "bar.xml" "bar.rng"
 > )
 
 
 -}
-validateWithSpezification :: Attributes -> String -> String -> IOSArrow XmlTree XmlTree
-validateWithSpezification al xmlDocument relaxSchema
+validateWithSpezification :: String -> String -> IOSArrow XmlTree XmlTree
+validateWithSpezification xmlDocument relaxSchema
   = -- validation of the schema with respect to the specification
     -- returns a list of errors or none if the schema is correct
 
-    ( validateRelax $< ( readForRelax al relaxSchema
+    ( validateRelax $< ( readForRelax relaxSchema
                          >>>
                          getChildren
                        )
@@ -256,22 +245,20 @@ validateWithSpezification al xmlDocument relaxSchema
     -- validation of the xml document with respect to the schema
     -- returns a list of errors or none if the xml document is correct
 
-    validateWithoutSpezification al xmlDocument relaxSchema
+    validateWithoutSpezification xmlDocument relaxSchema
 
 {- | Relax NG schema validation
 
     see 'validateSchema' and 'validateWithSpezification'
 
-   * 1.parameter :  list of available options (see also: 'validate')
-
-   - 2.parameter :  Relax NG schema file
+   * 1.parameter :  Relax NG schema file
 
    - arrow-input  :  Relax NG Specification in simple form
 -}
 
-validateSchemaWithSpezification :: Attributes -> String -> IOSArrow XmlTree XmlTree
-validateSchemaWithSpezification al relaxSchema
-  = validateWithSpezification al "" relaxSchema
+validateSchemaWithSpezification :: String -> IOSArrow XmlTree XmlTree
+validateSchemaWithSpezification relaxSchema
+  = validateWithSpezification "" relaxSchema
 
 
 
@@ -279,26 +266,24 @@ validateSchemaWithSpezification al relaxSchema
 
 Validates a xml document with respect to a Relax NG schema, but the schema is @not@ validated with respect to a specification first. Should be used only for valid Relax NG schemes.
 
-   * 1.parameter :  list of available options (see also: 'validate')
+   * 1.parameter :  XML document
 
-   - 2.parameter :  XML document
-
-   - 3.parameter :  Relax NG schema file
+   - 2.parameter :  Relax NG schema file
 
 -}
 
 
-validateWithoutSpezification :: Attributes -> String -> String -> IOSArrow n XmlTree
-validateWithoutSpezification al xmlDocument relaxSchema
-  = readForRelax al relaxSchema
+validateWithoutSpezification :: String -> String -> IOSArrow n XmlTree
+validateWithoutSpezification xmlDocument relaxSchema
+  = readForRelax relaxSchema
     >>>
-    createSimpleForm al True True True
+    createSimpleForm True True True
     >>>
     ( ( getErrors >>> perform handleSimplificationErrors )              -- issue errors in schema simplification
       `orElse`
       ( if null xmlDocument                                             -- no errors: validate document
         then none
-        else validateRelax $< ( readForRelax al xmlDocument
+        else validateRelax $< ( readForRelax xmlDocument
                                 >>>
                                 normalizeForRelaxValidation
                                 >>>
