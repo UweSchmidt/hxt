@@ -1,0 +1,36 @@
+-- arch-tag: Haskell XML Toolbox main description file
+Name:           hxt-curl
+Version:        9.0.0
+Synopsis:       LibCurl interface for HXT
+Description:    LibCurl interface for HXT
+License:        OtherLicense
+License-file:   LICENSE
+Author:         Uwe Schmidt
+Maintainer:     Uwe Schmidt <uwe@fh-wedel.de>
+Stability:      Stable
+Category:       XML
+Homepage:       http://www.fh-wedel.de/~si/HXmlToolbox/index.html
+Copyright:      Copyright (c) 2010 Uwe Schmidt
+Build-type:     Simple
+Cabal-version:  >=1.6
+
+library
+ exposed-modules:
+  Text.XML.HXT.Curl
+
+ other-modules:
+  Text.XML.HXT.Arrow.LibCurlInput,
+  Text.XML.HXT.IO.GetHTTPLibCurl
+
+ hs-source-dirs: src
+
+ ghc-options: -Wall
+
+ extensions:
+
+ build-depends: base       >= 4   && < 5,
+                haskell98  >= 1   && < 2,
+                parsec     >= 2.1 && < 4,
+                bytestring >= 0.9 && < 1,
+                curl       >= 1.3 && < 2,
+                hxt        >= 8.5 && < 10
