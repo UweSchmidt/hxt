@@ -10,7 +10,7 @@
    Stability  : experimental
    Portability: portable
 
-   HXmlParser - Validating XML Parser of the Haskell XML Toolbox
+   HXmlParser - Minimal Validating XML Parser of the Haskell XML Toolbox, no HTTP supported
 
    XML well-formed checker and validator.
 
@@ -28,14 +28,12 @@
 module Main
 where
 
-import Text.XML.HXT.Arrow		-- import all stuff for parsing, validating, and transforming XML
+import Text.XML.HXT.Core                -- import all stuff for parsing, validating, and transforming XML
 
-import System.IO			-- import the IO and commandline option stuff
+import System.IO                        -- import the IO and commandline option stuff
 import System.Environment
 import System.Console.GetOpt
 import System.Exit
-
-import Data.Maybe
 
 -- ------------------------------------------------------------
 
@@ -45,16 +43,16 @@ import Data.Maybe
 main :: IO ()
 main
     = do
-      argv <- getArgs					-- get the commandline arguments
-      (al, src) <- cmdlineOpts argv			-- and evaluate them, return a key-value list
-      [rc]  <- runX (parser al src)			-- run the parser arrow
-      exitProg (rc >= c_err)				-- set return code and terminate
+      argv <- getArgs                                   -- get the commandline arguments
+      (al, src) <- cmdlineOpts argv                     -- and evaluate them, return a key-value list
+      [rc]  <- runX (parser al src)                     -- run the parser arrow
+      exitProg (rc >= c_err)                            -- set return code and terminate
 
 -- ------------------------------------------------------------
 
-exitProg	:: Bool -> IO a
-exitProg True	= exitWith (ExitFailure (-1))
-exitProg False	= exitWith ExitSuccess
+exitProg        :: Bool -> IO a
+exitProg True   = exitWith (ExitFailure (-1))
+exitProg False  = exitWith ExitSuccess
 
 -- ------------------------------------------------------------
 
@@ -64,98 +62,108 @@ exitProg False	= exitWith ExitSuccess
 -- get wellformed document, validates document, propagates and check namespaces
 -- and controls output
 
-parser	:: Attributes -> String -> IOSArrow b Int
-parser al src
-    = readDocument al src
+parser  :: SysConfigList -> String -> IOSArrow b Int
+parser config src
+    = configSysParams config				-- set all global config options, even the output file, and the
+      >>>                                               -- user defined key-value pairs
+      readDocument [] src                               -- no more special read options needed
       >>>
       ( ( traceMsg 1 "start processing document"
-	  >>>
-	  processDocument al
-	  >>>
-	  traceMsg 1 "document processing finished"
-	)
-	`when`
-	documentStatusOk
+          >>>
+          ( processDocument $< getSysAttr "action" )	-- ask for the action stored in the key-value list of user defined values 
+          >>>
+          traceMsg 1 "document processing finished"
+        )
+        `when`
+        documentStatusOk
       )
       >>>
       traceSource
       >>>
       traceTree
       >>>
-      writeDocument al (fromMaybe "-" . lookup a_output_file $ al) `whenNot` hasAttr "no-output"
+      ( (writeDocument [] $< getSysParam theOutputFile)	-- ask for the output file stored in the system configuration
+        `whenNot`
+        ( getSysAttr "no-output" >>> isA (== "1") )	-- ask for the no-output attr value in the system key-value list
+      )
       >>>
       getErrStatus
 
--- simple example of a processing arrow
+-- simple example of a processing arrow, selected by a command line option
 
-processDocument	:: Attributes -> IOSArrow XmlTree XmlTree
-processDocument al
-    | extractText
-	= traceMsg 1 "selecting plain text"
-	  >>>
-	  processChildren (deep isText)
-    | otherwise
-	= this
-    where
-    extractText	= optionIsSet "show-text" $ al
+processDocument :: String -> IOSArrow XmlTree XmlTree
+processDocument "only-text"
+    = traceMsg 1 "selecting plain text"
+      >>>
+      processChildren (deep isText)
+
+processDocument "indent"
+    = traceMsg 1 "indent document"
+      >>>
+      indentDoc
+
+processDocument _action
+    = traceMsg 1 "default action: do nothing"
+      >>>
+      this
 
 -- ------------------------------------------------------------
 --
 -- the options definition part
 -- see doc for System.Console.GetOpt
 
-progName	:: String
-progName	= "HXmlParser"
+progName        :: String
+progName        = "HXmlParser"
     
-options 	:: [OptDescr (String, String)]
+options         :: [OptDescr SysConfig]
 options
-    = generalOptions
+    = generalSysConfigOptions
       ++
-      inputOptions
+      inputSysConfigOptions
       ++
-      relaxOptions
+      outputSysConfigOptions
       ++
-      outputOptions
+      showSysConfigOptions
       ++
-      [ Option "q"	["no-output"]		(NoArg  ("no-output", "1"))		"no output of resulting document"
-      , Option "x"	["show-text"]		(NoArg	("show-text", "1"))		"output only the raw text, remove all markup"
+      [ Option "q"      ["no-output"] (NoArg $ withAttr "no-output"    "1")   "no output of resulting document"
+      , Option "x"      ["action"]    (ReqArg (withAttr "action") "ACTION")   "actions are: only-text, indent, no-op"
       ]
-      ++
-      showOptions
+      -- the last 2 option values will be stored by withAttr in the system key-value list
+      -- and can be read by getSysAttr key
 
-usage		:: [String] -> IO a
+usage           :: [String] -> IO a
 usage errl
     | null errl
-	= do
-	  hPutStrLn stdout use
-	  exitProg False
+        = do
+          hPutStrLn stdout use
+          exitProg False
     | otherwise
-	= do
-	  hPutStrLn stderr (concat errl ++ "\n" ++ use)
-	  exitProg True
+        = do
+          hPutStrLn stderr (concat errl ++ "\n" ++ use)
+          exitProg True
     where
     header = "HXmlParser - Validating XML Parser of the Haskell XML Toolbox with Arrow Interface\n" ++
-             "XML well-formed checker, DTD validator, Relax NG validator.\n\n" ++
+             "XML well-formed checker, DTD validator, HTML parser.\n\n" ++
              "Usage: " ++ progName ++ " [OPTION...] [URI or FILE]"
     use    = usageInfo header options
 
-cmdlineOpts 	:: [String] -> IO (Attributes, String)
+cmdlineOpts     :: [String] -> IO (SysConfigList, String)
 cmdlineOpts argv
     = case (getOpt Permute options argv) of
-      (ol,n,[])
-	  -> do
-	     sa <- src n
-	     help (lookup a_help ol) sa
-	     return (ol, sa)
+      (scfg,n,[])
+          -> do
+             sa <- src n
+             help (getSysConfigOption a_help scfg) sa
+             return (scfg, sa)
       (_,_,errs)
-	  -> usage errs
+          -> usage errs
     where
-    src []	= return []
-    src [uri]	= return uri
-    src _	= usage ["only one input uri or file allowed\n"]
+    src []      = return []
+    src [uri]   = return uri
+    src _       = usage ["only one input uri or file allowed\n"]
 
-    help (Just _) _	= usage []
-    help Nothing []	= usage ["no input uri or file given\n"]
-    help Nothing _	= return ()
+    help "1" _  = usage []
+    help _ []   = usage ["no input uri or file given\n"]
+    help _ _    = return ()
 
 -- ------------------------------------------------------------

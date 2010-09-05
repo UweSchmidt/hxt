@@ -46,13 +46,13 @@ module Text.XML.HXT.Arrow.XmlState
     , incrSysParam
     , getSysConfigOption
 
-    , setParam
-    , unsetParam
-    , getParam
-    , getAllParams
-    , setParamString
-    , setParamInt
-    , getParamInt
+    , setSysAttr
+    , unsetSysAttr
+    , getSysAttr
+    , getAllSysAttrs
+    , setSysAttrString
+    , setSysAttrInt
+    , getSysAttrInt
     ,
       -- * RelaxNG Handling
       setRelaxParam

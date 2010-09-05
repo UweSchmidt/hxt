@@ -17,6 +17,7 @@
 
 module Text.XML.HXT.Arrow.WriteDocument
     ( writeDocument
+    , writeDocument'
     , writeDocumentToString
     , prepareContents
     )
@@ -139,14 +140,22 @@ error code is:
 
 writeDocument   	:: SysConfigList -> String -> IOStateArrow s XmlTree XmlTree
 writeDocument config dst
+    = localSysParam theOutputFile
+      $
+      configSysParams [withOutputFile dst]
+      >>>
+      writeDocument' config
+
+writeDocument'   	:: SysConfigList -> IOStateArrow s XmlTree XmlTree
+writeDocument' config
     = localSysParam (theTrace `pairS` theOutputConfig)
       $
-      configSysParams (withOutputFile dst : config)
+      configSysParams config
       >>>
-      perform (uncurry writeDocument' $< getSysParam (theTextMode `pairS` theOutputFile))
+      perform (uncurry writeDocument'' $< getSysParam (theTextMode `pairS` theOutputFile))
 
-writeDocument'  	:: Bool -> String -> IOStateArrow s XmlTree XmlTree
-writeDocument' textMode dst
+writeDocument''  	:: Bool -> String -> IOStateArrow s XmlTree XmlTree
+writeDocument'' textMode dst
     = ( traceMsg 1 ("writeDocument: destination is " ++ show dst)
         >>>
         ( (flip prepareContents) encodeDocument $< getSysParam idS )

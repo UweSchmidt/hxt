@@ -1039,7 +1039,7 @@ simplificationStep5
     createUniqueNames num
         = arr (\ l -> unique l num)
           >>>
-          perform (setParamInt "define_id" $< arr (max num . getNextValue))
+          perform (setSysAttrInt "define_id" $< arr (max num . getNextValue))
         where
         unique :: [String] -> Int -> RefList
         unique []     _    = []
@@ -1070,7 +1070,7 @@ simplificationStep5
                                           getPatternNamesInGrammar "define"
                                           >>>
                                           -- create a new (unique) name for all define names
-                                          (createUniqueNames $< (getParamInt 0 "define_id"))
+                                          (createUniqueNames $< (getSysAttrInt 0 "define_id"))
                                         )
                                         &&&
                                         -- set the old ref list to be the new parentRef list
@@ -1574,13 +1574,13 @@ simplificationStep7
 
 hasTreeChanged  :: IOSArrow b Int
 hasTreeChanged
-    = getParamInt 0 "rng:changeTree"
+    = getSysAttrInt 0 "rng:changeTree"
       >>>
       isA (== 1)
 
 markTreeChanged :: Int -> IOSArrow b b
 markTreeChanged i
-    = perform (setParamInt "rng:changeTree" i)
+    = perform (setSysAttrInt "rng:changeTree" i)
 
 -- ------------------------------------------------------------
 
@@ -2224,7 +2224,7 @@ getChangesAttr :: IOSArrow XmlTree String
 getChangesAttr
   = getAttrValue a_relaxSimplificationChanges
     &&&
-    getParam a_output_changes
+    getSysAttr a_output_changes
     >>>
     ifP (\(changes, param) -> changes /= "" && param == "1")
       (arr2 $ \l _ -> " (" ++ l ++ ")")

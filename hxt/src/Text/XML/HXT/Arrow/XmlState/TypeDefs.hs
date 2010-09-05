@@ -516,44 +516,44 @@ incrSysParam cnt                = getSysParam cnt
 
 -- | store a string in global state under a given attribute name
 
-setParam                :: String -> IOStateArrow s String String
-setParam n              = chgSysParam theAttrList (addEntry n)
+setSysAttr              :: String -> IOStateArrow s String String
+setSysAttr n            = chgSysParam theAttrList (addEntry n)
 
 -- | remove an entry in global state, arrow input remains unchanged
 
-unsetParam              :: String -> IOStateArrow s b b
-unsetParam n            = configSysParam $ chgS theAttrList (delEntry n)
+unsetSysAttr            :: String -> IOStateArrow s b b
+unsetSysAttr n            = configSysParam $ chgS theAttrList (delEntry n)
 
 -- | read an attribute value from global state
 
-getParam                :: String -> IOStateArrow s b String
-getParam n              = getSysParam theAttrList
+getSysAttr                :: String -> IOStateArrow s b String
+getSysAttr n              = getSysParam theAttrList
                           >>^
                           lookup1 n
 
 -- | read all attributes from global state
 
-getAllParams            :: IOStateArrow s b Attributes
-getAllParams            = getSysParam theAttrList
+getAllSysAttrs            :: IOStateArrow s b Attributes
+getAllSysAttrs            = getSysParam theAttrList
 
 
-setParamString          :: String -> String -> IOStateArrow s b b
-setParamString n v      = perform ( constA v
+setSysAttrString        :: String -> String -> IOStateArrow s b b
+setSysAttrString n v    = perform ( constA v
                                     >>>
-                                    setParam n
+                                    setSysAttr n
                                   )
 
 -- | store an int value in global state
 
-setParamInt             :: String -> Int -> IOStateArrow s b b
-setParamInt n v         = setParamString n (show v)
+setSysAttrInt           :: String -> Int -> IOStateArrow s b b
+setSysAttrInt n v       = setSysAttrString n (show v)
 
 -- | read an int value from global state
 --
--- > getParamInt 0 myIntAttr
+-- > getSysAttrInt 0 myIntAttr
 
-getParamInt             :: Int -> String -> IOStateArrow s b Int
-getParamInt def n       = getParam n
+getSysAttrInt           :: Int -> String -> IOStateArrow s b Int
+getSysAttrInt def n     = getSysAttr n
                           >>^
                           toInt def
 

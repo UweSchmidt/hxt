@@ -29,7 +29,7 @@ test		: $(prog)
 		@echo "===> first see all command line options"
 		$(prog) --help
 		@echo
-		$(MAKE) test0 test1 test2 test3 test4 test5
+		$(MAKE) test0 test1 test2 test3 test4
 
 EX1		= ./example1.xml
 EXi		= ./invalid.xml
@@ -74,7 +74,7 @@ test1		:
 		$(prog) --show-tree --output-encoding=ISO-8859-1 $(EX1)
 		@echo
 		@sleep 2 ; echo ; echo "===> once again, but without any markup" ; echo ; sleep 2
-		$(prog) --show-text --output-encoding=ISO-8859-1 $(EX1)
+		$(prog) --action=only-text --output-encoding=ISO-8859-1 $(EX1)
 		@echo
 
 test2		:
@@ -84,14 +84,14 @@ test2		:
 		@sleep 2 ; echo ; echo "===> parser will validate this document and try to indent the output" ; echo ; sleep 2
 		$(prog) --indent $(EX2)
 		@sleep 2 ; echo ; echo "===> once again, but remove all markup" ; echo ; sleep 2
-		$(prog) --show-text --remove-whitespace $(EX2)
+		$(prog) --action=only-text --remove-whitespace $(EX2)
 		@sleep 2 ; echo ; echo "===> once again with hdom tree output" ; echo ; sleep 2
 		$(prog) --show-tree --remove-whitespace $(EX2)
 
 test3		:
 		@echo "===> namespace processing examples" ; echo ; sleep 2
 		@echo "===> namespace propagation test" ; echo ; sleep 2
-		$(prog) --verbose --check-namespaces  --indent --output-encoding=ISO-8859-1 $(EX3)
+		$(prog) --verbose --check-namespaces  --indent --output-encoding=UTF-8 $(EX3)
 		@echo
 		@echo ; sleep 2 ; echo "===> namespace propagation test: tree output with attached namespaces" ; echo ; sleep 2
 		$(prog) --verbose --check-namespaces  --remove-whitespace --show-tree --output-encoding=ISO-8859-1 $(EX3)
@@ -113,42 +113,6 @@ test4		:
 		$(prog) --indent --preserve-comment --parse-html --output-html --no-empty-elements $(EX4a)
 		@echo
 
-
-test5		:
-		@echo "===> Validate a valid xml file with respect to a valid Relax NG schema" ; echo ; sleep 1
-		@echo "the XML document ./valid1.xml"
-		@cat ./valid1.xml
-		@echo "the Relax NG schema ./valid1.rng"
-		@cat  ./valid1.rng
-		@echo
-		$(prog) --relax-schema ./valid1.rng ./valid1.xml
-		@echo
-		@echo "===> Validate an  invalid xml file with respect to a valid Relax NG schema" ; echo ; sleep 1
-		@echo "the invalid XML document ./invalid1.xml"
-		@cat ./valid1.xml
-		$(prog) --relax-schema ./valid1.rng ./invalid1.xml || true
-		@echo
-		@echo "===> Incorrect Relax NG schema" ; echo ; sleep 1
-		$(prog) --relax-schema ./invalid2.rng ./valid1.xml || true
-		@echo
-		@echo "===> Incorrect Relax NG schema with two errors" ; echo ; sleep 1
-		$(prog) --relax-schema ./invalid3.rng ./valid1.xml || true
-		@echo
-
-test6		:
-		@echo "===> tagsoup parsing examples" ; echo ; sleep 2
-		@echo "===> lousy HTML document" ; echo ; sleep 2
-		$(prog) --tagsoup --parse-html lousy.html
-		@echo "===> www.w3c.org homepage (valid XHTML)" ; echo ; sleep 2
-		$(prog) --tagsoup http://www.w3c.org/
-		@echo "===> same again with removed whitespace and tree output" ; echo ; sleep 2
-		$(prog) --tagsoup --remove-whitespace --show-tree http://www.w3c.org/
-		@echo "===> same procedure with www.haskell.org homepage (rather valid HTML)" ; echo ; sleep 2
-		$(prog) --tagsoup --parse-html http://www.haskell.org/
-		@echo "===> same again with removed whitespace and tree output" ; echo ; sleep 2
-		$(prog) --tagsoup --parse-html --remove-whitespace --show-tree http://www.haskell.org/
-		@echo
-
 dist		:
 		[ -d $(DIST_DIR) ] || mkdir -p $(DIST_DIR)
 		cp $(EX) Makefile $(prog).hs $(DIST_DIR)
@@ -156,4 +120,4 @@ dist		:
 clean		:
 		rm -f $(prog) *.o *.hi
 
-.PHONY		: all test test0 test1 test2 test3 test4 test5 test6 dist clean prof local force
+.PHONY		: all test test0 test1 test2 test3 test4 dist clean prof local force

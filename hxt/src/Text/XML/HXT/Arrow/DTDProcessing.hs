@@ -127,7 +127,7 @@ processDTD
       processRoot
           = ( traceMsg 1 ("processDTD: process parameter entities")
               >>>
-              setParamString a_standalone ""
+              setSysAttrString a_standalone ""
               >>>
               ( addDocType
                 `whenNot`
