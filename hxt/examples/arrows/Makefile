@@ -9,7 +9,7 @@ EXAMPLES	= \
 		hrelaxng \
 		RelaxTestSuite \
 		AGentleIntroductionToHXT \
-		performance RegexXMLSchema
+		performance
 
 HXT_HOME	= ../..
 PKGFLAGS	=

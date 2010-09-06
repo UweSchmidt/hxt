@@ -73,8 +73,6 @@ extra-source-files:
  examples/arrows/performance/Makefile
  examples/arrows/pickle/Makefile
  examples/arrows/pickle/PickleTest.hs
- examples/arrows/RegexXMLSchema/Makefile
- examples/arrows/RegexXMLSchema/REtest.hs
 
 library
  exposed-modules:

@@ -44,7 +44,6 @@ import Text.ParserCombinators.Parsec    ( parse )
 
 import Text.XML.HXT.DOM.Util            ( stringToLower )
 import Text.XML.HXT.DOM.XmlKeywords
-import Text.XML.HXT.DOM.XmlOptions      ( isTrueValue )
 
 import Text.XML.HXT.Parser.ProtocolHandlerUtil
                                         ( parseContentType )
@@ -286,10 +285,8 @@ opt2copt k v
         (phost, pp)             = span (/=':') v
         ppp                     = drop 1 pp
 
-
-
 isTrue          :: String -> Bool
-isTrue s        = null s || isTrueValue s
+isTrue s        = null s || (s `elem` ["1", "True", "true", "Yes", "yes"])
 
 isIntArg        :: String -> Bool
 isIntArg s      = not (null s) && all isDigit s

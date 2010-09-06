@@ -1,14 +1,13 @@
 {- |
-   $Id: SimpleExamples.hs,v 1.3 2006/11/17 17:16:24 hxml Exp $
-  
-  The examples from the HXT tutorial at haskell.org "http://www.haskell.org/haskellwiki/HXT"
+   The examples from the HXT tutorial at haskell.org "http://www.haskell.org/haskellwiki/HXT"
 -}
 
 module Main
 where
 
-import Text.XML.HXT.Arrow		-- import HXT stuff
-import Text.XML.HXT.XPath
+import Text.XML.HXT.Core		-- basic HXT stuff
+import Text.XML.HXT.XPath               -- additional XPath functions
+import Text.XML.HXT.Curl                -- Curl HTTP handler
 
 import Data.List			-- auxiliary functions
 import Data.Maybe
@@ -35,45 +34,54 @@ main
 	 then exitWith (ExitFailure (-1))
 	 else exitWith ExitSuccess
 
-application	:: Attributes -> String -> String -> String -> IOSArrow b Int
-application al fct src dst
-    = readDocument al src
+application	:: SysConfigList -> String -> String -> String -> IOSArrow b Int
+application config fct src dst
+    = configSysParams config                            -- set all global config options
+      >>>
+      readDocument [] src
       >>>
       processChildren (processRootElement fct `when` isElem)
       >>>
-      writeDocument ( (a_indent, v_1)
-		      : (a_output_encoding, isoLatin1)
-		      : al
-		    ) dst
+      writeDocument [ withIndent yes,
+		      withOutputEncoding isoLatin1
+		    ]
+		    dst
       >>>
       getErrStatus
 
 -- | the dummy for the boring stuff of option evaluation,
 -- usually done with 'System.Console.GetOpt'
 
-cmdlineOpts 	:: [String] -> IO (Attributes, String, String, String)
+cmdlineOpts 	:: [String] -> IO (SysConfigList, String, String, String)
 cmdlineOpts argv
-    = return ([(a_validate, v_0),(a_parse_html, v_1)], argv!!0, argv!!1, argv!!2)
+    = return ( [ withValidate no
+	       , withParseHTML yes
+	       , withCurl []
+	       ]
+	     , argv!!0
+	     , argv!!1
+	     , argv!!2
+	     )
 
 
 -- | the processing examples
 
 examples	:: [ (String, IOSArrow XmlTree XmlTree) ]
 examples
-    = [ ( "selectAllText",	selectAllText	)
-      , ( "selectAllTextAndAltValues",	selectAllTextAndAltValues	)
+    = [ ( "selectAllText",			selectAllText	)
+      , ( "selectAllTextAndAltValues",		selectAllTextAndAltValues	)
       , ( "selectAllTextAndRealAltValues",	selectAllTextAndRealAltValues	)
-      , ( "addRefIcon",		addRefIcon	)
-      , ( "helloWorld",		helloWorld	)
-      , ( "helloWorld2",	helloWorld2	)
-      , ( "imageTable",		imageTable	)
-      , ( "imageTable0",	imageTable0	)
-      , ( "imageTable1",	imageTable1	)
-      , ( "imageTable2",	imageTable2	)
-      , ( "imageTable3",	imageTable3	)
-      , ( "toAbsHRefs",		toAbsHRefs	)
-      , ( "toAbsRefs",		toAbsRefs	)
-      , ( "toAbsRefs1",		toAbsRefs1	)
+      , ( "addRefIcon",				addRefIcon	)
+      , ( "helloWorld",				helloWorld	)
+      , ( "helloWorld2",			helloWorld2	)
+      , ( "imageTable",				imageTable	)
+      , ( "imageTable0",			imageTable0	)
+      , ( "imageTable1",			imageTable1	)
+      , ( "imageTable2",			imageTable2	)
+      , ( "imageTable3",			imageTable3	)
+      , ( "toAbsHRefs",				toAbsHRefs	)
+      , ( "toAbsRefs",				toAbsRefs	)
+      , ( "toAbsRefs1",				toAbsRefs1	)
       ]
 
 processRootElement	:: String -> IOSArrow XmlTree XmlTree

@@ -5,7 +5,7 @@ import Data.Maybe
 import System.Exit
 import Test.HUnit
 
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 
 -- ------------------------------------------------------------
 --
@@ -232,7 +232,7 @@ pickleUnpickleTests
 		 >>>
 		 writeDocumentToString []			-- XmlTree => String
 		 >>>
-		 readFromString [(a_validate, v_0)]		-- String => XmlTree
+		 readFromString [ withValidate no ]		-- String => XmlTree
 		 >>>
 		 arrL (maybeToList . unpickleDoc xpProgram)	-- XmlTree => Program
 	       )
@@ -245,11 +245,11 @@ pickleUnpickleTests
 		 >>>
 		 arr (pickleDoc xpProgram)			-- Program => XmlTree
 		 >>>
-		 writeDocument [ (a_indent, v_1)		-- XmlTree => formated external XML document
+		 writeDocument [ withIndent yes			-- XmlTree => formated external XML document
 			       ] "pickle.xml"
 		 >>>
-		 readDocument  [ (a_remove_whitespace, v_1)	-- formated external XML document => XmlTree
-			       , (a_validate, v_0)
+		 readDocument  [ withRemoveWS yes		-- formated external XML document => XmlTree
+			       , withValidate no
 			       ] "pickle.xml"
 		 >>>
 		 arrL (maybeToList . unpickleDoc xpProgram)	-- XmlTree => Program
@@ -263,12 +263,12 @@ pickleUnpickleTests
 	       ( constA p					-- take the Program value
 		 >>>
 		 xpickleDocument   xpProgram
-                                 [ (a_indent, v_1)		-- Program => formated external XML document
+                                 [ withIndent yes		-- Program => formated external XML document
 				 ] "pickle.xml"
 		 >>>
 		 xunpickleDocument xpProgram
-                                   [ (a_remove_whitespace, v_1)	-- formated external XML document => Program
-				   , (a_validate, v_0)
+                                   [ withRemoveWS yes		-- formated external XML document => Program
+				   , withValidate no
 				   ] "pickle.xml"
 	       )
 	res7	:: IO [Program]					-- the most important case
@@ -279,13 +279,13 @@ pickleUnpickleTests
 	       ( constA p					-- take the Program value
 		 >>>
 		 xpickleDocument   xpProgram
-                                 [ (a_indent, v_1)		-- Program => formated external XML document
-				 , (a_addDTD, v_1)
+                                 [ withIndent yes		-- Program => formated external XML document
+				 , withSysAttr a_addDTD v_1	-- with inline DTD
 				 ] "pickle.xml"
 		 >>>
 		 xunpickleDocument xpProgram
-                                   [ (a_remove_whitespace, v_1)	-- formated external XML document => Program
-				   , (a_validate, v_1)
+                                   [ withRemoveWS yes		-- formated external XML document => Program
+				   , withValidate yes
 				   ] "pickle.xml"
 	       )
 

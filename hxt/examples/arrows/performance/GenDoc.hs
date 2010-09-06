@@ -5,9 +5,10 @@
 module Main
 where
 
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
+import Text.XML.HXT.TagSoup
 
-import Text.XML.HXT.DOM.Unicode
+import Data.String.Unicode
     ( unicodeToXmlEntity
     )
 
@@ -154,13 +155,13 @@ genDoc d out    = constA (mkBTree d)
 
 readDoc	:: String -> IOSArrow b XmlTree
 readDoc src
-    = readDocument [ (a_tagsoup, v_1)
-		   , (a_parse_xml, v_1)
-		   , (a_remove_whitespace, v_1)
-		   , (a_encoding, isoLatin1)
-		   , (a_issue_warnings, v_0)
-		   , (a_trace, v_1)
-		   , (a_strict_input, v_0)
+    = readDocument [ withTagSoup
+		   , withParseHTML no
+		   , withRemoveWS yes
+		   , withInputEncoding isoLatin1
+		   , withWarnings no
+		   , withTrace 1
+		   , withStrictInput no
 		   ] src
       >>>
       processChildren (isElem `guards` this)

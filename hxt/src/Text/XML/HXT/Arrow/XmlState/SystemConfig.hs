@@ -258,8 +258,8 @@ no                              = False
 --- 'a_preserve_comment', 'a_do_not_preserve_comment', 'a_check_namespaces', 'a_do_not_check_namespaces',
 -- 'a_remove_whitespace', 'a_do_not_remove_whitespace'
 
-inputSysConfigOptions    :: [OptDescr SysConfig]
-inputSysConfigOptions
+inputOptions    :: [OptDescr SysConfig]
+inputOptions
     = [ Option "t"      [a_trace]                       (OptArg trc "LEVEL")                    "trace level (0-4), default 1"
       , Option "p"      [a_proxy]                       (ReqArg  withProxy            "PROXY")  "proxy for http access (e.g. \"www-cache:3128\")"
       , Option ""       [a_redirect]                    (NoArg  (withRedirect           True))  "automatically follow redirected URIs"
@@ -299,8 +299,8 @@ inputSysConfigOptions
 -- 'a_check_restrictions', 'a_validate_externalRef', 'a_validate_include', 'a_do_not_check_restrictions',
 -- 'a_do_not_validate_externalRef', 'a_do_not_validate_include'
 
-relaxSysConfigOptions :: [OptDescr SysConfig]
-relaxSysConfigOptions
+relaxOptions :: [OptDescr SysConfig]
+relaxOptions
     = [ Option "X" [a_relax_schema]                     (ReqArg withRelaxNG             "SCHEMA")  "validation with Relax NG, SCHEMA is the URI for the Relax NG schema"
       , Option ""  [a_check_restrictions]               (NoArg (withRelaxCheckRestr        True))  "check Relax NG schema restrictions during schema simplification (default)"
       , Option ""  [a_do_not_check_restrictions]        (NoArg (withRelaxCheckRestr       False))  "do not check Relax NG schema restrictions"
@@ -315,19 +315,20 @@ relaxSysConfigOptions
 --
 -- defines options: 'a_indent', 'a_output_encoding', 'a_output_html' and others
 
-outputSysConfigOptions   :: [OptDescr SysConfig]
-outputSysConfigOptions
-    = [ Option "i"      [a_indent]              (NoArg  (withIndent                 True))      "indent XML output for readability"
-      , Option "o"      [a_output_encoding]     (ReqArg  withOutputEncoding     "CHARSET")      ( "encoding of output (" ++ utf8 ++ ", " ++ isoLatin1 ++ ", " ++ usAscii ++ ")" )
-      , Option ""       [a_output_xml]          (NoArg   withOutputXML                   )      "output of none ASCII chars as HTMl entity references"
-      , Option ""       [a_output_html]         (NoArg   withOutputHTML                  )      "output of none ASCII chars as HTMl entity references"
-      , Option ""       [a_output_xhtml]        (NoArg   withOutputXHTML                 )      "output of HTML elements with empty content (script, ...) done in format <elem...></elem> instead of <elem/>"
-      , Option ""       [a_output_plain]        (NoArg   withOutputPLAIN                 )      "output of HTML elements with empty content (script, ...) done in format <elem...></elem> instead of <elem/>"
-      , Option ""       [a_no_xml_pi]           (NoArg  (withNoXmlPi                True))      ("output without <?xml ...?> processing instruction, useful in combination with --" ++ show a_output_html)
-      , Option ""       [a_no_empty_elem_for]   (ReqArg (withNoEmptyElemFor . words') "NAMES")  "output of empty elements done in format <elem...></elem> only for given list of element names"
-      , Option ""       [a_no_empty_elements]   (NoArg  (withNoEmptyElements        True))      "output of empty elements done in format <elem...></elem> instead of <elem/>"
-      , Option ""       [a_add_default_dtd]     (NoArg  (withAddDefaultDTD          True))      "add the document type declaration given in the input document"
-      , Option ""       [a_text_mode]           (NoArg  (withTextMode               True))      "output in text mode"
+outputOptions   :: [OptDescr SysConfig]
+outputOptions
+    = [ Option "f"      [a_output_file]         (ReqArg (withSysAttr a_output_file) "FILE")   "output file for resulting document (default: stdout)"
+      , Option "i"      [a_indent]              (NoArg  (withIndent               True))      "indent XML output for readability"
+      , Option "o"      [a_output_encoding]     (ReqArg  withOutputEncoding    "CHARSET")      ( "encoding of output (" ++ utf8 ++ ", " ++ isoLatin1 ++ ", " ++ usAscii ++ ")" )
+      , Option ""       [a_output_xml]          (NoArg   withOutputXML                  )      "output of none ASCII chars as HTMl entity references"
+      , Option ""       [a_output_html]         (NoArg   withOutputHTML                 )      "output of none ASCII chars as HTMl entity references"
+      , Option ""       [a_output_xhtml]        (NoArg   withOutputXHTML                )      "output of HTML elements with empty content (script, ...) done in format <elem...></elem> instead of <elem/>"
+      , Option ""       [a_output_plain]        (NoArg   withOutputPLAIN                )      "output of HTML elements with empty content (script, ...) done in format <elem...></elem> instead of <elem/>"
+      , Option ""       [a_no_xml_pi]           (NoArg  (withNoXmlPi               True))      ("output without <?xml ...?> processing instruction, useful in combination with --" ++ show a_output_html)
+      , Option ""       [a_no_empty_elem_for]   (ReqArg (withNoEmptyElemFor . words') "NAMES")   "output of empty elements done in format <elem...></elem> only for given list of element names"
+      , Option ""       [a_no_empty_elements]   (NoArg  (withNoEmptyElements       True))      "output of empty elements done in format <elem...></elem> instead of <elem/>"
+      , Option ""       [a_add_default_dtd]     (NoArg  (withAddDefaultDTD         True))      "add the document type declaration given in the input document"
+      , Option ""       [a_text_mode]           (NoArg  (withTextMode              True))      "output in text mode"
       ]
     where
     words'
@@ -339,8 +340,8 @@ outputSysConfigOptions
 --
 -- defines options: 'a_verbose', 'a_help'
 
-generalSysConfigOptions  :: [OptDescr SysConfig]
-generalSysConfigOptions
+generalOptions  :: [OptDescr SysConfig]
+generalOptions
     = [ Option "v"      [a_verbose]             (NoArg  (withSysAttr a_verbose v_1))               "verbose output"
       , Option "h?"     [a_help]                (NoArg  (withSysAttr a_help    v_1))               "this message"
       ]
@@ -348,18 +349,36 @@ generalSysConfigOptions
 -- |
 -- defines 'a_version' option
 
-versionSysConfigOptions  :: [OptDescr SysConfig]
-versionSysConfigOptions
+versionOptions  :: [OptDescr SysConfig]
+versionOptions
     = [ Option "V"      [a_version]             (NoArg  (withSysAttr a_version v_1))               "show program version"
       ]
 
 -- |
 -- debug output options
 
-showSysConfigOptions     :: [OptDescr SysConfig]
-showSysConfigOptions
+showOptions     :: [OptDescr SysConfig]
+showOptions
     = [ Option ""       [a_show_tree]           (NoArg  (withShowTree      True))          "output tree representation instead of document source"
       , Option ""       [a_show_haskell]        (NoArg  (withShowHaskell   True))          "output internal Haskell representation instead of document source"
       ]
+
+-- ------------------------------------------------------------
+
+a_output_file	:: String
+a_output_file	= "output-file"
+
+-- ------------------------------------------------------------
+
+-- |
+-- select options from a predefined list of option desciptions
+
+selectOptions   :: [String] -> [OptDescr a] -> [OptDescr a]
+selectOptions ol os
+    = concat . map (\ on -> filter (\ (Option _ ons _ _) -> on `elem` ons) os) $ ol
+
+removeOptions   :: [String] -> [OptDescr a] -> [OptDescr a]
+removeOptions ol os
+    = filter (\ (Option _ ons _ _) -> not . any (`elem` ol) $ ons ) os
 
 -- ------------------------------------------------------------

@@ -26,6 +26,7 @@ import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlState
+import Text.XML.HXT.Arrow.XmlState.TypeDefs
 
 import qualified Text.XML.HXT.Parser.TagSoup as TS
 
@@ -33,8 +34,8 @@ import qualified Text.XML.HXT.Parser.TagSoup as TS
 
 -- | enable TagSoup parsing
 
-withTagSoup			:: SysConfig
-withTagSoup			= putS (theTagSoup `pairS` theTagSoupParser) (True, parseHtmlTagSoup)
+withTagSoup                     :: SysConfig
+withTagSoup                     = putS (theTagSoup `pairS` theTagSoupParser) (True, parseHtmlTagSoup)
 
 -- ------------------------------------------------------------
 

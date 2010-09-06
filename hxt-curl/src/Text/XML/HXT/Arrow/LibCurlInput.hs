@@ -18,7 +18,7 @@ module Text.XML.HXT.Arrow.LibCurlInput
     ( getLibCurlContents
     , a_use_curl
     , withCurl
-    , curlSysConfigOptions
+    , curlOptions
     )
 where
 
@@ -29,17 +29,18 @@ import           Control.Arrow.ArrowIO
 
 import           System.Console.GetOpt
 
-import           Text.XML.HXT.Arrow.DocumentInput		( addInputError )
+import           Text.XML.HXT.Arrow.DocumentInput               ( addInputError )
 import qualified Text.XML.HXT.IO.GetHTTPLibCurl as LibCURL
 
 import           Text.XML.HXT.DOM.Interface
 
 import           Text.XML.HXT.Arrow.XmlArrow
 import           Text.XML.HXT.Arrow.XmlState
+import           Text.XML.HXT.Arrow.XmlState.TypeDefs
 
 -- ----------------------------------------------------------
 
-getLibCurlContents	:: IOSArrow XmlTree XmlTree
+getLibCurlContents      :: IOSArrow XmlTree XmlTree
 getLibCurlContents
     = getC
       $<<
@@ -72,23 +73,22 @@ getLibCurlContents
 
 addContent        :: (Attributes, String) -> IOSArrow XmlTree XmlTree
 addContent (al, c)
-    = replaceChildren (txt c)		-- add the contents
+    = replaceChildren (txt c)           -- add the contents
       >>>
-      seqA (map (uncurry addAttr) al)	-- add the meta info (HTTP headers, ...)
+      seqA (map (uncurry addAttr) al)   -- add the meta info (HTTP headers, ...)
 
 -- ------------------------------------------------------------
 
-a_use_curl			:: String
-a_use_curl                      = "use-curl"
+a_use_curl              :: String
+a_use_curl              = "use-curl"
 
-withCurl                        :: Attributes -> SysConfig
-withCurl curlOptions            = putS (theUseCurl `pairS` theHttpHandler) (True, getLibCurlContents)
-                                  >>>
-                                  withInputOptions curlOptions
+withCurl               :: Attributes -> SysConfig
+withCurl curlOpts      = putS (theUseCurl `pairS` theHttpHandler) (True, getLibCurlContents)
+                         >>>
+                         withInputOptions curlOpts
 
-curlSysConfigOptions            :: [OptDescr SysConfig]
-curlSysConfigOptions
-    = [ Option "" [a_use_curl]  (NoArg (withCurl []))  "enable HTTP input with libcurl" ]
+curlOptions            :: [OptDescr SysConfig]
+curlOptions            = [ Option "" [a_use_curl]  (NoArg (withCurl []))  "enable HTTP input with libcurl" ]
 
 -- ------------------------------------------------------------
 

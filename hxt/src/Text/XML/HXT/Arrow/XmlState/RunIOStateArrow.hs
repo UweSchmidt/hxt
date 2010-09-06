@@ -153,8 +153,8 @@ dummyTagSoupParser      =  issueFatal $
 
 -- ------------------------------------------------------------
 
-getSysConfigOption      :: String -> SysConfigList -> String
-getSysConfigOption n c  = lookup1 n $ tl
+getConfigAttr      :: String -> SysConfigList -> String
+getConfigAttr n c  = lookup1 n $ tl
     where
     s  = (foldr (>>>) id c) initialSysState
     tl = getS theAttrList s

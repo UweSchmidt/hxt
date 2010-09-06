@@ -1,13 +1,15 @@
 module Main
 where
 
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 
 main	:: IO()
 main
-    = runX ( readDocument [ (a_validate, v_0) ] "hello.xml"
+    = runX ( configSysParams [ withTrace 1 ]
 	     >>>
-	     writeDocument [ ] "bye.xml"
+	     readDocument    [ withValidate no ] "hello.xml"
+	     >>>
+	     writeDocument   [ ] "bye.xml"
 	   )
       >> return ()
 

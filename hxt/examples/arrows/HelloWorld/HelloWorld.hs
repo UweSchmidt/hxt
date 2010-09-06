@@ -1,17 +1,17 @@
 module Main
 where
 
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 import System.Exit
 
 main	:: IO()
 main
     = do
-      [rc] <- runX ( readDocument [ (a_trace, "1")
-				  , (a_validate, v_0)
+      [rc] <- runX ( readDocument [ withTrace 1
+				  , withValidate no
 				  ] "hello.xml"
 		     >>>
-		     writeDocument [ (a_output_encoding, isoLatin1)
+		     writeDocument [ withOutputEncoding utf8
 				   ] "-"
 		     >>>
 		     getErrStatus

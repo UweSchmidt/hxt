@@ -66,7 +66,9 @@ exitProg False  = exitWith ExitSuccess
 
 parser  :: SysConfigList -> String -> IOSArrow b Int
 parser conf src
-    = readDocument conf src
+    = configSysParams config				-- set all global config options
+      >>>
+      readDocument [] src
       >>>
       ( ( traceMsg 1 "start processing document"
           >>>
@@ -82,25 +84,30 @@ parser conf src
       >>>
       traceTree
       >>>             -- TODO vvvvv
-      ( writeDocument [] (getSysConfigOption a_output_file $ conf)
+      ( writeDocument [] $< getSysAttr "output-file" )
         `whenNot`
         ( getParamInt 0 "no-output" >>> isA (== 1) )
       )
       >>>
       getErrStatus
 
--- simple example of a processing arrow
+-- simple example of a processing arrow, selected by a command line option
 
-processDocument :: SysConfigList -> IOSArrow XmlTree XmlTree
-processDocument conf
-    | extractText
-        = traceMsg 1 "selecting plain text"
-          >>>
-          processChildren (deep isText)
-    | otherwise
-        = this
-    where
-    extractText = (== "1") . getSysConfigOption "show-text" $ conf
+processDocument :: String -> IOSArrow XmlTree XmlTree
+processDocument "only-text"
+    = traceMsg 1 "selecting plain text"
+      >>>
+      processChildren (deep isText)
+
+processDocument "indent"
+    = traceMsg 1 "indent document"
+      >>>
+      indentDoc
+
+processDocument _action
+    = traceMsg 1 "default action: do nothing"
+      >>>
+      this
 
 -- ------------------------------------------------------------
 --
@@ -112,23 +119,23 @@ progName        = "HXmlParser"
 
 options         :: [OptDescr SysConfig]
 options
-    = generalSysConfigOptions
+    = generalOptions
       ++
-      inputSysConfigOptions
+      inputOptions
       ++
-      tagSoupSysConfigOptions
+      curlOptions
       ++
-      curlSysConfigOptions
+      tagSoupOptions
       ++
-      relaxSysConfigOptions
+      relaxOptions
       ++
-      outputSysConfigOptions
+      outputOptions
       ++
-      [ Option "q"      ["no-output"]           (NoArg $ withAttr "no-output" "1")          "no output of resulting document"
-      , Option "x"      ["show-text"]           (NoArg $ withAttr "show-text" "1")          "output only the raw text, remove all markup"
+      [ Option "q"      ["no-output"]   (NoArg $ withSysAttr "no-output" "1")       "no output of resulting document"
+      , Option "x"      ["show-text"]   (NoArg $ withSysAttr "show-text" "1")       "output only the raw text, remove all markup"
       ]
       ++
-      showSysConfigOptions
+      showOptions
 
 usage           :: [String] -> IO a
 usage errl
@@ -152,7 +159,7 @@ cmdlineOpts argv
       (scfg,n,[])
           -> do
              sa <- src n
-             help (getSysConfigOption a_help scfg) sa
+             help (getConfigAttr a_help scfg) sa
              return (scfg, sa)
       (_,_,errs)
           -> usage errs

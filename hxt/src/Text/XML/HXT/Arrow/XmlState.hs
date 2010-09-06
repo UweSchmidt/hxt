@@ -42,7 +42,7 @@ module Text.XML.HXT.Arrow.XmlState
     , configSysParams
     , localSysParam
     , incrSysParam
-    , getSysConfigOption
+    , getConfigAttr
 
     , setSysAttr
     , unsetSysAttr
@@ -115,12 +115,14 @@ module Text.XML.HXT.Arrow.XmlState
     , setMimeTypeTableFromFile
 
     , -- System Configuration and options
-      inputSysConfigOptions
-    , relaxSysConfigOptions
-    , outputSysConfigOptions
-    , generalSysConfigOptions
-    , versionSysConfigOptions
-    , showSysConfigOptions
+      inputOptions
+    , relaxOptions
+    , outputOptions
+    , generalOptions
+    , versionOptions
+    , showOptions
+    , selectOptions
+    , removeOptions
 
     , yes
     , no

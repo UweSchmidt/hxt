@@ -102,10 +102,11 @@ import           Control.Arrow.ListArrows
 
 import           Text.XML.HXT.DOM.Interface
 
-import           Text.XML.HXT.Arrow.XmlArrow
-import           Text.XML.HXT.Arrow.XmlState
 import           Text.XML.HXT.Arrow.ReadDocument
 import           Text.XML.HXT.Arrow.WriteDocument
+import           Text.XML.HXT.Arrow.XmlArrow
+import           Text.XML.HXT.Arrow.XmlState
+import           Text.XML.HXT.Arrow.XmlState.TypeDefs
 
 import           Text.XML.HXT.Arrow.Pickle.Xml
 import           Text.XML.HXT.Arrow.Pickle.Schema
@@ -125,19 +126,23 @@ import           Text.XML.HXT.Arrow.Pickle.DTD
 
 xpickleDocument         :: PU a -> SysConfigList -> String -> IOStateArrow s a XmlTree
 xpickleDocument xp config dest
-    = xpickleVal xp
+    = localSysParam (theTrace `pairS` theAttrList `pairS` theOutputConfig)
+      $
+      configSysParams config
+      >>>
+      xpickleVal xp
       >>>
       traceMsg 1 "xpickleVal applied"
       >>>
-      ( if getSysConfigOption a_addDTD config == v_1
-        then replaceChildren ( (constA undefined >>> xpickleDTD xp >>> getChildren)
-                               <+>
-                               getChildren
-                             )
-        else this
-      )
+      ifA ( getSysAttr a_addDTD >>> isA (== v_1) )
+          ( replaceChildren ( (constA undefined >>> xpickleDTD xp >>> getChildren)
+			      <+>
+			      getChildren
+                            )
+	  )
+          this
       >>>
-      writeDocument config dest
+      writeDocument [] dest
 
 -- | Option for generating and adding DTD when document is pickled
 

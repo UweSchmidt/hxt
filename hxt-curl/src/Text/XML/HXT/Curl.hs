@@ -18,7 +18,7 @@ module Text.XML.HXT.Curl
     ( getLibCurlContents
     , a_use_curl
     , withCurl
-    , curlSysConfigOptions
+    , curlOptions
     )
 where
 

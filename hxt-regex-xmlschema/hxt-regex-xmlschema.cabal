@@ -31,6 +31,8 @@ extra-source-files:
   examples/colorizeProgs/Makefile
   examples/performance/REtest.hs
   examples/performance/Makefile
+  examples/RegexXMLSchema/Makefile
+  examples/RegexXMLSchema/REtest.hs
 
 Library
   Exposed-modules:

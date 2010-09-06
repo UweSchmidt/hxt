@@ -11,7 +11,7 @@ where
 
 import           Data.Map (Map, fromList, toList)
 
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 
 -- Example data taken from:
 -- http://www.ibiblio.org/xml/books/bible/examples/05/5-1.xml
@@ -115,15 +115,15 @@ xpPlayer
 main	:: IO ()
 main
     = do
-      runX ( xunpickleDocument xpSeason [ (a_validate,v_0)
-					, (a_trace, v_1)
-					, (a_remove_whitespace,v_1)
-					, (a_preserve_comment, v_0)
+      runX ( xunpickleDocument xpSeason [ withValidate no
+					, withTrace 1
+					, withRemoveWS yes
+					, withPreserveComment no
 					] "simple2.xml"
 	     >>>
 	     processSeason
 	     >>>
-	     xpickleDocument xpSeason [ (a_indent, v_1)
+	     xpickleDocument xpSeason [ withIndent yes
 				      ] "new-simple2.xml"
 	   )
       return ()

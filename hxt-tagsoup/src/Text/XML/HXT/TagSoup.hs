@@ -31,8 +31,8 @@ import Text.XML.HXT.Arrow.XmlState
 a_tagsoup			:: String
 a_tagsoup                       = "tagsoup"
 
-tagSoupSysConfigOptions			::  [OptDescr SysConfig]
-tagSoupSysConfigOptions
+tagSoupOptions			::  [OptDescr SysConfig]
+tagSoupOptions
     = [ Option "T" [a_tagsoup] (NoArg withTagSoup)  "lazy tagsoup parser, for HTML and XML, no DTD, no validation, no PIs, only XHTML entityrefs"
       ]
 

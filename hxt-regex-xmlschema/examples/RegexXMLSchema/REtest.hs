@@ -5,10 +5,10 @@
 module Main(main)
 where
 
-import Text.XML.HXT.Arrow
-import Text.XML.HXT.RelaxNG.XmlSchema.RegexMatch
+import Text.XML.HXT.Core
+import Text.Regex.XMLSchema.String
 
-import Text.XML.HXT.DOM.Unicode
+import Data.String.Unicode
     ( unicodeToXmlEntity
     )
 

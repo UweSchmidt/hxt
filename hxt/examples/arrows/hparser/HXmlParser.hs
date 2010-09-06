@@ -64,13 +64,13 @@ exitProg False  = exitWith ExitSuccess
 
 parser  :: SysConfigList -> String -> IOSArrow b Int
 parser config src
-    = configSysParams config				-- set all global config options, the output file and the
+    = configSysParams config                            -- set all global config options, the output file and the
       >>>                                               -- other user options are stored as key-value pairs in the stystem state
       readDocument [] src                               -- no more special read options needed
       >>>
       ( ( traceMsg 1 "start processing document"
           >>>
-          ( processDocument $< getSysAttr "action" )	-- ask for the action stored in the key-value list of user defined values 
+          ( processDocument $< getSysAttr "action" )    -- ask for the action stored in the key-value list of user defined values 
           >>>
           traceMsg 1 "document processing finished"
         )
@@ -82,9 +82,9 @@ parser config src
       >>>
       traceTree
       >>>
-      ( (writeDocument [] $< getSysAttr "output-file")	-- ask for the output file stored in the system configuration
+      ( (writeDocument [] $< getSysAttr "output-file")  -- ask for the output file stored in the system configuration
         `whenNot`
-        ( getSysAttr "no-output" >>> isA (== "1") )	-- ask for the no-output attr value in the system key-value list
+        ( getSysAttr "no-output" >>> isA (== "1") )     -- ask for the no-output attr value in the system key-value list
       )
       >>>
       getErrStatus
@@ -117,17 +117,17 @@ progName        = "HXmlParser"
     
 options         :: [OptDescr SysConfig]
 options
-    = generalSysConfigOptions
+    = generalOptions
       ++
-      inputSysConfigOptions
+      inputOptions
       ++
-      outputSysConfigOptions
+      outputOptions
       ++
-      showSysConfigOptions
+      showOptions
       ++
-      [ Option "f"      ["output-file"] (ReqArg  withSysAttr "output-file" "FILE")   "output file for resulting document (default: stdout)"
-      , Option "q"      ["no-output"]   (NoArg $ withSysAttr "no-output"      "1")   "no output of resulting document"
-      , Option "x"      ["action"]      (ReqArg (withSysAttr "action")   "ACTION")   "actions are: only-text, indent, no-op"
+      [ Option "f"      ["output-file"] (ReqArg  (withSysAttr "output-file") "FILE") "output file for resulting document (default: stdout)"
+      , Option "q"      ["no-output"]   (NoArg $  withSysAttr "no-output"      "1")   "no output of resulting document"
+      , Option "x"      ["action"]      (ReqArg  (withSysAttr "action")   "ACTION")   "actions are: only-text, indent, no-op"
       ]
       -- the last 2 option values will be stored by withAttr in the system key-value list
       -- and can be read by getSysAttr key
@@ -154,7 +154,7 @@ cmdlineOpts argv
       (scfg,n,[])
           -> do
              sa <- src n
-             help (getSysConfigOption a_help scfg) sa
+             help (getConfigAttr a_help scfg) sa
              return (scfg, sa)
       (_,_,errs)
           -> usage errs

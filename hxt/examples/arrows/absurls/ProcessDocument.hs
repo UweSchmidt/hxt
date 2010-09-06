@@ -22,7 +22,7 @@ module ProcessDocument
     ( processDocument )
 where
 
-import Text.XML.HXT.Arrow		-- import all stuff for parsing, validating, and transforming XML
+import Text.XML.HXT.Core		-- import all stuff for parsing, validating, and transforming XML
 
 import Data.Maybe
 
