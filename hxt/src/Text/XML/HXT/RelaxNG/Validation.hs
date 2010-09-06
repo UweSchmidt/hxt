@@ -36,8 +36,6 @@ import           Text.XML.HXT.DOM.Interface
 import qualified Text.XML.HXT.DOM.XmlNode as XN
 
 import           Text.XML.HXT.Arrow.XmlArrow
-import           Text.XML.HXT.Arrow.XmlState
-
 import           Text.XML.HXT.Arrow.Edit                ( canonicalizeAllNodes
                                                         , collapseAllXText
                                                         )
@@ -46,6 +44,8 @@ import           Text.XML.HXT.Arrow.ProcessDocument     ( propagateAndValidateNa
                                                         , getDocumentContents
                                                         , parseXmlDocument
                                                         )
+import           Text.XML.HXT.Arrow.XmlState
+import           Text.XML.HXT.Arrow.XmlState.TypeDefs
 
 import           Text.XML.HXT.RelaxNG.DataTypes
 import           Text.XML.HXT.RelaxNG.CreatePattern

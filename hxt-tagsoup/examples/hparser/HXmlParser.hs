@@ -109,7 +109,7 @@ processDocument conf
 
 progName        :: String
 progName        = "HXmlParser"
-    
+
 options         :: [OptDescr SysConfig]
 options
     = generalSysConfigOptions

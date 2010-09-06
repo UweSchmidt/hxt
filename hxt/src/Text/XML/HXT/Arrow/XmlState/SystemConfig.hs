@@ -38,10 +38,10 @@ import System.Console.GetOpt
 withTrace                       :: Int -> SysConfig
 withTrace                       = putS theTraceLevel
 
--- | @withAttr key value@ : store an arbitarty key value pair in system state
+-- | @withSysAttr key value@ : store an arbitarty key value pair in system state
 
-withAttr                        :: String -> String -> SysConfig
-withAttr n v                    = chgS theAttrList (addEntry n v)
+withSysAttr                     :: String -> String -> SysConfig
+withSysAttr n v                 = chgS theAttrList (addEntry n v)
 
 withAcceptedMimeTypes           :: [String] -> SysConfig
 withAcceptedMimeTypes           = putS theAcceptedMimeTypes
@@ -176,9 +176,6 @@ withIndent                      = putS theIndent
 
 withOutputEncoding              :: String -> SysConfig
 withOutputEncoding              = putS theOutputEncoding
-
-withOutputFile                  :: String -> SysConfig
-withOutputFile                  = putS theOutputFile
 
 -- | @withOutputXML@ : output option, default writing
 --
@@ -316,13 +313,12 @@ relaxSysConfigOptions
 -- |
 -- commonly useful options for XML output
 --
--- defines options: 'a_indent', 'a_output_encoding', 'a_output_file', 'a_output_html'
+-- defines options: 'a_indent', 'a_output_encoding', 'a_output_html' and others
 
 outputSysConfigOptions   :: [OptDescr SysConfig]
 outputSysConfigOptions
     = [ Option "i"      [a_indent]              (NoArg  (withIndent                 True))      "indent XML output for readability"
       , Option "o"      [a_output_encoding]     (ReqArg  withOutputEncoding     "CHARSET")      ( "encoding of output (" ++ utf8 ++ ", " ++ isoLatin1 ++ ", " ++ usAscii ++ ")" )
-      , Option "f"      [a_output_file]         (ReqArg  withOutputFile            "FILE")      "output file for resulting document (default: stdout)"
       , Option ""       [a_output_xml]          (NoArg   withOutputXML                   )      "output of none ASCII chars as HTMl entity references"
       , Option ""       [a_output_html]         (NoArg   withOutputHTML                  )      "output of none ASCII chars as HTMl entity references"
       , Option ""       [a_output_xhtml]        (NoArg   withOutputXHTML                 )      "output of HTML elements with empty content (script, ...) done in format <elem...></elem> instead of <elem/>"
@@ -345,8 +341,8 @@ outputSysConfigOptions
 
 generalSysConfigOptions  :: [OptDescr SysConfig]
 generalSysConfigOptions
-    = [ Option "v"      [a_verbose]             (NoArg  (withAttr a_verbose v_1))               "verbose output"
-      , Option "h?"     [a_help]                (NoArg  (withAttr a_help    v_1))               "this message"
+    = [ Option "v"      [a_verbose]             (NoArg  (withSysAttr a_verbose v_1))               "verbose output"
+      , Option "h?"     [a_help]                (NoArg  (withSysAttr a_help    v_1))               "this message"
       ]
 
 -- |
@@ -354,7 +350,7 @@ generalSysConfigOptions
 
 versionSysConfigOptions  :: [OptDescr SysConfig]
 versionSysConfigOptions
-    = [ Option "V"      [a_version]             (NoArg  (withAttr a_version v_1))               "show program version"
+    = [ Option "V"      [a_version]             (NoArg  (withSysAttr a_version v_1))               "show program version"
       ]
 
 -- |

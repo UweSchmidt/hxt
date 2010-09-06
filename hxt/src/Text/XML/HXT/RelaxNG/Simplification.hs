@@ -33,16 +33,13 @@ import qualified Text.XML.HXT.DOM.XmlNode as XN
     )
 
 import Text.XML.HXT.Arrow.XmlArrow
+import Text.XML.HXT.Arrow.Edit                  ( removeWhiteSpace
+                                                )
+import Text.XML.HXT.Arrow.Namespace             ( processWithNsEnv
+                                                , propagateNamespaces
+                                                )
 import Text.XML.HXT.Arrow.XmlState
-
-import Text.XML.HXT.Arrow.Namespace
-    ( processWithNsEnv
-    , propagateNamespaces
-    )
-
-import Text.XML.HXT.Arrow.Edit
-    ( removeWhiteSpace
-    )
+import Text.XML.HXT.Arrow.XmlState.TypeDefs
 
 import Text.XML.HXT.RelaxNG.DataTypes
 import Text.XML.HXT.RelaxNG.BasicArrows

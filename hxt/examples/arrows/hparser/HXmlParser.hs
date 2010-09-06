@@ -64,8 +64,8 @@ exitProg False  = exitWith ExitSuccess
 
 parser  :: SysConfigList -> String -> IOSArrow b Int
 parser config src
-    = configSysParams config				-- set all global config options, even the output file, and the
-      >>>                                               -- user defined key-value pairs
+    = configSysParams config				-- set all global config options, the output file and the
+      >>>                                               -- other user options are stored as key-value pairs in the stystem state
       readDocument [] src                               -- no more special read options needed
       >>>
       ( ( traceMsg 1 "start processing document"
@@ -82,7 +82,7 @@ parser config src
       >>>
       traceTree
       >>>
-      ( (writeDocument [] $< getSysParam theOutputFile)	-- ask for the output file stored in the system configuration
+      ( (writeDocument [] $< getSysAttr "output-file")	-- ask for the output file stored in the system configuration
         `whenNot`
         ( getSysAttr "no-output" >>> isA (== "1") )	-- ask for the no-output attr value in the system key-value list
       )
@@ -125,8 +125,9 @@ options
       ++
       showSysConfigOptions
       ++
-      [ Option "q"      ["no-output"] (NoArg $ withAttr "no-output"    "1")   "no output of resulting document"
-      , Option "x"      ["action"]    (ReqArg (withAttr "action") "ACTION")   "actions are: only-text, indent, no-op"
+      [ Option "f"      ["output-file"] (ReqArg  withSysAttr "output-file" "FILE")   "output file for resulting document (default: stdout)"
+      , Option "q"      ["no-output"]   (NoArg $ withSysAttr "no-output"      "1")   "no output of resulting document"
+      , Option "x"      ["action"]      (ReqArg (withSysAttr "action")   "ACTION")   "actions are: only-text, indent, no-op"
       ]
       -- the last 2 option values will be stored by withAttr in the system key-value list
       -- and can be read by getSysAttr key

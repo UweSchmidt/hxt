@@ -36,7 +36,6 @@ import Data.String.Unicode                      ( getOutputEncodingFct )
 import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlArrow
-import Text.XML.HXT.Arrow.XmlState
 import Text.XML.HXT.Arrow.Edit                  ( addHeadlineToXmlDoc
                                                 , addXmlPi
                                                 , addXmlPiEncoding
@@ -44,6 +43,9 @@ import Text.XML.HXT.Arrow.Edit                  ( addHeadlineToXmlDoc
                                                 , numberLinesInXmlDoc
                                                 , treeRepOfXmlDoc
                                                 )
+import Text.XML.HXT.Arrow.XmlState
+import Text.XML.HXT.Arrow.XmlState.TypeDefs
+
 import System.IO                                ( Handle
                                                 , IOMode(..)
                                                 , openFile

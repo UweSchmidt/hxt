@@ -214,12 +214,11 @@ data XIOParseConfig     = XIOPcfg { xioMimeTypes                ::   MimeTypeTab
                                   , xioCanonicalize             :: ! Bool
                                   , xioIgnoreNoneXmlContents    :: ! Bool
                                   , xioTagSoup                  :: ! Bool
-                                  , xioTagSoupParser            ::   IOSArrow XmlTree XmlTree 
+                                  , xioTagSoupParser            ::   IOSArrow XmlTree XmlTree
                                   }
 
 data XIOOutputConfig    = XIOOcfg { xioIndent                   :: ! Bool
                                   , xioOutputEncoding           :: ! String
-                                  , xioOutputFile               :: ! String
                                   , xioOutputFmt                :: ! XIOXoutConfig
                                   , xioNoXmlPi                  :: ! Bool
                                   , xioNoEmptyElemFor           :: ! [String]
@@ -303,10 +302,6 @@ theIndent                       = ( xioIndent,      \ x s -> s { xioIndent = x} 
 
 theOutputEncoding               :: Selector XIOSysState String
 theOutputEncoding               = ( xioOutputEncoding,      \ x s -> s { xioOutputEncoding = x} )
-                                  `subS` theOutputConfig
-
-theOutputFile                   :: Selector XIOSysState String
-theOutputFile                   = ( xioOutputFile,      \ x s -> s { xioOutputFile = x} )
                                   `subS` theOutputConfig
 
 theOutputFmt                    :: Selector XIOSysState XIOXoutConfig
@@ -511,7 +506,7 @@ incrSysParam cnt                = getSysParam cnt
                                   setSysParam cnt
                                   >>>
                                   arr (\ x -> x - 1)
-                                  
+
 -- ------------------------------
 
 -- | store a string in global state under a given attribute name

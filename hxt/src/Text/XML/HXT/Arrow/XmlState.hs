@@ -33,8 +33,6 @@ module Text.XML.HXT.Arrow.XmlState
     ,
       -- * Run IO State arrows
       runX
-    , runXIOState
-    , initialState
     ,
       -- * Global System State Access
       getSysParam
@@ -57,76 +55,6 @@ module Text.XML.HXT.Arrow.XmlState
       -- * RelaxNG Handling
       setRelaxParam
     , getRelaxParam
-    ,
-         -- * State selectors
-      theSysState
-    , theUserState
-    , theErrorStatus
-    , theErrorMsgHandler
-    , theErrorMsgCollect
-    , theErrorMsgList
-    , theBaseURI
-    , theDefaultBaseURI
-    , theParseConfig
-    , theTraceLevel
-    , theTraceCmd
-    , theTrace
-    , theMimeTypes
-    , theMimeTypeFile
-    , theParseByMimeType
-    , theAcceptedMimeTypes
-    , theAttrList
-    , theWarnings
-    , theRemoveWS
-    , theParseHTML
-    , theLowerCaseNames
-    , thePreserveComment
-    , theValidate
-    , theCheckNamespaces
-    , theCanonicalize
-    , theIgnoreNoneXmlContents
-    , theTagSoup
-    , theTagSoupParser
-
-    , theRelaxConfig
-    , theRelaxValidate
-    , theRelaxSchema
-    , theRelaxCheckRestr
-    , theRelaxValidateExtRef
-    , theRelaxValidateInclude
-    , theRelaxCollectErrors
-    , theRelaxNoOfErrors
-    , theRelaxDefineId
-    , theRelaxAttrList
-
-    , theInputConfig
-    , theStrictInput
-    , theEncodingErrors
-    , theInputEncoding
-    , theUseCurl
-    , theHttpHandler
-    , theInputOptions
-    , theRedirect
-    , theProxy
-
-    , theOutputConfig
-    , theIndent
-    , theOutputEncoding
-    , theOutputFile
-    , theOutputFmt
-    , theNoXmlPi
-    , theNoEmptyElemFor
-    , theNoEmptyElements
-    , theAddDefaultDTD
-    , theTextMode
-    , theShowTree
-    , theShowHaskell
-
-    , subS
-    , pairS
-    , putS
-    , chgS
-    , idS
 
     , -- * Error Handling
       clearErrStatus
@@ -199,7 +127,7 @@ module Text.XML.HXT.Arrow.XmlState
 
     , withAcceptedMimeTypes
     , withAddDefaultDTD
-    , withAttr
+    , withSysAttr
     , withCanonicalize
     , withCheckNamespaces
     , withDefaultBaseURI
@@ -215,7 +143,6 @@ module Text.XML.HXT.Arrow.XmlState
     , withNoEmptyElemFor
     , withNoXmlPi
     , withOutputEncoding
-    , withOutputFile
     , withOutputXML
     , withOutputHTML
     , withOutputXHTML

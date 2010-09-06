@@ -362,7 +362,7 @@ rex regex
     | otherwise = ex
     where
     ex = parseRegex regex
-          
+
 -- ----------------------------------------
 
 rexLanguage

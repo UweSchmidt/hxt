@@ -30,22 +30,21 @@ import Control.Arrow.ListArrows
 import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlArrow
-import Text.XML.HXT.Arrow.XmlState
-
 import Text.XML.HXT.Arrow.Edit                  ( canonicalizeAllNodes
                                                 , canonicalizeForXPath
                                                 , canonicalizeContents
                                                 , rememberDTDAttrl
                                                 , removeDocWhiteSpace
                                                 )
-
 import Text.XML.HXT.Arrow.ParserInterface
-
 import Text.XML.HXT.Arrow.ProcessDocument       ( getDocumentContents
                                                 , parseXmlDocument
                                                 , parseHtmlDocument
                                                 , propagateAndValidateNamespaces
                                                 )
+import Text.XML.HXT.Arrow.XmlState
+import Text.XML.HXT.Arrow.XmlState.TypeDefs
+
 
 import Text.XML.HXT.RelaxNG.Validator           ( validateDocumentWithRelaxSchema )
 

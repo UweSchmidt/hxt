@@ -4,4 +4,4 @@ where
 import Text.XML.HXT.DOM
 
 relaxSchema4Relax :: XmlTree
-relaxSchema4Relax = 
+relaxSchema4Relax =

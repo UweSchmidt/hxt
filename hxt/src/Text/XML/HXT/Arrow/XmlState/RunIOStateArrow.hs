@@ -116,7 +116,6 @@ initialOutputConfig             :: XIOOutputConfig
 initialOutputConfig             = XIOOcfg
                                   { xioIndent                   = False
                                   , xioOutputEncoding           = ""
-                                  , xioOutputFile               = ""
                                   , xioOutputFmt                = XMLoutput
                                   , xioNoXmlPi                  = False
                                   , xioNoEmptyElemFor           = []

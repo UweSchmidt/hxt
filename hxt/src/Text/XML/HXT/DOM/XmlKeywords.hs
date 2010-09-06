@@ -63,7 +63,6 @@ a_accept_mimetypes,
  a_no_redirect,
  a_no_xml_pi,
  a_output_encoding,
- a_output_file,
  a_output_xml,
  a_output_html,
  a_output_xhtml,
@@ -176,7 +175,6 @@ a_no_empty_elements             = "no-empty-elements"
 a_no_empty_elem_for             = "no-empty-elem-for"
 a_no_redirect                   = "no-redirect"
 a_no_xml_pi                     = "no-xml-pi"
-a_output_file                   = "output-file"
 a_output_encoding               = "output-encoding"
 a_output_html                   = "output-html"
 a_output_xhtml                  = "output-xhtml"

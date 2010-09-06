@@ -35,6 +35,7 @@ import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlState
+import Text.XML.HXT.Arrow.XmlState.TypeDefs
 
 import Text.XML.HXT.Arrow.ParserInterface
     ( parseXmlDoc

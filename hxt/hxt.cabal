@@ -1,7 +1,7 @@
 -- arch-tag: Haskell XML Toolbox main description file
 Name:           hxt
 Version:        9.0.0
-Synopsis:       A collection of tools for processing XML with Haskell. 
+Synopsis:       A collection of tools for processing XML with Haskell.
 Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
                 but introduces a more general approach for processing XML with Haskell.
                 The Haskell XML Toolbox uses a generic data model for representing XML documents,
@@ -128,7 +128,6 @@ library
   Text.XML.HXT.DOM.Util,
   Text.XML.HXT.DOM.XmlKeywords,
   Text.XML.HXT.DOM.XmlNode,
-  Text.XML.HXT.DOM.XmlOptions,
   Text.XML.HXT.DTDValidation.AttributeValueValidation,
   Text.XML.HXT.DTDValidation.DTDValidation,
   Text.XML.HXT.DTDValidation.DocTransformation,

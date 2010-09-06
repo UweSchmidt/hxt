@@ -75,7 +75,7 @@ addContent (al, c)
     = replaceChildren (txt c)		-- add the contents
       >>>
       seqA (map (uncurry addAttr) al)	-- add the meta info (HTTP headers, ...)
-          
+
 -- ------------------------------------------------------------
 
 a_use_curl			:: String
