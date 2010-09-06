@@ -104,6 +104,7 @@ library
   Text.XML.HXT.Arrow.Pickle.Xml,
   Text.XML.HXT.Arrow.ProcessDocument,
   Text.XML.HXT.Arrow.ReadDocument,
+  Text.XML.HXT.Arrow.XmlOptions,
   Text.XML.HXT.Arrow.XmlState,
   Text.XML.HXT.Arrow.XmlState.ErrorHandling,
   Text.XML.HXT.Arrow.XmlState.MimeTypeTable,

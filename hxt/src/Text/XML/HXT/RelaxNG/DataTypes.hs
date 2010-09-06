@@ -17,10 +17,12 @@ relaxSchemaGrammarFile = "Text/XML/HXT/RelaxNG/SpecificationSchemaGrammar.rng"
 
 a_numberOfErrors,
  a_relaxSimplificationChanges,
+ a_output_changes,
  defineOrigName :: String
 
 a_numberOfErrors             = "numberOfErrors"
 a_relaxSimplificationChanges = "relaxSimplificationChanges"
+a_output_changes             = "output-pattern-transformations"
 defineOrigName               = "RelaxDefineOriginalName"
 
 

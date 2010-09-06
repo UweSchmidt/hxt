@@ -115,16 +115,7 @@ module Text.XML.HXT.Arrow.XmlState
     , setMimeTypeTableFromFile
 
     , -- System Configuration and options
-      inputOptions
-    , relaxOptions
-    , outputOptions
-    , generalOptions
-    , versionOptions
-    , showOptions
-    , selectOptions
-    , removeOptions
-
-    , yes
+      yes
     , no
 
     , withAcceptedMimeTypes

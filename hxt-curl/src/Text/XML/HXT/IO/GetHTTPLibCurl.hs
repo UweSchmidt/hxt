@@ -43,7 +43,16 @@ import System.IO.Unsafe                 ( unsafePerformIO )
 import Text.ParserCombinators.Parsec    ( parse )
 
 import Text.XML.HXT.DOM.Util            ( stringToLower )
-import Text.XML.HXT.DOM.XmlKeywords
+import Text.XML.HXT.DOM.XmlKeywords     ( transferStatus
+                                        , transferMessage
+                                        , transferVersion
+                                        , httpPrefix
+                                        )
+
+import Text.XML.HXT.Arrow.XmlOptions    ( a_proxy
+                                        , a_redirect
+                                        , a_if_modified_since
+                                        )
 
 import Text.XML.HXT.Parser.ProtocolHandlerUtil
                                         ( parseContentType )
@@ -160,7 +169,7 @@ getCont strictInput options uri
         where
         body :: B.ByteString
         body
-            | strictInput	= B.length body' `seq` body'
+            | strictInput       = B.length body' `seq` body'
             | otherwise         = body'
             where
             body'               = respBody r

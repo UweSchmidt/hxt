@@ -25,10 +25,6 @@ import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlState.ErrorHandling
 import Text.XML.HXT.Arrow.XmlState.TypeDefs
 
-import Data.Maybe
-
-import System.Console.GetOpt
-
 -- ------------------------------
 
 -- config options
@@ -237,148 +233,15 @@ withRelaxValidateExtRef         = putS theRelaxValidateExtRef
 withRelaxValidateInclude        :: Bool -> SysConfig
 withRelaxValidateInclude        = putS theRelaxValidateInclude
 
+withRelaxCollectErrors          :: Bool -> SysConfig
+withRelaxCollectErrors          = putS theRelaxCollectErrors
+
 -- ------------------------------------------------------------
---
 
 yes                             :: Bool
 yes                             = True
 
 no                              :: Bool
 no                              = False
-
-
--- |
--- commonly useful options for XML input
---
--- can be used for option definition with haskell getopt
---
--- defines options: 'a_trace', 'a_proxy', 'a_use_curl', 'a_do_not_use_curl', 'a_options_curl', 'a_encoding',
--- 'a_issue_errors', 'a_do_not_issue_errors', 'a_parse_html', 'a_parse_by_mimetype', 'a_issue_warnings', 'a_do_not_issue_warnings',
--- 'a_parse_xml', 'a_validate', 'a_do_not_validate', 'a_canonicalize', 'a_do_not_canonicalize',
---- 'a_preserve_comment', 'a_do_not_preserve_comment', 'a_check_namespaces', 'a_do_not_check_namespaces',
--- 'a_remove_whitespace', 'a_do_not_remove_whitespace'
-
-inputOptions    :: [OptDescr SysConfig]
-inputOptions
-    = [ Option "t"      [a_trace]                       (OptArg trc "LEVEL")                    "trace level (0-4), default 1"
-      , Option "p"      [a_proxy]                       (ReqArg  withProxy            "PROXY")  "proxy for http access (e.g. \"www-cache:3128\")"
-      , Option ""       [a_redirect]                    (NoArg  (withRedirect           True))  "automatically follow redirected URIs"
-      , Option ""       [a_no_redirect]                 (NoArg  (withRedirect          False))  "switch off following redirected URIs"
-      , Option ""       [a_default_baseuri]             (ReqArg  withDefaultBaseURI     "URI")  "default base URI, default: \"file:///<cwd>/\""
-      , Option "e"      [a_encoding]                    (ReqArg  withInputEncoding  "CHARSET")  ( "default document encoding (" ++ utf8 ++ ", " ++ isoLatin1 ++ ", " ++ usAscii ++ ", ...)" )
-      , Option ""       [a_mime_types]                  (ReqArg  withMimeTypeFile      "FILE")  "set mime type configuration file, e.g. \"/etc/mime.types\""
-      , Option ""       [a_issue_errors]                (NoArg  (withErrors             True))  "issue all error messages on stderr (default)"
-      , Option ""       [a_do_not_issue_errors]         (NoArg  (withErrors            False))  "ignore all error messages"
-      , Option ""       [a_ignore_encoding_errors]      (NoArg  (withEncodingErrors    False))   "ignore encoding errors"
-      , Option ""       [a_ignore_none_xml_contents]    (NoArg  (withIgnoreNoneXmlContents True)) "discards all contents of none XML/HTML documents, only the meta info remains in the doc tree"
-      , Option ""       [a_accept_mimetypes]            (ReqArg  withMT           "MIMETYPES") "only accept documents matching the given list of mimetype specs"
-      , Option "H"      [a_parse_html]                  (NoArg  (withParseHTML          True))  "parse input as HTML, try to interprete everything as HTML, no validation"
-      , Option "M"      [a_parse_by_mimetype]           (NoArg  (withParseByMimeType    True))  "parse dependent on mime type: text/html as HTML, text/xml and text/xhtml and others as XML, else no parse"
-      , Option ""       [a_parse_xml]                   (NoArg  (withParseHTML         False))  "parse input as XML, (default)"
-      , Option ""       [a_strict_input]                (NoArg  (withStrictInput        True))  "read input files strictly, this ensures closing the files correctly even if not read completely"
-      , Option ""       [a_issue_warnings]              (NoArg  (withWarnings           True))  "issue warnings, when parsing HTML (default)"
-      , Option "Q"      [a_do_not_issue_warnings]       (NoArg  (withWarnings          False))  "ignore warnings, when parsing HTML"
-      , Option ""       [a_validate]                    (NoArg  (withValidate           True))  "document validation when parsing XML (default)"
-      , Option "w"      [a_do_not_validate]             (NoArg  (withValidate          False))  "only wellformed check, no validation"
-      , Option ""       [a_canonicalize]                (NoArg  (withCanonicalize       True))  "canonicalize document, remove DTD, comment, transform CDATA, CharRef's, ... (default)"
-      , Option "c"      [a_do_not_canonicalize]         (NoArg  (withCanonicalize      False))  "do not canonicalize document, don't remove DTD, comment, don't transform CDATA, CharRef's, ..."
-      , Option "C"      [a_preserve_comment]            (NoArg  (withPreserveComment    True))  "don't remove comments during canonicalisation"
-      , Option ""       [a_do_not_preserve_comment]     (NoArg  (withPreserveComment   False))  "remove comments during canonicalisation (default)"
-      , Option "n"      [a_check_namespaces]            (NoArg  (withCheckNamespaces    True))  "tag tree with namespace information and check namespaces"
-      , Option ""       [a_do_not_check_namespaces]     (NoArg  (withCheckNamespaces   False))  "ignore namespaces (default)"
-      , Option "r"      [a_remove_whitespace]           (NoArg  (withRemoveWS           True))  "remove redundant whitespace, simplifies tree and processing"
-      , Option ""       [a_do_not_remove_whitespace]    (NoArg  (withRemoveWS          False))  "don't remove redundant whitespace (default)"
-      ]
-    where
-    withMT = withAcceptedMimeTypes . words
-    trc = withTrace . max 0 . min 9 . (read :: String -> Int) . ('0':) . filter (`elem` "0123456789") . fromMaybe v_1
-
--- | available Relax NG validation options
---
--- defines options
--- 'a_check_restrictions', 'a_validate_externalRef', 'a_validate_include', 'a_do_not_check_restrictions',
--- 'a_do_not_validate_externalRef', 'a_do_not_validate_include'
-
-relaxOptions :: [OptDescr SysConfig]
-relaxOptions
-    = [ Option "X" [a_relax_schema]                     (ReqArg withRelaxNG             "SCHEMA")  "validation with Relax NG, SCHEMA is the URI for the Relax NG schema"
-      , Option ""  [a_check_restrictions]               (NoArg (withRelaxCheckRestr        True))  "check Relax NG schema restrictions during schema simplification (default)"
-      , Option ""  [a_do_not_check_restrictions]        (NoArg (withRelaxCheckRestr       False))  "do not check Relax NG schema restrictions"
-      , Option ""  [a_validate_externalRef]             (NoArg (withRelaxValidateExtRef    True))  "validate a Relax NG schema referenced by a externalRef-Pattern (default)"
-      , Option ""  [a_do_not_validate_externalRef]      (NoArg (withRelaxValidateExtRef   False))  "do not validate a Relax NG schema referenced by an externalRef-Pattern"
-      , Option ""  [a_validate_include]                 (NoArg (withRelaxValidateInclude   True))  "validate a Relax NG schema referenced by an include-Pattern (default)"
-      , Option ""  [a_do_not_validate_include]          (NoArg (withRelaxValidateInclude  False))   "do not validate a Relax NG schema referenced by an include-Pattern"
-      ]
-
--- |
--- commonly useful options for XML output
---
--- defines options: 'a_indent', 'a_output_encoding', 'a_output_html' and others
-
-outputOptions   :: [OptDescr SysConfig]
-outputOptions
-    = [ Option "f"      [a_output_file]         (ReqArg (withSysAttr a_output_file) "FILE")   "output file for resulting document (default: stdout)"
-      , Option "i"      [a_indent]              (NoArg  (withIndent               True))      "indent XML output for readability"
-      , Option "o"      [a_output_encoding]     (ReqArg  withOutputEncoding    "CHARSET")      ( "encoding of output (" ++ utf8 ++ ", " ++ isoLatin1 ++ ", " ++ usAscii ++ ")" )
-      , Option ""       [a_output_xml]          (NoArg   withOutputXML                  )      "output of none ASCII chars as HTMl entity references"
-      , Option ""       [a_output_html]         (NoArg   withOutputHTML                 )      "output of none ASCII chars as HTMl entity references"
-      , Option ""       [a_output_xhtml]        (NoArg   withOutputXHTML                )      "output of HTML elements with empty content (script, ...) done in format <elem...></elem> instead of <elem/>"
-      , Option ""       [a_output_plain]        (NoArg   withOutputPLAIN                )      "output of HTML elements with empty content (script, ...) done in format <elem...></elem> instead of <elem/>"
-      , Option ""       [a_no_xml_pi]           (NoArg  (withNoXmlPi               True))      ("output without <?xml ...?> processing instruction, useful in combination with --" ++ show a_output_html)
-      , Option ""       [a_no_empty_elem_for]   (ReqArg (withNoEmptyElemFor . words') "NAMES")   "output of empty elements done in format <elem...></elem> only for given list of element names"
-      , Option ""       [a_no_empty_elements]   (NoArg  (withNoEmptyElements       True))      "output of empty elements done in format <elem...></elem> instead of <elem/>"
-      , Option ""       [a_add_default_dtd]     (NoArg  (withAddDefaultDTD         True))      "add the document type declaration given in the input document"
-      , Option ""       [a_text_mode]           (NoArg  (withTextMode              True))      "output in text mode"
-      ]
-    where
-    words'
-        = words
-          . map (\ c -> if c == ',' then ' ' else c)
-
--- |
--- commonly useful options
---
--- defines options: 'a_verbose', 'a_help'
-
-generalOptions  :: [OptDescr SysConfig]
-generalOptions
-    = [ Option "v"      [a_verbose]             (NoArg  (withSysAttr a_verbose v_1))               "verbose output"
-      , Option "h?"     [a_help]                (NoArg  (withSysAttr a_help    v_1))               "this message"
-      ]
-
--- |
--- defines 'a_version' option
-
-versionOptions  :: [OptDescr SysConfig]
-versionOptions
-    = [ Option "V"      [a_version]             (NoArg  (withSysAttr a_version v_1))               "show program version"
-      ]
-
--- |
--- debug output options
-
-showOptions     :: [OptDescr SysConfig]
-showOptions
-    = [ Option ""       [a_show_tree]           (NoArg  (withShowTree      True))          "output tree representation instead of document source"
-      , Option ""       [a_show_haskell]        (NoArg  (withShowHaskell   True))          "output internal Haskell representation instead of document source"
-      ]
-
--- ------------------------------------------------------------
-
-a_output_file	:: String
-a_output_file	= "output-file"
-
--- ------------------------------------------------------------
-
--- |
--- select options from a predefined list of option desciptions
-
-selectOptions   :: [String] -> [OptDescr a] -> [OptDescr a]
-selectOptions ol os
-    = concat . map (\ on -> filter (\ (Option _ ons _ _) -> on `elem` ons) os) $ ol
-
-removeOptions   :: [String] -> [OptDescr a] -> [OptDescr a]
-removeOptions ol os
-    = filter (\ (Option _ ons _ _) -> not . any (`elem` ol) $ ons ) os
 
 -- ------------------------------------------------------------
