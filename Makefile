@@ -5,6 +5,7 @@ HXTPACKAGES	= hxt-charproperties \
                   hxt-curl \
                   hxt-tagsoup \
                   hxt-xpath \
+		  hxt-relaxng \
 
 # hxt-xslt hxt-filter hxt-binary hxt-cache janus/janus-library
 

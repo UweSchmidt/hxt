@@ -145,10 +145,6 @@ module Text.XML.HXT.Arrow.XmlState
     , withPreserveComment
     , withProxy
     , withRedirect
-    , withRelaxCheckRestr
-    , withRelaxNG
-    , withRelaxValidateExtRef
-    , withRelaxValidateInclude
     , withRemoveWS
     , withShowHaskell
     , withShowTree

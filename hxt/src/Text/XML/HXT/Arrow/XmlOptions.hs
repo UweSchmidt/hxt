@@ -54,7 +54,7 @@ inputOptions
       , Option ""       [a_do_not_issue_errors]         (NoArg  (withErrors            False))  "ignore all error messages"
       , Option ""       [a_ignore_encoding_errors]      (NoArg  (withEncodingErrors    False))   "ignore encoding errors"
       , Option ""       [a_ignore_none_xml_contents]    (NoArg  (withIgnoreNoneXmlContents True)) "discards all contents of none XML/HTML documents, only the meta info remains in the doc tree"
-      , Option ""       [a_accept_mimetypes]            (ReqArg  withMT           "MIMETYPES") "only accept documents matching the given list of mimetype specs"
+      , Option ""       [a_accept_mimetypes]            (ReqArg  withMT           "MIMETYPES")  "only accept documents matching the given comma separated list of mimetype specs"
       , Option "H"      [a_parse_html]                  (NoArg  (withParseHTML          True))  "parse input as HTML, try to interprete everything as HTML, no validation"
       , Option "M"      [a_parse_by_mimetype]           (NoArg  (withParseByMimeType    True))  "parse dependent on mime type: text/html as HTML, text/xml and text/xhtml and others as XML, else no parse"
       , Option ""       [a_parse_xml]                   (NoArg  (withParseHTML         False))  "parse input as XML, (default)"
@@ -73,27 +73,8 @@ inputOptions
       , Option ""       [a_do_not_remove_whitespace]    (NoArg  (withRemoveWS          False))  "don't remove redundant whitespace (default)"
       ]
     where
-    withMT = withAcceptedMimeTypes . words
+    withMT = withAcceptedMimeTypes . words . map (\ x -> if x == ',' then ' ' else x)
     trc = withTrace . max 0 . min 9 . (read :: String -> Int) . ('0':) . filter (`elem` "0123456789") . fromMaybe v_1
-
--- | available Relax NG validation options
---
--- defines options
--- 'a_check_restrictions', 'a_validate_externalRef', 'a_validate_include', 'a_do_not_check_restrictions',
--- 'a_do_not_validate_externalRef', 'a_do_not_validate_include'
-
-relaxOptions :: [OptDescr SysConfig]
-relaxOptions
-    = [ Option "X" [a_relax_schema]                     (ReqArg withRelaxNG             "SCHEMA")  "validation with Relax NG, SCHEMA is the URI for the Relax NG schema"
-      , Option ""  [a_check_restrictions]               (NoArg (withRelaxCheckRestr        True))  "check Relax NG schema restrictions during schema simplification (default)"
-      , Option ""  [a_do_not_check_restrictions]        (NoArg (withRelaxCheckRestr       False))  "do not check Relax NG schema restrictions"
-      , Option ""  [a_validate_externalRef]             (NoArg (withRelaxValidateExtRef    True))  "validate a Relax NG schema referenced by a externalRef-Pattern (default)"
-      , Option ""  [a_do_not_validate_externalRef]      (NoArg (withRelaxValidateExtRef   False))  "do not validate a Relax NG schema referenced by an externalRef-Pattern"
-      , Option ""  [a_validate_include]                 (NoArg (withRelaxValidateInclude   True))  "validate a Relax NG schema referenced by an include-Pattern (default)"
-      , Option ""  [a_do_not_validate_include]          (NoArg (withRelaxValidateInclude  False))   "do not validate a Relax NG schema referenced by an include-Pattern"
-      , Option ""  [a_collect_errors]                   (NoArg (withRelaxCollectErrors     True))   "collect errors, default"
-      , Option ""  [a_do_not_collect_errors]            (NoArg (withRelaxCollectErrors    False))   "do not collect errors"
-      ]
 
 -- |
 -- commonly useful options for XML output
@@ -243,27 +224,6 @@ a_text_mode                     = "text-mode"
 a_trace                         = "trace"
 a_validate                      = "validate"
 a_verbose                       = "verbose"
-
--- ------------------------------------------------------------
--- option for Relax NG
-
-a_relax_schema,
- a_do_not_check_restrictions,
- a_check_restrictions,
- a_do_not_validate_externalRef,
- a_validate_externalRef,
- a_do_not_validate_include,
- a_validate_include,
- a_do_not_collect_errors :: String
-
-a_relax_schema                = "relax-schema"
-a_do_not_check_restrictions   = "do-not-check-restrictions"
-a_check_restrictions          = "check-restrictions"
-a_do_not_validate_externalRef = "do-not-validate-externalRef"
-a_validate_externalRef        = "validate-externalRef"
-a_do_not_validate_include     = "do-not-validate-include"
-a_validate_include            = "validate-include"
-a_do_not_collect_errors       = "do-not-collect-errors"
 
 -- ------------------------------------------------------------
 

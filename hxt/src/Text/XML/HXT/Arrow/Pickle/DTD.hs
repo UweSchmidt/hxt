@@ -26,7 +26,7 @@ import qualified Text.XML.HXT.DOM.XmlNode as XN
 
 import           Text.XML.HXT.DOM.Interface
 import           Text.XML.HXT.Arrow.Pickle.Schema
-import           Text.XML.HXT.RelaxNG.XmlSchema.DataTypeLibW3C
+import           Text.XML.HXT.XMLSchema.DataTypeLibW3CNames
 
 -- ------------------------------------------------------------
 

@@ -18,7 +18,7 @@ import Text.XML.HXT.RelaxNG.DataTypeLibUtils
 import Text.XML.HXT.RelaxNG.DataTypeLibMysql
     ( mysqlDatatypeLib )
 
-import Text.XML.HXT.RelaxNG.XmlSchema.DataTypeLibW3C
+import Text.XML.HXT.RelaxNG.XMLSchema.DataTypeLibW3C
     ( w3cDatatypeLib )
 
 import Data.Maybe

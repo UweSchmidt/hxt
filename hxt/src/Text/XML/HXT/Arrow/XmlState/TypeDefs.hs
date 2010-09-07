@@ -240,6 +240,7 @@ data XIORelaxConfig     = XIORxc  { xioRelaxValidate            :: ! Bool
                                   , xioRelaxNoOfErrors          :: ! Int
                                   , xioRelaxDefineId            :: ! Int
                                   , xioRelaxAttrList            ::   AssocList String XmlTrees
+				  , xioRelaxValidator           ::   IOSArrow XmlTree XmlTree
                                   }
 
 instance NFData XIOSysState             -- all fields of interest are strict
@@ -372,8 +373,13 @@ theRelaxNoOfErrors              = ( xioRelaxNoOfErrors, \ x s -> s { xioRelaxNoO
 theRelaxDefineId                :: Selector XIOSysState Int
 theRelaxDefineId                = ( xioRelaxDefineId, \ x s -> s { xioRelaxDefineId = x} )
                                   `subS` theRelaxConfig
+
 theRelaxAttrList                :: Selector XIOSysState (AssocList String XmlTrees)
 theRelaxAttrList                = ( xioRelaxAttrList,      \ x s -> s { xioRelaxAttrList = x} )
+                                  `subS` theRelaxConfig
+
+theRelaxValidator                :: Selector XIOSysState (IOSArrow XmlTree XmlTree)
+theRelaxValidator                = ( xioRelaxValidator,      \ x s -> s { xioRelaxValidator = x} )
                                   `subS` theRelaxConfig
 
 -- ----------------------------------------

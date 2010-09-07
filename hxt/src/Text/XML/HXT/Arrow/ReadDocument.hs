@@ -45,9 +45,6 @@ import Text.XML.HXT.Arrow.ProcessDocument       ( getDocumentContents
 import Text.XML.HXT.Arrow.XmlState
 import Text.XML.HXT.Arrow.XmlState.TypeDefs
 
-
-import Text.XML.HXT.RelaxNG.Validator           ( validateDocumentWithRelaxSchema )
-
 -- ------------------------------------------------------------
 -- TODO
 {- |
@@ -138,7 +135,11 @@ for minimal complete examples see 'Text.XML.HXT.Arrow.WriteDocument.writeDocumen
 
 readDocument    :: SysConfigList -> String -> IOStateArrow s b XmlTree
 readDocument config src
-    = localSysParam (theTrace `pairS` (theParseConfig `pairS` theInputConfig))
+    = localSysParam (theTrace
+		     `pairS` theParseConfig
+		     `pairS` theInputConfig
+		     `pairS` theRelaxConfig
+		    )
       $
       readDocument' config src
 
@@ -205,7 +206,7 @@ readDocument' config src
                                                           )
                               )
                               >>>
-                              relax $< getSysParam theRelaxSchema
+                              relax
                             )
                        else this
                      )
@@ -257,7 +258,10 @@ readDocument' config src
             | otherwise                 = this                                  -- but remove contents when option is set
 
         checknamespaces (withNamespaces, withTagSoup')
-            | (withNamespaces && not withTagSoup')
+            | ( withNamespaces
+		&&
+		not withTagSoup'
+	      )
               ||
               validateWithRelax         = propagateAndValidateNamespaces
             | otherwise                 = this
@@ -271,8 +275,8 @@ readDocument' config src
             | canonicalize'             = canonicalizeAllNodes
             | otherwise                 = this
 
-        relax relaxSchema
-            | validateWithRelax         = validateDocumentWithRelaxSchema [] relaxSchema
+        relax
+            | validateWithRelax         = withoutUserState $< getSysParam theRelaxValidator
             | otherwise                 = this
 
         whitespace (removeWS, withTagSoup')

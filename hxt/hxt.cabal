@@ -59,16 +59,6 @@ extra-source-files:
  examples/arrows/hparser/namespace1.xml
  examples/arrows/hparser/valid1.rng
  examples/arrows/hparser/valid1.xml
- examples/arrows/hrelaxng/.ghci
- examples/arrows/hrelaxng/HRelaxNG.hs
- examples/arrows/hrelaxng/invalid1.xml
- examples/arrows/hrelaxng/invalid2.rng
- examples/arrows/hrelaxng/invalid3.rng
- examples/arrows/hrelaxng/Makefile
- examples/arrows/hrelaxng/valid1.rng
- examples/arrows/hrelaxng/valid1.xml
- examples/arrows/hrelaxng/valid2.rng
- examples/arrows/hrelaxng/valid2.xml
  examples/arrows/performance/GenDoc.hs
  examples/arrows/performance/Makefile
  examples/arrows/pickle/Makefile
@@ -146,22 +136,7 @@ library
   Text.XML.HXT.Parser.XmlEntities,
   Text.XML.HXT.Parser.XmlParsec,
   Text.XML.HXT.Parser.XmlTokenParser,
-  Text.XML.HXT.RelaxNG,
-  Text.XML.HXT.RelaxNG.BasicArrows,
-  Text.XML.HXT.RelaxNG.CreatePattern,
-  Text.XML.HXT.RelaxNG.DataTypeLibMysql,
-  Text.XML.HXT.RelaxNG.DataTypeLibUtils,
-  Text.XML.HXT.RelaxNG.DataTypeLibraries,
-  Text.XML.HXT.RelaxNG.DataTypes,
-  Text.XML.HXT.RelaxNG.PatternFunctions,
-  Text.XML.HXT.RelaxNG.PatternToString,
-  Text.XML.HXT.RelaxNG.Schema,
-  Text.XML.HXT.RelaxNG.SchemaGrammar,
-  Text.XML.HXT.RelaxNG.Simplification,
-  Text.XML.HXT.RelaxNG.Utils,
-  Text.XML.HXT.RelaxNG.Validation,
-  Text.XML.HXT.RelaxNG.Validator,
-  Text.XML.HXT.RelaxNG.XmlSchema.DataTypeLibW3C,
+  Text.XML.HXT.XMLSchema.DataTypeLibW3CNames,
   Text.XML.HXT.Version
 
  hs-source-dirs: src

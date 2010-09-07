@@ -137,6 +137,7 @@ initialRelaxConfig              = XIORxc
                                   , xioRelaxNoOfErrors          = 0
                                   , xioRelaxDefineId            = 0
                                   , xioRelaxAttrList            = []
+				  , xioRelaxValidator           = dummyRelaxValidator
                                   }
 
 -- ------------------------------------------------------------
@@ -146,10 +147,15 @@ dummyHTTPHandler        = issueFatal $
                           "HTTP handler not configured, " ++
                           "please install package hxt-curl and use 'withCurl' input config option"
 
-dummyTagSoupParser        :: IOSArrow b b
+dummyTagSoupParser      :: IOSArrow b b
 dummyTagSoupParser      =  issueFatal $
                            "TagSoup parser not configured, " ++
-                           "please install package hxt-tagsoup and use 'withTagSoup' parser config option"
+                           "please install package hxt-tagsoup and use 'withTagSoup' parser config option from this package"
+
+dummyRelaxValidator     :: IOSArrow b b
+dummyRelaxValidator     =  issueFatal $
+                           "RelaxNG validator not configured, " ++
+                           "please install package hxt-relaxng and use 'withRelaxNG' config option from this package"
 
 -- ------------------------------------------------------------
 

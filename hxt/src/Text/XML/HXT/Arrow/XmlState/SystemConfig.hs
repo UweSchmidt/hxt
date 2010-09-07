@@ -221,23 +221,6 @@ withShowHaskell                 = putS theShowHaskell
 
 -- ------------------------------------------------------------
 
-withRelaxNG                     :: String -> SysConfig
-withRelaxNG s                   = putS (theRelaxValidate `pairS` theRelaxSchema) (True, s)
-
-withRelaxCheckRestr             ::  Bool -> SysConfig
-withRelaxCheckRestr             = putS theRelaxCheckRestr
-
-withRelaxValidateExtRef         :: Bool -> SysConfig
-withRelaxValidateExtRef         = putS theRelaxValidateExtRef
-
-withRelaxValidateInclude        :: Bool -> SysConfig
-withRelaxValidateInclude        = putS theRelaxValidateInclude
-
-withRelaxCollectErrors          :: Bool -> SysConfig
-withRelaxCollectErrors          = putS theRelaxCollectErrors
-
--- ------------------------------------------------------------
-
 yes                             :: Bool
 yes                             = True
 
