@@ -86,6 +86,7 @@ import           Control.Concurrent.MVar
 import           Control.DeepSeq
 
 import           Data.AssocList
+import           Data.Binary
 import           Data.Char                      ( toLower )
 import           Data.List                      ( isPrefixOf )
 import qualified Data.Map               as M
@@ -150,6 +151,19 @@ instance Eq QName where
 -- and does things like "mkName("x:y") == mkPrefixLocalPart("x","y")
 
 instance NFData QName where
+
+instance Binary QName where
+    put qn              = let
+                          px = namePrefix   qn
+                          lp = localPart    qn
+                          ns = namespaceUri qn
+                          in
+                          put px >> put lp >> put ns
+    get                 = do
+                          px <- get
+                          lp <- get
+                          ns <- get
+                          return $ mkQName px lp ns
 
 -- -----------------------------------------------------------------------------
 

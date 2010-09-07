@@ -36,6 +36,7 @@ module Text.XML.HXT.Core
     , module Text.XML.HXT.Arrow.ProcessDocument
     , module Text.XML.HXT.Arrow.ReadDocument
     , module Text.XML.HXT.Arrow.WriteDocument
+    , module Text.XML.HXT.Arrow.Binary
     , module Text.XML.HXT.Arrow.XmlOptions
 
     , module Text.XML.HXT.Version
@@ -61,6 +62,7 @@ import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlOptions
 import Text.XML.HXT.Arrow.XmlState
 import Text.XML.HXT.Arrow.XmlRegex ()           -- import this explicitly
+import Text.XML.HXT.Arrow.Binary
 
 import Text.XML.HXT.Version
 

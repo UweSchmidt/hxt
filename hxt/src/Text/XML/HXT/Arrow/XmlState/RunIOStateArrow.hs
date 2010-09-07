@@ -66,12 +66,22 @@ initialState s  = XIOState { xioSysState       = initialSysState
 
 initialSysState                 :: XIOSysState
 initialSysState                 = XIOSys
+                                  { xioSysWriter         = initialSysWriter
+                                  , xioSysEnv            = initialSysEnv
+                                  }
+
+initialSysWriter                :: XIOSysWriter
+initialSysWriter                = XIOwrt
+                                  { xioErrorMsgList      = []
+                                  }
+
+initialSysEnv                   :: XIOSysEnv
+initialSysEnv                   = XIOEnv
                                   { xioTraceLevel        = 0
                                   , xioTraceCmd          = traceOutputToStderr
                                   , xioErrorStatus       = c_ok
                                   , xioErrorMsgHandler   = errorOutputToStderr
                                   , xioErrorMsgCollect   = False
-                                  , xioErrorMsgList      = []
                                   , xioBaseURI           = ""
                                   , xioDefaultBaseURI    = ""
                                   , xioAttrList          = []
@@ -79,6 +89,7 @@ initialSysState                 = XIOSys
                                   , xioParseConfig       = initialParseConfig
                                   , xioOutputConfig      = initialOutputConfig
                                   , xioRelaxConfig       = initialRelaxConfig
+                                  , xioBinaryConfig      = initialBinaryConfig
                                   }
 
 initialInputConfig              :: XIOInputConfig
@@ -139,6 +150,12 @@ initialRelaxConfig              = XIORxc
                                   , xioRelaxAttrList            = []
 				  , xioRelaxValidator           = dummyRelaxValidator
                                   }
+
+initialBinaryConfig              :: XIOBinaryConfig
+initialBinaryConfig              = XIOBin
+                                   { xioBinaryCompression       = id
+                                   , xioBinaryDeCompression     = id
+                                   }
 
 -- ------------------------------------------------------------
 

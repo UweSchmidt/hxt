@@ -140,7 +140,7 @@ error code is:
 
 writeDocument   	:: SysConfigList -> String -> IOStateArrow s XmlTree XmlTree
 writeDocument config dst
-    = localSysParam (theTrace `pairS` theOutputConfig)
+    = localSysEnv
       $
       configSysParams config
       >>>

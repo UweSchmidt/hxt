@@ -65,7 +65,7 @@ getTraceCmd             = getSysParam theTraceCmd
 -- | run an arrow with a given trace level, the old trace level is restored after the arrow execution
 
 withTraceLevel          :: Int -> IOStateArrow s b c -> IOStateArrow s b c
-withTraceLevel level f  = localSysParam theTraceLevel $ setTraceLevel level >>> f
+withTraceLevel level f  = localSysEnv $ setTraceLevel level >>> f
 
 -- | apply a trace arrow and issue message to stderr
 

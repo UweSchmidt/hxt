@@ -139,7 +139,7 @@ normalizeForRelaxValidation
 
 validateDocWithRelax :: IOSArrow XmlTree XmlTree -> SysConfigList -> String -> IOSArrow XmlTree XmlTree
 validateDocWithRelax theSchema config doc
-    = localSysParam (theInputConfig `pairS` theParseConfig)
+    = localSysEnv
       $
       configSysParams config
       >>>

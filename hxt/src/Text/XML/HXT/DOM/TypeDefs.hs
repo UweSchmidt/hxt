@@ -28,6 +28,7 @@ where
 import Control.DeepSeq
 
 import Data.AssocList
+import Data.Binary
 import Data.Tree.NTree.TypeDefs
 import Data.Typeable
 
@@ -78,6 +79,41 @@ instance NFData XNode where
     rnf (XAttr qn)              = rnf qn
     rnf (XError n e)            = rnf n  `seq` rnf e
 
+instance Binary XNode where
+    put (XText s)               = put (0::Word8) >> put s
+    put (XCharRef i)            = put (1::Word8) >> put i
+    put (XEntityRef n)          = put (2::Word8) >> put n
+    put (XCmt c)                = put (3::Word8) >> put c
+    put (XCdata s)              = put (4::Word8) >> put s
+    put (XPi qn ts)             = put (5::Word8) >> put qn >> put ts
+    put (XTag qn cs)            = put (6::Word8) >> put qn >> put cs
+    put (XDTD de al)            = put (7::Word8) >> put de >> put al
+    put (XAttr qn)              = put (8::Word8) >> put qn
+    put (XError n e)            = put (9::Word8) >> put n  >> put e
+
+    get                         = do
+                                  tag <- getWord8
+                                  case tag of
+                                    0 -> get >>= return . XText
+                                    1 -> get >>= return . XCharRef
+                                    2 -> get >>= return . XEntityRef
+                                    3 -> get >>= return . XCmt
+                                    4 -> get >>= return . XCdata
+                                    5 -> do
+                                         qn <- get
+                                         get >>= return . XPi qn
+                                    6 -> do
+                                         qn <- get
+                                         get >>= return . XTag qn
+                                    7 -> do
+                                         de <- get
+                                         get >>= return . XDTD de
+                                    8 -> get >>= return . XAttr
+                                    9 -> do
+                                         n <- get
+                                         get >>= return . XError n
+                                    _ -> error "XNode.get: error while decoding XNode"
+
 -- -----------------------------------------------------------------------------
 --
 -- DTDElem
@@ -120,6 +156,22 @@ data DTDElem    = DOCTYPE       -- ^ attr: name, system, public,        XDTD ele
                   deriving (Eq, Ord, Enum, Show, Read, Typeable)
 
 instance NFData DTDElem
+
+instance Binary DTDElem where
+    put de                      = put ((toEnum . fromEnum $ de)::Word8)         -- DTDElem is not yet instance of Enum
+    get                         = do
+                                  tag <- getWord8
+                                  return . toEnum . fromEnum $ tag
+{-
+    put de                      = let
+                                  i = fromJust . elemIndex de $ dtdElems
+                                  in
+                                  put ((toEnum i)::Word8)
+
+    get                         = do
+                                  tag <- getWord8
+                                  return $ dtdElems !! (fromEnum tag)
+-}
 
 -- -----------------------------------------------------------------------------
 

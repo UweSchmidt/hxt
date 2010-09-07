@@ -27,6 +27,7 @@ where
 
 import Control.DeepSeq
 
+import Data.Binary
 import Data.Tree.Class
 import Data.Typeable
 
@@ -50,6 +51,13 @@ type NTrees   a = [NTree a]
 
 instance (NFData a) => NFData (NTree a) where
     rnf (NTree n cl)                    = rnf n `seq` rnf cl
+
+instance (Binary a) => Binary (NTree a) where
+    put (NTree n cs)    = put n >> put cs
+    get                 = do
+                          n  <- get
+                          cs <- get
+                          return (NTree n cs)
 
 -- | NTree implements class Functor
 

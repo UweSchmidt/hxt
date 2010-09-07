@@ -7,7 +7,8 @@ HXTPACKAGES	= hxt-charproperties \
                   hxt-xpath \
 		  hxt-relaxng \
 
-# hxt-xslt hxt-filter hxt-binary hxt-cache janus/janus-library
+# TODO : hxt-xslt hxt-cache
+# old packages: hxt-filter hxt-binary janus/janus-library
 
 all	:
 	$(foreach i,$(HXTPACKAGES), ( cd $i && cabal configure && cabal build && cabal install && cabal sdist; ); )

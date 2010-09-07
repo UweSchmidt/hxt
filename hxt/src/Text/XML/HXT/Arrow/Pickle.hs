@@ -126,7 +126,7 @@ import           Text.XML.HXT.Arrow.Pickle.DTD
 
 xpickleDocument         :: PU a -> SysConfigList -> String -> IOStateArrow s a XmlTree
 xpickleDocument xp config dest
-    = localSysParam (theTrace `pairS` theAttrList `pairS` theOutputConfig)
+    = localSysEnv
       $
       configSysParams config
       >>>

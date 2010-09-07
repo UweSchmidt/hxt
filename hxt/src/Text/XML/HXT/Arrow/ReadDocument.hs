@@ -135,11 +135,7 @@ for minimal complete examples see 'Text.XML.HXT.Arrow.WriteDocument.writeDocumen
 
 readDocument    :: SysConfigList -> String -> IOStateArrow s b XmlTree
 readDocument config src
-    = localSysParam (theTrace
-		     `pairS` theParseConfig
-		     `pairS` theInputConfig
-		     `pairS` theRelaxConfig
-		    )
+    = localSysEnv
       $
       readDocument' config src
 

@@ -36,9 +36,9 @@ where
 import Control.Arrow                            -- arrow classes
 import Control.Arrow.ArrowList
 import Control.Arrow.IOStateListArrow
-
 import Control.DeepSeq
 
+import Data.ByteString.Lazy             ( ByteString )
 import Data.Char                        ( isDigit )
 
 import Text.XML.HXT.DOM.Interface
@@ -175,12 +175,20 @@ idS                     = (id, const)
 -- predefined system state data type with all components for the
 -- system functions, like trace, error handling, ...
 
-data XIOSysState        = XIOSys  { xioTraceLevel               :: ! Int
+data XIOSysState        = XIOSys  { xioSysWriter                :: ! XIOSysWriter
+                                  , xioSysEnv                   :: ! XIOSysEnv
+                                  }
+
+instance NFData XIOSysState             -- all fields of interest are strict
+
+data XIOSysWriter       = XIOwrt  { xioErrorMsgList             :: ! XmlTrees
+                                  }
+
+data XIOSysEnv          = XIOEnv  { xioTraceLevel               :: ! Int
                                   , xioTraceCmd                 ::   Int -> String -> IO ()
                                   , xioErrorStatus              :: ! Int
                                   , xioErrorMsgHandler          ::   String -> IO ()
                                   , xioErrorMsgCollect          :: ! Bool
-                                  , xioErrorMsgList             :: ! XmlTrees
                                   , xioBaseURI                  :: ! String
                                   , xioDefaultBaseURI           :: ! String
                                   , xioAttrList                 :: ! Attributes
@@ -188,6 +196,7 @@ data XIOSysState        = XIOSys  { xioTraceLevel               :: ! Int
                                   , xioParseConfig              :: ! XIOParseConfig
                                   , xioOutputConfig             :: ! XIOOutputConfig
                                   , xioRelaxConfig              :: ! XIORelaxConfig
+                                  , xioBinaryConfig             :: ! XIOBinaryConfig
                                   }
 
 data XIOInputConfig     = XIOIcgf { xioStrictInput              :: ! Bool
@@ -243,7 +252,12 @@ data XIORelaxConfig     = XIORxc  { xioRelaxValidate            :: ! Bool
 				  , xioRelaxValidator           ::   IOSArrow XmlTree XmlTree
                                   }
 
-instance NFData XIOSysState             -- all fields of interest are strict
+data XIOBinaryConfig    = XIOBin  { xioBinaryCompression        ::   CompressionFct
+                                  , xioBinaryDeCompression      ::   DeCompressionFct
+                                  }
+
+type CompressionFct     = ByteString -> ByteString
+type DeCompressionFct   = ByteString -> ByteString
 
 type SysConfig                  = XIOSysState -> XIOSysState
 type SysConfigList              = [SysConfig]
@@ -258,8 +272,21 @@ theUserState                    = ( xioUserState,        \ x s -> s { xioUserSta
 
 -- ----------------------------------------
 
+theSysWriter                    :: Selector XIOSysState XIOSysWriter
+theSysWriter                    = ( xioSysWriter, \ x s -> s { xioSysWriter = x} )
+
+theErrorMsgList                 :: Selector XIOSysState XmlTrees
+theErrorMsgList                 = ( xioErrorMsgList,    \ x s -> s { xioErrorMsgList = x } )
+                                   `subS` theSysWriter
+
+-- ----------------------------------------
+
+theSysEnv                       :: Selector XIOSysState XIOSysEnv
+theSysEnv                       = ( xioSysEnv, \ x s -> s { xioSysEnv = x} )
+
 theInputConfig                  :: Selector XIOSysState XIOInputConfig
 theInputConfig                  = ( xioInputConfig,      \ x s -> s { xioInputConfig = x} )
+                                   `subS` theSysEnv
 
 theStrictInput                  :: Selector XIOSysState Bool
 theStrictInput                  = ( xioStrictInput,      \ x s -> s { xioStrictInput = x} )
@@ -296,6 +323,7 @@ theProxy                        = ( xioProxy,      \ x s -> s { xioProxy = x} )
 
 theOutputConfig                 :: Selector XIOSysState XIOOutputConfig
 theOutputConfig                 = ( xioOutputConfig, \ x s -> s { xioOutputConfig = x} )
+                                   `subS` theSysEnv
 
 theIndent                       :: Selector XIOSysState Bool
 theIndent                       = ( xioIndent,      \ x s -> s { xioIndent = x} )
@@ -341,6 +369,7 @@ theShowHaskell                  = ( xioShowHaskell,      \ x s -> s { xioShowHas
 
 theRelaxConfig                  :: Selector XIOSysState XIORelaxConfig
 theRelaxConfig                  = ( xioRelaxConfig,      \ x s -> s { xioRelaxConfig = x} )
+                                   `subS` theSysEnv
 
 theRelaxValidate                :: Selector XIOSysState Bool
 theRelaxValidate                = ( xioRelaxValidate, \ x s -> s { xioRelaxValidate = x} )
@@ -386,36 +415,42 @@ theRelaxValidator                = ( xioRelaxValidator,      \ x s -> s { xioRel
 
 theParseConfig                  :: Selector XIOSysState XIOParseConfig
 theParseConfig                  = ( xioParseConfig,      \ x s -> s { xioParseConfig = x} )
+                                   `subS` theSysEnv
 
 theErrorStatus                  :: Selector XIOSysState Int
 theErrorStatus                  = ( xioErrorStatus,     \ x s -> s { xioErrorStatus = x } )
+                                   `subS` theSysEnv
 
 theErrorMsgHandler              :: Selector XIOSysState (String -> IO ())
 theErrorMsgHandler              = ( xioErrorMsgHandler, \ x s -> s { xioErrorMsgHandler = x } )
+                                   `subS` theSysEnv
 
 theErrorMsgCollect              :: Selector XIOSysState Bool
 theErrorMsgCollect              = ( xioErrorMsgCollect, \ x s -> s { xioErrorMsgCollect = x } )
-
-theErrorMsgList                 :: Selector XIOSysState XmlTrees
-theErrorMsgList                 = ( xioErrorMsgList,    \ x s -> s { xioErrorMsgList = x } )
+                                   `subS` theSysEnv
 
 theBaseURI                      :: Selector XIOSysState String
 theBaseURI                      = ( xioBaseURI,         \ x s -> s { xioBaseURI = x } )
+                                   `subS` theSysEnv
 
 theDefaultBaseURI               :: Selector XIOSysState String
 theDefaultBaseURI               = ( xioDefaultBaseURI,  \ x s -> s { xioDefaultBaseURI = x } )
+                                   `subS` theSysEnv
 
 theTraceLevel                   :: Selector XIOSysState Int
 theTraceLevel                   = ( xioTraceLevel,      \ x s -> s { xioTraceLevel = x } )
+                                   `subS` theSysEnv
 
 theTraceCmd                     :: Selector XIOSysState (Int -> String -> IO ())
 theTraceCmd                     = ( xioTraceCmd,        \ x s -> s { xioTraceCmd = x } )
+                                   `subS` theSysEnv
 
 theTrace                        :: Selector XIOSysState (Int, Int -> String -> IO ())
 theTrace                        = theTraceLevel `pairS` theTraceCmd
 
 theAttrList                     :: Selector XIOSysState Attributes
 theAttrList                     = ( xioAttrList,        \ x s -> s { xioAttrList = x } )
+                                   `subS` theSysEnv
 
 theMimeTypes                    :: Selector XIOSysState MimeTypeTable
 theMimeTypes                    = ( xioMimeTypes,       \ x s -> s { xioMimeTypes = x } )
@@ -477,6 +512,20 @@ theTagSoupParser                :: Selector XIOSysState (IOSArrow XmlTree XmlTre
 theTagSoupParser                = ( xioTagSoupParser,  \ x s -> s { xioTagSoupParser = x } )
                                   `subS` theParseConfig
 
+-- ----------------------------------------
+
+theBinaryConfig                  :: Selector XIOSysState XIOBinaryConfig
+theBinaryConfig                  = ( xioBinaryConfig,      \ x s -> s { xioBinaryConfig = x} )
+                                   `subS` theSysEnv
+
+theBinaryCompression             :: Selector XIOSysState (ByteString -> ByteString)
+theBinaryCompression             = ( xioBinaryCompression,      \ x s -> s { xioBinaryCompression = x} )
+                                   `subS` theBinaryConfig
+
+theBinaryDeCompression           :: Selector XIOSysState (ByteString -> ByteString)
+theBinaryDeCompression           = ( xioBinaryDeCompression,      \ x s -> s { xioBinaryDeCompression = x} )
+                                   `subS` theBinaryConfig
+
 -- ------------------------------------------------------------
 
 getSysParam                     :: Selector XIOSysState c -> IOStateArrow s b c
@@ -503,6 +552,9 @@ localSysParam sel f             = IOSLA $ \ s0 v ->
                                   do
                                   (s1, res) <- runIOSLA f s0 v
                                   return (putS sel' c0 s1, res)
+
+localSysEnv                     :: IOStateArrow s a b -> IOStateArrow s a b
+localSysEnv                     = localSysParam theSysEnv
 
 incrSysParam                    :: Selector XIOSysState Int -> IOStateArrow s a Int
 incrSysParam cnt                = getSysParam cnt

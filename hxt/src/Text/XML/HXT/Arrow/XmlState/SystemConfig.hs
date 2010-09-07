@@ -219,6 +219,13 @@ withShowTree                    = putS theShowTree
 withShowHaskell                 :: Bool -> SysConfig
 withShowHaskell                 = putS theShowHaskell
 
+-- | Configure compression and decompression for binary serialization/deserialization.
+-- First component is the compression function applied after serialization,
+-- second the decompression applied before deserialization.
+
+withBinaryConfig                :: (CompressionFct, DeCompressionFct) -> SysConfig
+withBinaryConfig                = putS (theBinaryCompression `pairS` theBinaryDeCompression)
+
 -- ------------------------------------------------------------
 
 yes                             :: Bool

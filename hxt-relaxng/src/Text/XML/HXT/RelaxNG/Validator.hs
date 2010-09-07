@@ -60,7 +60,7 @@ validateDocumentWithRelaxSchema :: SysConfigList -> String -> IOStateArrow s Xml
 validateDocumentWithRelaxSchema config relaxSchema
     = ( withoutUserState
         $
-        localSysParam (theInputConfig `pairS` theParseConfig `pairS` theRelaxConfig)
+        localSysEnv
         $
         configSysParams config
         >>>
