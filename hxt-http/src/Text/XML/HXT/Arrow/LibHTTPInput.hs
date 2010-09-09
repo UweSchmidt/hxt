@@ -14,11 +14,10 @@
 
 -- ------------------------------------------------------------
 
-module Text.XML.HXT.Arrow.LibCurlInput
-    ( getLibCurlContents
-    , a_use_curl
-    , withCurl
-    , curlOptions
+module Text.XML.HXT.Arrow.LibHTTPInput
+    ( getHTTPNativeContents
+    , withHTTP
+    , httpOptions
     )
 where
 
@@ -30,40 +29,32 @@ import           Control.Arrow.ArrowIO
 import           System.Console.GetOpt
 
 import           Text.XML.HXT.Arrow.DocumentInput               ( addInputError )
-import qualified Text.XML.HXT.IO.GetHTTPLibCurl as LibCURL
+import           Text.XML.HXT.IO.GetHTTPNative                  ( getCont )
 
 import           Text.XML.HXT.DOM.Interface
 
 import           Text.XML.HXT.Arrow.XmlArrow
 import           Text.XML.HXT.Arrow.XmlState
 import           Text.XML.HXT.Arrow.XmlState.TypeDefs
-import           Text.XML.HXT.Arrow.XmlOptions                  ( a_proxy
-                                                                , a_redirect
-                                                                )
 
 -- ----------------------------------------------------------
 
-getLibCurlContents      :: IOSArrow XmlTree XmlTree
-getLibCurlContents
+getHTTPNativeContents      :: IOSArrow XmlTree XmlTree
+getHTTPNativeContents
     = getC
       $<<
       ( getAttrValue transferURI
         &&&
         getSysVar (theInputOptions `pairS`
-                   theRedirect     `pairS`
                    theProxy        `pairS`
                    theStrictInput
                   )
       )
       where
-      getC uri (((options, redirect), proxy), strictInput)
-          = applyA ( ( traceMsg 2 ( "get HTTP via libcurl, uri=" ++ show uri ++ " options=" ++ show options )
+      getC uri ((options, proxy), strictInput)
+          = applyA ( ( traceMsg 2 ( "get HTTP via native HTTP interface, uri=" ++ show uri ++ " options=" ++ show options )
                        >>>
-                       arrIO0 ( LibCURL.getCont
-                                    strictInput
-                                    ((a_proxy, proxy) : (a_redirect, show . fromEnum $ redirect) : options)
-                                    uri
-                              )
+                       arrIO0 (getCont strictInput proxy uri)
                      )
                      >>>
                      ( arr (uncurry addInputError)
@@ -80,16 +71,16 @@ addContent (al, c)
 
 -- ------------------------------------------------------------
 
-a_use_curl              :: String
-a_use_curl              = "use-curl"
+a_use_http              :: String
+a_use_http              = "use-http"
 
-withCurl               :: Attributes -> SysConfig
-withCurl curlOpts      = putS theHttpHandler getLibCurlContents
+withHTTP               :: Attributes -> SysConfig
+withHTTP httpOpts      = putS theHttpHandler getHTTPNativeContents
                          >>>
-                         withInputOptions curlOpts
+                         withInputOptions httpOpts
 
-curlOptions            :: [OptDescr SysConfig]
-curlOptions            = [ Option "" [a_use_curl]  (NoArg (withCurl []))  "enable HTTP input with libcurl" ]
+httpOptions            :: [OptDescr SysConfig]
+httpOptions            = [ Option "" [a_use_http]  (NoArg (withHTTP []))  "enable HTTP input with native Haskell HTTP package" ]
 
 -- ------------------------------------------------------------
 

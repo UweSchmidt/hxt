@@ -51,8 +51,10 @@ import Network.URI      ( URI
 --
 -- the http protocol handler, haskell implementation
 
-getCont         :: String -> String -> IO (Either String ([(String, String)], String))
-getCont uri proxy
+getCont         :: Bool -> String -> String -> IO (Either ([(String, String)], String)
+                                                          ([(String, String)], String)
+                                                  )
+getCont strictInput proxy uri
     = do
       res <- try (getHttp False uri1 proxy)
       either processError processResponse res
@@ -60,31 +62,45 @@ getCont uri proxy
     uri1 = fromJust (parseURIReference uri)
 
     processError e
-        = return $ Left ( "http error when requesting URI "
-                          ++ show uri
-                          ++ ": "
-                          ++ ioeGetErrorString e
-                          ++ " (perhaps server does not understand HTTP/1.1) "
-                        )
+        = return $
+          Left ( [ (transferStatus, "999")
+                 , (transferMessage, "HTTP library error")
+                 ]
+               , "http error when requesting URI "
+                 ++ show uri
+                 ++ ": "
+                 ++ ioeGetErrorString e
+                 ++ " (perhaps server does not understand HTTP/1.1) "
+               )
 
     processResponse response
-        | st >= 200 && st < 300
-            = return $ Right (al, cs)
+        | rc >= 200 && rc < 300
+            = if strictInput
+              then length cs `seq` return res
+              else                 return res
 
         | otherwise
-            = return $ Left ( "http error when accessing URI "
-                              ++ show uri
-                              ++ ": "
-                              ++ show st
-                              ++ " "
-                              ++ rspReason response
-                            )
+            = return $
+              Left ( rs
+                   , "http error when accessing URI "
+                     ++ show uri
+                     ++ ": "
+                     ++ show rc
+                     ++ " "
+                     ++ rr
+                   )
         where
-        al = convertResponseHeaders response
-        cs = rspBody response
-        st = convertResponseStatus (rspCode response)
+        rc  = convertResponseStatus $ rspCode response
+        rr  = rspReason response
+        res = Right (rs, cs)
+        rs  = rst ++ rsh
+        rst = [ (transferStatus, show rc)
+              , (transferMessage,     rr)
+              ]
+        rsh = convertResponseHeaders response
+        cs  = rspBody response
 
-    getHttp             :: Bool -> URI -> String -> IO Response
+    getHttp             :: Bool -> URI -> String -> IO (Response String)
     getHttp trc' uri' proxy'
         = withSocketsDo $
           browse ( do
@@ -111,7 +127,7 @@ getCont uri proxy
     convertResponseStatus (a, b, c)
         = 100 * a + 10 * b + c
 
-    convertResponseHeaders      :: Response -> [(String, String)]
+    convertResponseHeaders      :: Response String -> [(String, String)]
     convertResponseHeaders r'
         = cvResponseCode (rspCode r')
           ++

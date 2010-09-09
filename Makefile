@@ -3,6 +3,7 @@ HXTPACKAGES	= hxt-charproperties \
                   hxt-unicode \
                   hxt \
                   hxt-curl \
+		  hxt-http \
                   hxt-tagsoup \
                   hxt-xpath \
 		  hxt-relaxng \

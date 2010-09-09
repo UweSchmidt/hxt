@@ -97,7 +97,6 @@ initialInputConfig              = XIOIcgf
                                   { xioStrictInput       = False
                                   , xioEncodingErrors    = True
                                   , xioInputEncoding     = ""
-                                  , xioUseCurl           = False
                                   , xioHttpHandler       = dummyHTTPHandler
                                   , xioInputOptions      = []
                                   , xioRedirect          = False
@@ -166,24 +165,35 @@ initialCacheConfig              = XIOCch
 
 dummyHTTPHandler        :: IOSArrow b b
 dummyHTTPHandler        = issueFatal $
-                          "HTTP handler not configured, " ++
-                          "please install package hxt-curl and use 'withCurl' input config option"
+                          unlines $
+                          [ "HTTP handler not configured,"
+                          , "please install package hxt-curl and use 'withCurl' config option"
+                          , "or install package hxt-http and use 'withHTTP' config option"
+                          ]
 
 dummyTagSoupParser      :: IOSArrow b b
 dummyTagSoupParser      =  issueFatal $
-                           "TagSoup parser not configured, " ++
-                           "please install package hxt-tagsoup and use 'withTagSoup' parser config option from this package"
+                           unlines $
+                           [ "TagSoup parser not configured,"
+                           , "please install package hxt-tagsoup"
+                           , " and use 'withTagSoup' parser config option from this package"
+                           ]
 
 dummyRelaxValidator     :: IOSArrow b b
 dummyRelaxValidator     =  issueFatal $
-                           "RelaxNG validator not configured, " ++
-                           "please install package hxt-relaxng and use 'withRelaxNG' config option from this package"
+                           unlines $
+                           [ "RelaxNG validator not configured,"
+                           , "please install package hxt-relaxng"
+                           , " and use 'withRelaxNG' config option from this package"
+                           ]
 
 dummyCacheRead          :: String -> IOSArrow b b
 dummyCacheRead          = const $
                           issueFatal $
-                          "Document cache not configured, " ++
-                          "please install package hxt-cache and use 'withCache' config option"
+                          unlines $
+                          [ "Document cache not configured,"
+                          , "please install package hxt-cache and use 'withCache' config option"
+                          ]
 
 -- ------------------------------------------------------------
 

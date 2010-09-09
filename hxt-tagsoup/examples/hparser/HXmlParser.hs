@@ -30,7 +30,8 @@ where
 
 import Text.XML.HXT.Core                -- import all stuff for parsing, validating, and transforming XML
 import Text.XML.HXT.TagSoup             -- import TagSoup parser
-import Text.XML.HXT.Curl                -- import HTTP handler
+import Text.XML.HXT.Curl                -- import curl HTTP handler
+import Text.XML.HXT.HTTP                -- import native HTTP handler
 
 import System.IO                        -- import the IO and commandline option stuff
 import System.Environment
@@ -83,7 +84,7 @@ parser config src
       traceSource
       >>>
       traceTree
-      >>>             -- TODO vvvvv
+      >>>
       ( ( writeDocument [] $< getSysAttr "output-file" )
         `whenNot`
         ( getSysAttr "no-output" >>> isA (== "1") )
@@ -124,6 +125,8 @@ options
       inputOptions
       ++
       curlOptions
+      ++
+      httpOptions
       ++
       tagSoupOptions
       ++

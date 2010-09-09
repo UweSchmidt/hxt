@@ -255,15 +255,15 @@ readCache' cf           = withLock cf $ readBinaryValue cf
 writeCache              :: (Binary b) => String -> IOStateArrow s b ()
 writeCache f            = writeC $< getSysVar theCacheDir
     where
-    writeC cdir         = traceMsg 1 ("writing cache file " ++ show f)
+    writeC cdir         = traceMsg 1 ("writing cache file " ++ show cf ++ " for document " ++ show f)
                           >>>
                           perform (arrIO0 createDir)
                           >>>
-                          withLock hf (writeBinaryValue hf)
+                          withLock cf (writeBinaryValue cf)
                           >>>
-                          perform (withLock ixf (arrIO0 $ writeIndex ixf f hf))
+                          perform (withLock ixf (arrIO0 $ writeIndex ixf f cf))
         where
-        hf              = dir </> file
+        cf              = dir </> file
         ixf             = cdir </> "index"
         (dir, file)     = cacheFile cdir f
         createDir       = createDirectoryIfMissing True dir
@@ -305,13 +305,13 @@ isInCache' age cdir f   = do
 -- Just (Just t) : cache hit, but cache data out of date: get document conditionally with if-modified-since t
 
 cacheHit                :: Integer -> FilePath -> IO (Maybe (Maybe ClockTime))
-cacheHit age hf         = ( try' $
+cacheHit age cf         = ( try' $
                             do
-                            e <- doesFileExist hf
+                            e <- doesFileExist cf
                             if not e
                               then return Nothing
                               else do
-                                   mt <- getModificationTime hf
+                                   mt <- getModificationTime cf
                                    ct <- getClockTime
                                    return . Just $ if (dt `addToClockTime` mt) >= ct
                                                    then Nothing
@@ -326,10 +326,10 @@ try'                    :: IO a -> IO (Either SomeException a)
 try'                    = try
 
 writeIndex              :: String -> String -> FilePath -> IO ()
-writeIndex ixf f hf     = ( try' $
+writeIndex ixf f cf     = ( try' $
                             do
                             h <- openBinaryFile ixf AppendMode
-                            hPutStrLn h $ show (hf, f)
+                            hPutStrLn h $ show (cf, f)
                             hClose h
                             return ()
                           ) >> return ()

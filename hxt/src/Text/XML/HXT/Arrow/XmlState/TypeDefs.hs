@@ -202,7 +202,6 @@ data XIOSysEnv          = XIOEnv  { xioTraceLevel               :: ! Int
 data XIOInputConfig     = XIOIcgf { xioStrictInput              :: ! Bool
                                   , xioEncodingErrors           :: ! Bool
                                   , xioInputEncoding            ::   String
-                                  , xioUseCurl                  :: ! Bool
                                   , xioHttpHandler              ::   IOSArrow XmlTree XmlTree
                                   , xioInputOptions             :: ! Attributes
                                   , xioRedirect                 :: ! Bool
@@ -303,10 +302,6 @@ theEncodingErrors               = ( xioEncodingErrors,   \ x s -> s { xioEncodin
 
 theInputEncoding                :: Selector XIOSysState String
 theInputEncoding                = ( xioInputEncoding,   \ x s -> s { xioInputEncoding = x} )
-                                  `subS` theInputConfig
-
-theUseCurl                      :: Selector XIOSysState Bool
-theUseCurl                      = ( xioUseCurl,      \ x s -> s { xioUseCurl = x} )
                                   `subS` theInputConfig
 
 theHttpHandler                  :: Selector XIOSysState (IOSArrow XmlTree XmlTree)
