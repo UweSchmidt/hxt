@@ -40,4 +40,6 @@ releaseResource theLocks r
 newResourceTable        :: IO (ResourceTable a)
 newResourceTable        = newMVar M.empty
 
+{-# NOINLINE newResourceTable #-}
+
 -----------------------------------------------------------------------------

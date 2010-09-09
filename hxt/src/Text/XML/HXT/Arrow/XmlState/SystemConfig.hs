@@ -223,8 +223,8 @@ withShowHaskell                 = putS theShowHaskell
 -- First component is the compression function applied after serialization,
 -- second the decompression applied before deserialization.
 
-withBinaryConfig                :: (CompressionFct, DeCompressionFct) -> SysConfig
-withBinaryConfig                = putS (theBinaryCompression `pairS` theBinaryDeCompression)
+withCompression                 :: (CompressionFct, DeCompressionFct) -> SysConfig
+withCompression                 = putS (theBinaryCompression `pairS` theBinaryDeCompression)
 
 -- ------------------------------------------------------------
 

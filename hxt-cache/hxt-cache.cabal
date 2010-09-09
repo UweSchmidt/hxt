@@ -1,9 +1,8 @@
 Name:           hxt-cache
-Version:        0.0.6
+Version:        9.0.0
 Synopsis:       Cache for HXT XML Documents and other binary data
 Description:    Extension for caching XML documents and other binary data in cache directory
-                of the local filesystem. The module exports a version of readDocument with the
-                additional cache functionality.
+                of the local filesystem.
 License:        OtherLicense
 License-file:   LICENSE
 Author:         Uwe Schmidt
@@ -21,6 +20,7 @@ extra-source-files:
 
 library
  exposed-modules:
+  Text.XML.HXT.Cache
   Text.XML.HXT.Arrow.XmlCache
   Control.Concurrent.ResourceTable
 
@@ -35,8 +35,7 @@ library
                 directory  >= 1   && < 2,
                 filepath   >= 1.1 && < 2,
                 haskell98  >= 1   && < 2,
-                hxt        >= 8.5 && < 9,
-                hxt-binary >= 0   && < 1,
+                hxt        >= 9   && < 10,
                 old-locale >= 1   && < 2,
                 old-time   >= 1   && < 2,
                 unix       >= 2.3 && < 3,

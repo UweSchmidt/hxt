@@ -89,7 +89,7 @@ initialSysEnv                   = XIOEnv
                                   , xioParseConfig       = initialParseConfig
                                   , xioOutputConfig      = initialOutputConfig
                                   , xioRelaxConfig       = initialRelaxConfig
-                                  , xioBinaryConfig      = initialBinaryConfig
+                                  , xioCacheConfig       = initialCacheConfig
                                   }
 
 initialInputConfig              :: XIOInputConfig
@@ -151,10 +151,15 @@ initialRelaxConfig              = XIORxc
 				  , xioRelaxValidator           = dummyRelaxValidator
                                   }
 
-initialBinaryConfig              :: XIOBinaryConfig
-initialBinaryConfig              = XIOBin
+initialCacheConfig              :: XIOCacheConfig
+initialCacheConfig              = XIOCch
                                    { xioBinaryCompression       = id
                                    , xioBinaryDeCompression     = id
+                                   , xioWithCache               = False
+                                   , xioCacheDir                = ""
+                                   , xioDocumentAge             = 0
+                                   , xioCache404Err             = False
+                                   , xioCacheRead               = dummyCacheRead
                                    }
 
 -- ------------------------------------------------------------
@@ -173,6 +178,12 @@ dummyRelaxValidator     :: IOSArrow b b
 dummyRelaxValidator     =  issueFatal $
                            "RelaxNG validator not configured, " ++
                            "please install package hxt-relaxng and use 'withRelaxNG' config option from this package"
+
+dummyCacheRead          :: String -> IOSArrow b b
+dummyCacheRead          = const $
+                          issueFatal $
+                          "Document cache not configured, " ++
+                          "please install package hxt-cache and use 'withCache' config option"
 
 -- ------------------------------------------------------------
 

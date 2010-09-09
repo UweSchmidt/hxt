@@ -7,8 +7,7 @@ HXTPACKAGES	= hxt-charproperties \
                   hxt-xpath \
 		  hxt-relaxng \
 		  hxt-xslt \
-
-# TODO : hxt-cache
+		  hxt-cache
 
 #                 hxt-filter                  # not maintained to work with hxt-9
 #                 hxt-binary                  # no longer required, integrated into hxt-9

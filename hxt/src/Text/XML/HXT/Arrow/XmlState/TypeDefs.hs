@@ -196,7 +196,7 @@ data XIOSysEnv          = XIOEnv  { xioTraceLevel               :: ! Int
                                   , xioParseConfig              :: ! XIOParseConfig
                                   , xioOutputConfig             :: ! XIOOutputConfig
                                   , xioRelaxConfig              :: ! XIORelaxConfig
-                                  , xioBinaryConfig             :: ! XIOBinaryConfig
+                                  , xioCacheConfig              :: ! XIOCacheConfig
                                   }
 
 data XIOInputConfig     = XIOIcgf { xioStrictInput              :: ! Bool
@@ -252,8 +252,13 @@ data XIORelaxConfig     = XIORxc  { xioRelaxValidate            :: ! Bool
 				  , xioRelaxValidator           ::   IOSArrow XmlTree XmlTree
                                   }
 
-data XIOBinaryConfig    = XIOBin  { xioBinaryCompression        ::   CompressionFct
+data XIOCacheConfig     = XIOCch  { xioBinaryCompression        ::   CompressionFct
                                   , xioBinaryDeCompression      ::   DeCompressionFct
+                                  , xioWithCache                :: ! Bool
+                                  , xioCacheDir                 :: ! String
+                                  , xioDocumentAge              :: ! Integer
+                                  , xioCache404Err              :: ! Bool
+                                  , xioCacheRead                ::   String -> IOSArrow XmlTree XmlTree
                                   }
 
 type CompressionFct     = ByteString -> ByteString
@@ -514,17 +519,37 @@ theTagSoupParser                = ( xioTagSoupParser,  \ x s -> s { xioTagSoupPa
 
 -- ----------------------------------------
 
-theBinaryConfig                  :: Selector XIOSysState XIOBinaryConfig
-theBinaryConfig                  = ( xioBinaryConfig,      \ x s -> s { xioBinaryConfig = x} )
+theCacheConfig                   :: Selector XIOSysState XIOCacheConfig
+theCacheConfig                   = ( xioCacheConfig, \ x s -> s { xioCacheConfig = x} )
                                    `subS` theSysEnv
 
 theBinaryCompression             :: Selector XIOSysState (ByteString -> ByteString)
-theBinaryCompression             = ( xioBinaryCompression,      \ x s -> s { xioBinaryCompression = x} )
-                                   `subS` theBinaryConfig
+theBinaryCompression             = ( xioBinaryCompression, \ x s -> s { xioBinaryCompression = x} )
+                                   `subS` theCacheConfig
 
 theBinaryDeCompression           :: Selector XIOSysState (ByteString -> ByteString)
-theBinaryDeCompression           = ( xioBinaryDeCompression,      \ x s -> s { xioBinaryDeCompression = x} )
-                                   `subS` theBinaryConfig
+theBinaryDeCompression           = ( xioBinaryDeCompression, \ x s -> s { xioBinaryDeCompression = x} )
+                                   `subS` theCacheConfig
+
+theWithCache                     :: Selector XIOSysState Bool
+theWithCache                     = ( xioWithCache, \ x s -> s { xioWithCache = x} )
+                                   `subS` theCacheConfig
+
+theCacheDir                      :: Selector XIOSysState String
+theCacheDir                      = ( xioCacheDir, \ x s -> s { xioCacheDir = x} )
+                                   `subS` theCacheConfig
+
+theDocumentAge                   :: Selector XIOSysState Integer
+theDocumentAge                   = ( xioDocumentAge, \ x s -> s { xioDocumentAge = x} )
+                                   `subS` theCacheConfig
+
+theCache404Err                   :: Selector XIOSysState Bool
+theCache404Err                   = ( xioCache404Err, \ x s -> s { xioCache404Err = x} )
+                                   `subS` theCacheConfig
+
+theCacheRead                     :: Selector XIOSysState (String -> IOSArrow XmlTree XmlTree)
+theCacheRead                     = ( xioCacheRead, \ x s -> s { xioCacheRead = x} )
+                                   `subS` theCacheConfig
 
 -- ------------------------------------------------------------
 

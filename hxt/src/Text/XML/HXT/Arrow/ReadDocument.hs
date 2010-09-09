@@ -143,7 +143,16 @@ readDocument'   :: SysConfigList -> String -> IOStateArrow s b XmlTree
 readDocument' config src
     = configSysVars config
       >>>
-      getDocumentContents src
+      readD $< getSysVar theWithCache
+    where
+    readD True  = constA undefined		-- just for generalizing the signature to: IOStateArrow s b       XmlTree
+                  >>>                           -- instead of                              IOStateArrow s XmlTree XmlTree
+                  (withoutUserState $< (getSysVar theCacheRead >>^ ($ src)))
+    readD False	= readDocument'' src
+
+readDocument''   :: String -> IOStateArrow s b XmlTree
+readDocument'' src
+    = getDocumentContents src
       >>>
       ( processDoc
         $<<

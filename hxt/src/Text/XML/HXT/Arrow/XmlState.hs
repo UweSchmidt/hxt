@@ -111,6 +111,7 @@ module Text.XML.HXT.Arrow.XmlState
     , withAddDefaultDTD
     , withSysAttr
     , withCanonicalize
+    , withCompression
     , withCheckNamespaces
     , withDefaultBaseURI
     , withEncodingErrors

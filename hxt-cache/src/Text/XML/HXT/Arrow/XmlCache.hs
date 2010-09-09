@@ -17,24 +17,20 @@
 -- ------------------------------------------------------------
 
 module Text.XML.HXT.Arrow.XmlCache
-    ( readDocument
-    , a_cache
-    , a_compress
-    , a_document_age
-    , a_cache_404
+    ( withCache
+    , withoutCache
+    , isInCache
     , lookupCache
+    , readCache
     , writeCache
     , sha1HashValue
     , sha1HashString
-    , CacheConfig(..)
-    , isInCache
-    , isInCache'
     )
 where
 
 import           Control.DeepSeq
 import           Control.Concurrent.ResourceTable
-import           Control.Exception      ( SomeException , try )
+import           Control.Exception              ( SomeException , try )
 
 import           Data.Binary
 import qualified Data.ByteString.Lazy   as B
@@ -47,55 +43,76 @@ import           System.FilePath
 import           System.Directory
 import           System.IO
 import           System.Locale
-import           System.Posix           ( touchFile )
+import           System.Posix                   ( touchFile )
 import           System.Time
 import           System.IO.Unsafe               ( unsafePerformIO )
 
-import           Text.XML.HXT.Arrow     hiding  ( readDocument )
-import qualified Text.XML.HXT.Arrow     -- as   X
+import           Text.XML.HXT.Core
+import           Text.XML.HXT.Arrow.XmlState.TypeDefs
 import           Text.XML.HXT.Arrow.Binary
 
-import           Text.XML.HXT.DOM.Binary
+-- ------------------------------------------------------------
+
+-- | withCache enables reading documents with caching.
+--
+-- When the cache is configured and enabled, every document read and parsed is serialized and stored in binary
+-- form in the cache. When reading the same document again, it is just deserialized, no parsing is performed.
+--
+-- The cache is configured by a path pointing to a directory for storing the docuemnts,
+-- by a maximal time span in second for valid documents. After that time span, the documents are read again
+-- and the cache is updated.
+-- The flag contols, whether documents returning 404 or other errors will be cached.
+-- If set, the cache is even activated for 404 (not found) responses, default is false.
+--
+-- The serialized documents can be compressed, e.g. with bzip, to save disk space and IO time.
+-- The compression can be configured by 'Text.XML.HXT.Arrow.XmlState.withCompression'
+--
+-- example:
+-- >
+-- > import Text.XML.HXT.Core
+-- > import Text.XML.HXT.Cache
+-- > import Codec.Compression.BZip (compress, decompress)
+-- > ...
+-- > readDocument [ withCache "/tmp/cache" 3600 False
+-- >              , withCompression (compress, decompress)
+-- >              , ....
+-- >              ] "http://www.haskell.org/"
+-- >
+-- In the example the document is read and stored in binary serialized form under /tmp/cache.
+-- The cached document remains valid for the next hour.
+-- It is compressed, before written to disk.
+
+withCache               :: String -> Integer -> Bool -> SysConfig
+withCache cachePath documentAge cache404
+                        = putS (theWithCache   `pairS`
+                                theCacheDir    `pairS`
+                                theDocumentAge `pairS`
+                                theCache404Err `pairS`
+                                theCacheRead
+                               ) ((((True, cachePath), documentAge), cache404), readDocCache)
+
+-- | Disable use of cache
+withoutCache            :: SysConfig
+withoutCache            = putS theWithCache False
 
 -- ------------------------------------------------------------
 
-a_cache                 :: String
-a_cache                 = "document-cache"
-
-a_compress              :: String
-a_compress              = "compress"
-
-a_document_age          :: String
-a_document_age          = "document-age"
-
-a_cache_404             :: String
-a_cache_404             = "cache-404"
-
--- ------------------------------------------------------------
-
--- | This readDocument is a wrapper for the 'Text.XML.HXT.Arrow.ReadDocument.readDocument' function.
--- The function is controlled by the options 'a_cache', 'a_compress' and 'a_document_age'.
---
--- * 'a_cache': the document tree of the document read is cached in the directory given by this option,
---              or, if it is read before and it is not out of date, see 'a_document_age', it is read from the
---              cache. The document is stored in binary format (used package: binary).
---
--- - 'a_compress' : controls whether the cache contents is compressed with the bzip2 lib for saving space
---
--- - 'a_document_age': determines the maximum age of the document in seconds. If this time is exceeded, the cache entry
---                     is ignored, the original is re-read and cached again. Default for the document age is 1 day.
---
--- - 'a_cache_404' : If set, cache is activated even for 404 (not found) responses, default is false.
-
-readDocument            :: Attributes -> String -> IOStateArrow s b XmlTree
-readDocument userOptions src
-                        = maybe rd (\ l -> withTraceLevel (read l) rd) $
-                          lookup a_trace userOptions
+readDocCache              :: String -> IOStateArrow s b XmlTree
+readDocCache src          = localSysVar theWithCache
+                            $
+                            configSysVar withoutCache
+                            >>>
+                            ( flip readDocCache' src
+                              $< getSysVar (theCacheDir    `pairS`
+                                            theDocumentAge `pairS`
+                                            theCache404Err
+                                           )
+                            )
     where
-    rd                  = readDocument' userOptions src
+    readDocCache' config src'
+                          = applyA $ arrIO0 (lookupCache' config src')
 
-readDocument'           :: Attributes -> String -> IOStateArrow s b XmlTree
-readDocument' userOptions src
+{-
     | withCache         = applyA $ arrIO0 (lookupCache' cacheConfig userOptions src)
     | otherwise         = Text.XML.HXT.Arrow.readDocument userOptions src
       where
@@ -123,52 +140,35 @@ defaultOptions          = [ ( a_compress,       v_0        )
                           , ( a_document_age,   ""         )
                           , ( a_cache_404,      v_0        )
                           ]
-
+-}
 -- ------------------------------------------------------------
 
 -- | Arrow for checking if a document is in the cache.
 -- The arrow fails if document not there, else the file modification time is returned.
 
-isInCache               :: Attributes -> IOStateArrow s String ClockTime
-isInCache options       = arrIO ( isInCache' $
-                                  defaultCacheConfig
-                                  { c_dir = lookup1 a_cache (addEntries options defaultOptions) }
-                                )
+isInCache               :: IOStateArrow s String ClockTime
+isInCache               = uncurry isInC $< getSysVar (theDocumentAge `pairS` theCacheDir)
+    where
+    isInC age cdir      = arrIO (isInCache' age cdir)
                           >>>
                           arr maybeToList
                           >>>
                           unlistA
 
--- ------------------------------------------------------------
-
-data CacheConfig        = CC
-                          { c_dir               :: FilePath
-                          , c_compress  :: Bool
-                          , c_age               :: Integer
-                          , c_404               :: Bool
-                          }
-
-defaultCacheConfig      :: CacheConfig
-defaultCacheConfig      = CC
-                          { c_dir               = "./.cache"
-                          , c_compress          = False
-                          , c_age               = 0
-                          , c_404               = False
-                          }
-
-lookupCache'            :: CacheConfig -> Attributes -> String -> IO (IOStateArrow s a XmlTree)
-lookupCache' cc os src  = do
-                          ch <- cacheHit cc cf
+lookupCache'            :: ((FilePath, Integer), Bool) -> String -> IO (IOStateArrow s a XmlTree)
+lookupCache' ((dir, age), e404) src
+                        = do
+                          ch <- cacheHit age cf
                           return $
                                  case ch of
                                  Nothing        -> readAndCacheDocument
                                  Just Nothing   -> readDocumentFromCache
                                  Just (Just mt) -> readDocumentCond mt
     where
-    cf                  = uncurry (</>) $ cacheFile cc src
+    cf                  = uncurry (</>) $ cacheFile dir src
 
     is200
-        | c_404 cc      = hasAttrValue transferStatus (`elem` ["200", "404"])
+        | e404          = hasAttrValue transferStatus (`elem` ["200", "404"])
         | otherwise     = hasAttrValue transferStatus (== "200")
 
     is304               = hasAttrValue transferStatus (== "304")
@@ -176,9 +176,9 @@ lookupCache' cc os src  = do
     readDocumentFromCache
                         = traceMsg 1 ("cache hit for " ++ show src ++ " reading " ++ show cf)
                           >>>
-                          ( readCache cc cf
+                          ( readCache' cf
                             >>>
-                            traceMsg 1 "cache read"
+                            traceMsg 2 "cache read"
                           )
                           `orElse`
                           ( clearErrStatus
@@ -190,10 +190,10 @@ lookupCache' cc os src  = do
     readAndCacheDocument
                         = traceMsg 1 ("cache miss, reading original document " ++ show src)
                           >>>
-                          Text.XML.HXT.Arrow.readDocument os src
+                          readDocument [] src
                           >>>
                           perform ( choiceA
-                                    [ is200 :-> ( writeCache cc src >>> none )
+                                    [ is200 :-> ( writeCache src >>> none )
                                     , this  :-> traceMsg 1 "transfer status /= 200, page not cached"
                                     ]
                                   )
@@ -201,7 +201,7 @@ lookupCache' cc os src  = do
     readDocumentCond mt
                         = traceMsg 1 ("cache out of date, read original document if modified " ++ show src)
                           >>>
-                          Text.XML.HXT.Arrow.readDocument (addEntries (condOpts mt) os) src
+                          readDocument [withInputOption "--header" ifModHeader] src
                           >>>
                           choiceA
                           [ is304            :-> ( traceMsg 1 ("document not modified, using cache data from " ++ show cf)
@@ -210,9 +210,12 @@ lookupCache' cc os src  = do
                                                    >>>
                                                    readDocumentFromCache
                                                  )
-                          , is200            :-> ( traceMsg 1 "document read and cache updated"
+                          , is200            :-> ( traceMsg 1 "document read, cache will be updated"
                                                    >>>
-                                                   perform (writeCache cc src)
+                                                   perform (writeCache src
+                                                            >>>
+                                                            traceMsg 2 "cache is updated"
+                                                           )
                                                  )
                           , this             :-> ( traceMsg 1 "document read without caching"
                                                    >>>
@@ -220,42 +223,50 @@ lookupCache' cc os src  = do
                                                  )
                           ]
         where
-        condOpts t      = [("curl--header", "If-Modified-Since: " ++ fmtTime t)]
-                          -- [(a_if_modified_since, fmtTime t)]
+        ifModHeader     = "If-Modified-Since: " ++ fmtTime mt
         fmtTime         = formatCalendarTime defaultTimeLocale rfc822DateFormat . toUTCTime
 
 -- ------------------------------------------------------------
 
-lookupCache             :: (NFData b, Binary b) => CacheConfig -> String -> IOStateArrow s a b
-lookupCache cc f        = isIOA (const $ hit)
-                          `guards`
-                          readCache cc cf
+lookupCache             :: (NFData b, Binary b) => String -> IOStateArrow s a b
+lookupCache f           = uncurry lookupC $< getSysVar (theDocumentAge `pairS` theCacheDir)
     where
-    cf                  = uncurry (</>) $ cacheFile cc f
-    hit                 = do
-                          ch <- cacheHit cc cf
+    lookupC age cdir    = isIOA (const $ hit)
+                          `guards`
+                          readCache' cf
+        where
+        cf              = uncurry (</>) $ cacheFile cdir f
+        hit             = do
+                          ch <- cacheHit age cf
                           return $ case ch of
                                    Just Nothing -> True
                                    _            -> False
 
 -- ------------------------------------------------------------
 
-readCache               :: (NFData c, Binary c) => CacheConfig -> String -> IOStateArrow s b c
-readCache cc cf         = withLock cf $ readBinaryValue (c_compress cc) cf
+readCache               :: (NFData c, Binary c) => String -> IOStateArrow s b c
+readCache f             = readC $< getSysVar theCacheDir
+    where
+    readC cdir          = readCache' $ uncurry (</>) $ cacheFile cdir f
 
-writeCache              :: (Binary b) => CacheConfig -> String -> IOStateArrow s b ()
-writeCache cc f         = traceMsg 1 ("writing cache file " ++ show f)
+readCache'              :: (NFData c, Binary c) => String -> IOStateArrow s b c
+readCache' cf           = withLock cf $ readBinaryValue cf
+
+writeCache              :: (Binary b) => String -> IOStateArrow s b ()
+writeCache f            = writeC $< getSysVar theCacheDir
+    where
+    writeC cdir         = traceMsg 1 ("writing cache file " ++ show f)
                           >>>
                           perform (arrIO0 createDir)
                           >>>
-                          withLock hf (writeBinaryValue (c_compress cc) hf)
+                          withLock hf (writeBinaryValue hf)
                           >>>
                           perform (withLock ixf (arrIO0 $ writeIndex ixf f hf))
-    where
-    hf                  = dir </> file
-    ixf                 = c_dir cc </> "index"
-    (dir, file)         = cacheFile cc f
-    createDir           = createDirectoryIfMissing True dir
+        where
+        hf              = dir </> file
+        ixf             = cdir </> "index"
+        (dir, file)     = cacheFile cdir f
+        createDir       = createDirectoryIfMissing True dir
 
 -- ------------------------------------------------------------
 
@@ -268,23 +279,22 @@ remFile f               = ( try' $ do ex <- doesFileExist f
 
 -- ------------------------------------------------------------
 
-cacheFile               :: CacheConfig -> String -> (FilePath, FilePath)
-cacheFile cc f          = (c_dir cc </> fd, fn)
+cacheFile               :: FilePath -> String -> (FilePath, FilePath)
+cacheFile dir f          = (dir </> fd, fn)
     where
     (fd, fn)            = splitAt 2 . sha1HashString $ f
 
 -- ------------------------------------------------------------
 
-isInCache'              :: CacheConfig -> String -> IO (Maybe ClockTime)
-isInCache' cc f         = do
-                          h <- cacheHit cc' cf
+isInCache'              :: Integer -> FilePath -> String -> IO (Maybe ClockTime)
+isInCache' age cdir f   = do
+                          h <- cacheHit age cf
                           return $
                                  case h of
                                  Just (Just t)  -> Just t
                                  _              -> Nothing
     where
-    cf                  = uncurry (</>) $ cacheFile cc f
-    cc'                 = cc { c_age = 0 }
+    cf                  = uncurry (</>) $ cacheFile cdir f
 
 -- ------------------------------------------------------------
 
@@ -294,8 +304,8 @@ isInCache' cc f         = do
 -- Just Nothing  : cache hit, cache data valid: use cache data
 -- Just (Just t) : cache hit, but cache data out of date: get document conditionally with if-modified-since t
 
-cacheHit                :: CacheConfig -> FilePath -> IO (Maybe (Maybe ClockTime))
-cacheHit cc hf          = ( try' $
+cacheHit                :: Integer -> FilePath -> IO (Maybe (Maybe ClockTime))
+cacheHit age hf         = ( try' $
                             do
                             e <- doesFileExist hf
                             if not e
@@ -308,7 +318,6 @@ cacheHit cc hf          = ( try' $
                                                    else Just mt
                           ) >>= return . either (const Nothing) id
     where
-    age                 = c_age cc
     seconds             = fromInteger $ age `mod` 60
     minutes             = fromInteger $ age `div` 60
     dt                  = normalizeTimeDiff $ TimeDiff 0 0 0 0 minutes seconds 0
