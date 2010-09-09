@@ -58,7 +58,7 @@ exitProg False  = exitWith ExitSuccess
 
 parser  :: SysConfigList -> String -> IOSArrow b Int
 parser config src
-    = configSysParams config                            -- set all global config options
+    = configSysVars config                            -- set all global config options
       >>>
       readDocument [withParseHTML yes] src              -- use HTML parser
       >>>

@@ -32,9 +32,9 @@ main
 
 relax :: SysConfigList -> String -> String -> IOSArrow b Int
 relax al xml schema
-    = configSysParams (al ++ [withRelaxNG schema])
+    = configSysVars al
       >>>
-      readDocument [] xml
+      readDocument [withRelaxNG schema] xml
       >>>
       writeDocument [] "-"
       >>>

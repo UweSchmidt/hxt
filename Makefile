@@ -6,9 +6,13 @@ HXTPACKAGES	= hxt-charproperties \
                   hxt-tagsoup \
                   hxt-xpath \
 		  hxt-relaxng \
+		  hxt-xslt \
 
-# TODO : hxt-xslt hxt-cache
-# old packages: hxt-filter hxt-binary janus/janus-library
+# TODO : hxt-cache
+
+#                 hxt-filter                  # not maintained to work with hxt-9
+#                 hxt-binary                  # no longer required, integrated into hxt-9
+#                 janus/janus-library         # currently not further maintained
 
 all	:
 	$(foreach i,$(HXTPACKAGES), ( cd $i && cabal configure && cabal build && cabal install && cabal sdist; ); )

@@ -34,16 +34,9 @@ module Text.XML.HXT.Arrow.XmlState
       -- * Run IO State arrows
       runX
     ,
-      -- * Global System State Access
-      getSysParam
-    , setSysParam
-    , chgSysParam
-    , configSysParam
-    , configSysParams
-    , localSysParam
-    , incrSysParam
+      -- * Global System State Configuration and Access
+      configSysVars
     , getConfigAttr
-
     , setSysAttr
     , unsetSysAttr
     , getSysAttr
@@ -52,11 +45,7 @@ module Text.XML.HXT.Arrow.XmlState
     , setSysAttrInt
     , getSysAttrInt
     ,
-      -- * RelaxNG Handling
-      setRelaxParam
-    , getRelaxParam
-
-    , -- * Error Handling
+      -- * Error Handling
       clearErrStatus
     , setErrStatus
     , getErrStatus

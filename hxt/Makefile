@@ -1,5 +1,3 @@
-# $Id: Makefile,v 1.93 2006/11/24 07:41:37 hxml Exp $
-
 include Version.mk
 
 HXT_HOME	= .

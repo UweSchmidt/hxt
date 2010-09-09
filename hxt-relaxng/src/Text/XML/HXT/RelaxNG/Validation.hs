@@ -141,7 +141,7 @@ validateDocWithRelax :: IOSArrow XmlTree XmlTree -> SysConfigList -> String -> I
 validateDocWithRelax theSchema config doc
     = localSysEnv
       $
-      configSysParams config
+      configSysVars config
       >>>
       ( if null doc
         then root [] []

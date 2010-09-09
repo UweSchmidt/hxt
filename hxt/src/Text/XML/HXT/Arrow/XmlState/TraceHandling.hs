@@ -45,22 +45,22 @@ import Text.XML.HXT.Arrow.Edit          ( addHeadlineToXmlDoc
 -- | set the global trace level
 
 setTraceLevel           :: Int -> IOStateArrow s b b
-setTraceLevel l         = configSysParam $ withTrace l
+setTraceLevel l         = configSysVar $ withTrace l
 
 -- | read the global trace level
 
 getTraceLevel           :: IOStateArrow s b Int
-getTraceLevel           = getSysParam theTraceLevel
+getTraceLevel           = getSysVar theTraceLevel
 
 -- | set the global trace command. This command does the trace output
 
 setTraceCmd             :: (Int -> String -> IO ()) -> IOStateArrow s b b
-setTraceCmd c           = configSysParam $ putS theTraceCmd c
+setTraceCmd c           = configSysVar $ putS theTraceCmd c
 
 -- | acces the command for trace output
 
 getTraceCmd             :: IOStateArrow a b (Int -> String -> IO ())
-getTraceCmd             = getSysParam theTraceCmd
+getTraceCmd             = getSysVar theTraceCmd
 
 -- | run an arrow with a given trace level, the old trace level is restored after the arrow execution
 

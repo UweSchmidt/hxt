@@ -66,7 +66,7 @@ exitProg False  = exitWith ExitSuccess
 
 parser  :: SysConfigList -> String -> IOSArrow b Int
 parser config src
-    = configSysParams config                            -- set all global config options, the output file and the
+    = configSysVars config                            -- set all global config options, the output file and the
       >>>                                               -- other user options are stored as key-value pairs in the stystem state
       readDocument [ withCurl []
 		   ] src                                -- no more special read options needed

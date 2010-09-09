@@ -101,7 +101,7 @@ getStringContents
 
 getFileContents         :: IOStateArrow s XmlTree XmlTree
 getFileContents
-    = applyA ( ( getSysParam theStrictInput
+    = applyA ( ( getSysVar theStrictInput
                  &&&
                  ( getAttrValue transferURI
                    >>>
@@ -123,7 +123,7 @@ getFileContents
 
 getStdinContents                :: IOStateArrow s XmlTree XmlTree
 getStdinContents
-    = applyA (  getSysParam theStrictInput
+    = applyA (  getSysVar theStrictInput
                 >>>
                 arrIO FILE.getStdinCont
                >>>
@@ -163,7 +163,7 @@ addTxtContent c
 
 getHttpContents         :: IOStateArrow s XmlTree XmlTree
 getHttpContents
-    = withoutUserState $ applyA $ getSysParam theHttpHandler
+    = withoutUserState $ applyA $ getSysVar theHttpHandler
 
 getURIContents          :: IOStateArrow s XmlTree XmlTree
 getURIContents
@@ -310,7 +310,7 @@ getEncoding
              arr guessEncoding
            , getAttrValue transferEncoding      -- 2. guess: take the transfer encoding
            , getAttrValue a_encoding            -- 3. guess: take encoding parameter in root node
-           , getSysParam  theInputEncoding      -- 4. guess: take encoding parameter in global state
+           , getSysVar  theInputEncoding        -- 4. guess: take encoding parameter in global state
            , constA utf8                        -- default : utf8
            ]
       >. (head . filter (not . null))           -- make the filter deterministic: take 1. entry from list of guesses
@@ -319,7 +319,7 @@ getTextEncoding :: IOStateArrow s XmlTree String
 getTextEncoding
     = catA [ getAttrValue transferEncoding      -- 1. guess: take the transfer encoding
            , getAttrValue a_encoding            -- 2. guess: take encoding parameter in root node
-           , getSysParam  theInputEncoding      -- 3. guess: take encoding parameter in global state
+           , getSysVar theInputEncoding         -- 3. guess: take encoding parameter in global state
            , constA isoLatin1                   -- default : no encoding
            ]
       >. (head . filter (not . null))           -- make the filter deterministic: take 1. entry from list of guesses
@@ -340,7 +340,7 @@ decodeDocument
         found df
             = traceMsg 2 ("decodeDocument: encoding is " ++ show enc)
               >>>
-              ( decodeText df $< getSysParam theEncodingErrors )
+              ( decodeText df $< getSysVar theEncodingErrors )
               >>>
               addAttr transferEncoding enc
 

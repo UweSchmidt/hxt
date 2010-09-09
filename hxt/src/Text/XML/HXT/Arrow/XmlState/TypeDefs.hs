@@ -528,25 +528,25 @@ theBinaryDeCompression           = ( xioBinaryDeCompression,      \ x s -> s { x
 
 -- ------------------------------------------------------------
 
-getSysParam                     :: Selector XIOSysState c -> IOStateArrow s b c
-getSysParam sel                 = IOSLA $ \ s _x ->
+getSysVar                       :: Selector XIOSysState c -> IOStateArrow s b c
+getSysVar sel                   = IOSLA $ \ s _x ->
                                   return (s, (:[]) . getS (sel `subS` theSysState) $ s)
 
-setSysParam                     :: Selector XIOSysState c -> IOStateArrow s c c
-setSysParam sel                 = (\ v -> configSysParam $ putS sel v) $< this
+setSysVar                       :: Selector XIOSysState c -> IOStateArrow s c c
+setSysVar sel                   = (\ v -> configSysVar $ putS sel v) $< this
 
-chgSysParam                    :: Selector XIOSysState c -> (b -> c -> c) -> IOStateArrow s b b
-chgSysParam sel op             = (\ v -> configSysParam $ chgS sel (op v)) $< this
+chgSysVar                       :: Selector XIOSysState c -> (b -> c -> c) -> IOStateArrow s b b
+chgSysVar sel op                = (\ v -> configSysVar $ chgS sel (op v)) $< this
 
-configSysParam                  :: SysConfig -> IOStateArrow s c c
-configSysParam cf               = IOSLA $ \ s v ->
+configSysVar                    :: SysConfig -> IOStateArrow s c c
+configSysVar cf                 = IOSLA $ \ s v ->
                                   return (chgS theSysState cf s, [v])
 
-configSysParams                 :: SysConfigList -> IOStateArrow s c c
-configSysParams cfs             = configSysParam $ foldr (>>>) id $ cfs
+configSysVars                   :: SysConfigList -> IOStateArrow s c c
+configSysVars cfs               = configSysVar $ foldr (>>>) id $ cfs
 
-localSysParam                   :: Selector XIOSysState c -> IOStateArrow s a b -> IOStateArrow s a b
-localSysParam sel f             = IOSLA $ \ s0 v ->
+localSysVar                     :: Selector XIOSysState c -> IOStateArrow s a b -> IOStateArrow s a b
+localSysVar sel f               = IOSLA $ \ s0 v ->
                                   let sel' = sel `subS` theSysState in
                                   let c0   = getS sel' s0 in
                                   do
@@ -554,14 +554,14 @@ localSysParam sel f             = IOSLA $ \ s0 v ->
                                   return (putS sel' c0 s1, res)
 
 localSysEnv                     :: IOStateArrow s a b -> IOStateArrow s a b
-localSysEnv                     = localSysParam theSysEnv
+localSysEnv                     = localSysVar theSysEnv
 
-incrSysParam                    :: Selector XIOSysState Int -> IOStateArrow s a Int
-incrSysParam cnt                = getSysParam cnt
+incrSysVar                      :: Selector XIOSysState Int -> IOStateArrow s a Int
+incrSysVar cnt                  = getSysVar cnt
                                   >>>
                                   arr (+1)
                                   >>>
-                                  setSysParam cnt
+                                  setSysVar cnt
                                   >>>
                                   arr (\ x -> x - 1)
 
@@ -570,24 +570,24 @@ incrSysParam cnt                = getSysParam cnt
 -- | store a string in global state under a given attribute name
 
 setSysAttr              :: String -> IOStateArrow s String String
-setSysAttr n            = chgSysParam theAttrList (addEntry n)
+setSysAttr n            = chgSysVar theAttrList (addEntry n)
 
 -- | remove an entry in global state, arrow input remains unchanged
 
 unsetSysAttr            :: String -> IOStateArrow s b b
-unsetSysAttr n            = configSysParam $ chgS theAttrList (delEntry n)
+unsetSysAttr n            = configSysVar $ chgS theAttrList (delEntry n)
 
 -- | read an attribute value from global state
 
 getSysAttr                :: String -> IOStateArrow s b String
-getSysAttr n              = getSysParam theAttrList
+getSysAttr n              = getSysVar theAttrList
                           >>^
                           lookup1 n
 
 -- | read all attributes from global state
 
 getAllSysAttrs            :: IOStateArrow s b Attributes
-getAllSysAttrs            = getSysParam theAttrList
+getAllSysAttrs            = getSysVar theAttrList
 
 
 setSysAttrString        :: String -> String -> IOStateArrow s b b
@@ -609,16 +609,6 @@ getSysAttrInt           :: Int -> String -> IOStateArrow s b Int
 getSysAttrInt def n     = getSysAttr n
                           >>^
                           toInt def
-
-setRelaxParam           :: String -> IOStateArrow s XmlTrees XmlTree
-setRelaxParam n         = chgSysParam theRelaxAttrList (addEntry n)
-                          >>>
-                          arrL id
-
-getRelaxParam           :: String -> IOStateArrow s b XmlTree
-getRelaxParam n         = getSysParam theRelaxAttrList
-                          >>>
-                          arrL (lookup1 n)
 
 toInt                   :: Int -> String -> Int
 toInt def s

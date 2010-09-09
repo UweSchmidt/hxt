@@ -121,7 +121,7 @@ error code is:
 > main        :: IO ()
 > main
 >     = do
->       [rc] <- runX ( configSysParams [ withTrace 1 ]
+>       [rc] <- runX ( configSysVars [ withTrace 1 ]
                        >>>
                        readDocument    [ withTrace    2
                                        , withValidate no
@@ -142,15 +142,15 @@ writeDocument   	:: SysConfigList -> String -> IOStateArrow s XmlTree XmlTree
 writeDocument config dst
     = localSysEnv
       $
-      configSysParams config
+      configSysVars config
       >>>
-      perform ( (flip writeDocument') dst $< getSysParam theTextMode )
+      perform ( (flip writeDocument') dst $< getSysVar theTextMode )
 
 writeDocument'  	:: Bool -> String -> IOStateArrow s XmlTree XmlTree
 writeDocument' textMode dst
     = ( traceMsg 1 ("writeDocument: destination is " ++ show dst)
         >>>
-        ( (flip prepareContents) encodeDocument $< getSysParam idS )
+        ( (flip prepareContents) encodeDocument $< getSysVar idS )
         >>>
         putXmlDocument textMode dst
         >>>

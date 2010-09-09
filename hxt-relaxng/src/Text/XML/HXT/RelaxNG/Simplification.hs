@@ -987,7 +987,7 @@ simplificationStep5
         ( renameDefines $<<
           ( getPatternNamesInGrammar "define"
             >>>
-            (createUniqueNames $< incrSysParam theRelaxDefineId)
+            (createUniqueNames $< incrSysVar theRelaxDefineId)
             &&&
             constA []
           )
@@ -1339,7 +1339,7 @@ simplificationStep6 =
         [ isRngElement
           :-> ( ifP (const parentIsDefine)
                 (processElements False)
-                ( processElements' $<< ( (incrSysParam theRelaxDefineId >>^ show)
+                ( processElements' $<< ( (incrSysVar theRelaxDefineId >>^ show)
                                          &&&
                                          getDefineName
                                        )
@@ -2076,9 +2076,9 @@ representatives _
 
 resetStates :: IOSArrow XmlTree XmlTree
 resetStates
-    = ( perform (constA 0  >>> setSysParam theRelaxDefineId)
+    = ( perform (constA 0  >>> setSysVar theRelaxDefineId)
         >>>
-        perform (constA 0  >>> setSysParam theRelaxNoOfErrors)
+        perform (constA 0  >>> setSysVar theRelaxNoOfErrors)
         >>>
         perform (constA [] >>> setRelaxParam "elementTable" )
       )
@@ -2180,7 +2180,7 @@ wrapPattern2Two name
 
 mkRelaxError :: String -> String -> IOSArrow n XmlTree
 mkRelaxError changesStr errStr
-  = perform (constA 1 >>> chgSysParam theRelaxNoOfErrors (+))
+  = perform (constA 1 >>> chgSysVar theRelaxNoOfErrors (+))
     >>>
     mkRngRelaxError none none
     >>>
@@ -2195,14 +2195,14 @@ collectErrors :: IOSArrow XmlTree XmlTree
 collectErrors
   = none
     `when`
-    ( (getSysParam theRelaxCollectErrors >>> isA not)
+    ( (getSysVar theRelaxCollectErrors >>> isA not)
       >>>
-      (getSysParam theRelaxNoOfErrors    >>> isA (>0))
+      (getSysVar theRelaxNoOfErrors    >>> isA (>0))
     )
 
 -- | Returns the list of simplification errors or 'none'
 getErrors :: IOSArrow XmlTree XmlTree
-getErrors = (getSysParam theRelaxNoOfErrors >>> isA (>0))
+getErrors = (getSysVar theRelaxNoOfErrors >>> isA (>0))
             `guards`
             (root [] [multi isRngRelaxError])
 
@@ -2301,5 +2301,17 @@ createSimpleForm checkRestrictions validateExternalRef validateInclude
               removeAttr a_relaxSimplificationChanges
               >>>
               removeAttr defineOrigName
+
+-- -------------------------------------------------------------------------------------------------------
+
+setRelaxParam           :: String -> IOStateArrow s XmlTrees XmlTree
+setRelaxParam n         = chgSysVar theRelaxAttrList (addEntry n)
+                          >>>
+                          arrL id
+
+getRelaxParam           :: String -> IOStateArrow s b XmlTree
+getRelaxParam n         = getSysVar theRelaxAttrList
+                          >>>
+                          arrL (lookup1 n)
 
 -- -------------------------------------------------------------------------------------------------------

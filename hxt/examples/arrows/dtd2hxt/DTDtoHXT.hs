@@ -78,7 +78,7 @@ nsDefault       = "default"
 
 dtd2hxt :: SysConfigList -> String -> IOSArrow b Int
 dtd2hxt config src
-    = configSysParams config                            -- set all global config options
+    = configSysVars config                            -- set all global config options
       >>>
       readDocument [withCanonicalize no
                    ,withCurl []

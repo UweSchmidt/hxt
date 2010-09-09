@@ -34,7 +34,7 @@ import Text.XML.HXT.Arrow.XmlState.TypeDefs
 -- This table is used when reading loacl files, (file: protocol) to determine the mime type
 
 setMimeTypeTable                :: MimeTypeTable -> IOStateArrow s b b
-setMimeTypeTable mtt            = configSysParam $ putS (theMimeTypes `pairS` theMimeTypeFile) (mtt, "")
+setMimeTypeTable mtt            = configSysVar $ putS (theMimeTypes `pairS` theMimeTypeFile) (mtt, "")
 
 -- | set the table mapping of file extensions to mime types by an external config file
 --
@@ -45,12 +45,12 @@ setMimeTypeTable mtt            = configSysParam $ putS (theMimeTypes `pairS` th
 -- of the IOStateArrow
 
 setMimeTypeTableFromFile        :: FilePath -> IOStateArrow s b b
-setMimeTypeTableFromFile file   = configSysParam $ putS theMimeTypeFile file
+setMimeTypeTableFromFile file   = configSysVar $ putS theMimeTypeFile file
 
 -- | read the system mimetype table
 
 getMimeTypeTable                :: IOStateArrow s b MimeTypeTable
-getMimeTypeTable                = getMime $< getSysParam (theMimeTypes `pairS` theMimeTypeFile)
+getMimeTypeTable                = getMime $< getSysVar (theMimeTypes `pairS` theMimeTypeFile)
     where
     getMime (mtt, "")           = constA mtt
     getMime (_,  mtf)           = perform (setMimeTypeTable $< arrIO0 ( readMimeTypeTable mtf))

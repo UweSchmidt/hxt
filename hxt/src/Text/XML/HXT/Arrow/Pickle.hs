@@ -128,7 +128,7 @@ xpickleDocument         :: PU a -> SysConfigList -> String -> IOStateArrow s a X
 xpickleDocument xp config dest
     = localSysEnv
       $
-      configSysParams config
+      configSysVars config
       >>>
       xpickleVal xp
       >>>

@@ -36,7 +36,7 @@ main
 
 application	:: SysConfigList -> String -> String -> String -> IOSArrow b Int
 application config fct src dst
-    = configSysParams config                            -- set all global config options
+    = configSysVars config                            -- set all global config options
       >>>
       readDocument [] src
       >>>

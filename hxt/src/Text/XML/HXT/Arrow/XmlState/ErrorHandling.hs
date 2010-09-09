@@ -54,12 +54,12 @@ import System.IO                        ( hPutStrLn
 -- ------------------------------------------------------------
 
 changeErrorStatus       :: (Int -> Int -> Int) -> IOStateArrow s Int Int
-changeErrorStatus f     = chgSysParam theErrorStatus f
+changeErrorStatus f     = chgSysVar theErrorStatus f
 
 -- | reset global error variable
 
 clearErrStatus          :: IOStateArrow s b b
-clearErrStatus          = configSysParam $ putS theErrorStatus 0
+clearErrStatus          = configSysVar $ putS theErrorStatus 0
 
 -- | set global error variable
 
@@ -69,7 +69,7 @@ setErrStatus            = changeErrorStatus max
 -- | read current global error status
 
 getErrStatus            :: IOStateArrow s XmlTree Int
-getErrStatus            = getSysParam theErrorStatus
+getErrStatus            = getSysVar theErrorStatus
 
 -- ------------------------------------------------------------
 
@@ -82,7 +82,7 @@ setErrMsgStatus         = perform
 -- | set the error message handler and the flag for collecting the errors
 
 setErrorMsgHandler      :: Bool -> (String -> IO ()) -> IOStateArrow s b b
-setErrorMsgHandler c f  = configSysParam $ putS (theErrorMsgCollect `pairS` theErrorMsgHandler) (c, f)
+setErrorMsgHandler c f  = configSysVar $ putS (theErrorMsgCollect `pairS` theErrorMsgHandler) (c, f)
 
 -- | error message handler for output to stderr
 
@@ -92,7 +92,7 @@ sysErrorMsg             = perform
                             >>>
                             arr formatErrorMsg
                             >>>
-                            getSysParam theErrorMsgHandler &&& this
+                            getSysVar theErrorMsgHandler &&& this
                             >>>
                             arrIO (\ (h, msg) -> h msg)
                           )
@@ -136,14 +136,14 @@ errorMsgIgnore          = setErrorMsgHandler False (const $ return ())
 -- this arrow reads the stored messages and clears the error message store
 
 getErrorMessages        :: IOStateArrow s b XmlTree
-getErrorMessages        = getSysParam theErrorMsgList
+getErrorMessages        = getSysVar theErrorMsgList
                           >>>
-                          configSysParam (putS theErrorMsgList [])
+                          configSysVar (putS theErrorMsgList [])
                           >>>
                           arrL reverse
 
 addToErrorMsgList       :: IOStateArrow s XmlTree XmlTree
-addToErrorMsgList       = chgSysParam
+addToErrorMsgList       = chgSysVar
                           ( theErrorMsgCollect `pairS` theErrorMsgList )
                           ( \ e (cs, es) -> (cs, if cs then e : es else es) )
 

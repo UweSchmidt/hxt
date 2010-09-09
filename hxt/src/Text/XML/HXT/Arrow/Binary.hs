@@ -37,7 +37,7 @@ import           Text.XML.HXT.Arrow.XmlState.TypeDefs
 -- ------------------------------------------------------------
 
 readBinaryValue         :: (NFData a, Binary a) => String -> IOStateArrow s b a
-readBinaryValue file    = flip decodeBinaryValue file $< getSysParam theBinaryDeCompression
+readBinaryValue file    = flip decodeBinaryValue file $< getSysVar theBinaryDeCompression
 
 -- | Read a serialied value from a file, optionally decompress it and decode the value
 -- In case of an error, the error message is issued and the arrow fails
@@ -57,7 +57,7 @@ decodeBinaryValue decompress file
 -- In case of an error, the error message is issued and the arrow fails
 
 writeBinaryValue        :: (Binary a) => String -> IOStateArrow s a ()
-writeBinaryValue file   = flip encodeBinaryValue file $< getSysParam theBinaryCompression
+writeBinaryValue file   = flip encodeBinaryValue file $< getSysVar theBinaryCompression
 
 encodeBinaryValue        :: (Binary a) => CompressionFct -> String -> IOStateArrow s a ()
 encodeBinaryValue compress file

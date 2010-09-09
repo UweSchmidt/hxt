@@ -49,16 +49,14 @@ getLibCurlContents
       $<<
       ( getAttrValue transferURI
         &&&
-        getSysParam (theInputOptions `pairS`
-                     (theRedirect `pairS`
-                      (theProxy `pairS`
-                       theStrictInput
-                      )
-                     )
-                    )
+        getSysVar (theInputOptions `pairS`
+                   theRedirect     `pairS`
+                   theProxy        `pairS`
+                   theStrictInput
+                  )
       )
       where
-      getC uri (options, (redirect, (proxy, strictInput)))
+      getC uri (((options, redirect), proxy), strictInput)
           = applyA ( ( traceMsg 2 ( "get HTTP via libcurl, uri=" ++ show uri ++ " options=" ++ show options )
                        >>>
                        arrIO0 ( LibCURL.getCont

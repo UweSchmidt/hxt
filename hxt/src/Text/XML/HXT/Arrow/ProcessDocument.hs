@@ -134,9 +134,9 @@ parseHtmlDocument       :: IOStateArrow s XmlTree XmlTree
 parseHtmlDocument
     = ( perform ( getAttrValue a_source >>> traceValue 1 (("parseHtmlDoc: parse HTML document " ++) . show) )
         >>>
-        ( parseHtml $< getSysParam theTagSoup )
+        ( parseHtml $< getSysVar theTagSoup )
         >>>
-        ( removeWarnings $< getSysParam (theWarnings `pairS` theTagSoup )
+        ( removeWarnings $< getSysVar (theWarnings `pairS` theTagSoup )
         )
         >>>
         setDocumentStatusFromSystemState "parse HTML document"
@@ -153,7 +153,7 @@ parseHtmlDocument
       `when` documentStatusOk
     where
     parseHtml withTagSoup'
-        | withTagSoup'  = withoutUserState $< getSysParam theTagSoupParser -- withoutUserState parseHtmlTagSoup
+        | withTagSoup'  = withoutUserState $< getSysVar theTagSoupParser -- withoutUserState parseHtmlTagSoup
 
         | otherwise     = traceMsg 1 ("parse document with parsec HTML parser")
                           >>>

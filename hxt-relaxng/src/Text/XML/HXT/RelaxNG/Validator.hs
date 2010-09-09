@@ -62,7 +62,7 @@ validateDocumentWithRelaxSchema config relaxSchema
         $
         localSysEnv
         $
-        configSysParams config
+        configSysVars config
         >>>
         ( ( validate' $< validSchema )    -- try to validate, only possible if schema is o.k.
           `orElse`
@@ -90,13 +90,12 @@ validateDocumentWithRelaxSchema config relaxSchema
           >>>
           traceMsg 2 "create simplified schema"
           >>>
-          ( (\ (b1, (b2, b3)) -> createSimpleForm b1 b2 b3)
+          ( (\ ((b1, b2), b3) -> createSimpleForm b1 b2 b3)
             $<
-            getSysParam (theRelaxCheckRestr `pairS`
-                         (theRelaxValidateExtRef `pairS`
-                          theRelaxValidateInclude
-                         )
-                        )
+            getSysVar (theRelaxCheckRestr     `pairS`
+                       theRelaxValidateExtRef `pairS`
+                       theRelaxValidateInclude
+                      )
           )
           >>>
           traceDoc "simplified schema"

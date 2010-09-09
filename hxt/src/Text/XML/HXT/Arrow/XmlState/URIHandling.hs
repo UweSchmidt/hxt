@@ -56,14 +56,14 @@ import System.Directory                 ( getCurrentDirectory )
 -- the input must be an absolute URI
 
 setBaseURI              :: IOStateArrow s String String
-setBaseURI              = setSysParam theBaseURI
+setBaseURI              = setSysVar theBaseURI
                           >>>
                           traceValue 2 (("setBaseURI: new base URI is " ++) . show)
 
 -- | read the base URI from the globale state
 
 getBaseURI              :: IOStateArrow s b String
-getBaseURI              = getSysParam theBaseURI
+getBaseURI              = getSysVar theBaseURI
                           >>>
                           ( ( getDefaultBaseURI
                               >>>
@@ -93,7 +93,7 @@ setDefaultBaseURI base  = ( if null base
                             else constA base
                           )
                           >>>
-                          setSysParam theDefaultBaseURI
+                          setSysVar theDefaultBaseURI
                           >>>
                           traceValue 2 (("setDefaultBaseURI: new default base URI is " ++) . show)
     where
@@ -121,7 +121,7 @@ setDefaultBaseURI base  = ( if null base
 -- | get the default base URI
 
 getDefaultBaseURI       :: IOStateArrow s b String
-getDefaultBaseURI       = getSysParam theDefaultBaseURI            -- read default uri in system  state
+getDefaultBaseURI       = getSysVar theDefaultBaseURI            -- read default uri in system  state
                           >>>
                           ( ( setDefaultBaseURI ""                  -- set the default uri in system state
                               >>>
@@ -135,7 +135,7 @@ getDefaultBaseURI       = getSysParam theDefaultBaseURI            -- read defau
 -- | remember base uri, run an arrow and restore the base URI, used with external entity substitution
 
 runInLocalURIContext    :: IOStateArrow s b c -> IOStateArrow s b c
-runInLocalURIContext f  = localSysParam theBaseURI f
+runInLocalURIContext f  = localSysVar theBaseURI f
 
 -- ----------------------------------------------------------
 

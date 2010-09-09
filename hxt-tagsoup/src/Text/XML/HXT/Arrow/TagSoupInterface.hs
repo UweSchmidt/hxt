@@ -43,18 +43,15 @@ withTagSoup                     = putS (theTagSoup `pairS` theTagSoupParser) (Tr
 
 parseHtmlTagSoup                :: IOSArrow XmlTree XmlTree
 parseHtmlTagSoup                = parse
-                                  $< getSysParam
+                                  $< getSysVar
                                      (theCheckNamespaces `pairS`
-                                      (theWarnings `pairS`
-                                       (thePreserveComment `pairS`
-                                        (theRemoveWS `pairS`
-                                         theLowerCaseNames
-                                        )
-                                       )
-                                      )
+                                      theWarnings `pairS`
+                                      thePreserveComment `pairS`
+                                      theRemoveWS `pairS`
+                                      theLowerCaseNames
                                      )
     where
-    parse (withNamespaces', (withWarnings', (preserveCmt', (removeWS', lowerCaseNames'))))
+    parse ((((withNamespaces', withWarnings'), preserveCmt'), removeWS'), lowerCaseNames')
                                 = traceMsg 1 ("parse document with tagsoup " ++
                                               ( if lowerCaseNames' then "HT" else "X" ) ++ "ML parser"
                                              )

@@ -40,7 +40,7 @@ import Control.Exception
 import Control.Arrow.ListArrows
 
 import Text.XML.HXT.DOM.Interface
-import Text.XML.HXT.Arrow.XmlIOStateArrow
+import Text.XML.HXT.Arrow.XmlState
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.ReadDocument
 
@@ -96,14 +96,14 @@ prepareXSLTDoc
 
 -- | read an XSLT stylesheet
 
-readXSLTDoc     :: Attributes -> IOSArrow String XmlTree
+readXSLTDoc     :: SysConfigList -> IOSArrow String XmlTree
 readXSLTDoc options
     = readFromDocument (options ++ defaultOptions)
     where
     defaultOptions
-        = [ (a_check_namespaces, v_1)
-          , (a_validate, v_0)
-          , (a_preserve_comment, v_0)
+        = [ withCheckNamespaces yes
+          , withValidate        no
+          , withPreserveComment no
           ]
 
 -- | Normalize stylesheet, expand includes, select imports and assemble the rules

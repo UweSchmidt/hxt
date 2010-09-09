@@ -1,9 +1,8 @@
 -- arch-tag: Haskell XML Toolbox XSLT Module
 Name:           hxt-xslt
-Version:        8.5.3
+Version:        9.0.0
 Synopsis:       The XSLT modules for HXT.
 Description:    The Haskell XML Toolbox XSLT library.
-                Since version 8.4 this library is packed in a separate package.
 License:        OtherLicense
 License-file:   LICENSE
 Author:         Tim Walkenhorst
@@ -88,6 +87,6 @@ library
                 directory  >= 1   && < 2,
                 filepath   >= 1   && < 2,
                 parsec     >= 2.1 && < 4,
-                hxt        >= 8.5 && < 9,
-                hxt-xpath  >= 8.5 && < 9
+                hxt        >= 9   && < 10,
+                hxt-xpath  >= 9   && < 10
 

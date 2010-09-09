@@ -141,7 +141,7 @@ readDocument config src
 
 readDocument'   :: SysConfigList -> String -> IOStateArrow s b XmlTree
 readDocument' config src
-    = configSysParams config
+    = configSysVars config
       >>>
       getDocumentContents src
       >>>
@@ -149,13 +149,11 @@ readDocument' config src
         $<<
         ( getMimeType
           &&&
-          getSysParam (theParseByMimeType `pairS`
-                       (theParseHTML `pairS`
-                        (theAcceptedMimeTypes `pairS`
-                         theRelaxValidate
-                        )
-                       )
-                      )
+          getSysVar (theParseByMimeType   `pairS`
+                     theParseHTML         `pairS`
+                     theAcceptedMimeTypes `pairS`
+                     theRelaxValidate
+                    )
         )
       )
       >>>
@@ -168,38 +166,36 @@ readDocument' config src
     getMimeType
         = getAttrValue transferMimeType >>^ stringToLower
 
-    processDoc mimeType (parseByMimeType, (parseHtml, (acceptedMimeTypes, validateWithRelax)))
+    processDoc mimeType (((parseByMimeType, parseHtml), acceptedMimeTypes), validateWithRelax)
         = traceMsg 1 (unwords [ "readDocument:", show src
                               , "(mime type:", show mimeType, ") will be processed"])
           >>>
           ( if isAcceptedMimeType acceptedMimeTypes mimeType
             then ( ifA (fromLA hasEmptyBody)
                    ( replaceChildren none )                                     -- empty response, e.g. in if-modified-since request
-                   ( ( parse $< getSysParam (theValidate `pairS`
-                                             (theIgnoreNoneXmlContents `pairS`
-                                              theTagSoup
-                                             )
-                                            )
+                   ( ( parse $< getSysVar (theValidate              `pairS`
+                                           theIgnoreNoneXmlContents `pairS`
+                                           theTagSoup
+                                          )
                      )
                      >>>
                      ( if isXmlOrHtml
-                       then ( ( checknamespaces $< getSysParam (theCheckNamespaces `pairS`
-                                                                theTagSoup
-                                                               )
+                       then ( ( checknamespaces $< getSysVar (theCheckNamespaces `pairS`
+                                                              theTagSoup
+                                                             )
                               )
                               >>>
                               rememberDTDAttrl
                               >>>
-                              ( canonicalize $< getSysParam (thePreserveComment `pairS`
-                                                             (theCanonicalize `pairS`
-                                                              theTagSoup
-                                                             )
-                                                            )
-                              )
-                              >>>
-                              ( whitespace $< getSysParam (theRemoveWS `pairS`
+                              ( canonicalize $< getSysVar (thePreserveComment `pairS`
+                                                           theCanonicalize    `pairS`
                                                            theTagSoup
                                                           )
+                              )
+                              >>>
+                              ( whitespace $< getSysVar (theRemoveWS `pairS`
+                                                         theTagSoup
+                                                        )
                               )
                               >>>
                               relax
@@ -242,10 +238,10 @@ readDocument' config src
                                             (mi == mis || mis == "*")
                                           )
                                           || r
-        parse (validate, (removeNoneXml, withTagSoup'))
+        parse ((validate, removeNoneXml), withTagSoup')
             | isHtml
               ||
-              withTagSoup'              = configSysParam (putS theLowerCaseNames isHtml)
+              withTagSoup'              = configSysVar (putS theLowerCaseNames isHtml)
                                           >>>
                                           parseHtmlDocument                     -- parse as HTML or with tagsoup XML
             | validateWithRelax         = parseXmlDocument False                -- for Relax NG use XML parser without validation
@@ -262,7 +258,7 @@ readDocument' config src
               validateWithRelax         = propagateAndValidateNamespaces
             | otherwise                 = this
 
-        canonicalize (preserveCmt, (canonicalize', withTagSoup'))
+        canonicalize ((preserveCmt, canonicalize'), withTagSoup')
             | withTagSoup'              = this                                  -- tagsoup already removes redundant stuff
             | validateWithRelax         = canonicalizeAllNodes
             | canonicalize'
@@ -272,7 +268,7 @@ readDocument' config src
             | otherwise                 = this
 
         relax
-            | validateWithRelax         = withoutUserState $< getSysParam theRelaxValidator
+            | validateWithRelax         = withoutUserState $< getSysVar theRelaxValidator
             | otherwise                 = this
 
         whitespace (removeWS, withTagSoup')

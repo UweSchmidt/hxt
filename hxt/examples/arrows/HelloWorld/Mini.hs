@@ -5,7 +5,7 @@ import Text.XML.HXT.Core
 
 main	:: IO()
 main
-    = runX ( configSysParams [ withTrace 1 ]
+    = runX ( configSysVars [ withTrace 1 ]
 	     >>>
 	     readDocument    [ withValidate no ] "hello.xml"
 	     >>>

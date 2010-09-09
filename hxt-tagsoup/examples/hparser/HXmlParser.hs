@@ -65,14 +65,14 @@ exitProg False  = exitWith ExitSuccess
 -- and controls output
 
 parser  :: SysConfigList -> String -> IOSArrow b Int
-parser conf src
-    = configSysParams config				-- set all global config options
+parser config src
+    = configSysVars config				-- set all global config options
       >>>
       readDocument [] src
       >>>
       ( ( traceMsg 1 "start processing document"
           >>>
-          processDocument conf
+          processDocument $< getSysAttr "action"
           >>>
           traceMsg 1 "document processing finished"
         )
@@ -84,9 +84,9 @@ parser conf src
       >>>
       traceTree
       >>>             -- TODO vvvvv
-      ( writeDocument [] $< getSysAttr "output-file" )
+      ( ( writeDocument [] $< getSysAttr "output-file" )
         `whenNot`
-        ( getParamInt 0 "no-output" >>> isA (== 1) )
+        ( getSysAttr "no-output" >>> isA (== "1") )
       )
       >>>
       getErrStatus
@@ -127,12 +127,10 @@ options
       ++
       tagSoupOptions
       ++
-      relaxOptions
-      ++
       outputOptions
       ++
-      [ Option "q"      ["no-output"]   (NoArg $ withSysAttr "no-output" "1")       "no output of resulting document"
-      , Option "x"      ["show-text"]   (NoArg $ withSysAttr "show-text" "1")       "output only the raw text, remove all markup"
+      [ Option "q"      ["no-output"]   (NoArg $ withSysAttr "no-output"    "1") "no output of resulting document"
+      , Option "x"      ["action"]      (ReqArg (withSysAttr "action") "ACTION") "actions are: only-text, indent, no-op"
       ]
       ++
       showOptions
