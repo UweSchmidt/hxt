@@ -41,6 +41,7 @@ import Text.XML.HXT.Arrow.ProcessDocument       ( getDocumentContents
                                                 , parseXmlDocument
                                                 , parseHtmlDocument
                                                 , propagateAndValidateNamespaces
+                                                , andValidateNamespaces
                                                 )
 import Text.XML.HXT.Arrow.XmlState
 import Text.XML.HXT.Arrow.XmlState.TypeDefs
@@ -259,12 +260,14 @@ readDocument'' src
             | otherwise                 = this                                  -- but remove contents when option is set
 
         checknamespaces (withNamespaces, withTagSoup')
-            | ( withNamespaces
-		&&
-		not withTagSoup'
-	      )
+            | withNamespaces
+	      &&
+	      withTagSoup'		= andValidateNamespaces			-- propagation is done in tagsoup
+
+            | withNamespaces
               ||
-              validateWithRelax         = propagateAndValidateNamespaces
+              validateWithRelax         = propagateAndValidateNamespaces	-- RelaxNG requires correct namespaces
+
             | otherwise                 = this
 
         canonicalize ((preserveCmt, canonicalize'), withTagSoup')

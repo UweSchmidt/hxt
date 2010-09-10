@@ -111,7 +111,7 @@ canonicalizeTree' toBeRemoved
       canonicalize1Node
           = (deep isPi `when` isDTD)            -- remove DTD parts, except PIs
             >>>
-            (none `when` toBeRemoved)           -- remove unintersting nodes
+            (none `when` toBeRemoved)           -- remove uninteresting nodes
             >>>
             ( processAttrl ( processChildren transfCharRef
                              >>>

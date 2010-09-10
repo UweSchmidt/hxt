@@ -22,6 +22,7 @@ module Text.XML.HXT.Arrow.ProcessDocument
     , parseHtmlDocument
     , validateDocument
     , propagateAndValidateNamespaces
+    , andValidateNamespaces
     , getDocumentContents
     )
 where
@@ -245,7 +246,14 @@ propagateAndValidateNamespaces
         >>>
         traceDoc "propagating namespaces done"
         >>>
-        traceMsg 1 "validating namespaces"
+        andValidateNamespaces
+      )
+      `when`
+      documentStatusOk
+
+andValidateNamespaces  :: IOStateArrow s XmlTree XmlTree
+andValidateNamespaces
+    = ( traceMsg 1 "validating namespaces"
         >>>
         ( setDocumentStatusFromSystemState "namespace propagation"
           `when`
