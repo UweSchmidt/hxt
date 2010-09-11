@@ -21,10 +21,26 @@ Build-type:          Simple
 -- Constraint on the version of Cabal needed to build this package.
 Cabal-version:       >=1.6
 
+Flag curl
+ Description:        Install hxt-curl
+ Default:            True
+
+Flag tagsoup
+ Description:        Install hxt-hagsoup
+ Default:            True
+
 Executable hxt-test
   -- .hs or .lhs file containing the Main module.
   Main-is: HXTTest.hs            
-  
+
+  Extensions: CPP
+ 
+  if flag(curl)
+    CPP-Options: -Dcurl
+ 
+  if flag(tagsoup)
+    CPP-Options: -Dtagsoup
+ 
   Build-depends: base       >= 4   && < 5,
                  haskell98  >= 1   && < 2,
                  -- containers >= 0.2 && < 1,
@@ -37,11 +53,14 @@ Executable hxt-test
                  -- bytestring >= 0.9 && < 1,
                  -- binary     >= 0.5 && < 1,
                  hxt           >= 9 && < 10,
-                 hxt-curl      >= 9 && < 10,
                  hxt-http      >= 9 && < 10,
-                 hxt-tagsoup   >= 9 && < 10,
                  hxt-relaxng   >= 9 && < 10,
                  hxt-xpath     >= 9 && < 10,
                  hxt-xslt      >= 9 && < 10,
                  hxt-cache     >= 9 && < 10       
   
+  if flag(curl)
+    Build-depends:  hxt-curl      >= 9 && < 10
+
+  if flag(tagsoup)
+    Build-depends:  hxt-tagsoup   >= 9 && < 10
