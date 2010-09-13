@@ -249,15 +249,18 @@ readDocument'' src
                                           )
                                           || r
         parse ((validate, removeNoneXml), withTagSoup')
+	    | not isXmlOrHtml           = if removeNoneXml
+					  then replaceChildren none             -- don't parse, if mime type is not XML nor HTML
+					  else this                             -- but remove contents when option is set
+
             | isHtml
-              ||
+	      ||
               withTagSoup'              = configSysVar (putS theLowerCaseNames isHtml)
                                           >>>
                                           parseHtmlDocument                     -- parse as HTML or with tagsoup XML
-            | validateWithRelax         = parseXmlDocument False                -- for Relax NG use XML parser without validation
-            | isXml                     = parseXmlDocument validate             -- parse as XML
-            | removeNoneXml             = replaceChildren none                  -- don't parse, if mime type is not XML nor HTML
-            | otherwise                 = this                                  -- but remove contents when option is set
+
+            | isXml                     = parseXmlDocument (not validateWithRelax && validate)           -- parse as XML
+            | otherwise                 = this                                  -- suppress warning
 
         checknamespaces (withNamespaces, withTagSoup')
             | withNamespaces
@@ -289,19 +292,19 @@ readDocument'' src
               not withTagSoup'          = removeDocWhiteSpace                   -- tagsoup already removes whitespace
             | otherwise                 = this
 
-        isHtml                  = parseHtml                                     -- force HTML
-                                  ||
-                                  ( parseByMimeType && isHtmlMimeType mimeType )
+        isHtml                          = ( not parseByMimeType && parseHtml )  -- force HTML
+					  ||
+					  ( parseByMimeType && isHtmlMimeType mimeType )
 
-        isXml                   = ( not parseByMimeType && not parseHtml )
-                                  ||
-                                  ( parseByMimeType
-                                    &&
-                                    ( isXmlMimeType mimeType
-                                      ||
-                                      null mimeType
-                                    )                                           -- mime type is XML or not known
-                                  )
+        isXml                           = ( not parseByMimeType && not parseHtml )
+					  ||
+					  ( parseByMimeType
+					    &&
+					    ( isXmlMimeType mimeType
+					      ||
+					      null mimeType
+					    )                                   -- mime type is XML or not known
+					  )
 
         isXmlOrHtml     = isHtml || isXml
 

@@ -22,7 +22,6 @@ import Text.XML.HXT.Arrow.XmlArrow
 import qualified Text.XML.HXT.Parser.HtmlParsec          as HP
 import qualified Text.XML.HXT.Parser.XmlParsec           as XP
 import qualified Text.XML.HXT.Parser.XmlDTDParser        as DP
-import qualified Text.XML.HXT.DTDValidation.Validation   as VA
 
 -- ------------------------------------------------------------
 
@@ -67,21 +66,6 @@ parseHtmlDoc                    = arr2L HP.parseHtmlDocument
 
 parseHtmlContent                :: ArrowList a => a String XmlTree
 parseHtmlContent                = arrL  HP.parseHtmlContent
-
--- ------------------------------------------------------------
-
-validateDoc                     :: ArrowList a => a XmlTree XmlTree
-validateDoc                     = fromLA ( VA.validate
-                                           `when`
-                                           VA.getDTDSubset      -- validate only when DTD decl is present
-                                         )
-
-transformDoc                    :: ArrowList a => a XmlTree XmlTree
-transformDoc                    = fromLA VA.transform
-
--- old stuff
--- validateDoc                  = arrL VA.validate
--- transformDoc                 = arrL VA.transform
 
 -- ------------------------------------------------------------
 

@@ -31,6 +31,8 @@ import Control.Arrow                            -- arrow classes
 import Control.Arrow.ArrowList
 import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
+import Control.Arrow.ListArrow
+    ( fromLA )
 
 import Text.XML.HXT.DOM.Interface
 
@@ -42,8 +44,6 @@ import Text.XML.HXT.Arrow.ParserInterface
     ( parseXmlDoc
     , parseHtmlDoc
     , substHtmlEntityRefs
-    , validateDoc
-    , transformDoc
     )
 
 import Text.XML.HXT.Arrow.Edit
@@ -65,6 +65,11 @@ import Text.XML.HXT.Arrow.DocumentInput
 import Text.XML.HXT.Arrow.Namespace
     ( propagateNamespaces
     , validateNamespaces
+    )
+import Text.XML.HXT.DTDValidation.Validation
+    ( validate
+    , getDTDSubset
+    , transform
     )
 
 -- ------------------------------------------------------------
@@ -89,7 +94,7 @@ This parser is useful for applications processing correct XML documents.
 -}
 
 parseXmlDocument        :: Bool -> IOStateArrow s XmlTree XmlTree
-parseXmlDocument validate
+parseXmlDocument validate'
     = ( replaceChildren ( ( getAttrValue a_source
                             &&&
                             xshow getChildren
@@ -108,7 +113,7 @@ parseXmlDocument validate
         >>>
         transfAllCharRef
         >>>
-        ( if validate
+        ( if validate'
           then validateDocument
           else this
         )
@@ -210,9 +215,11 @@ validateDocument
         >>>
         setDocumentStatusFromSystemState "document validation"
         >>>
+        traceMsg 1 "document validated, transforming doc with respect to DTD"
+        >>>
         transformDoc
         >>>
-        traceMsg 1 "document validated"
+        traceMsg 1 "document transformed"
         >>>
         traceSource
         >>>
@@ -286,5 +293,16 @@ getDocumentContents src
       traceMsg 1 ("readDocument: start processing document " ++ show src)
       >>>
       getXmlContents
+
+-- ------------------------------------------------------------
+
+validateDoc                     :: ArrowList a => a XmlTree XmlTree
+validateDoc                     = fromLA ( validate
+                                           `when`
+                                           getDTDSubset      -- validate only when DTD decl is present
+                                         )
+
+transformDoc                    :: ArrowList a => a XmlTree XmlTree
+transformDoc                    = fromLA transform
 
 -- ------------------------------------------------------------

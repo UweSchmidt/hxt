@@ -25,9 +25,29 @@ Flag curl
  Description:        Install hxt-curl
  Default:            True
 
+Flag http
+ Description:        Install hxt-http
+ Default:            False
+
+Flag cache
+ Description:        Install hxt-cache
+ Default:            False
+
 Flag tagsoup
- Description:        Install hxt-hagsoup
+ Description:        Install hxt-tagsoup
  Default:            True
+
+Flag relaxng
+ Description:        Install hxt-relaxng
+ Default:            False
+
+Flag xpath
+ Description:        Install hxt-xpath
+ Default:            False
+
+Flag xslt
+ Description:        Install hxt-xslt
+ Default:            False
 
 Executable hxt-test
   -- .hs or .lhs file containing the Main module.
@@ -38,8 +58,23 @@ Executable hxt-test
   if flag(curl)
     CPP-Options: -Dcurl
  
+  if flag(http)
+    CPP-Options: -Dhttp
+ 
+  if flag(cache)
+    CPP-Options: -Dcache
+ 
   if flag(tagsoup)
     CPP-Options: -Dtagsoup
+ 
+  if flag(relaxng)
+    CPP-Options: -Drelaxng
+ 
+  if flag(xpath)
+    CPP-Options: -Dxpath
+ 
+  if flag(xslt)
+    CPP-Options: -Dxslt
  
   Build-depends: base       >= 4   && < 5,
                  haskell98  >= 1   && < 2,
@@ -52,15 +87,25 @@ Executable hxt-test
                  -- deepseq    >= 1.1 && < 2,
                  -- bytestring >= 0.9 && < 1,
                  -- binary     >= 0.5 && < 1,
-                 hxt           >= 9 && < 10,
-                 hxt-http      >= 9 && < 10,
-                 hxt-relaxng   >= 9 && < 10,
-                 hxt-xpath     >= 9 && < 10,
-                 hxt-xslt      >= 9 && < 10,
-                 hxt-cache     >= 9 && < 10       
+                 hxt           >= 9 && < 10
   
   if flag(curl)
     Build-depends:  hxt-curl      >= 9 && < 10
 
+  if flag(http)
+    Build-depends:  hxt-http      >= 9 && < 10
+
+  if flag(cache)
+    Build-depends:  hxt-cache     >= 9 && < 10
+
   if flag(tagsoup)
     Build-depends:  hxt-tagsoup   >= 9 && < 10
+
+  if flag(relaxng)
+    Build-depends:  hxt-relaxng   >= 9 && < 10
+
+  if flag(xpath)
+    Build-depends:  hxt-xpath     >= 9 && < 10
+
+  if flag(xslt)
+    Build-depends:  hxt-xslt      >= 9 && < 10

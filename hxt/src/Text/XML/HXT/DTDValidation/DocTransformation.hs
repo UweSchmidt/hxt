@@ -42,6 +42,7 @@ import Text.XML.HXT.DTDValidation.AttributeValueValidation
 import Data.Maybe
 import Data.List
 import Data.Ord
+import qualified Data.Map as M
 
 -- ------------------------------------------------------------
 
@@ -49,8 +50,7 @@ import Data.Ord
 -- Lookup-table which maps element names to their transformation functions. The
 -- transformation functions are XmlArrows.
 
-type TransEnvTable      = [TransEnv]
-type TransEnv           = (ElemName, TransFct)
+type TransEnvTable      = M.Map ElemName TransFct
 type ElemName           = String
 type TransFct           = XmlArrow
 
@@ -81,17 +81,14 @@ transform dtdPart
 
 traverseTree :: TransEnvTable -> XmlArrow
 traverseTree transEnv
-    = processTopDown
-      ( ( (transFct $< getName)
-          >>>
-          processChildren (traverseTree transEnv)
-        )
-       `when`
-       isElem
-      )
+    = processTopDown ( (transFct $< getName)
+		       `when`
+		       isElem
+		     )
     where
     transFct            :: String -> XmlArrow
-    transFct name       = fromMaybe this . lookup name $ transEnv
+    transFct name       = fromMaybe this . M.lookup name $ transEnv
+
 
 -- |
 -- Build all transformation functions.
@@ -102,7 +99,8 @@ traverseTree transEnv
 
 buildAllTransformationFunctions :: XmlTrees -> TransEnvTable
 buildAllTransformationFunctions dtdNodes
-    = (t_root, this)
+    = M.fromList $
+      (t_root, this)
       :
       concatMap (buildTransformationFunctions dtdNodes) dtdNodes
 
@@ -116,7 +114,7 @@ buildAllTransformationFunctions dtdNodes
 --
 --    - returns : entry for the lookup-table
 
-buildTransformationFunctions :: XmlTrees -> XmlTree -> [TransEnv]
+buildTransformationFunctions :: XmlTrees -> XmlTree -> [(ElemName, TransFct)]
 
 buildTransformationFunctions dtdPart dn
     | isDTDElementNode dn       = [(name, transFct)]

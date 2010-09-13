@@ -2,11 +2,26 @@ module Main
 where
 
 import Text.XML.HXT.Core
+
+#ifdef http
 import Text.XML.HXT.HTTP
+#endif
+
+#ifdef relaxng
 import Text.XML.HXT.RelaxNG
+#endif
+
+#ifdef xpath
 import Text.XML.HXT.XPath
+#endif
+
+#ifdef xslt
 import Text.XML.HXT.XSLT
+#endif
+
+#ifdef cache
 import Text.XML.HXT.Cache
+#endif
 
 #ifdef curl
 import Text.XML.HXT.Curl

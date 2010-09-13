@@ -105,6 +105,11 @@ processDocument "indent"
       >>>
       indentDoc
 
+processDocument "show-tree"
+    = traceMsg 1 "show-tree document"
+      >>>
+      writeDocument [withShowTree yes] ""
+
 processDocument _action
     = traceMsg 1 "default action: do nothing"
       >>>
