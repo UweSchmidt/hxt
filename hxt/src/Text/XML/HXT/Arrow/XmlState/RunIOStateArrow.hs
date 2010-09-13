@@ -163,13 +163,19 @@ initialCacheConfig              = XIOCch
 
 -- ------------------------------------------------------------
 
-dummyHTTPHandler        :: IOSArrow b b
-dummyHTTPHandler        = issueFatal $
-                          unlines $
-                          [ "HTTP handler not configured,"
-                          , "please install package hxt-curl and use 'withCurl' config option"
-                          , "or install package hxt-http and use 'withHTTP' config option"
-                          ]
+dummyHTTPHandler        :: IOSArrow XmlTree XmlTree
+dummyHTTPHandler        = ( issueFatal $
+                            unlines $
+                            [ "HTTP handler not configured,"
+                            , "please install package hxt-curl and use 'withCurl' config option"
+                            , "or install package hxt-http and use 'withHTTP' config option"
+                            ]
+                          )
+                          >>>
+                          addAttr transferMessage "HTTP handler not configured"
+                          >>>
+                          addAttr transferStatus "999"
+
 
 dummyTagSoupParser      :: IOSArrow b b
 dummyTagSoupParser      =  issueFatal $

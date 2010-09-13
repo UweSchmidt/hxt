@@ -133,6 +133,11 @@ examples        = [ example1
                   , example11
                   ]
 
+urlw3
+  , urlw3c	:: String
+urlw3		= "http://www.w3.org/"
+urlw3c		= "http://www.w3c.org/"
+
 genInputFile    :: (String, String) -> IO ()
 genInputFile f  = do
                   remInputFile (fst f)
@@ -157,7 +162,7 @@ configParseTests        :: Test
 configParseTests
     = TestLabel "Test simple parser configurations" $
       TestList $
-      map mkTest $
+      zipWith mkTest [1..] $
       [ ( "example1.xml"
         , []
         , "<html> <head> </head> <body> </body> </html>"
@@ -295,7 +300,7 @@ configParseTests
         )
       ]
     where
-    mkTest (prog, config, exp)
+    mkTest cnt (prog, config, exp)
         = TestCase $
           do
           res <- runX $
@@ -304,7 +309,7 @@ configParseTests
                  readDocument [] prog
                  >>>
                  writeDocumentToString [withRemoveWS no]
-          assertEqual "Simple parser results differ" exp (concat res)
+          assertEqual (show cnt ++ ". Simple parser test:") exp (concat res)
 
 -- ----------------------------------------------------------
 
@@ -313,7 +318,7 @@ configTagSoupTests      :: Test
 configTagSoupTests
     = TestLabel "Test TagSoup parser configurations" $
       TestList $
-      map mkTest $
+      zipWith mkTest [1..] $
       [
         ( "example2.xml"
         , []
@@ -390,7 +395,7 @@ configTagSoupTests
         )
       ]
     where
-    mkTest (prog, config, exp)
+    mkTest cnt (prog, config, exp)
         = TestCase $
           do
           res <- runX $
@@ -399,10 +404,51 @@ configTagSoupTests
                  readDocument [] prog
                  >>>
                  writeDocumentToString [withRemoveWS no]
-          assertEqual "TagSoup parser results differ" exp (concat res)
+          assertEqual (show cnt ++ ". TagSoup parser test:") exp (concat res)
 #else
 configTagSoupTests      :: Test
 configTagSoupTests      = TestList []
+#endif
+
+-- ----------------------------------------------------------
+
+#ifdef curl
+configCurlTests      :: Test
+configCurlTests
+    = TestLabel "Test Curl parser configurations" $
+      TestList $
+      zipWith mkTest [1..] $
+      [ ( urlw3, []
+        , getAttrValue transferStatus
+        , "999"
+        )
+      , ( urlw3, [withCurl []
+                 ,withValidate no
+                 ]
+        , getAttrValue transferStatus
+        , "200"
+        )
+      , ( urlw3c, [withCurl []
+                  , withParseHTML yes
+                  ]
+        , getAttrValue transferStatus
+        , "301"
+        )
+      ]
+    where
+    mkTest cnt (url, config, proc, exp)
+        = TestCase $
+          do
+          res <- runX $
+                 configSysVars config
+                 >>>
+                 readDocument [] url
+                 >>>
+                 proc
+          assertEqual (show cnt ++ ". Curl HTTP test:") exp (concat res)
+#else
+configCurlTests      :: Test
+configCurlTests      = TestList []
 #endif
 
 -- ----------------------------------------------------------
@@ -415,6 +461,7 @@ allTests
 
       , configParseTests
       , configTagSoupTests
+      , configCurlTests
 
       , TestLabel "Remove test input files" $
         TestCase remInputFiles
