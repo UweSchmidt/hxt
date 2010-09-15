@@ -201,7 +201,7 @@ lookupCache' ((dir, age), e404) src
     readDocumentCond mt
                         = traceMsg 1 ("cache out of date, read original document if modified " ++ show src)
                           >>>
-                          readDocument [withInputOption "--header" ifModHeader] src
+                          readDocument [withInputOption a_if_modified_since (fmtTime mt)] src
                           >>>
                           choiceA
                           [ is304            :-> ( traceMsg 1 ("document not modified, using cache data from " ++ show cf)
@@ -223,7 +223,6 @@ lookupCache' ((dir, age), e404) src
                                                  )
                           ]
         where
-        ifModHeader     = "If-Modified-Since: " ++ fmtTime mt
         fmtTime         = formatCalendarTime defaultTimeLocale rfc822DateFormat . toUTCTime
 
 -- ------------------------------------------------------------

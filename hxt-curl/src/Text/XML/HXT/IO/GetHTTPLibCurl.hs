@@ -246,7 +246,9 @@ opt2copt k v
       &&
       isIntArg v                        = [CurlTimeoutMS           $ read    v]
     | k `elem` ["-n", "--netrc"]        = [CurlNetrcFile                     v]
-    | k `elem` ["--ssl-verify-peer"]    = [CurlSSLVerifyPeer $ read v]
+    | k `elem` ["--ssl-verify-peer"]
+      &&
+      isIntArg v                        = [CurlSSLVerifyPeer       $ read    v]
     | k `elem` ["-R", "--remote-time"]  = [CurlFiletime            $ isTrue  v]
     | k `elem` ["-u", "--user"]         = [CurlUserPwd                       v]
     | k `elem` ["-U", "--proxy-user"]   = [CurlProxyUserPwd                  v]
@@ -259,11 +261,11 @@ opt2copt k v
     | k `elem` ["-Y", "--speed-limit"]
       &&
       isIntArg v                        = [CurlLowSpeed            $ read    v]
+    | k == a_if_modified_since          = [CurlHttpHeaders         $ ["If-Modified-Since: " ++ v] ]
+                                        -- CurlTimeValue seems to be buggy, therefore this workaround
     | k `elem` ["-z", "--time-cond", a_if_modified_since]
                                         =  ifModifiedOptions
 
-    | k == a_if_modified_since          = [CurlHttpHeaders         $ ["If-Modified-Since: " ++ v] ]
-                                        -- CurlTimeValue seems to be buggy, therefore this workaround
     | k == "--max-redirs"
       &&
       isIntArg v                        = [CurlMaxRedirs           $ read    v]
@@ -289,7 +291,7 @@ opt2copt k v
           ]
         where
         pport
-            | isIntArg ppp      = read v
+            | isIntArg ppp      = read ppp
             | otherwise         = 1080
         (phost, pp)             = span (/=':') v
         ppp                     = drop 1 pp

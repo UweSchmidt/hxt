@@ -57,11 +57,11 @@ getLibCurlContents
       )
       where
       getC uri (((options, redirect), proxy), strictInput)
-          = applyA ( ( traceMsg 2 ( "get HTTP via libcurl, uri=" ++ show uri ++ " options=" ++ show options )
+          = applyA ( ( traceMsg 2 ( "get HTTP via libcurl, uri=" ++ show uri ++ " options=" ++ show options' )
                        >>>
                        arrIO0 ( LibCURL.getCont
                                     strictInput
-                                    ((a_proxy, proxy) : (a_redirect, show . fromEnum $ redirect) : options)
+                                    options'
                                     uri
                               )
                      )
@@ -71,6 +71,10 @@ getLibCurlContents
                        arr addContent
                      )
                    )
+            where
+            options' = (a_proxy, proxy)
+                       : (a_redirect, show . fromEnum $ redirect)
+                       : options
 
 addContent        :: (Attributes, String) -> IOSArrow XmlTree XmlTree
 addContent (al, c)

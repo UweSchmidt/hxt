@@ -149,9 +149,11 @@ examples        = [ example1
                   ]
 
 urlw3
-  , urlw3c	:: String
+  , urlw3c, html32	:: String
+
 urlw3		= "http://www.w3.org/"
 urlw3c		= "http://www.w3c.org/"
+html32          = "http://www.w3.org/TR/REC-html32-19970114"
 
 genInputFile    :: (String, String) -> IO ()
 genInputFile f  = do
@@ -437,17 +439,71 @@ configCurlTests
         , getAttrValue transferStatus
         , "999"
         )
-      , ( urlw3, [withCurl []
-                 ,withValidate no
+      , ( urlw3, [ withCurl []
+                 , withValidate no
                  ]
         , getAttrValue transferStatus
         , "200"
         )
-      , ( urlw3c, [withCurl []
+      , ( urlw3c, [ withCurl []			-- permanently moved
                   , withParseHTML yes
                   ]
         , getAttrValue transferStatus
         , "301"
+        )
+      , ( urlw3c, [ withCurl []			-- permanently moved
+                  , withRedirect yes            -- with redirect
+                  , withParseHTML yes
+                  ]
+        , getAttrValue transferStatus
+        , "200"
+        )
+      , ( urlw3,  [ withCurl [("--max-filesize", "500000")]	-- file size limit o.k.
+                  , withParseHTML yes
+                  ]
+        , getAttrValue transferStatus
+        , "200"
+        )
+      , ( urlw3,  [ withCurl [("--max-filesize", "500")]	-- file size limit exceeded
+                  , withParseHTML yes
+                  ]
+        , getAttrValue transferStatus
+        , "999"
+        )
+      , ( urlw3, [ withCurl []
+                 , withProxy "xyz"				-- this proxy should not exist
+                 , withValidate no
+                 ]
+        , getAttrValue transferStatus
+        , "999"
+        )
+      , ( urlw3, [ withCurl []
+                 , withProxy "localhost:4742"			-- this proxy also should not exist
+                 , withValidate no
+                 ]
+        , getAttrValue transferStatus
+        , "999"
+        )
+      , ( html32, [ withCurl [(a_if_modified_since, "Mon, 05 Apr 1999 23:08:57 GMT")] -- empty body
+                  , withParseHTML yes
+                  , withValidate no
+                  ]
+        , getAttrValue transferStatus
+        , "304"
+        )
+      , ( html32, [ withCurl []
+                  , withInputOption a_if_modified_since "Mon, 05 Apr 1999 23:08:57 GMT" -- empty body
+                  , withParseHTML yes
+                  ]
+        , getAttrValue transferStatus
+        , "304"
+        )
+      , ( html32, [ withCurl [(a_if_modified_since, "Sat, 03 Apr 1999 23:08:57 GMT")] -- full body
+                  , withParseHTML yes
+                  , withWarnings  no
+                  ]
+        , getAttrValue transferStatus
+        , "200"
         )
       ]
     where
@@ -474,8 +530,8 @@ allTests
       [ TestLabel "Generate test input files" $
         TestCase genInputFiles
 
-      , configParseTests
-      , configTagSoupTests
+--      , configParseTests
+--      , configTagSoupTests
       , configCurlTests
 
       , TestLabel "Remove test input files" $
