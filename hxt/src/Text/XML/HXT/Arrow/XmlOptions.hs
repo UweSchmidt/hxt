@@ -148,6 +148,7 @@ a_accept_mimetypes,
  a_error_log,
  a_help,
  a_if_modified_since,
+ a_if_unmodified_since,
  a_ignore_encoding_errors,
  a_ignore_none_xml_contents,
  a_indent,
@@ -195,6 +196,7 @@ a_error                         = "error"
 a_error_log                     = "errorLog"
 a_help                          = "help"
 a_if_modified_since             = "if-modified-since"
+a_if_unmodified_since           = "if-unmodified-since"
 a_ignore_encoding_errors        = "ignore-encoding-errors"
 a_ignore_none_xml_contents      = "ignore-none-xml-contents"
 a_indent                        = "indent"

@@ -10,38 +10,53 @@ module Text.XML.HXT.IO.GetHTTPNative
 
 where
 
+import Control.Arrow
+
 import Text.XML.HXT.DOM.XmlKeywords
+import Text.XML.HXT.DOM.TypeDefs                ( Attributes )
 import Text.XML.HXT.DOM.Util                    ( stringTrim )
+
+import Text.XML.HXT.Arrow.XmlOptions            ( a_if_modified_since
+						, a_if_unmodified_since
+						)
+
 import Text.XML.HXT.Parser.ProtocolHandlerUtil  ( parseContentType )
 
 import Text.ParserCombinators.Parsec            ( parse )
 
-import Data.Maybe       ( fromJust
-                        )
-import System.IO        ( hPutStrLn
-                        , stderr
-                        )
-import System.IO.Error  ( ioeGetErrorString
-                        , try
-                        )
-import Network.Browser  ( Proxy(..)
-                        , browse
-                        , defaultGETRequest
-                        , request
-                        , setOutHandler
-                        , setErrHandler
-                        , setProxy
-                        )
-import Network.HTTP     ( Header(..)
-                        , HeaderName(..)
-                        , Response(..)
-                        , httpVersion
-                        )
-import Network.Socket   ( withSocketsDo
-                        )
-import Network.URI      ( URI
-                        , parseURIReference
-                        )
+import Data.Char                                ( isDigit
+						)
+import Data.Maybe                               ( fromJust
+						)
+import System.IO                                ( hPutStrLn
+						, stderr
+						)
+import System.IO.Error                          ( ioeGetErrorString
+						, try
+						)
+import Network.Browser                          ( Proxy(..)
+						, BrowserAction
+						, browse
+						, defaultGETRequest
+						, request
+						, setOutHandler
+						, setErrHandler
+						, setProxy
+						, setAllowRedirects
+						, setMaxRedirects
+						)
+import Network.HTTP                             ( Header(..)
+						, HeaderName(..)
+						, Request(..)
+						, Response(..)
+						, httpVersion
+						, replaceHeader
+						)
+import Network.Socket                           ( withSocketsDo
+						)
+import Network.URI                              ( URI
+						, parseURIReference
+						)
 
 -- ------------------------------------------------------------
 --
@@ -51,12 +66,13 @@ import Network.URI      ( URI
 --
 -- the http protocol handler, haskell implementation
 
-getCont         :: Bool -> String -> String -> IO (Either ([(String, String)], String)
-                                                          ([(String, String)], String)
-                                                  )
-getCont strictInput proxy uri
+getCont         :: Bool -> String -> String -> Bool -> Attributes ->
+		   IO (Either ([(String, String)], String)
+                              ([(String, String)], String)
+                      )
+getCont strictInput proxy uri redirect options
     = do
-      res <- try (getHttp False uri1 proxy)
+      res <- try (getHttp False uri1 proxy redirect options)
       either processError processResponse res
     where
     uri1 = fromJust (parseURIReference uri)
@@ -100,28 +116,38 @@ getCont strictInput proxy uri
         rsh = convertResponseHeaders response
         cs  = rspBody response
 
-    getHttp             :: Bool -> URI -> String -> IO (Response String)
-    getHttp trc' uri' proxy'
+    getHttp             :: Bool -> URI -> String -> Bool -> Attributes -> IO (Response String)
+    getHttp trc' uri' proxy' redirect' options'
         = withSocketsDo $
           browse ( do
-                   setOutHandler (trcFct)
-                   setErrHandler (trcFct)
-
-                   setProxy' proxy'
-                   (_ruri, rsp) <- request rq
+                   sequence_ configHttp
+                   (_ruri, rsp) <- request $ theRequest
                    return rsp
                  )
         where
+        theRequest :: Request String
+        theRequest
+	    = configHeaders $ defaultGETRequest uri' 
+
+        configHeaders :: Request String -> Request String
+	configHeaders
+	    = foldr (>>>) id . map (uncurry replaceHeader) . concatMap (uncurry setHOption) $ options
+
+	configHttp
+	    = setOutHandler (trcFct)
+              : setErrHandler (trcFct)
+              : ( if null proxy'
+		  then return ()
+		  else setProxy (Proxy proxy' Nothing)
+		)
+	      : setAllowRedirects redirect'
+	      : concatMap (uncurry setOption) options'
+
         trcFct s
             | trc'
                 = hPutStrLn stderr ("-- (5) http: " ++ s)
             | otherwise
                 = return ()
-
-        rq = defaultGETRequest uri'
-
-        setProxy' ""    = return ()
-        setProxy' p     = setProxy (Proxy p Nothing)
 
     convertResponseStatus       :: (Int, Int, Int) -> Int
     convertResponseStatus (a, b, c)
@@ -163,5 +189,28 @@ getCont strictInput proxy uri
             where
             addHttpAttr = [ (httpPrefix ++ (show name), value) ]
 
+
+setOption	:: String -> String -> [BrowserAction t ()]
+setOption k v
+    | k == "max-redirs"
+      &&
+      isIntArg v                        = [setMaxRedirects (Just $ read v)]
+    | k == "max-redirs"
+      &&
+      null v                            = [setMaxRedirects Nothing]
+
+    | otherwise	                        = []
+
+setHOption	:: String -> String -> [(HeaderName, String)]
+setHOption k v
+    | k `elem` ["-A", "user-agent"]     = [(HdrUserAgent,         v)]
+    | k `elem` ["-e", "referer"]        = [(HdrReferer,           v)]
+    | k == a_if_modified_since          = [(HdrIfModifiedSince,   v)]
+    | k == a_if_unmodified_since        = [(HdrIfUnmodifiedSince, v)]
+    | otherwise                         = []
+
+
+isIntArg        :: String -> Bool
+isIntArg s      = not (null s) && all isDigit s
 
 -- ------------------------------------------------------------

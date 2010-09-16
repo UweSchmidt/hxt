@@ -47,14 +47,15 @@ getHTTPNativeContents
         &&&
         getSysVar (theInputOptions `pairS`
                    theProxy        `pairS`
-                   theStrictInput
+                   theStrictInput  `pairS`
+		   theRedirect
                   )
       )
       where
-      getC uri ((options, proxy), strictInput)
+      getC uri (((options, proxy), strictInput), redirect)
           = applyA ( ( traceMsg 2 ( "get HTTP via native HTTP interface, uri=" ++ show uri ++ " options=" ++ show options )
                        >>>
-                       arrIO0 (getCont strictInput proxy uri)
+                       arrIO0 (getCont strictInput proxy uri redirect options)
                      )
                      >>>
                      ( arr (uncurry addInputError)

@@ -52,6 +52,7 @@ import Text.XML.HXT.DOM.XmlKeywords     ( transferStatus
 import Text.XML.HXT.Arrow.XmlOptions    ( a_proxy
                                         , a_redirect
                                         , a_if_modified_since
+                                        , a_if_unmodified_since
                                         )
 
 import Text.XML.HXT.Parser.ProtocolHandlerUtil
@@ -215,61 +216,61 @@ getCont strictInput options uri
 
 copt    :: String -> String -> [CurlOption]
 copt k v
-    | "curl" `isPrefixOf` k
-        = opt2copt (drop 4 k) v
+    | "curl-" `isPrefixOf` k    = copt (drop 4 k) v		-- throw away curl prefix
+    | "--"    `isPrefixOf` k	= opt2copt (drop 2 k) v
+    | k `elem` [ a_proxy
+	       , a_redirect]    = opt2copt k v
 
-    | k `elem` [a_proxy, a_redirect]
-        = opt2copt k v
-
-    | otherwise
-        = opt2copt k v
+    | otherwise                 = opt2copt k v
 
 opt2copt        :: String -> String -> [CurlOption]
 opt2copt k v
-    | k `elem` ["-A", "--user-agent"]   = [CurlUserAgent v]
-    | k `elem` ["-b", "--cookie"]       = [CurlCookie v]
-    | k == "--connect-timeout"
+    | k `elem` ["-A", "user-agent"]     = [CurlUserAgent v]
+    | k `elem` ["-b", "cookie"]         = [CurlCookie v]
+    | k == "connect-timeout"
       &&
       isIntArg v                        = [CurlConnectTimeout      $ read    v]
-    | k == "--crlf"                     = [CurlCRLF                $ isTrue  v]
-    | k `elem` ["-d", "--data"]         = [CurlPostFields          $ lines   v]
-    | k `elem` ["-e", "--referer"]      = [CurlReferer                       v]
-    | k `elem` ["-H", "--header"]       = [CurlHttpHeaders         $ lines   v]
-    | k == "--ignore-content-length"    = [CurlIgnoreContentLength $ isTrue  v]
-    | k `elem` ["-I", "--head"]         = [CurlNoBody              $ isTrue  v]
-    | k `elem` ["-L", "--location", a_redirect]
+    | k == "crlf"                       = [CurlCRLF                $ isTrue  v]
+    | k `elem` ["-d", "data"]           = [CurlPostFields          $ lines   v]
+    | k `elem` ["-e", "referer"]        = [CurlReferer                       v]
+    | k `elem` ["-H", "header"]         = [CurlHttpHeaders         $ lines   v]
+    | k == "ignore-content-length"      = [CurlIgnoreContentLength $ isTrue  v]
+    | k `elem` ["-I", "head"]           = [CurlNoBody              $ isTrue  v]
+    | k `elem` ["-L", "location", a_redirect]
                                         = [CurlFollowLocation      $ isTrue  v]
-    | k == "--max-filesize"
+    | k == "max-filesize"
       &&
       isIntArg v                        = [CurlMaxFileSizeLarge    $ read    v]
-    | k `elem` ["-m", "--max-time"]
+    | k `elem` ["-m", "max-time"]
       &&
       isIntArg v                        = [CurlTimeoutMS           $ read    v]
-    | k `elem` ["-n", "--netrc"]        = [CurlNetrcFile                     v]
-    | k `elem` ["--ssl-verify-peer"]
+    | k `elem` ["-n", "netrc"]          = [CurlNetrcFile                     v]
+    | k `elem` ["ssl-verify-peer"]
       &&
       isIntArg v                        = [CurlSSLVerifyPeer       $ read    v]
-    | k `elem` ["-R", "--remote-time"]  = [CurlFiletime            $ isTrue  v]
-    | k `elem` ["-u", "--user"]         = [CurlUserPwd                       v]
-    | k `elem` ["-U", "--proxy-user"]   = [CurlProxyUserPwd                  v]
-    | k `elem` ["-x", "--proxy", a_proxy]
+    | k `elem` ["-R", "remote-time"]    = [CurlFiletime            $ isTrue  v]
+    | k `elem` ["-u", "user"]           = [CurlUserPwd                       v]
+    | k `elem` ["-U", "proxy-user"]     = [CurlProxyUserPwd                  v]
+    | k `elem` ["-x", "proxy", a_proxy]
                                         =  proxyOptions
-    | k `elem` ["-X", "--request"]      = [CurlCustomRequest                 v]
-    | k `elem` ["-y", "--speed-time"]
+    | k `elem` ["-X", "request"]        = [CurlCustomRequest                 v]
+    | k `elem` ["-y", "speed-time"]
       &&
       isIntArg v                        = [CurlLowSpeedTime        $ read    v]
-    | k `elem` ["-Y", "--speed-limit"]
+    | k `elem` ["-Y", "speed-limit"]
       &&
       isIntArg v                        = [CurlLowSpeed            $ read    v]
-    | k == a_if_modified_since          = [CurlHttpHeaders         $ ["If-Modified-Since: " ++ v] ]
+    | k == a_if_modified_since          = [CurlHttpHeaders         $ ["If-Modified-Since: "   ++ v] ]
+    | k == a_if_unmodified_since        = [CurlHttpHeaders         $ ["If-Unmodified-Since: " ++ v] ]
+                                        -- ^^^^^
                                         -- CurlTimeValue seems to be buggy, therefore this workaround
-    | k `elem` ["-z", "--time-cond", a_if_modified_since]
+    | k `elem` ["-z", "time-cond", a_if_modified_since]
                                         =  ifModifiedOptions
 
-    | k == "--max-redirs"
+    | k == "max-redirs"
       &&
       isIntArg v                        = [CurlMaxRedirs           $ read    v]
-    | k `elem` ["-0", "--http1.0"]      = [CurlHttpVersion       HttpVersion10]
+    | k `elem` ["-0", "http1.0"]        = [CurlHttpVersion       HttpVersion10]
     | otherwise                         = []
     where
     ifModifiedOptions

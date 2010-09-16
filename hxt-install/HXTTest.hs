@@ -394,7 +394,9 @@ configTagSoupTests
         , "<a>x</a>"
         )
       , ( "example10.xml"               -- tagsoup removes CDATAs
-        , [withParseHTML yes, withCanonicalize no]
+        , [ withParseHTML yes
+	  , withCanonicalize no
+	  ]
         , "<a>x</a>"
         )
 
@@ -403,11 +405,12 @@ configTagSoupTests
         , ""
         )
       , ( "example11.txt"
-        , [withParseByMimeType yes]
-        , "hello\n"			-- TODO parse by mimetype does not work together with tagsoup
+        , [ withParseByMimeType yes ]
+        , "hello\n"
         )
       , ( "example11.txt"
-        , [withIgnoreNoneXmlContents yes, withParseByMimeType yes]
+        , [ withIgnoreNoneXmlContents yes
+	  , withParseByMimeType yes]
         , ""
         )
       ]
@@ -432,7 +435,7 @@ configTagSoupTests      = TestList []
 #ifdef curl
 configCurlTests      :: Test
 configCurlTests
-    = TestLabel "Test Curl parser configurations" $
+    = TestLabel "Test Curl input configurations" $
       TestList $
       zipWith mkTest [1..] $
       [ ( urlw3, []
@@ -458,13 +461,13 @@ configCurlTests
         , getAttrValue transferStatus
         , "200"
         )
-      , ( urlw3,  [ withCurl [("--max-filesize", "500000")]	-- file size limit o.k.
+      , ( urlw3,  [ withCurl [("max-filesize", "500000")]	-- file size limit o.k.
                   , withParseHTML yes
                   ]
         , getAttrValue transferStatus
         , "200"
         )
-      , ( urlw3,  [ withCurl [("--max-filesize", "500")]	-- file size limit exceeded
+      , ( urlw3,  [ withCurl [("max-filesize", "500")]		-- file size limit exceeded
                   , withParseHTML yes
                   ]
         , getAttrValue transferStatus
@@ -524,6 +527,89 @@ configCurlTests      = TestList []
 
 -- ----------------------------------------------------------
 
+#ifdef http
+configHttpTests      :: Test
+configHttpTests
+    = TestLabel "Test HTTP input configurations" $
+      TestList $
+      zipWith mkTest [1..] $
+      [ ( urlw3, []
+        , getAttrValue transferStatus
+        , "999"
+        )
+      , ( urlw3, [ withHTTP []
+                 , withValidate no
+                 ]
+        , getAttrValue transferStatus
+        , "200"
+        )
+      , ( urlw3c, [ withHTTP []			-- permanently moved
+                  , withParseHTML yes
+                  ]
+        , getAttrValue transferStatus
+        , "301"
+        )
+      , ( urlw3c, [ withHTTP []			-- permanently moved
+                  , withRedirect yes            -- with redirect
+                  , withParseHTML yes
+                  ]
+        , getAttrValue transferStatus
+        , "200"
+        )
+      , ( urlw3, [ withHTTP []
+                 , withProxy "xyz"				-- this proxy should not exist
+                 , withValidate no
+                 ]
+        , getAttrValue transferStatus
+        , "999"
+        )
+      , ( urlw3, [ withHTTP []
+                 , withProxy "localhost:4742"			-- this proxy also should not exist
+                 , withValidate no
+                 ]
+        , getAttrValue transferStatus
+        , "999"
+        )
+      , ( html32, [ withHTTP [(a_if_modified_since, "Mon, 05 Apr 1999 23:08:57 GMT")] -- empty body
+                  , withParseHTML yes
+                  , withValidate no
+                  ]
+        , getAttrValue transferStatus
+        , "304"
+        )
+      , ( html32, [ withHTTP []
+                  , withInputOption a_if_modified_since "Mon, 05 Apr 1999 23:08:57 GMT" -- empty body
+                  , withParseHTML yes
+                  ]
+        , getAttrValue transferStatus
+        , "304"
+        )
+      , ( html32, [ withHTTP [(a_if_modified_since, "Sat, 03 Apr 1999 23:08:57 GMT")] -- full body
+                  , withParseHTML yes
+                  , withWarnings  no
+                  ]
+        , getAttrValue transferStatus
+        , "200"
+        )
+      ]
+    where
+    mkTest cnt (url, config, proc, exp)
+        = TestCase $
+          do
+          res <- runX $
+                 configSysVars config
+                 >>>
+                 readDocument [] url
+                 >>>
+                 proc
+          assertEqual (show cnt ++ ". HTTP HTTP test:") exp (concat res)
+#else
+configHttpTests      :: Test
+configHttpTests      = TestList []
+#endif
+
+-- ----------------------------------------------------------
+
 allTests        :: Test
 allTests
     = TestList
@@ -532,7 +618,8 @@ allTests
 
 --      , configParseTests
 --      , configTagSoupTests
-      , configCurlTests
+--      , configCurlTests
+      , configHttpTests
 
       , TestLabel "Remove test input files" $
         TestCase remInputFiles
