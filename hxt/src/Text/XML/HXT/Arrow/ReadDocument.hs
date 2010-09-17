@@ -47,47 +47,68 @@ import Text.XML.HXT.Arrow.XmlState
 import Text.XML.HXT.Arrow.XmlState.TypeDefs
 
 -- ------------------------------------------------------------
--- TODO
+--
 {- |
 the main document input filter
 
 this filter can be configured by a list of configuration options, a value of type 'Text.XML.HXT.XmlState.TypeDefs.SysConfig'
 
-for available options see module 'Text.XML.HXT.XmlState.SystemConfig'
+for all available options see module 'Text.XML.HXT.XmlState.SystemConfig'
 
-- @withTagSoup@ : use light weight and lazy parser based on tagsoup lib.
-                  This is only available when hxt-tagsoup is installed and
-                  'Text.XML.HXT.TagSoup' is imported
+- @withValidate yes/no@ :
+  switch on/off DTD validation. Only for XML parsed documents, not for HTML parsing.
+
+- @withParseHTML yes/no@ :
+  switch on HTML parsing.
+
+- @withParseByMimeType yes/no@ :
+  select XML/HTML parser by document mime type.
+  text/xml and text/xhtml are parsed as XML, text/html as HTML.
+
+- @withCheckNamespaces yes/no@ :
+  Switch on/off namespace propagation and checking
+
+- @withInputEncoding <encoding-spec>@ :
+  Set default encoding.
+
+- @withTagSoup@ :
+  use light weight and lazy parser based on tagsoup lib.
+  This is only available when package hxt-tagsoup is installed and
+  'Text.XML.HXT.TagSoup' is imported
+
+- @withRelaxNG <schema.rng>@ :
+  validate document with Relax NG, the parameter is for the schema URI.
+  This implies using XML parser, no validation against DTD, and canonicalisation.
 
 
-- 'a_relax_schema' : validate document with Relax NG, the options value is the schema URI
-                     this implies using XML parser, no validation against DTD, and canonicalisation
-
-
-- 'a_indent' : indent document by inserting whitespace, else skip this step (default)
-
-- 'a_use_curl' : obsolete and ignored, HTTP acccess is always done with curl bindings for libcurl
-
-- 'a_if_modified_since' : read document conditionally, only if the document is newer than the given date and time argument, the contents is delivered,
-                          else just the root node with the meta data is returned. The date and time must be given in "System.Locale.rfc822DateFormat".
-
-- curl options : the HTTP interface with libcurl can be configured with a lot of options. To support these options in an easy way, there is a naming convetion:
-                 Every option, which has the prefix @curl@ and the rest of the name forms an option as described in the curl man page, is passed to the curl binding lib.
-                 See 'Text.XML.HXT.IO.GetHTTPLibCurl.getCont' for examples. Currently most of the options concerning HTTP requests are implemented.
+- @withCurl [<curl-option>...]@ :
+  Use the libCurl binding for HTTP access.
+  This is only available when package hxt-curl is installed and
+  'Text.XML.HXT.Curl' is imported
+                   
+- @withHTTP [<http-option>...]@ :
+  Use the Haskell HTTP package for HTTP access.
+  This is only available when package hxt-http is installed and
+  'Text.XML.HXT.HTTP' is imported
 
 examples:
 
-> readDocument [ ] "test.xml"
+> readDocument [] "test.xml"
 
 reads and validates a document \"test.xml\", no namespace propagation, only canonicalization is performed
 
+> ...
+> import Text.XML.HXT.Curl
+> ...
+>
 > readDocument [ withValidate        no
 >              , withInputEncoding   isoLatin1
 >              , withParseByMimeType yes
+               , withCurl []
 >              ] "http://localhost/test.php"
 
 reads document \"test.php\", parses it as HTML or XML depending on the mimetype given from the server, but without validation, default encoding 'isoLatin1'.
-
+HTTP access is done via libCurl.
 
 > readDocument [ withParseHTML       yes
 >              , withInputEncoding   isoLatin1
@@ -104,9 +125,9 @@ reads a HTML document from standard input, no validation is done when parsing HT
 reads an SVG document from \"test.svg\", sets the mime type by looking in the system mimetype config file,
 default encoding is 'isoLatin1',
 
+> ...
 > import Text.XML.HXT.Curl
 > import Text.XML.HXT.TagSoup
->
 > ...
 >
 > readDocument [ withParseHTML      yes
@@ -116,9 +137,9 @@ default encoding is 'isoLatin1',
 >              , withWarnings       no
 >              ] "http://www.haskell.org/"
 
-reads Haskell homepage with HTML parser ignoring any warnings
+reads Haskell homepage with HTML parser, ignoring any warnings
 (at the time of writing, there were some HTML errors),
-with http access via curl interface
+with http access via libCurl interface
 and proxy \"www-cache\" at port 3128,
 parsing is done with tagsoup HTML parser.
 This requires packages \"hxt-curl\" and \"hxt-tagsoup\" to be installed
@@ -127,9 +148,11 @@ This requires packages \"hxt-curl\" and \"hxt-tagsoup\" to be installed
 >              , withCheckNamespaces   yes
 >              , withRemoveWS          yes
 >              , withTrace             2
+>              , withHTTP              []
 >              ] "http://www.w3c.org/"
 
-read w3c home page (xhtml), validate and check namespaces, remove whitespace between tags, trace activities with level 2
+read w3c home page (xhtml), validate and check namespaces, remove whitespace between tags, trace activities with level 2.
+HTTP access is done with Haskell HTTP package
 
 for minimal complete examples see 'Text.XML.HXT.Arrow.WriteDocument.writeDocument' and 'runX', the main starting point for running an XML arrow.
 -}

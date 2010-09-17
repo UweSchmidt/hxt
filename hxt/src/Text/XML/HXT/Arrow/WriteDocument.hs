@@ -51,7 +51,7 @@ import Text.XML.HXT.Arrow.DocumentOutput        ( putXmlDocument
                                                 )
 
 -- ------------------------------------------------------------
--- TODO
+--
 
 {- |
 the main filter for writing documents
@@ -65,30 +65,36 @@ if @ destination @ is the empty string or \"-\", stdout is used as output device
 for available options see 'Text.XML.HXT.Arrow.XmlState.SystemConfig'
 
 
-- 'a_output_xml' : (default) issue XML: quote special XML chars \>,\<,\",\',& where neccessary
+- @withOutputXML@ :
+ (default) issue XML: quote special XML chars \>,\<,\",\',& where neccessary
                    add XML processing instruction
-                   and encode document with respect to 'a_output_encoding',
-                   if explicitly switched of, the plain text is issued, this is useful
-                   for non XML output, e.g. generated Haskell code, LaTex, Java, ...
+                   and encode document with respect to output encoding,
 
-- 'a_output_html' : issue XHTML: quote alle XML chars, use HTML entity refs or char refs for none ASCII chars
+- @withOutputHTML@ :
+ issue HTML: translate all special XML chars and all HTML chars with a corresponding entity reference
+ into entity references. Do not generate empty elements, e.g. @<script .../>@ for HTML elements, that are allowed
+ to contain a none empty body. Result is for the example is @<script ...></script>@.
+ The short form introduces trouble in various browsers.
 
-- 'a_no_empty_elements' : do not write the short form \<name .../\> for empty elements. When 'a_output_html' is set,
-                          the always empty HTML elements are still written in short form, but not the others, as e.g. the script element.
-                          Empty script elements, like \<script href=\"...\"/\>, are always a problem for firefox and others.
-                          When XML output is generated with this option, all empty elements are written in the long form.
+- @withOutputXHTML@ :
+ same as @withOutputHTML@, but all none ASCII chars are substituted by char references.
 
-- 'a_no_empty_elem_for' : do not generate empty elements for the element names given in the comma separated list of this option value.
-                          This option overwrites the above described 'a_no_empty_elements' option
+- @withOutputPLAIN@ :
+ Do not substitute any chars. This is useful when generating something else than XML/HTML, e.g. Haskell source code.
 
-- 'a_add_default_dtd' : if the document to be written was build by reading another document containing a Document Type Declaration,
-                        this DTD is inserted into the output document (default: no insert)
+- @withXmlPi yes/no@ :
+ Add a @<?xml version=... encoding=... ?>@ processing instruction to the beginning of the document.
+ Default is yes.
 
-- 'a_no_xml_pi' : suppress generation of \<?xml ... ?\> processing instruction
+- @withAddDefaultDTD@ :
+  if the document to be written was build by reading another document containing a Document Type Declaration,
+  this DTD is inserted into the output document (default: no insert)
 
-- 'a_show_tree' : show tree representation of document (for debugging)
+- @withShowTree yes/no@ :
+  show DOM tree representation of document (for debugging)
 
-- 'a_show_haskell' : show Haskell representaion of document (for debugging)
+- @withShowHaskell yes/no@ :
+  show Haskell representaion of document (for debugging)
 
  a minimal main program for copying a document
  has the following structure:
@@ -107,7 +113,7 @@ for available options see 'Text.XML.HXT.Arrow.XmlState.SystemConfig'
 >            )
 >       return ()
 
-an example for copying a document to standard output with global trace level 1, input trace level 2,
+an example for copying a document from the web to standard output with global trace level 1, input trace level 2,
 output encoding isoLatin1,
 and evaluation of
 error code is:
@@ -116,22 +122,31 @@ error code is:
 > where
 >
 > import Text.XML.HXT.Core
+> import Text.XML.HXT.Curl
+> -- or
+> -- import Text.XML.HXT.HTTP
 > import System.Exit
 >
 > main        :: IO ()
 > main
 >     = do
->       [rc] <- runX ( configSysVars [ withTrace 1 ]
-                       >>>
-                       readDocument    [ withTrace    2
-                                       , withValidate no
->                                      ] "hello.xml"
->                      >>>
->                      writeDocument [ withOutputEncoding isoLatin1
->                                    ] "-"        -- output to stdout
->                      >>>
->                      getErrStatus
->                    )
+>       [rc] <- runX
+>               ( configSysVars [ withTrace 1          -- set the defaults for all read-,
+>                               , withCurl []          -- write- and other operations
+>                                 -- or withHTTP []
+>                               ]
+>                 >>>
+>                 readDocument  [ withTrace     2      -- use these additional
+>                               , withParseHTML yes    -- options only for this read
+>                               ]
+>                               "http://www.haskell.org/"
+>                 >>>
+>                 writeDocument [ withOutputEncoding isoLatin1
+>                               ]
+>                               ""                     -- output to stdout
+>                 >>>
+>                 getErrStatus
+>               )
 >       exitWith ( if rc >= c_err
 >                  then ExitFailure 1
 >                  else ExitSuccess
