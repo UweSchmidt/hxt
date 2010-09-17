@@ -16,7 +16,7 @@ import Text.XML.HXT.XPath
 #endif
 
 #ifdef xslt
-import Text.XML.HXT.XSLT
+import Text.XML.HXT.XSLT ()
 #endif
 
 #ifdef cache
@@ -146,6 +146,29 @@ example11       = ( "example11.txt"
                     ]
                   )
 
+example12       :: (String, String)
+example12       = ( "example12.xml"
+                  , "<foo/>"
+                  )
+
+example12i      :: (String, String)
+example12i      = ( "example12i.xml"
+                  , "<foo>x</foo>"
+                  )
+
+example12s      :: (String, String)
+example12s      = ( "example12.rng"
+                  , unlines $
+                    [ "<grammar xmlns=\"http://relaxng.org/ns/structure/1.0\">"
+                    , "  <start>"
+                    , "    <element name=\"foo\">"
+                    , "      <empty/>"
+                    , "    </element>"
+                    , "  </start>"
+                    , "</grammar>"
+                    ]
+                  )
+
 examples        :: [(String, String)]
 examples        = [ example1
                   , example2
@@ -159,6 +182,9 @@ examples        = [ example1
                   , example9
                   , example10
                   , example11
+                  , example12
+                  , example12i
+                  , example12s
                   ]
 
 urlw3
@@ -200,19 +226,21 @@ remCacheDir     = system ("find " ++ cacheDir ++ " -type f | xargs rm -f") >> re
 
 mkTest0		:: String -> (String, SysConfigList, String) -> Test
 mkTest0 msg (prog, config, expected)
-    = mkTest msg (prog, config, writeDocumentToString [withRemoveWS no], expected)
+    = mkTest2 msg (prog, config, writeDocumentToString [withRemoveWS no], expected)
 
 mkTest1		:: String -> (String, SysConfigList, String) -> Test
 mkTest1 msg (prog, config, expected)
-    = mkTest msg (prog, [], writeDocumentToString config, expected)
+    = mkTest2 msg (prog, [], writeDocumentToString config, expected)
 
-mkTest		:: String -> (String, SysConfigList, IOSArrow XmlTree String, String) -> Test
-mkTest msg (url, config, proc, expected)
+mkTest2		:: String -> (String, SysConfigList, IOSArrow XmlTree String, String) -> Test
+mkTest2 msg (url, config, proc, expected)
+    = mkTest msg (config, (readDocument [] url >>> proc), expected)
+
+mkTest		:: String -> (SysConfigList, IOSArrow XmlTree String, String) -> Test
+mkTest msg (config, proc, expected)
     = TestCase $
       do res <- runX $
                 configSysVars config
-                >>>
-                readDocument [] url
                 >>>
                 proc
          assertEqual msg expected (concat res)
@@ -361,6 +389,32 @@ configParseTests
         )
       ]
 
+-- ----------------------------------------------------------
+
+#ifdef relaxng
+configRelaxTests        :: Test
+configRelaxTests
+    = TestLabel "Test RelaxNG configurations" $
+      TestList $
+      map (mkTest0 "RelaxNG test") $
+      [ ( "example12.xml"
+        , [ withTrace 1
+          , withRelaxNG "example12.rng"
+          ]
+        , "<foo/>"
+        )
+      , ( "example12i.xml"
+        , [ withRelaxNG "example12.rng" ]
+        , ""
+        )
+      ]
+#else
+configRelaxTests        :: Test
+configRelaxTests        = TestList []
+#endif
+
+-- ----------------------------------------------------------
+
 configOutputTests        :: Test
 configOutputTests
     = TestLabel "Test output configurations" $
@@ -442,14 +496,60 @@ configOutputTests
 
 -- ----------------------------------------------------------
 
+configPickleTests        :: Test
+configPickleTests
+    = TestLabel "Pickle tests output configurations" $
+      TestList $
+      map (mkTest "Pickle test") $
+      [ ( []
+        , xunpickleDocument pick [withValidate no] "example10.xml"
+        , "x"
+        )
+      , ( []
+        , xunpickleDocument pick [withValidate no] "example10.xml"
+          >>>
+          xpickleVal pick
+          >>>
+          writeDocumentToString []
+        , "<a>x</a>"
+        )
+      ]
+    where
+    pick = xpElem "a" $ xpText
+
+-- ----------------------------------------------------------
+
+#ifdef xpath
+configXPathTests        :: Test
+configXPathTests
+    = TestLabel "XPath tests" $
+      TestList $
+      map (mkTest2 "XPath test") $
+      [ ( "example10.xml"
+        , [withValidate no]
+        , xshow $ getXPathTreesInDoc "/a/text()"
+        , "x"
+        )
+      , ( "example10.xml"
+        , [withValidate no]
+        , xshow $ getXPathTreesInDoc "/a"
+        , "<a>x</a>"
+        )
+      ]
+#else
+configXPathTests        :: Test
+configXPathTests	= TestList []
+#endif
+
+-- ----------------------------------------------------------
+
 #ifdef tagsoup
 configTagSoupTests      :: Test
 configTagSoupTests
     = TestLabel "Test TagSoup parser configurations" $
       TestList $
-      map (mkTest0 "TagSoup parser test") $
-      [
-        ( "example2.xml"
+      map (mkTest0 "TagSoup parser test" . (\ (u,c,r) -> (u, withTagSoup : c, r))) $
+      [ ( "example2.xml"
         , []
         , "<html><head/><body/></html>"
         )
@@ -458,7 +558,7 @@ configTagSoupTests
         , "<html><head/><body/></html>"
         )
       , ( "example3.xml"
-        , [withTagSoup]
+        , []
         , "<html>\228</html>"
         )
 
@@ -538,7 +638,7 @@ configCurlTests      :: Test
 configCurlTests
     = TestLabel "Test Curl input configurations" $
       TestList $
-      map (mkTest "Curl HTTP test") $
+      map (mkTest2 "Curl HTTP test") $
       [ ( urlw3, []
         , getAttrValue transferStatus
         , "999"
@@ -622,7 +722,7 @@ configHttpTests      :: Test
 configHttpTests
     = TestLabel "Test HTTP input configurations" $
       TestList $
-      map (mkTest "HTTP input test") $
+      map (mkTest2 "HTTP input test") $
       [ ( urlw3, []
         , getAttrValue transferStatus
         , "999"
@@ -698,7 +798,7 @@ configCacheTests
         TestCase genCacheDir
       ]
       ++
-      map (mkTest "Cache HTTP test")
+      map (mkTest2 "Cache HTTP test")
 #ifdef curl
       [ ( urlw3
         , [ withCurl []
@@ -769,11 +869,14 @@ allTests
       [ TestLabel "Generate test input files" $
         TestCase genInputFiles
 
---      , configParseTests
---      , configOutputTests
---      , configTagSoupTests
---      , configCurlTests
---      , configHttpTests
+      , configParseTests
+      , configOutputTests
+      , configPickleTests
+      , configXPathTests
+      , configRelaxTests
+      , configTagSoupTests
+      , configCurlTests
+      , configHttpTests
       , configCacheTests
 
       , TestLabel "Remove test input files" $
