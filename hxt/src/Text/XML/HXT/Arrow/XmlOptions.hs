@@ -90,9 +90,8 @@ outputOptions
       , Option ""       [a_output_html]         (NoArg   withOutputHTML                 )      "output of none ASCII chars as HTMl entity references"
       , Option ""       [a_output_xhtml]        (NoArg   withOutputXHTML                )      "output of HTML elements with empty content (script, ...) done in format <elem...></elem> instead of <elem/>"
       , Option ""       [a_output_plain]        (NoArg   withOutputPLAIN                )      "output of HTML elements with empty content (script, ...) done in format <elem...></elem> instead of <elem/>"
-      , Option ""       [a_no_xml_pi]           (NoArg  (withNoXmlPi               True))      ("output without <?xml ...?> processing instruction, useful in combination with --" ++ show a_output_html)
+      , Option ""       [a_no_xml_pi]           (NoArg  (withXmlPi                False))      ("output without <?xml ...?> processing instruction, useful in combination with --" ++ show a_output_html)
       , Option ""       [a_no_empty_elem_for]   (ReqArg (withNoEmptyElemFor . words') "NAMES")   "output of empty elements done in format <elem...></elem> only for given list of element names"
-      , Option ""       [a_no_empty_elements]   (NoArg  (withNoEmptyElements       True))      "output of empty elements done in format <elem...></elem> instead of <elem/>"
       , Option ""       [a_add_default_dtd]     (NoArg  (withAddDefaultDTD         True))      "add the document type declaration given in the input document"
       , Option ""       [a_text_mode]           (NoArg  (withTextMode              True))      "output in text mode"
       ]

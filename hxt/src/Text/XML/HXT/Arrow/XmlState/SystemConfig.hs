@@ -198,14 +198,11 @@ withOutputXHTML                 = putS theOutputFmt XHTMLoutput
 withOutputPLAIN                 :: SysConfig
 withOutputPLAIN                 = putS theOutputFmt PLAINoutput
 
-withNoXmlPi                     :: Bool -> SysConfig
-withNoXmlPi                     = putS theNoXmlPi
+withXmlPi                       :: Bool -> SysConfig
+withXmlPi                       = putS theXmlPi
 
 withNoEmptyElemFor              :: [String] -> SysConfig
 withNoEmptyElemFor              = putS theNoEmptyElemFor
-
-withNoEmptyElements             :: Bool -> SysConfig
-withNoEmptyElements             = putS theNoEmptyElements
 
 withAddDefaultDTD               :: Bool -> SysConfig
 withAddDefaultDTD               = putS theAddDefaultDTD

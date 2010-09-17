@@ -54,7 +54,9 @@ Executable hxt-test
   Main-is: HXTTest.hs            
 
   Extensions: CPP
- 
+
+  ghc-options: -Wall
+
   if flag(curl)
     CPP-Options: -Dcurl
  

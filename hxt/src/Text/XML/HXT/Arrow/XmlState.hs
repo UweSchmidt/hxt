@@ -122,9 +122,8 @@ module Text.XML.HXT.Arrow.XmlState
     , withInputOption
     , withInputOptions
     , withMimeTypeFile
-    , withNoEmptyElements
     , withNoEmptyElemFor
-    , withNoXmlPi
+    , withXmlPi
     , withOutputEncoding
     , withOutputXML
     , withOutputHTML

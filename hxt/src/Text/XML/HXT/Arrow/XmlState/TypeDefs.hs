@@ -228,9 +228,8 @@ data XIOParseConfig     = XIOPcfg { xioMimeTypes                ::   MimeTypeTab
 data XIOOutputConfig    = XIOOcfg { xioIndent                   :: ! Bool
                                   , xioOutputEncoding           :: ! String
                                   , xioOutputFmt                :: ! XIOXoutConfig
-                                  , xioNoXmlPi                  :: ! Bool
+                                  , xioXmlPi                    :: ! Bool
                                   , xioNoEmptyElemFor           :: ! [String]
-                                  , xioNoEmptyElements          :: ! Bool
                                   , xioAddDefaultDTD            :: ! Bool
                                   , xioTextMode                 :: ! Bool
                                   , xioShowTree                 :: ! Bool
@@ -337,16 +336,12 @@ theOutputFmt                    :: Selector XIOSysState XIOXoutConfig
 theOutputFmt                    = ( xioOutputFmt,      \ x s -> s { xioOutputFmt = x} )
                                   `subS` theOutputConfig
 
-theNoXmlPi                      :: Selector XIOSysState Bool
-theNoXmlPi                      = ( xioNoXmlPi,      \ x s -> s { xioNoXmlPi = x} )
+theXmlPi                        :: Selector XIOSysState Bool
+theXmlPi                        = ( xioXmlPi,      \ x s -> s { xioXmlPi = x} )
                                   `subS` theOutputConfig
 
 theNoEmptyElemFor               :: Selector XIOSysState [String]
 theNoEmptyElemFor               = ( xioNoEmptyElemFor,      \ x s -> s { xioNoEmptyElemFor = x} )
-                                  `subS` theOutputConfig
-
-theNoEmptyElements              :: Selector XIOSysState Bool
-theNoEmptyElements              = ( xioNoEmptyElements,      \ x s -> s { xioNoEmptyElements = x} )
                                   `subS` theOutputConfig
 
 theAddDefaultDTD                :: Selector XIOSysState Bool

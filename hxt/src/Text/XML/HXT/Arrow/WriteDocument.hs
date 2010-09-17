@@ -176,7 +176,7 @@ writeDocument' textMode dst
 writeDocumentToString   :: ArrowXml a => SysConfigList  -> a XmlTree String
 writeDocumentToString config
     = prepareContents ( foldr (>>>) id (withOutputEncoding unicodeString :
-                                        withNoXmlPi        yes           :
+                                        withXmlPi          no            :
                                         config
                                        )
                         $ initialSysState
@@ -204,18 +204,11 @@ prepareContents config encodeDoc
     outHtml'     = getS theOutputFmt   config ==  HTMLoutput
     outXhtml'    = getS theOutputFmt   config == XHTMLoutput
     outXml'      = getS theOutputFmt   config ==   XMLoutput
-    noPi'        = getS theNoXmlPi     config
-    noEEs'       = getS theNoEmptyElements config
+    noPi'        = not $ getS theXmlPi       config
     noEEsFor'    = getS theNoEmptyElemFor  config
     addDDTD'     = getS theAddDefaultDTD   config
     outEnc'      = getS theOutputEncoding  config
 
-    formatEmptyElems
-        | not (null noEEsFor')          = preventEmptyElements noEEsFor'
-        | noEEs'
-          ||
-          outXhtml'                     = preventEmptyElements []
-        | otherwise                     = const this
     addDtd
         | addDDTD'                      = addDefaultDTDecl
         | otherwise                     = this
@@ -227,13 +220,23 @@ prepareContents config encodeDoc
     format
         | showTree'                     = treeRepOfXmlDoc
         | showHaskell'                  = haskellRepOfXmlDoc
-        | outHtml'                      = formatEmptyElems True
+        | outHtml'                      = preventEmptyElements noEEsFor' True
                                           >>>
                                           escapeHtmlDoc                 -- escape al XML and HTML chars >= 128
                                           >>>
                                           encodeDoc                     -- convert doc into text with respect to output encoding with ASCII as default
                                             noPi' ( if null outEnc' then usAscii else outEnc' )
-        | outXml'                       = formatEmptyElems outXhtml'
+
+        | outXhtml'                     = preventEmptyElements noEEsFor' True
+                                          >>>
+                                          escapeXmlDoc                  -- escape lt, gt, amp, quot,
+                                          >>>
+                                          encodeDoc                     -- convert doc into text with respect to output encoding
+                                            noPi' outEnc'
+        | outXml'                       = ( if null noEEsFor'
+                                            then this
+                                            else preventEmptyElements noEEsFor' False
+                                          )
                                           >>>
                                           escapeXmlDoc                  -- escape lt, gt, amp, quot,
                                           >>>

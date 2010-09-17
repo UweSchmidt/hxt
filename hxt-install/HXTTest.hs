@@ -33,11 +33,11 @@ import Text.XML.HXT.TagSoup
 
 -- ----------------------------------------------------------
 
-import Data.Maybe
+import Data.Maybe	()
 
 import System.Directory
 import System.Exit
-import System.IO
+import System.IO	()
 
 import Test.HUnit
 
@@ -56,6 +56,14 @@ example2        = ( "example2.xml"
                   , unlines $
                     [ "<?xml version='1.0'?>"
                     , "<html><head/><body/></html>"
+                    ]
+                  )
+
+example2a       :: (String, String)
+example2a       = ( "example2a.xml"
+                  , unlines $
+                    [ "<?xml version='1.0' encoding='UTF-8'?>"
+                    , "<html><head/><body>&lt;&#224;&gt;</body></html>"
                     ]
                   )
 
@@ -137,6 +145,7 @@ example11       = ( "example11.txt"
 examples        :: [(String, String)]
 examples        = [ example1
                   , example2
+                  , example2a
                   , example3
                   , example4
                   , example5
@@ -175,11 +184,32 @@ remInputFiles   = sequence_ $ map (remInputFile . fst) $ examples
 
 -- ----------------------------------------------------------
 
+mkTest0		:: String -> (String, SysConfigList, String) -> Test
+mkTest0 msg (prog, config, expected)
+    = mkTest msg (prog, config, writeDocumentToString [withRemoveWS no], expected)
+
+mkTest1		:: String -> (String, SysConfigList, String) -> Test
+mkTest1 msg (prog, config, expected)
+    = mkTest msg (prog, [], writeDocumentToString config, expected)
+
+mkTest		:: String -> (String, SysConfigList, IOSArrow XmlTree String, String) -> Test
+mkTest msg (url, config, proc, expected)
+    = TestCase $
+      do res <- runX $
+                configSysVars config
+                >>>
+                readDocument [] url
+                >>>
+                proc
+         assertEqual msg expected (concat res)
+
+-- ----------------------------------------------------------
+
 configParseTests        :: Test
 configParseTests
     = TestLabel "Test simple parser configurations" $
       TestList $
-      zipWith mkTest [1..] $
+      map (mkTest0 "Simple parser test") $
       [ ( "example1.xml"
         , []
         , "<html> <head> </head> <body> </body> </html>"
@@ -316,17 +346,85 @@ configParseTests
         , ""
         )
       ]
-    where
-    mkTest cnt (prog, config, exp)
-        = TestCase $
-          do
-          res <- runX $
-                 configSysVars config
-                 >>>
-                 readDocument [] prog
-                 >>>
-                 writeDocumentToString [withRemoveWS no]
-          assertEqual (show cnt ++ ". Simple parser test:") exp (concat res)
+
+configOutputTests        :: Test
+configOutputTests
+    = TestLabel "Test output configurations" $
+      TestList $
+      map (mkTest1 "Output test") $
+      [ ( "example1.xml"
+        , []
+        , "<html> <head> </head> <body> </body> </html>"
+        )
+      , ( "example1.xml"
+        , [withIndent yes]
+        , "<html>\n  <head/>\n  <body/>\n</html>\n"
+        )
+      , ( "example1.xml"
+        , [withRemoveWS yes]
+        , "<html><head/><body/></html>"
+        )
+      , ( "example1.xml"
+        , [ withRemoveWS yes
+          , withNoEmptyElemFor ["head"]
+          ]
+        , "<html><head></head><body/></html>"
+        )
+      , ( "example2a.xml"
+        , [ withRemoveWS yes
+          , withOutputXML
+          ]
+        , "<html><head/><body>&lt;\224></body></html>"
+        )
+      , ( "example2a.xml"
+        , [ withRemoveWS yes
+          , withOutputHTML
+          ]
+        , "<html><head></head><body>&lt;&agrave;></body></html>"
+        )
+      , ( "example2a.xml"
+        , [ withRemoveWS yes
+          , withOutputXHTML
+          ]
+        , "<html><head></head><body>&lt;\224></body></html>"
+        )
+      , ( "example2a.xml"
+        , [ withRemoveWS yes
+          , withOutputPLAIN
+          ]
+        , "<html><head/><body><\224></body></html>"
+        )
+      , ( "example2a.xml"
+        , [ withRemoveWS yes
+          , withOutputXHTML
+          , withOutputEncoding usAscii
+          ]
+        , "<html><head></head><body>&lt;&#224;></body></html>"
+        )
+      , ( "example2a.xml"
+        , [ withRemoveWS yes
+          , withOutputXHTML
+          , withOutputEncoding utf8
+          ]
+        , "<html><head></head><body>&lt;\195\160></body></html>"
+        )
+      , ( "example2a.xml"
+        , [ withRemoveWS yes
+          , withOutputXHTML
+          , withOutputEncoding usAscii
+          , withXmlPi yes
+          ]
+        , "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>\n<html><head></head><body>&lt;&#224;></body></html>"
+        )
+      , ( "example2a.xml"
+        , [ withRemoveWS yes
+          , withOutputXHTML
+          , withOutputEncoding utf8
+          , withXmlPi yes
+          ]
+        , "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<html><head></head><body>&lt;\195\160></body></html>"
+        )
+      ]
 
 -- ----------------------------------------------------------
 
@@ -335,7 +433,7 @@ configTagSoupTests      :: Test
 configTagSoupTests
     = TestLabel "Test TagSoup parser configurations" $
       TestList $
-      zipWith mkTest [1..] $
+      map (mkTest0 "TagSoup parser test") $
       [
         ( "example2.xml"
         , []
@@ -414,17 +512,6 @@ configTagSoupTests
         , ""
         )
       ]
-    where
-    mkTest cnt (prog, config, exp)
-        = TestCase $
-          do
-          res <- runX $
-                 configSysVars (config ++ [withTagSoup])
-                 >>>
-                 readDocument [] prog
-                 >>>
-                 writeDocumentToString [withRemoveWS no]
-          assertEqual (show cnt ++ ". TagSoup parser test:") exp (concat res)
 #else
 configTagSoupTests      :: Test
 configTagSoupTests      = TestList []
@@ -437,7 +524,7 @@ configCurlTests      :: Test
 configCurlTests
     = TestLabel "Test Curl input configurations" $
       TestList $
-      zipWith mkTest [1..] $
+      map (mkTest "Curl HTTP test") $
       [ ( urlw3, []
         , getAttrValue transferStatus
         , "999"
@@ -509,17 +596,6 @@ configCurlTests
         , "200"
         )
       ]
-    where
-    mkTest cnt (url, config, proc, exp)
-        = TestCase $
-          do
-          res <- runX $
-                 configSysVars config
-                 >>>
-                 readDocument [] url
-                 >>>
-                 proc
-          assertEqual (show cnt ++ ". Curl HTTP test:") exp (concat res)
 #else
 configCurlTests      :: Test
 configCurlTests      = TestList []
@@ -532,7 +608,7 @@ configHttpTests      :: Test
 configHttpTests
     = TestLabel "Test HTTP input configurations" $
       TestList $
-      zipWith mkTest [1..] $
+      map (mkTest "HTTP input test") $
       [ ( urlw3, []
         , getAttrValue transferStatus
         , "999"
@@ -592,17 +668,6 @@ configHttpTests
         , "200"
         )
       ]
-    where
-    mkTest cnt (url, config, proc, exp)
-        = TestCase $
-          do
-          res <- runX $
-                 configSysVars config
-                 >>>
-                 readDocument [] url
-                 >>>
-                 proc
-          assertEqual (show cnt ++ ". HTTP HTTP test:") exp (concat res)
 #else
 configHttpTests      :: Test
 configHttpTests      = TestList []
@@ -617,9 +682,10 @@ allTests
         TestCase genInputFiles
 
 --      , configParseTests
+      , configOutputTests
 --      , configTagSoupTests
 --      , configCurlTests
-      , configHttpTests
+--      , configHttpTests
 
       , TestLabel "Remove test input files" $
         TestCase remInputFiles
