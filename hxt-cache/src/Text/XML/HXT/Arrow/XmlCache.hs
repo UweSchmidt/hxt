@@ -143,17 +143,29 @@ defaultOptions          = [ ( a_compress,       v_0        )
 -}
 -- ------------------------------------------------------------
 
--- | Arrow for checking if a document is in the cache.
--- The arrow fails if document not there, else the file modification time is returned.
+-- | Predicate arrow for checking if a document is in the cache.
+-- The arrow fails if document not there or is not longer valid, else the file name is returned.
 
-isInCache               :: IOStateArrow s String ClockTime
+isInCache               :: IOStateArrow s String String
 isInCache               = uncurry isInC $< getSysVar (theDocumentAge `pairS` theCacheDir)
     where
-    isInC age cdir      = arrIO (isInCache' age cdir)
-                          >>>
-                          arr maybeToList
-                          >>>
-                          unlistA
+    isInC age cdir      = ( traceValue 2 (\ x -> "isInCache: file=" ++ show x ++ " age=" ++ show age ++ " cache dir=" ++ show cdir)
+                            >>>
+                            arrIO (isInCache' age cdir)
+                            >>>
+                            arrL ( \ x ->
+                                   case x of
+                                   Just Nothing -> [x]
+                                   _            -> []
+                                 )
+                          ) `guards` this
+
+    isInCache' age cdir f
+                        = cacheHit age cf
+        where
+        cf              = uncurry (</>) $ cacheFile cdir f
+
+-- ------------------------------------------------------------
 
 lookupCache'            :: ((FilePath, Integer), Bool) -> String -> IO (IOStateArrow s a XmlTree)
 lookupCache' ((dir, age), e404) src
@@ -282,18 +294,6 @@ cacheFile               :: FilePath -> String -> (FilePath, FilePath)
 cacheFile dir f          = (dir </> fd, fn)
     where
     (fd, fn)            = splitAt 2 . sha1HashString $ f
-
--- ------------------------------------------------------------
-
-isInCache'              :: Integer -> FilePath -> String -> IO (Maybe ClockTime)
-isInCache' age cdir f   = do
-                          h <- cacheHit age cf
-                          return $
-                                 case h of
-                                 Just (Just t)  -> Just t
-                                 _              -> Nothing
-    where
-    cf                  = uncurry (</>) $ cacheFile cdir f
 
 -- ------------------------------------------------------------
 

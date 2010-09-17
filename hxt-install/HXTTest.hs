@@ -20,7 +20,10 @@ import Text.XML.HXT.XSLT
 #endif
 
 #ifdef cache
+#ifdef curl
 import Text.XML.HXT.Cache
+import Text.XML.HXT.Arrow.XmlCache
+#endif
 #endif
 
 #ifdef curl
@@ -35,6 +38,7 @@ import Text.XML.HXT.TagSoup
 
 import Data.Maybe	()
 
+import System           ( system )
 import System.Directory
 import System.Exit
 import System.IO	()
@@ -181,6 +185,16 @@ genInputFiles   = sequence_ $ map genInputFile $ examples
 
 remInputFiles   :: IO ()
 remInputFiles   = sequence_ $ map (remInputFile . fst) $ examples
+
+cacheDir        :: String
+cacheDir        = "./.hxt-test-cache"
+
+genCacheDir     :: IO ()
+genCacheDir     = createDirectoryIfMissing True cacheDir
+
+remCacheDir     :: IO ()
+remCacheDir     = system ("find " ++ cacheDir ++ " -type f | xargs rm -f") >> return ()
+                  -- removeDirectoryRecursive cacheDir
 
 -- ----------------------------------------------------------
 
@@ -675,6 +689,80 @@ configHttpTests      = TestList []
 
 -- ----------------------------------------------------------
 
+#ifdef cache
+configCacheTests      :: Test
+configCacheTests
+    = TestLabel "Test Cache input configurations" $
+      TestList $
+      [ TestLabel "Generate cache dir" $
+        TestCase genCacheDir
+      ]
+      ++
+      map (mkTest "Cache HTTP test")
+#ifdef curl
+      [ ( urlw3
+        , [ withCurl []
+          , withoutCache
+          , withValidate no
+          ]
+        , getAttrValue transferStatus
+        , "200"
+        )
+      , ( urlw3					-- cache write
+        , [ withCurl []
+          , withTrace 1
+          , withCache cacheDir 10 False
+          , withValidate no
+          ]
+        , ( getAttrValue transferStatus
+            &&&
+            ( constA urlw3
+              >>>
+              ( (isInCache >>> constA ",ok")
+                `orElse`
+                constA ",not in cache"
+              )
+            )
+          )
+          >>> arr (uncurry (++))
+        , "200,ok"
+        )
+      , ( urlw3					-- cache hit
+        , [ withCurl []
+          , withTrace 1
+          , withCache cacheDir 10 False
+          , withValidate no
+          ]
+        , perform (arrIO0 (system "sleep 5"))	-- delay for next test
+          >>>
+          getAttrValue transferStatus
+        , "200"
+        )
+      , ( urlw3					-- cache out of date, refresh
+        , [ withCurl []
+          , withTrace 1
+          , withCache cacheDir 1 False
+          , withValidate no
+          ]
+        , getAttrValue transferStatus
+        , "200"
+        )
+      ]
+#else
+      []
+#endif
+      ++
+      [ TestLabel "Remove cache dir" $
+        TestCase remCacheDir
+      ]
+#else
+configCacheTests      :: Test
+configCacheTests      = TestList []
+#endif
+
+
+-- ----------------------------------------------------------
+
 allTests        :: Test
 allTests
     = TestList
@@ -682,10 +770,11 @@ allTests
         TestCase genInputFiles
 
 --      , configParseTests
-      , configOutputTests
+--      , configOutputTests
 --      , configTagSoupTests
 --      , configCurlTests
 --      , configHttpTests
+      , configCacheTests
 
       , TestLabel "Remove test input files" $
         TestCase remInputFiles
