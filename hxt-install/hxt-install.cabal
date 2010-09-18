@@ -14,7 +14,7 @@ Stability:           Experimental
 Category:            XML
 Build-type:          Simple
 
--- Extra-source-files:  
+-- Extra-source-files:
 
 Cabal-version:       >=1.6
 
@@ -29,6 +29,10 @@ Flag http
 Flag cache
  Description:        Install hxt-cache
  Default:            True
+
+Flag bzip
+ Description:        For testing hxt-cache with compression
+ Default:            False
 
 Flag tagsoup
  Description:        Install hxt-tagsoup
@@ -47,7 +51,7 @@ Flag xslt
  Default:            True
 
 Executable hxt-test
-  Main-is: HXTTest.hs            
+  Main-is: HXTTest.hs
 
   Extensions: CPP
 
@@ -55,48 +59,54 @@ Executable hxt-test
 
   if flag(curl)
     CPP-Options: -Dcurl
- 
+
   if flag(http)
     CPP-Options: -Dhttp
- 
+
   if flag(cache)
     CPP-Options: -Dcache
- 
+
+  if flag(bzip)
+    CPP-Options: -Dbzip
+
   if flag(tagsoup)
     CPP-Options: -Dtagsoup
- 
+
   if flag(relaxng)
     CPP-Options: -Drelaxng
- 
+
   if flag(xpath)
     CPP-Options: -Dxpath
- 
+
   if flag(xslt)
     CPP-Options: -Dxslt
- 
+
   Build-depends: base             >= 4   && < 5,
                  haskell98        >= 1   && < 2,
                  directory        >= 1   && < 2,
                  HUnit            >= 1.2 && < 2,
                  hxt              >= 9   && < 10
-  
+
   if flag(curl)
-    Build-depends:  hxt-curl      >= 9 && < 10
+    Build-depends:  hxt-curl      >= 9   && < 10
 
   if flag(http)
-    Build-depends:  hxt-http      >= 9 && < 10
+    Build-depends:  hxt-http      >= 9   && < 10
 
   if flag(cache)
-    Build-depends:  hxt-cache     >= 9 && < 10
+    Build-depends:  hxt-cache     >= 9   && < 10
+
+  if flag(bzip)
+    Build-depends:  bzlib         >= 0.5 && < 1
 
   if flag(tagsoup)
-    Build-depends:  hxt-tagsoup   >= 9 && < 10
+    Build-depends:  hxt-tagsoup   >= 9   && < 10
 
   if flag(relaxng)
-    Build-depends:  hxt-relaxng   >= 9 && < 10
+    Build-depends:  hxt-relaxng   >= 9   && < 10
 
   if flag(xpath)
-    Build-depends:  hxt-xpath     >= 9 && < 10
+    Build-depends:  hxt-xpath     >= 9   && < 10
 
   if flag(xslt)
-    Build-depends:  hxt-xslt      >= 9 && < 10
+    Build-depends:  hxt-xslt      >= 9   && < 10

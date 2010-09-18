@@ -23,6 +23,9 @@ import Text.XML.HXT.XSLT ()
 #ifdef curl
 import Text.XML.HXT.Cache
 import Text.XML.HXT.Arrow.XmlCache
+#ifdef bzip
+import Codec.Compression.BZip ( compress, decompress )
+#endif
 #endif
 #endif
 
@@ -36,12 +39,12 @@ import Text.XML.HXT.TagSoup
 
 -- ----------------------------------------------------------
 
-import Data.Maybe	()
+import Data.Maybe       ()
 
 import System           ( system )
 import System.Directory
 import System.Exit
-import System.IO	()
+import System.IO        ()
 
 import Test.HUnit
 
@@ -188,10 +191,11 @@ examples        = [ example1
                   ]
 
 urlw3
-  , urlw3c, html32	:: String
+  , urlw3h, urlw3c, html32      :: String
 
-urlw3		= "http://www.w3.org/"
-urlw3c		= "http://www.w3c.org/"
+urlw3           = "http://www.w3.org/"
+urlw3h          = "http://www.w3.org/Home.html"
+urlw3c          = "http://www.w3c.org/"
 html32          = "http://www.w3.org/TR/REC-html32-19970114"
 
 genInputFile    :: (String, String) -> IO ()
@@ -224,19 +228,19 @@ remCacheDir     = system ("find " ++ cacheDir ++ " -type f | xargs rm -f") >> re
 
 -- ----------------------------------------------------------
 
-mkTest0		:: String -> (String, SysConfigList, String) -> Test
+mkTest0         :: String -> (String, SysConfigList, String) -> Test
 mkTest0 msg (prog, config, expected)
     = mkTest2 msg (prog, config, writeDocumentToString [withRemoveWS no], expected)
 
-mkTest1		:: String -> (String, SysConfigList, String) -> Test
+mkTest1         :: String -> (String, SysConfigList, String) -> Test
 mkTest1 msg (prog, config, expected)
     = mkTest2 msg (prog, [], writeDocumentToString config, expected)
 
-mkTest2		:: String -> (String, SysConfigList, IOSArrow XmlTree String, String) -> Test
+mkTest2         :: String -> (String, SysConfigList, IOSArrow XmlTree String, String) -> Test
 mkTest2 msg (url, config, proc, expected)
     = mkTest msg (config, (readDocument [] url >>> proc), expected)
 
-mkTest		:: String -> (SysConfigList, IOSArrow XmlTree String, String) -> Test
+mkTest          :: String -> (SysConfigList, IOSArrow XmlTree String, String) -> Test
 mkTest msg (config, proc, expected)
     = TestCase $
       do res <- runX $
@@ -538,7 +542,7 @@ configXPathTests
       ]
 #else
 configXPathTests        :: Test
-configXPathTests	= TestList []
+configXPathTests        = TestList []
 #endif
 
 -- ----------------------------------------------------------
@@ -607,8 +611,8 @@ configTagSoupTests
         )
       , ( "example10.xml"               -- tagsoup removes CDATAs
         , [ withParseHTML yes
-	  , withCanonicalize no
-	  ]
+          , withCanonicalize no
+          ]
         , "<a>x</a>"
         )
 
@@ -622,7 +626,7 @@ configTagSoupTests
         )
       , ( "example11.txt"
         , [ withIgnoreNoneXmlContents yes
-	  , withParseByMimeType yes]
+          , withParseByMimeType yes]
         , ""
         )
       ]
@@ -649,40 +653,40 @@ configCurlTests
         , getAttrValue transferStatus
         , "200"
         )
-      , ( urlw3c, [ withCurl []			-- permanently moved
+      , ( urlw3c, [ withCurl []                 -- permanently moved
                   , withParseHTML yes
                   ]
         , getAttrValue transferStatus
         , "301"
         )
-      , ( urlw3c, [ withCurl []			-- permanently moved
+      , ( urlw3c, [ withCurl []                 -- permanently moved
                   , withRedirect yes            -- with redirect
                   , withParseHTML yes
                   ]
         , getAttrValue transferStatus
         , "200"
         )
-      , ( urlw3,  [ withCurl [("max-filesize", "500000")]	-- file size limit o.k.
+      , ( urlw3,  [ withCurl [("max-filesize", "500000")]       -- file size limit o.k.
                   , withParseHTML yes
                   ]
         , getAttrValue transferStatus
         , "200"
         )
-      , ( urlw3,  [ withCurl [("max-filesize", "500")]		-- file size limit exceeded
+      , ( urlw3,  [ withCurl [("max-filesize", "500")]          -- file size limit exceeded
                   , withParseHTML yes
                   ]
         , getAttrValue transferStatus
         , "999"
         )
       , ( urlw3, [ withCurl []
-                 , withProxy "xyz"				-- this proxy should not exist
+                 , withProxy "xyz"                              -- this proxy should not exist
                  , withValidate no
                  ]
         , getAttrValue transferStatus
         , "999"
         )
       , ( urlw3, [ withCurl []
-                 , withProxy "localhost:4742"			-- this proxy also should not exist
+                 , withProxy "localhost:4742"                   -- this proxy also should not exist
                  , withValidate no
                  ]
         , getAttrValue transferStatus
@@ -733,13 +737,13 @@ configHttpTests
         , getAttrValue transferStatus
         , "200"
         )
-      , ( urlw3c, [ withHTTP []			-- permanently moved
+      , ( urlw3c, [ withHTTP []                 -- permanently moved
                   , withParseHTML yes
                   ]
         , getAttrValue transferStatus
         , "301"
         )
-      , ( urlw3c, [ withHTTP []			-- permanently moved
+      , ( urlw3c, [ withHTTP []                 -- permanently moved
                   , withRedirect yes            -- with redirect
                   , withParseHTML yes
                   ]
@@ -747,14 +751,14 @@ configHttpTests
         , "200"
         )
       , ( urlw3, [ withHTTP []
-                 , withProxy "xyz"				-- this proxy should not exist
+                 , withProxy "xyz"                              -- this proxy should not exist
                  , withValidate no
                  ]
         , getAttrValue transferStatus
         , "999"
         )
       , ( urlw3, [ withHTTP []
-                 , withProxy "localhost:4742"			-- this proxy also should not exist
+                 , withProxy "localhost:4742"                   -- this proxy also should not exist
                  , withValidate no
                  ]
         , getAttrValue transferStatus
@@ -808,7 +812,7 @@ configCacheTests
         , getAttrValue transferStatus
         , "200"
         )
-      , ( urlw3					-- cache write
+      , ( urlw3                                 -- cache write
         , [ withCurl []
           , withTrace 1
           , withCache cacheDir 10 False
@@ -827,18 +831,18 @@ configCacheTests
           >>> arr (uncurry (++))
         , "200,ok"
         )
-      , ( urlw3					-- cache hit
+      , ( urlw3                                 -- cache hit
         , [ withCurl []
           , withTrace 1
           , withCache cacheDir 10 False
           , withValidate no
           ]
-        , perform (arrIO0 (system "sleep 5"))	-- delay for next test
+        , perform (arrIO0 (system "sleep 5"))   -- delay for next test
           >>>
           getAttrValue transferStatus
         , "200"
         )
-      , ( urlw3					-- cache out of date, refresh
+      , ( urlw3                                 -- cache out of date, refresh
         , [ withCurl []
           , withTrace 1
           , withCache cacheDir 1 False
@@ -847,6 +851,50 @@ configCacheTests
         , getAttrValue transferStatus
         , "200"
         )
+#ifdef bzip
+      , ( urlw3h                                        -- cache write
+        , [ withCurl []
+          , withTrace 1
+          , withCache cacheDir 10 False
+          , withCompression (compress, decompress)  -- compress serialized data with bzip
+          , withValidate no                         -- for saving cache space and IO operations
+          ]                                         -- compression saves about 90% of space
+        , ( getAttrValue transferStatus
+            &&&
+            ( constA urlw3h
+              >>>
+              ( (isInCache >>> constA ",ok")
+                `orElse`
+                constA ",not in cache"
+              )
+            )
+          )
+          >>> arr (uncurry (++))
+        , "200,ok"
+        )
+      , ( urlw3h                                        -- cache hit
+        , [ withCurl []
+          , withTrace 1
+          , withCache cacheDir 10 False
+          , withCompression (compress, decompress)
+          , withValidate no
+          ]
+        , perform (arrIO0 (system "sleep 5"))           -- delay for next test
+          >>>
+          getAttrValue transferStatus
+        , "200"
+        )
+      , ( urlw3h                                        -- cache out of date, refresh
+        , [ withCurl []
+          , withTrace 1
+          , withCache cacheDir 1 False
+          , withCompression (compress, decompress)
+          , withValidate no
+          ]
+        , getAttrValue transferStatus
+        , "200"
+        )
+#endif
       ]
 #else
       []
