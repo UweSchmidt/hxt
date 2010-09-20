@@ -1,7 +1,18 @@
--- |
--- UTF-8 character parser and simple XML token parsers
---
--- Version : $Id: XmlCharParser.hs,v 1.2 2005/05/31 16:01:12 hxml Exp $
+-- ------------------------------------------------------------
+
+{- |
+   Module     : Text.XML.HXT.Parser.XmlCharParser
+   Copyright  : Copyright (C) 2010 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : stable
+   Portability: portable
+
+   UTF-8 character parser and simple XML token parsers
+-}
+
+-- ------------------------------------------------------------
 
 module Text.XML.HXT.Parser.XmlCharParser
     ( xmlChar                   -- xml char parsers

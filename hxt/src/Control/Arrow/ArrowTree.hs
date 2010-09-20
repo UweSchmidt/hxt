@@ -2,19 +2,17 @@
 
 {- |
    Module     : Control.Arrow.ArrowTree
-   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   Copyright  : Copyright (C) 2010 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
-   Stability  : experimental
+   Stability  : stable
    Portability: portable
-   Version    : $Id: ArrowTree.hs,v 1.12 2006/11/30 16:05:24 hxml Exp $
 
-List arrows for tree processing.
+   List arrows for tree processing.
 
-Trees that implement the "Data.Tree.Class" interface, can be processed
-with these arrows.
-
+   Trees that implement the "Data.Tree.Class" interface, can be processed
+   with these arrows.
 -}
 
 -- ------------------------------------------------------------

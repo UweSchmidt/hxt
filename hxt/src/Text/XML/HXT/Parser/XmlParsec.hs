@@ -8,7 +8,6 @@
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: XmlParsec.hs,v 1.14 2005/09/02 17:09:39 hxml Exp $
 
    Xml Parsec parser with pure filter interface
 

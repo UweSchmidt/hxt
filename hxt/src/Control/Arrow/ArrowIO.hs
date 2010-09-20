@@ -8,9 +8,8 @@
    Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: ArrowIO.hs,v 1.6 2005/09/02 17:09:39 hxml Exp $
 
-Lifting of IO actions to arrows
+  Lifting of IO actions to arrows
 
 -}
 

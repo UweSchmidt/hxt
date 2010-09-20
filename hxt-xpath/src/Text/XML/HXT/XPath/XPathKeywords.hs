@@ -1,9 +1,18 @@
--- |
--- $Id: XPathKeywords.hs,v 1.1 2004/09/02 19:12:05 hxml Exp $
---
--- the XPath keywords
---
+-- ------------------------------------------------------------
 
+{- |
+   Module     : Text.XML.HXT.XPath.XPathKeywords
+   Copyright  : Copyright (C) 2010 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : experimental
+   Portability: portable
+
+   xpath keywords
+-}
+
+-- ------------------------------------------------------------
 
 module Text.XML.HXT.XPath.XPathKeywords
 where

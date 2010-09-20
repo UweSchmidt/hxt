@@ -1,35 +1,38 @@
-HXTPACKAGES	= hxt-charproperties \
-                  hxt-regex-xmlschema \
-                  hxt-unicode \
-                  hxt \
-                  hxt-curl \
-		  hxt-http \
-                  hxt-tagsoup \
-                  hxt-xpath \
-		  hxt-relaxng \
-		  hxt-xslt \
-		  hxt-cache
+PL	= hxt-charproperties \
+          hxt-regex-xmlschema \
+          hxt-unicode \
+          hxt \
+          hxt-curl \
+          hxt-http \
+          hxt-tagsoup \
+          hxt-xpath \
+          hxt-relaxng \
+	  hxt-xslt \
+	  hxt-cache
 
 #                 hxt-filter                  # not maintained to work with hxt-9
 #                 hxt-binary                  # no longer required, integrated into hxt-9
 #                 janus/janus-library         # currently not further maintained
 
 all	:
-	$(foreach i,$(HXTPACKAGES), ( cd $i && cabal configure && cabal build && cabal install && cabal sdist; ); )
+	$(foreach i,$(PL), ( cd $i && cabal configure && cabal build && cabal install && cabal sdist; ); )
 	ghc-pkg list
 
 global	:
-	$(foreach i,$(HXTPACKAGES), ( cd $i && cabal configure && cabal build && cabal sdist && sudo cabal install --global; ); )
+	$(foreach i,$(PL), ( cd $i && cabal configure && cabal build && cabal sdist && sudo cabal install --global; ); )
 	ghc-pkg list
 
+haddock	:
+	$(foreach i,$(PL), ( cd $i && cabal haddock ); )
+
 clean	:
-	$(foreach i,$(HXTPACKAGES), ( cd $i && cabal clean; ); )
+	$(foreach i,$(PL), ( cd $i && cabal clean; ); )
 
 test	:
 	[ -d ~/tmp ] || mkdir ~/tmp
 	cp test-Makefile ~/tmp/Makefile
-	$(foreach i, $(HXTPACKAGES), rm -f $(wildcard ~/tmp/$i-*.tar.gz); )
-	$(foreach i, $(HXTPACKAGES), cp $(wildcard $i/dist/$i-*.tar.gz) ~/tmp; )
+	$(foreach i, $(PL), rm -f $(wildcard ~/tmp/$i-*.tar.gz); )
+	$(foreach i, $(PL), cp $(wildcard $i/dist/$i-*.tar.gz) ~/tmp; )
 	$(MAKE) -C ~/tmp all
 
 unregister	:

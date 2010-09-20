@@ -8,7 +8,6 @@
    Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: CompiledStylesheet.hs,v 1.3 2007/05/02 06:41:05 hxml Exp $
 
    Types for compiled stylesheets
 

@@ -9,10 +9,8 @@
    Maintainer : uwe@fh-wedel.de
    Stability  : experimental
    Portability: portable
-   Version    : $Id: HXPath.hs,v 1.2 2006/05/11 14:47:18 hxml Exp $
 
-HXPath - XPath Evaluator of the Haskell XML Toolbox (Arrow version)
-
+   HXPath - XPath Evaluator of the Haskell XML Toolbox (Arrow version)
 -}
 
 -- ------------------------------------------------------------

@@ -8,7 +8,6 @@
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: ProcessDocument.hs,v 1.3 2006/08/30 16:20:52 hxml Exp $
 
    Compound arrows for reading, parsing, validating and writing XML documents
 

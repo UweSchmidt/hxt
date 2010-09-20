@@ -1,5 +1,3 @@
--- $Id: HXT.hs,v 1.3 2005/09/02 17:09:38 hxml Exp $
-
 module HXT {-
     ( module Text.XML.HXT.Parser
     , module Text.XML.HXT.XPath

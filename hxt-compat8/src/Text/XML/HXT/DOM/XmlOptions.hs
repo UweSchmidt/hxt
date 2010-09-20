@@ -1,9 +1,18 @@
--- |
--- Common useful options
---
--- Version : $Id: XmlOptions.hs,v 1.1 2006/11/09 20:27:42 hxml Exp $
---
---
+-- ------------------------------------------------------------
+
+{- |
+   Module     : Text.XML.HXT.DOM.XmlOptions
+   Copyright  : Copyright (C) 2010 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : experimental
+   Portability: portable
+
+   HXT version 8 compatibility routines
+-}
+
+-- ------------------------------------------------------------
 
 module Text.XML.HXT.DOM.XmlOptions
     ( inputOptions

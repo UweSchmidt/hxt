@@ -107,7 +107,7 @@ withCheckNamespaces             = putS theCheckNamespaces
 withCanonicalize                :: Bool -> SysConfig
 withCanonicalize                = putS theCanonicalize
 
--- | @withIgnoreNoneXmlContents yes/no@ : input option, ignore document contents of none XML\/HTML documents.
+-- | @withIgnoreNoneXmlContents yes\/no@ : input option, ignore document contents of none XML\/HTML documents.
 --
 -- This option can be useful for implementing crawler like applications, e.g. an URL checker.
 -- In those cases net traffic can be reduced.

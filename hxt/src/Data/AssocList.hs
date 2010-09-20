@@ -1,8 +1,20 @@
--- |
--- simple key value assocciation list
--- implemented as unordered list of pairs
---
--- Version : $Id: AssocList.hs,v 1.2 2005/05/27 13:15:23 hxml Exp $
+-- ------------------------------------------------------------
+
+{- |
+   Module     : Data.AssocList
+   Copyright  : Copyright (C) 2010 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : stable
+   Portability: portable
+
+   Simple key value assocciation list
+   implemented as unordered list of pairs
+
+-}
+
+-- ------------------------------------------------------------
 
 module Data.AssocList
     ( module Data.AssocList

@@ -1,8 +1,18 @@
 -- ------------------------------------------------------------
---
--- GET for http access with curl
---
--- Version : $Id: GetHTTPCurl.hs,v 1.3 2005/04/14 12:52:52 hxml Exp $
+
+{- |
+   Module     : Text.XML.HXT.Arrow.LibCurlInput
+   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : experimental
+   Portability: portable
+
+   libcurl HTTP access
+-}
+
+-- ------------------------------------------------------------
 
 module Text.XML.HXT.IO.GetHTTPCurl
     ( getCont

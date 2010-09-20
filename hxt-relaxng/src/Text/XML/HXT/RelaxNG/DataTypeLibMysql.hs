@@ -1,7 +1,6 @@
 -- |
 -- Datatype library for the MySQL datatypes
 --
--- $Id: DataTypeLibMysql.hs,v 1.1 2005/09/02 17:09:39 hxml Exp $
 
 module Text.XML.HXT.RelaxNG.DataTypeLibMysql
   ( mysqlNS

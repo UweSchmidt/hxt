@@ -8,7 +8,6 @@
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: XsltArrows.hs,v 1.1 2006/11/11 15:36:05 hxml Exp $
 
    The HXT arrow interface for the XSLT module
 

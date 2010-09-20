@@ -68,7 +68,7 @@ import           Text.XML.HXT.Arrow.Binary
 -- The compression can be configured by 'Text.XML.HXT.Arrow.XmlState.withCompression'
 --
 -- example:
--- >
+--
 -- > import Text.XML.HXT.Core
 -- > import Text.XML.HXT.Cache
 -- > import Codec.Compression.BZip (compress, decompress)
@@ -78,7 +78,8 @@ import           Text.XML.HXT.Arrow.Binary
 -- >              , ....
 -- >              ] "http://www.haskell.org/"
 -- >
--- In the example the document is read and stored in binary serialized form under /tmp/cache.
+--
+-- In the example the document is read and stored in binary serialized form under \/tmp\/cache.
 -- The cached document remains valid for the next hour.
 -- It is compressed, before written to disk.
 

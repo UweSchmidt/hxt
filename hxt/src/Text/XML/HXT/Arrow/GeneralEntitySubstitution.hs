@@ -8,7 +8,6 @@
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: GeneralEntitySubstitution.hs,v 1.13 2006/05/01 18:56:24 hxml Exp $
 
    general entity substitution
 

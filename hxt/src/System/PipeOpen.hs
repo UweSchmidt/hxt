@@ -8,9 +8,8 @@
    Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
    Stability  : experimental
    Portability: none portable
-   Version    : $Id: PipeOpen.hs,v 1.2 2005/09/02 17:09:39 hxml Exp $
 
-pipe open implemented with System.Process functions
+   pipe open implemented with System.Process functions
 
 -}
 

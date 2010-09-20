@@ -262,8 +262,7 @@ opt2copt k v
       isIntArg v                        = [CurlLowSpeed            $ read    v]
     | k == a_if_modified_since          = [CurlHttpHeaders         $ ["If-Modified-Since: "   ++ v] ]
     | k == a_if_unmodified_since        = [CurlHttpHeaders         $ ["If-Unmodified-Since: " ++ v] ]
-                                        -- ^^^^^
-                                        -- CurlTimeValue seems to be buggy, therefore this workaround
+                                        -- CurlTimeValue seems to be buggy, therefore the above workaround
     | k `elem` ["-z", "time-cond", a_if_modified_since]
                                         =  ifModifiedOptions
 

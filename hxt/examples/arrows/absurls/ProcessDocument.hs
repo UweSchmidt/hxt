@@ -9,11 +9,10 @@
    Maintainer : uwe@fh-wedel.de
    Stability  : experimental
    Portability: portable
-   Version    : $Id: ProcessDocument.hs,v 1.2 2005/05/15 17:01:04 hxml Exp $
 
-AbsURIs - Conversion references into absolute URIs in HTML pages
+   AbsURIs - Conversion references into absolute URIs in HTML pages
 
-The REAL processing functions
+   The REAL processing functions
 -}
 
 -- ------------------------------------------------------------

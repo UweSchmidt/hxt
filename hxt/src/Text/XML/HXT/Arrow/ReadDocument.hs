@@ -55,18 +55,18 @@ this filter can be configured by a list of configuration options, a value of typ
 
 for all available options see module 'Text.XML.HXT.XmlState.SystemConfig'
 
-- @withValidate yes/no@ :
-  switch on/off DTD validation. Only for XML parsed documents, not for HTML parsing.
+- @withValidate yes\/no@ :
+  switch on\/off DTD validation. Only for XML parsed documents, not for HTML parsing.
 
-- @withParseHTML yes/no@ :
+- @withParseHTML yes\/no@ :
   switch on HTML parsing.
 
-- @withParseByMimeType yes/no@ :
-  select XML/HTML parser by document mime type.
-  text/xml and text/xhtml are parsed as XML, text/html as HTML.
+- @withParseByMimeType yes\/no@ :
+  select XML\/HTML parser by document mime type.
+  text\/xml and text\/xhtml are parsed as XML, text\/html as HTML.
 
-- @withCheckNamespaces yes/no@ :
-  Switch on/off namespace propagation and checking
+- @withCheckNamespaces yes\/no@ :
+  Switch on\/off namespace propagation and checking
 
 - @withInputEncoding <encoding-spec>@ :
   Set default encoding.
@@ -79,7 +79,6 @@ for all available options see module 'Text.XML.HXT.XmlState.SystemConfig'
 - @withRelaxNG <schema.rng>@ :
   validate document with Relax NG, the parameter is for the schema URI.
   This implies using XML parser, no validation against DTD, and canonicalisation.
-
 
 - @withCurl [<curl-option>...]@ :
   Use the libCurl binding for HTTP access.
@@ -104,8 +103,8 @@ reads and validates a document \"test.xml\", no namespace propagation, only cano
 > readDocument [ withValidate        no
 >              , withInputEncoding   isoLatin1
 >              , withParseByMimeType yes
-               , withCurl []
->              ] "http://localhost/test.php"
+>              , withCurl []
+>              ] \"http:\/\/localhost\/test.php\"
 
 reads document \"test.php\", parses it as HTML or XML depending on the mimetype given from the server, but without validation, default encoding 'isoLatin1'.
 HTTP access is done via libCurl.

@@ -2,7 +2,6 @@
 -- RunTestCases - run the W3C test case suite with the Parser of the Haskell XML Toolbox
 --
 -- Author :s .\\artin Schmidt, Uwe Schmidt
--- Version : $Id: RunTestCases.hs,v 1.8 2004/09/02 19:11:54 hxml Exp $
 
 module Main
 where

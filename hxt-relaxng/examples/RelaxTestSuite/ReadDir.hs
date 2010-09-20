@@ -2,8 +2,6 @@
    Read a complete directory hierarchy and return it as a tree.
    Copied and modified from Peter Simons (<http://cryp.to/>).
 
-   $Id: ReadDir.hs,v 1.1 2005/09/02 17:09:38 hxml Exp $
-   
 -}
 
 module ReadDir

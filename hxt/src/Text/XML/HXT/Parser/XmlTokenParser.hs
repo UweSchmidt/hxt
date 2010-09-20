@@ -2,13 +2,12 @@
 
 {- |
    Module     : Text.XML.HXT.Parser.XmlTokenParser
-   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   Copyright  : Copyright (C) 2010 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
-   Stability  : experimental
+   Stability  : stable
    Portability: portable
-   Version    : $Id: XmlTokenParser.hs,v 1.3 2005/09/02 17:09:39 hxml Exp $
 
    Parsec parser for XML tokens
 

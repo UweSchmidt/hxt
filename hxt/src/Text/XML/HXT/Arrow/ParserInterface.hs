@@ -1,7 +1,18 @@
--- |
--- interface to the HXT XML and DTD parsers
---
--- version: $Id: ParserInterface.hs,v 1.1 2006/05/01 18:56:24 hxml Exp $
+-- ------------------------------------------------------------
+
+{- |
+   Module     : Text.XML.HXT.Arrow.ParserInterface
+   Copyright  : Copyright (C) 2010 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : stable
+   Portability: portable
+
+   interface to the HXT XML and DTD parsers
+-}
+
+-- ------------------------------------------------------------
 
 module Text.XML.HXT.Arrow.ParserInterface
     ( module Text.XML.HXT.Arrow.ParserInterface )

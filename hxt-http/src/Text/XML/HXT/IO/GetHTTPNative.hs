@@ -1,8 +1,18 @@
 -- ------------------------------------------------------------
---
--- GET for native http access
---
--- Version : $Id: GetHTTPNative.hs,v 1.2 2005/04/14 12:52:52 hxml Exp $
+
+{- |
+   Module     : Text.XML.HXT.IO.GetHTTPNative
+   Copyright  : Copyright (C) 2010 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+   Stability  : experimental
+   Portability: portable
+
+   HXT interface for native HTTP access via package HTTP
+-}
+
+-- ------------------------------------------------------------
 
 module Text.XML.HXT.IO.GetHTTPNative
     ( module Text.XML.HXT.IO.GetHTTPNative

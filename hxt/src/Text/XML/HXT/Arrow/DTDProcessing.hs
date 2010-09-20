@@ -8,7 +8,6 @@
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: DTDProcessing.hs,v 1.9 2006/05/11 14:47:19 hxml Exp $
 
    DTD processing function for
    including external parts of a DTD

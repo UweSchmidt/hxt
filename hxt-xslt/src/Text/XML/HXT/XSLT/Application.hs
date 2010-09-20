@@ -8,7 +8,6 @@
    Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: Application.hs,v 1.7 2007/05/02 06:41:05 hxml Exp $
 
    The transformation functions for XSLT transformation of XML documents
 

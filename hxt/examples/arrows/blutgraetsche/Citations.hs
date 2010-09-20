@@ -2,8 +2,6 @@
 -- Citations - a program for selecting all citations from www.blutgraetsche.de
 --
 -- Author : Uwe Schmidt
---
--- Version : $Id: Citations.hs,v 1.1 2006/05/24 12:47:25 hxml Exp $
 
 module Main
 where

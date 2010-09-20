@@ -1,7 +1,6 @@
 -- |
 -- run the Relax NG Testsuite created be James Clark (<http://www.relaxng.org/#test-suites>)
 -- 
--- $Id: TestCases.hs,v 1.2 2005/09/30 14:41:44 hxml Exp $
 
 module TestCases
   ( runTest )

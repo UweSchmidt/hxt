@@ -8,14 +8,12 @@
    Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id: ArrowIf.hs,v 1.8 2006/05/04 14:17:53 hxml Exp $
 
-Conditionals for List Arrows
+   Conditionals for List Arrows
 
-This module defines conditional combinators for list arrows.
+   This module defines conditional combinators for list arrows.
 
-The empty list as result represents False, none empty lists True.
-
+   The empty list as result represents False, none empty lists True.
 -}
 
 -- ------------------------------------------------------------
