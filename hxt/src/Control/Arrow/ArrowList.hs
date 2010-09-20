@@ -9,7 +9,7 @@
    Stability  : experimental
    Portability: portable
 
-   The List Arrow Class
+   The list arrow class
 
    This module defines the interface for list arrows.
 

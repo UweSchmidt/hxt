@@ -24,19 +24,23 @@ module Control.Arrow.IOStateListArrow
     )
 where
 
-import           Prelude hiding (id, (.))
+import Prelude hiding (id, (.))
 
-import           Control.Category
+import Control.Category
 
-import           Control.Arrow
-import           Control.Arrow.ArrowIf
-import           Control.Arrow.ArrowIO
-import           Control.Arrow.ArrowList
-import           Control.Arrow.ArrowNF
-import           Control.Arrow.ArrowTree
-import           Control.Arrow.ArrowState
+import Control.Arrow
+import Control.Arrow.ArrowExc
+import Control.Arrow.ArrowIf
+import Control.Arrow.ArrowIO
+import Control.Arrow.ArrowList
+import Control.Arrow.ArrowNF
+import Control.Arrow.ArrowTree
+import Control.Arrow.ArrowState
 
-import           Control.DeepSeq
+import Control.DeepSeq
+import Control.Exception                ( SomeException
+                                        , try
+                                        )
 
 -- ------------------------------------------------------------
 
@@ -144,6 +148,16 @@ instance ArrowIO (IOSLA s) where
     arrIO cmd           = IOSLA $ \ s x -> do
                                            res <- cmd x
                                            return (s, [res])
+
+instance ArrowExc (IOSLA s) where
+    tryA f              = IOSLA $ \ s x -> do
+                                           res <- try' $ runIOSLA f s x
+                                           return $ case res of
+                                              Left   er      -> (s,  [Left er])
+                                              Right (s1, ys) -> (s1, [Right x' | x' <- ys])
+        where
+        try'            :: IO a -> IO (Either SomeException a)
+        try'            = try
 
 instance ArrowIOIf (IOSLA s) where
     isIOA p             = IOSLA $ \ s x -> do

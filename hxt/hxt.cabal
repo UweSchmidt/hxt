@@ -66,6 +66,7 @@ extra-source-files:
 
 library
  exposed-modules:
+  Control.Arrow.ArrowExc,
   Control.Arrow.ArrowIO,
   Control.Arrow.ArrowIf,
   Control.Arrow.ArrowList,

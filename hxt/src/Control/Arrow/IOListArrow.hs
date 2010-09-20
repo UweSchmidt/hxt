@@ -23,14 +23,18 @@ import Prelude hiding (id, (.))
 
 import Control.Category
 
-import           Control.Arrow
-import           Control.Arrow.ArrowIf
-import           Control.Arrow.ArrowList
-import           Control.Arrow.ArrowNF
-import           Control.Arrow.ArrowTree
-import           Control.Arrow.ArrowIO
+import Control.Arrow
+import Control.Arrow.ArrowExc
+import Control.Arrow.ArrowIf
+import Control.Arrow.ArrowIO
+import Control.Arrow.ArrowList
+import Control.Arrow.ArrowNF
+import Control.Arrow.ArrowTree
 
-import           Control.DeepSeq
+import Control.DeepSeq
+import Control.Exception      		( SomeException
+					, try
+					)
 
 -- ------------------------------------------------------------
 
@@ -116,6 +120,16 @@ instance ArrowIO IOLA where
     arrIO cmd           = IOLA $ \x -> do
                                        res <- cmd x
                                        return [res]
+
+instance ArrowExc IOLA where
+    tryA f      = IOLA $ \ x -> do
+				res <- try' $ runIOLA f x
+				return $ case res of
+				  Left  er -> [Left er]
+				  Right ys -> [Right x' | x' <- ys]
+	where
+	try'    :: IO a -> IO (Either SomeException a)
+	try'    = try
 
 instance ArrowIOIf IOLA where
     isIOA p             = IOLA $ \x -> do
