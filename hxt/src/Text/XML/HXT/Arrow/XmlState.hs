@@ -60,6 +60,7 @@ module Text.XML.HXT.Arrow.XmlState
     , issueWarn
     , issueErr
     , issueFatal
+    , issueExc
     , setDocumentStatus
     , setDocumentStatusFromSystemState
     , documentStatusOk

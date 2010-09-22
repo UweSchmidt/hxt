@@ -113,35 +113,6 @@ readDocCache src          = localSysVar theWithCache
     readDocCache' config src'
                           = applyA $ arrIO0 (lookupCache' config src')
 
-{-
-    | withCache         = applyA $ arrIO0 (lookupCache' cacheConfig userOptions src)
-    | otherwise         = Text.XML.HXT.Arrow.readDocument userOptions src
-      where
-
-      options           = addEntries userOptions defaultOptions
-      compr             = optionIsSet a_compress options
-      withCache         = isJust . lookup a_cache $ userOptions
-      cacheDir          = lookup1 a_cache options
-      cacheAge          = readInteger . lookup1 a_document_age $ options
-      cache404          = optionIsSet a_cache_404 options
-      readInteger s
-          | null s || not (all isDigit s)
-                        = 60 * 60 * 24                          -- default age: 1 day
-          | otherwise   = read s
-      cacheConfig       = CC
-                          { c_dir      = cacheDir
-                          , c_compress = compr
-                          , c_age      = cacheAge
-                          , c_404         = cache404
-                          }
-
-defaultOptions          :: [(String, String)]
-defaultOptions          = [ ( a_compress,       v_0        )
-                          , ( a_cache,          "./.cache" )
-                          , ( a_document_age,   ""         )
-                          , ( a_cache_404,      v_0        )
-                          ]
--}
 -- ------------------------------------------------------------
 
 -- | Predicate arrow for checking if a document is in the cache.

@@ -45,7 +45,7 @@ import Network.URI
 import System.Posix hiding (Handler)
 import System.IO
 
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 
 import Network.Server.Janus.Messaging
 import Network.Server.Janus.Core as Shader

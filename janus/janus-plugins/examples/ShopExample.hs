@@ -38,7 +38,7 @@ module Network.Server.Janus.ShopExample
     )
 where
 
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 
 import Network.Server.Janus.Core
 import Network.Server.Janus.HTMLBuilder

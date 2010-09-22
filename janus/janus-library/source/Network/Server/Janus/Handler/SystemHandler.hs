@@ -36,7 +36,7 @@ import System.IO
 
 # endif
 
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 
 
 # if PLUGINS

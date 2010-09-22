@@ -33,7 +33,7 @@ import Network.BSD
 import Network.Socket
 import Network.URI
 import System.IO
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 
 import Network.Server.Janus.Messaging
 import Network.Server.Janus.Core as Shader

@@ -26,7 +26,7 @@ where
 import Data.Maybe
 import System.IO
 import System.Eval (unsafeEval)
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 
 import Network.Server.Janus.Core
 import Network.Server.Janus.Transaction as TA

@@ -47,7 +47,7 @@ import Data.List
 import Data.Map as Map
 import Network.URI (unEscapeString)
 import Text.Regex
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 
 import Network.Server.Janus.Core as Shader
 import Network.Server.Janus.Messaging
@@ -356,7 +356,7 @@ storeXmlShader =
 			     , [("value", show _shader_config_node)]
 			     )                                                      -<  conf
         XmlVal tree <- getSV node                                                   -<< ()
-        writeDocument [(a_indent, "1")] file                                        -<< tree
+        writeDocument [withIndent yes] file                                         -<< tree
         returnA                                                                     -<  in_ta
 
 {- |

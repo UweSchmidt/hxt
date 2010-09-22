@@ -44,7 +44,7 @@ module Network.Server.Janus.Shader.ConsoleShader
 where
 
 import Control.Concurrent
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 
 import Network.Server.Janus.Core
 import Network.Server.Janus.DynamicLoader

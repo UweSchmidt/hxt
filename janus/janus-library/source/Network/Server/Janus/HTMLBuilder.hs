@@ -53,7 +53,7 @@ module Network.Server.Janus.HTMLBuilder
    )
 where
 
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 
 import Network.Server.Janus.XmlHelper
 

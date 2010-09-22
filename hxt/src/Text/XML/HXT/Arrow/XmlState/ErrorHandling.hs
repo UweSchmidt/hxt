@@ -39,6 +39,8 @@ import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
 import Control.Arrow.ArrowIO
 
+import Control.Exception                ( SomeException )
+
 import Data.Maybe
 
 import Text.XML.HXT.DOM.Interface
@@ -177,6 +179,18 @@ issueErr msg            = perform (err msg   >>> filterErrorMsg)
 
 issueFatal              :: String -> IOStateArrow s b b
 issueFatal msg          = perform (fatal msg >>> filterErrorMsg)
+
+-- | Default exception handler: issue a fatal error message and fail.
+--
+-- The parameter can be used to specify where the error occured
+
+issueExc                :: String -> IOStateArrow s SomeException b
+issueExc m              = ( issueFatal $< arr  ((msg ++) . show) )
+                          >>>
+                          none
+    where
+    msg | null m        = "Exception: "
+        | otherwise     = "Exception in " ++ m ++ ": "
 
 -- |
 -- add the error level and the module where the error occured

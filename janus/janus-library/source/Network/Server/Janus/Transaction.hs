@@ -51,7 +51,7 @@ module Network.Server.Janus.Transaction
     )
 where
 
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 
 import Network.Server.Janus.JanusPaths
 import Network.Server.Janus.Messaging

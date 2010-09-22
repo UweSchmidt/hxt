@@ -27,7 +27,7 @@ module Network.Server.Janus.Shader.SOAPShader
     )
 where
 
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 import Text.XML.HXT.Arrow.ParserInterface
 
 import Network.Server.Janus.Core

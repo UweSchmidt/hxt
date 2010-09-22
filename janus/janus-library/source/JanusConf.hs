@@ -37,7 +37,7 @@ import System.Time	( formatCalendarTime
 			, getClockTime
 			)
 
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 import Text.XML.HXT.XPath
 
 -- ------------------------------------------------------------
@@ -63,15 +63,15 @@ exitProg False	= exitWith ExitSuccess
 
 processJanusConf	:: String -> String -> String -> IOSArrow b Int
 processJanusConf cn on dt
-    = readDocument [(a_validate, v_0)] cn
+    = readDocument [withValidate no] cn
       >>>
       checkJanusServerConfig
       >>>
       genJanusMain
       >>>
-      writeDocument [ (a_no_xml_pi, v_1)
-		    , (a_output_encoding, isoLatin1)
-		    , (a_output_xml, v_0)
+      writeDocument [ withXmlPi no
+		    , withOutputEncoding isoLatin1
+		    , withOutputPLAIN
 		    ] on
       >>>
       getErrStatus
@@ -262,7 +262,7 @@ part1 cf dt
 	  , "import Network.Server.Janus.Server    ( serverArrow )"
 	  , "import Network.Server.Janus.XmlHelper ( evalXml )"
 	  , ""
-	  , "import Text.XML.HXT.Arrow"
+	  , "import Text.XML.HXT.Core"
 	  , ""
 	  ]
 

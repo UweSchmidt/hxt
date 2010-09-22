@@ -217,7 +217,7 @@ import System.Time
 
 import Text.ParserCombinators.Parsec
 
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 import Text.XML.HXT.XPath
 import Text.XML.HXT.XPath.XPathDataTypes
        ( Expr (..)

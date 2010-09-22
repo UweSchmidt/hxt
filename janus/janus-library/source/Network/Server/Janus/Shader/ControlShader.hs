@@ -32,7 +32,7 @@ where
 import Data.Maybe
 import Data.Map
 import Text.Regex
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 
 import Network.Server.Janus.Core
 import Network.Server.Janus.XmlHelper

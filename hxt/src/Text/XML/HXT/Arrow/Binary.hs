@@ -20,14 +20,13 @@ module Text.XML.HXT.Arrow.Binary
     )
 where
 
-import           Control.Arrow
+import           Control.Arrow          ()
+import           Control.Arrow.ArrowExc
 import           Control.Arrow.ArrowList
 import           Control.Arrow.ArrowIO
 
 import           Control.DeepSeq
-import           Control.Exception      ( SomeException
-                                        , try
-                                        )
+
 import           Data.Binary
 import qualified Data.ByteString.Lazy   as B
 
@@ -44,12 +43,12 @@ readBinaryValue file    = flip decodeBinaryValue file $< getSysVar theBinaryDeCo
 
 decodeBinaryValue         :: (NFData a, Binary a) => DeCompressionFct -> String -> IOStateArrow s b a
 decodeBinaryValue decompress file
-                          = arrIO0 (try' $ do
-                                         r <- dec
-                                         rnf r `seq` return r
+                          = arrIO0 ( do
+                                     r <- dec
+                                     rnf r `seq` return r
                                    )
-                          >>>
-                          issueExc "readBinaryValue"
+                            `catchA`
+                            issueExc "readBinaryValue"
     where
     dec                 = B.readFile file >>= return . decode . decompress
 
@@ -61,23 +60,10 @@ writeBinaryValue file   = flip encodeBinaryValue file $< getSysVar theBinaryComp
 
 encodeBinaryValue        :: (Binary a) => CompressionFct -> String -> IOStateArrow s a ()
 encodeBinaryValue compress file
-                         = arrIO (\ x -> try' $ enc x)
-                          >>>
-                          issueExc "writeBinaryXmlTree"
+                         = arrIO enc
+                           `catchA`
+                           issueExc "writeBinaryXmlTree"
     where
     enc                  = B.writeFile file . compress . encode
-
-
-issueExc                :: String -> IOStateArrow s (Either SomeException a) a
-issueExc s              = ( ( issueFatal $< arr  ((("Exception in " ++ s ++ ": ") ++) . show)
-                              >>>
-                              none
-                            )
-                            |||
-                            this
-                          )
-
-try'                    :: IO a -> IO (Either SomeException a)
-try'                    = try
 
 -- ------------------------------------------------------------

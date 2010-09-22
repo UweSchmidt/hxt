@@ -1,5 +1,5 @@
 name:          janus-library
-version:	0.5.1
+version:	0.6.0
 license:       OtherLicense
 license-file:  LICENSE
 author:        Christian Uhlig
@@ -20,20 +20,20 @@ flag withHsPlugins
 
 
 library
-  build-depends: base         >= 4   && < 5
-               , haskell98    >= 1.0 && < 2
-               , array        >= 0.2 && < 1
-               , unix         >= 2.3 && < 3
-               , bytestring   >= 0.9 && < 1
-               , containers   >= 0.2 && < 1
-               , old-time     >= 1.0 && < 2
-               , directory    >= 1.0 && < 2
-               , parsec       >= 2.1 && < 4
-               , network      >= 2.1 && < 3
+  build-depends: base         >= 4    && < 5
+               , haskell98    >= 1.0  && < 2
+               , array        >= 0.2  && < 1
+               , unix         >= 2.3  && < 3
+               , bytestring   >= 0.9  && < 1
+               , containers   >= 0.2  && < 1
+               , old-time     >= 1.0  && < 2
+               , directory    >= 1.0  && < 2
+               , parsec       >= 2.1  && < 4
+               , network      >= 2.1  && < 3
                , regex-compat >= 0.92 && < 1
-               , html         >= 1.0 && < 2
-               , hxt          >= 8.5 && < 9
-               , hxt-xpath    >= 8.5 && < 9
+               , html         >= 1.0  && < 2
+               , hxt          >= 9    && < 10
+               , hxt-xpath    >= 9    && < 10
 
   if flag(withHsPlugins)
     build-depends: plugins    >= 1.1
@@ -89,7 +89,7 @@ executable janus-conf
                , haskell98    >= 1.0 && < 2
                , old-time     >= 1.0 && < 2
                , old-locale   >= 1.0 && < 2
-               , hxt          >= 8.5 && < 9
+               , hxt          >= 9   && < 10
   other-modules:
     Network.Server.Janus.ServerVersion
   hs-source-dirs: source

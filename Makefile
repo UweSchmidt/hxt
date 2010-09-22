@@ -8,14 +8,18 @@ PL	= hxt-charproperties \
           hxt-xpath \
           hxt-relaxng \
 	  hxt-xslt \
-	  hxt-cache
+	  hxt-cache \
+          janus/janus-library
 
 #                 hxt-filter                  # not maintained to work with hxt-9
 #                 hxt-binary                  # no longer required, integrated into hxt-9
-#                 janus/janus-library         # currently not further maintained
 
 all	:
 	$(foreach i,$(PL), ( cd $i && cabal configure && cabal build && cabal install && cabal sdist; ); )
+	ghc-pkg list
+
+reinstall:
+	$(foreach i,$(PL), ( cd $i && cabal install; ); )
 	ghc-pkg list
 
 global	:

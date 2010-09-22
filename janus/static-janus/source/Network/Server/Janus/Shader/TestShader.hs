@@ -27,7 +27,7 @@ module Network.Server.Janus.Shader.TestShader
     )
 where
 
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 
 import Network.Server.Janus.Core as Shader
 import Network.Server.Janus.XmlHelper
@@ -154,16 +154,16 @@ counterPage cnt pg
 readTemplate	:: XmlSource s String
 readTemplate
     = runInLocalURIContext $
-      readFromDocument [ (a_parse_html,v_1)
-		       , (a_indent,v_1)
-		       , (a_trace,v_1)
+      readFromDocument [ withParseHTML yes
+		       , withIndent yes
+		       , withTrace 1
 		       ]
 
 showPage	:: IOStateArrow s XmlTree String
 showPage
     = addXHtmlDoctypeTransitional	    -- add a DTD decl and convert to text
-      >>> writeDocumentToString [ (a_output_html, v_1)
-				, (a_no_xml_pi,v_1)
+      >>> writeDocumentToString [ withOutputHTML
+				, withXmlPi no
 				]
 
 genPage		:: String -> IOStateArrow a XmlTree XmlTree -> IOStateArrow a XmlTree String

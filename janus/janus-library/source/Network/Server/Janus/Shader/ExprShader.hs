@@ -31,7 +31,7 @@ module Network.Server.Janus.Shader.ExprShader
     )
 where
 
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 
 import Network.Server.Janus.Core as Shader
 import Network.Server.Janus.XmlHelper

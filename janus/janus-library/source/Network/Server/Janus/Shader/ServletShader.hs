@@ -33,7 +33,7 @@ module Network.Server.Janus.Shader.ServletShader
 where
 
 import Network.URI
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 
 import Network.Server.Janus.Core
 import Network.Server.Janus.HTMLBuilder

@@ -39,8 +39,8 @@ module Network.Server.Janus.XmlHelper
     , fromDynDefA
     , finallyA
     , maybeA
-    , catchA
-    , catchA_
+    -- , catchA
+    -- , catchA_
     , exceptA
     , exceptionA
     , exceptZeroA
@@ -87,7 +87,7 @@ import Data.Maybe
 
 import System.Time
 
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 import Text.XML.HXT.XPath
 
 import Network.Server.Janus.JanusPaths
@@ -197,7 +197,7 @@ maybeA op =
             then returnA    -<  fromJust val
             else zeroArrow  -<  ()
             )
-
+{-
 {- |
 Transforms an IO Monad constructor into an Arrow. An exception thrown by the IO Monad value is catched and handled
 by the second argument.
@@ -214,7 +214,7 @@ Arrow is ignored.
 catchA_ :: ArrowIO a => IO c -> (SomeException -> IO c) -> a b c
 catchA_ action handler =
     catchA (\_ -> action) handler
-
+-}
 {- |
 Like catchA, but utilizes an Arrow for exception handling.
 -}
@@ -290,10 +290,10 @@ An Arrow reading the file denoted by the argument, parsing the content by means 
 fileSource :: String -> XmlSource s a
 fileSource filename
     = runInLocalURIContext $
-      readDocument [ (a_remove_whitespace, v_1)
-		   , (a_canonicalize, v_1)
-		   , (a_indent, v_0)
-		   , (a_validate, v_0)] filename
+      readDocument [ withRemoveWS yes
+		   , withCanonicalize yes
+		   , withIndent no
+		   , withValidate no] filename
 
 {- |
 An Arrow returning an XmlTree value independently of the Arrow's input.

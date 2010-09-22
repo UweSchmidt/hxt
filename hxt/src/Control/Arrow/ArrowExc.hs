@@ -16,6 +16,8 @@
 -- ------------------------------------------------------------
 
 module Control.Arrow.ArrowExc
+    ( ArrowExc(..)
+    )
 where
 
 import           Control.Arrow
