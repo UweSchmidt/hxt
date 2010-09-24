@@ -21,21 +21,25 @@ module Text.XML.HXT.Arrow.LibHTTPInput
     )
 where
 
-import           Control.Arrow                            -- arrow classes
-import           Control.Arrow.ArrowList
-import           Control.Arrow.ArrowTree
-import           Control.Arrow.ArrowIO
+import Control.Arrow                            -- arrow classes
+import Control.Arrow.ArrowList
+import Control.Arrow.ArrowTree
+import Control.Arrow.ArrowIO
 
-import           System.Console.GetOpt
+import Data.Function.Selector                   ( setS
+                                                , (.&&&.)
+                                                )
 
-import           Text.XML.HXT.Arrow.DocumentInput               ( addInputError )
-import           Text.XML.HXT.IO.GetHTTPNative                  ( getCont )
+import System.Console.GetOpt
 
-import           Text.XML.HXT.DOM.Interface
+import Text.XML.HXT.Arrow.DocumentInput         ( addInputError )
+import Text.XML.HXT.IO.GetHTTPNative            ( getCont )
 
-import           Text.XML.HXT.Arrow.XmlArrow
-import           Text.XML.HXT.Arrow.XmlState
-import           Text.XML.HXT.Arrow.XmlState.TypeDefs
+import Text.XML.HXT.DOM.Interface
+
+import Text.XML.HXT.Arrow.XmlArrow
+import Text.XML.HXT.Arrow.XmlState
+import Text.XML.HXT.Arrow.XmlState.TypeDefs
 
 -- ----------------------------------------------------------
 
@@ -45,14 +49,14 @@ getHTTPNativeContents
       $<<
       ( getAttrValue transferURI
         &&&
-        getSysVar (theInputOptions `pairS`
-                   theProxy        `pairS`
-                   theStrictInput  `pairS`
+        getSysVar (theInputOptions .&&&.
+                   theProxy        .&&&.
+                   theStrictInput  .&&&.
 		   theRedirect
                   )
       )
       where
-      getC uri (((options, proxy), strictInput), redirect)
+      getC uri (options, (proxy, (strictInput, redirect)))
           = applyA ( ( traceMsg 2 ( "get HTTP via native HTTP interface, uri=" ++ show uri ++ " options=" ++ show options )
                        >>>
                        arrIO0 (getCont strictInput proxy uri redirect options)
@@ -76,7 +80,7 @@ a_use_http              :: String
 a_use_http              = "use-http"
 
 withHTTP               :: Attributes -> SysConfig
-withHTTP httpOpts      = putS theHttpHandler getHTTPNativeContents
+withHTTP httpOpts      = setS theHttpHandler getHTTPNativeContents
                          >>>
                          withInputOptions httpOpts
 

@@ -40,6 +40,12 @@ import Control.DeepSeq
 
 import Data.ByteString.Lazy             ( ByteString )
 import Data.Char                        ( isDigit )
+import Data.Function.Selector           ( Selector(..)
+                                        , getS
+                                        , setS
+                                        , chgS
+                                        , (.&&&.)
+                                        )
 
 import Text.XML.HXT.DOM.Interface
 
@@ -137,38 +143,6 @@ withoutUserState      = withOtherUserState ()
 
 -- ------------------------------------------------------------
 
-type Selector s a       = (s -> a, a -> s -> s)
-
-subS                    :: Selector b c -> Selector a b -> Selector a c
-subS (g2, s2) (g1, s1)  = ( g2 . g1
-                          , s1s2
-                          )
-                          where
-                          s1s2 x s = s'
-                              where
-                              x1  = g1 s
-                              x1' = s2 x x1
-                              s'  = s1 x1' s
-
-pairS                   :: Selector s a -> Selector s b -> Selector s (a, b)
-pairS (g1, s1) (g2, s2) = ( g1 &&& g2
-                          , \ (x, y) -> s2 y . s1 x
-                          )
-
-chgS                    :: Selector s a -> (a -> a) -> (s -> s)
-chgS (g, s) f x         = s (f (g x)) x
-
-getS                    :: Selector s a -> s -> a
-getS                    = fst                           -- getS (g, _s) x = g x
-
-putS                    :: Selector s a -> a -> (s -> s)
-putS s v                = chgS s (const v)
-
-idS                     :: Selector s s
-idS                     = (id, const)
-
--- ------------------------------------------------------------
-
 -- system state structure and acces functions
 
 -- |
@@ -254,7 +228,7 @@ data XIOCacheConfig     = XIOCch  { xioBinaryCompression        ::   Compression
                                   , xioBinaryDeCompression      ::   DeCompressionFct
                                   , xioWithCache                :: ! Bool
                                   , xioCacheDir                 :: ! String
-                                  , xioDocumentAge              :: ! Integer
+                                  , xioDocumentAge              :: ! Int
                                   , xioCache404Err              :: ! Bool
                                   , xioCacheRead                ::   String -> IOSArrow XmlTree XmlTree
                                   }
@@ -265,290 +239,485 @@ type DeCompressionFct   = ByteString -> ByteString
 type SysConfig                  = XIOSysState -> XIOSysState
 type SysConfigList              = [SysConfig]
 
--- ------------------------------
+-- ----------------------------------------
 
 theSysState                     :: Selector (XIOState us) XIOSysState
-theSysState                     = ( xioSysState,         \ x s -> s { xioSysState = x} )
+theSysState                     = S { getS = xioSysState
+                                    , setS = \ x s -> s { xioSysState = x}
+                                    }
 
 theUserState                    :: Selector (XIOState us) us
-theUserState                    = ( xioUserState,        \ x s -> s { xioUserState = x} )
+theUserState                    = S { getS = xioUserState
+                                    , setS = \ x s -> s { xioUserState = x}
+                                    }
 
 -- ----------------------------------------
 
 theSysWriter                    :: Selector XIOSysState XIOSysWriter
-theSysWriter                    = ( xioSysWriter, \ x s -> s { xioSysWriter = x} )
+theSysWriter                    = S { getS = xioSysWriter
+                                    , setS = \ x s -> s { xioSysWriter = x}
+                                    }
 
 theErrorMsgList                 :: Selector XIOSysState XmlTrees
-theErrorMsgList                 = ( xioErrorMsgList,    \ x s -> s { xioErrorMsgList = x } )
-                                   `subS` theSysWriter
+theErrorMsgList                 = theSysWriter
+                                  >>>
+                                  S { getS = xioErrorMsgList
+                                    , setS = \ x s -> s { xioErrorMsgList = x }
+                                    }
 
 -- ----------------------------------------
 
 theSysEnv                       :: Selector XIOSysState XIOSysEnv
-theSysEnv                       = ( xioSysEnv, \ x s -> s { xioSysEnv = x} )
+theSysEnv                       = S { getS = xioSysEnv
+                                    , setS = \ x s -> s { xioSysEnv = x}
+                                    }
 
 theInputConfig                  :: Selector XIOSysState XIOInputConfig
-theInputConfig                  = ( xioInputConfig,      \ x s -> s { xioInputConfig = x} )
-                                   `subS` theSysEnv
+theInputConfig                  = theSysEnv
+                                  >>>
+                                  S { getS = xioInputConfig
+                                    , setS = \ x s -> s { xioInputConfig = x}
+                                    }
 
 theStrictInput                  :: Selector XIOSysState Bool
-theStrictInput                  = ( xioStrictInput,      \ x s -> s { xioStrictInput = x} )
-                                  `subS` theInputConfig
+theStrictInput                  = theInputConfig
+                                  >>>
+                                  S { getS = xioStrictInput
+                                    , setS = \ x s -> s { xioStrictInput = x}
+                                    }
 
 theEncodingErrors               :: Selector XIOSysState Bool
-theEncodingErrors               = ( xioEncodingErrors,   \ x s -> s { xioEncodingErrors = x} )
-                                  `subS` theInputConfig
+theEncodingErrors               = theInputConfig
+                                  >>>
+                                  S { getS = xioEncodingErrors
+                                    , setS = \ x s -> s { xioEncodingErrors = x}
+                                    }
 
 theInputEncoding                :: Selector XIOSysState String
-theInputEncoding                = ( xioInputEncoding,   \ x s -> s { xioInputEncoding = x} )
-                                  `subS` theInputConfig
+theInputEncoding                = theInputConfig
+                                  >>>
+                                  S { getS = xioInputEncoding
+                                    , setS = \ x s -> s { xioInputEncoding = x}
+                                    }
 
 theHttpHandler                  :: Selector XIOSysState (IOSArrow XmlTree XmlTree)
-theHttpHandler                  = ( xioHttpHandler,      \ x s -> s { xioHttpHandler = x} )
-                                  `subS` theInputConfig
+theHttpHandler                  = theInputConfig
+                                  >>>
+                                  S { getS = xioHttpHandler
+                                    , setS = \ x s -> s { xioHttpHandler = x}
+                                    }
 
 theInputOptions                 :: Selector XIOSysState Attributes
-theInputOptions                 = ( xioInputOptions,      \ x s -> s { xioInputOptions = x} )
-                                  `subS` theInputConfig
+theInputOptions                 = theInputConfig
+                                  >>>
+                                  S { getS = xioInputOptions
+                                    , setS = \ x s -> s { xioInputOptions = x}
+                                    }
 
 theRedirect                     :: Selector XIOSysState Bool
-theRedirect                     = ( xioRedirect,      \ x s -> s { xioRedirect = x} )
-                                  `subS` theInputConfig
+theRedirect                     = theInputConfig
+                                  >>>
+                                  S { getS = xioRedirect
+                                    , setS = \ x s -> s { xioRedirect = x}
+                                    }
 
 theProxy                        :: Selector XIOSysState String
-theProxy                        = ( xioProxy,      \ x s -> s { xioProxy = x} )
-                                  `subS` theInputConfig
+theProxy                        = theInputConfig
+                                  >>>
+                                  S { getS = xioProxy
+                                    , setS = \ x s -> s { xioProxy = x}
+                                    }
+
 -- ----------------------------------------
 
 theOutputConfig                 :: Selector XIOSysState XIOOutputConfig
-theOutputConfig                 = ( xioOutputConfig, \ x s -> s { xioOutputConfig = x} )
-                                   `subS` theSysEnv
+theOutputConfig                 = theSysEnv
+                                  >>>
+                                  S { getS = xioOutputConfig
+                                    , setS = \ x s -> s { xioOutputConfig = x}
+                                    }
 
 theIndent                       :: Selector XIOSysState Bool
-theIndent                       = ( xioIndent,      \ x s -> s { xioIndent = x} )
-                                  `subS` theOutputConfig
+theIndent                       = theOutputConfig
+                                  >>>
+                                  S { getS = xioIndent
+                                    , setS = \ x s -> s { xioIndent = x}
+                                    }
 
 theOutputEncoding               :: Selector XIOSysState String
-theOutputEncoding               = ( xioOutputEncoding,      \ x s -> s { xioOutputEncoding = x} )
-                                  `subS` theOutputConfig
+theOutputEncoding               = theOutputConfig
+                                  >>>
+                                  S { getS = xioOutputEncoding
+                                    , setS = \ x s -> s { xioOutputEncoding = x}
+                                    }
 
 theOutputFmt                    :: Selector XIOSysState XIOXoutConfig
-theOutputFmt                    = ( xioOutputFmt,      \ x s -> s { xioOutputFmt = x} )
-                                  `subS` theOutputConfig
+theOutputFmt                    = theOutputConfig
+                                  >>>
+                                  S { getS = xioOutputFmt
+                                    , setS = \ x s -> s { xioOutputFmt = x}
+                                    }
 
 theXmlPi                        :: Selector XIOSysState Bool
-theXmlPi                        = ( xioXmlPi,      \ x s -> s { xioXmlPi = x} )
-                                  `subS` theOutputConfig
+theXmlPi                        = theOutputConfig
+                                  >>>
+                                  S { getS = xioXmlPi
+                                    , setS = \ x s -> s { xioXmlPi = x}
+                                    }
 
 theNoEmptyElemFor               :: Selector XIOSysState [String]
-theNoEmptyElemFor               = ( xioNoEmptyElemFor,      \ x s -> s { xioNoEmptyElemFor = x} )
-                                  `subS` theOutputConfig
+theNoEmptyElemFor               = theOutputConfig
+                                  >>>
+                                  S { getS = xioNoEmptyElemFor
+                                    , setS = \ x s -> s { xioNoEmptyElemFor = x}
+                                    }
 
 theAddDefaultDTD                :: Selector XIOSysState Bool
-theAddDefaultDTD                = ( xioAddDefaultDTD,      \ x s -> s { xioAddDefaultDTD = x} )
-                                  `subS` theOutputConfig
+theAddDefaultDTD                = theOutputConfig
+                                  >>>
+                                  S { getS = xioAddDefaultDTD
+                                    , setS = \ x s -> s { xioAddDefaultDTD = x}
+                                    }
 
 theTextMode                     :: Selector XIOSysState Bool
-theTextMode                     = ( xioTextMode,      \ x s -> s { xioTextMode = x} )
-                                  `subS` theOutputConfig
+theTextMode                     = theOutputConfig
+                                  >>>
+                                  S { getS = xioTextMode
+                                    , setS = \ x s -> s { xioTextMode = x}
+                                    }
 
 theShowTree                     :: Selector XIOSysState Bool
-theShowTree                     = ( xioShowTree,      \ x s -> s { xioShowTree = x} )
-                                  `subS` theOutputConfig
+theShowTree                     = theOutputConfig
+                                  >>>
+                                  S { getS = xioShowTree
+                                    , setS = \ x s -> s { xioShowTree = x}
+                                    }
 
 theShowHaskell                  :: Selector XIOSysState Bool
-theShowHaskell                  = ( xioShowHaskell,      \ x s -> s { xioShowHaskell = x} )
-                                  `subS` theOutputConfig
+theShowHaskell                  = theOutputConfig
+                                  >>>
+                                  S { getS = xioShowHaskell
+                                    , setS = \ x s -> s { xioShowHaskell = x}
+                                    }
 
 -- ----------------------------------------
 
 theRelaxConfig                  :: Selector XIOSysState XIORelaxConfig
-theRelaxConfig                  = ( xioRelaxConfig,      \ x s -> s { xioRelaxConfig = x} )
-                                   `subS` theSysEnv
+theRelaxConfig                  = theSysEnv
+                                  >>>
+                                  S { getS = xioRelaxConfig
+                                    , setS = \ x s -> s { xioRelaxConfig = x}
+                                    }
 
 theRelaxValidate                :: Selector XIOSysState Bool
-theRelaxValidate                = ( xioRelaxValidate, \ x s -> s { xioRelaxValidate = x} )
-                                  `subS` theRelaxConfig
+theRelaxValidate                = theRelaxConfig
+                                  >>>
+                                  S { getS = xioRelaxValidate
+                                    , setS = \ x s -> s { xioRelaxValidate = x}
+                                    }
 
 theRelaxSchema                  :: Selector XIOSysState String
-theRelaxSchema                  = ( xioRelaxSchema, \ x s -> s { xioRelaxSchema = x} )
-                                  `subS` theRelaxConfig
+theRelaxSchema                  = theRelaxConfig
+                                  >>>
+                                  S { getS = xioRelaxSchema
+                                    , setS = \ x s -> s { xioRelaxSchema = x}
+                                    }
 
 theRelaxCheckRestr              :: Selector XIOSysState Bool
-theRelaxCheckRestr              = ( xioRelaxCheckRestr, \ x s -> s { xioRelaxCheckRestr = x} )
-                                  `subS` theRelaxConfig
+theRelaxCheckRestr              = theRelaxConfig
+                                  >>>
+                                  S { getS = xioRelaxCheckRestr
+                                    , setS = \ x s -> s { xioRelaxCheckRestr = x}
+                                    }
 
 theRelaxValidateExtRef          :: Selector XIOSysState Bool
-theRelaxValidateExtRef          = ( xioRelaxValidateExtRef, \ x s -> s { xioRelaxValidateExtRef = x} )
-                                  `subS` theRelaxConfig
+theRelaxValidateExtRef          = theRelaxConfig
+                                  >>>
+                                  S { getS = xioRelaxValidateExtRef
+                                    , setS = \ x s -> s { xioRelaxValidateExtRef = x}
+                                    }
 
 theRelaxValidateInclude         :: Selector XIOSysState Bool
-theRelaxValidateInclude         = ( xioRelaxValidateInclude, \ x s -> s { xioRelaxValidateInclude = x} )
-                                  `subS` theRelaxConfig
+theRelaxValidateInclude         = theRelaxConfig
+                                  >>>
+                                  S { getS = xioRelaxValidateInclude
+                                    , setS = \ x s -> s { xioRelaxValidateInclude = x}
+                                    }
 
 theRelaxCollectErrors           :: Selector XIOSysState Bool
-theRelaxCollectErrors           = ( xioRelaxCollectErrors, \ x s -> s { xioRelaxCollectErrors = x} )
-                                  `subS` theRelaxConfig
+theRelaxCollectErrors           = theRelaxConfig
+                                  >>>
+                                  S { getS = xioRelaxCollectErrors
+                                    , setS = \ x s -> s { xioRelaxCollectErrors = x}
+                                    }
 
 theRelaxNoOfErrors              :: Selector XIOSysState Int
-theRelaxNoOfErrors              = ( xioRelaxNoOfErrors, \ x s -> s { xioRelaxNoOfErrors = x} )
-                                  `subS` theRelaxConfig
+theRelaxNoOfErrors              = theRelaxConfig
+                                  >>>
+                                  S { getS = xioRelaxNoOfErrors
+                                    , setS = \ x s -> s { xioRelaxNoOfErrors = x}
+                                    }
 
 theRelaxDefineId                :: Selector XIOSysState Int
-theRelaxDefineId                = ( xioRelaxDefineId, \ x s -> s { xioRelaxDefineId = x} )
-                                  `subS` theRelaxConfig
+theRelaxDefineId                = theRelaxConfig
+                                  >>>
+                                  S { getS = xioRelaxDefineId
+                                    , setS = \ x s -> s { xioRelaxDefineId = x}
+                                    }
 
 theRelaxAttrList                :: Selector XIOSysState (AssocList String XmlTrees)
-theRelaxAttrList                = ( xioRelaxAttrList,      \ x s -> s { xioRelaxAttrList = x} )
-                                  `subS` theRelaxConfig
+theRelaxAttrList                = theRelaxConfig
+                                  >>>
+                                  S { getS = xioRelaxAttrList
+                                    , setS = \ x s -> s { xioRelaxAttrList = x}
+                                    }
 
 theRelaxValidator                :: Selector XIOSysState (IOSArrow XmlTree XmlTree)
-theRelaxValidator                = ( xioRelaxValidator,      \ x s -> s { xioRelaxValidator = x} )
-                                  `subS` theRelaxConfig
+theRelaxValidator                = theRelaxConfig
+                                   >>>
+                                   S { getS = xioRelaxValidator
+                                     , setS = \ x s -> s { xioRelaxValidator = x}
+                                     }
 
 -- ----------------------------------------
 
 theParseConfig                  :: Selector XIOSysState XIOParseConfig
-theParseConfig                  = ( xioParseConfig,      \ x s -> s { xioParseConfig = x} )
-                                   `subS` theSysEnv
+theParseConfig                  = theSysEnv
+                                  >>>
+                                  S { getS = xioParseConfig
+                                    , setS = \ x s -> s { xioParseConfig = x}
+                                    }
 
 theErrorStatus                  :: Selector XIOSysState Int
-theErrorStatus                  = ( xioErrorStatus,     \ x s -> s { xioErrorStatus = x } )
-                                   `subS` theSysEnv
+theErrorStatus                  = theSysEnv
+                                  >>>
+                                  S { getS = xioErrorStatus
+                                    , setS = \ x s -> s { xioErrorStatus = x }
+                                    }
 
 theErrorMsgHandler              :: Selector XIOSysState (String -> IO ())
-theErrorMsgHandler              = ( xioErrorMsgHandler, \ x s -> s { xioErrorMsgHandler = x } )
-                                   `subS` theSysEnv
+theErrorMsgHandler              = theSysEnv
+                                  >>>
+                                  S { getS = xioErrorMsgHandler
+                                    , setS = \ x s -> s { xioErrorMsgHandler = x }
+                                    }
 
 theErrorMsgCollect              :: Selector XIOSysState Bool
-theErrorMsgCollect              = ( xioErrorMsgCollect, \ x s -> s { xioErrorMsgCollect = x } )
-                                   `subS` theSysEnv
+theErrorMsgCollect              = theSysEnv
+                                  >>>
+                                  S { getS = xioErrorMsgCollect
+                                    , setS = \ x s -> s { xioErrorMsgCollect = x }
+                                    }
 
 theBaseURI                      :: Selector XIOSysState String
-theBaseURI                      = ( xioBaseURI,         \ x s -> s { xioBaseURI = x } )
-                                   `subS` theSysEnv
+theBaseURI                      = theSysEnv
+                                  >>>
+                                  S { getS = xioBaseURI
+                                    , setS = \ x s -> s { xioBaseURI = x }
+                                    }
 
 theDefaultBaseURI               :: Selector XIOSysState String
-theDefaultBaseURI               = ( xioDefaultBaseURI,  \ x s -> s { xioDefaultBaseURI = x } )
-                                   `subS` theSysEnv
+theDefaultBaseURI               = theSysEnv
+                                  >>>
+                                  S { getS = xioDefaultBaseURI
+                                    , setS = \ x s -> s { xioDefaultBaseURI = x }
+                                    }
 
 theTraceLevel                   :: Selector XIOSysState Int
-theTraceLevel                   = ( xioTraceLevel,      \ x s -> s { xioTraceLevel = x } )
-                                   `subS` theSysEnv
+theTraceLevel                   = theSysEnv
+                                  >>>
+                                  S { getS = xioTraceLevel
+                                    , setS = \ x s -> s { xioTraceLevel = x }
+                                    }
 
 theTraceCmd                     :: Selector XIOSysState (Int -> String -> IO ())
-theTraceCmd                     = ( xioTraceCmd,        \ x s -> s { xioTraceCmd = x } )
-                                   `subS` theSysEnv
+theTraceCmd                     = theSysEnv
+                                  >>>
+                                  S { getS = xioTraceCmd
+                                    , setS = \ x s -> s { xioTraceCmd = x }
+                                    }
 
 theTrace                        :: Selector XIOSysState (Int, Int -> String -> IO ())
-theTrace                        = theTraceLevel `pairS` theTraceCmd
+theTrace                        = theTraceLevel .&&&. theTraceCmd
 
 theAttrList                     :: Selector XIOSysState Attributes
-theAttrList                     = ( xioAttrList,        \ x s -> s { xioAttrList = x } )
-                                   `subS` theSysEnv
+theAttrList                     = theSysEnv
+                                  >>>
+                                  S { getS = xioAttrList
+                                    , setS = \ x s -> s { xioAttrList = x }
+                                    }
 
 theMimeTypes                    :: Selector XIOSysState MimeTypeTable
-theMimeTypes                    = ( xioMimeTypes,       \ x s -> s { xioMimeTypes = x } )
-                                  `subS` theParseConfig
+theMimeTypes                    = theParseConfig
+                                  >>>
+                                  S { getS = xioMimeTypes
+                                    , setS = \ x s -> s { xioMimeTypes = x }
+                                    }
 
 theMimeTypeFile                 :: Selector XIOSysState String
-theMimeTypeFile                    = ( xioMimeTypeFile, \ x s -> s { xioMimeTypeFile = x } )
-                                  `subS` theParseConfig
+theMimeTypeFile                 = theParseConfig
+                                  >>>
+                                  S { getS = xioMimeTypeFile
+                                    , setS = \ x s -> s { xioMimeTypeFile = x }
+                                    }
 
 theAcceptedMimeTypes            :: Selector XIOSysState [String]
-theAcceptedMimeTypes            = ( xioAcceptedMimeTypes,       \ x s -> s { xioAcceptedMimeTypes = x } )
-                                  `subS` theParseConfig
+theAcceptedMimeTypes            = theParseConfig
+                                  >>>
+                                  S { getS = xioAcceptedMimeTypes
+                                    , setS = \ x s -> s { xioAcceptedMimeTypes = x }
+                                    }
 
 theWarnings                     :: Selector XIOSysState Bool
-theWarnings                     = ( xioWarnings,        \ x s -> s { xioWarnings = x } )
-                                  `subS` theParseConfig
+theWarnings                     = theParseConfig
+                                  >>>
+                                  S { getS = xioWarnings
+                                    , setS = \ x s -> s { xioWarnings = x }
+                                    }
 
 theRemoveWS                     :: Selector XIOSysState Bool
-theRemoveWS                     = ( xioRemoveWS,        \ x s -> s { xioRemoveWS = x } )
-                                  `subS` theParseConfig
+theRemoveWS                     = theParseConfig
+                                  >>>
+                                  S { getS = xioRemoveWS
+                                    , setS = \ x s -> s { xioRemoveWS = x }
+                                    }
 
 thePreserveComment              :: Selector XIOSysState Bool
-thePreserveComment              = ( xioPreserveComment, \ x s -> s { xioPreserveComment = x } )
-                                  `subS` theParseConfig
+thePreserveComment              = theParseConfig
+                                  >>>
+                                  S { getS = xioPreserveComment
+                                    , setS = \ x s -> s { xioPreserveComment = x }
+                                    }
 
 theParseByMimeType              :: Selector XIOSysState Bool
-theParseByMimeType              = ( xioParseByMimeType, \ x s -> s { xioParseByMimeType = x } )
-                                  `subS` theParseConfig
+theParseByMimeType              = theParseConfig
+                                  >>>
+                                  S { getS = xioParseByMimeType
+                                    , setS = \ x s -> s { xioParseByMimeType = x }
+                                    }
 
 theParseHTML                    :: Selector XIOSysState Bool
-theParseHTML                    = ( xioParseHTML, \ x s -> s { xioParseHTML = x } )
-                                  `subS` theParseConfig
+theParseHTML                    = theParseConfig
+                                  >>>
+                                  S { getS = xioParseHTML
+                                    , setS = \ x s -> s { xioParseHTML = x }
+                                    }
 
 theLowerCaseNames               :: Selector XIOSysState Bool
-theLowerCaseNames               = ( xioLowerCaseNames, \ x s -> s { xioLowerCaseNames = x } )
-                                  `subS` theParseConfig
+theLowerCaseNames               = theParseConfig
+                                  >>>
+                                  S { getS = xioLowerCaseNames
+                                    , setS = \ x s -> s { xioLowerCaseNames = x }
+                                    }
 
 theValidate                     :: Selector XIOSysState Bool
-theValidate                     = ( xioValidate, \ x s -> s { xioValidate = x } )
-                                  `subS` theParseConfig
+theValidate                     = theParseConfig
+                                  >>>
+                                  S { getS = xioValidate
+                                    , setS = \ x s -> s { xioValidate = x }
+                                    }
 
 theCheckNamespaces              :: Selector XIOSysState Bool
-theCheckNamespaces              = ( xioCheckNamespaces, \ x s -> s { xioCheckNamespaces = x } )
-                                  `subS` theParseConfig
+theCheckNamespaces              = theParseConfig
+                                  >>>
+                                  S { getS = xioCheckNamespaces
+                                    , setS = \ x s -> s { xioCheckNamespaces = x }
+                                    }
 
 theCanonicalize                 :: Selector XIOSysState Bool
-theCanonicalize                 = ( xioCanonicalize, \ x s -> s { xioCanonicalize = x } )
-                                  `subS` theParseConfig
+theCanonicalize                 = theParseConfig
+                                  >>>
+                                  S { getS = xioCanonicalize
+                                    , setS = \ x s -> s { xioCanonicalize = x }
+                                    }
 
 theIgnoreNoneXmlContents        :: Selector XIOSysState Bool
-theIgnoreNoneXmlContents        = ( xioIgnoreNoneXmlContents, \ x s -> s { xioIgnoreNoneXmlContents = x } )
-                                  `subS` theParseConfig
+theIgnoreNoneXmlContents        = theParseConfig
+                                  >>>
+                                  S { getS = xioIgnoreNoneXmlContents
+                                    , setS = \ x s -> s { xioIgnoreNoneXmlContents = x }
+                                    }
 
 theTagSoup                      :: Selector XIOSysState Bool
-theTagSoup                      = ( xioTagSoup,        \ x s -> s { xioTagSoup = x } )
-                                  `subS` theParseConfig
+theTagSoup                      = theParseConfig
+                                  >>>
+                                  S { getS = xioTagSoup
+                                    , setS = \ x s -> s { xioTagSoup = x }
+                                    }
 
 theTagSoupParser                :: Selector XIOSysState (IOSArrow XmlTree XmlTree)
-theTagSoupParser                = ( xioTagSoupParser,  \ x s -> s { xioTagSoupParser = x } )
-                                  `subS` theParseConfig
+theTagSoupParser                = theParseConfig
+                                  >>>
+                                  S { getS = xioTagSoupParser
+                                    , setS = \ x s -> s { xioTagSoupParser = x }
+                                    }
 
 -- ----------------------------------------
 
-theCacheConfig                   :: Selector XIOSysState XIOCacheConfig
-theCacheConfig                   = ( xioCacheConfig, \ x s -> s { xioCacheConfig = x} )
-                                   `subS` theSysEnv
+theCacheConfig                  :: Selector XIOSysState XIOCacheConfig
+theCacheConfig                  = theSysEnv
+                                  >>>
+                                  S { getS = xioCacheConfig
+                                    , setS = \ x s -> s { xioCacheConfig = x}
+                                    }
 
-theBinaryCompression             :: Selector XIOSysState (ByteString -> ByteString)
-theBinaryCompression             = ( xioBinaryCompression, \ x s -> s { xioBinaryCompression = x} )
-                                   `subS` theCacheConfig
+theBinaryCompression            :: Selector XIOSysState (ByteString -> ByteString)
+theBinaryCompression            = theCacheConfig
+                                  >>>
+                                  S { getS = xioBinaryCompression
+                                    , setS = \ x s -> s { xioBinaryCompression = x}
+                                    }
 
-theBinaryDeCompression           :: Selector XIOSysState (ByteString -> ByteString)
-theBinaryDeCompression           = ( xioBinaryDeCompression, \ x s -> s { xioBinaryDeCompression = x} )
-                                   `subS` theCacheConfig
+theBinaryDeCompression          :: Selector XIOSysState (ByteString -> ByteString)
+theBinaryDeCompression          = theCacheConfig
+                                  >>>
+                                  S { getS = xioBinaryDeCompression
+                                    , setS = \ x s -> s { xioBinaryDeCompression = x}
+                                    }
 
-theWithCache                     :: Selector XIOSysState Bool
-theWithCache                     = ( xioWithCache, \ x s -> s { xioWithCache = x} )
-                                   `subS` theCacheConfig
+theWithCache                    :: Selector XIOSysState Bool
+theWithCache                    = theCacheConfig
+                                  >>>
+                                  S { getS = xioWithCache
+                                    , setS = \ x s -> s { xioWithCache = x}
+                                    }
 
-theCacheDir                      :: Selector XIOSysState String
-theCacheDir                      = ( xioCacheDir, \ x s -> s { xioCacheDir = x} )
-                                   `subS` theCacheConfig
+theCacheDir                     :: Selector XIOSysState String
+theCacheDir                     = theCacheConfig
+                                  >>>
+                                  S { getS = xioCacheDir
+                                    , setS = \ x s -> s { xioCacheDir = x}
+                                    }
 
-theDocumentAge                   :: Selector XIOSysState Integer
-theDocumentAge                   = ( xioDocumentAge, \ x s -> s { xioDocumentAge = x} )
-                                   `subS` theCacheConfig
+theDocumentAge                  :: Selector XIOSysState Int
+theDocumentAge                  = theCacheConfig
+                                  >>>
+                                  S { getS = xioDocumentAge
+                                    , setS = \ x s -> s { xioDocumentAge = x}
+                                    }
 
-theCache404Err                   :: Selector XIOSysState Bool
-theCache404Err                   = ( xioCache404Err, \ x s -> s { xioCache404Err = x} )
-                                   `subS` theCacheConfig
+theCache404Err                  :: Selector XIOSysState Bool
+theCache404Err                  = theCacheConfig
+                                  >>>
+                                  S { getS = xioCache404Err
+                                    , setS = \ x s -> s { xioCache404Err = x}
+                                    }
 
-theCacheRead                     :: Selector XIOSysState (String -> IOSArrow XmlTree XmlTree)
-theCacheRead                     = ( xioCacheRead, \ x s -> s { xioCacheRead = x} )
-                                   `subS` theCacheConfig
+theCacheRead                    :: Selector XIOSysState (String -> IOSArrow XmlTree XmlTree)
+theCacheRead                    = theCacheConfig
+                                  >>>
+                                  S { getS = xioCacheRead
+                                    , setS = \ x s -> s { xioCacheRead = x}
+                                    }
 
 -- ------------------------------------------------------------
 
 getSysVar                       :: Selector XIOSysState c -> IOStateArrow s b c
 getSysVar sel                   = IOSLA $ \ s _x ->
-                                  return (s, (:[]) . getS (sel `subS` theSysState) $ s)
+                                  return (s, (:[]) . getS (theSysState >>> sel) $ s)
 
 setSysVar                       :: Selector XIOSysState c -> IOStateArrow s c c
-setSysVar sel                   = (\ v -> configSysVar $ putS sel v) $< this
+setSysVar sel                   = (\ v -> configSysVar $ setS sel v) $< this
 
 chgSysVar                       :: Selector XIOSysState c -> (b -> c -> c) -> IOStateArrow s b b
 chgSysVar sel op                = (\ v -> configSysVar $ chgS sel (op v)) $< this
@@ -562,11 +731,11 @@ configSysVars cfs               = configSysVar $ foldr (>>>) id $ cfs
 
 localSysVar                     :: Selector XIOSysState c -> IOStateArrow s a b -> IOStateArrow s a b
 localSysVar sel f               = IOSLA $ \ s0 v ->
-                                  let sel' = sel `subS` theSysState in
+                                  let sel' = theSysState >>> sel in
                                   let c0   = getS sel' s0 in
                                   do
                                   (s1, res) <- runIOSLA f s0 v
-                                  return (putS sel' c0 s1, res)
+                                  return (setS sel' c0 s1, res)
 
 localSysEnv                     :: IOStateArrow s a b -> IOStateArrow s a b
 localSysEnv                     = localSysVar theSysEnv

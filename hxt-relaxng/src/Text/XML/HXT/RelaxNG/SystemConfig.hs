@@ -21,6 +21,9 @@
 module   Text.XML.HXT.RelaxNG.SystemConfig
 where
 
+import Data.Function.Selector                   ( setS
+                                                , (.&&&.)
+                                                )
 import Text.XML.HXT.Arrow.XmlState.TypeDefs
 import Text.XML.HXT.Arrow.XmlOptions
 
@@ -32,22 +35,22 @@ import System.Console.GetOpt
 -- ------------------------------------------------------------
 
 withRelaxNG                     :: String -> SysConfig
-withRelaxNG s                   = putS (theRelaxValidate
-					`pairS` theRelaxSchema
-					`pairS` theRelaxValidator
-				       ) ((True, s), validateDocumentWithRelaxSchema [] s)
+withRelaxNG s                   = setS (theRelaxValidate
+					.&&&. theRelaxSchema
+					.&&&. theRelaxValidator
+				       ) (True, (s, validateDocumentWithRelaxSchema [] s))
 
 withRelaxCheckRestr             ::  Bool -> SysConfig
-withRelaxCheckRestr             = putS theRelaxCheckRestr
+withRelaxCheckRestr             = setS theRelaxCheckRestr
 
 withRelaxValidateExtRef         :: Bool -> SysConfig
-withRelaxValidateExtRef         = putS theRelaxValidateExtRef
+withRelaxValidateExtRef         = setS theRelaxValidateExtRef
 
 withRelaxValidateInclude        :: Bool -> SysConfig
-withRelaxValidateInclude        = putS theRelaxValidateInclude
+withRelaxValidateInclude        = setS theRelaxValidateInclude
 
 withRelaxCollectErrors          :: Bool -> SysConfig
-withRelaxCollectErrors          = putS theRelaxCollectErrors
+withRelaxCollectErrors          = setS theRelaxCollectErrors
 
 -- ------------------------------------------------------------
 

@@ -22,6 +22,9 @@ import Control.Arrow
 import Control.Arrow.ArrowList
 import Control.Arrow.ArrowTree
 
+import Data.Function.Selector                   ( setS
+                                                , (.&&&.)
+                                                )
 import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlArrow
@@ -35,7 +38,7 @@ import qualified Text.XML.HXT.Parser.TagSoup as TS
 -- | enable TagSoup parsing
 
 withTagSoup                     :: SysConfig
-withTagSoup                     = putS (theTagSoup `pairS` theTagSoupParser) (True, parseHtmlTagSoup)
+withTagSoup                     = setS (theTagSoup .&&&. theTagSoupParser) (True, parseHtmlTagSoup)
 
 -- ------------------------------------------------------------
 
@@ -44,14 +47,14 @@ withTagSoup                     = putS (theTagSoup `pairS` theTagSoupParser) (Tr
 parseHtmlTagSoup                :: IOSArrow XmlTree XmlTree
 parseHtmlTagSoup                = parse
                                   $< getSysVar
-                                     (theCheckNamespaces `pairS`
-                                      theWarnings `pairS`
-                                      thePreserveComment `pairS`
-                                      theRemoveWS `pairS`
+                                     (theCheckNamespaces .&&&.
+                                      theWarnings        .&&&.
+                                      thePreserveComment .&&&.
+                                      theRemoveWS        .&&&.
                                       theLowerCaseNames
                                      )
     where
-    parse ((((withNamespaces', withWarnings'), preserveCmt'), removeWS'), lowerCaseNames')
+    parse (withNamespaces', (withWarnings', (preserveCmt', (removeWS', lowerCaseNames'))))
                                 = traceMsg 1 ("parse document with tagsoup " ++
                                               ( if lowerCaseNames' then "HT" else "X" ) ++ "ML parser"
                                              )

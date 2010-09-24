@@ -27,6 +27,10 @@ where
 
 import Control.Arrow.ListArrows
 
+import Data.Function.Selector                   ( setS
+                                                , (.&&&.)
+                                                )
+
 import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlArrow
@@ -181,9 +185,9 @@ readDocument'' src
         $<<
         ( getMimeType
           &&&
-          getSysVar (theParseByMimeType   `pairS`
-                     theParseHTML         `pairS`
-                     theAcceptedMimeTypes `pairS`
+          getSysVar (theParseByMimeType   .&&&.
+                     theParseHTML         .&&&.
+                     theAcceptedMimeTypes .&&&.
                      theRelaxValidate
                     )
         )
@@ -198,34 +202,34 @@ readDocument'' src
     getMimeType
         = getAttrValue transferMimeType >>^ stringToLower
 
-    processDoc mimeType (((parseByMimeType, parseHtml), acceptedMimeTypes), validateWithRelax)
+    processDoc mimeType (parseByMimeType, (parseHtml, (acceptedMimeTypes, validateWithRelax)))
         = traceMsg 1 (unwords [ "readDocument:", show src
                               , "(mime type:", show mimeType, ") will be processed"])
           >>>
           ( if isAcceptedMimeType acceptedMimeTypes mimeType
             then ( ifA (fromLA hasEmptyBody)
                    ( replaceChildren none )                                     -- empty response, e.g. in if-modified-since request
-                   ( ( parse $< getSysVar (theValidate              `pairS`
-                                           theIgnoreNoneXmlContents `pairS`
+                   ( ( parse $< getSysVar (theValidate              .&&&.
+                                           theIgnoreNoneXmlContents .&&&.
                                            theTagSoup
                                           )
                      )
                      >>>
                      ( if isXmlOrHtml
-                       then ( ( checknamespaces $< getSysVar (theCheckNamespaces `pairS`
+                       then ( ( checknamespaces $< getSysVar (theCheckNamespaces .&&&.
                                                               theTagSoup
                                                              )
                               )
                               >>>
                               rememberDTDAttrl
                               >>>
-                              ( canonicalize $< getSysVar (thePreserveComment `pairS`
-                                                           theCanonicalize    `pairS`
+                              ( canonicalize $< getSysVar (thePreserveComment .&&&.
+                                                           theCanonicalize    .&&&.
                                                            theTagSoup
                                                           )
                               )
                               >>>
-                              ( whitespace $< getSysVar (theRemoveWS `pairS`
+                              ( whitespace $< getSysVar (theRemoveWS .&&&.
                                                          theTagSoup
                                                         )
                               )
@@ -270,14 +274,14 @@ readDocument'' src
                                             (mi == mis || mis == "*")
                                           )
                                           || r
-        parse ((validate, removeNoneXml), withTagSoup')
+        parse (validate, (removeNoneXml, withTagSoup'))
 	    | not isXmlOrHtml           = if removeNoneXml
 					  then replaceChildren none             -- don't parse, if mime type is not XML nor HTML
 					  else this                             -- but remove contents when option is set
 
             | isHtml
 	      ||
-              withTagSoup'              = configSysVar (putS theLowerCaseNames isHtml)
+              withTagSoup'              = configSysVar (setS theLowerCaseNames isHtml)
                                           >>>
                                           parseHtmlDocument                     -- parse as HTML or with tagsoup XML
 
@@ -295,7 +299,7 @@ readDocument'' src
 
             | otherwise                 = this
 
-        canonicalize ((preserveCmt, canonicalize'), withTagSoup')
+        canonicalize (preserveCmt, (canonicalize', withTagSoup'))
             | withTagSoup'              = this                                  -- tagsoup already removes redundant stuff
             | validateWithRelax         = canonicalizeAllNodes
             | canonicalize'

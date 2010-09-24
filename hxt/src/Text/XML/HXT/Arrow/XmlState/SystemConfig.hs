@@ -20,6 +20,11 @@ where
 
 import Control.Arrow
 
+import Data.Function.Selector           ( setS
+                                        , chgS
+                                        , (.&&&.)
+                                        )
+
 import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlState.ErrorHandling
@@ -32,7 +37,7 @@ import Text.XML.HXT.Arrow.XmlState.TypeDefs
 -- | @withTace level@ : system option, set the trace level, (0..4)
 
 withTrace                       :: Int -> SysConfig
-withTrace                       = putS theTraceLevel
+withTrace                       = setS theTraceLevel
 
 -- | @withSysAttr key value@ : store an arbitarty key value pair in system state
 
@@ -40,25 +45,25 @@ withSysAttr                     :: String -> String -> SysConfig
 withSysAttr n v                 = chgS theAttrList (addEntry n v)
 
 withAcceptedMimeTypes           :: [String] -> SysConfig
-withAcceptedMimeTypes           = putS theAcceptedMimeTypes
+withAcceptedMimeTypes           = setS theAcceptedMimeTypes
 
 -- | @withMimeTypeFile filename@ : input option,
 -- set the mime type table for @file:@ documents by given file.
 -- The format of this config file must be in the syntax of a debian linux \"mime.types\" config file
 
 withMimeTypeFile                :: String -> SysConfig
-withMimeTypeFile                = putS theMimeTypeFile
+withMimeTypeFile                = setS theMimeTypeFile
 
 -- | @withWarnings yes/no@ : system option, issue warnings during reading, HTML parsing and processing,
 -- default is 'yes'
 
 withWarnings                    :: Bool -> SysConfig
-withWarnings                    = putS theWarnings
+withWarnings                    = setS theWarnings
 
 -- | @withErrors yes/no@ : system option for suppressing error messages, default is 'no'
 
 withErrors                      :: Bool -> SysConfig
-withErrors b                    = putS theErrorMsgHandler h
+withErrors b                    = setS theErrorMsgHandler h
     where
     h | b                       = errorOutputToStderr
       | otherwise               = const $ return ()
@@ -66,12 +71,12 @@ withErrors b                    = putS theErrorMsgHandler h
 -- | @withRemoveWS yes/no@ : read and write option, remove all whitespace, used for document indentation, default is 'no'
 
 withRemoveWS                    :: Bool -> SysConfig
-withRemoveWS                    = putS theRemoveWS
+withRemoveWS                    = setS theRemoveWS
 
 -- | @withPreserveComment yes/no@ : read option, preserve comments during canonicalization, default is 'no'
 
 withPreserveComment             :: Bool -> SysConfig
-withPreserveComment             = putS thePreserveComment
+withPreserveComment             = setS thePreserveComment
 
 -- | @withParseByMimeType yes/no@  : read option, select the parser by the mime type of the document
 -- (pulled out of the HTTP header).
@@ -85,27 +90,27 @@ withPreserveComment             = putS thePreserveComment
 -- of arbitray binary data.
 
 withParseByMimeType             :: Bool -> SysConfig
-withParseByMimeType             = putS theParseByMimeType
+withParseByMimeType             = setS theParseByMimeType
 
 -- | @withParseHTML yes/no@: read option, use HTML parser, default is 'no' (use XML parser)
 
 withParseHTML                   :: Bool -> SysConfig
-withParseHTML                   = putS theParseHTML
+withParseHTML                   = setS theParseHTML
 
 -- | @withValidate yes/no@: read option, validate document againsd DTD, default is 'yes'
 
 withValidate                    :: Bool -> SysConfig
-withValidate                    = putS theValidate
+withValidate                    = setS theValidate
 
 -- | @withCheckNamespaces yes/no@: read option, check namespaces, default is 'no'
 
 withCheckNamespaces             :: Bool -> SysConfig
-withCheckNamespaces             = putS theCheckNamespaces
+withCheckNamespaces             = setS theCheckNamespaces
 
 -- | @withCanonicalize yes/no@ : read option, canonicalize document, default is 'yes'
 
 withCanonicalize                :: Bool -> SysConfig
-withCanonicalize                = putS theCanonicalize
+withCanonicalize                = setS theCanonicalize
 
 -- | @withIgnoreNoneXmlContents yes\/no@ : input option, ignore document contents of none XML\/HTML documents.
 --
@@ -113,19 +118,19 @@ withCanonicalize                = putS theCanonicalize
 -- In those cases net traffic can be reduced.
 
 withIgnoreNoneXmlContents       :: Bool -> SysConfig
-withIgnoreNoneXmlContents       = putS theIgnoreNoneXmlContents
+withIgnoreNoneXmlContents       = setS theIgnoreNoneXmlContents
 
 -- ------------------------------------------------------------
 
 -- | @withStrictInput yes/no@ : input option, input of file and HTTP contents is read eagerly, default is 'no'
 
 withStrictInput                 :: Bool -> SysConfig
-withStrictInput                 = putS theStrictInput
+withStrictInput                 = setS theStrictInput
 
 -- | @withEncodingErrors yes/no@ : input option, ignore all encoding errors, default is 'no'
 
 withEncodingErrors              :: Bool -> SysConfig
-withEncodingErrors              = putS theEncodingErrors
+withEncodingErrors              = setS theEncodingErrors
 
 -- | @withInputEncoding encodingName@ : input option
 --
@@ -134,7 +139,7 @@ withEncodingErrors              = putS theEncodingErrors
 -- default decoding for XML\/HTML is utf8, for text iso latin1 (no decoding).
 
 withInputEncoding               :: String -> SysConfig
-withInputEncoding               = putS theInputEncoding
+withInputEncoding               = setS theInputEncoding
 
 -- | @withDefaultBaseURI URI@ , input option, set the default base URI
 --
@@ -142,7 +147,7 @@ withInputEncoding               = putS theInputEncoding
 -- relative URIs within the document
 
 withDefaultBaseURI              :: String -> SysConfig
-withDefaultBaseURI              = putS theDefaultBaseURI
+withDefaultBaseURI              = setS theDefaultBaseURI
 
 withInputOption                 :: String -> String -> SysConfig
 withInputOption n v             = chgS theInputOptions (addEntry n v)
@@ -153,25 +158,25 @@ withInputOptions                = foldr (>>>) id . map (uncurry withInputOption)
 -- | @withRedirect yes/no@ : input option, automatically follow redirected URIs, default is 'yes'
 
 withRedirect                    :: Bool -> SysConfig
-withRedirect                    = putS theRedirect
+withRedirect                    = setS theRedirect
 
 -- | @withProxy \"host:port\"@ : input option, configure a proxy for HTTP access, e.g. www-cache:3128
 
 withProxy                       :: String -> SysConfig
-withProxy                       = putS theProxy
+withProxy                       = setS theProxy
 
 -- ------------------------------------------------------------
 
 -- | @withIndent yes/no@ : output option, indent document before output, default is 'no'
 
 withIndent                      :: Bool -> SysConfig
-withIndent                      = putS theIndent
+withIndent                      = setS theIndent
 
 -- | @withOutputEncoding encoding@ , output option,
 -- default is the default input encoding or utf8, if input encoding is not set
 
 withOutputEncoding              :: String -> SysConfig
-withOutputEncoding              = putS theOutputEncoding
+withOutputEncoding              = setS theOutputEncoding
 
 -- | @withOutputXML@ : output option, default writing
 --
@@ -180,48 +185,48 @@ withOutputEncoding              = putS theOutputEncoding
 -- and encode document with respect to 'withOutputEncoding'
 
 withOutputXML                   :: SysConfig
-withOutputXML                   = putS theOutputFmt XMLoutput
+withOutputXML                   = setS theOutputFmt XMLoutput
 
 -- | Write XHTML: quote all special XML chars, use HTML entity refs or char refs for none ASCII chars
 
 withOutputHTML                  :: SysConfig
-withOutputHTML                  = putS theOutputFmt HTMLoutput
+withOutputHTML                  = setS theOutputFmt HTMLoutput
 
 -- | Write XML: quote only special XML chars, don't substitute chars by HTML entities, and don\'t generate empty elements for HTML elements,
 -- which may contain any contents, e.g. @<script src=...></script>@ instead of @<script src=... />@
 
 withOutputXHTML                 :: SysConfig
-withOutputXHTML                 = putS theOutputFmt XHTMLoutput
+withOutputXHTML                 = setS theOutputFmt XHTMLoutput
 
 -- | suppreses all char and entitiy substitution
 
 withOutputPLAIN                 :: SysConfig
-withOutputPLAIN                 = putS theOutputFmt PLAINoutput
+withOutputPLAIN                 = setS theOutputFmt PLAINoutput
 
 withXmlPi                       :: Bool -> SysConfig
-withXmlPi                       = putS theXmlPi
+withXmlPi                       = setS theXmlPi
 
 withNoEmptyElemFor              :: [String] -> SysConfig
-withNoEmptyElemFor              = putS theNoEmptyElemFor
+withNoEmptyElemFor              = setS theNoEmptyElemFor
 
 withAddDefaultDTD               :: Bool -> SysConfig
-withAddDefaultDTD               = putS theAddDefaultDTD
+withAddDefaultDTD               = setS theAddDefaultDTD
 
 withTextMode                    :: Bool -> SysConfig
-withTextMode                    = putS theTextMode
+withTextMode                    = setS theTextMode
 
 withShowTree                    :: Bool -> SysConfig
-withShowTree                    = putS theShowTree
+withShowTree                    = setS theShowTree
 
 withShowHaskell                 :: Bool -> SysConfig
-withShowHaskell                 = putS theShowHaskell
+withShowHaskell                 = setS theShowHaskell
 
 -- | Configure compression and decompression for binary serialization/deserialization.
 -- First component is the compression function applied after serialization,
 -- second the decompression applied before deserialization.
 
 withCompression                 :: (CompressionFct, DeCompressionFct) -> SysConfig
-withCompression                 = putS (theBinaryCompression `pairS` theBinaryDeCompression)
+withCompression                 = setS (theBinaryCompression .&&&. theBinaryDeCompression)
 
 -- ------------------------------------------------------------
 

@@ -24,6 +24,9 @@ import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
 import Control.Arrow.ArrowIO
 
+import Data.Function.Selector           ( setS
+                                        )
+
 import System.IO                        ( hPutStrLn
                                         , hFlush
                                         , stderr
@@ -55,7 +58,7 @@ getTraceLevel           = getSysVar theTraceLevel
 -- | set the global trace command. This command does the trace output
 
 setTraceCmd             :: (Int -> String -> IO ()) -> IOStateArrow s b b
-setTraceCmd c           = configSysVar $ putS theTraceCmd c
+setTraceCmd c           = configSysVar $ setS theTraceCmd c
 
 -- | acces the command for trace output
 

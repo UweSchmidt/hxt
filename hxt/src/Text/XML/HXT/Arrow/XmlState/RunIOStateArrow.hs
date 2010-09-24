@@ -20,6 +20,9 @@ where
 import Control.Arrow                            -- arrow classes
 import Control.Arrow.IOStateListArrow
 
+import Data.Function.Selector           ( Selector(..)
+                                        )
+
 import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlArrow
@@ -146,7 +149,7 @@ initialRelaxConfig              = XIORxc
                                   , xioRelaxNoOfErrors          = 0
                                   , xioRelaxDefineId            = 0
                                   , xioRelaxAttrList            = []
-				  , xioRelaxValidator           = dummyRelaxValidator
+                                  , xioRelaxValidator           = dummyRelaxValidator
                                   }
 
 initialCacheConfig              :: XIOCacheConfig
@@ -207,5 +210,12 @@ getConfigAttr n c       = lookup1 n $ tl
     where
     s                   = (foldr (>>>) id c) initialSysState
     tl                  = getS theAttrList s
+
+-- ----------------------------------------
+
+theSysConfigComp        :: Selector XIOSysState a -> Selector SysConfig a
+theSysConfigComp sel    = S { getS = \     cf -> getS sel      (cf initialSysState)
+                            , setS = \ val cf -> setS sel val . cf
+                            }
 
 -- ------------------------------------------------------------

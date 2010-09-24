@@ -30,8 +30,9 @@ import Control.Arrow                            -- arrow classes
 import Control.Arrow.ArrowList
 import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
-import Control.Arrow.ListArrow
-    ( fromLA )
+import Control.Arrow.ListArrow                  ( fromLA )
+
+import Data.Function.Selector                   ( (.&&&.) )
 
 import Text.XML.HXT.DOM.Interface
 
@@ -39,37 +40,31 @@ import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlState
 import Text.XML.HXT.Arrow.XmlState.TypeDefs
 
-import Text.XML.HXT.Arrow.ParserInterface
-    ( parseXmlDoc
-    , parseHtmlDoc
-    , substHtmlEntityRefs
-    )
+import Text.XML.HXT.Arrow.ParserInterface       ( parseXmlDoc
+                                                , parseHtmlDoc
+                                                , substHtmlEntityRefs
+                                                )
 
-import Text.XML.HXT.Arrow.Edit
-    ( transfAllCharRef
-    )
+import Text.XML.HXT.Arrow.Edit                  ( transfAllCharRef
+                                                )
 
 import Text.XML.HXT.Arrow.GeneralEntitySubstitution
-    ( processGeneralEntities
-    )
+                                               ( processGeneralEntities
+                                               )
 
-import Text.XML.HXT.Arrow.DTDProcessing
-    ( processDTD
-    )
+import Text.XML.HXT.Arrow.DTDProcessing        ( processDTD
+                                               )
 
-import Text.XML.HXT.Arrow.DocumentInput
-    ( getXmlContents
-    )
+import Text.XML.HXT.Arrow.DocumentInput        ( getXmlContents
+                                               )
 
-import Text.XML.HXT.Arrow.Namespace
-    ( propagateNamespaces
-    , validateNamespaces
-    )
-import Text.XML.HXT.DTDValidation.Validation
-    ( validate
-    , getDTDSubset
-    , transform
-    )
+import Text.XML.HXT.Arrow.Namespace            ( propagateNamespaces
+                                               , validateNamespaces
+                                               )
+import Text.XML.HXT.DTDValidation.Validation   ( validate
+                                               , getDTDSubset
+                                               , transform
+                                               )
 
 -- ------------------------------------------------------------
 
@@ -141,7 +136,7 @@ parseHtmlDocument
         >>>
         ( parseHtml $< getSysVar theTagSoup )
         >>>
-        ( removeWarnings $< getSysVar (theWarnings `pairS` theTagSoup )
+        ( removeWarnings $< getSysVar (theWarnings .&&&. theTagSoup )
         )
         >>>
         setDocumentStatusFromSystemState "parse HTML document"

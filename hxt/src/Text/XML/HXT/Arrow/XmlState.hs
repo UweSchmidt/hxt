@@ -36,7 +36,6 @@ module Text.XML.HXT.Arrow.XmlState
     ,
       -- * Global System State Configuration and Access
       configSysVars
-    , getConfigAttr
     , setSysAttr
     , unsetSysAttr
     , getSysAttr
@@ -44,6 +43,7 @@ module Text.XML.HXT.Arrow.XmlState
     , setSysAttrString
     , setSysAttrInt
     , getSysAttrInt
+    , getConfigAttr
     ,
       -- * Error Handling
       clearErrStatus
@@ -153,3 +153,5 @@ import Text.XML.HXT.Arrow.XmlState.SystemConfig
 import Text.XML.HXT.Arrow.XmlState.TraceHandling
 import Text.XML.HXT.Arrow.XmlState.TypeDefs
 import Text.XML.HXT.Arrow.XmlState.URIHandling
+
+-- ------------------------------------------------------------

@@ -18,6 +18,8 @@ where
 
 import Control.Arrow.ListArrows
 
+import Data.Function.Selector                   ( (.&&&.)
+                                                )
 import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlArrow
@@ -90,10 +92,10 @@ validateDocumentWithRelaxSchema config relaxSchema
           >>>
           traceMsg 2 "create simplified schema"
           >>>
-          ( (\ ((b1, b2), b3) -> createSimpleForm b1 b2 b3)
+          ( (\ (b1, (b2, b3)) -> createSimpleForm b1 b2 b3)
             $<
-            getSysVar (theRelaxCheckRestr     `pairS`
-                       theRelaxValidateExtRef `pairS`
+            getSysVar (theRelaxCheckRestr     .&&&.
+                       theRelaxValidateExtRef .&&&.
                        theRelaxValidateInclude
                       )
           )

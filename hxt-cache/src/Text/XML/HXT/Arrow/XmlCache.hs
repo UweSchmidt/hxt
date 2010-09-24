@@ -28,28 +28,32 @@ module Text.XML.HXT.Arrow.XmlCache
     )
 where
 
-import           Control.DeepSeq
-import           Control.Concurrent.ResourceTable
-import           Control.Exception              ( SomeException , try )
+import Control.DeepSeq
+import Control.Concurrent.ResourceTable
+import Control.Exception                        ( SomeException , try )
 
-import           Data.Binary
-import qualified Data.ByteString.Lazy   as B
-import           Data.Char
-import           Data.Either
-import           Data.Maybe
-import           Data.Digest.Pure.SHA
+import Data.Binary
+import qualified
+       Data.ByteString.Lazy   as B
+import Data.Char
+import Data.Either
+import Data.Function.Selector                   ( setS
+                                                , (.&&&.)
+                                                )
+import Data.Maybe
+import Data.Digest.Pure.SHA
 
-import           System.FilePath
-import           System.Directory
-import           System.IO
-import           System.Locale
-import           System.Posix                   ( touchFile )
-import           System.Time
-import           System.IO.Unsafe               ( unsafePerformIO )
+import System.FilePath
+import System.Directory
+import System.IO
+import System.Locale
+import System.Posix                            ( touchFile )
+import System.Time
+import System.IO.Unsafe                        ( unsafePerformIO )
 
-import           Text.XML.HXT.Core
-import           Text.XML.HXT.Arrow.XmlState.TypeDefs
-import           Text.XML.HXT.Arrow.Binary
+import Text.XML.HXT.Core
+import Text.XML.HXT.Arrow.XmlState.TypeDefs
+import Text.XML.HXT.Arrow.Binary
 
 -- ------------------------------------------------------------
 
@@ -83,18 +87,18 @@ import           Text.XML.HXT.Arrow.Binary
 -- The cached document remains valid for the next hour.
 -- It is compressed, before written to disk.
 
-withCache               :: String -> Integer -> Bool -> SysConfig
+withCache               :: String -> Int -> Bool -> SysConfig
 withCache cachePath documentAge cache404
-                        = putS (theWithCache   `pairS`
-                                theCacheDir    `pairS`
-                                theDocumentAge `pairS`
-                                theCache404Err `pairS`
+                        = setS (theWithCache   .&&&.
+                                theCacheDir    .&&&.
+                                theDocumentAge .&&&.
+                                theCache404Err .&&&.
                                 theCacheRead
-                               ) ((((True, cachePath), documentAge), cache404), readDocCache)
+                               ) (True, (cachePath, (documentAge, (cache404, readDocCache))))
 
 -- | Disable use of cache
 withoutCache            :: SysConfig
-withoutCache            = putS theWithCache False
+withoutCache            = setS theWithCache False
 
 -- ------------------------------------------------------------
 
@@ -104,8 +108,8 @@ readDocCache src          = localSysVar theWithCache
                             configSysVar withoutCache
                             >>>
                             ( flip readDocCache' src
-                              $< getSysVar (theCacheDir    `pairS`
-                                            theDocumentAge `pairS`
+                              $< getSysVar (theCacheDir    .&&&.
+                                            theDocumentAge .&&&.
                                             theCache404Err
                                            )
                             )
@@ -119,7 +123,7 @@ readDocCache src          = localSysVar theWithCache
 -- The arrow fails if document not there or is not longer valid, else the file name is returned.
 
 isInCache               :: IOStateArrow s String String
-isInCache               = uncurry isInC $< getSysVar (theDocumentAge `pairS` theCacheDir)
+isInCache               = uncurry isInC $< getSysVar (theDocumentAge .&&&. theCacheDir)
     where
     isInC age cdir      = ( traceValue 2 (\ x -> "isInCache: file=" ++ show x ++ " age=" ++ show age ++ " cache dir=" ++ show cdir)
                             >>>
@@ -139,8 +143,8 @@ isInCache               = uncurry isInC $< getSysVar (theDocumentAge `pairS` the
 
 -- ------------------------------------------------------------
 
-lookupCache'            :: ((FilePath, Integer), Bool) -> String -> IO (IOStateArrow s a XmlTree)
-lookupCache' ((dir, age), e404) src
+lookupCache'            :: (FilePath, (Int, Bool)) -> String -> IO (IOStateArrow s a XmlTree)
+lookupCache' (dir, (age, e404)) src
                         = do
                           ch <- cacheHit age cf
                           return $
@@ -212,7 +216,7 @@ lookupCache' ((dir, age), e404) src
 -- ------------------------------------------------------------
 
 lookupCache             :: (NFData b, Binary b) => String -> IOStateArrow s a b
-lookupCache f           = uncurry lookupC $< getSysVar (theDocumentAge `pairS` theCacheDir)
+lookupCache f           = uncurry lookupC $< getSysVar (theDocumentAge .&&&. theCacheDir)
     where
     lookupC age cdir    = isIOA (const $ hit)
                           `guards`
@@ -275,7 +279,7 @@ cacheFile dir f          = (dir </> fd, fn)
 -- Just Nothing  : cache hit, cache data valid: use cache data
 -- Just (Just t) : cache hit, but cache data out of date: get document conditionally with if-modified-since t
 
-cacheHit                :: Integer -> FilePath -> IO (Maybe (Maybe ClockTime))
+cacheHit                :: Int -> FilePath -> IO (Maybe (Maybe ClockTime))
 cacheHit age cf         = ( try' $
                             do
                             e <- doesFileExist cf
@@ -289,8 +293,8 @@ cacheHit age cf         = ( try' $
                                                    else Just mt
                           ) >>= return . either (const Nothing) id
     where
-    seconds             = fromInteger $ age `mod` 60
-    minutes             = fromInteger $ age `div` 60
+    seconds             = age `mod` 60
+    minutes             = age `div` 60
     dt                  = normalizeTimeDiff $ TimeDiff 0 0 0 0 minutes seconds 0
 
 try'                    :: IO a -> IO (Either SomeException a)

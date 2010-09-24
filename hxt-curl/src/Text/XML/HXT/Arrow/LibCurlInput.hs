@@ -27,6 +27,10 @@ import           Control.Arrow.ArrowList
 import           Control.Arrow.ArrowTree
 import           Control.Arrow.ArrowIO
 
+import Data.Function.Selector                   ( setS
+                                                , (.&&&.)
+                                                )
+
 import           System.Console.GetOpt
 
 import           Text.XML.HXT.Arrow.DocumentInput               ( addInputError )
@@ -49,14 +53,14 @@ getLibCurlContents
       $<<
       ( getAttrValue transferURI
         &&&
-        getSysVar (theInputOptions `pairS`
-                   theRedirect     `pairS`
-                   theProxy        `pairS`
+        getSysVar (theInputOptions .&&&.
+                   theRedirect     .&&&.
+                   theProxy        .&&&.
                    theStrictInput
                   )
       )
       where
-      getC uri (((options, redirect), proxy), strictInput)
+      getC uri (options, (redirect, (proxy, strictInput)))
           = applyA ( ( traceMsg 2 ( "get HTTP via libcurl, uri=" ++ show uri ++ " options=" ++ show options' )
                        >>>
                        arrIO0 ( LibCURL.getCont
@@ -88,7 +92,7 @@ a_use_curl              :: String
 a_use_curl              = "use-curl"
 
 withCurl               :: Attributes -> SysConfig
-withCurl curlOpts      = putS theHttpHandler getLibCurlContents
+withCurl curlOpts      = setS theHttpHandler getLibCurlContents
                          >>>
                          withInputOptions curlOpts
 

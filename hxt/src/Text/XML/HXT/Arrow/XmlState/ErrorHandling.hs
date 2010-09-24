@@ -41,6 +41,9 @@ import Control.Arrow.ArrowIO
 
 import Control.Exception                ( SomeException )
 
+import Data.Function.Selector           ( setS
+                                        , (.&&&.)
+                                        )
 import Data.Maybe
 
 import Text.XML.HXT.DOM.Interface
@@ -61,7 +64,7 @@ changeErrorStatus f     = chgSysVar theErrorStatus f
 -- | reset global error variable
 
 clearErrStatus          :: IOStateArrow s b b
-clearErrStatus          = configSysVar $ putS theErrorStatus 0
+clearErrStatus          = configSysVar $ setS theErrorStatus 0
 
 -- | set global error variable
 
@@ -84,7 +87,7 @@ setErrMsgStatus         = perform
 -- | set the error message handler and the flag for collecting the errors
 
 setErrorMsgHandler      :: Bool -> (String -> IO ()) -> IOStateArrow s b b
-setErrorMsgHandler c f  = configSysVar $ putS (theErrorMsgCollect `pairS` theErrorMsgHandler) (c, f)
+setErrorMsgHandler c f  = configSysVar $ setS (theErrorMsgCollect .&&&. theErrorMsgHandler) (c, f)
 
 -- | error message handler for output to stderr
 
@@ -140,13 +143,13 @@ errorMsgIgnore          = setErrorMsgHandler False (const $ return ())
 getErrorMessages        :: IOStateArrow s b XmlTree
 getErrorMessages        = getSysVar theErrorMsgList
                           >>>
-                          configSysVar (putS theErrorMsgList [])
+                          configSysVar (setS theErrorMsgList [])
                           >>>
                           arrL reverse
 
 addToErrorMsgList       :: IOStateArrow s XmlTree XmlTree
 addToErrorMsgList       = chgSysVar
-                          ( theErrorMsgCollect `pairS` theErrorMsgList )
+                          ( theErrorMsgCollect .&&&. theErrorMsgList )
                           ( \ e (cs, es) -> (cs, if cs then e : es else es) )
 
 -- ------------------------------------------------------------
