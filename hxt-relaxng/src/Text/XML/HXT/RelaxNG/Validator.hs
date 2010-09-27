@@ -18,8 +18,6 @@ where
 
 import Control.Arrow.ListArrows
 
-import Data.Function.Selector                   ( (.&&&.)
-                                                )
 import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlArrow

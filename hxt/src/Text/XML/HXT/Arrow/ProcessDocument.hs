@@ -32,8 +32,6 @@ import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
 import Control.Arrow.ListArrow                  ( fromLA )
 
-import Data.Function.Selector                   ( (.&&&.) )
-
 import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlArrow

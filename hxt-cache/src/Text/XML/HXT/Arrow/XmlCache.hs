@@ -37,9 +37,6 @@ import qualified
        Data.ByteString.Lazy   as B
 import Data.Char
 import Data.Either
-import Data.Function.Selector                   ( setS
-                                                , (.&&&.)
-                                                )
 import Data.Maybe
 import Data.Digest.Pure.SHA
 

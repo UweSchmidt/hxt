@@ -49,7 +49,7 @@ import System.Plugins
 
 type ModuleName     	= String
 type ObjectName     	= String
-data RepositoryType	= ShaderRepo | HandlerRepo -- | StateHandlerRepo
+data RepositoryType	= ShaderRepo | HandlerRepo -- old: | StateHandlerRepo
 type RepositoryKey  	= String
 data Repository a   	= Rep RepositoryType (Map RepositoryKey a)
 

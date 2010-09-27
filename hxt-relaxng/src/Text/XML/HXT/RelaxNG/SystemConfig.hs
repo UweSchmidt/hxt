@@ -21,9 +21,6 @@
 module   Text.XML.HXT.RelaxNG.SystemConfig
 where
 
-import Data.Function.Selector                   ( setS
-                                                , (.&&&.)
-                                                )
 import Text.XML.HXT.Arrow.XmlState.TypeDefs
 import Text.XML.HXT.Arrow.XmlOptions
 

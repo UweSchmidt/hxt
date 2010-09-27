@@ -24,9 +24,6 @@ import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
 import Control.Arrow.ArrowIO
 
-import Data.Function.Selector           ( setS
-                                        )
-
 import System.IO                        ( hPutStrLn
                                         , hFlush
                                         , stderr

@@ -41,9 +41,6 @@ import Control.Arrow.ArrowIO
 
 import Control.Exception                ( SomeException )
 
-import Data.Function.Selector           ( setS
-                                        , (.&&&.)
-                                        )
 import Data.Maybe
 
 import Text.XML.HXT.DOM.Interface

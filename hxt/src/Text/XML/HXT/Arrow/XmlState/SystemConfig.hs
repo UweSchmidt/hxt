@@ -20,11 +20,6 @@ where
 
 import Control.Arrow
 
-import Data.Function.Selector           ( setS
-                                        , chgS
-                                        , (.&&&.)
-                                        )
-
 import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlState.ErrorHandling

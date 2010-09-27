@@ -22,9 +22,6 @@ import Control.Arrow
 import Control.Arrow.ArrowList
 import Control.Arrow.ArrowTree
 
-import Data.Function.Selector                   ( setS
-                                                , (.&&&.)
-                                                )
 import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlArrow

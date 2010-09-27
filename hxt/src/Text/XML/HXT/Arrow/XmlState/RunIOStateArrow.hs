@@ -20,9 +20,6 @@ where
 import Control.Arrow                            -- arrow classes
 import Control.Arrow.IOStateListArrow
 
-import Data.Function.Selector           ( Selector(..)
-                                        )
-
 import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlArrow

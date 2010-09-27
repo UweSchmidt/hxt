@@ -28,10 +28,6 @@ import Control.Arrow.ArrowList
 import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
 
-import Data.Function.Selector                   ( getS
-                                                , idS
-                                                )
-
 import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlArrow

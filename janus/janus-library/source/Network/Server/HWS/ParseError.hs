@@ -1,8 +1,9 @@
 -----------------------------------------------------------
 -- Daan Leijen (c) 1999, daan@cs.uu.nl
 --
--- $version: 23 Feb 2000, release version 0.2$
+-- version: 23 Feb 2000, release version 0.2
 -----------------------------------------------------------
+
 module Network.Server.HWS.ParseError ( SourceName, Line, Column                 
                   , SourcePos, sourceLine, sourceColumn, sourceName
                   , newPos, initialPos, updatePos, updatePosString

@@ -27,10 +27,6 @@ import           Control.Arrow.ArrowList
 import           Control.Arrow.ArrowTree
 import           Control.Arrow.ArrowIO
 
-import Data.Function.Selector                   ( setS
-                                                , (.&&&.)
-                                                )
-
 import           System.Console.GetOpt
 
 import           Text.XML.HXT.Arrow.DocumentInput               ( addInputError )

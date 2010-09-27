@@ -22,10 +22,6 @@ import Control.Arrow                            -- arrow classes
 import Control.Arrow.ArrowList
 import Control.Arrow.ArrowIO
 
-import Data.Function.Selector           ( setS
-                                        , (.&&&.)
-                                        )
-
 import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlState.TypeDefs

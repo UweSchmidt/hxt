@@ -31,6 +31,12 @@
 -- ------------------------------------------------------------
 
 module Text.XML.HXT.Arrow.XmlState.TypeDefs
+    ( module Text.XML.HXT.Arrow.XmlState.TypeDefs
+    , Selector(..)
+    , chgS
+    , idS
+    , (.&&&.)
+    )
 where
 
 import Control.Arrow                            -- arrow classes
@@ -41,9 +47,8 @@ import Control.DeepSeq
 import Data.ByteString.Lazy             ( ByteString )
 import Data.Char                        ( isDigit )
 import Data.Function.Selector           ( Selector(..)
-                                        , getS
-                                        , setS
                                         , chgS
+                                        , idS
                                         , (.&&&.)
                                         )
 
