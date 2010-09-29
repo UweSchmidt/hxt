@@ -28,7 +28,9 @@ module Text.XML.HXT.Arrow.XmlRegex
     , mkDot
     , mkStar
     , mkAlt
+    , mkAlts
     , mkSeq
+    , mkSeqs
     , mkRep
     , mkRng
     , mkOpt
@@ -61,7 +63,7 @@ import Text.XML.HXT.DOM.Interface
 -- ('mkStar', mkRep', 'mkRng') and choice ('mkAlt', 'mkOpt')
 
 matchRegexA             :: XmlRegex -> LA XmlTree XmlTree -> LA XmlTree XmlTrees
-matchRegexA re ts       = ts >>. (\ s -> maybe [] (const [s]) . matchXmlRegex re $ s)
+matchRegexA re ts       = ts >>. (\ s -> maybe [s] (const []) . matchXmlRegex re $ s)
 
 -- | split the sequence of trees computed by the filter a into
 --
@@ -131,8 +133,8 @@ mkPrim          = Sym
 mkPrimA         :: LA XmlTree XmlTree -> XmlRegex
 mkPrimA a       = mkPrim (not . null . runLA a)
 
-mkDot   :: XmlRegex
-mkDot   = Dot
+mkDot   	:: XmlRegex
+mkDot   	= Dot
 
 mkStar                  :: XmlRegex -> XmlRegex
 mkStar (Zero _)         = mkUnit                -- {}* == ()
@@ -159,6 +161,9 @@ mkAlt e1@(Sym _)    (Alt e2@(Sym _) e3) = mkAlt (mkAlt e1 e2) e3        -- prepa
 mkAlt (Alt e1 e2)   e3                  = mkAlt e1 (mkAlt e2 e3)        -- associativity
 mkAlt e1 e2                             = Alt e1 e2
 
+mkAlts                          :: [XmlRegex] -> XmlRegex
+mkAlts                          = foldr mkAlt (mkZero "")
+
 mkSeq                           :: XmlRegex -> XmlRegex -> XmlRegex
 mkSeq e1@(Zero _) _e2           = e1
 mkSeq _e1         e2@(Zero _)   = e2
@@ -166,6 +171,9 @@ mkSeq Unit        e2            = e2
 mkSeq e1          Unit          = e1
 mkSeq (Seq e1 e2) e3            = mkSeq e1 (mkSeq e2 e3)
 mkSeq e1 e2                     = Seq e1 e2
+
+mkSeqs                          :: [XmlRegex] -> XmlRegex
+mkSeqs                          = foldr mkSeq mkUnit
 
 mkRep           :: Int -> XmlRegex -> XmlRegex
 mkRep 0 e                       = mkStar e

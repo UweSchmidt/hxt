@@ -179,7 +179,7 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
     -- The search is performed top down. All nodes of the tree are searched, even within the
     -- subtrees of trees for which the predicate holds.
     --
-    -- example: @ multy isHtmlTable @ selects all table elements, even nested ones.
+    -- example: @ multi isHtmlTable @ selects all table elements, even nested ones.
 
     multi               :: Tree t => a (t b) c -> a (t b) c
     multi f             = f                                     -- combine result for root

@@ -9,7 +9,7 @@
 
    Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
    Stability  : experimental
-   Portability: multy parameter classes and functional depenedencies required
+   Portability: multi parameter classes and functional depenedencies required
 
    Arrows for managing an explicit state
 

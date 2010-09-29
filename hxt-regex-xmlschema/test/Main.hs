@@ -215,7 +215,7 @@ simpleMatchTests
               )
             , ( "/[*](.*{\\}(.*[*]/.*))[*]/"            -- single line C comment of form /*...*/, but without any */ in the comment body
                                                         -- this is the way to specify none greedy expessions
-                                                        -- if multy line comment are required, substitute .* by \A, so newlines are allowed
+                                                        -- if multi-line comment are required, substitute .* by \A, so newlines are allowed
               , ["/**/","/***/","/*x*/","/*///*/"]
               , ["", "/", "/*", "/*/", "/**/*/", "/*xxx*/xxx*/"]
               )
@@ -233,20 +233,21 @@ simpleSplitTests
       TestList $
       map splitTest $ tests
     where
-    splitTest (re, inp, tok)
+    splitTest (re, inp, tok, rest)
         = TestCase $
-          assertEqual ("split " ++ show re ++ show inp ++ " = (" ++ show tok ++ ", ... )")
-                      tok
-                      (fst (split re inp))
-    tests = [ ("",      "a",    ""      )
-            , ("a*b",   "abc",  "ab"    )
-            , ("a*",    "bc",   ""      )
-            , ("a+",    "bc",   ""      )
-            , ("a{2}",  "aaa",  "aa"    )
-            , ("a{2,}", "aaa",  "aaa"   )
-            , ("a|b",   "ab",   "a"     )
-            , ("a|b*",  "bbba", "bbb"   )
-            , ("abc",   "abcd", "abc"   )
+          assertEqual ("split " ++ show re ++ " " ++ show inp ++ " = " ++ show (tok, rest))
+                      (tok, rest)
+                      (split re inp)
+    tests = [ ("",      "a",    "",   "a"    )
+            , ("a*b",   "abc",  "ab",  "c"   )
+            , ("a*",    "bc",   "",    "bc"  )
+            , ("a+",    "bc",   "",    "bc"  )
+            , ("[",     "bc",   "",    "bc"  )
+            , ("a{2}",  "aaa",  "aa",  "a"   )
+            , ("a{2,}", "aaa",  "aaa", ""    )
+            , ("a|b",   "ab",   "a",   "b"   )
+            , ("a|b*",  "bbba", "bbb", "a"   )
+            , ("abc",   "abcd", "abc", "d"   )
             ]
 
 -- ------------------------------------------------------------

@@ -105,9 +105,9 @@ splitRE re input
 -- examples:
 --
 -- > split "a*b" "abc" = ("ab","c")
--- > split "a*"  "bc"  = ("", "bc")
--- > split "a+"  "bc"  = ("", "bc")
--- > split "["   "abc" = ("", "abc")
+-- > split "a*"  "bc"  = ("", "bc")    -- "a*" matches ""
+-- > split "a+"  "bc"  = ("", "bc")    -- "a+" does not match, no split
+-- > split "["   "abc" = ("", "abc")   -- "["  syntax error, no split
 
 split           :: String -> String -> (String, String)
 split		= split' parseRegex

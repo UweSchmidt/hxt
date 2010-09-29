@@ -624,11 +624,11 @@ splitWithRegex' re inp@(c : inp')
 -- tail recursive version of above function
 
 splitWithRegex'                 :: Eq l => GenRegex l -> String -> Maybe (GenRegex l, String)
-splitWithRegex' re              = splitWithRegex''
+splitWithRegex' re inp          = splitWithRegex''
                                   ( if nullable re
-                                    then Just (re, "")          -- first possible result: empty prefix
+                                    then Just (re, inp)         -- first possible result: empty prefix
                                     else Nothing                -- empty prefix not a result
-                                  ) re
+                                  ) re inp
 
 splitWithRegex''                :: Eq l => Maybe (GenRegex l, String) -> GenRegex l -> String -> Maybe (GenRegex l, String)
 splitWithRegex'' lastRes _re "" = lastRes
