@@ -49,6 +49,7 @@ module Text.XML.HXT.Arrow.Pickle
       -- from Text.XML.HXT.Arrow.Pickle.Xml
     , pickleDoc
     , unpickleDoc
+    , showPickled
 
     , PU(..)
     , XmlPickler
@@ -56,9 +57,29 @@ module Text.XML.HXT.Arrow.Pickle
     , xp4Tuple
     , xp5Tuple
     , xp6Tuple
+    , xp7Tuple
+    , xp8Tuple
+    , xp9Tuple
+    , xp10Tuple
+    , xp11Tuple
+    , xp12Tuple
+    , xp13Tuple
+    , xp14Tuple
+    , xp15Tuple
+    , xp16Tuple
+    , xp17Tuple
+    , xp18Tuple
+    , xp19Tuple
+    , xp20Tuple
+    , xp21Tuple
+    , xp22Tuple
+    , xp23Tuple
+    , xp24Tuple
+
     , xpAddFixedAttr
     , xpAlt
     , xpAttr
+    , xpTextAttr
     , xpAttrFixed
     , xpAttrImplied
     , xpChoice
@@ -245,4 +266,3 @@ thePicklerDTD           :: PU b -> XmlTrees
 thePicklerDTD           = dtdDescrToXml . dtdDescr . theSchema
 
 -- ------------------------------------------------------------
-

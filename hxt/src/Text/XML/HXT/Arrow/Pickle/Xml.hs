@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+
 -- ------------------------------------------------------------
 
 {- |
@@ -38,6 +40,8 @@
 module Text.XML.HXT.Arrow.Pickle.Xml
 where
 
+import           Control.Arrow.ListArrows
+
 import           Data.Maybe
 import           Data.Map (Map)
 import qualified Data.Map as M
@@ -45,11 +49,12 @@ import qualified Data.Map as M
 import           Text.XML.HXT.DOM.Interface
 import qualified Text.XML.HXT.DOM.XmlNode as XN
 
-import           Control.Arrow.ListArrows
-import           Text.XML.HXT.Arrow.XmlArrow
+import           Text.XML.HXT.Arrow.Edit          (xshowEscapeXml)
 import           Text.XML.HXT.Arrow.Pickle.Schema
 import           Text.XML.HXT.Arrow.ReadDocument  (xread)
-import           Text.XML.HXT.Arrow.Edit          (xshowEscapeXml)
+import           Text.XML.HXT.Arrow.WriteDocument (writeDocumentToString)
+import           Text.XML.HXT.Arrow.XmlArrow
+import           Text.XML.HXT.Arrow.XmlState
 
 -- ------------------------------------------------------------
 
@@ -116,6 +121,13 @@ unpickleDoc p t
                                    }
     | otherwise
         = unpickleDoc p (XN.mkRoot [] [t])
+
+-- ------------------------------------------------------------
+
+-- | Pickles a value, then writes the document to a string.
+
+showPickled :: (XmlPickler a) => SysConfigList -> a -> String
+showPickled a = concat . (pickleDoc xpickle >>> runLA (writeDocumentToString a))
 
 -- ------------------------------------------------------------
 
@@ -220,6 +232,8 @@ xpWrap (i, j) pa        = (xpSeq j pa (xpLift . i)) { theSchema = theSchema pa }
 xpWrapMaybe             :: (a -> Maybe b, b -> a) -> PU a -> PU b
 xpWrapMaybe (i, j) pa   = (xpSeq j pa (xpLiftMaybe . i)) { theSchema = theSchema pa }
 
+-- ------------------------------------------------------------
+
 -- | pickle a pair of values sequentially
 --
 -- Used for pairs or together with wrap for pickling
@@ -267,6 +281,191 @@ xp6Tuple pa pb pc pd pe pf
     where
     toSix   ~(a, ~(b, ~(c, ~(d, ~(e, f))))) = (a,  b,  c,  d,  e, f    )
     fromSix ~(a,   b,   c,   d,   e, f)     = (a, (b, (c, (d, (e, f)))))
+
+-- ------------------------------------------------------------
+
+-- | Like 'xpPair' and 'xpTriple' but for 7-tuples
+--
+-- Thanks to Tony Morris for doing xp7Tuple, ..., xp24Tuple.
+
+xp7Tuple :: PU a -> PU b -> PU c -> PU d -> PU e ->
+            PU f -> PU g -> PU (a, b, c, d, e, f, g)
+xp7Tuple a b c d e f g
+    = xpWrap ( \ (a, (b, c, d, e, f, g)) -> (a, b, c, d, e, f, g)
+             , \ (a, b, c, d, e, f, g)   -> (a, (b, c, d, e, f, g))
+             )
+      (xpPair a (xp6Tuple b c d e f g))
+
+xp8Tuple :: PU a -> PU b -> PU c -> PU d -> PU e ->
+            PU f -> PU g -> PU h -> PU (a, b, c, d, e, f, g, h)
+xp8Tuple a b c d e f g h
+    = xpWrap ( \ ((a, b), (c, d, e, f, g, h)) -> (a, b, c, d, e, f, g, h)
+             , \ (a, b, c, d, e, f, g, h) -> ((a, b), (c, d, e, f, g, h))
+             )
+      (xpPair (xpPair a b) (xp6Tuple c d e f g h))
+
+xp9Tuple :: PU a -> PU b -> PU c -> PU d -> PU e ->
+            PU f -> PU g -> PU h -> PU i -> PU (a, b, c, d, e, f, g, h, i)
+xp9Tuple a b c d e f g h i
+    = xpWrap ( \ ((a, b, c), (d, e, f, g, h, i)) -> (a, b, c, d, e, f, g, h, i)
+             , \ (a, b, c, d, e, f, g, h, i) -> ((a, b, c), (d, e, f, g, h, i))
+             )
+      (xpPair (xpTriple a b c) (xp6Tuple d e f g h i))
+
+xp10Tuple :: PU a -> PU b -> PU c -> PU d -> PU e ->
+             PU f -> PU g -> PU h -> PU i -> PU j ->
+             PU (a, b, c, d, e, f, g, h, i, j)
+xp10Tuple a b c d e f g h i j
+    = xpWrap ( \ ((a, b, c, d), (e, f, g, h, i, j)) -> (a, b, c, d, e, f, g, h, i, j)
+             , \ (a, b, c, d, e, f, g, h, i, j) -> ((a, b, c, d), (e, f, g, h, i, j))
+             )
+      (xpPair (xp4Tuple a b c d) (xp6Tuple e f g h i j))
+
+xp11Tuple :: PU a -> PU b -> PU c -> PU d -> PU e ->
+             PU f -> PU g -> PU h -> PU i -> PU j ->
+             PU k -> PU (a, b, c, d, e, f, g, h, i, j, k)
+xp11Tuple a b c d e f g h i j k
+    = xpWrap ( \ ((a, b, c, d, e), (f, g, h, i, j, k)) -> (a, b, c, d, e, f, g, h, i, j, k)
+             , \ (a, b, c, d, e, f, g, h, i, j, k) -> ((a, b, c, d, e), (f, g, h, i, j, k))
+             )
+      (xpPair (xp5Tuple a b c d e) (xp6Tuple f g h i j k))
+
+xp12Tuple :: PU a -> PU b -> PU c -> PU d -> PU e ->
+             PU f -> PU g -> PU h -> PU i -> PU j ->
+             PU k -> PU l -> PU (a, b, c, d, e, f, g, h, i, j, k, l)
+xp12Tuple a b c d e f g h i j k l
+    = xpWrap ( \ ((a, b, c, d, e, f), (g, h, i, j, k, l)) -> (a, b, c, d, e, f, g, h, i, j, k, l)
+             , \ (a, b, c, d, e, f, g, h, i, j, k, l) -> ((a, b, c, d, e, f), (g, h, i, j, k, l))
+             )
+      (xpPair (xp6Tuple a b c d e f) (xp6Tuple g h i j k l))
+
+xp13Tuple :: PU a -> PU b -> PU c -> PU d -> PU e ->
+             PU f -> PU g -> PU h -> PU i -> PU j ->
+             PU k -> PU l -> PU m -> PU (a, b, c, d, e, f, g, h, i, j, k, l, m)
+xp13Tuple a b c d e f g h i j k l m
+    = xpWrap ( \ (a, (b, c, d, e, f, g), (h, i, j, k, l, m)) -> (a, b, c, d, e, f, g, h, i, j, k, l, m)
+             , \ (a, b, c, d, e, f, g, h, i, j, k, l, m) -> (a, (b, c, d, e, f, g), (h, i, j, k, l, m))
+             )
+      (xpTriple a (xp6Tuple b c d e f g) (xp6Tuple h i j k l m))
+
+xp14Tuple :: PU a -> PU b -> PU c -> PU d -> PU e ->
+             PU f -> PU g -> PU h -> PU i -> PU j ->
+             PU k -> PU l -> PU m -> PU n -> PU (a, b, c, d, e, f, g, h, i, j, k, l, m, n)
+xp14Tuple a b c d e f g h i j k l m n
+    = xpWrap ( \ ((a, b), (c, d, e, f, g, h), (i, j, k, l, m, n)) -> (a, b, c, d, e, f, g, h, i, j, k, l, m, n)
+             , \ (a, b, c, d, e, f, g, h, i, j, k, l, m, n) -> ((a, b), (c, d, e, f, g, h), (i, j, k, l, m, n))
+             )
+      (xpTriple (xpPair a b) (xp6Tuple c d e f g h) (xp6Tuple i j k l m n))
+
+xp15Tuple :: PU a -> PU b -> PU c -> PU d -> PU e ->
+             PU f -> PU g -> PU h -> PU i -> PU j ->
+             PU k -> PU l -> PU m -> PU n -> PU o ->
+             PU (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)
+xp15Tuple a b c d e f g h i j k l m n o
+    = xpWrap ( \ ((a, b, c), (d, e, f, g, h, i), (j, k, l, m, n, o)) -> (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)
+             , \ (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o) -> ((a, b, c), (d, e, f, g, h, i), (j, k, l, m, n, o))
+             )
+      (xpTriple (xpTriple a b c) (xp6Tuple d e f g h i) (xp6Tuple j k l m n o))
+
+xp16Tuple :: PU a -> PU b -> PU c -> PU d -> PU e ->
+             PU f -> PU g -> PU h -> PU i -> PU j ->
+             PU k -> PU l -> PU m -> PU n -> PU o ->
+             PU p -> PU (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)
+xp16Tuple a b c d e f g h i j k l m n o p
+    = xpWrap ( \ ((a, b, c, d), (e, f, g, h, i, j), (k, l, m, n, o, p)) -> (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)
+             , \ (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) -> ((a, b, c, d), (e, f, g, h, i, j), (k, l, m, n, o, p))
+             )
+      (xpTriple (xp4Tuple a b c d) (xp6Tuple e f g h i j) (xp6Tuple k l m n o p))
+
+xp17Tuple :: PU a -> PU b -> PU c -> PU d -> PU e ->
+             PU f -> PU g -> PU h -> PU i -> PU j ->
+             PU k -> PU l -> PU m -> PU n -> PU o ->
+             PU p -> PU q -> PU (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q)
+xp17Tuple a b c d e f g h i j k l m n o p q
+    = xpWrap ( \ ((a, b, c, d, e), (f, g, h, i, j, k), (l, m, n, o, p, q)) -> (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q)
+             , \ (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q) -> ((a, b, c, d, e), (f, g, h, i, j, k), (l, m, n, o, p, q))
+             )
+      (xpTriple (xp5Tuple a b c d e) (xp6Tuple f g h i j k) (xp6Tuple l m n o p q))
+
+xp18Tuple :: PU a -> PU b -> PU c -> PU d -> PU e ->
+             PU f -> PU g -> PU h -> PU i -> PU j ->
+             PU k -> PU l -> PU m -> PU n -> PU o ->
+             PU p -> PU q -> PU r -> PU (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r)
+xp18Tuple a b c d e f g h i j k l m n o p q r
+    = xpWrap ( \ ((a, b, c, d, e, f), (g, h, i, j, k, l), (m, n, o, p, q, r)) -> (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r)
+             , \ (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r) -> ((a, b, c, d, e, f), (g, h, i, j, k, l), (m, n, o, p, q, r))
+             )
+      (xpTriple (xp6Tuple a b c d e f) (xp6Tuple g h i j k l) (xp6Tuple m n o p q r))
+
+xp19Tuple :: PU a -> PU b -> PU c -> PU d -> PU e ->
+             PU f -> PU g -> PU h -> PU i -> PU j ->
+             PU k -> PU l -> PU m -> PU n -> PU o ->
+             PU p -> PU q -> PU r -> PU s -> PU (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s)
+xp19Tuple a b c d e f g h i j k l m n o p q r s
+    = xpWrap ( \ (a, (b, c, d, e, f, g), (h, i, j, k, l, m), (n, o, p, q, r, s)) -> (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s)
+             , \ (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s) -> (a, (b, c, d, e, f, g), (h, i, j, k, l, m), (n, o, p, q, r, s))
+             )
+      (xp4Tuple a (xp6Tuple b c d e f g) (xp6Tuple h i j k l m) (xp6Tuple n o p q r s))
+
+xp20Tuple :: PU a -> PU b -> PU c -> PU d -> PU e ->
+             PU f -> PU g -> PU h -> PU i -> PU j ->
+             PU k -> PU l -> PU m -> PU n -> PU o ->
+             PU p -> PU q -> PU r -> PU s -> PU t ->
+             PU (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t)
+xp20Tuple a b c d e f g h i j k l m n o p q r s t
+    = xpWrap ( \ ((a, b), (c, d, e, f, g, h), (i, j, k, l, m, n), (o, p, q, r, s, t)) -> (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t)
+             , \ (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t) -> ((a, b), (c, d, e, f, g, h), (i, j, k, l, m, n), (o, p, q, r, s, t))
+             )
+      (xp4Tuple (xpPair a b) (xp6Tuple c d e f g h) (xp6Tuple i j k l m n) (xp6Tuple o p q r s t))
+
+xp21Tuple :: PU a -> PU b -> PU c -> PU d -> PU e ->
+             PU f -> PU g -> PU h -> PU i -> PU j ->
+             PU k -> PU l -> PU m -> PU n -> PU o ->
+             PU p -> PU q -> PU r -> PU s -> PU t ->
+             PU u -> PU (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u)
+xp21Tuple a b c d e f g h i j k l m n o p q r s t u
+    = xpWrap ( \ ((a, b, c), (d, e, f, g, h, i), (j, k, l, m, n, o), (p, q, r, s, t, u)) -> (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u)
+             , \ (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u) -> ((a, b, c), (d, e, f, g, h, i), (j, k, l, m, n, o), (p, q, r, s, t, u))
+             )
+      (xp4Tuple (xpTriple a b c) (xp6Tuple d e f g h i) (xp6Tuple j k l m n o) (xp6Tuple p q r s t u))
+
+xp22Tuple :: PU a -> PU b -> PU c -> PU d -> PU e ->
+             PU f -> PU g -> PU h -> PU i -> PU j ->
+             PU k -> PU l -> PU m -> PU n -> PU o ->
+             PU p -> PU q -> PU r -> PU s -> PU t ->
+             PU u -> PU v -> PU (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v)
+xp22Tuple a b c d e f g h i j k l m n o p q r s t u v
+    = xpWrap ( \ ((a, b, c, d), (e, f, g, h, i, j), (k, l, m, n, o, p), (q, r, s, t, u, v)) -> (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v)
+             , \ (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v) -> ((a, b, c, d), (e, f, g, h, i, j), (k, l, m, n, o, p), (q, r, s, t, u, v))
+             )
+      (xp4Tuple (xp4Tuple a b c d) (xp6Tuple e f g h i j) (xp6Tuple k l m n o p) (xp6Tuple q r s t u v))
+
+xp23Tuple :: PU a -> PU b -> PU c -> PU d -> PU e ->
+             PU f -> PU g -> PU h -> PU i -> PU j ->
+             PU k -> PU l -> PU m -> PU n -> PU o ->
+             PU p -> PU q -> PU r -> PU s -> PU t ->
+             PU u -> PU v -> PU w -> PU (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w)
+xp23Tuple a b c d e f g h i j k l m n o p q r s t u v w
+    = xpWrap ( \ ((a, b, c, d, e), (f, g, h, i, j, k), (l, m, n, o, p, q), (r, s, t, u, v, w)) -> (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w)
+             , \ (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w) -> ((a, b, c, d, e), (f, g, h, i, j, k), (l, m, n, o, p, q), (r, s, t, u, v, w))
+             )
+      (xp4Tuple (xp5Tuple a b c d e) (xp6Tuple f g h i j k) (xp6Tuple l m n o p q) (xp6Tuple r s t u v w))
+
+-- | Hopefully no one needs a xp25Tuple
+
+xp24Tuple :: PU a -> PU b -> PU c -> PU d -> PU e ->
+             PU f -> PU g -> PU h -> PU i -> PU j ->
+             PU k -> PU l -> PU m -> PU n -> PU o ->
+             PU p -> PU q -> PU r -> PU s -> PU t ->
+             PU u -> PU v -> PU w -> PU x -> PU (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x)
+xp24Tuple a b c d e f g h i j k l m n o p q r s t u v w x
+    = xpWrap ( \ ((a, b, c, d, e, f), (g, h, i, j, k, l), (m, n, o, p, q, r), (s, t, u, v, w, x)) -> (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x)
+             , \ (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x) -> ((a, b, c, d, e, f), (g, h, i, j, k, l), (m, n, o, p, q, r), (s, t, u, v, w, x))
+             )
+      (xp4Tuple (xp6Tuple a b c d e f) (xp6Tuple g h i j k l) (xp6Tuple m n o p q r) (xp6Tuple s t u v w x))
+
+-- ------------------------------------------------------------
+
 
 -- | Pickle a string into an XML text node
 --
@@ -623,6 +822,10 @@ xpAttrQN qn pa
 xpAttr          :: String -> PU a -> PU a
 xpAttr          = xpAttrQN . mkName
 
+-- | A text attribute.
+xpTextAttr :: String -> PU String
+xpTextAttr = flip xpAttr xpText
+
 -- | Add an optional attribute for an optional value (Maybe a).
 
 xpAttrImplied   :: String -> PU a -> PU (Maybe a)
@@ -692,3 +895,42 @@ instance XmlPickler a => XmlPickler (Maybe a) where
     xpickle = xpOption xpickle
 
 -- ------------------------------------------------------------
+
+-- ------------------------------------------------------------
+{-
+-- | Extra library functions for HXT.
+module Text.XML.HXT.Extras(
+                     showPickled,
+                     textAttr,
+                     xp7Tuple,
+                     xp8Tuple,
+                     xp9Tuple,
+                     xp10Tuple,
+                     xp11Tuple,
+                     xp12Tuple,
+                     xp13Tuple,
+                     xp14Tuple,
+                     xp15Tuple,
+                     xp16Tuple,
+                     xp17Tuple,
+                     xp18Tuple,
+                     xp19Tuple,
+                     xp20Tuple,
+                     xp21Tuple,
+                     xp22Tuple,
+                     xp23Tuple,
+                     xp24Tuple
+                   ) where
+
+import Text.XML.HXT.Arrow
+
+-- | Pickles a value then writes the document to a string.
+showPickled :: (XmlPickler a) => Attributes -> a -> String
+showPickled a = concat . (pickleDoc xpickle >>> runLA (writeDocumentToString a))
+
+-- | A text attribute.
+textAttr :: String -> PU String
+textAttr = flip xpAttr xpText
+-}
+-- ------------------------------------------------------------
+
