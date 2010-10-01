@@ -1,13 +1,23 @@
-HXTPACKAGES	= hxt hxt-xpath hxt-xslt hxt-filter hxt-binary hxt-cache
+PL1	= hxt-charproperties \
+          hxt-regex-xmlschema \
+          hxt-unicode \
+          hxt \
+          hxt-curl \
+          hxt-http \
+          hxt-tagsoup \
+          hxt-xpath \
+          hxt-relaxng \
+	  hxt-xslt \
+	  hxt-cache
 
 all	:
 	$(MAKE) untar
 	$(MAKE) build
 
 untar	:
-	$(foreach i, $(HXTPACKAGES), tar xvzf $(wildcard $i-[0-9]*.tar.gz) ; )
+	$(foreach i, $(PL1), tar xvzf $(wildcard $i-[0-9]*.tar.gz) ; )
 
 build	:
-	$(foreach i, $(HXTPACKAGES), ( cd $(wildcard $i-[0-9]*[0-9]) && cabal configure && cabal build; ); )
+	$(foreach i, $(PL1), ( cd $(wildcard $i-[0-9]*[0-9]) && cabal configure && cabal build; ); )
 
 .PHONY	: all unpack build

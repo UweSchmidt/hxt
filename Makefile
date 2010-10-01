@@ -1,4 +1,4 @@
-PL	= hxt-charproperties \
+PL1	= hxt-charproperties \
           hxt-regex-xmlschema \
           hxt-unicode \
           hxt \
@@ -8,7 +8,9 @@ PL	= hxt-charproperties \
           hxt-xpath \
           hxt-relaxng \
 	  hxt-xslt \
-	  hxt-cache \
+	  hxt-cache
+
+PL	= $(PL1) \
           janus/janus-library
 
 #                 hxt-filter                  # not maintained to work with hxt-9
@@ -35,8 +37,8 @@ clean	:
 test	:
 	[ -d ~/tmp ] || mkdir ~/tmp
 	cp test-Makefile ~/tmp/Makefile
-	$(foreach i, $(PL), rm -f $(wildcard ~/tmp/$i-*.tar.gz); )
-	$(foreach i, $(PL), cp $(wildcard $i/dist/$i-*.tar.gz) ~/tmp; )
+	$(foreach i, $(PL1), rm -f $(wildcard ~/tmp/$i-*.tar.gz); )
+	$(foreach i, $(PL1), cp $(wildcard $i/dist/$i-*.tar.gz) ~/tmp; )
 	$(MAKE) -C ~/tmp all
 
 unregister	:
