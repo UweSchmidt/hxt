@@ -16,12 +16,9 @@
       <li><a href="#req">Requirements</a></li>
       <li><a href="#down">Download</a></li>
       <li><a href="#install">Installation</a></li>
-      <li><a href="#change">Change history</a></li>
       <li><a href="#limit">Known problems and limitations</a></li>
       <li><a href="#port">Portability</a></li>
       <li><a href="#filter">HXT with Filters</a>
-      <li><a href="#xslt">HXT XSLT</a>
-      <li><a href="#etc">HXT extensions</a>
       <li><a href="#rel">Related Work</a></li>
       <li><a href="#feed">Feedback</a></li>
     </ul>
@@ -112,15 +109,18 @@
     <h3>Documentation</h3>
 
     <p>
-      The <em><a href="./hdoc/index.html">HXT API Documentation</a></em> generated
-      with <a href="http://www.haskell.org/haddock/">Haddock</a>.
+      The API documentation of the <em><a href="http://holumbus.fh-wedel.de/hayoo/hayoo.html?query=hxt">HXT packages</a></em>
+      is available on hackage and can be found via <a href="http://holumbus.fh-wedel.de/hayoo/hayoo.html?query=hxt">Hayoo!</a>. 
     </p>
 
     <p>
       A (somewhat) gentle introduction to HXT is avalable in the
       <a href="http://www.haskell.org/haskellwiki/HXT">Haskell
 	Wiki</a>.
-      There's also a page about
+      HXT-9 is not downwards compatible to older versions.
+      When upgrading sources to HXT-9, especially dealing with configuration options has to be changed.
+      The <a href="">HXT Wiki page</a> contains hints to upgrade old sources.
+      Conversion between XML and native Haskell data is described in another Haskell Wiki page
       <a href="http://www.haskell.org/haskellwiki/HXT/Conversion_of_Haskell_data_from/to_XML">HXT: Conversion of Haskell data from/to XML</a> with picklers.
     </p>
 
@@ -176,257 +176,52 @@
     <h3>Requirements</h3>
     <ul>
       <li>ghc-6.10 with cabal 1.6</li>
-      <li><a href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/curl">curl package >= 1.3</a></li>
-      <li><a href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/tagsoup">tagsoup package >= 0.8</a></li>
+      <li>For HTTP access (at least) one of the packages
+	<a href="http://hackage.haskell.org/package/HTTP">HTTP</a> or
+	<a href="http://hackage.haskell.org/package/curl">curl</a></li>
     </ul>
     <p>
-      It is recommended to install the versions available from
+      It is recommended to install the HXT packages available from
       <a href="http://hackage.haskell.org/packages/hackage.html">Hackage</a>.
     </p>
 
     <a name="down"></a>
     <h3>HXT Downloads</h3>
-    <p>
-      <li><a href="hxt-8.5.0.tar.gz">hxt-8.5.0.tar.gz</a></li>
-      <li><a href="hxt-xpath-8.5.0.tar.gz">hxt-xpath-8.5.0.tar.gz</a></li>
-      <li><a href="hxt-xslt-8.5.0.tar.gz">hxt-xslt-8.5.0.tar.gz</a></li>
-      <li><a href="hxt-filter-8.4.0.tar.gz">hxt-filter-8.4.0.tar.gz</a></li>
-      <li><a href="#etc">extension modules</a></li>
+    <p>With HXT-9 the toolbox has been split into smaller packages. The core package includes the validating XML parser and an error tolerant HTML parser,
+      all the XML/HTML processing arrows and the picklers for conversion from/to native Haskell data. This package does not depend on any HTTP library.
+      For HTTP access the packages <a href="http://hackage.haskell.org/package/hxt-http">hxt-http</a> or <a href="http://hackage.haskell.org/package/hxt-curl">hxt-curl</a>
+      are available. The core package and the extensions require some basic funtionality, which could be useful for other (none XML/HTML) projects. These
+      are automatically installed by cabal when installing the main packages.
     </p>
-    <ul>
-      <li>This version works with ghc 6.12.1 with cabal 1.8.
-	For ghc 6.10.* please use HXT 8.3.*.</li>
-      <li>This version does not include the filter variant of hxt.
-	These modules are separated into an extra packages
-	<tt>hxt-filter</tt>.
-	Also
-	the XPath and XSLT modules are separated into packages
-	<tt>hxt-xpath</tt> and <tt">hxt-xslt</tt>.
-      </li>
-      <li>Includes sources for building a ghc package
-	<code>hxt</code> with Cabal.
-	This package contains a Haskell DOM, an XML parser, a HTML parser based on parsec,
-	a lightweight HTML/XML parser based on tagsoup, a
-	DTD validator,  namespace processing functions, and a Relax
-	NG validator and the serialization/deserialisation of data to/from XML.
-      </li>
-      <li>HTTP access is done via the <a href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/curl">curl binding</a>.
-	When installing curl (under Linux) be aware to first install the
-	source package of the curl library.
-      </li>
-      <li>Includes various examples, e.g. in example dir
-	<tt>examples/arrows/hparser/</tt>
-	a validating parser, which can be used as a starting point for
-	a HXT command line application.
-      </li>
-      <li>Includes an <a href="http://www.haskell.org/arrows/">arrow interface</a> with type classes and
-	overloading for a more flexible use of the filter technique.
-      </li>
-    </ul>
     <p>
-      A git repository is available under
-      <a href="http://git.fh-wedel.de/repos/hxt.git/">http://git.fh-wedel.de/repos/hxt.git</a>.
-      This repository also contains the other hxt-packages.
+      <li><a href="http://hackage.haskell.org/package/hxt">hxt</a>: The HXT core</li>
+      <li><a href="http://hackage.haskell.org/package/hxt-http">hxt-http</a>: Binding to HTTP package</li>
+      <li><a href="http://hackage.haskell.org/package/hxt-curl">hxt-curl</a>: Binding to LibCurl package</li>
+      <li><a href="http://hackage.haskell.org/package/hxt-xpath">hxt-xpath</a>:XPath extension</li>
+      <li><a href="http://hackage.haskell.org/package/hxt-xslt">hxt-xslt</a>: XSLT transformer</li>
+      <li><a href="http://hackage.haskell.org/package/hxt-relaxng">hxt-relaxng</a>: RelaxNG validator</li>
+      <li><a href="http://hackage.haskell.org/package/hxt-tagsoup">hxt-tagsoup</a>: Lazy HTML parser based on tagsoup</li>
+      <li><a href="http://hackage.haskell.org/package/hxt-charproperties">hxt-charproperties</a>: Basic package for XML and Unicode character properties</li>
+      <li><a href="http://hackage.haskell.org/package/hxt-unicode">hxt-unicode</a>: Basic package for decoding various encodings into Unicode</li>
+      <li><a href="http://hackage.haskell.org/package/hxt-regex-xmlschema">hxt-regex-xmlschema</a>: A lightweight and stand alone regex package for XML Schema regular expressions</li>
+      <li><a href="http://hackage.haskell.org/package/hxt-cache">hxt-cache</a>: A cache for parsed XML/HTML pages, stored as DOM in binary format</li>
+    </p>
+    <p>
+      There are various examples included in the .tar archives, usually in subdirectories <em>example</em>.
+    </p>
+    <p>
+      A git repository is available on
+      <a href="http://github.com/UweSchmidt/hxt">GitHub</a>.
+      This repository contains all HXT packages.
     </p>
 
     <a name="install"></a>
     <h3>Installation</h3>
       
     <p>
-      Before installing this version, install the curl and tagsoup modules.
-      For a quick install and access to hackage use the cabal installation
-      program.
+      Installation is done like usual via cabal: <tt>cabal install hxt</tt>
     </p>
-    <p>
-      A quick test of the example programs unpack the tar files and move into the example
-      subdirectories.
-    </p>
-    <pre>
-    cd &lt;hxt-package&gt;/examples
-    make all
-    make test
-    </pre>
-    <p>
 
-    <a name="change"></a>
-    <h3>Change History</h3>
-    <ul>
-      <li>In <a href="hxt-8.5.0.tar.gz">Version 8.5.0</a>
-	<ul>
-	  <li>
-	    XPath module has been internally refactored and optimized
-	    for speed. Runtime deficiencies for complex and ambigious
-	    XPath expressions have been removed.
-	  </li>
-	  <li>XPath modules are separated into extra package hxt-xpath
-	  </li>
-	</ul>
-      </li>
-      <li>In <a href="hxt-8.4.0.tar.gz">Version 8.4.0</a>
-	<ul>
-	  <li>Changes for ghc-6.12. This version requires
-	    ghc-6.12. There is a new option <tt>a_text_mode</tt> for
-	    text output of documents.
-	  </li>
-	  <li>XSLT part separated into extra package hxt-xslt</li>
-	</ul>
-      </li>
-      <li>In <a href="hxt-8.3.2.tar.gz">Version 8.3.2</a>
-	This is a bug fix release.
-	<ul>
-	  <li>
-	    New output option <tt>a_output_xhtml</tt>for writing XHTML.
-	  </li>
-	  <li>
-	    New output option <tt>a_no_empty_elem_for</tt> for precise
-	    control, which empty elements shall not be emitted in
-	    short form <tt>&lt;name .../&gt;</tt>.
-	  </li>
-	  <li>New output option <tt>a_add_default_dtd</tt> for easy
-	    adding a Document Type Declaration.
-	  </li>
-	  <li>
-	    <tt>writeDocumentToString</tt> changed, such that it is a pure
-	    arrow and does not need to run in the IO monad.
-	  </li>
-	  <li>
-	    Dealing with URIs containing unescaped chars changed.
-	    When URIs can't be parsed (with Network.URI), then the
-	    not allowed chars will be escaped in %XX format and
-	    URI parsing is retried. This enables normal file names to contain blanks and
-	    other chars without explicit escaping.
-	  </li>
-	</ul>
-      </li>
-      <li>In <a href="hxt-8.3.1.tar.gz">Version 8.3.1</a>
-	<ul>
-	  <li> Additional input option "a_accept_mimetypes" for setting a list of allowed
-	    mime types when using readDocument.
-	  </li>
-	</ul>
-      </li>
-      <li>In <a href="hxt-8.3.1.tar.gz">Version 8.3.1</a>
-	This is only a bug fix release.
-	<ul>
-	  <li>
-	    Interface and option handling for libcurl reworked.
-	    New input option "a_no_redirect" for preventing autmatic
-	    redirect added.
-	  </li>
-	  <li>
-	    Encoding of none XML/HTML text data done with the same
-	    encoding routines as for XML/HTML. This enables easy processing
-	    of other text documents.
-	  </li>
-	</ul>
-      </li>
-      <li>In <a href="hxt-8.3.0.tar.gz">Version 8.3.0</a>
-	<ul>
-	  <li>
-	    New output option "a_no_empty_elements" for preventing
-	    the XML short format "&lt;name/&gt;" for HTML elements,
-	    like "script", "p", and others. Especially a script tag
-	    of the form "&lt;script href="..."/&gt;" does not work in
-	    firefox.
-	    Turning on this option gives the form "&lt;script href="..."&gt;&lt;/script&gt;".
-	  </li>
-	  <li>
-	    An input option "a_strict_input" for bytestring input of
-	    files added. Lazy input, especially when using the tagsoup
-	    parser, can lead to error messages like "too many open
-	    files" when processing a whole bunsh of documents.
-	  </li>
-	  <li>Internal representation of qualified names changed to gain
-	    more space efficency.
-	  </li>
-	</ul>
-      </li>
-      <li>In <a href="hxt-8.2.0.tar.gz">Version 8.2.0</a>
-	<ul>
-	  <li>
-	    Modifications to work with ghc-6.10.
-	  </li>
-	  <li>
-	    A new module <tt>Data.Atom</tt> for dealing with names like LISP atoms
-	    and for sharing the memory for these values. When using names as keys
-	    in tables, trees or maps, it becomes much more efficient to represent these
-	    names as atoms than as strings. Equality check on atoms is constant in time and really fast, and all occurences
-	    of an atom share the same internal value.
-	  </li>
-	  <li>
-	    Implementation of <tt>strictA</tt> changed. <tt>strictA</tt> is marked deprecated.
-	    The implementation is not longer done with a <tt>DeepSeq</tt> function but with
-	    <tt>Control.Parallel.Strategies</tt>, the <tt>NFData</tt> class and <tt>rnf</tt>.
-	    There is a new combinator <tt>rnfA</tt> for complete <em>deep</em> evaluation of an
-	    arrow result.
-	  </li>
-	  <li>
-	    Further functions for working with <a href="http://www.w3.org/TR/xmlschema11-2/#regexs">W3C XML Schema Regular expressions</a>
-	    in module Text.XML.HXT.RelaxNG.XmlSchema.RegexMatch,
-	    especially for tokenizing and sed like editing of text.
-	  </li>
-	</ul>
-      </li>
-      <li>In <a href="hxt-8.1.1.tar.gz">Version 8.1.1</a>
-	<ul>
-	  <li>
-	    New functions for working with <a href="http://www.w3.org/TR/xmlschema11-2/#regexs">W3C XML Schema Regular expressions</a>
-	    in module Text.XML.HXT.RelaxNG.XmlSchema.RegexMatch.
-	  </li>
-	  <li>
-	    Darcs server has changed, new server is <tt><a href="http://darcs2.fh-wedel.de/repos/hxt/">http://darcs2.fh-wedel.de/repos/hxt/</a></tt>.
-	  </li>
-	</ul>
-      </li>
-      <li>In <a href="hxt-8.1.0.tar.gz">Version 8.1.0</a>
-	<ul>
-	  <li>
-	    HTTP interface changed to work with libcurl
-	    via curl bindings with package <a href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/curl">curl</a>.
-	    So the HTTP package is not longer needed, also the old
-	    and somewhat inefficent interface to curl by starting an external process and
-	    communicate via a pipe is not longer needed.
-	    When installing the curl bindings, be aware that the
-	    libcurl development packages including the C header files
-	    must be installed. Otherwise the Setup.hs will complain of
-	    missing files.
-	  </li>
-	  <li>
-	    New input option for ignoring none XML/HTML contents
-	    when reading documents (useful for crawler like applications).
-	  </li>
-	  <li>
-	    Mime type support for the <tt>file:</tt> protocol. Mime type mapping
-	    can be controlled by a config file in the format of
-	    <tt>/etc/mime.types</tt> on some linux systems.
-	  </li
-	  <li>
-	    A few more picklers for de-serialization from/to XML, e.g. for maps.
-	  </li>
-	  <li>
-	    A new option for ignoring decoding errors when reading XML documents.
-	    This may be useful for crawler like applications.
-	  </li>
-	</ul>
-      </li>
-      <li>In <a href="hxt-8.0.0.tar.gz">Version 8.0.0</a>
-	<ul>
-	  <li>
-	    Old filter interface separated from the hxt package and moved
-	    to an extra package <a href="#filter">hxt-filter</a>.
-	  </li>
-	  <li>
-	    Version numbers added in hxt.cabal for required package versions.
-	  </li>
-	  <li>
-	    DTD validation and XPath modules refactored to work with arrows instead of
-	    filters.
-	    This is done for separating the old hxt filter library
-	    from the actively developed and maintained arrow part.
-	  </li>
-	</ul>
-      </li>
-    </ul>
 
     <a name="limit"></a>
     <h3>Known problems and limitations</h3>
@@ -456,36 +251,9 @@
     <a name="filter"></a>
     <h3>HXT with Filters</h3>
     <p>
-      For older applications using the filter functionality,
-      there is an extra package <a href="hxt-filter-8.4.0.tar.gz">hxt-filter</a>.
-      This package must be installed on top of hxt.
-      The filter package will not be actively developed any more.
-      Please move to the arrow version for long term projects.
-      Installation works with cabal in the usual way.
-      Download archive is <a href="hxt-filter-8.4.0.tar.gz">hxt-filter-8.4.0.tar.gz</a>,
-      <em><a href="./hdoc-filter/index.html">HXT Filter API Documentation</a></em>
-      with source links is availabe as well as a
-      darcs repository under
-      <a href="http://git.fh-wedel.de/repos/hxt.git/">http://git.fh-wedel.de/repos/hxt.git</a>.
+      The old filter variant of HXT <a href="http://hackage.haskell.org/package/hxt-filter">hxt-filter</a> is not supported by the HXT-9 version any more.
     </p>
-
-    <a name="etc"></a>
-    <h3>Extension Packages</h3>
-    <p>
-      There is a small package
-      <a href="hxt-binary-0.0.1.tar.gz">hxt-binary-0.0.1.tar.gz</a>
-      for serializing and deserializing documents represented as
-      XmlTrees. This package contains <tt>Binary</tt> instances for the HXT
-      data types representing XML data.
-    </p>
-    <p>
-      The above package is used for a package implementing a simple
-      cache system for parsed XML data
-      <a href="hxt-cache-0.0.1.tar.gz">hxt-cache-0.0.1.tar.gz</a>.
-      The cache system may be useful for the development of crawlers
-      or for preprocessing templates for web frameworks.
-    </p>
-
+ 
     <a name="rel"></a>
     <h3>Related work</h3>
     <ul>

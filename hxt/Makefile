@@ -4,7 +4,7 @@ HXT_HOME	= .
 
 DIST		= $(DIST_NAME)
 DIST_TAR	= $(DIST_NAME).tar.gz
-DIST_FILES	= Makefile Version.mk README LICENCE Setup.lhs $(SOFTWARE).cabal
+DIST_FILES	= Makefile Version.mk README LICENSE Setup.lhs $(SOFTWARE).cabal
 
 SETUP		= Setup.lhs
 
@@ -60,7 +60,7 @@ cabal_install	:
 
 Version.mk	: hxt.cabal Makefile
 		( echo "SOFTWARE	= hxt" \
-		; echo "VERSION		= $$(cat hxt.cabal | grep -i '^version:' | cut -d ' ' -f 2)" \
+		; echo "VERSION		= $$(cat hxt.cabal | grep -i '^Version:' | perl -p -e 's/^Version:[ ]+//' )" \
 		; echo 'DIST_NAME	= $$(SOFTWARE)-$$(VERSION)' \
 		) > $@
 
