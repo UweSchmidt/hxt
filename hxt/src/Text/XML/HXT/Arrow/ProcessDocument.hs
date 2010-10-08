@@ -18,6 +18,7 @@
 
 module Text.XML.HXT.Arrow.ProcessDocument
     ( parseXmlDocument
+    , parseXmlDocumentWithExpat
     , parseHtmlDocument
     , validateDocument
     , propagateAndValidateNamespaces
@@ -114,6 +115,14 @@ parseXmlDocument validate'
 
 -- ------------------------------------------------------------
 
+parseXmlDocumentWithExpat        :: IOStateArrow s XmlTree XmlTree
+parseXmlDocumentWithExpat
+    = ( withoutUserState $< getSysVar theExpatParser
+      )
+      `when` documentStatusOk
+
+-- ------------------------------------------------------------
+
 {- |
 HTML parser
 
@@ -132,7 +141,7 @@ parseHtmlDocument       :: IOStateArrow s XmlTree XmlTree
 parseHtmlDocument
     = ( perform ( getAttrValue a_source >>> traceValue 1 (("parseHtmlDoc: parse HTML document " ++) . show) )
         >>>
-        ( parseHtml $< getSysVar theTagSoup )
+        ( parseHtml $< getSysVar (theTagSoup .&&&. theExpat) )
         >>>
         ( removeWarnings $< getSysVar (theWarnings .&&&. theTagSoup )
         )
@@ -150,8 +159,10 @@ parseHtmlDocument
       )
       `when` documentStatusOk
     where
-    parseHtml withTagSoup'
-        | withTagSoup'  = withoutUserState $< getSysVar theTagSoupParser -- withoutUserState parseHtmlTagSoup
+    parseHtml (withTagSoup', withExpat')
+        | withExpat'    = withoutUserState $< getSysVar theExpatParser
+
+        | withTagSoup'  = withoutUserState $< getSysVar theTagSoupParser
 
         | otherwise     = traceMsg 1 ("parse document with parsec HTML parser")
                           >>>

@@ -328,9 +328,9 @@ getTextEncoding
 decodeDocument  :: IOStateArrow s XmlTree XmlTree
 decodeDocument
     = choiceA
-      [ ( isRoot >>> isXmlHtmlDoc )   :-> ( decodeX       $< constA False )
-                                                         --  getSysVar theExpat -- old: ( decodeArr normalizeNL  $< getEncoding )
-      , ( isRoot >>> isTextDoc )      :-> ( decodeArr id  $< getTextEncoding )
+      [ ( isRoot >>> isXmlHtmlDoc )   :-> ( decodeX                $< getSysVar theExpat)
+                                  -- old: ( decodeArr normalizeNL  $< getEncoding )
+      , ( isRoot >>> isTextDoc )      :-> ( decodeArr id           $< getTextEncoding )
       , this                          :-> this
       ]
     where

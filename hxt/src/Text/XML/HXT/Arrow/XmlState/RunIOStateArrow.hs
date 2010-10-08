@@ -18,6 +18,7 @@ module Text.XML.HXT.Arrow.XmlState.RunIOStateArrow
 where
 
 import Control.Arrow                            -- arrow classes
+import Control.Arrow.ArrowList
 import Control.Arrow.IOStateListArrow
 
 import Text.XML.HXT.DOM.Interface
@@ -73,6 +74,7 @@ initialSysState                 = XIOSys
 initialSysWriter                :: XIOSysWriter
 initialSysWriter                = XIOwrt
                                   { xioErrorMsgList      = []
+                                  , xioExpatErrors       = none
                                   }
 
 initialSysEnv                   :: XIOSysEnv
@@ -120,6 +122,8 @@ initialParseConfig              = XIOPcfg
                                   , xioCanonicalize             = True
                                   , xioIgnoreNoneXmlContents    = False
                                   , xioTagSoupParser            = dummyTagSoupParser
+                                  , xioExpat                    = False
+                                  , xioExpatParser              = dummyExpatParser
                                   }
 
 initialOutputConfig             :: XIOOutputConfig
@@ -182,6 +186,14 @@ dummyTagSoupParser      =  issueFatal $
                            [ "TagSoup parser not configured,"
                            , "please install package hxt-tagsoup"
                            , " and use 'withTagSoup' parser config option from this package"
+                           ]
+
+dummyExpatParser        :: IOSArrow b b
+dummyExpatParser        =  issueFatal $
+                           unlines $
+                           [ "Expat parser not configured,"
+                           , "please install package hxt-expat"
+                           , " and use 'withExpat' parser config option from this package"
                            ]
 
 dummyRelaxValidator     :: IOSArrow b b

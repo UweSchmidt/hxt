@@ -161,6 +161,7 @@ data XIOSysState        = XIOSys  { xioSysWriter                :: ! XIOSysWrite
 instance NFData XIOSysState             -- all fields of interest are strict
 
 data XIOSysWriter       = XIOwrt  { xioErrorMsgList             :: ! XmlTrees
+                                  , xioExpatErrors              ::   IOSArrow XmlTree XmlTree
                                   }
 
 data XIOSysEnv          = XIOEnv  { xioTraceLevel               :: ! Int
@@ -202,6 +203,8 @@ data XIOParseConfig     = XIOPcfg { xioMimeTypes                ::   MimeTypeTab
                                   , xioIgnoreNoneXmlContents    :: ! Bool
                                   , xioTagSoup                  :: ! Bool
                                   , xioTagSoupParser            ::   IOSArrow XmlTree XmlTree
+                                  , xioExpat                    :: ! Bool
+                                  , xioExpatParser              ::   IOSArrow XmlTree XmlTree
                                   }
 
 data XIOOutputConfig    = XIOOcfg { xioIndent                   :: ! Bool
@@ -655,6 +658,27 @@ theTagSoupParser                = theParseConfig
                                   >>>
                                   S { getS = xioTagSoupParser
                                     , setS = \ x s -> s { xioTagSoupParser = x }
+                                    }
+
+theExpat                        :: Selector XIOSysState Bool
+theExpat                        = theParseConfig
+                                  >>>
+                                  S { getS = xioExpat
+                                    , setS = \ x s -> s { xioExpat = x }
+                                    }
+
+theExpatParser                  :: Selector XIOSysState (IOSArrow XmlTree XmlTree)
+theExpatParser                  = theParseConfig
+                                  >>>
+                                  S { getS = xioExpatParser
+                                    , setS = \ x s -> s { xioExpatParser = x }
+                                    }
+
+theExpatErrors                  :: Selector XIOSysState (IOSArrow XmlTree XmlTree)
+theExpatErrors                  = theSysWriter
+                                  >>>
+                                  S { getS = xioExpatErrors
+                                    , setS = \ x s -> s { xioExpatErrors = x }
                                     }
 
 -- ----------------------------------------

@@ -5,6 +5,7 @@ PL1	= hxt-charproperties \
           hxt-curl \
           hxt-http \
           hxt-tagsoup \
+	  hxt-expat \
           hxt-xpath \
           hxt-relaxng \
 	  hxt-xslt \

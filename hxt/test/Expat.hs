@@ -12,6 +12,9 @@ import           Text.XML.HXT.Core
 import qualified Text.XML.HXT.Core                      as X
 import qualified Text.XML.HXT.DOM.XmlNode               as XN
 import           Text.XML.HXT.Arrow.XmlState.TypeDefs
+import           Text.XML.HXT.Parser.XhtmlEntities      ( xhtmlEntities )
+
+-- ------------------------------------------------------------
 
 main :: IO ()
 main = do
@@ -67,7 +70,12 @@ withoutExpat            = setS theExpat False
 -- ------------------------------------------------------------
 
 parseExpat		:: Bool -> IOSArrow XmlTree XmlTree
-parseExpat strict	= traceMsg 1 ("parse document with expat parser")
+parseExpat strict	= parse1 $<< ( getAttrValue  transferEncoding
+                                       &&&
+                                       getSysVar theParseHTML
+                                     )
+    where
+    parse1 enc isHtml   = traceMsg 1 ("parse document with expat parser, encoding is " ++ show enc)
                           >>>
                           replaceChildren
                           ( applyA
@@ -75,7 +83,7 @@ parseExpat strict	= traceMsg 1 ("parse document with expat parser")
                                >>>
                                arr ( stringToByteString		-- TODO eliminate this
                                      >>>
-                                     parse defaultParseOptions
+                                     parse parseOptions
                                      >>>
                                      first uNodeStringToXmlTree
                                      >>>
@@ -83,7 +91,23 @@ parseExpat strict	= traceMsg 1 ("parse document with expat parser")
                                    )
                             )
                           )
-    where
+        where
+        parseOptions
+            | isHtml	= parseO { entityDecoder = Just htmlEncoder }
+            | otherwise = parseO
+            where
+            parseO      = defaultParseOptions { overrideEncoding = expatEnc }
+
+            htmlEncoder :: String -> Maybe String
+            htmlEncoder ent
+                        = fmap (toEnum >>> (:[])) . lookup ent $ xhtmlEntities
+
+            expatEnc	= lookup enc [ (X.usAscii,ASCII)
+                                     , (X.utf8,UTF8)
+                                     , (X.utf16,UTF16)
+                                     , (X.isoLatin1,ISO88591)
+                                     ]
+
     evalRes t er	= constA t <+> evalErrs er
 
     evalErrs Nothing	= none

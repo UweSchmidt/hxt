@@ -39,6 +39,7 @@ import Text.XML.HXT.Arrow.Edit                  ( canonicalizeAllNodes
 import Text.XML.HXT.Arrow.ParserInterface
 import Text.XML.HXT.Arrow.ProcessDocument       ( getDocumentContents
                                                 , parseXmlDocument
+                                                , parseXmlDocumentWithExpat
                                                 , parseHtmlDocument
                                                 , propagateAndValidateNamespaces
                                                 , andValidateNamespaces
@@ -207,7 +208,8 @@ readDocument'' src
                    ( replaceChildren none )                                     -- empty response, e.g. in if-modified-since request
                    ( ( parse $< getSysVar (theValidate              .&&&.
                                            theIgnoreNoneXmlContents .&&&.
-                                           theTagSoup
+                                           theTagSoup               .&&&.
+                                           theExpat
                                           )
                      )
                      >>>
@@ -270,7 +272,7 @@ readDocument'' src
                                             (mi == mis || mis == "*")
                                           )
                                           || r
-        parse (validate, (removeNoneXml, withTagSoup'))
+        parse (validate, (removeNoneXml, (withTagSoup', withExpat')))
 	    | not isXmlOrHtml           = if removeNoneXml
 					  then replaceChildren none             -- don't parse, if mime type is not XML nor HTML
 					  else this                             -- but remove contents when option is set
@@ -281,7 +283,10 @@ readDocument'' src
                                           >>>
                                           parseHtmlDocument                     -- parse as HTML or with tagsoup XML
 
-            | isXml                     = parseXmlDocument (not validateWithRelax && validate)           -- parse as XML
+            | isXml                     = if withExpat'
+                                          then parseXmlDocumentWithExpat
+                                          else parseXmlDocument (not validateWithRelax && validate)
+                                                                                -- parse as XML
             | otherwise                 = this                                  -- suppress warning
 
         checknamespaces (withNamespaces, withTagSoup')
