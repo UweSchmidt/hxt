@@ -1,2 +1,2 @@
 <?xml version="1.0" ?>
-<foo><data xmlns="foo"/></foo>
+<foo><data xmlns="foo"/><?abc xyz?><!-- hahah -->&lt;&gt;&auml;&uuml;</foo>

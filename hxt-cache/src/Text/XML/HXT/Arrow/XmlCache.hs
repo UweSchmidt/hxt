@@ -59,7 +59,7 @@ import Text.XML.HXT.Arrow.Binary
 -- When the cache is configured and enabled, every document read and parsed is serialized and stored in binary
 -- form in the cache. When reading the same document again, it is just deserialized, no parsing is performed.
 --
--- The cache is configured by a path pointing to a directory for storing the docuemnts,
+-- The cache is configured by a path pointing to a directory for storing the documents,
 -- by a maximal time span in second for valid documents. After that time span, the documents are read again
 -- and the cache is updated.
 -- The flag contols, whether documents returning 404 or other errors will be cached.

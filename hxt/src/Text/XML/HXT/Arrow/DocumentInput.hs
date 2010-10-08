@@ -328,11 +328,20 @@ getTextEncoding
 decodeDocument  :: IOStateArrow s XmlTree XmlTree
 decodeDocument
     = choiceA
-      [ ( isRoot >>> isXmlHtmlDoc )   :-> ( decodeArr normalizeNL  $< getEncoding )
-      , ( isRoot >>> isTextDoc )      :-> ( decodeArr id           $< getTextEncoding )
+      [ ( isRoot >>> isXmlHtmlDoc )   :-> ( decodeX       $< constA False )
+                                                         --  getSysVar theExpat -- old: ( decodeArr normalizeNL  $< getEncoding )
+      , ( isRoot >>> isTextDoc )      :-> ( decodeArr id  $< getTextEncoding )
       , this                          :-> this
       ]
     where
+    decodeX     	:: Bool -> IOStateArrow s XmlTree XmlTree
+    decodeX False	= decodeArr normalizeNL  $< getEncoding
+    decodeX True        = noDecode               $< getEncoding		-- parse with expat
+
+    noDecode enc	= traceMsg 2 ("no decoding (done by expat): encoding is " ++ show enc)
+                          >>>
+                          addAttr transferEncoding enc
+
     decodeArr   :: (String -> String) -> String -> IOStateArrow s XmlTree XmlTree
     decodeArr normalizeNewline enc
         = maybe notFound found . getDecodingFct $ enc
