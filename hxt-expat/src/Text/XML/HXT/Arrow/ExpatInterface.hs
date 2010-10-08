@@ -61,7 +61,6 @@ withExpat strict        = setS (theExpat       .&&&.
                                 theExpatErrors
                                ) (True, (False, (parseExpat strict, none)))
 
-
 -- | Turns off expat parsing. The build in HXT parsers will be used.
 
 withoutExpat            :: SysConfig
