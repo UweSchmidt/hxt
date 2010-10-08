@@ -34,6 +34,8 @@ import Text.XML.HXT.Parser.ProtocolHandlerUtil  ( parseContentType )
 
 import Text.ParserCombinators.Parsec            ( parse )
 
+import qualified Data.ByteString.Lazy           as B
+
 import Data.Char                                ( isDigit
 						)
 import Data.Maybe                               ( fromJust
@@ -47,7 +49,7 @@ import System.IO.Error                          ( ioeGetErrorString
 import Network.Browser                          ( Proxy(..)
 						, BrowserAction
 						, browse
-						, defaultGETRequest
+						, defaultGETRequest_
 						, request
 						, setOutHandler
 						, setErrHandler
@@ -77,8 +79,8 @@ import Network.URI                              ( URI
 -- the http protocol handler, haskell implementation
 
 getCont         :: Bool -> String -> String -> Bool -> Attributes ->
-		   IO (Either ([(String, String)], String)
-                              ([(String, String)], String)
+		   IO (Either ([(String, String)],       String)
+                              ([(String, String)], B.ByteString)
                       )
 getCont strictInput proxy uri redirect options
     = do
@@ -102,8 +104,8 @@ getCont strictInput proxy uri redirect options
     processResponse response
         | rc >= 200 && rc < 300
             = if strictInput
-              then length cs `seq` return res
-              else                 return res
+              then B.length cs `seq` return res
+              else                   return res
 
         | otherwise
             = return $
@@ -126,7 +128,7 @@ getCont strictInput proxy uri redirect options
         rsh = convertResponseHeaders response
         cs  = rspBody response
 
-    getHttp             :: Bool -> URI -> String -> Bool -> Attributes -> IO (Response String)
+    getHttp             :: Bool -> URI -> String -> Bool -> Attributes -> IO (Response B.ByteString)
     getHttp trc' uri' proxy' redirect' options'
         = withSocketsDo $
           browse ( do
@@ -135,11 +137,11 @@ getCont strictInput proxy uri redirect options
                    return rsp
                  )
         where
-        theRequest :: Request String
+        theRequest :: Request B.ByteString
         theRequest
-	    = configHeaders $ defaultGETRequest uri' 
+	    = configHeaders $ defaultGETRequest_ uri' 
 
-        configHeaders :: Request String -> Request String
+        configHeaders :: Request B.ByteString -> Request B.ByteString
 	configHeaders
 	    = foldr (>>>) id . map (uncurry replaceHeader) . concatMap (uncurry setHOption) $ options
 
@@ -163,7 +165,7 @@ getCont strictInput proxy uri redirect options
     convertResponseStatus (a, b, c)
         = 100 * a + 10 * b + c
 
-    convertResponseHeaders      :: Response String -> [(String, String)]
+    convertResponseHeaders      :: Response B.ByteString -> [(String, String)]
     convertResponseHeaders r'
         = cvResponseCode (rspCode r')
           ++

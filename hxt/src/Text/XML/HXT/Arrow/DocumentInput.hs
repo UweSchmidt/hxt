@@ -32,6 +32,10 @@ import           Control.Arrow.ArrowTree
 import           Control.Arrow.ArrowIO
 import           Control.Arrow.ListArrow
 
+import qualified Data.ByteString.Lazy           as B
+import qualified Data.ByteString.Lazy.Char8     as C
+
+
 import           Data.List                      ( isPrefixOf )
 import           Data.String.Unicode            ( getDecodingFct
                                                 , guessEncoding
@@ -129,7 +133,7 @@ getStdinContents
                >>>
                ( arr (uncurry addInputError) -- io error occured
                  |||
-                 arr addTxtContent      -- content read
+                 arr addTxtContent           -- content read
                )
              )
 
@@ -153,9 +157,9 @@ addMimeType
     uriToMime mtt
         = arr $ ( \ uri -> extensionToMimeType (drop 1 . takeExtension $ uri) mtt )
 
-addTxtContent   :: String -> IOStateArrow s XmlTree XmlTree
-addTxtContent c
-    = replaceChildren (txt c)
+addTxtContent   :: B.ByteString -> IOStateArrow s XmlTree XmlTree
+addTxtContent bc
+    = replaceChildren (txt $ C.unpack bc)	-- TODO: eliminate unpack at this point
       >>>
       addAttr transferMessage "OK"
       >>>

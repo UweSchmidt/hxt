@@ -26,6 +26,9 @@ import Control.Arrow.ArrowList
 import Control.Arrow.ArrowTree
 import Control.Arrow.ArrowIO
 
+import qualified Data.ByteString.Lazy           as B
+import qualified Data.ByteString.Lazy.Char8     as C
+
 import System.Console.GetOpt
 
 import Text.XML.HXT.Arrow.DocumentInput         ( addInputError )
@@ -64,11 +67,11 @@ getHTTPNativeContents
                      )
                    )
 
-addContent        :: (Attributes, String) -> IOSArrow XmlTree XmlTree
-addContent (al, c)
-    = replaceChildren (txt c)           -- add the contents
+addContent        :: (Attributes, B.ByteString) -> IOSArrow XmlTree XmlTree
+addContent (al, bc)
+    = replaceChildren (txt $ C.unpack bc)       -- add the contents, TODO eliminate unpack
       >>>
-      seqA (map (uncurry addAttr) al)   -- add the meta info (HTTP headers, ...)
+      seqA (map (uncurry addAttr) al)           -- add the meta info (HTTP headers, ...)
 
 -- ------------------------------------------------------------
 

@@ -22,16 +22,9 @@ module Text.XML.HXT.IO.GetFILE
 
 where
 
-import qualified Data.ByteString        as B
-import qualified Data.ByteString.Char8  as C
+import qualified Data.ByteString.Lazy           as B
 
 import           Network.URI            ( unEscapeString
-                                        )
-
-import           System.IO              ( IOMode(..)
-                                        , openBinaryFile
-                                          -- , getContents  is defined in the prelude
-                                        , hGetContents
                                         )
 
 import           System.IO.Error        ( ioeGetErrorString
@@ -46,15 +39,14 @@ import           Text.XML.HXT.DOM.XmlKeywords
 
 -- ------------------------------------------------------------
 
-getStdinCont            :: Bool -> IO (Either ([(String, String)], String)
-                                              String)
+getStdinCont            :: Bool -> IO (Either ([(String, String)], String) B.ByteString)
 getStdinCont strictInput
     = do
-      c <- try ( if strictInput
-                 then do
-                      cb <- B.getContents
-                      return  (C.unpack cb)
-                 else getContents
+      c <- try ( do
+                 cb <- B.getContents
+                 if strictInput
+                    then B.length cb `seq` return cb
+                    else                   return cb
                )
       return (either readErr Right c)
     where
@@ -68,8 +60,7 @@ getStdinCont strictInput
           msg = "stdin read error: " ++ es
           es  = ioeGetErrorString e
 
-getCont         :: Bool -> String -> IO (Either ([(String, String)], String)
-                                                String)
+getCont         :: Bool -> String -> IO (Either ([(String, String)], String) B.ByteString)
 getCont strictInput source
     = do                        -- preliminary
       source'' <- checkFile source'
@@ -81,13 +72,11 @@ getCont strictInput source
                          then return $ fileErr "file not readable"
                          else do
                               c <- try $
+                                   do
+                                   cb <- B.readFile fn
                                    if strictInput
-                                      then do
-                                           cb <- B.readFile fn
-                                           return (C.unpack cb)
-                                      else do
-                                           h <- openBinaryFile fn ReadMode
-                                           hGetContents h
+                                      then B.length `seq` return cb
+                                      else                return cb
                               return (either readErr Right c)
     where
     source' = drivePath $ source

@@ -1,5 +1,5 @@
 Name:                hxt-install
-Version:             9.0.0
+Version:             9.1.0
 Synopsis:            Dummy application for installing the HXT packages
 Description:         Dummy application for installing the HXT packages.
                      The HXT packages not to be installed can be selected
@@ -38,6 +38,10 @@ Flag tagsoup
  Description:        Install hxt-tagsoup
  Default:            True
 
+Flag expat
+ Description:        Install hxt-expat
+ Default:            True
+
 Flag relaxng
  Description:        Install hxt-relaxng
  Default:            True
@@ -72,6 +76,9 @@ Executable hxt-test
   if flag(tagsoup)
     CPP-Options: -Dtagsoup
 
+  if flag(expat)
+    CPP-Options: -Dexpat
+
   if flag(relaxng)
     CPP-Options: -Drelaxng
 
@@ -101,6 +108,9 @@ Executable hxt-test
 
   if flag(tagsoup)
     Build-depends:  hxt-tagsoup   >= 9   && < 10
+
+  if flag(expat)
+    Build-depends:  hxt-expat     >= 9   && < 10
 
   if flag(relaxng)
     Build-depends:  hxt-relaxng   >= 9   && < 10

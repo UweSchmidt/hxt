@@ -37,6 +37,10 @@ import Text.XML.HXT.Curl
 import Text.XML.HXT.TagSoup
 #endif
 
+#ifdef expat
+import Text.XML.HXT.Expat
+#endif
+
 -- ----------------------------------------------------------
 
 import Data.Maybe       ()

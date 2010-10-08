@@ -27,8 +27,7 @@ import Control.Arrow                    ( first
 import Control.Concurrent.MVar
 import Control.Monad                    ( when )
 
-import qualified Data.ByteString        as B
-import qualified Data.ByteString.Char8  as C
+import qualified Data.ByteString.Lazy   as B
 
 import Data.Char                        ( isDigit
                                         , isSpace
@@ -113,8 +112,8 @@ releaseCurl     = putMVar curlResource ()
 -- will set the user agent and the referer URL for this request.
 
 getCont         :: Bool -> [(String, String)] -> String ->
-                   IO (Either ([(String, String)], String)
-                              ([(String, String)], String))
+                   IO (Either ([(String, String)],       String)
+                              ([(String, String)], B.ByteString))
 getCont strictInput options uri
     = do
       initCurl
@@ -165,13 +164,13 @@ getCont strictInput options uri
                    )
         | otherwise
             = Right ( contentT rsh ++ headers
-                    , C.unpack body
+                    , body
                     )
         where
         body :: B.ByteString
         body
             | strictInput       = B.length body' `seq` body'
-            | otherwise         = body'
+            | otherwise         =                      body'
             where
             body'               = respBody r
 
