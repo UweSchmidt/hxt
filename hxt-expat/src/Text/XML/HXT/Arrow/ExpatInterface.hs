@@ -30,12 +30,39 @@ import           Text.XML.HXT.Parser.XhtmlEntities      ( xhtmlEntities )
 
 -- ------------------------------------------------------------
 
+{- |
+   The system config option to enable the expat parser
+
+Here is an example, how to use it:
+
+> ...
+> import Text.HXT.XML.Core
+> import Text.HXT.XML.Expat
+> ...
+>
+> readDocument [ withExpat True ] "some-file.xml"
+> ...
+
+reads the given document and parses it with the expat parser.
+There is no validation enabled. The parameter to @withExpat@ determines, whether parsing
+is done strict. Here strict parsing is enabled. When strict parsing is used,
+the parse is immediately checked for parser errors, and possible errors are issued.
+When set to non-strict parsing, error checking is delayed and may be done later 
+with the @issueExpatErr@ arrow.
+
+When HTML parsing is enabled, the expat parser will be configured with the HTML enitity reference
+resolver, else only the predefined XML enitities will be substituted.
+-}
+
 withExpat               :: Bool -> SysConfig
 withExpat strict        = setS (theExpat       .&&&.
                                 theTagSoup     .&&&.
                                 theExpatParser .&&&.
                                 theExpatErrors
                                ) (True, (False, (parseExpat strict, none)))
+
+
+-- | Turns off expat parsing. The build in HXT parsers will be used.
 
 withoutExpat            :: SysConfig
 withoutExpat            = setS theExpat False
@@ -45,7 +72,7 @@ withoutExpat            = setS theExpat False
 parseExpat              :: Bool -> IOSArrow XmlTree XmlTree
 parseExpat strict       = parse1 $<< ( getAttrValue  transferEncoding
                                        &&&
-                                       getSysVar theParseHTML
+                                       getSysVar theLowerCaseNames
                                      )
     where
     parse1 enc isHtml   = traceMsg 1 ( "parse document with expat parser, encoding is " ++
@@ -53,21 +80,41 @@ parseExpat strict       = parse1 $<< ( getAttrValue  transferEncoding
                                        ", HTML entity subst is " ++ show isHtml
                                      )
                           >>>
-                          replaceChildren
-                          ( applyA
-                            (  xshow X.getChildren
-                               >>>
-                               arr ( LC.pack            -- TODO eliminate this
-                                     >>>
-                                     parse parseOptions
-                                     >>>
-                                     first uNodeStringToXmlTree
-                                     >>>
-                                     uncurry evalRes
-                                   )
-                            )
-                          )
+                          ( substContents $< parse2 )
         where
+        substContents (t, e)
+            | strict    = case e of
+                          Nothing -> setChildren [t]
+                          Just _  -> ee e
+                                     >>> 
+                                     setChildren []
+            | otherwise = perform ( constA (ee e)
+                                    >>>
+                                    traceMsg 1 "set expat error"
+                                    >>>
+                                    setSysVar theExpatErrors 
+                                    >>>
+                                    none
+                                  )
+                          >>>
+                          setChildren [t]
+            where
+            ee  Nothing = none
+            ee (Just (XMLParseError msg loc))
+                        = issueErr ("Expat error at " ++ show (xmlLineNumber loc) ++
+                                    ":" ++ show (xmlColumnNumber loc) ++ ":" ++ msg
+                                   )
+
+        parse2          :: IOSArrow XmlTree (XmlTree, Maybe XMLParseError)
+        parse2          = xshow X.getChildren
+                          >>>
+                          arr ( LC.pack            -- TODO eliminate this, extend XNode with bytestring
+                                >>>
+                                parse parseOptions
+                                >>>
+                                first uNodeStringToXmlTree
+                              )
+
         parseOptions
             | isHtml    = parseO { entityDecoder = Just htmlEncoder }
             | otherwise = parseO
@@ -84,20 +131,7 @@ parseExpat strict       = parse1 $<< ( getAttrValue  transferEncoding
                                      , (X.isoLatin1, ISO88591)
                                      ]
 
-    evalRes t er        = constA t <+> evalErrs er
-
-    evalErrs Nothing    = none
-    evalErrs (Just (XMLParseError msg loc))
-        | strict        = ee
-        | otherwise     = constA ee
-                          >>>
-                          traceMsg 1 ("set expat error: " ++ msg)
-                          >>>
-                          setSysVar theExpatErrors 
-                          >>>
-                          none
-        where
-        ee               = issueErr ("Expat error at " ++ show (xmlLineNumber loc) ++ ":" ++ show (xmlColumnNumber loc) ++ ":" ++ msg)
+-- | In case of lazy parsing check for possible errors
 
 issueExpatErr           :: IOStateArrow s b b
 issueExpatErr           = withoutUserState $ perform $

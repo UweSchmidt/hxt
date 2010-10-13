@@ -92,7 +92,7 @@ Executable hxt-test
                  haskell98        >= 1   && < 2,
                  directory        >= 1   && < 2,
                  HUnit            >= 1.2 && < 2,
-                 hxt              >= 9   && < 10
+                 hxt              >= 9.1 && < 10
 
   if flag(curl)
     Build-depends:  hxt-curl      >= 9   && < 10
@@ -107,10 +107,10 @@ Executable hxt-test
     Build-depends:  bzlib         >= 0.5 && < 1
 
   if flag(tagsoup)
-    Build-depends:  hxt-tagsoup   >= 9   && < 10
+    Build-depends:  hxt-tagsoup   >= 9.1 && < 10
 
   if flag(expat)
-    Build-depends:  hxt-expat     >= 9   && < 10
+    Build-depends:  hxt-expat     >= 9.1 && < 10
 
   if flag(relaxng)
     Build-depends:  hxt-relaxng   >= 9   && < 10

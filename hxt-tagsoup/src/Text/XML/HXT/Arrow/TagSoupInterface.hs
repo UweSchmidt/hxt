@@ -2,7 +2,7 @@
 
 {- |
    Module     : Text.XML.HXT.Arrow.TagSoupInterface
-   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   Copyright  : Copyright (C) 2010 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
@@ -32,10 +32,34 @@ import qualified Text.XML.HXT.Parser.TagSoup as TS
 
 -- ------------------------------------------------------------
 
--- | enable TagSoup parsing
+{- |
+   The system config option to enable the tagsoup parser
+
+Here is an example, how to use it:
+
+> ...
+> import Text.HXT.XML.Core
+> import Text.HXT.XML.TagSoup
+> ...
+>
+> readDocument [ withExpat ] "some-file.xml"
+> ...
+
+reads the given document and parses it with the lazy tagsoup parser.
+There is no validation enabled.
+-}
+
 
 withTagSoup                     :: SysConfig
-withTagSoup                     = setS (theTagSoup .&&&. theTagSoupParser) (True, parseHtmlTagSoup)
+withTagSoup                     = setS (theTagSoup       .&&&.
+                                        theExpat         .&&&.
+                                        theTagSoupParser
+                                       ) (True, (False, parseHtmlTagSoup))
+
+-- | Turns off tagsoup parsing. The build in HXT parser will be used.
+
+withoutTagSoup                  :: SysConfig
+withoutTagSoup                  = setS theTagSoup False
 
 -- ------------------------------------------------------------
 

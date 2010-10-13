@@ -9,7 +9,7 @@
    Stability  : experimental
    Portability: portable
 
-   Interface for Expat Parser
+   Interface for Expat XML Parser
 
 -}
 

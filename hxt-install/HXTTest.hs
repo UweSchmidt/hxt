@@ -86,6 +86,13 @@ example3        = ( "example3.xml"
                     ]
                   )
 
+example3a       :: (String, String)
+example3a       = ( "example3a.html"
+                  , unlines $
+                    [ "<html>&auml;</html>"
+                    ]
+                  )
+
 example4        :: (String, String)
 example4        = ( "example4.html"
                   , unlines $
@@ -181,6 +188,7 @@ examples        = [ example1
                   , example2
                   , example2a
                   , example3
+                  , example3a
                   , example4
                   , example5
                   , example6
@@ -641,6 +649,104 @@ configTagSoupTests      = TestList []
 
 -- ----------------------------------------------------------
 
+#ifdef expat
+configExpatTests      :: Test
+configExpatTests
+    = TestLabel "Test Expat parser configurations" $
+      TestList $
+      map (mkTest0 "Expat parser test" . (\ (u,c,r) -> (u, withExpat True : c, r))) $
+      [ ( "example2.xml"
+        , []
+        , "<html><head/><body/></html>"
+        )
+      , ( "example2.xml"
+        , [withRemoveWS yes]
+        , "<html><head/><body/></html>"
+        )
+      , ( "example3.xml"
+        , []
+        , ""
+        )
+      , ( "example3a.html"
+        , [withParseHTML yes]
+        , "<html>\228</html>"
+        )
+      , ( "example3a.html"
+        , [withParseByMimeType yes]
+        , "<html>\228</html>"
+        )
+
+      , ( "example5.xml"
+        , [withPreserveComment no]
+        , "<html/>"
+        )
+      , ( "example5.xml"
+        , [withPreserveComment yes]
+        , "<html/>"                     -- expat does not preserve comments
+        )
+
+
+      , ( "example8.xml"                -- namespace check
+        , []
+        , "<n:a xmlns:n=\"nnn\"/>"
+        )
+      , ( "example8.xml"
+        , [withCheckNamespaces no]
+        , "<n:a xmlns:n=\"nnn\"/>"
+        )
+      , ( "example8.xml"
+        , [withCheckNamespaces yes]
+        , "<n:a xmlns:n=\"nnn\"/>"
+        )
+      , ( "example9.xml"
+        , []
+        , "<n:a xmlns:m=\"nnn\"/>"
+        )
+      , ( "example9.xml"
+        , [withCheckNamespaces no]
+        , "<n:a xmlns:m=\"nnn\"/>"
+        )
+      , ( "example9.xml"
+        , [withCheckNamespaces yes]
+        , ""
+        )
+
+      , ( "example10.xml"
+        , []
+        , "<a>x</a>"
+        )
+      , ( "example10.xml"
+        , [withCanonicalize yes]
+        , "<a>x</a>"
+        )
+      , ( "example10.xml"
+        , [ withParseHTML yes
+          , withCanonicalize no
+          ]
+        , "<a>x</a>"
+        )
+
+      , ( "example11.txt"               -- parse by mimetype and none XML/HTML contents
+        , []
+        , ""
+        )
+      , ( "example11.txt"
+        , [ withParseByMimeType yes ]
+        , "hello\n"
+        )
+      , ( "example11.txt"
+        , [ withIgnoreNoneXmlContents yes
+          , withParseByMimeType yes]
+        , ""
+        )
+      ]
+#else
+configExpatTests      :: Test
+configExpatTests      = TestList []
+#endif
+
+-- ----------------------------------------------------------
+
 #ifdef curl
 configCurlTests      :: Test
 configCurlTests
@@ -930,6 +1036,7 @@ allTests
       , configCurlTests
       , configHttpTests
       , configCacheTests
+      , configExpatTests
 
       , TestLabel "Remove test input files" $
         TestCase remInputFiles
