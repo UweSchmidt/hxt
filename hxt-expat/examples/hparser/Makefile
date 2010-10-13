@@ -87,10 +87,10 @@ test4		:
 		@echo "===> the source of a lousy html document" ; echo ; sleep 2
 		cat $(EX4)
 		@sleep 2 ; echo ; echo "===> expat parser does not parse this document, it will emit an error" ; echo ; sleep 2
-		$(prog) --not-lazy --show-tree --trace=1 --parse-html $(EX4)
+		$(prog) --not-lazy --show-tree --trace=1 --parse-html $(EX4) || true
 		@echo
 		@sleep 2 ; echo ; echo "===> expat parser does not parse this document, it will not emit an error" ; echo ; sleep 2
-		$(prog) --lazy --show-tree --trace=1 --parse-html $(EX4)
+		$(prog) --lazy --show-tree --trace=1 --parse-html $(EX4) || true
 
 clean		:
 		rm -f $(prog) *.o *.hi
