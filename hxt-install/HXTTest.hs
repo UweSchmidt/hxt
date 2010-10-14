@@ -654,7 +654,7 @@ configExpatTests      :: Test
 configExpatTests
     = TestLabel "Test Expat parser configurations" $
       TestList $
-      map (mkTest0 "Expat parser test" . (\ (u,c,r) -> (u, withExpat True : c, r))) $
+      map (mkTest0 "Expat parser test" . (\ (u,c,r) -> (u, withTrace 0 : withExpat True : c, r))) $
       [ ( "example2.xml"
         , []
         , "<html><head/><body/></html>"

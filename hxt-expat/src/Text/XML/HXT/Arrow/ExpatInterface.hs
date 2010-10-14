@@ -28,6 +28,8 @@ import qualified Text.XML.HXT.DOM.XmlNode               as XN
 import           Text.XML.HXT.Arrow.XmlState.TypeDefs
 import           Text.XML.HXT.Parser.XhtmlEntities      ( xhtmlEntities )
 
+-- import Debug.Trace
+
 -- ------------------------------------------------------------
 
 {- |
@@ -122,7 +124,8 @@ parseExpat strict       = parse1 $<< ( getAttrValue  transferEncoding
 
             htmlEncoder :: String -> Maybe String
             htmlEncoder ent
-                        = fmap (toEnum >>> (:[])) . lookup ent $ xhtmlEntities
+                        = -- traceShow ("\n" ++ ent ++ "\n") $
+                          fmap (toEnum >>> (:[])) . lookup ent $ xhtmlEntities
 
             expatEnc    = lookup enc [ (X.usAscii,   ASCII)
                                      , (X.utf8,      UTF8)
