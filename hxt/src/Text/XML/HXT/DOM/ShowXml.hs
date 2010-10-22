@@ -17,6 +17,7 @@
 
 module Text.XML.HXT.DOM.ShowXml
     ( xshow
+    , xshowBlob
     , showElemType
     )
 where
@@ -41,14 +42,34 @@ import Text.XML.HXT.DOM.XmlNode                 ( mkDTDElem
 
 xshow   :: XmlTrees -> String
 xshow [(NTree (XText s) _)]     = s                     -- special case optimisation
+xshow [(NTree (XBlob b) _)]     = blobToString b        -- special case optimisation
 xshow ts                        = showXmlTrees ts ""
+
+-- | convert an XML tree into a binary large object (a bytestring)
+
+xshowBlob               :: XmlTrees -> Blob
+xshowBlob               = stringToBlob . xshow
 
 -- ------------------------------------------------------------
 
 showXmlTree             :: XmlTree  -> String -> String
 
-showXmlTree (NTree (XText s) _)
+showXmlTree (NTree (XText s) _)                         -- common cases first
     = showString s
+
+showXmlTree (NTree (XTag t al) [])
+    = showLt . showQName t . showXmlTrees al . showSlash . showGt
+
+showXmlTree (NTree (XTag t al) cs)
+    = showLt . showQName t . showXmlTrees al . showGt
+      . showXmlTrees cs
+      . showLt . showSlash . showQName t . showGt
+
+showXmlTree (NTree (XAttr an) cs)
+    = showBlank . showQName an . showEq . showQuoteString (xshow cs)
+
+showXmlTree (NTree (XBlob b) _)
+    = showString . blobToString $ b
 
 showXmlTree (NTree (XCharRef i) _)
     = showString "&#" . showString (show i) . showChar ';'
@@ -80,19 +101,8 @@ showXmlTree (NTree (XPi n al) _)
       showPiAttr _
           = id
 
-showXmlTree (NTree (XTag t al) [])
-    = showLt . showQName t . showXmlTrees al . showSlash . showGt
-
-showXmlTree (NTree (XTag t al) cs)
-    = showLt . showQName t . showXmlTrees al . showGt
-      . showXmlTrees cs
-      . showLt . showSlash . showQName t . showGt
-
 showXmlTree (NTree (XDTD de al) cs)
     = showXmlDTD de al cs
-
-showXmlTree (NTree (XAttr an) cs)
-    = showBlank . showQName an . showEq . showQuoteString (xshow cs)
 
 showXmlTree (NTree (XError l e) _)
     = showString "<!-- ERROR (" . shows l . showString "):\n" . showString e . showString "\n-->"
@@ -108,24 +118,20 @@ showXmlTrees'           = foldr (\ x y -> x . showNL . y) id . map showXmlTree
 -- ------------------------------------------------------------
 
 showQName               :: QName -> String -> String
-showQName
-    = showString . qualifiedName
+showQName               = showString . qualifiedName
 
 -- ------------------------------------------------------------
 
 showQuoteString         :: String -> String -> String
 showQuoteString s
-    | '\"' `elem` s
-        = showApos . showString s . showApos
-    | otherwise
-        = showQuot . showString s . showQuot
+    | '\"' `elem` s     = showApos . showString s . showApos
+    | otherwise         = showQuot . showString s . showQuot
 
 
 -- ------------------------------------------------------------
 
-showAttr        :: String -> Attributes -> String -> String
-showAttr k al
-    = showString (fromMaybe "" . lookup k $ al)
+showAttr                :: String -> Attributes -> String -> String
+showAttr k al           = showString (fromMaybe "" . lookup k $ al)
 
 -- ------------------------------------------------------------
 

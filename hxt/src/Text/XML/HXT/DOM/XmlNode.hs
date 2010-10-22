@@ -31,9 +31,9 @@ where
 
 import Control.Monad
 
+import Data.Maybe
 import Data.Tree.NTree.TypeDefs
 
-import Data.Maybe
 
 import Text.XML.HXT.DOM.Interface
 
@@ -41,6 +41,7 @@ class XmlNode a where
     -- discriminating predicates
 
     isText              :: a -> Bool
+    isBlob              :: a -> Bool
     isCharRef           :: a -> Bool
     isEntityRef         :: a -> Bool
     isCmt               :: a -> Bool
@@ -55,6 +56,7 @@ class XmlNode a where
     -- constructor functions for leave nodes
 
     mkText              :: String -> a
+    mkBlob              :: Blob   -> a
     mkCharRef           :: Int    -> a
     mkEntityRef         :: String -> a
     mkCmt               :: String -> a
@@ -65,6 +67,7 @@ class XmlNode a where
     -- selectors
 
     getText             :: a -> Maybe String
+    getBlob             :: a -> Maybe Blob
     getCharRef          :: a -> Maybe Int
     getEntityRef        :: a -> Maybe String
     getCmt              :: a -> Maybe String
@@ -92,6 +95,7 @@ class XmlNode a where
     -- "modifier" functions
 
     changeText          :: (String   -> String)   -> a -> a
+    changeBlob          :: (Blob     -> Blob)     -> a -> a
     changeCmt           :: (String   -> String)   -> a -> a
     changeName          :: (QName    -> QName)    -> a -> a
     changeElemName      :: (QName    -> QName)    -> a -> a
@@ -101,6 +105,7 @@ class XmlNode a where
     changeDTDAttrl      :: (Attributes -> Attributes) -> a -> a
 
     setText             :: String   -> a -> a
+    setBlob             :: Blob     -> a -> a
     setCmt              :: String   -> a -> a
     setName             :: QName    -> a -> a
     setElemName         :: QName    -> a -> a
@@ -112,27 +117,32 @@ class XmlNode a where
     -- default implementations
 
     getName n           = getElemName n `mplus` getAttrName n `mplus` getPiName n
-    getQualifiedName n  = getName n >>= \ n' -> return (qualifiedName n')
-    getUniversalName n  = getName n >>= \ n' -> return (universalName n')
-    getUniversalUri n   = getName n >>= \ n' -> return (universalUri n')
-    getLocalPart n      = getName n >>= \ n' -> return (localPart n')
-    getNamePrefix n     = getName n >>= \ n' -> return (namePrefix n')
-    getNamespaceUri n   = getName n >>= \ n' -> return (namespaceUri n')
+    getQualifiedName n  = getName n >>= return . qualifiedName
+    getUniversalName n  = getName n >>= return . universalName
+    getUniversalUri n   = getName n >>= return . universalUri
+    getLocalPart n      = getName n >>= return . localPart
+    getNamePrefix n     = getName n >>= return . namePrefix
+    getNamespaceUri n   = getName n >>= return . namespaceUri
 
-    setText t           = changeText     (const t)
-    setCmt c            = changeCmt      (const c)
-    setName n           = changeName     (const n)
-    setElemName n       = changeElemName (const n)
-    setElemAttrl al     = changeAttrl    (const al)
-    setAttrName n       = changeAttrName (const n)
-    setPiName   n       = changePiName   (const n)
-    setDTDAttrl al      = changeDTDAttrl (const al)
+    setText             = changeText     . const
+    setBlob             = changeBlob     . const
+    setCmt              = changeCmt      . const
+    setName             = changeName     . const
+    setElemName         = changeElemName . const
+    setElemAttrl        = changeAttrl    . const
+    setAttrName         = changeAttrName . const
+    setPiName           = changePiName   . const
+    setDTDAttrl         = changeDTDAttrl . const
 
 -- XNode and XmlTree are instances of XmlNode
 
 instance XmlNode XNode where
     isText (XText _)            = True
+    isText (XBlob _)            = True
     isText _                    = False
+
+    isBlob (XBlob _)            = True
+    isBlob _                    = False
 
     isCharRef (XCharRef _)      = True
     isCharRef _                 = False
@@ -166,17 +176,22 @@ instance XmlNode XNode where
     isError _                   = False
 
 
-    mkText t                    = XText t
-    mkCharRef c                 = XCharRef c
-    mkEntityRef e               = XEntityRef e
-    mkCmt c                     = XCmt c
-    mkCdata d                   = XCdata d
+    mkText                      = XText
+    mkBlob                      = XBlob
+    mkCharRef                   = XCharRef
+    mkEntityRef                 = XEntityRef
+    mkCmt                       = XCmt
+    mkCdata                     = XCdata
     mkPi n c                    = XPi n (if null c then [] else [mkAttr (mkName a_value) c])
-    mkError l msg               = XError l msg
+    mkError                     = XError
 
 
-    getText (XText t)           = Just t
+    getText (XText t)           = Just   t
+    getText (XBlob b)           = Just . blobToString $ b
     getText _                   = Nothing
+
+    getBlob (XBlob b)           = Just b
+    getBlob _                   = Nothing
 
     getCharRef (XCharRef c)     = Just c
     getCharRef _                = Nothing
@@ -218,28 +233,32 @@ instance XmlNode XNode where
     getErrorMsg (XError _ m)    = Just m
     getErrorMsg _               = Nothing
 
-    changeText cf (XText t)             = XText (cf t)
+    changeText cf (XText t)             = XText . cf $ t
+    changeText cf (XBlob b)             = XText . cf . blobToString $ b
     changeText _ _                      = error "changeText undefined"
 
-    changeCmt cf (XCmt c)               = XCmt (cf c)
+    changeBlob cf (XBlob b)             = XBlob . cf $ b
+    changeBlob _ _                      = error "changeBlob undefined"
+
+    changeCmt cf (XCmt c)               = XCmt  . cf $ c
     changeCmt _ _                       = error "changeCmt undefined"
 
-    changeName cf (XTag n al)           = XTag (cf n) al
-    changeName cf (XAttr n)             = XAttr (cf n)
-    changeName cf (XPi n al)            = XPi (cf n) al
+    changeName cf (XTag n al)           = XTag   (cf n) al
+    changeName cf (XAttr n)             = XAttr . cf $ n
+    changeName cf (XPi n al)            = XPi    (cf n) al
     changeName _ _                      = error "changeName undefined"
 
-    changeElemName cf (XTag n al)       = XTag (cf n) al
+    changeElemName cf (XTag n al)       = XTag   (cf n) al
     changeElemName _ _                  = error "changeElemName undefined"
 
     changeAttrl cf (XTag n al)          = XTag n (cf al)
     changeAttrl cf (XPi  n al)          = XPi  n (cf al)
     changeAttrl _ _                     = error "changeAttrl undefined"
 
-    changeAttrName cf (XAttr n)         = XAttr (cf n)
+    changeAttrName cf (XAttr n)         = XAttr . cf $ n
     changeAttrName _ _                  = error "changeAttrName undefined"
 
-    changePiName cf (XPi n al)          = XPi (cf n) al
+    changePiName cf (XPi n al)          = XPi    (cf n) al
     changePiName _ _                    = error "changeAttrName undefined"
 
     changeDTDAttrl cf (XDTD p al)       = XDTD p (cf al)
@@ -256,6 +275,7 @@ mkDTDNode       = XDTD
 
 instance XmlNode a => XmlNode (NTree a) where
     isText              = isText      . getNode
+    isBlob              = isBlob      . getNode
     isCharRef           = isCharRef   . getNode
     isEntityRef         = isEntityRef . getNode
     isCmt               = isCmt       . getNode
@@ -268,6 +288,7 @@ instance XmlNode a => XmlNode (NTree a) where
     isError             = isError     . getNode
 
     mkText              = mkLeaf . mkText
+    mkBlob              = mkLeaf . mkBlob
     mkCharRef           = mkLeaf . mkCharRef
     mkEntityRef         = mkLeaf . mkEntityRef
     mkCmt               = mkLeaf . mkCmt
@@ -276,6 +297,7 @@ instance XmlNode a => XmlNode (NTree a) where
     mkError l           = mkLeaf . mkError l
 
     getText             = getText       . getNode
+    getBlob             = getBlob       . getNode
     getCharRef          = getCharRef    . getNode
     getEntityRef        = getEntityRef  . getNode
     getCmt              = getCmt        . getNode
@@ -290,14 +312,15 @@ instance XmlNode a => XmlNode (NTree a) where
     getErrorLevel       = getErrorLevel . getNode
     getErrorMsg         = getErrorMsg   . getNode
 
-    changeText cf       = changeNode (changeText cf)
-    changeCmt cf        = changeNode (changeCmt  cf)
-    changeName cf       = changeNode (changeName cf)
-    changeElemName cf   = changeNode (changeElemName cf)
-    changeAttrl cf      = changeNode (changeAttrl cf)
-    changeAttrName cf   = changeNode (changeAttrName cf)
-    changePiName cf     = changeNode (changePiName cf)
-    changeDTDAttrl cf   = changeNode (changeDTDAttrl cf)
+    changeText          = changeNode . changeText
+    changeBlob          = changeNode . changeBlob
+    changeCmt           = changeNode . changeCmt
+    changeName          = changeNode . changeName
+    changeElemName      = changeNode . changeElemName
+    changeAttrl         = changeNode . changeAttrl
+    changeAttrName      = changeNode . changeAttrName
+    changePiName        = changeNode . changePiName
+    changeDTDAttrl      = changeNode . changeDTDAttrl
 
 mkElement       :: QName -> XmlTrees -> XmlTrees -> XmlTree
 mkElement n al  = mkTree (mkElementNode n al)
