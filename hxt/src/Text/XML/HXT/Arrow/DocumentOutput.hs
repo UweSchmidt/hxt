@@ -31,6 +31,8 @@ import Control.Arrow.ArrowTree
 import Control.Arrow.ArrowIO
 import Control.Arrow.ListArrow
 
+import qualified
+       Data.ByteString.Lazy                     as BS
 import Data.String.Unicode                      ( getOutputEncodingFct )
 
 import Text.XML.HXT.DOM.Interface
@@ -59,16 +61,31 @@ import System.IO.Error                          ( try )
 
 -- ------------------------------------------------------------
 --
--- output arrows
+-- | Write the contents of a document tree into an output stream (file or stdout).
+--
+-- If textMode is set, writing is done with Haskell string output, else (default)
+-- writing is done with lazy ByteString output
 
 putXmlDocument  :: Bool -> String -> IOStateArrow s XmlTree XmlTree
 putXmlDocument textMode dst
     = perform putDoc
       where
       putDoc
-          = xshow getChildren
-            >>>
-            arrIO (\ s -> try ( hPutDocument (\h -> hPutStrLn h s)))
+          = ( if textMode
+              then ( xshow getChildren
+                     >>>
+                     arrIO (\ s -> try ( hPutDocument (\h -> hPutStrLn h s)))
+                   )
+              else ( xshowBlob getChildren
+                     >>>
+                     arrIO (\ s -> try ( hPutDocument (\h -> do
+                                                             BS.hPutStr h s
+                                                             BS.hPutStr h (stringToBlob "\n")
+                                                      )
+                                       )
+                           )
+                   )
+            )
             >>>
             ( ( traceMsg 1 ("io error, document not written to " ++ outFile)
                 >>>
@@ -77,7 +94,7 @@ putXmlDocument textMode dst
                 filterErrorMsg
               )
               |||
-              ( traceMsg 2 ("document written to " ++ outFile)
+              ( traceMsg 2 ("document written to " ++ outFile ++ ", textMode = " ++ show textMode)
                 >>>
                 none
               )

@@ -64,6 +64,9 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     isText              :: a XmlTree XmlTree
     isText              = isA XN.isText
 
+    isBlob              :: a XmlTree XmlTree
+    isBlob              = isA XN.isBlob
+
     -- | test for char reference, used during parsing
     isCharRef           :: a XmlTree XmlTree
     isCharRef           = isA XN.isCharRef
@@ -184,6 +187,10 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     mkText              :: a String XmlTree
     mkText              = arr  XN.mkText
 
+    -- | blob node construction arrow
+    mkBlob              :: a Blob XmlTree
+    mkBlob              = arr  XN.mkBlob
+
     -- | char reference construction arrow, useful for document output
     mkCharRef           :: a Int    XmlTree
     mkCharRef           = arr  XN.mkCharRef
@@ -269,6 +276,10 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     -- | constant arrow for text nodes
     txt                 :: String -> a n XmlTree
     txt                 = constA .  XN.mkText
+
+    -- | constant arrow for blob nodes
+    blb                 :: Blob -> a n XmlTree
+    blb                 = constA .  XN.mkBlob
 
     -- | constant arrow for char reference nodes
     charRef             :: Int    -> a n XmlTree
@@ -418,6 +429,10 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     changeText          :: (String -> String) -> a XmlTree XmlTree
     changeText cf       = arr (XN.changeText     cf) `when` isText
 
+    -- | edit the blob of a blob node
+    changeBlob          :: (Blob -> Blob) -> a XmlTree XmlTree
+    changeBlob cf       = arr (XN.changeBlob     cf) `when` isBlob
+
     -- | edit the comment string of a comment node
     changeCmt           :: (String -> String) -> a XmlTree XmlTree
     changeCmt  cf       = arr (XN.changeCmt      cf) `when` isCmt
@@ -554,6 +569,10 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     -- | apply an arrow to the input and convert the resulting XML trees into a string representation
     xshow               :: a n XmlTree -> a n String
     xshow f             = f >. XS.xshow
+
+    -- | apply an arrow to the input and convert the resulting XML trees into a string representation
+    xshowBlob           :: a n XmlTree -> a n Blob
+    xshowBlob f         = f >. XS.xshowBlob
 
 {- | Document Type Definition arrows
 

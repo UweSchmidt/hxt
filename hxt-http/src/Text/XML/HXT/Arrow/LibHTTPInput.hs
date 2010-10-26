@@ -69,7 +69,7 @@ getHTTPNativeContents
 
 addContent        :: (Attributes, B.ByteString) -> IOSArrow XmlTree XmlTree
 addContent (al, bc)
-    = replaceChildren (txt $ C.unpack bc)       -- add the contents, TODO eliminate unpack
+    = replaceChildren (blob bc)                 -- add the contents
       >>>
       seqA (map (uncurry addAttr) al)           -- add the meta info (HTTP headers, ...)
 

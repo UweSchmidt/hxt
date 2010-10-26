@@ -18,8 +18,6 @@
 module Text.XML.HXT.Arrow.ExpatInterface
 where
 
--- import qualified Data.ByteString.Lazy                   as L
-import qualified Data.ByteString.Lazy.Char8             as LC
 import           Text.XML.Expat.Tree
 
 import           Text.XML.HXT.Core
@@ -107,11 +105,9 @@ parseExpat strict       = parse1 $<< ( getAttrValue  transferEncoding
                                    )
 
         parse2          :: IOSArrow XmlTree (XmlTree, Maybe XMLParseError)
-        parse2          = xshow X.getChildren
+        parse2          = xshowBlob X.getChildren       -- expat parser wants bytestrings as input
                           >>>
-                          arr ( LC.pack            -- TODO eliminate this, extend XNode with bytestring
-                                >>>
-                                parse parseOptions
+                          arr ( parse parseOptions
                                 >>>
                                 first uNodeStringToXmlTree
                               )

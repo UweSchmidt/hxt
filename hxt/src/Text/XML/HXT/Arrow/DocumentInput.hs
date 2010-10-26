@@ -32,10 +32,6 @@ import           Control.Arrow.ArrowTree
 import           Control.Arrow.ArrowIO
 import           Control.Arrow.ListArrow
 
-import qualified Data.ByteString.Lazy           as B
-import qualified Data.ByteString.Lazy.Char8     as C
-
-
 import           Data.List                      ( isPrefixOf )
 import           Data.String.Unicode            ( getDecodingFct
                                                 , guessEncoding
@@ -157,9 +153,9 @@ addMimeType
     uriToMime mtt
         = arr $ ( \ uri -> extensionToMimeType (drop 1 . takeExtension $ uri) mtt )
 
-addTxtContent   :: B.ByteString -> IOStateArrow s XmlTree XmlTree
+addTxtContent   :: Blob -> IOStateArrow s XmlTree XmlTree
 addTxtContent bc
-    = replaceChildren (txt $ C.unpack bc)	-- TODO: eliminate unpack at this point
+    = replaceChildren (blb bc)
       >>>
       addAttr transferMessage "OK"
       >>>

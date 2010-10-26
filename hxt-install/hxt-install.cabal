@@ -112,9 +112,6 @@ Executable hxt-test
   if flag(expat)
     Build-depends:  hxt-expat     >= 9.1 && < 10
 
-  if flag(expat)
-    Build-depends:  hxt-expat     >= 9   && < 10
-
   if flag(relaxng)
     Build-depends:  hxt-relaxng   >= 9   && < 10
 
