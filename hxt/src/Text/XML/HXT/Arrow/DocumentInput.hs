@@ -143,9 +143,15 @@ addInputError al e
 
 addMimeType     :: IOStateArrow s XmlTree XmlTree
 addMimeType
-    = addMime $< ( getAttrValue transferURI
-                   >>>
-                   ( uriToMime $< getMimeTypeTable )
+    = addMime $< ( ( getSysVar theFileMimeType
+                     >>>
+                     isA (not . null)
+                   )
+                   `orElse`
+                   ( getAttrValue transferURI
+                     >>>
+                     ( uriToMime $< getMimeTypeTable )
+                   )
                  )
     where
     addMime mt

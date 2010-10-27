@@ -108,6 +108,7 @@ initialParseConfig              = XIOPcfg
                                   { xioMimeTypes                = defaultMimeTypeTable
                                   , xioMimeTypeFile             = ""
                                   , xioAcceptedMimeTypes        = []
+                                  , xioFileMimeType             = ""
                                   , xioWarnings                 = True
                                   , xioRemoveWS                 = False
                                   , xioParseByMimeType          = False
