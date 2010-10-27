@@ -49,6 +49,13 @@ withAcceptedMimeTypes           = setS theAcceptedMimeTypes
 withMimeTypeFile                :: String -> SysConfig
 withMimeTypeFile                = setS theMimeTypeFile
 
+-- | Force a given mime type for all file contents.
+--
+-- The mime type for file access will then not be computed by looking into a mime.types file
+
+withFileMimeType                :: String -> SysConfig
+withFileMimeType                = setS theFileMimeType
+
 -- | @withWarnings yes/no@ : system option, issue warnings during reading, HTML parsing and processing,
 -- default is 'yes'
 

@@ -183,6 +183,12 @@ example12s      = ( "example12.rng"
                     ]
                   )
 
+example13o      :: (String, String)
+example13o      = ( "example13.o"
+                  , "<foo>\228</foo>"
+                  )
+
+
 examples        :: [(String, String)]
 examples        = [ example1
                   , example2
@@ -200,6 +206,7 @@ examples        = [ example1
                   , example12
                   , example12i
                   , example12s
+                  , example13o
                   ]
 
 urlw3
@@ -402,6 +409,14 @@ configParseTests
       , ( "example11.txt"
         , [withIgnoreNoneXmlContents yes, withParseByMimeType yes]
         , ""
+        )
+      , ( "example13.o"
+        , [withValidate no]
+        , "<foo>\195\164</foo>"         -- no utf-8 decoding
+        )
+      , ( "example13.o"
+        , [withValidate no, withFileMimeType "text/xml"]
+        , "<foo>\228</foo>"             -- utf-8 decoding forced
         )
       ]
 

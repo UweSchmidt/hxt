@@ -191,6 +191,7 @@ data XIOInputConfig     = XIOIcgf { xioStrictInput              :: ! Bool
 data XIOParseConfig     = XIOPcfg { xioMimeTypes                ::   MimeTypeTable
                                   , xioMimeTypeFile             ::   String
                                   , xioAcceptedMimeTypes        ::   [String]
+                                  , xioFileMimeType             ::   String
                                   , xioWarnings                 :: ! Bool
                                   , xioRemoveWS                 :: ! Bool
                                   , xioParseByMimeType          :: ! Bool
@@ -574,6 +575,13 @@ theAcceptedMimeTypes            = theParseConfig
                                   >>>
                                   S { getS = xioAcceptedMimeTypes
                                     , setS = \ x s -> s { xioAcceptedMimeTypes = x }
+                                    }
+
+theFileMimeType                 :: Selector XIOSysState String
+theFileMimeType                 = theParseConfig
+                                  >>>
+                                  S { getS = xioFileMimeType
+                                    , setS = \ x s -> s { xioFileMimeType = x }
                                     }
 
 theWarnings                     :: Selector XIOSysState Bool

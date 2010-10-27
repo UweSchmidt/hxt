@@ -117,6 +117,7 @@ module Text.XML.HXT.Arrow.XmlState
     , withDefaultBaseURI
     , withEncodingErrors
     , withErrors
+    , withFileMimeType
     , withIgnoreNoneXmlContents
     , withIndent
     , withInputEncoding
