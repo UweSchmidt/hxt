@@ -32,9 +32,9 @@ import Control.Arrow.ArrowNF
 import Control.Arrow.ArrowTree
 
 import Control.DeepSeq
-import Control.Exception      		( SomeException
-					, try
-					)
+import Control.Exception                ( SomeException
+                                        , try
+                                        )
 
 -- ------------------------------------------------------------
 
@@ -122,14 +122,15 @@ instance ArrowIO IOLA where
                                        return [res]
 
 instance ArrowExc IOLA where
-    tryA f      = IOLA $ \ x -> do
-				res <- try' $ runIOLA f x
-				return $ case res of
-				  Left  er -> [Left er]
-				  Right ys -> [Right x' | x' <- ys]
-	where
-	try'    :: IO a -> IO (Either SomeException a)
-	try'    = try
+    tryA f              = IOLA $ \ x -> do
+                                        res <- try' $ runIOLA f x
+                                        return $
+                                          case res of
+                                          Left  er -> [Left er]
+                                          Right ys -> [Right x' | x' <- ys]
+        where
+        try'            :: IO a -> IO (Either SomeException a)
+        try'            = try
 
 instance ArrowIOIf IOLA where
     isIOA p             = IOLA $ \x -> do

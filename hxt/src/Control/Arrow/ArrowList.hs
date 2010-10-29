@@ -39,7 +39,7 @@ infixl 2 $<$
 
 -- | The interface for list arrows
 --
--- Only 'mkA', 'arr2A', 'isA' '(>>.)' don't have default implementations
+-- Only 'mkA', 'isA' '(>>.)' don't have default implementations
 
 class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
 
@@ -67,6 +67,7 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
     -- | construction of a 2 argument arrow from a singe argument arrow
 
     arr2A               :: (b -> a c d) -> a (b, c) d
+    arr2A f             = first (arr f) >>> app
 
     -- | constructor for a list arrow from a function with a list as result
 
