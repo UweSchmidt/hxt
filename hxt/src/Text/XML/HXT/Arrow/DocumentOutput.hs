@@ -183,9 +183,21 @@ encodeDocument supressXmlPi defaultEnc
 
 -- ------------------------------------------------------------
 
+isBinaryDoc               :: LA XmlTree XmlTree
+isBinaryDoc               = ( ( getAttrValue transferMimeType >>^ stringToLower )
+                              >>>
+                              isA (\ t -> not (null t || isTextMimeType t || isXmlMimeType t))
+                            )
+                            `guards` this
+
 getOutputEncoding'      :: String -> String -> LA XmlTree String
 getOutputEncoding' defaultEnc defaultEnc2
-    =  catA [ getChildren                       -- 1. guess: evaluate <?xml ... encoding="..."?>
+    =  catA [ isBinaryDoc
+              >>>                               -- 0. guess: binary data found: no encoding at all
+              constA isoLatin1                  --           the content should usually be a blob
+                                                --           this handling is like the decoding in DocumentInput,
+                                                --           there nothing is decoded for non text or non xml contents
+            , getChildren                       -- 1. guess: evaluate <?xml ... encoding="..."?>
               >>>
               ( ( isPi >>> hasName t_xml )
                 `guards`
@@ -213,13 +225,33 @@ encodeDocument' supressXmlPi defaultEnc
                                   )
                            )
                            >>>
-                           replaceChildren ( xshow getChildren
-                                             >>>
-                                             arr ef
-                                             >>>
-                                             mkText
-                                           )
+                           ( encodeBlob `orElse` encodeDoc ef )
                            >>>
                            addAttr a_output_encoding encodingScheme
+        where
+        encodeDoc ef    = replaceChildren
+                          ( xshow getChildren
+                            >>>
+                            arr ef
+                            >>>
+                            mkText
+                          )
+        -- if encoding scheme is isolatin1 and the contents is a single blob (bytestring)
+        -- the encoding is the identity.
+        -- This optimization enables processing (copying) of none XML contents
+        -- without any conversions from and to strings
+        encodeBlob
+            | encodingScheme /= isoLatin1
+                        = none
+            | otherwise = childIsSingleBlob `guards` this
+            where
+            childIsSingleBlob
+                        = listA getChildren
+                          >>>
+                          isA (length >>> (== 1))
+                          >>>
+                          unlistA
+                          >>>
+                          isBlob
 
 -- ------------------------------------------------------------
