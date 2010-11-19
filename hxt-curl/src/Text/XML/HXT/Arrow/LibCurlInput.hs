@@ -28,7 +28,7 @@ import           Control.Arrow.ArrowTree
 import           Control.Arrow.ArrowIO
 
 import qualified Data.ByteString.Lazy           as B
-import qualified Data.ByteString.Lazy.Char8     as C
+-- import qualified Data.ByteString.Lazy.Char8     as C
 
 import           System.Console.GetOpt
 
@@ -81,7 +81,7 @@ getLibCurlContents
 
 addContent        :: (Attributes, B.ByteString) -> IOSArrow XmlTree XmlTree
 addContent (al, bc)
-    = replaceChildren (blob bc)                 -- add the contents
+    = replaceChildren (blb bc)                  -- add the contents
       >>>
       seqA (map (uncurry addAttr) al)           -- add the meta info (HTTP headers, ...)
 
