@@ -4,11 +4,11 @@
 
 {- |
    Module     : Data.Tree.NTree.TypeDefs
-   Copyright  : Copyright (C) 2005-2008 Uwe Schmidt
+   Copyright  : Copyright (C) 2005-2010 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
-   Stability  : experimental
+   Stability  : stable
    Portability: portable
 
    Interface definition for trees
@@ -78,14 +78,9 @@ instance Tree NTree where
 
     foldTree        f ~(NTree n cs)     = f n (map (foldTree f) cs)
 
-    nodesTree           = foldTree (\ n rs -> n : concat rs)
-    depthTree           = foldTree (\ _ rs -> 1 + maximum (0 : rs))
-    cardTree            = foldTree (\ _ rs -> 1 + sum rs)
-    formatTree nf n     = formatNTreeF nf (showString "---") (showString "   ") n ""
-
 -- ------------------------------------------------------------
 -- |
--- convert a tree into a pseudo graphical string reprsentation
+-- convert a tree into a pseudo graphical string representation
 
 formatNTreeF    :: (node -> String) -> (String -> String) -> (String -> String) -> NTree node -> String -> String
 

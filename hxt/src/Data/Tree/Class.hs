@@ -74,19 +74,23 @@ class Tree t where
     -- | all nodes of a tree
 
     nodesTree           ::                     t a -> [a]
+    nodesTree           = foldTree (\ n rs -> n : concat rs)
 
     -- | depth of a tree
 
     depthTree           ::                     t a -> Int
+    depthTree           = foldTree (\ _ rs -> 1 + maximum (0 : rs))
 
     -- | number of nodes in a tree
 
     cardTree            ::                     t a -> Int
+    cardTree            = foldTree (\ _ rs -> 1 + sum rs)
 
     -- | format tree for readable trace output
     --
     -- a /graphical/ representation of the tree in text format
 
     formatTree          ::    (a -> String) -> t a -> String
+    formatTree nf n     = formatNTreeF nf (showString "---") (showString "   ") n ""
 
 -- ------------------------------------------------------------
