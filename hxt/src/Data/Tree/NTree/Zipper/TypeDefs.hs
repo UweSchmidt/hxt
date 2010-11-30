@@ -1,11 +1,30 @@
-module Data_Tree_NTree_Zipper_TypeDefs
+-- ------------------------------------------------------------
+
+{- |
+   Module     : Data.Tree.NTree.Zipper.TypeDefs
+   Copyright  : Copyright (C) 2010 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
+   Stability  : stable
+   Portability: portable
+
+   Implementation of navigateble trees for
+   rose trees. The implementation is done with zippers.
+   A description and introductory tutorial about zippers
+   can be found in <http://learnyouahaskell.com/zippers>
+-}
+
+-- ------------------------------------------------------------
+
+module Data.Tree.NTree.Zipper.TypeDefs
     ( NTZipper
     , toNTZipper
     , fromNTZipper
     )
 where
 
-import Data_Tree_NavigatableTree_Class
+import Data.Tree.NavigatableTree.Class
 
 import Data.Tree.NTree.TypeDefs
 

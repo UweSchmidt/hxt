@@ -2,10 +2,10 @@ module Zipper
 where
 
 import Data.Tree.NTree.TypeDefs
-import Text.XML.HXT.DOM.XmlNode
+import Data.Tree.NTree.Zipper.TypeDefs
+import Data.Tree.NavigatableTree.Class
 
-import Data_Tree_NavigatableTree_Class
-import Data_Tree_NTree_Zipper_TypeDefs
+import Text.XML.HXT.DOM.XmlNode
 
 -- import Text.XML.HXT.Core
 

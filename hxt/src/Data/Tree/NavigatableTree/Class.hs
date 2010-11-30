@@ -1,4 +1,22 @@
-module Data_Tree_NavigatableTree_Class
+-- ------------------------------------------------------------
+
+{- |
+   Module     : Data.Tree.NavigatableTree.Class
+   Copyright  : Copyright (C) 2010 Uwe Schmidt
+   License    : MIT
+
+   Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
+   Stability  : experimental
+   Portability: portable
+
+   Interface definition for navigatable trees.
+   Navigatable trees need to have operations to move up, down, left and right.
+   With these elementary operations, the XPath axises can be defined.
+-}
+
+-- ------------------------------------------------------------
+
+module Data.Tree.NavigatableTree.Class
 where
 
 import Control.Arrow		( (>>>) )

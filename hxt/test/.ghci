@@ -1,0 +1,4 @@
+:set  -ignore-package hxt
+:set -i.:../src
+:set -XFlexibleInstances
+:load Zipper
