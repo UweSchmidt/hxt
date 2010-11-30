@@ -1,166 +1,45 @@
-module Data_Tree_NTree_Zipper_TypeDefs
+module Zipper
 where
 
-import Control.Monad
-
 import Data.Tree.NTree.TypeDefs
+import Text.XML.HXT.DOM.XmlNode
 
-data NTZipper a 	= NTZ
-                          { ntree   :: (NTree a)
-                          , context :: (NTBreadCrumbs a)
-                          }
-			  deriving (Show)
+import Data_Tree_NavigatableTree_Class
+import Data_Tree_NTree_Zipper_TypeDefs
 
-type NTBreadCrumbs a 	= [NTCrumb a]
+-- import Text.XML.HXT.Core
 
-data NTCrumb a 		= NTC
-                          { leftSide  :: (NTrees a)
-                          , node      :: a
-                          , rightSide :: (NTrees a)
-                          }
-			  deriving (Show)
-
-toNTZipper		:: NTree a -> NTZipper a
-toNTZipper t            = NTZ t []
-
-{-# INLINE toNTZipper #-}
-
-fromNTZipper            :: NTZipper a -> NTree a
-fromNTZipper            = ntree . head . up
-
-{-# INLINE fromNTZipper #-}
+import Data.Maybe
 
 -- ------------------------------------------------------------
 
-up                     	:: NTZipper a -> [NTZipper a]
-up z
-    | isTop z		= []
-    | otherwise         = [NTZ (up1 t bc) bcs]
-    where
-    NTZ t (bc : bcs)    = z
-
-{-# INLINE up #-}
-
-down                    :: NTZipper a -> [NTZipper a]
-down (NTZ (NTree n cs) bcs)
-          | null cs	= []
-          | otherwise	= [NTZ (head cs) (NTC [] n (tail cs) : bcs)]
-
-{-# INLINE down #-}
-
-right                   :: NTZipper a -> [NTZipper a]
-right z
-    | isTop z		= []
-    | null rs           = []
-    | otherwise         = [NTZ t' (bc' : bcs)]
-    where
-    (NTZ t (bc : bcs))	= z
-    (NTC ls n rs)       = bc
-    t'                  = head rs
-    bc'                 = NTC (t : ls) n (tail rs)
-
-{-# INLINE right #-}
-
-left                    :: NTZipper a -> [NTZipper a]
-left z
-    | isTop z		= []
-    | null ls           = []
-    | otherwise         = [NTZ t' (bc' : bcs)]
-    where
-    (NTZ t (bc : bcs))	= z
-    (NTC ls n rs)       = bc
-    t'                  = head ls
-    bc'                 = NTC (tail ls) n (t : rs)
-
-{-# INLINE left #-}
-
-next                    :: NTZipper a -> [NTZipper a]
-next z                  = take 1 (down z ++ (concatMap right . pathStar up) z)
-
-top                     :: NTZipper a -> NTZipper a
-top z
-    | isTop z		= z
-    | otherwise         = top $
-                          NTZ (up1 t bc) bcs
-    where
-    NTZ t (bc : bcs)    = z
-
-isTop                   :: NTZipper a -> Bool
-isTop (NTZ _ [])        = True
-isTop _                 = False
-
-{-# INLINE isTop #-}
-
-up1			:: NTree a -> NTCrumb a -> NTree a
-up1 t (NTC ls n rs)	= NTree n (foldl (flip (:)) (t : rs) ls)
-
-{-# INLINE up1 #-}
-
-pathStar		:: (a -> [a]) -> (a -> [a])
-pathStar f x            = x : concatMap (pathStar f) (f x)
-
-pathPlus                :: (a -> [a]) -> (a -> [a])
-pathPlus f x            = concatMap (pathStar f) (f x)
-
-{-# INLINE pathPlus #-}
-
--- ------------------------------------------------------------
--- XPath axis
-
-parentAxis              :: NTZipper a -> [NTZipper a]
-parentAxis              = up
-
-ancestorAxis            :: NTZipper a -> [NTZipper a]
-ancestorAxis            = pathPlus up
-
-ancestorOrSelfAxis      :: NTZipper a -> [NTZipper a]
-ancestorOrSelfAxis      = pathStar up
-
-childAxis               :: NTZipper a -> [NTZipper a]
-childAxis               = down >=> pathStar right
-
-descendantAxis          :: NTZipper a -> [NTZipper a]
-descendantAxis          = undefined -- tail . preorderNT             -- concatMap preorderNT . childAxis
-
-descendantOrSelfAxis    :: NTZipper a -> [NTZipper a]
-descendantOrSelfAxis    = undefined -- preorderNT
-
-followingSiblingAxis    :: NTZipper a -> [NTZipper a]
-followingSiblingAxis    = pathPlus right
-
-precedingSiblingAxis    :: NTZipper a -> [NTZipper a]
-precedingSiblingAxis    = pathPlus left                               -- reverse . pathPlus left
-
-selfAxis                :: NTZipper a -> [NTZipper a]
-selfAxis                = (:[])
-
-followingAxis           :: NTZipper a -> [NTZipper a]
-followingAxis           = undefined -- preorderNT     `o'` followingSiblingAxis `o'` ancestorOrSelfAxis
-
-precedingAxis           :: NTZipper a -> [NTZipper a]
-precedingAxis           = undefined -- revPreorderNT  `o'` precedingSiblingAxis `o'` ancestorOrSelfAxis
-
-
--- ------------------------------------------------------------
-
-instance Functor NTZipper where
-    fmap f (NTZ t xs)	= NTZ (fmap f t) (map (fmap f) xs)
-
-instance Functor NTCrumb where
-    fmap f (NTC xs x ys)= NTC (map (fmap f) xs) (f x) (map (fmap f) ys)
-
--- ------------------------------------------------------------
-
-t :: NTree Int
-t = NTree 1 [NTree 11 []
-	    ,NTree 12 [NTree 121 []
-		      ,NTree 122 []
-		      ]
+t0 :: NTree Int
+t0 = NTree 1 [NTree 11 []
+	     ,NTree 12 [NTree 121 [NTree 1211 []
+                                  ,NTree 1212 []
+                                  ]
+		       ,NTree 122 [NTree 1221 []]
+		       ]
+             ,NTree 13 []
+             ,NTree 14 [NTree 141 []]
 	    ]
 
-(>>>) f g x = do
-	      y <- f x
-	      z <- g y
-	      return z
+nt0, nt1 :: NTZipper Int
+nt0 = fromJust . mvRight . fromJust . mvDown $ toNTZipper t0
+nt1 = fromJust . mvRight . fromJust . mvDown $ nt0
 
-po t = map (getNode . ntree) $ pathStar next $ (toNTZipper t)
+{-
+po t = map (NT.getNode . ntree) $ pathStar next $ NT.changeChildren reverse $ (toNTZipper t)
+
+t2 = runLA (arr toNTZipper >>> processTopDown (changeNode (+1)) >>> arr fromNTZipper) t
+t3 = runLA
+     ( arr toNTZipper
+       >>>
+       arrL down >>> arrL toTheRight >>> (change $< parNode) >>> arrL up
+       >>>
+       arr fromNTZipper
+     ) t
+    where
+    parNode = arrL up >>> arr fromNTZipper >>> getNode
+    change x = changeNode (+(1000 * x)) 
+-}

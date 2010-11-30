@@ -140,27 +140,35 @@ instance XmlNode XNode where
     isText (XText _)            = True
     isText (XBlob _)            = True
     isText _                    = False
+    {-# INLINE isText #-}
 
     isBlob (XBlob _)            = True
     isBlob _                    = False
+    {-# INLINE isBlob #-}
 
     isCharRef (XCharRef _)      = True
     isCharRef _                 = False
+    {-# INLINE isCharRef #-}
 
     isEntityRef (XEntityRef _)  = True
     isEntityRef _               = False
+    {-# INLINE isEntityRef #-}
 
     isCmt (XCmt _)              = True
     isCmt _                     = False
+    {-# INLINE isCmt #-}
 
     isCdata (XCdata _)          = True
     isCdata _                   = False
+    {-# INLINE isCdata #-}
 
     isPi (XPi _ _)              = True
     isPi _                      = False
+    {-# INLINE isPi #-}
 
     isElem (XTag _ _)           = True
     isElem _                    = False
+    {-# INLINE isElem #-}
 
     isRoot t                    = isElem t
                                   &&
@@ -168,168 +176,252 @@ instance XmlNode XNode where
 
     isDTD (XDTD _ _)            = True
     isDTD _                     = False
+    {-# INLINE isDTD #-}
 
     isAttr (XAttr _)            = True
     isAttr _                    = False
+    {-# INLINE isAttr #-}
 
     isError (XError _ _)        = True
     isError _                   = False
+    {-# INLINE isError #-}
 
 
     mkText                      = XText
+    {-# INLINE mkText #-}
     mkBlob                      = XBlob
+    {-# INLINE mkBlob #-}
     mkCharRef                   = XCharRef
+    {-# INLINE mkCharRef #-}
     mkEntityRef                 = XEntityRef
+    {-# INLINE mkEntityRef #-}
     mkCmt                       = XCmt
+    {-# INLINE mkCmt #-}
     mkCdata                     = XCdata
+    {-# INLINE mkCdata #-}
     mkPi n c                    = XPi n (if null c then [] else [mkAttr (mkName a_value) c])
+
     mkError                     = XError
+    {-# INLINE mkError #-}
 
 
     getText (XText t)           = Just   t
     getText (XBlob b)           = Just . blobToString $ b
     getText _                   = Nothing
+    {-# INLINE getText #-}
 
     getBlob (XBlob b)           = Just b
     getBlob _                   = Nothing
+    {-# INLINE getBlob #-}
 
     getCharRef (XCharRef c)     = Just c
     getCharRef _                = Nothing
+    {-# INLINE getCharRef #-}
 
     getEntityRef (XEntityRef e) = Just e
     getEntityRef _              = Nothing
+    {-# INLINE getEntityRef #-}
 
     getCmt (XCmt c)             = Just c
     getCmt _                    = Nothing
+    {-# INLINE getCmt #-}
 
     getCdata (XCdata d)         = Just d
     getCdata _                  = Nothing
+    {-# INLINE getCdata #-}
 
     getPiName (XPi n _)         = Just n
     getPiName _                 = Nothing
+    {-# INLINE getPiName #-}
 
     getPiContent (XPi _ c)      = Just c
     getPiContent _              = Nothing
+    {-# INLINE getPiContent #-}
 
     getElemName (XTag n _)      = Just n
     getElemName _               = Nothing
+    {-# INLINE getElemName #-}
 
     getAttrl (XTag _ al)        = Just al
     getAttrl (XPi  _ al)        = Just al
     getAttrl _                  = Nothing
+    {-# INLINE getAttrl #-}
 
     getDTDPart (XDTD p _)       = Just p
     getDTDPart _                = Nothing
+    {-# INLINE getDTDPart #-}
 
     getDTDAttrl (XDTD _ al)     = Just al
     getDTDAttrl _               = Nothing
+    {-# INLINE getDTDAttrl #-}
 
     getAttrName (XAttr n)       = Just n
     getAttrName _               = Nothing
+    {-# INLINE getAttrName #-}
 
     getErrorLevel (XError l _)  = Just l
     getErrorLevel _             = Nothing
+    {-# INLINE getErrorLevel #-}
 
     getErrorMsg (XError _ m)    = Just m
     getErrorMsg _               = Nothing
+    {-# INLINE getErrorMsg #-}
 
     changeText cf (XText t)             = XText . cf $ t
     changeText cf (XBlob b)             = XText . cf . blobToString $ b
     changeText _ _                      = error "changeText undefined"
+    {-# INLINE changeText #-}
 
     changeBlob cf (XBlob b)             = XBlob . cf $ b
     changeBlob _ _                      = error "changeBlob undefined"
+    {-# INLINE changeBlob #-}
 
     changeCmt cf (XCmt c)               = XCmt  . cf $ c
     changeCmt _ _                       = error "changeCmt undefined"
+    {-# INLINE changeCmt #-}
 
     changeName cf (XTag n al)           = XTag   (cf n) al
     changeName cf (XAttr n)             = XAttr . cf $ n
     changeName cf (XPi n al)            = XPi    (cf n) al
     changeName _ _                      = error "changeName undefined"
+    {-# INLINE changeName #-}
 
     changeElemName cf (XTag n al)       = XTag   (cf n) al
     changeElemName _ _                  = error "changeElemName undefined"
+    {-# INLINE changeElemName #-}
 
     changeAttrl cf (XTag n al)          = XTag n (cf al)
     changeAttrl cf (XPi  n al)          = XPi  n (cf al)
     changeAttrl _ _                     = error "changeAttrl undefined"
+    {-# INLINE changeAttrl #-}
 
     changeAttrName cf (XAttr n)         = XAttr . cf $ n
     changeAttrName _ _                  = error "changeAttrName undefined"
+    {-# INLINE changeAttrName #-}
 
     changePiName cf (XPi n al)          = XPi    (cf n) al
     changePiName _ _                    = error "changeAttrName undefined"
+    {-# INLINE changePiName #-}
 
     changeDTDAttrl cf (XDTD p al)       = XDTD p (cf al)
     changeDTDAttrl _ _                  = error "changeDTDAttrl undefined"
+    {-# INLINE changeDTDAttrl #-}
 
 mkElementNode   :: QName -> XmlTrees -> XNode
 mkElementNode   = XTag
+{-# INLINE mkElementNode #-}
 
 mkAttrNode      :: QName -> XNode
 mkAttrNode      = XAttr
+{-# INLINE mkAttrNode #-}
 
 mkDTDNode       :: DTDElem -> Attributes -> XNode
 mkDTDNode       = XDTD
+{-# INLINE mkDTDNode #-}
 
-instance XmlNode a => XmlNode (NTree a) where
+instance (XmlNode a, Tree t) => XmlNode (t a) where
     isText              = isText      . getNode
+    {-# INLINE isText #-}
     isBlob              = isBlob      . getNode
+    {-# INLINE isBlob #-}
     isCharRef           = isCharRef   . getNode
+    {-# INLINE isCharRef #-}
     isEntityRef         = isEntityRef . getNode
+    {-# INLINE isEntityRef #-}
     isCmt               = isCmt       . getNode
+    {-# INLINE isCmt #-}
     isCdata             = isCdata     . getNode
+    {-# INLINE isCdata #-}
     isPi                = isPi        . getNode
+    {-# INLINE isPi #-}
     isElem              = isElem      . getNode
+    {-# INLINE isElem #-}
     isRoot              = isRoot      . getNode
+    {-# INLINE isRoot #-}
     isDTD               = isDTD       . getNode
+    {-# INLINE isDTD #-}
     isAttr              = isAttr      . getNode
+    {-# INLINE isAttr #-}
     isError             = isError     . getNode
+    {-# INLINE isError #-}
 
     mkText              = mkLeaf . mkText
+    {-# INLINE mkText #-}
     mkBlob              = mkLeaf . mkBlob
+    {-# INLINE mkBlob #-}
     mkCharRef           = mkLeaf . mkCharRef
+    {-# INLINE mkCharRef #-}
     mkEntityRef         = mkLeaf . mkEntityRef
+    {-# INLINE mkEntityRef #-}
     mkCmt               = mkLeaf . mkCmt
+    {-# INLINE mkCmt #-}
     mkCdata             = mkLeaf . mkCdata
+    {-# INLINE mkCdata #-}
     mkPi n              = mkLeaf . mkPi n
+    {-# INLINE mkPi #-}
     mkError l           = mkLeaf . mkError l
+    {-# INLINE mkError #-}
 
     getText             = getText       . getNode
+    {-# INLINE getText #-}
     getBlob             = getBlob       . getNode
+    {-# INLINE getBlob #-}
     getCharRef          = getCharRef    . getNode
+    {-# INLINE getCharRef #-}
     getEntityRef        = getEntityRef  . getNode
+    {-# INLINE getEntityRef #-}
     getCmt              = getCmt        . getNode
+    {-# INLINE getCmt #-}
     getCdata            = getCdata      . getNode
+    {-# INLINE getCdata #-}
     getPiName           = getPiName     . getNode
+    {-# INLINE getPiName #-}
     getPiContent        = getPiContent  . getNode
+    {-# INLINE getPiContent #-}
     getElemName         = getElemName   . getNode
+    {-# INLINE getElemName #-}
     getAttrl            = getAttrl      . getNode
+    {-# INLINE getAttrl #-}
     getDTDPart          = getDTDPart    . getNode
+    {-# INLINE getDTDPart #-}
     getDTDAttrl         = getDTDAttrl   . getNode
+    {-# INLINE getDTDAttrl #-}
     getAttrName         = getAttrName   . getNode
+    {-# INLINE getAttrName #-}
     getErrorLevel       = getErrorLevel . getNode
+    {-# INLINE getErrorLevel #-}
     getErrorMsg         = getErrorMsg   . getNode
+    {-# INLINE getErrorMsg #-}
 
     changeText          = changeNode . changeText
+    {-# INLINE changeText #-}
     changeBlob          = changeNode . changeBlob
+    {-# INLINE changeBlob #-}
     changeCmt           = changeNode . changeCmt
+    {-# INLINE changeCmt #-}
     changeName          = changeNode . changeName
+    {-# INLINE changeName #-}
     changeElemName      = changeNode . changeElemName
+    {-# INLINE changeElemName #-}
     changeAttrl         = changeNode . changeAttrl
+    {-# INLINE changeAttrl #-}
     changeAttrName      = changeNode . changeAttrName
+    {-# INLINE changeAttrName #-}
     changePiName        = changeNode . changePiName
+    {-# INLINE changePiName #-}
     changeDTDAttrl      = changeNode . changeDTDAttrl
+    {-# INLINE changeDTDAttrl #-}
 
 mkElement       :: QName -> XmlTrees -> XmlTrees -> XmlTree
 mkElement n al  = mkTree (mkElementNode n al)
+{-# INLINE mkElement #-}
 
 mkRoot          :: XmlTrees -> XmlTrees -> XmlTree
 mkRoot al       = mkTree (mkElementNode (mkName t_root) al)
 
 mkAttr          :: QName -> XmlTrees -> XmlTree
 mkAttr n        = mkTree (mkAttrNode n)
+{-# INLINE mkAttr #-}
 
 mkDTDElem       :: DTDElem -> Attributes -> XmlTrees -> XmlTree
 mkDTDElem e al  = mkTree (mkDTDNode e al)

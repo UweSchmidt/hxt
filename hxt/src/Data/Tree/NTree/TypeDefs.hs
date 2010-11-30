@@ -51,6 +51,7 @@ type NTrees   a = [NTree a]
 
 instance (NFData a) => NFData (NTree a) where
     rnf (NTree n cl)                    = rnf n `seq` rnf cl
+    {-# INLINE rnf #-}
 
 instance (Binary a) => Binary (NTree a) where
     put (NTree n cs)    = put n >> put cs
@@ -63,54 +64,26 @@ instance (Binary a) => Binary (NTree a) where
 
 instance Functor NTree where
     fmap f ~(NTree n cl)                = NTree (f n) (map (fmap f) cl)
+    {-# INLINE fmap #-}
 
 
 -- | Implementation of "Data.Tree.Class" interface for rose trees
 
 instance Tree NTree where
     mkTree n cl                         = NTree n cl
+    {-# INLINE mkTree #-}
 
     getNode           ~(NTree n _ )     = n
+    {-# INLINE getNode #-}
     getChildren       ~(NTree _ cl)     = cl
+    {-# INLINE getChildren #-}
 
     changeNode     cf ~(NTree n cl)     = NTree (cf n) cl
+    {-# INLINE changeNode #-}
     changeChildren cf ~(NTree n cl)     = NTree n (cf cl)
+    {-# INLINE changeChildren #-}
 
     foldTree        f ~(NTree n cs)     = f n (map (foldTree f) cs)
-
--- ------------------------------------------------------------
--- |
--- convert a tree into a pseudo graphical string representation
-
-formatNTreeF    :: (node -> String) -> (String -> String) -> (String -> String) -> NTree node -> String -> String
-
-formatNTreeF node2String pf1 pf2 (NTree n l)
-    = formatNode
-      . formatChildren pf2 l
-    where
-    formatNode  = pf1 . foldr (.) id (map trNL (node2String n)) . showNL
-    trNL '\n'   = showNL . pf2
-    trNL c      = showChar c
-    showNL      = showChar '\n'
-    formatChildren _ []
-        = id
-    formatChildren pf (t:ts)
-        | null ts
-            = pfl'
-              . formatTr pf2' t
-        | otherwise
-            = pfl'
-              . formatTr pf1' t
-              . formatChildren pf ts
-        where
-        pf0'    = pf . showString indent1
-        pf1'    = pf . showString indent2
-        pf2'    = pf . showString indent3
-        pfl'    = pf . showString indent4
-        formatTr        = formatNTreeF node2String pf0'
-        indent1 = "+---"
-        indent2 = "|   "
-        indent3 = "    "
-        indent4 = "|\n"
+    {-# INLINE foldTree #-}
 
 -- eof ------------------------------------------------------------

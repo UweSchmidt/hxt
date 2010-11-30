@@ -43,10 +43,13 @@ newtype LA a b = LA { runLA :: a -> [b] }
 
 instance Category LA where
     id                  = LA $ (:[])
+    {-# INLINE id #-}
     LA g . LA f         = LA $ concatMap g . f
+    {-# INLINE (.) #-}
 
 instance Arrow LA where
     arr f               = LA $ \ x -> [f x]
+    {-# INLINE arr #-}
     first (LA f)        = LA $ \ ~(x1, x2) -> [ (y1, x2) | y1 <- f x1 ]
 
     -- just for efficiency
@@ -57,11 +60,12 @@ instance Arrow LA where
 
 instance ArrowZero LA where
     zeroArrow           = LA $ const []
+    {-# INLINE zeroArrow #-}
 
 
 instance ArrowPlus LA where
     LA f <+> LA g       = LA $ \ x -> f x ++ g x
-
+    {-# INLINE (<+>) #-}
 
 instance ArrowChoice LA where
     left  (LA f)        = LA $ either (map Left . f) ((:[]) . Right)
@@ -72,20 +76,25 @@ instance ArrowChoice LA where
 
 instance ArrowApply LA where
     app                 = LA $ \ (LA f, x) -> f x
+    {-# INLINE app #-}
 
 instance ArrowList LA where
-    arrL                        = LA
+    arrL                = LA
+    {-# INLINE arrL #-}
     arr2A f             = LA $ \ ~(x, y) -> runLA (f x) y
+    {-# INLINE arr2A #-}
     isA p               = LA $ \ x -> if p x then [x] else []
+    {-# INLINE isA #-}
     LA f >>. g          = LA $ g . f
+    {-# INLINE (>>.) #-}
     withDefault a d     = a >>. \ x -> if null x then [d] else x
-
 
 instance ArrowIf LA where
     ifA (LA p) t e      = LA $ \ x -> runLA ( if null (p x)
                                               then e
                                               else t
                                             ) x
+    {-# INLINE ifA #-}
 
     (LA f) `orElse` (LA g)
                         = LA $ \ x -> ( let
@@ -95,6 +104,7 @@ instance ArrowIf LA where
                                         then g x
                                         else res
                                       )
+    {-# INLINE orElse #-}
 
     spanA p             = LA $ (:[]) . span (not . null . runLA p)
 
@@ -114,6 +124,7 @@ instance ArrowNF LA where
 
 fromLA          :: ArrowList a => LA b c -> a b c
 fromLA f        =  arrL (runLA f)
+{-# INLINE fromLA #-}
 
 -- ------------------------------------------------------------
 

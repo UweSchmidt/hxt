@@ -49,6 +49,7 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
 
     arr2                :: (b1 -> b2 -> c) -> a (b1, b2) c
     arr2                = arr . uncurry
+    {-# INLINE arr2 #-}
 
     -- | construction of a 3 argument arrow from a 3-ary function
     -- |
@@ -56,6 +57,7 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
 
     arr3                :: (b1 -> b2 -> b3 -> c) -> a (b1, (b2, b3)) c
     arr3 f              = arr (\ ~(x1, ~(x2, x3)) -> f x1 x2 x3)
+    {-# INLINE arr3 #-}
 
     -- | construction of a 4 argument arrow from a 4-ary function
     -- |
@@ -63,11 +65,13 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
 
     arr4                :: (b1 -> b2 -> b3 -> b4 -> c) -> a (b1, (b2, (b3, b4))) c
     arr4 f              = arr (\ ~(x1, ~(x2, ~(x3, x4))) -> f x1 x2 x3 x4)
+    {-# INLINE arr4 #-}
 
     -- | construction of a 2 argument arrow from a singe argument arrow
 
     arr2A               :: (b -> a c d) -> a (b, c) d
     arr2A f             = first (arr f) >>> app
+    {-# INLINE arr2A #-}
 
     -- | constructor for a list arrow from a function with a list as result
 
@@ -77,16 +81,19 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
 
     arr2L               :: (b -> c -> [d]) -> a (b, c) d
     arr2L               = arrL . uncurry
+    {-# INLINE arr2L #-}
 
     -- | constructor for a const arrow: @ constA = arr . const @
 
     constA              :: c -> a b c
     constA              = arr . const
+    {-# INLINE constA #-}
 
     -- | constructor for a const arrow: @ constL = arrL . const @
 
     constL              :: [c] -> a b c
     constL              = arrL . const
+    {-# INLINE constL #-}
 
     -- | builds an arrow from a predicate.
     -- If the predicate holds, the single list containing the input is returned, else the empty list
@@ -105,6 +112,7 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
 
     (>.)                :: a b c -> ([c] ->  d ) -> a b d
     af >. f             = af >>. ((:[]) . f)
+    {-# INLINE (>.) #-}
 
     -- | combinator for converting an arrow into a determinstic version with all results collected in a single element list
     --
@@ -120,6 +128,7 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
 
     listA               :: a b c -> a b [c]
     listA af            = af >>.  (:[])
+    {-# INLINE listA #-}
 
     -- | the inverse of 'listA'
     --
@@ -129,16 +138,19 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
 
     unlistA             :: a [b] b
     unlistA             = arrL id
+    {-# INLINE unlistA #-}
 
     -- | the identity arrow, alias for returnA
 
     this                :: a b b
     this                = returnA
+    {-# INLINE this #-}
 
     -- | the zero arrow, alias for zeroArrow
 
     none                :: a b c
     none                = zeroArrow
+    {-# INLINE none #-}
 
     -- | converts an arrow, that may fail, into an arrow that always succeeds
     --
@@ -146,6 +158,7 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
 
     withDefault         :: a b c -> c -> a b c
     withDefault a d     = a >>. \ x -> if null x then [d] else x
+    {-# INLINE withDefault #-}
 
     -- | makes a list arrow deterministic, the number of results is at most 1
     --
@@ -328,6 +341,7 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
 
     perform             :: a b c -> a b b
     perform f           = listA f &&& this >>> arr snd
+    {-# INLINE perform #-}
 
     -- | generalization of arrow combinator '<+>'
     --
@@ -335,6 +349,7 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
 
     catA                :: [a b c] -> a b c
     catA                = foldl (<+>) none
+    {-# INLINE catA #-}
 
     -- | generalization of arrow combinator '>>>'
     --
@@ -342,5 +357,6 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
 
     seqA                :: [a b b] -> a b b
     seqA                = foldl (>>>) this
+    {-# INLINE seqA #-}
 
 -- ------------------------------------------------------------

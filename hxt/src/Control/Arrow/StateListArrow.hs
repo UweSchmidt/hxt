@@ -44,6 +44,7 @@ newtype SLA s a b = SLA { runSLA :: s -> a -> (s, [b]) }
 
 instance Category (SLA s) where
     id                  = SLA $ \ s x -> (s, [x])
+    {-# INLINE id #-}
 
     SLA g . SLA f       = SLA $ \ s x -> let
                                          ~(s1, ys) = f s x
@@ -60,6 +61,7 @@ instance Category (SLA s) where
 
 instance Arrow (SLA s) where
     arr f               = SLA $ \ s x -> (s, [f x])
+    {-# INLINE arr #-}
 
     first (SLA f)       = SLA $ \ s ~(x1, x2) -> let
                                                  ~(s', ys1) = f s x1
@@ -89,6 +91,7 @@ instance Arrow (SLA s) where
 
 instance ArrowZero (SLA s) where
     zeroArrow           = SLA $ \ s -> const (s, [])
+    {-# INLINE zeroArrow #-}
 
 
 instance ArrowPlus (SLA s) where
@@ -118,22 +121,29 @@ instance ArrowChoice (SLA s) where
 
 instance ArrowApply (SLA s) where
     app                 = SLA $ \ s (SLA f, x) -> f s x
+    {-# INLINE app #-}
 
 
 instance ArrowList (SLA s) where
     arrL f              = SLA $ \ s x -> (s, (f x))
+    {-# INLINE arrL #-}
     arr2A f             = SLA $ \ s ~(x, y) -> runSLA (f x) s y
+    {-# INLINE arr2A #-}
     constA c            = SLA $ \ s   -> const (s, [c])
+    {-# INLINE constA #-}
     isA p               = SLA $ \ s x -> (s, if p x then [x] else [])
+    {-# INLINE isA #-}
     SLA f >>. g         = SLA $ \ s x -> let
                                          ~(s1, ys) = f s x
                                          in
                                          (s1, g ys)
+    {-# INLINE (>>.) #-}
     -- just for efficency
     perform (SLA f)     = SLA $ \ s x -> let
                                          ~(s1, _ys) = f s x
                                          in
                                          (s1, [x])
+    {-# INLINE perform #-}
 
 instance ArrowIf (SLA s) where
     ifA (SLA p) ta ea   = SLA $ \ s x -> let
@@ -155,7 +165,9 @@ instance ArrowIf (SLA s) where
 
 instance ArrowState s (SLA s) where
     changeState cf      = SLA $ \ s x -> (cf s x, [x])
+    {-# INLINE changeState #-}
     accessState af      = SLA $ \ s x -> (s, [af s x])
+    {-# INLINE accessState #-}
 
 instance ArrowTree (SLA s)
 
@@ -180,6 +192,7 @@ instance (NFData s) => ArrowNF (SLA s) where
 
 fromSLA         :: ArrowList a => s -> SLA s b c -> a b c
 fromSLA s f     =  arrL (snd . (runSLA f s))
+{-# INLINE fromSLA #-}
 
 
 -- ------------------------------------------------------------

@@ -47,46 +47,55 @@ class ArrowList a => ArrowIf a where
 
     ifP                 :: (b -> Bool) -> a b d -> a b d -> a b d
     ifP p               = ifA (isA p)
+    {-# INLINE ifP #-}
 
     -- | negation: @ neg f = ifA f none this @
 
     neg                 :: a b c -> a b b
     neg f               = ifA f none this
+    {-# INLINE neg #-}
 
     -- | @ f \`when\` g @ : when the predicate g holds, f is applied, else the identity filter this
 
     when                :: a b b -> a b c -> a b b
     f `when` g          = ifA g f this
+    {-# INLINE when #-}
 
     -- | shortcut: @ f \`whenP\` p = f \`when\` (isA p) @
 
     whenP               :: a b b -> (b -> Bool) -> a b b
     f `whenP` g         = ifP g f this
+    {-# INLINE whenP #-}
 
     -- | @ f \`whenNot\` g @ : when the predicate g does not hold, f is applied, else the identity filter this
 
     whenNot             :: a b b -> a b c -> a b b
     f `whenNot` g       = ifA g this f
+    {-# INLINE whenNot #-}
 
     -- | like 'whenP'
 
     whenNotP            :: a b b -> (b -> Bool) -> a b b
     f `whenNotP` g      = ifP g this f
+    {-# INLINE whenNotP #-}
 
     -- | @ g \`guards\` f @ : when the predicate g holds, f is applied, else none
 
     guards              :: a b c -> a b d -> a b d
     f `guards` g        = ifA f g none
+    {-# INLINE guards #-}
 
     -- | like 'whenP'
 
     guardsP             :: (b -> Bool) -> a b d -> a b d
     f `guardsP` g       = ifP f g none
+    {-# INLINE guardsP #-}
 
     -- | shortcut for @ f `guards` this @
 
     filterA             :: a b c -> a b b
     filterA f           = ifA f this none
+    {-# INLINE filterA #-}
 
     -- | @ f \`containing\` g @ : keep only those results from f for which g holds
     --
@@ -94,6 +103,7 @@ class ArrowList a => ArrowIf a where
 
     containing          :: a b c -> a c d -> a b c
     f `containing` g    = f >>> g `guards` this
+    {-# INLINE containing #-}
 
     -- | @ f \`notContaining\` g @ : keep only those results from f for which g does not hold
     --
@@ -101,6 +111,7 @@ class ArrowList a => ArrowIf a where
 
     notContaining       :: a b c -> a c d -> a b c
     f `notContaining` g = f >>> ifA g none this
+    {-# INLINE notContaining #-}
 
     -- | @ f \`orElse\` g @ : directional choice: if f succeeds, the result of f is the result, else g is applied
     orElse              :: a b c -> a b c -> a b c

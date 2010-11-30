@@ -50,12 +50,14 @@ class Arrow a => ArrowState s a | a -> s where
 
     getState            :: a b s
     getState            = accessState (\ s _x -> s)
+    {-# INLINE getState #-}
 
     -- | overwrite the old state
     --
     -- definition: @ setState = changeState (\\ s x -> x) @
     setState            :: a s s
     setState            = changeState (\ _s x -> x)     -- changeState (const id)
+    {-# INLINE setState #-}
 
     -- | change state (and ignore input) and return new state
     --

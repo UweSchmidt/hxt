@@ -33,6 +33,7 @@ class Arrow a => ArrowIO a where
     -- | construct an arrow from an IO action without any parameter
     arrIO0              :: IO c -> a b c
     arrIO0 f            = arrIO (const f)
+    {-# INLINE arrIO0 #-}
 
     -- | construction of a 2 argument arrow from a binary IO action
     -- |
@@ -40,6 +41,7 @@ class Arrow a => ArrowIO a where
 
     arrIO2              :: (b1 -> b2 -> IO c) -> a (b1, b2) c
     arrIO2 f            = arrIO (\ ~(x1, x2) -> f x1 x2)
+    {-# INLINE arrIO2 #-}
 
     -- | construction of a 3 argument arrow from a 3-ary IO action
     -- |
@@ -47,6 +49,7 @@ class Arrow a => ArrowIO a where
 
     arrIO3              :: (b1 -> b2 -> b3 -> IO c) -> a (b1, (b2, b3)) c
     arrIO3 f            = arrIO (\ ~(x1, ~(x2, x3)) -> f x1 x2 x3)
+    {-# INLINE arrIO3 #-}
 
     -- | construction of a 4 argument arrow from a 4-ary IO action
     -- |
@@ -54,6 +57,7 @@ class Arrow a => ArrowIO a where
 
     arrIO4              :: (b1 -> b2 -> b3 -> b4 -> IO c) -> a (b1, (b2, (b3, b4))) c
     arrIO4 f            = arrIO (\ ~(x1, ~(x2, ~(x3, x4))) -> f x1 x2 x3 x4)
+    {-# INLINE arrIO4 #-}
 
 
 -- | the interface for converting an IO predicate into a list arrow

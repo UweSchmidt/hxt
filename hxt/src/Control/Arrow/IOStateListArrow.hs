@@ -50,6 +50,7 @@ newtype IOSLA s a b = IOSLA { runIOSLA :: s -> a -> IO (s, [b]) }
 
 instance Category (IOSLA s) where
     id                  = IOSLA $ \ s x -> return (s, [x])      -- don't defined id = arr id, this gives loops during optimization
+    {-# INLINE id #-}
 
     IOSLA g . IOSLA f   = IOSLA $ \ s x -> do
                                            (s1, ys) <- f s x
@@ -63,6 +64,7 @@ instance Category (IOSLA s) where
 
 instance Arrow (IOSLA s) where
     arr f               = IOSLA $ \ s x -> return (s, [f x])
+    {-# INLINE arr #-}
 
     first (IOSLA f)     = IOSLA $ \ s (x1, x2) -> do
                                                    (s', ys1) <- f s x1
@@ -89,6 +91,7 @@ instance Arrow (IOSLA s) where
 
 instance ArrowZero (IOSLA s) where
     zeroArrow           = IOSLA $ \ s -> const (return (s, []))
+    {-# INLINE zeroArrow #-}
 
 
 instance ArrowPlus (IOSLA s) where
@@ -114,19 +117,27 @@ instance ArrowChoice (IOSLA s) where
 
 instance ArrowApply (IOSLA s) where
     app                 = IOSLA $ \ s (IOSLA f, x) -> f s x
+    {-# INLINE app #-}
 
 instance ArrowList (IOSLA s) where
     arrL f              = IOSLA $ \ s x -> return (s, (f x))
+    {-# INLINE arrL #-}
     arr2A f             = IOSLA $ \ s (x, y) -> runIOSLA (f x) s y
+    {-# INLINE arr2A #-}
     constA c            = IOSLA $ \ s   -> const (return (s, [c]))
+    {-# INLINE constA #-}
     isA p               = IOSLA $ \ s x -> return (s, if p x then [x] else [])
+    {-# INLINE isA #-}
     IOSLA f >>. g       = IOSLA $ \ s x -> do
                                            (s1, ys) <- f s x
                                            return (s1, g ys)
+    {-# INLINE (>>.) #-}
+
     -- just for efficency
     perform (IOSLA f)   = IOSLA $ \ s x -> do
                                            (s1, _ys) <- f s x
                                            return (s1, [x])
+    {-# INLINE perform #-}
 
 instance ArrowIf (IOSLA s) where
     ifA (IOSLA p) ta ea = IOSLA $ \ s x -> do
@@ -148,6 +159,7 @@ instance ArrowIO (IOSLA s) where
     arrIO cmd           = IOSLA $ \ s x -> do
                                            res <- cmd x
                                            return (s, [res])
+    {-# INLINE arrIO #-}
 
 instance ArrowExc (IOSLA s) where
     tryA f              = IOSLA $ \ s x -> do
@@ -163,10 +175,13 @@ instance ArrowIOIf (IOSLA s) where
     isIOA p             = IOSLA $ \ s x -> do
                                            res <- p x
                                            return (s, if res then [x] else [])
+    {-# INLINE isIOA #-}
 
 instance ArrowState s (IOSLA s) where
     changeState cf      = IOSLA $ \ s x -> let s' = cf s x in return (seq s' s', [x])
+    {-# INLINE changeState #-}
     accessState af      = IOSLA $ \ s x -> return (s, [af s x])
+    {-# INLINE accessState #-}
 
 -- ------------------------------------------------------------
 

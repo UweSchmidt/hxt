@@ -44,41 +44,49 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
 
     mkLeaf              :: Tree t => b -> a c (t b)
     mkLeaf              = constA . T.mkLeaf
+    {-# INLINE mkLeaf #-}
 
     -- | construct an inner node
 
     mkTree              :: Tree t => b -> [t b] -> a c (t b)
     mkTree n            = constA . T.mkTree n
+    {-# INLINE mkTree #-}
 
     -- | select the children of the root of a tree
 
     getChildren         :: Tree t => a (t b) (t b)
     getChildren         = arrL T.getChildren
+    {-# INLINE getChildren #-}
 
     -- | select the attribute of the root of a tree
 
     getNode             :: Tree t => a (t b) b
     getNode             = arr T.getNode
+    {-# INLINE getNode #-}
 
     -- | substitute the children of the root of a tree
 
     setChildren         :: Tree t =>            [t b] -> a (t b) (t b)
     setChildren cs      = arr (T.setChildren cs)
+    {-# INLINE setChildren #-}
 
     -- | substitute the attribute of the root of a tree
 
     setNode             :: Tree t =>                b -> a (t b) (t b)
     setNode n           = arr (T.setNode n)
+    {-# INLINE setNode #-}
 
     -- | edit the children of the root of a tree
 
     changeChildren      :: Tree t => ([t b] -> [t b]) -> a (t b) (t b)
     changeChildren csf  = arr (T.changeChildren csf)
+    {-# INLINE changeChildren #-}
 
     -- | edit the attribute of the root of a tree
 
     changeNode          :: Tree t =>        (b  -> b) -> a (t b) (t b)
     changeNode nf       = arr (T.changeNode nf)
+    {-# INLINE changeNode #-}
 
                                                                 -- compound arrows
 
@@ -122,6 +130,7 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
 
     (/>)                :: Tree t => a b (t c) -> a (t c) d -> a b d
     f /> g              = f >>> getChildren >>> g
+    {-# INLINE (/>) #-}
 
     -- |
     -- pronounced \"double slash\", meaning g arbitrarily deep inside f
@@ -138,6 +147,7 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
 
     (//>)               :: Tree t => a b (t c) -> a (t c) d -> a b d
     f //> g             = f >>> getChildren >>> deep g
+    {-# INLINE (//>) #-}
 
 
     -- |
@@ -147,6 +157,7 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
 
     (</)                :: Tree t => a (t b) (t b) -> a (t b) (t b) -> a (t b) (t b)
     f </ g              = f `containing` (getChildren >>> g)
+    {-# INLINE (</) #-}
 
 
     -- | recursively searches a whole tree for subtrees, for which a predicate holds.

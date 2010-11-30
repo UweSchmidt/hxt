@@ -30,16 +30,19 @@ class Tree t where
 
     mkLeaf              ::                       a -> t a
     mkLeaf n            = mkTree n []
+    {-# INLINE mkLeaf #-}
 
     -- | leaf test: list of children empty?
 
     isLeaf              ::                     t a -> Bool
     isLeaf              = null . getChildren
+    {-# INLINE isLeaf #-}
 
     -- | innner node test: @ not . isLeaf @
 
     isInner             ::                     t a -> Bool
     isInner             = not . isLeaf
+    {-# INLINE isInner #-}
 
     -- | select node attribute
 
@@ -61,11 +64,13 @@ class Tree t where
 
     setNode             ::                a -> t a -> t a
     setNode n           = changeNode (const n)
+    {-# INLINE setNode #-}
 
     -- | substitute children: @ setChildren cl = changeChildren (const cl) @
 
     setChildren         ::            [t a] -> t a -> t a
     setChildren cl      = changeChildren (const cl)
+    {-# INLINE setChildren #-}
 
     -- | fold for trees
 
@@ -75,6 +80,7 @@ class Tree t where
 
     nodesTree           ::                     t a -> [a]
     nodesTree           = foldTree (\ n rs -> n : concat rs)
+    {-# INLINE nodesTree #-}
 
     -- | depth of a tree
 
@@ -91,6 +97,43 @@ class Tree t where
     -- a /graphical/ representation of the tree in text format
 
     formatTree          ::    (a -> String) -> t a -> String
-    formatTree nf n     = formatNTreeF nf (showString "---") (showString "   ") n ""
+    formatTree nf n     = formatNTree' nf (showString "---") (showString "   ") n ""
 
 -- ------------------------------------------------------------
+-- |
+-- convert a tree into a pseudo graphical string representation
+
+formatNTree'    :: Tree t => (a -> String) -> (String -> String) -> (String -> String) -> t a -> String -> String
+
+formatNTree' node2String pf1 pf2 tree
+    = formatNode
+      . formatChildren pf2 l
+    where
+    n           = getNode     tree
+    l           = getChildren tree
+    formatNode  = pf1 . foldr (.) id (map trNL (node2String n)) . showNL
+    trNL '\n'   = showNL . pf2
+    trNL c      = showChar c
+    showNL      = showChar '\n'
+    formatChildren _ []
+        = id
+    formatChildren pf (t:ts)
+        | null ts
+            = pfl'
+              . formatTr pf2' t
+        | otherwise
+            = pfl'
+              . formatTr pf1' t
+              . formatChildren pf ts
+        where
+        pf0'    = pf . showString indent1
+        pf1'    = pf . showString indent2
+        pf2'    = pf . showString indent3
+        pfl'    = pf . showString indent4
+        formatTr        = formatNTree' node2String pf0'
+        indent1 = "+---"
+        indent2 = "|   "
+        indent3 = "    "
+        indent4 = "|\n"
+
+-- eof ------------------------------------------------------------
