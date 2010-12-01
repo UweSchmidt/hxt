@@ -1,3 +1,5 @@
+{-# OPTIONS -fno-warn-orphans #-}
+
 -- ------------------------------------------------------------
 
 {- |
@@ -18,13 +20,19 @@
 -- ------------------------------------------------------------
 
 module Data.Tree.NTree.Zipper.TypeDefs
+{-
     ( NTZipper
+    , NTree
     , toNTZipper
     , fromNTZipper
     )
+-}
 where
 
+import Data.Tree.Class
+
 import Data.Tree.NavigatableTree.Class
+import Data.Tree.NavigatableTree.XPathAxis	( childAxis )
 
 import Data.Tree.NTree.TypeDefs
 
@@ -133,26 +141,40 @@ up1 t (NTC ls n rs)	= NTree n (foldl (flip (:)) (t : rs) ls)
 
 instance Functor NTZipper where
     fmap f (NTZ t xs)	= NTZ (fmap f t) (map (fmap f) xs)
+    {-# INLINE fmap #-}
 
 instance Functor NTCrumb where
     fmap f (NTC xs x ys)= NTC (map (fmap f) xs) (f x) (map (fmap f) ys)
+    {-# INLINE fmap #-}
 
 instance Tree NTZipper where
     mkTree n cl		= toNTZipper . mkTree n $ map ntree cl
 
     getNode             = getNode . ntree
+    {-# INLINE getNode #-}
     getChildren         = childAxis
+    {-# INLINE getChildren #-}
 
     changeNode     cf t = t { ntree = changeNode cf (ntree t) }
     changeChildren cf t = t { ntree = setChildren (map ntree . cf . childAxis $ t) (ntree t) }
 
     foldTree f          = foldTree f . ntree
-
+    {-# INLINE foldTree #-}
 
 instance NavigatableTree NTZipper where
     mvDown 		= down
+    {-# INLINE mvDown #-}
     mvUp   		= up
+    {-# INLINE mvUp #-}
     mvLeft 		= toTheLeft
+    {-# INLINE mvLeft #-}
     mvRight 		= toTheRight
+    {-# INLINE mvRight #-}
+
+instance TreeToNavigatableTree NTree NTZipper where
+    fromTree            = toNTZipper
+    {-# INLINE fromTree #-}
+    toTree              = fromNTZipper
+    {-# INLINE toTree #-}
 
 -- ------------------------------------------------------------

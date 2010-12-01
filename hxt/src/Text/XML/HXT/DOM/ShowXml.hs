@@ -23,6 +23,7 @@ module Text.XML.HXT.DOM.ShowXml
 where
 
 import Data.Maybe
+import Data.Tree.Class
 import Data.Tree.NTree.TypeDefs
 
 import Text.XML.HXT.DOM.TypeDefs                -- XML Tree types

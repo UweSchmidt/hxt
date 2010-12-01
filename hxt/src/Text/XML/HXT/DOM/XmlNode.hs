@@ -25,6 +25,7 @@
 
 module Text.XML.HXT.DOM.XmlNode
     ( module Text.XML.HXT.DOM.XmlNode
+    , module Data.Tree.Class
     , module Data.Tree.NTree.TypeDefs
     )
 where
@@ -32,6 +33,7 @@ where
 import Control.Monad
 
 import Data.Maybe
+import Data.Tree.Class
 import Data.Tree.NTree.TypeDefs
 
 

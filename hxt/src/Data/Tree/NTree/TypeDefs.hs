@@ -20,9 +20,9 @@
 -- ------------------------------------------------------------
 
 module Data.Tree.NTree.TypeDefs
-    ( module Data.Tree.Class
-    , module Data.Tree.NTree.TypeDefs
-    )
+--    ( module Data.Tree.Class
+--    , module Data.Tree.NTree.TypeDefs
+--    )
 where
 
 import Control.DeepSeq

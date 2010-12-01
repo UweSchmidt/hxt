@@ -10,6 +10,7 @@ where
 
 import Control.Arrow.ListArrows
 
+import Data.Tree.Class                  ( formatTree )
 import Data.Tree.NTree.TypeDefs
 
 import Text.XML.HXT.DOM.Interface

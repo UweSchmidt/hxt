@@ -36,6 +36,7 @@ import Text.XML.HXT.DOM.FormatXmlTree   ( formatXmlTree )
 import Text.XML.HXT.XPath.XPathDataTypes
 
 import Data.Char                        ( toLower )
+import Data.Tree.Class                  ( formatTree )
 
 -- ------------------------------------------------------------
 

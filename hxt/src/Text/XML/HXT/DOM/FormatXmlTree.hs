@@ -21,11 +21,11 @@ module Text.XML.HXT.DOM.FormatXmlTree
     )
 where
 
+import Data.Maybe
+
 import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.DOM.ShowXml
 import Text.XML.HXT.DOM.XmlNode
-
-import Data.Maybe
 
 -- ------------------------------------------------------------
 

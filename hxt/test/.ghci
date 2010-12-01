@@ -1,4 +1,6 @@
 :set  -ignore-package hxt
 :set -i.:../src
+:set -XMultiParamTypeClasses
+:set -XFunctionalDependencies
 :set -XFlexibleInstances
 :load Zipper

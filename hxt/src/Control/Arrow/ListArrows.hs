@@ -21,6 +21,7 @@ module Control.Arrow.ListArrows
     , module Control.Arrow.ArrowIf
     , module Control.Arrow.ArrowIO
     , module Control.Arrow.ArrowList
+    , module Control.Arrow.ArrowNavigatableTree
     , module Control.Arrow.ArrowNF
     , module Control.Arrow.ArrowState
     , module Control.Arrow.ArrowTree
@@ -36,6 +37,7 @@ import Control.Arrow                            -- arrow classes
 import Control.Arrow.ArrowExc
 import Control.Arrow.ArrowList
 import Control.Arrow.ArrowIf
+import Control.Arrow.ArrowNavigatableTree
 import Control.Arrow.ArrowNF
 import Control.Arrow.ArrowState
 import Control.Arrow.ArrowTree
