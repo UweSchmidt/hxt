@@ -18,15 +18,15 @@
 module Main
 where
 
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
+import Text.XML.HXT.Curl
 import Text.XML.HXT.XPath
+import Text.XML.HXT.Arrow.XmlState.TypeDefs
 
 import System.IO                        -- import the IO and commandline option stuff
 import System.Environment
 import System.Console.GetOpt
 import System.Exit
-
-import Data.Maybe
 
 -- ------------------------------------------------------------
 
@@ -55,9 +55,11 @@ exitProg False  = exitWith ExitSuccess
 -- runs in the trivial XmlState monad (with user state set to ())
 -- so IO and access to global options is possible
 
-xpath   :: Attributes -> String -> String -> IOSArrow b Int
-xpath al expr src
-    = readDocument al src
+xpath   :: SysConfigList -> String -> String -> IOSArrow b Int
+xpath cf expr src
+    = configSysVars cf                                  -- set all global config options, the output file and the
+      >>>                                               -- other user options are stored as key-value pairs in the stystem state
+      readDocument [withCurl []] src
       >>>
       evalXPathExpr
       >>>
@@ -67,9 +69,9 @@ xpath al expr src
       >>>
       traceTree
       >>>
-      formatXPathResult
+      ( formatXPathResult $< getSysVar theIndent )
       >>>
-      writeDocument al "-"
+      writeDocument [] "-"
       >>>
       getErrStatus
     where
@@ -82,16 +84,16 @@ xpath al expr src
                             filterErrorMsg
                           )
 
-    formatXPathResult   :: IOSArrow XmlTree XmlTree
-    formatXPathResult
+    formatXPathResult   :: Bool -> IOSArrow XmlTree XmlTree
+    formatXPathResult indent
         = replaceChildren ( mkelem "xpath-result"
                             [ sattr "expr" expr, sattr "source" src ]
                             [ newline, getChildren >>> (this <+> newline) ]
                           )
         where
         newline
-            | isJust . lookup a_indent $ al = txt "\n"
-            | otherwise                     = none
+            | indent     = txt "\n"
+            | otherwise  = none
 
 -- ------------------------------------------------------------
 --
@@ -101,7 +103,7 @@ xpath al expr src
 progName        :: String
 progName        = "HXPath"
 
-options         :: [OptDescr (String, String)]
+options         :: [OptDescr SysConfig]
 options
     = generalOptions
       ++
@@ -124,14 +126,14 @@ usage errl
              "Usage: " ++ progName ++ " [OPTION...] <XPath expr> <URL or FILE>"
     use    = usageInfo header options
 
-cmdlineOpts     :: [String] -> IO (Attributes, String, String)
+cmdlineOpts     :: [String] -> IO (SysConfigList, String, String)
 cmdlineOpts argv
     = case (getOpt Permute options argv) of
-      (ol,n,[]  )
+      (scfg,n,[]  )
           -> do
              (ex, sa) <- src n
-             help (lookup a_help ol)
-             return (ol, ex, sa)
+             help (getConfigAttr a_help scfg)
+             return (scfg, ex, sa)
       (_,_,errs)
           -> usage errs
     where
@@ -144,7 +146,7 @@ cmdlineOpts argv
     src _
         = usage ["too many arguments"]
 
-    help Nothing        = return ()
-    help (Just _)       = usage []
+    help "1"            = usage []
+    help _              = return ()
 
 -- ------------------------------------------------------------

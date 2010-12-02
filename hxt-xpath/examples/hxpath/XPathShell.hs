@@ -23,8 +23,9 @@ where
 
 import qualified Control.Monad as M
 
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 import Text.XML.HXT.XPath
+import Text.XML.HXT.Curl
 
 import System.Console.Editline.Readline
 import System.Environment
@@ -58,12 +59,12 @@ buildEnv env                    = (addEntries . read $ env) $ defaultEnv
 loadDoc         :: String -> IO ([XmlTree], NsEnv')
 loadDoc doc
     = do
-      d <- runX ( readDocument [ (a_tagsoup, v_0)
-                               , (a_parse_by_mimetype, v_1)
-                               , (a_check_namespaces, v_1)
-                               , (a_remove_whitespace, v_1)
-                               , (a_validate, v_0)
-                               , (a_canonicalize, v_1)
+      d <- runX ( readDocument [ withParseByMimeType yes
+                               , withCheckNamespaces yes
+                               , withRemoveWS yes
+                               , withValidate no
+                               , withCanonicalize yes
+                               , withCurl []
                                ] doc
                   >>>
                   (documentStatusOk `guards` this)
@@ -75,8 +76,8 @@ showDoc         :: XmlTree -> IO ()
 showDoc doc
     = runX ( constA doc
              >>>
-             writeDocument [ (a_indent, v_1)
-                           , (a_no_xml_pi, v_1)
+             writeDocument [ withIndent yes
+                           , withXmlPi no
                            ] ""
            )
       >> return ()
@@ -85,8 +86,8 @@ showTree                :: XmlTree -> IO ()
 showTree doc
     = runX ( constA doc
              >>>
-             writeDocument [ (a_show_tree, v_1)
-                           , (a_no_xml_pi, v_1)
+             writeDocument [ withShowTree yes
+                           , withXmlPi no
                            ] ""
            )
       >> return ()
