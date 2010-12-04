@@ -27,14 +27,16 @@ where
 
 import Control.DeepSeq
 
-import Data.AssocList
-import Data.Binary
-import qualified
-       Data.ByteString.Lazy             as BS
-import qualified
-       Data.ByteString.Lazy.Char8       as CS
-import Data.Tree.NTree.TypeDefs
-import Data.Typeable
+import           Data.AssocList
+
+import           Data.Binary
+import qualified Data.ByteString.Lazy             as BS
+import qualified Data.ByteString.Lazy.Char8       as CS
+
+import           Data.Tree.NTree.TypeDefs
+import           Data.Tree.NTree.Zipper.TypeDefs
+
+import           Data.Typeable
 
 import Text.XML.HXT.DOM.QualifiedName
 
@@ -42,13 +44,21 @@ import Text.XML.HXT.DOM.QualifiedName
 --
 -- Basic types for xml tree and filters
 
--- | Node of xml tree representation
+-- | Rose tree with XML nodes (XNode)
 
 type XmlTree    = NTree    XNode
 
--- | List of nodes of xml tree representation
+-- | List of rose trees with XML nodes
 
 type XmlTrees   = NTrees   XNode
+
+-- | Navigatable rose tree with XML nodes
+
+type XmlNavTree = NTZipper XNode
+
+-- | List of navigatable rose trees with XML nodes
+
+type XmlNavTrees = [NTZipper XNode]
 
 -- -----------------------------------------------------------------------------
 --

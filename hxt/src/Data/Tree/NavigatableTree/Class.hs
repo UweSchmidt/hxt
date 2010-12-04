@@ -50,4 +50,7 @@ class TreeToNavigatableTree t nt | t -> nt, nt -> t where
     -- remove navigation
     toTree              :: nt a -> t a
 
+    -- change the tree but remain the navigation
+    substTree            :: t a -> nt a -> nt a
+
 -- ------------------------------------------------------------

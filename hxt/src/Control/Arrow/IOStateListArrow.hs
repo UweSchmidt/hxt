@@ -35,6 +35,7 @@ import Control.Arrow.ArrowIO
 import Control.Arrow.ArrowList
 import Control.Arrow.ArrowNF
 import Control.Arrow.ArrowTree
+import Control.Arrow.ArrowNavigatableTree
 import Control.Arrow.ArrowState
 
 import Control.DeepSeq
@@ -214,6 +215,8 @@ runSt s2 (IOSLA f)
 -- ------------------------------------------------------------
 
 instance ArrowTree (IOSLA s)
+
+instance ArrowNavigatableTree (IOSLA s)
 
 instance (NFData s) => ArrowNF (IOSLA s) where
     rnfA (IOSLA f)      = IOSLA $ \ s x -> do

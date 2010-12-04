@@ -63,29 +63,36 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     -- | test for text nodes
     isText              :: a XmlTree XmlTree
     isText              = isA XN.isText
+    {-# INLINE isText #-}
 
     isBlob              :: a XmlTree XmlTree
     isBlob              = isA XN.isBlob
+    {-# INLINE isBlob #-}
 
     -- | test for char reference, used during parsing
     isCharRef           :: a XmlTree XmlTree
     isCharRef           = isA XN.isCharRef
+    {-# INLINE isCharRef #-}
 
     -- | test for entity reference, used during parsing
     isEntityRef         :: a XmlTree XmlTree
     isEntityRef         = isA XN.isEntityRef
+    {-# INLINE isEntityRef #-}
 
     -- | test for comment
     isCmt               :: a XmlTree XmlTree
     isCmt               = isA XN.isCmt
+    {-# INLINE isCmt #-}
 
     -- | test for CDATA section, used during parsing
     isCdata             :: a XmlTree XmlTree
     isCdata             = isA XN.isCdata
+    {-# INLINE isCdata #-}
 
     -- | test for processing instruction
     isPi                :: a XmlTree XmlTree
     isPi                = isA XN.isPi
+    {-# INLINE isPi #-}
 
     -- | test for processing instruction \<?xml ...\>
     isXmlPi             :: a XmlTree XmlTree
@@ -94,22 +101,27 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     -- | test for element
     isElem              :: a XmlTree XmlTree
     isElem              = isA XN.isElem
+    {-# INLINE isElem #-}
 
     -- | test for DTD part, used during parsing
     isDTD               :: a XmlTree XmlTree
     isDTD               = isA XN.isDTD
+    {-# INLINE isDTD #-}
 
     -- | test for attribute tree
     isAttr              :: a XmlTree XmlTree
     isAttr              = isA XN.isAttr
+    {-# INLINE isAttr #-}
 
     -- | test for error message
     isError             :: a XmlTree XmlTree
     isError             = isA XN.isError
+    {-# INLINE isError #-}
 
     -- | test for root node (element with name \"\/\")
     isRoot              :: a XmlTree XmlTree
     isRoot              = isA XN.isRoot
+    {-# INLINE isRoot #-}
 
     -- | test for text nodes with text, for which a predicate holds
     --
@@ -124,52 +136,61 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
 
     isWhiteSpace        :: a XmlTree XmlTree
     isWhiteSpace        = hasText (all isXmlSpaceChar)
+    {-# INLINE isWhiteSpace #-}
 
     -- |
     -- test whether a node (element, attribute, pi) has a name with a special property
 
     hasNameWith         :: (QName  -> Bool) -> a XmlTree XmlTree
     hasNameWith p       = (getQName        >>> isA p) `guards` this
+    {-# INLINE hasNameWith #-}
 
     -- |
     -- test whether a node (element, attribute, pi) has a specific qualified name
     -- useful only after namespace propagation
     hasQName            :: QName  -> a XmlTree XmlTree
     hasQName n          = (getQName        >>> isA (== n)) `guards` this
+    {-# INLINE hasQName #-}
 
     -- |
     -- test whether a node has a specific name (prefix:localPart ore localPart),
     -- generally useful, even without namespace handling
     hasName             :: String -> a XmlTree XmlTree
     hasName n           = (getName         >>> isA (== n)) `guards` this
+    {-# INLINE hasName #-}
 
     -- |
     -- test whether a node has a specific name as local part,
     -- useful only after namespace propagation
     hasLocalPart        :: String -> a XmlTree XmlTree
     hasLocalPart n      = (getLocalPart    >>> isA (== n)) `guards` this
+    {-# INLINE hasLocalPart #-}
 
     -- |
     -- test whether a node has a specific name prefix,
     -- useful only after namespace propagation
     hasNamePrefix       :: String -> a XmlTree XmlTree
     hasNamePrefix n     = (getNamePrefix   >>> isA (== n)) `guards` this
+    {-# INLINE hasNamePrefix #-}
 
     -- |
     -- test whether a node has a specific namespace URI
     -- useful only after namespace propagation
     hasNamespaceUri     :: String -> a XmlTree XmlTree
     hasNamespaceUri n   = (getNamespaceUri >>> isA (== n)) `guards` this
+    {-# INLINE hasNamespaceUri #-}
 
     -- |
     -- test whether an element node has an attribute node with a specific name
     hasAttr             :: String -> a XmlTree XmlTree
     hasAttr n           = (getAttrl        >>> hasName n)  `guards` this
+    {-# INLINE hasAttr #-}
 
     -- |
     -- test whether an element node has an attribute node with a specific qualified name
     hasQAttr            :: QName -> a XmlTree XmlTree
     hasQAttr n          = (getAttrl        >>> hasQName n)  `guards` this
+    {-# INLINE hasQAttr #-}
 
     -- |
     -- test whether an element node has an attribute with a specific value
@@ -186,26 +207,32 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     -- | text node construction arrow
     mkText              :: a String XmlTree
     mkText              = arr  XN.mkText
+    {-# INLINE mkText #-}
 
     -- | blob node construction arrow
     mkBlob              :: a Blob XmlTree
     mkBlob              = arr  XN.mkBlob
+    {-# INLINE mkBlob #-}
 
     -- | char reference construction arrow, useful for document output
     mkCharRef           :: a Int    XmlTree
     mkCharRef           = arr  XN.mkCharRef
+    {-# INLINE mkCharRef #-}
 
     -- | entity reference construction arrow, useful for document output
     mkEntityRef         :: a String XmlTree
     mkEntityRef         = arr  XN.mkEntityRef
+    {-# INLINE mkEntityRef #-}
 
     -- | comment node construction, useful for document output
     mkCmt               :: a String XmlTree
     mkCmt               = arr  XN.mkCmt
+    {-# INLINE mkCmt #-}
 
     -- | CDATA construction, useful for document output
     mkCdata             :: a String XmlTree
     mkCdata             = arr  XN.mkCdata
+    {-# INLINE mkCdata #-}
 
     -- | error node construction, useful only internally
     mkError             :: Int -> a String XmlTree
@@ -218,6 +245,7 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     mkElement n af cf   = (listA af &&& listA cf)
                           >>>
                           arr2 (\ al cl -> XN.mkElement n al cl)
+
     -- | attribute node construction:
     -- | the attribute value is computed by applying an arrow to the input
     mkAttr              :: QName -> a n XmlTree -> a n XmlTree
@@ -242,168 +270,208 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
 
     mkqelem             :: QName -> [a n XmlTree] -> [a n XmlTree] -> a n XmlTree
     mkqelem  n afs cfs  = mkElement n (catA afs) (catA cfs)
+    {-# INLINE mkqelem #-}
 
     -- | convenient arrow for element construction with strings instead of qualified names as element names, see also 'mkElement' and 'mkelem'
     mkelem              :: String -> [a n XmlTree] -> [a n XmlTree] -> a n XmlTree
     mkelem  n afs cfs   = mkElement (mkName n) (catA afs) (catA cfs)
+    {-# INLINE mkelem #-}
 
     -- | convenient arrow for element constrution with attributes but without content, simple variant of 'mkelem' and 'mkElement'
     aelem               :: String -> [a n XmlTree]                  -> a n XmlTree
     aelem n afs         = catA afs >. \ al -> XN.mkElement (mkName n) al []
+    {-# INLINE aelem #-}
 
     -- | convenient arrow for simple element constrution without attributes, simple variant of 'mkelem' and 'mkElement'
     selem               :: String                  -> [a n XmlTree] -> a n XmlTree
     selem n cfs         = catA cfs >.         XN.mkElement (mkName n) []
+    {-# INLINE selem #-}
 
     -- | convenient arrow for constrution of empty elements without attributes, simple variant of 'mkelem' and 'mkElement'
     eelem               :: String                                   -> a n XmlTree
     eelem n             = constA      (XN.mkElement (mkName n) [] [])
+    {-# INLINE eelem #-}
 
     -- | construction of an element node with name \"\/\" for document roots
     root                ::           [a n XmlTree] -> [a n XmlTree] -> a n XmlTree
     root                = mkelem t_root
+    {-# INLINE root #-}
 
     -- | alias for 'mkAttr'
     qattr               :: QName -> a n XmlTree -> a n XmlTree
     qattr               = mkAttr
+    {-# INLINE qattr #-}
 
     -- | convenient arrow for attribute constrution, simple variant of 'mkAttr'
     attr                :: String -> a n XmlTree -> a n XmlTree
     attr                = mkAttr . mkName
+    {-# INLINE attr #-}
 
     -- constant arrows (ignoring the input) for tree construction ------------------------------
 
     -- | constant arrow for text nodes
     txt                 :: String -> a n XmlTree
     txt                 = constA .  XN.mkText
+    {-# INLINE txt #-}
 
     -- | constant arrow for blob nodes
     blb                 :: Blob -> a n XmlTree
     blb                 = constA .  XN.mkBlob
+    {-# INLINE blb #-}
 
     -- | constant arrow for char reference nodes
     charRef             :: Int    -> a n XmlTree
     charRef             = constA .  XN.mkCharRef
+    {-# INLINE charRef #-}
 
     -- | constant arrow for entity reference nodes
     entityRef           :: String -> a n XmlTree
     entityRef           = constA .  XN.mkEntityRef
+    {-# INLINE entityRef #-}
 
     -- | constant arrow for comment
     cmt                 :: String -> a n XmlTree
     cmt                 = constA .  XN.mkCmt
+    {-# INLINE cmt #-}
 
     -- | constant arrow for warning
     warn                :: String -> a n XmlTree
     warn                = constA . (XN.mkError c_warn)
+    {-# INLINE warn #-}
 
     -- | constant arrow for errors
     err                 :: String -> a n XmlTree
     err                 = constA . (XN.mkError c_err)
+    {-# INLINE err #-}
 
     -- | constant arrow for fatal errors
     fatal               :: String -> a n XmlTree
     fatal               = constA . (XN.mkError c_fatal)
+    {-# INLINE fatal #-}
 
     -- | constant arrow for simple processing instructions, see 'mkPi'
     spi                 :: String -> String -> a n XmlTree
     spi piName piCont   = constA (XN.mkPi   (mkName piName) [XN.mkText piCont])
+    {-# INLINE spi #-}
 
     -- | constant arrow for attribute nodes, attribute name is a qualified name and value is a text,
     -- | see also 'mkAttr', 'qattr', 'attr'
     sqattr              :: QName -> String -> a n XmlTree
     sqattr an av        = constA (XN.mkAttr an                 [XN.mkText av])
+    {-# INLINE sqattr #-}
 
     -- | constant arrow for attribute nodes, attribute name and value are
     -- | given by parameters, see 'mkAttr'
     sattr               :: String -> String -> a n XmlTree
     sattr an av         = constA (XN.mkAttr (mkName an)     [XN.mkText av])
+    {-# INLINE sattr #-}
 
     -- selector arrows --------------------------------------------------
 
     -- | select the text of a text node
     getText             :: a XmlTree String
     getText             = arrL (maybeToList  . XN.getText)
+    {-# INLINE getText #-}
 
     -- | select the value of a char reference
     getCharRef          :: a XmlTree Int
     getCharRef          = arrL (maybeToList  . XN.getCharRef)
+    {-# INLINE getCharRef #-}
 
     -- | select the name of a entity reference node
     getEntityRef        :: a XmlTree String
     getEntityRef        = arrL (maybeToList  . XN.getEntityRef)
+    {-# INLINE getEntityRef #-}
 
     -- | select the comment of a comment node
     getCmt              :: a XmlTree String
     getCmt              = arrL (maybeToList  . XN.getCmt)
+    {-# INLINE getCmt #-}
 
     -- | select the content of a CDATA node
     getCdata            :: a XmlTree String
     getCdata            = arrL (maybeToList  . XN.getCdata)
+    {-# INLINE getCdata #-}
 
     -- | select the name of a processing instruction
     getPiName           :: a XmlTree QName
     getPiName           = arrL (maybeToList  . XN.getPiName)
+    {-# INLINE getPiName #-}
 
     -- | select the content of a processing instruction
     getPiContent        :: a XmlTree XmlTree
     getPiContent        = arrL (fromMaybe [] . XN.getPiContent)
+    {-# INLINE getPiContent #-}
 
     -- | select the name of an element node
     getElemName         :: a XmlTree QName
     getElemName         = arrL (maybeToList  . XN.getElemName)
+    {-# INLINE getElemName #-}
 
     -- | select the attribute list of an element node
     getAttrl            :: a XmlTree XmlTree
     getAttrl            = arrL (fromMaybe [] . XN.getAttrl)
+    {-# INLINE getAttrl #-}
 
     -- | select the DTD type of a DTD node
     getDTDPart          :: a XmlTree DTDElem
     getDTDPart          = arrL (maybeToList  . XN.getDTDPart)
+    {-# INLINE getDTDPart #-}
 
     -- | select the DTD attributes of a DTD node
     getDTDAttrl         :: a XmlTree Attributes
     getDTDAttrl         = arrL (maybeToList  . XN.getDTDAttrl)
+    {-# INLINE getDTDAttrl #-}
 
     -- | select the name of an attribute
     getAttrName         :: a XmlTree QName
     getAttrName         = arrL (maybeToList  . XN.getAttrName)
+    {-# INLINE getAttrName #-}
 
     -- | select the error level (c_warn, c_err, c_fatal) from an error node
     getErrorLevel       :: a XmlTree Int
     getErrorLevel       = arrL (maybeToList  . XN.getErrorLevel)
+    {-# INLINE getErrorLevel #-}
 
     -- | select the error message from an error node
     getErrorMsg         :: a XmlTree String
     getErrorMsg         = arrL (maybeToList  . XN.getErrorMsg)
+    {-# INLINE getErrorMsg #-}
 
     -- | select the qualified name from an element, attribute or pi
     getQName            :: a XmlTree QName
     getQName            = arrL (maybeToList  . XN.getName)
+    {-# INLINE getQName #-}
 
     -- | select the prefix:localPart or localPart from an element, attribute or pi
     getName             :: a XmlTree String
     getName             = arrL (maybeToList  . XN.getQualifiedName)
+    {-# INLINE getName #-}
 
     -- | select the univeral name ({namespace URI} ++ localPart)
     getUniversalName    :: a XmlTree String
     getUniversalName    = arrL (maybeToList  . XN.getUniversalName)
+    {-# INLINE getUniversalName #-}
 
     -- | select the univeral name (namespace URI ++ localPart)
     getUniversalUri     :: a XmlTree String
     getUniversalUri     = arrL (maybeToList  . XN.getUniversalUri)
+    {-# INLINE getUniversalUri #-}
 
     -- | select the local part
     getLocalPart        :: a XmlTree String
     getLocalPart        = arrL (maybeToList  . XN.getLocalPart)
+    {-# INLINE getLocalPart #-}
 
     -- | select the name prefix
     getNamePrefix       :: a XmlTree String
     getNamePrefix       = arrL (maybeToList  . XN.getNamePrefix)
+    {-# INLINE getNamePrefix #-}
 
     -- | select the namespace URI
     getNamespaceUri     :: a XmlTree String
     getNamespaceUri     = arrL (maybeToList  . XN.getNamespaceUri)
+    {-# INLINE getNamespaceUri #-}
 
     -- | select the value of an attribute of an element node,
     -- always succeeds with empty string as default value \"\"
@@ -476,30 +544,37 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     -- | replace an element, attribute or pi name
     setQName            :: QName -> a XmlTree XmlTree
     setQName  n         = changeQName  (const n)
+    {-# INLINE setQName #-}
 
     -- | replace an element name
     setElemName         :: QName -> a XmlTree XmlTree
     setElemName  n      = changeElemName  (const n)
+    {-# INLINE setElemName #-}
 
     -- | replace an attribute name
     setAttrName         :: QName -> a XmlTree XmlTree
     setAttrName n       = changeAttrName (const n)
+    {-# INLINE setAttrName #-}
 
     -- | replace an element name
     setPiName           :: QName -> a XmlTree XmlTree
     setPiName  n        = changePiName  (const n)
+    {-# INLINE setPiName #-}
 
     -- | replace an atribute list of an element node
     setAttrl            :: a XmlTree XmlTree -> a XmlTree XmlTree
     setAttrl            = changeAttrl (const id)                -- (\ x y -> y)
+    {-# INLINE setAttrl #-}
 
     -- | add a list of attributes to an element
     addAttrl            :: a XmlTree XmlTree -> a XmlTree XmlTree
     addAttrl            = changeAttrl (XN.mergeAttrl)
+    {-# INLINE addAttrl #-}
 
     -- | add (or replace) an attribute
     addAttr             :: String -> String  -> a XmlTree XmlTree
     addAttr an av       = addAttrl (sattr an av)
+    {-# INLINE addAttr #-}
 
     -- | remove an attribute
     removeAttr          :: String  -> a XmlTree XmlTree
@@ -569,10 +644,12 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     -- | apply an arrow to the input and convert the resulting XML trees into a string representation
     xshow               :: a n XmlTree -> a n String
     xshow f             = f >. XS.xshow
+    {-# INLINE xshow #-}
 
     -- | apply an arrow to the input and convert the resulting XML trees into a string representation
     xshowBlob           :: a n XmlTree -> a n Blob
     xshowBlob f         = f >. XS.xshowBlob
+    {-# INLINE xshowBlob #-}
 
 {- | Document Type Definition arrows
 

@@ -4,7 +4,7 @@
 
 {- |
    Module     : Control.Arrow.StateListArrow
-   Copyright  : Copyright (C) 2005-8 Uwe Schmidt
+   Copyright  : Copyright (C) 2010 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
@@ -33,6 +33,7 @@ import           Control.Arrow.ArrowList
 import           Control.Arrow.ArrowNF
 import           Control.Arrow.ArrowState
 import           Control.Arrow.ArrowTree
+import           Control.Arrow.ArrowNavigatableTree
 
 import           Control.DeepSeq
 
@@ -170,6 +171,8 @@ instance ArrowState s (SLA s) where
     {-# INLINE accessState #-}
 
 instance ArrowTree (SLA s)
+
+instance ArrowNavigatableTree (SLA s)
 
 instance (NFData s) => ArrowNF (SLA s) where
     rnfA (SLA f)        = SLA $ \ s x -> let res = f s x

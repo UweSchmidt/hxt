@@ -73,7 +73,8 @@ initialSysState                 = XIOSys
 
 initialSysWriter                :: XIOSysWriter
 initialSysWriter                = XIOwrt
-                                  { xioErrorMsgList      = []
+                                  { xioErrorStatus       = c_ok
+                                  , xioErrorMsgList      = []
                                   , xioExpatErrors       = none
                                   }
 
@@ -81,7 +82,6 @@ initialSysEnv                   :: XIOSysEnv
 initialSysEnv                   = XIOEnv
                                   { xioTraceLevel        = 0
                                   , xioTraceCmd          = traceOutputToStderr
-                                  , xioErrorStatus       = c_ok
                                   , xioErrorMsgHandler   = errorOutputToStderr
                                   , xioErrorMsgCollect   = False
                                   , xioBaseURI           = ""

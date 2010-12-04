@@ -30,6 +30,7 @@ import Control.Arrow.ArrowIO
 import Control.Arrow.ArrowList
 import Control.Arrow.ArrowNF
 import Control.Arrow.ArrowTree
+import Control.Arrow.ArrowNavigatableTree
 
 import Control.DeepSeq
 import Control.Exception                ( SomeException
@@ -138,6 +139,8 @@ instance ArrowIOIf IOLA where
                                        return (if res then [x] else [])
 
 instance ArrowTree IOLA
+
+instance ArrowNavigatableTree IOLA
 
 instance ArrowNF IOLA where
     rnfA (IOLA f)       = IOLA $ \ x -> do

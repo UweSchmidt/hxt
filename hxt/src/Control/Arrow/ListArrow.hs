@@ -30,6 +30,7 @@ import           Control.Arrow.ArrowIf
 import           Control.Arrow.ArrowList
 import           Control.Arrow.ArrowNF
 import           Control.Arrow.ArrowTree
+import           Control.Arrow.ArrowNavigatableTree
 
 import           Control.DeepSeq
 
@@ -111,6 +112,8 @@ instance ArrowIf LA where
     partitionA  p       = LA $ (:[]) . partition (not . null . runLA p)
 
 instance ArrowTree LA
+
+instance ArrowNavigatableTree LA
 
 instance ArrowNF LA where
     rnfA (LA f)         = LA $ \ x -> let res = f x

@@ -58,11 +58,17 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
     getChildren         = arrL T.getChildren
     {-# INLINE getChildren #-}
 
-    -- | select the attribute of the root of a tree
+    -- | select the node info of the root of a tree
 
     getNode             :: Tree t => a (t b) b
     getNode             = arr T.getNode
     {-# INLINE getNode #-}
+
+    -- | select the attribute of the root of a tree
+
+    hasNode             :: Tree t => (b -> Bool) -> a (t b) (t b)
+    hasNode p           = (getNode >>> isA p) `guards` this
+    {-# INLINE hasNode #-}
 
     -- | substitute the children of the root of a tree
 

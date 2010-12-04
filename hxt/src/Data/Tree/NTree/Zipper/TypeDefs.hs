@@ -164,17 +164,24 @@ instance Tree NTZipper where
 instance NavigatableTree NTZipper where
     mvDown 		= down
     {-# INLINE mvDown #-}
+
     mvUp   		= up
     {-# INLINE mvUp #-}
+
     mvLeft 		= toTheLeft
     {-# INLINE mvLeft #-}
+
     mvRight 		= toTheRight
     {-# INLINE mvRight #-}
 
 instance TreeToNavigatableTree NTree NTZipper where
     fromTree            = toNTZipper
     {-# INLINE fromTree #-}
+
     toTree              = fromNTZipper
     {-# INLINE toTree #-}
+
+    substTree t nt      = nt { ntree = t }
+    {-# INLINE substTree #-}
 
 -- ------------------------------------------------------------
