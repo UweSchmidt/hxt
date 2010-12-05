@@ -160,12 +160,12 @@ data XIOSysState        = XIOSys  { xioSysWriter                :: ! XIOSysWrite
 
 instance NFData XIOSysState             -- all fields of interest are strict
 
-data XIOSysWriter       = XIOwrt  { xioErrorMsgList             :: ! XmlTrees
+data XIOSysWriter       = XIOwrt  { xioErrorStatus              :: ! Int
+                                  , xioErrorMsgList             :: ! XmlTrees
                                   }
 
 data XIOSysEnv          = XIOEnv  { xioTraceLevel               :: ! Int
                                   , xioTraceCmd                 ::   Int -> String -> IO ()
-                                  , xioErrorStatus              :: ! Int
                                   , xioErrorMsgHandler          ::   String -> IO ()
                                   , xioErrorMsgCollect          :: ! Bool
                                   , xioBaseURI                  :: ! String
@@ -261,6 +261,13 @@ theUserState                    = S { getS = xioUserState
 theSysWriter                    :: Selector XIOSysState XIOSysWriter
 theSysWriter                    = S { getS = xioSysWriter
                                     , setS = \ x s -> s { xioSysWriter = x}
+                                    }
+
+theErrorStatus                  :: Selector XIOSysState Int
+theErrorStatus                  = theSysWriter
+                                  >>>
+                                  S { getS = xioErrorStatus
+                                    , setS = \ x s -> s { xioErrorStatus = x }
                                     }
 
 theErrorMsgList                 :: Selector XIOSysState XmlTrees
@@ -491,13 +498,6 @@ theParseConfig                  = theSysEnv
                                   >>>
                                   S { getS = xioParseConfig
                                     , setS = \ x s -> s { xioParseConfig = x}
-                                    }
-
-theErrorStatus                  :: Selector XIOSysState Int
-theErrorStatus                  = theSysEnv
-                                  >>>
-                                  S { getS = xioErrorStatus
-                                    , setS = \ x s -> s { xioErrorStatus = x }
                                     }
 
 theErrorMsgHandler              :: Selector XIOSysState (String -> IO ())
