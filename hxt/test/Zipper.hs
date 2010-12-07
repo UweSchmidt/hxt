@@ -7,6 +7,11 @@ import Data.Tree.Class                 ( formatTree )
 import Data.Tree.NTree.TypeDefs        ( NTree(..) )
 import Data.Tree.NTree.Zipper.TypeDefs ( NTZipper )
 
+import qualified Data.Tree.NavigatableTree.Class        as T
+import           Data.Tree.NavigatableTree.Class        ( NavigatableTree
+                                                        , TreeToNavigatableTree
+                                                        )
+
 import Text.XML.HXT.Core
 
 -- ------------------------------------------------------------
@@ -36,7 +41,7 @@ t3 = moveDown >>> moveRight >>> (change $< parNode) >>> moveUp
     change x = changeNode (+(5000 * x)) 
 
 t4  ::  Int -> NavArrow
-t4 n = ( descendantOrSelfAxis `moveTo` hasNode (== n)
+t4 n = ( moveOn (descendantOrSelfAxis >>> filterAxis (hasNode (== n)))
          >>>
          setNode 42
          >>>
@@ -54,7 +59,7 @@ nn n
        
 nnn :: Int -> NavArrow
 nnn n
-    = ( moveTo descendantOrFollowingAxis (hasNode odd)
+    = ( moveOn (descendantOrFollowingAxis >>> filterAxis (hasNode odd))
         >>>
         setNode n
         >>>
@@ -110,7 +115,7 @@ doc1 = root [] [constA (html1 "example1" (tab1 "1. Table" "table1" 5 3)) >>> xre
 
 colorizeRows :: String -> String -> String -> LA XmlNavTree XmlNavTree
 colorizeRows name dark light
-    = ( moveTo descendantAxis (remNavi >>> hasAttrValue "id" (== name))
+    = ( moveOn (descendantAxis >>> filterAxis (hasAttrValue "id" (== name)))
         >>>
         colorize dark light childAxis
         >>>
@@ -119,7 +124,7 @@ colorizeRows name dark light
       `orElse` this
     where
     colorize c1 c2 axis
-        = ( moveTo axis (remNavi >>> hasName "tr")
+        = ( moveOn (axis >>> filterAxis (hasName "tr"))
             >>>
             ( withoutNavi $ addAttr "class" c1 )
             >>>
@@ -129,10 +134,10 @@ colorizeRows name dark light
 
 numberH1 :: LA XmlNavTree XmlNavTree
 numberH1
-    = number (0::Int) descendantAxis
+    = number (0::Int) descendantAxis `orElse` this
     where
     number cnt axis
-        =   moveTo axis (remNavi >>> hasName "td")
+        =   moveOn (axis >>> filterAxis (hasName "td"))
             >>>
             ( withoutNavi $ addNumber (cnt + 1) )
             >>>
@@ -143,15 +148,62 @@ numberH1
     addNumber i
         = insertChildrenAt 0 (txt (show i ++ ". "))
 
+processTable p = visit
+                 (descendantAxis >>> filterAxis (hasAttrValue "id" (=="table1")))
+                 none
+                 ()
+                 (const ())
+                 (const p)
+
+numberH1' = visit
+            (descendantAxis >>> filterAxis (hasAttrValue "id" (=="table1")) >>>
+             descendantAxis >>> filterAxis (hasName "td")
+            )
+            (followingAxis  >>> filterAxis (hasName "td"))
+            (1::Int)
+            (1+)
+            (\ i -> insertChildrenAt 0 (txt (show i ++ ". ")))
+
+
+numberH1'' = visit
+            (descendantAxis >>> filterAxis (hasName "td"))
+            (followingAxis  >>> filterAxis (hasName "td"))
+            (1::Int)
+            (1+)
+            (\ i -> insertChildrenAt 0 (txt (show i ++ ". ")))
+
+visit	:: LA XmlNavTree XmlNavTree ->
+           LA XmlNavTree XmlNavTree ->
+           a  ->
+          (a -> a) ->
+          (a -> LA XmlTree XmlTree) ->
+           LA XmlTree XmlTree
+visit initAxis nextAxis initState nextState nodeTransf
+    = withNavi (move initState initAxis)
+      `orElse`
+      this
+    where
+    move state axis
+        = moveOn axis
+          >>>
+          changeTree (nodeTransf state)
+          >>>
+          ( move (nextState state) nextAxis	-- and go to the next node
+            `orElse`
+            moveToRoot			--
+          )
+
 runTest	:: LA XmlNavTree XmlNavTree -> IOSArrow XmlTree XmlTree -> IO XmlTrees
 runTest transf doc
     = runX (doc >>> fromLA (withNavi transf) >>> writeDocument [withIndent yes, withXmlPi no] "")
 
+r1 = runX (doc1 >>> fromLA (numberH1') >>> writeDocument [withIndent yes, withXmlPi no] "")
+r2 = runX (doc1 >>> fromLA (processTable numberH1'') >>> writeDocument [withIndent yes, withXmlPi no] "")
+r3 = runX (doc1 >>> root [] [fromLA (withNavi (descendantAxis >>> filterAxis (hasName "table") >>> descendantAxis >>> (selfAxis <+> followingAxis) >>> filterAxis (hasName "td")))] >>> writeDocument [withIndent yes, withXmlPi no] "")
 
-transformDoc cfg rules src dst =
-    configSysVars (withTrace 4 : cfg) >>>
-    readDocument  [] src >>>
-    perform (getErrStatus >>> arrIO print) >>>
-    rules >>> -- some transformations
-    -- writeDocument [] dst >>>
-    getErrStatus
+changeTree		:: ( ArrowList a
+                           , ArrowIf a
+                           , TreeToNavigatableTree t nt
+                           ) =>
+                           a (t b) (t b) -> a (nt b) (nt b)
+changeTree cf		= withoutNavi $ single cf `orElse` this

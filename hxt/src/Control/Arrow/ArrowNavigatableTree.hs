@@ -135,41 +135,41 @@ isAtRoot                = isA (null . T.ancestorAxis)
 
 -- | Conversion from a tree into a navigatable tree
 
-addNavi                :: ( ArrowList a
+addNav                  :: ( ArrowList a
                            , TreeToNavigatableTree t nt
                            ) =>
                            a (t b) (nt b)
-addNavi                = arr T.fromTree
+addNav                  = arr T.fromTree
 
 
 -- | Conversion from a navigatable tree into an ordinary tree
 
-remNavi                  :: ( ArrowList a
+remNav                  :: ( ArrowList a
                            , TreeToNavigatableTree t nt
                            ) =>
                            a (nt b) (t b)
-remNavi                  = arr T.toTree
+remNav                  = arr T.toTree
 
 -- | apply an operation using navigation to an ordinary tree
 --
 -- This root and all children may be visited in arbitrary order
 
-withNavi                :: ( ArrowList a
+withNav                 :: ( ArrowList a
                            , TreeToNavigatableTree t nt
                            ) =>
                            a (nt b) (nt c) -> a (t b) (t c)
-withNavi f              = addNavi >>> f >>> remNavi
+withNav f               = addNav >>> f >>> remNav
 
 
 -- | apply a simple operation without use of navigation to a navigatable tree
 --
 -- This enables to apply arbitrary tree operations to navigatable trees
 
-withoutNavi             :: ( ArrowList a
+withoutNav              :: ( ArrowList a
                            , TreeToNavigatableTree t nt
                            ) =>
                            a (t b) (t b) -> a (nt b) (nt b)
-withoutNavi f           = ( (remNavi >>> f)			-- apply the simple arrow to the tree
+withoutNav f            = ( (remNav >>> f)			-- apply the simple arrow to the tree
                             &&&
                             this				-- remember the navigation context
                           )
@@ -177,19 +177,24 @@ withoutNavi f           = ( (remNavi >>> f)			-- apply the simple arrow to the t
                              
 -- ------------------------------------------------------------
 
--- | Move on a given axis to the first node for which the given predicate holds
+-- | Filter an axis with an ordinary tree predicate
 --
--- Example: In a tree of Ints move to the first node in the subtrees (in preorder) that has label 42
+-- Example: In a tree of Ints find all nodes in the subtrees (in preorder) that have label 42
 --
--- > descendantAxis `moveTo` hasNode (== 42)
+-- > descendantAxis >>> filterAxis (hasNode (== 42))
+--
+-- Example: In an XML Tree find the following nodes of a node with attribute id and value 42
+--
+-- > descendantAxis >>> filterAxis (hasAttrValue "id" (=="42")) >>> followingAxis
 
-moveTo                  :: ( ArrowIf a
-                           , NavigatableTree t
+filterAxis		:: ( ArrowIf a
+                           , TreeToNavigatableTree t nt
                            ) =>
-                           a (t b) (t b) -> a (t b) c -> a (t b) (t b)
+                           a (t b) c -> a (nt b) (nt b)
 
-moveTo axis p           = single $ axis >>> (p `guards` this)
-{-# INLINE moveTo #-}
+filterAxis p            = (remNav >>> p) `guards` this
+{-# INLINE filterAxis #-}
+
 
 -- | Move to the next tree on a given axis. Deterministic arrow
 --
