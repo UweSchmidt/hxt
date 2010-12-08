@@ -18,11 +18,11 @@
 module Data.Tree.NavigatableTree.XPathAxis
 where
 
-import Data.Maybe		( maybeToList )
+import Data.Maybe               ( maybeToList )
 import Data.Tree.NavigatableTree.Class
 
-import Control.Arrow		( (>>>) )
-import Control.Monad		( (>=>) )
+import Control.Arrow            ( (>>>) )
+import Control.Monad            ( (>=>) )
 
 -- ------------------------------------------------------------
 --
@@ -30,7 +30,7 @@ import Control.Monad		( (>=>) )
 
 -- | collect all trees by moving into one direction, starting tree is included
 
-maybeStar		:: (a -> Maybe a) -> (a -> [a])
+maybeStar               :: (a -> Maybe a) -> (a -> [a])
 maybeStar f x            = x : maybe [] (maybeStar f) (f x)
 
 -- | collect all trees by moving into one direction, starting tree is not included
@@ -85,7 +85,7 @@ descendantOrSelfAxis    = visit []
 
 revDescendantOrSelfAxis :: NavigatableTree t => t a -> [t a]
 revDescendantOrSelfAxis t
-			= t : concatMap revDescendantOrSelfAxis (reverse $ childAxis t)
+                        = t : concatMap revDescendantOrSelfAxis (reverse $ childAxis t)
 
 -- | XPath axis: following sibling
 

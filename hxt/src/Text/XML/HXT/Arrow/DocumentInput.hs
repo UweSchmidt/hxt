@@ -340,11 +340,11 @@ decodeDocument
       , this                          :-> this
       ]
     where
-    decodeX     	:: Bool -> IOStateArrow s XmlTree XmlTree
-    decodeX False	= decodeArr normalizeNL  $< getEncoding
-    decodeX True        = noDecode               $< getEncoding		-- parse with expat
+    decodeX             :: Bool -> IOStateArrow s XmlTree XmlTree
+    decodeX False       = decodeArr normalizeNL  $< getEncoding
+    decodeX True        = noDecode               $< getEncoding         -- parse with expat
 
-    noDecode enc	= traceMsg 2 ("no decoding (done by expat): encoding is " ++ show enc)
+    noDecode enc        = traceMsg 2 ("no decoding (done by expat): encoding is " ++ show enc)
                           >>>
                           addAttr transferEncoding enc
 

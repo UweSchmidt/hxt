@@ -31,8 +31,8 @@ class (Arrow a, ArrowChoice a, ArrowZero a, ArrowIO a) => ArrowExc a where
 
     catchA      :: a b c -> a SomeException c -> a b c
     catchA f h  = tryA f
-		  >>>
-		  ( h ||| returnA )
+                  >>>
+                  ( h ||| returnA )
 
 
 -- ------------------------------------------------------------

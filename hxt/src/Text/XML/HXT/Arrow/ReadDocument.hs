@@ -169,10 +169,10 @@ readDocument' config src
       >>>
       readD $< getSysVar theWithCache
     where
-    readD True  = constA undefined		-- just for generalizing the signature to: IOStateArrow s b       XmlTree
+    readD True  = constA undefined              -- just for generalizing the signature to: IOStateArrow s b       XmlTree
                   >>>                           -- instead of                              IOStateArrow s XmlTree XmlTree
                   (withoutUserState $< (getSysVar theCacheRead >>^ ($ src)))
-    readD False	= readDocument'' src
+    readD False = readDocument'' src
 
 readDocument''   :: String -> IOStateArrow s b XmlTree
 readDocument'' src
@@ -273,12 +273,12 @@ readDocument'' src
                                           )
                                           || r
         parse (validate, (removeNoneXml, (withTagSoup', withExpat')))
-	    | not isXmlOrHtml           = if removeNoneXml
-					  then replaceChildren none             -- don't parse, if mime type is not XML nor HTML
-					  else this                             -- but remove contents when option is set
+            | not isXmlOrHtml           = if removeNoneXml
+                                          then replaceChildren none             -- don't parse, if mime type is not XML nor HTML
+                                          else this                             -- but remove contents when option is set
 
             | isHtml
-	      ||
+              ||
               withTagSoup'              = configSysVar (setS theLowerCaseNames isHtml)
                                           >>>
                                           parseHtmlDocument                     -- parse as HTML or with tagsoup XML
@@ -291,12 +291,12 @@ readDocument'' src
 
         checknamespaces (withNamespaces, withTagSoup')
             | withNamespaces
-	      &&
-	      withTagSoup'		= andValidateNamespaces			-- propagation is done in tagsoup
+              &&
+              withTagSoup'              = andValidateNamespaces                 -- propagation is done in tagsoup
 
             | withNamespaces
               ||
-              validateWithRelax         = propagateAndValidateNamespaces	-- RelaxNG requires correct namespaces
+              validateWithRelax         = propagateAndValidateNamespaces        -- RelaxNG requires correct namespaces
 
             | otherwise                 = this
 
@@ -320,18 +320,18 @@ readDocument'' src
             | otherwise                 = this
 
         isHtml                          = ( not parseByMimeType && parseHtml )  -- force HTML
-					  ||
-					  ( parseByMimeType && isHtmlMimeType mimeType )
+                                          ||
+                                          ( parseByMimeType && isHtmlMimeType mimeType )
 
         isXml                           = ( not parseByMimeType && not parseHtml )
-					  ||
-					  ( parseByMimeType
-					    &&
-					    ( isXmlMimeType mimeType
-					      ||
-					      null mimeType
-					    )                                   -- mime type is XML or not known
-					  )
+                                          ||
+                                          ( parseByMimeType
+                                            &&
+                                            ( isXmlMimeType mimeType
+                                              ||
+                                              null mimeType
+                                            )                                   -- mime type is XML or not known
+                                          )
 
         isXmlOrHtml     = isHtml || isXml
 
@@ -341,7 +341,7 @@ readDocument'' src
 -- the arrow version of 'readDocument', the arrow input is the source URI
 
 readFromDocument        :: SysConfigList -> IOStateArrow s String XmlTree
-readFromDocument config	= applyA ( arr $ readDocument config )
+readFromDocument config = applyA ( arr $ readDocument config )
 
 -- ------------------------------------------------------------
 
@@ -353,9 +353,9 @@ readFromDocument config	= applyA ( arr $ readDocument config )
 --
 -- Default encoding: No encoding is done, the String argument is taken as Unicode string
 
-readString      	:: SysConfigList -> String -> IOStateArrow s b XmlTree
+readString              :: SysConfigList -> String -> IOStateArrow s b XmlTree
 readString config content
-    			= readDocument (withInputEncoding unicodeString : config)
+                        = readDocument (withInputEncoding unicodeString : config)
                           (stringProtocol ++ content)
 
 -- ------------------------------------------------------------
@@ -363,9 +363,9 @@ readString config content
 -- |
 -- the arrow version of 'readString', the arrow input is the source URI
 
-readFromString  	:: SysConfigList -> IOStateArrow s String XmlTree
+readFromString          :: SysConfigList -> IOStateArrow s String XmlTree
 readFromString config
-    			= applyA ( arr $ readString config )
+                        = applyA ( arr $ readString config )
 
 -- ------------------------------------------------------------
 

@@ -133,8 +133,8 @@ mkPrim          = Sym
 mkPrimA         :: LA XmlTree XmlTree -> XmlRegex
 mkPrimA a       = mkPrim (not . null . runLA a)
 
-mkDot   	:: XmlRegex
-mkDot   	= Dot
+mkDot           :: XmlRegex
+mkDot           = Dot
 
 mkStar                  :: XmlRegex -> XmlRegex
 mkStar (Zero _)         = mkUnit                -- {}* == ()

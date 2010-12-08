@@ -114,9 +114,9 @@ collectPrefixUriPairs
 --
 -- Calls 'cleanupNamespaces' with 'collectNamespaceDecl'
 
-uniqueNamespaces                	:: ArrowXml a => a XmlTree XmlTree
-uniqueNamespaces                	= fromLA $
-					  cleanupNamespaces' collectNamespaceDecl
+uniqueNamespaces                        :: ArrowXml a => a XmlTree XmlTree
+uniqueNamespaces                        = fromLA $
+                                          cleanupNamespaces' collectNamespaceDecl
 
 -- | generate unique namespaces and add all namespace declarations for all prefix-uri pairs in all qualified names
 --
@@ -125,20 +125,20 @@ uniqueNamespaces                	= fromLA $
 
 uniqueNamespacesFromDeclAndQNames       :: ArrowXml a => a XmlTree XmlTree
 uniqueNamespacesFromDeclAndQNames       = fromLA $
-					  cleanupNamespaces' ( collectNamespaceDecl
-							       <+>
-							       collectPrefixUriPairs
-							     )
+                                          cleanupNamespaces' ( collectNamespaceDecl
+                                                               <+>
+                                                               collectPrefixUriPairs
+                                                             )
 
-cleanupNamespaces' 			:: LA XmlTree (String, String) -> LA XmlTree XmlTree
-cleanupNamespaces' collectNamespaces	= processTopDownUntil
-					  ( hasNamespaceDecl `guards` cleanupNamespaces collectNamespaces )
+cleanupNamespaces'                      :: LA XmlTree (String, String) -> LA XmlTree XmlTree
+cleanupNamespaces' collectNamespaces    = processTopDownUntil
+                                          ( hasNamespaceDecl `guards` cleanupNamespaces collectNamespaces )
     where
-    hasNamespaceDecl			= isElem
-					  >>>
-					  getAttrl
-					  >>>
-					  isNamespaceDeclAttr
+    hasNamespaceDecl                    = isElem
+                                          >>>
+                                          getAttrl
+                                          >>>
+                                          isNamespaceDeclAttr
 
 -- | does the real work for namespace cleanup.
 --

@@ -32,7 +32,7 @@ where
 import Data.Tree.Class
 
 import Data.Tree.NavigatableTree.Class
-import Data.Tree.NavigatableTree.XPathAxis	( childAxis )
+import Data.Tree.NavigatableTree.XPathAxis      ( childAxis )
 
 import Data.Tree.NTree.TypeDefs
 
@@ -42,29 +42,29 @@ import Data.Tree.NTree.TypeDefs
 --
 -- A zipper consist of the current tree and the branches on the way back to the root
 
-data NTZipper a 	= NTZ
+data NTZipper a         = NTZ
                           { ntree   :: (NTree a)
                           , context :: (NTBreadCrumbs a)
                           }
-			  deriving (Show)
+                          deriving (Show)
 
 -- | The list of unzipped nodes from a current tree back to the root
 
-type NTBreadCrumbs a 	= [NTCrumb a]
+type NTBreadCrumbs a    = [NTCrumb a]
 
 -- | One unzipped step consists of the left siblings, the node info and the right siblings
 
-data NTCrumb a 		= NTC
-                          (NTrees a)		-- left side
-                          a			-- node
-                          (NTrees a)		-- right side
-			  deriving (Show)
+data NTCrumb a          = NTC
+                          (NTrees a)            -- left side
+                          a                     -- node
+                          (NTrees a)            -- right side
+                          deriving (Show)
 
 -- ------------------------------------------------------------
 
 -- | Conversion of a rose tree into a navigatable rose tree
 
-toNTZipper		:: NTree a -> NTZipper a
+toNTZipper              :: NTree a -> NTZipper a
 toNTZipper t            = NTZ t []
 
 {-# INLINE toNTZipper #-}
@@ -83,9 +83,9 @@ fromNTZipper            = ntree
 
 -- ------------------------------------------------------------
 
-up                     	:: NTZipper a -> Maybe (NTZipper a)
+up                      :: NTZipper a -> Maybe (NTZipper a)
 up z
-    | isTop z		= Nothing
+    | isTop z           = Nothing
     | otherwise         = Just $ NTZ (up1 t bc) bcs
     where
     NTZ t (bc : bcs)    = z
@@ -94,8 +94,8 @@ up z
 
 down                    :: NTZipper a -> Maybe (NTZipper a)
 down (NTZ (NTree n cs) bcs)
-          | null cs	= Nothing
-          | otherwise	= Just $ NTZ (head cs) (NTC [] n (tail cs) : bcs)
+          | null cs     = Nothing
+          | otherwise   = Just $ NTZ (head cs) (NTC [] n (tail cs) : bcs)
 
 {-# INLINE down #-}
 
@@ -106,7 +106,7 @@ toTheRight z
       null rs           = Nothing
     | otherwise         = Just $ NTZ t' (bc' : bcs)
     where
-    (NTZ t (bc : bcs))	= z
+    (NTZ t (bc : bcs))  = z
     (NTC ls n rs)       = bc
     t'                  = head rs
     bc'                 = NTC (t : ls) n (tail rs)
@@ -120,27 +120,67 @@ toTheLeft z
       null ls           = Nothing
     | otherwise         = Just $ NTZ t' (bc' : bcs)
     where
-    (NTZ t (bc : bcs))	= z
+    (NTZ t (bc : bcs))  = z
     (NTC ls n rs)       = bc
     t'                  = head ls
     bc'                 = NTC (tail ls) n (t : rs)
 
 {-# INLINE toTheLeft #-}
 
+addToTheLeft            :: NTree a -> NTZipper a -> Maybe (NTZipper a)
+addToTheLeft t z
+    | isTop z           = Nothing
+    | otherwise         = Just $ NTZ t' (NTC (t:ls) n rs : bcs)
+    where
+    (NTZ t' (bc : bcs)) = z
+    (NTC ls n rs)       = bc
+{-# INLINE addToTheLeft #-}
+
+addToTheRight            :: NTree a -> NTZipper a -> Maybe (NTZipper a)
+addToTheRight t z
+    | isTop z           = Nothing
+    | otherwise         = Just $ NTZ t' (NTC ls n (t:rs) : bcs)
+    where
+    (NTZ t' (bc : bcs)) = z
+    (NTC ls n rs)       = bc
+{-# INLINE addToTheRight #-}
+
+dropFromTheLeft            :: NTZipper a -> Maybe (NTZipper a)
+dropFromTheLeft z
+    | isTop z           = Nothing
+    | null ls           = Nothing
+    | otherwise         = Just $ NTZ t' (NTC (tail ls) n rs : bcs)
+    where
+    (NTZ t' (bc : bcs)) = z
+    (NTC ls n rs)       = bc
+{-# INLINE dropFromTheLeft #-}
+
+dropFromTheRight        :: NTZipper a -> Maybe (NTZipper a)
+dropFromTheRight z
+    | isTop z           = Nothing
+    | null rs           = Nothing
+    | otherwise         = Just $ NTZ t' (NTC ls n (tail rs) : bcs)
+    where
+    (NTZ t' (bc : bcs)) = z
+    (NTC ls n rs)       = bc
+{-# INLINE dropFromTheRight #-}
+
+-- ------------------------------------------------------------
+
 isTop                   :: NTZipper a -> Bool
 isTop                   = null . context
 
 {-# INLINE isTop #-}
 
-up1			:: NTree a -> NTCrumb a -> NTree a
-up1 t (NTC ls n rs)	= NTree n (foldl (flip (:)) (t : rs) ls)
+up1                     :: NTree a -> NTCrumb a -> NTree a
+up1 t (NTC ls n rs)     = NTree n (foldl (flip (:)) (t : rs) ls)
 
 {-# INLINE up1 #-}
 
 -- ------------------------------------------------------------
 
 instance Functor NTZipper where
-    fmap f (NTZ t xs)	= NTZ (fmap f t) (map (fmap f) xs)
+    fmap f (NTZ t xs)   = NTZ (fmap f t) (map (fmap f) xs)
     {-# INLINE fmap #-}
 
 instance Functor NTCrumb where
@@ -148,7 +188,7 @@ instance Functor NTCrumb where
     {-# INLINE fmap #-}
 
 instance Tree NTZipper where
-    mkTree n cl		= toNTZipper . mkTree n $ map ntree cl
+    mkTree n cl         = toNTZipper . mkTree n $ map ntree cl
 
     getNode             = getNode . ntree
     {-# INLINE getNode #-}
@@ -162,26 +202,39 @@ instance Tree NTZipper where
     {-# INLINE foldTree #-}
 
 instance NavigatableTree NTZipper where
-    mvDown 		= down
+    mvDown              = down
     {-# INLINE mvDown #-}
 
-    mvUp   		= up
+    mvUp                = up
     {-# INLINE mvUp #-}
 
-    mvLeft 		= toTheLeft
+    mvLeft              = toTheLeft
     {-# INLINE mvLeft #-}
 
-    mvRight 		= toTheRight
+    mvRight             = toTheRight
     {-# INLINE mvRight #-}
 
-instance TreeToNavigatableTree NTree NTZipper where
+instance NavigatableTreeToTree NTZipper NTree where
     fromTree            = toNTZipper
     {-# INLINE fromTree #-}
 
     toTree              = fromNTZipper
     {-# INLINE toTree #-}
 
-    substTree t nt      = nt { ntree = t }
-    {-# INLINE substTree #-}
+instance NavigatableTreeModify NTZipper NTree where
+    addTreeLeft         = addToTheLeft
+    {-# INLINE addTreeLeft #-}
+
+    addTreeRight        = addToTheRight
+    {-# INLINE addTreeRight #-}
+
+    dropTreeLeft        = dropFromTheLeft
+    {-# INLINE dropTreeLeft #-}
+
+    dropTreeRight       = dropFromTheRight
+    {-# INLINE dropTreeRight #-}
+
+    substThisTree t nt  = nt { ntree = t }
+    {-# INLINE substThisTree #-}
 
 -- ------------------------------------------------------------

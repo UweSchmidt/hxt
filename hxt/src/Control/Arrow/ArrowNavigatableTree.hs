@@ -20,14 +20,15 @@
 module Control.Arrow.ArrowNavigatableTree
 where
 
-import Control.Arrow
-import Control.Arrow.ArrowList
-import Control.Arrow.ArrowIf
+import           Control.Arrow
+import           Control.Arrow.ArrowList
+import           Control.Arrow.ArrowIf
 
 import           Data.Maybe
 
 import           Data.Tree.NavigatableTree.Class        ( NavigatableTree
-                                                        , TreeToNavigatableTree
+                                                        , NavigatableTreeToTree
+                                                        , NavigatableTreeModify
                                                         )
 import qualified Data.Tree.NavigatableTree.Class        as T
 import qualified Data.Tree.NavigatableTree.XPathAxis    as T
@@ -41,20 +42,20 @@ import qualified Data.Tree.NavigatableTree.XPathAxis    as T
 class (ArrowList a) => ArrowNavigatableTree a where
 
     -- move one step towards the root
-    moveUp		:: NavigatableTree t => a (t b) (t b)
-    moveUp		= arrL $ maybeToList . T.mvUp
+    moveUp              :: NavigatableTree t => a (t b) (t b)
+    moveUp              = arrL $ maybeToList . T.mvUp
 
     -- descend one step to the leftmost child
-    moveDown		:: NavigatableTree t => a (t b) (t b)
-    moveDown		= arrL $ maybeToList . T.mvDown
+    moveDown            :: NavigatableTree t => a (t b) (t b)
+    moveDown            = arrL $ maybeToList . T.mvDown
 
     -- move to the left neighbour
-    moveLeft		:: NavigatableTree t => a (t b) (t b)
-    moveLeft		= arrL $ maybeToList . T.mvLeft
+    moveLeft            :: NavigatableTree t => a (t b) (t b)
+    moveLeft            = arrL $ maybeToList . T.mvLeft
 
     -- move to the right neighbour
-    moveRight		:: NavigatableTree t => a (t b) (t b)
-    moveRight		= arrL $ maybeToList . T.mvRight
+    moveRight           :: NavigatableTree t => a (t b) (t b)
+    moveRight           = arrL $ maybeToList . T.mvRight
 
 -- derived functions
 
@@ -136,7 +137,7 @@ isAtRoot                = isA (null . T.ancestorAxis)
 -- | Conversion from a tree into a navigatable tree
 
 addNav                  :: ( ArrowList a
-                           , TreeToNavigatableTree t nt
+                           , NavigatableTreeToTree nt t
                            ) =>
                            a (t b) (nt b)
 addNav                  = arr T.fromTree
@@ -145,7 +146,7 @@ addNav                  = arr T.fromTree
 -- | Conversion from a navigatable tree into an ordinary tree
 
 remNav                  :: ( ArrowList a
-                           , TreeToNavigatableTree t nt
+                           , NavigatableTreeToTree nt t
                            ) =>
                            a (nt b) (t b)
 remNav                  = arr T.toTree
@@ -155,7 +156,7 @@ remNav                  = arr T.toTree
 -- This root and all children may be visited in arbitrary order
 
 withNav                 :: ( ArrowList a
-                           , TreeToNavigatableTree t nt
+                           , NavigatableTreeToTree nt t
                            ) =>
                            a (nt b) (nt c) -> a (t b) (t c)
 withNav f               = addNav >>> f >>> remNav
@@ -166,14 +167,15 @@ withNav f               = addNav >>> f >>> remNav
 -- This enables to apply arbitrary tree operations to navigatable trees
 
 withoutNav              :: ( ArrowList a
-                           , TreeToNavigatableTree t nt
+                           , NavigatableTreeToTree nt t
+                           , NavigatableTreeModify nt t
                            ) =>
                            a (t b) (t b) -> a (nt b) (nt b)
-withoutNav f            = ( (remNav >>> f)			-- apply the simple arrow to the tree
+withoutNav f            = ( (remNav >>> f)                      -- apply the simple arrow to the tree
                             &&&
-                            this				-- remember the navigation context
+                            this                                -- remember the navigation context
                           )
-                          >>> arr (uncurry T.substTree)		-- resore the context
+                          >>> arr (uncurry T.substThisTree)             -- resore the context
                              
 -- ------------------------------------------------------------
 
@@ -187,8 +189,8 @@ withoutNav f            = ( (remNav >>> f)			-- apply the simple arrow to the tr
 --
 -- > descendantAxis >>> filterAxis (hasAttrValue "id" (=="42")) >>> followingAxis
 
-filterAxis		:: ( ArrowIf a
-                           , TreeToNavigatableTree t nt
+filterAxis              :: ( ArrowIf a
+                           , NavigatableTreeToTree nt t
                            ) =>
                            a (t b) c -> a (nt b) (nt b)
 
@@ -210,3 +212,102 @@ moveOn axis             = single $ axis
 {-# INLINE moveOn #-}
 
 -- ------------------------------------------------------------
+
+-- | Change the current subtree of a navigatable tree.
+--
+-- The arrow for computing the changes should be deterministic. If it fails
+-- nothing is changed.
+
+changeThisTree          :: ( ArrowList a
+                           , ArrowIf a
+                           , NavigatableTreeToTree nt t
+                           , NavigatableTreeModify nt t
+                           ) =>
+                           a (t b) (t b) -> a (nt b) (nt b)
+changeThisTree cf       = withoutNav $ single cf `orElse` this
+
+-- | Substitute the current subtree of a navigatable tree by a given tree
+
+substThisTree           :: ( ArrowList a
+                           , ArrowIf a
+                           , NavigatableTreeToTree nt t
+                           , NavigatableTreeModify nt t
+                           ) =>
+                           t b -> a (nt b) (nt b)
+substThisTree t         = changeThisTree (constA t)
+
+-- ------------------------------------------------------------
+
+-- | apply an ordinary arrow to the current subtree of a navigatabe tree and add the result trees in front of the current tree.
+--
+-- If this arrow is applied to the root, it will fail, because we want a tree as result, not a forest.
+
+addToTheLeft            :: ( ArrowList a
+                           , NavigatableTreeToTree nt t
+                           , NavigatableTreeModify nt t
+                           ) =>
+                           a (t b) (t b) -> a (nt b) (nt b)
+addToTheLeft            = addToOneSide $
+                          foldl (\ acc t -> acc >>= T.addTreeLeft t)
+{-# INLINE addToTheLeft #-}
+
+-- | apply an ordinary arrow to the current subtree of a navigatabe tree and add the result trees behind the current tree.
+--
+-- If this arrow is applied to the root, it will fail, because we want a tree as result, not a forest.
+
+addToTheRight           :: ( ArrowList a
+                           , NavigatableTreeToTree nt t
+                           , NavigatableTreeModify nt t
+                           ) =>
+                           a (t b) (t b) -> a (nt b) (nt b)
+addToTheRight           = addToOneSide $
+                          foldr (\ t acc -> acc >>= T.addTreeRight t)
+{-# INLINE addToTheRight #-}
+
+
+-- | addToOneSide does the real work for 'addToTheLeft' and 'addToTheRight'
+
+addToOneSide            :: ( ArrowList a
+                           , NavigatableTreeToTree nt t
+                           , NavigatableTreeModify nt t
+                           ) =>
+                           ( Maybe (nt b) -> [t b] -> Maybe (nt b) ) ->
+                           a (t  b) (t  b) ->
+                           a (nt b) (nt b)
+addToOneSide side f     = ( ( remNav >>> listA f )
+                            &&&
+                            this
+                          )
+                          >>>
+                          arrL ( uncurry (\ ts nt -> side (Just nt) ts)
+                                 >>>
+                                 maybeToList
+                               )
+
+-- ------------------------------------------------------------
+
+-- | drop the direct left sibling tree of the given navigatable tree
+--
+-- If this arrow is applied to the root or a leftmost tree, it will fail, because there is nothing to remove
+
+dropFromTheLeft         :: ( ArrowList a
+                           -- , NavigatableTreeToTree nt t
+                           , NavigatableTreeModify nt t
+                           ) =>
+                           a (nt b) (nt b)
+dropFromTheLeft            = arrL $ T.dropTreeLeft >>> maybeToList
+{-# INLINE dropFromTheLeft #-}
+
+-- | drop the direct left sibling tree of the given navigatable tree
+--
+-- If this arrow is applied to the root or a rightmost tree, it will fail, because there is nothing to remove
+
+dropFromTheRight        :: ( ArrowList a
+                           , NavigatableTreeModify nt t
+                           ) =>
+                           a (nt b) (nt b)
+dropFromTheRight            = arrL $ T.dropTreeRight >>> maybeToList
+{-# INLINE dropFromTheRight #-}
+
+-- ------------------------------------------------------------
+

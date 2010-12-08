@@ -230,7 +230,7 @@ data XIORelaxConfig     = XIORxc  { xioRelaxValidate            :: ! Bool
                                   , xioRelaxNoOfErrors          :: ! Int
                                   , xioRelaxDefineId            :: ! Int
                                   , xioRelaxAttrList            ::   AssocList String XmlTrees
-				  , xioRelaxValidator           ::   IOSArrow XmlTree XmlTree
+                                  , xioRelaxValidator           ::   IOSArrow XmlTree XmlTree
                                   }
 
 data XIOCacheConfig     = XIOCch  { xioBinaryCompression        ::   CompressionFct

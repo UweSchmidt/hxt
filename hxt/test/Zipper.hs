@@ -7,10 +7,13 @@ import Data.Tree.Class                 ( formatTree )
 import Data.Tree.NTree.TypeDefs        ( NTree(..) )
 import Data.Tree.NTree.Zipper.TypeDefs ( NTZipper )
 
-import qualified Data.Tree.NavigatableTree.Class        as T
-import           Data.Tree.NavigatableTree.Class        ( NavigatableTree
-                                                        , TreeToNavigatableTree
-                                                        )
+-- import qualified Data.Tree.NavigatableTree.Class        as T
+-- import           Data.Tree.NavigatableTree.Class        ( NavigatableTree
+--                                                        , NavigatableTreeToTree
+--                                                        , NavigatableTreeModify
+--                                                        )
+
+import Data.Maybe
 
 import Text.XML.HXT.Core
 
@@ -81,7 +84,7 @@ loop' axis inc = cont
                `orElse` moveToRoot
 
 tt :: NavArrow -> TreeOfInt -> [TreeOfInt]
-tt f = runLA $ withNavi f
+tt f = runLA $ withNav f
 
 ex :: NavArrow -> TreeOfInt -> IO ()
 ex f = putStrLn . formatTree show . head . tt f
@@ -126,7 +129,7 @@ colorizeRows name dark light
     colorize c1 c2 axis
         = ( moveOn (axis >>> filterAxis (hasName "tr"))
             >>>
-            ( withoutNavi $ addAttr "class" c1 )
+            ( withoutNav $ addAttr "class" c1 )
             >>>
             colorize c2 c1 followingSiblingAxis
           )
@@ -139,7 +142,7 @@ numberH1
     number cnt axis
         =   moveOn (axis >>> filterAxis (hasName "td"))
             >>>
-            ( withoutNavi $ addNumber (cnt + 1) )
+            ( withoutNav $ addNumber (cnt + 1) )
             >>>
             ( number (cnt + 1) followingAxis
               `orElse`
@@ -179,14 +182,14 @@ visit	:: LA XmlNavTree XmlNavTree ->
           (a -> LA XmlTree XmlTree) ->
            LA XmlTree XmlTree
 visit initAxis nextAxis initState nextState nodeTransf
-    = withNavi (move initState initAxis)
+    = withNav (move initState initAxis)
       `orElse`
       this
     where
     move state axis
         = moveOn axis
           >>>
-          changeTree (nodeTransf state)
+          changeThisTree (nodeTransf state)
           >>>
           ( move (nextState state) nextAxis	-- and go to the next node
             `orElse`
@@ -195,15 +198,10 @@ visit initAxis nextAxis initState nextState nodeTransf
 
 runTest	:: LA XmlNavTree XmlNavTree -> IOSArrow XmlTree XmlTree -> IO XmlTrees
 runTest transf doc
-    = runX (doc >>> fromLA (withNavi transf) >>> writeDocument [withIndent yes, withXmlPi no] "")
+    = runX (doc >>> fromLA (withNav transf) >>> writeDocument [withIndent yes, withXmlPi no] "")
 
 r1 = runX (doc1 >>> fromLA (numberH1') >>> writeDocument [withIndent yes, withXmlPi no] "")
 r2 = runX (doc1 >>> fromLA (processTable numberH1'') >>> writeDocument [withIndent yes, withXmlPi no] "")
-r3 = runX (doc1 >>> root [] [fromLA (withNavi (descendantAxis >>> filterAxis (hasName "table") >>> descendantAxis >>> (selfAxis <+> followingAxis) >>> filterAxis (hasName "td")))] >>> writeDocument [withIndent yes, withXmlPi no] "")
+r3 = runX (doc1 >>> root [] [fromLA (withNav (descendantAxis >>> filterAxis (hasName "table") >>> descendantAxis >>> (selfAxis <+> followingAxis) >>> filterAxis (hasName "td")))] >>> writeDocument [withIndent yes, withXmlPi no] "")
 
-changeTree		:: ( ArrowList a
-                           , ArrowIf a
-                           , TreeToNavigatableTree t nt
-                           ) =>
-                           a (t b) (t b) -> a (nt b) (nt b)
-changeTree cf		= withoutNavi $ single cf `orElse` this
+-- ------------------------------------------------------------

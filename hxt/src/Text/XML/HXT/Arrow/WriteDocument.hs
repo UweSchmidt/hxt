@@ -153,7 +153,7 @@ error code is:
 >                )
 -}
 
-writeDocument   	:: SysConfigList -> String -> IOStateArrow s XmlTree XmlTree
+writeDocument           :: SysConfigList -> String -> IOStateArrow s XmlTree XmlTree
 writeDocument config dst
     = localSysEnv
       $
@@ -161,7 +161,7 @@ writeDocument config dst
       >>>
       perform ( (flip writeDocument') dst $< getSysVar theTextMode )
 
-writeDocument'  	:: Bool -> String -> IOStateArrow s XmlTree XmlTree
+writeDocument'          :: Bool -> String -> IOStateArrow s XmlTree XmlTree
 writeDocument' textMode dst
     = ( traceMsg 1 ("writeDocument: destination is " ++ show dst)
         >>>
@@ -212,7 +212,7 @@ prepareContents config encodeDoc
       >>>
       format
     where
-    indent'	 = getS theIndent      config
+    indent'      = getS theIndent      config
     removeWS'    = getS theRemoveWS    config
     showTree'    = getS theShowTree    config
     showHaskell' = getS theShowHaskell config

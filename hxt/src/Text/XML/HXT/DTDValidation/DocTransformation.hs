@@ -82,9 +82,9 @@ transform dtdPart
 traverseTree :: TransEnvTable -> XmlArrow
 traverseTree transEnv
     = processTopDown ( (transFct $< getName)
-		       `when`
-		       isElem
-		     )
+                       `when`
+                       isElem
+                     )
     where
     transFct            :: String -> XmlArrow
     transFct name       = fromMaybe this . M.lookup name $ transEnv

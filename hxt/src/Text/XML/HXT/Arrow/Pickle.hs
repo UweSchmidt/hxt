@@ -157,10 +157,10 @@ xpickleDocument xp config dest
       >>>
       ifA ( getSysAttr a_addDTD >>> isA (== v_1) )
           ( replaceChildren ( (constA undefined >>> xpickleDTD xp >>> getChildren)
-			      <+>
-			      getChildren
+                              <+>
+                              getChildren
                             )
-	  )
+          )
           this
       >>>
       writeDocument [] dest
