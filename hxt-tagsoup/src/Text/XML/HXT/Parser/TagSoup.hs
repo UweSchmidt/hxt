@@ -142,7 +142,7 @@ isOpn           = lookAhead is
 -- primitive symbol parsers
 
 getTag          :: Parser STag
-getTag          = P $ \ (t1:ts1) -> (t1, ts1)
+getTag          = P $ \ t -> (head t, tail t)
 
 getSym          :: (STag -> a) -> Parser a
 getSym f        = do

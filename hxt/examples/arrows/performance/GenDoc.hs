@@ -1,4 +1,5 @@
 {-# LANGUAGE BangPatterns#-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 
 -- ----------------------------------------
 
@@ -7,6 +8,7 @@ where
 
 import Text.XML.HXT.Core
 import Text.XML.HXT.TagSoup
+-- import Text.XML.HXT.Expat
 
 import Data.String.Unicode
     ( unicodeToXmlEntity
@@ -155,7 +157,8 @@ genDoc d out    = constA (mkBTree d)
 
 readDoc	:: String -> IOSArrow b XmlTree
 readDoc src
-    = readDocument [ withTagSoup
+    = readDocument [ -- withExpat yes
+                     withTagSoup
 		   , withParseHTML no
 		   , withRemoveWS yes
 		   , withInputEncoding isoLatin1
@@ -212,12 +215,12 @@ instance XmlPickler BTree where
 	where
 	tag (Leaf _	) = 0
 	tag (Fork _ _	) = 1
+
 	ps = [ xpWrap ( Leaf, \ (Leaf i) -> i)
 	       ( xpElem "leaf" $ xpAttr "value" $ xpickle )
-
 	     , xpWrap ( uncurry Fork, \ (Fork l r) -> (l, r))
 	       ( xpElem "fork" $ xpPair xpickle xpickle )
-	       ]
+	     ]
 
 -- ----------------------------------------
 

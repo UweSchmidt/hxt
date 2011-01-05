@@ -641,7 +641,7 @@ xpList pa
 xpList1 :: PU a -> PU [a]
 xpList1 pa
     = ( xpWrap (\ (x, xs) -> x : xs
-               ,\ (x : xs) -> (x, xs)
+               ,\ x -> (head x, tail x)
                ) $
         xpPair pa (xpList pa)
       ) { theSchema = scList1 (theSchema pa) }

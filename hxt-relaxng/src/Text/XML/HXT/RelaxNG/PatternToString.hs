@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+
 module Text.XML.HXT.RelaxNG.PatternToString
   ( patternToStringTree
   , patternToFormatedString
