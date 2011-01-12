@@ -57,6 +57,7 @@ library
  hs-source-dirs: src
 
  ghc-options: -Wall
+ ghc-prof-options: -auto-all -caf-all
 
  -- extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances
 

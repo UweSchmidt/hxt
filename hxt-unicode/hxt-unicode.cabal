@@ -31,3 +31,4 @@ Library
   hs-source-dirs: src
 
   ghc-options: -Wall
+  ghc-prof-options: -auto-all -caf-all

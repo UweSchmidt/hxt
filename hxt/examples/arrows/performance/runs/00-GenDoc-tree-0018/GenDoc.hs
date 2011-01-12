@@ -157,8 +157,6 @@ genDoc d out    = constA (mkBTree d)
                   >>>
                   readBinaryValue (out ++ ".bin")
 		  >>>
-                  strictA
-                  >>>
 		  putDoc out
 
 -- ----------------------------------------
@@ -166,9 +164,9 @@ genDoc d out    = constA (mkBTree d)
 readDoc	:: String -> IOSArrow b XmlTree
 readDoc src
     = readDocument [ withParseHTML no
-                   , withValidate no
+		   -- , withRemoveWS yes
 		   , withInputEncoding isoLatin1
-		   , withWarnings yes
+		   , withWarnings no
 		   , withTrace 1
 		   , withStrictInput no
 		   -- , withRemoveWS yes

@@ -4,3 +4,5 @@ PruneLeft
 PruneRight
 ReadDoc
 tree-*.xml
+*.aux
+*.bin

@@ -1,0 +1,14 @@
+performance test runs with GenDoc 18 und ReadDoc 18.
+
+GenDoc.ps shows, that QNames and Strings need mode space during readBinary
+than neccessary, after deserialization the space reduces.
+
+The Problem was the non strict evaluation of mkQName in the instance declaration
+of Binary for QName. There the QNames must be reduced to whnf to take the sharing of strings
+in QName genaration into effect. The closures need more space than the evaluated QNames.
+
+A single ! solved that problem. But the diagram shows that about 10Mb space is needed
+for QName values, so the sharing should not be done with names (String) but with QNames.
+
+In ReadDoc.ps there is a peak on string usage when the input is normaized.
+The reason there could be a similar problem as with GenDoc
