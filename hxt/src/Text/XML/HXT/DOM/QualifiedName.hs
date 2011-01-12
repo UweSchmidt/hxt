@@ -163,7 +163,10 @@ instance Binary QName where
                           px <- get
                           lp <- get
                           ns <- get
-                          return $ mkQName px lp ns
+                          return $! mkQName px lp ns
+                          --     ^^
+                          -- strict apply !!!
+                          -- build the QNames strict, else the name sharing optimization will not be in effect
 
 -- -----------------------------------------------------------------------------
 
@@ -522,7 +525,7 @@ theAtoms        = unsafePerformIO (newMVar M.empty)
 -- | insert a bytestring into the atom cache
 
 insertAtom      :: String -> Atoms -> (Atoms, Atom)
-insertAtom s m  = maybe (M.insert {- (trace (show s) s) -} s s m, deepseq s (A s))
+insertAtom s m  = maybe (M.insert {- (trace (show s) s) -} s s m, A s)
                         (\ s' -> (m, A s'))
                   .
                   M.lookup s $ m
@@ -530,7 +533,7 @@ insertAtom s m  = maybe (M.insert {- (trace (show s) s) -} s s m, deepseq s (A s
 -- | creation of an @Atom@ from a @String@
 
 newAtom         :: String -> Atom
-newAtom         = unsafePerformIO . newAtom'
+newAtom s       = s `deepseq` unsafePerformIO (newAtom' s)
 {-# NOINLINE newAtom #-}
 
 -- | The internal operation running in the IO monad
