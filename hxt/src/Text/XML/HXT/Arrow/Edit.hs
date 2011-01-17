@@ -762,7 +762,7 @@ hasXmlPi
 addXmlPi                :: ArrowXml a => a XmlTree XmlTree
 addXmlPi
     = fromLA
-      ( insertChildrenAt 0 ( ( mkPi (mkSNsName t_xml) none
+      ( insertChildrenAt 0 ( ( mkPi (mkName t_xml) none
                                >>>
                                addAttr a_version "1.0"
                              )
