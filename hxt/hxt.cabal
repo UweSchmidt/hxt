@@ -79,6 +79,7 @@ library
   Control.Arrow.ListArrow,
   Control.Arrow.ListArrows,
   Control.Arrow.StateListArrow,
+  Control.FlatSeq,
   Data.AssocList,
   Data.Atom,
   Data.Function.Selector,

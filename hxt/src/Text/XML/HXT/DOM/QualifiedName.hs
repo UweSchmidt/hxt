@@ -76,14 +76,15 @@ module Text.XML.HXT.DOM.QualifiedName
 
 where
 
-{-
+{- -}
 import           Debug.Trace
- -}
+{- -}
 
 import           Control.Arrow                  ( (***) )
 
 import           Control.Concurrent.MVar
 import           Control.DeepSeq
+import           Control.FlatSeq
 
 import           Data.AssocList
 import           Data.Binary
@@ -150,7 +151,8 @@ instance Eq QName where
 -- uses XML names not in a systematical way
 -- and does things like "mkName("x:y") == mkPrefixLocalPart("x","y")
 
-instance NFData QName where
+instance NFData QName
+instance WNFData QName          -- QName has only strict fields
 
 instance Binary QName where
     put qn              = let
@@ -525,7 +527,7 @@ theAtoms        = unsafePerformIO (newMVar M.empty)
 -- | insert a bytestring into the atom cache
 
 insertAtom      :: String -> Atoms -> (Atoms, Atom)
-insertAtom s m  = maybe (M.insert {- (trace (show s) s) -} s s m, A s)
+insertAtom s m  = maybe (M.insert {- -} (trace (show s) s) {- -} {- s -} s m, A s)
                         (\ s' -> (m, A s'))
                   .
                   M.lookup s $ m
@@ -533,7 +535,8 @@ insertAtom s m  = maybe (M.insert {- (trace (show s) s) -} s s m, A s)
 -- | creation of an @Atom@ from a @String@
 
 newAtom         :: String -> Atom
-newAtom s       = s `deepseq` unsafePerformIO (newAtom' s)
+-- newAtom s       = s `deepseq` unsafePerformIO (newAtom' s)
+newAtom s       = s `deepseq` A s -- (trace (show s) s)
 {-# NOINLINE newAtom #-}
 
 -- | The internal operation running in the IO monad

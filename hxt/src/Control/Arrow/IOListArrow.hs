@@ -147,4 +147,7 @@ instance ArrowNF IOLA where
                                         res <- f x
                                         deepseq res $ return res
 
+
+instance ArrowWNF IOLA
+
 -- ------------------------------------------------------------

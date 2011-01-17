@@ -26,10 +26,13 @@ module Data.Tree.NTree.TypeDefs
 where
 
 import Control.DeepSeq
+import Control.FlatSeq
 
 import Data.Binary
 import Data.Tree.Class
 import Data.Typeable
+
+-- ------------------------------------------------------------
 
 -- | n-ary ordered tree (rose trees)
 --
@@ -53,6 +56,16 @@ instance (NFData a) => NFData (NTree a) where
     rnf (NTree n cl)                    = rnf n `seq` rnf cl
     {-# INLINE rnf #-}
 
+instance (WNFData a) => WNFData (NTree a) where
+    rwnf (NTree n cl)           	= rwnf n `seq` rwnf cl
+    {-# INLINE rwnf #-}
+
+    -- | Evaluate a tree 2 steps deep, the top node and all children are evaluated with rwnf
+    rwnf2 (NTree n cl)              	= rwnf n `seq` rlnf rwnf cl
+    {-# INLINE rwnf2 #-}
+
+-- ------------------------------------------------------------
+
 instance (Binary a) => Binary (NTree a) where
     put (NTree n cs)    = put n >> put cs
     get                 = do
@@ -60,12 +73,15 @@ instance (Binary a) => Binary (NTree a) where
                           cs <- get
                           return (NTree n cs)
 
+-- ------------------------------------------------------------
+
 -- | NTree implements class Functor
 
 instance Functor NTree where
     fmap f ~(NTree n cl)                = NTree (f n) (map (fmap f) cl)
     {-# INLINE fmap #-}
 
+-- ------------------------------------------------------------
 
 -- | Implementation of "Data.Tree.Class" interface for rose trees
 
