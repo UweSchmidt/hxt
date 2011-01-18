@@ -210,9 +210,11 @@ type Blob       = BS.ByteString
 
 blobToString    :: Blob -> String
 blobToString    = CS.unpack
+{-# INLINE blobToString #-}
 
 stringToBlob    :: String -> Blob
 stringToBlob    = CS.pack
+{-# INLINE stringToBlob #-}
 
 -- -----------------------------------------------------------------------------
 

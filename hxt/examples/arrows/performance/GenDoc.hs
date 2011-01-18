@@ -24,7 +24,7 @@ import Control.FlatSeq
 
 import Data.Maybe
 
-import System.IO                        -- import the IO and commandline option stuff
+import System.IO  hiding (utf8)                      -- import the IO and commandline option stuff
 import System.Environment
 
 import qualified Text.XML.HXT.DOM.XmlNode as XN
@@ -266,13 +266,6 @@ sattr' an av            = constA (mkAttr' (mkName an) [mkText' av])
 
 -- ----------------------------------------
 
-readMaybe xs
-    | all isDigit xs 	= Just . foldl' (\ r c -> 10 * r + (fromEnum c - fromEnum '0')) 0 $ xs
-readMaybe ('-' : xs)	= fmap (0 -) . readMaybe $ xs
-readMaybe ('+' : xs)	=              readMaybe $ xs
-readMaybe _             = Nothing
-
-
 genDoc          :: Int -> String -> IOSArrow b XmlTree
 genDoc d out    = constA (let t = mkBTree d in rnf t `seq` t)
                   >>>
@@ -360,7 +353,7 @@ instance XmlPickler BTree where
         tag (Fork _ _   ) = 1
 
         ps = [ xpWrap ( Leaf, \ (Leaf i) -> i)
-               ( xpElem "leaf" $ xpAttr "value" $ xpInt )
+               ( xpElem "leaf" $ xpAttr "value" $ xpInt ) -- xpWrap (const 0, const ">&\"äöü") $ xpText )
              , xpWrap ( uncurry Fork, \ (Fork l r) -> (l, r))
                ( xpElem "fork" $ xpPair xpickle xpickle )
              ]
@@ -396,6 +389,15 @@ foldT1 op (Fork l r)    = foldT1 op l `op` foldT1 op r
 
 putDoc  :: String -> IOStateArrow s XmlTree XmlTree
 putDoc dst
+    = writeDocument [ withOutputEncoding utf8
+                    , withOutputXML
+                    ] dst
+
+-- ----------------------------------------
+{-
+
+putDoc  :: String -> IOStateArrow s XmlTree XmlTree
+putDoc dst
     = addXmlPi
       >>>
       addXmlPiEncoding isoLatin1
@@ -419,5 +421,5 @@ putDoc dst
                 handle <- openBinaryFile dst WriteMode
                 action handle
                 hClose handle
-
+-}
 -- ----------------------------------------

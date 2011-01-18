@@ -30,6 +30,7 @@ import Text.XML.HXT.DOM.XmlKeywords             -- constants
 import Text.XML.HXT.DOM.TypeDefs                -- XML Tree types
 import Text.XML.HXT.DOM.Util
 import Text.XML.HXT.DOM.MimeTypes               -- mime types related stuff
+
 import Data.String.EncodingNames                -- char encoding names for readDocument
 
 -- ------------------------------------------------------------

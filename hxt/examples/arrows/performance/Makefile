@@ -2,7 +2,7 @@
 
 HXT_HOME	= ../../..
 PKGFLAGS	= 
-GHCFLAGS	= -Wall -O2
+GHCFLAGS	= -Wall -O2 -rtsopts
 GHC		= ghc $(GHCFLAGS) $(PKGFLAGS)
 
 DIST		= $(HXT_HOME)/dist/examples/arrows
@@ -24,7 +24,7 @@ progs		= $(prog) $(prog2) $(prog3) $(prog4) $(prog5) $(prog6)
 all		: $(progs)
 
 prof		:
-		$(MAKE) all PKGFLAGS="-prof -auto-all -caf-all -rtsopts"
+		$(MAKE) all PKGFLAGS="-prof -auto-all -caf-all"
 
 $(prog)		: $(prog).hs
 		$(GHC) --make -o $@ $<

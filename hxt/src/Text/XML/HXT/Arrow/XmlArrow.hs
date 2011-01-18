@@ -2,7 +2,7 @@
 
 {- |
    Module     : Text.XML.HXT.Arrow.XmlArrow
-   Copyright  : Copyright (C) 2005-9 Uwe Schmidt
+   Copyright  : Copyright (C) 2011 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
@@ -641,15 +641,20 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
                             | otherwise
                                 = XN.changeChildren (++ [c]) t
 
+
     -- | apply an arrow to the input and convert the resulting XML trees into a string representation
+
     xshow               :: a n XmlTree -> a n String
     xshow f             = f >. XS.xshow
     {-# INLINE xshow #-}
 
+
     -- | apply an arrow to the input and convert the resulting XML trees into a string representation
+
     xshowBlob           :: a n XmlTree -> a n Blob
     xshowBlob f         = f >. XS.xshowBlob
     {-# INLINE xshowBlob #-}
+
 
 {- | Document Type Definition arrows
 

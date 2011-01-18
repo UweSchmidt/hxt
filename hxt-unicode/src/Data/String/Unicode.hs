@@ -53,6 +53,11 @@ module Data.String.Unicode
 
     , normalizeNL
     , guessEncoding
+
+    , getOutputEncodingFct'
+    , unicodeCharToUtf8'
+    , unicodeCharToXmlEntity'
+    , unicodeCharToLatin1'
     )
 where
 
@@ -313,6 +318,7 @@ unicodeToLatin1
 -- substitute selected characters
 -- The @check@ function returns 'True' whenever a character needs to substitution
 -- The function @esc@ computes a substitute.
+
 escape :: (Unicode -> Bool) -> (Unicode -> String) -> UString -> String
 escape check esc =
     concatMap (\uc -> if check uc then [uc] else esc uc)
@@ -495,7 +501,6 @@ outputEncodingTable
     = [ (utf8,          unicodeToUtf8           )
       , (isoLatin1,     unicodeToLatin1         )
       , (usAscii,       unicodeToXmlEntity      )
-      , (ucs2,          ucs2ToUnicode           )
       , (unicodeString, id                      )
       , ("",            unicodeToUtf8           )       -- default
       ]
@@ -547,4 +552,98 @@ partitionEither =
 {-# INLINE partitionEither #-}
 
 -- ------------------------------------------------------------
+
+-- output encoding for bytestrings
+
+-- |
+-- the table of supported output encoding schemes and the associated
+-- conversion functions from Unicode
+
+type StringFct		= String -> String
+
+outputEncodingTable'     :: [(String, (Char -> StringFct))]
+outputEncodingTable'
+    = [ (utf8,          unicodeCharToUtf8'           )
+      , (isoLatin1,     unicodeCharToLatin1'         )
+      , (usAscii,       unicodeCharToXmlEntity'      )
+      , ("",            unicodeCharToUtf8'           )       -- default
+      ]
+
+-- |
+-- the lookup function for selecting the encoding function
+
+getOutputEncodingFct'            :: String -> Maybe (Char -> StringFct)
+getOutputEncodingFct' enc
+    = lookup (map toUpper enc) outputEncodingTable'
+
+
+-- ------------------------------------------------------------
+
+-- |
+-- conversion from Unicode (Char) to a UTF8 encoded string.
+
+unicodeCharToUtf8'      :: Char -> StringFct
+unicodeCharToUtf8' c
+    | i >= 0          && i <= 0x0000007F        -- 1 byte UTF8 (7 bits)
+        = (c :)
+
+    | i >= 0x00000080 && i <= 0x000007FF        -- 2 byte UTF8 (5 + 6 bits)
+        = ((toEnum (0xC0 + i `div` 0x40)                   ) :) .
+          ((toEnum (0x80 + i                    `mod` 0x40)) :)
+
+    | i >= 0x00000800 && i <= 0x0000FFFF        -- 3 byte UTF8 (4 + 6 + 6 bits)
+        = ((toEnum (0xE0 +  i `div`     0x1000)            ) :) .
+          ((toEnum (0x80 + (i `div`       0x40) `mod` 0x40)) :) .
+          ((toEnum (0x80 +  i                   `mod` 0x40)) :)
+
+    | i >= 0x00010000 && i <= 0x001FFFFF        -- 4 byte UTF8 (3 + 6 + 6 + 6 bits) -- extension to encode 21 bit values
+        = ((toEnum (0xF0 +  i `div`    0x40000)            ) :) .
+          ((toEnum (0x80 + (i `div`     0x1000) `mod` 0x40)) :) .
+          ((toEnum (0x80 + (i `div`       0x40) `mod` 0x40)) :) .
+          ((toEnum (0x80 +  i                   `mod` 0x40)) :)
+
+    | i >= 0x00200000 && i <= 0x03FFFFFF        -- 5 byte UTF8 (2 + 6 + 6 + 6 + 6 bits) -- extension to encode 26 bit values
+        = ((toEnum (0xF8 +  i `div`  0x1000000)            ) :) .
+          ((toEnum (0x80 + (i `div`    0x40000) `mod` 0x40)) :) .
+          ((toEnum (0x80 + (i `div`     0x1000) `mod` 0x40)) :) .
+          ((toEnum (0x80 + (i `div`       0x40) `mod` 0x40)) :) .
+          ((toEnum (0x80 +  i                   `mod` 0x40)) :)
+
+    | i >= 0x04000000 && i <= 0x7FFFFFFF        -- 6 byte UTF8 (1 + 6 + 6 + 6 + 6 + 6 bits) -- extension to encode 31 bit values
+        = ((toEnum (0xFC +  i `div` 0x40000000)            ) :) .
+          ((toEnum (0x80 + (i `div`  0x1000000) `mod` 0x40)) :) .
+          ((toEnum (0x80 + (i `div`    0x40000) `mod` 0x40)) :) .
+          ((toEnum (0x80 + (i `div`     0x1000) `mod` 0x40)) :) .
+          ((toEnum (0x80 + (i `div`       0x40) `mod` 0x40)) :) .
+          ((toEnum (0x80 +  i                   `mod` 0x40)) :)
+
+    | otherwise                                 -- other values not supported
+        = error ("unicodeCharToUtf8: illegal integer argument " ++ show i)
+    where
+    i = fromEnum c
+
+-- ------------------------------------------------------------
+
+-- |
+-- substitute all Unicode characters, that are not legal 1-byte
+-- UTF-8 XML characters by a character reference.
+
+unicodeCharToXmlEntity'	:: Char -> StringFct
+unicodeCharToXmlEntity' c
+    | isXml1ByteChar c	= (c :)
+    | otherwise		= ((intToCharRef . fromEnum $ c) ++)
+
+-- ------------------------------------------------------------
+
+-- |
+-- substitute all Unicode characters, that are not legal latin1
+-- UTF-8 XML characters by a character reference.
+
+unicodeCharToLatin1' 	:: Char -> StringFct
+unicodeCharToLatin1' c
+    | isXmlLatin1Char c	= (c :)
+    | otherwise		= ((intToCharRef . fromEnum $ c) ++)
+
+-- ------------------------------------------------------------
+
 
