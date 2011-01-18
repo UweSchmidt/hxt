@@ -50,6 +50,7 @@ module Text.XML.HXT.DOM.QualifiedName
     , setNamespaceUri'
 
     , qualifiedName
+    , qualifiedName'
     , universalName
     , universalUri
     , buildUniversalName
@@ -111,14 +112,14 @@ import Data.Char.Properties.XMLCharProps        ( isXmlNCNameStartChar
 -- Names are always reduced to normal form, and they are stored internally in a name cache
 -- for sharing equal names by the same data structure
 
-newtype XName           = XN String
+newtype XName           = XN { unXN :: String }
                           deriving (Eq, Ord, Typeable)
 
 instance Read XName where
     readsPrec p str     = [ (newXName x, y) | (x, y) <- readsPrec p str ]
 
 instance Show XName where
-    show (XN s)         = s
+    show (XN s)         = show s
 
 instance NFData XName where
     rnf (XN s)          = rnf s
@@ -226,13 +227,13 @@ namespaceUri' (NS ns _) = ns
 namespaceUri' _         = nullXName
 
 namePrefix              :: QName -> String
-namePrefix              = show . namePrefix'
+namePrefix              = unXN . namePrefix'
 
 localPart               :: QName -> String
-localPart               = show . localPart'
+localPart               = unXN . localPart'
 
 namespaceUri            :: QName -> String
-namespaceUri            = show . namespaceUri'
+namespaceUri            = unXN . namespaceUri'
 
 -- ------------------------------------------------------------
 
@@ -271,9 +272,16 @@ setNamePrefix' px (NS ns n)     = newNSName' ns (setNamePrefix' px n)
 -- builds the full name \"prefix:localPart\", if prefix is not null, else the local part is the result
 
 qualifiedName                   :: QName -> String
-qualifiedName (LP lp)           = show lp
-qualifiedName (PX px n)         = show px ++ (':' : qualifiedName n)
+qualifiedName (LP lp)           = unXN lp
+qualifiedName (PX px n)         = unXN px ++ (':' : qualifiedName n)
 qualifiedName (NS _ n)          = qualifiedName n
+
+-- | functional list version of qualifiedName
+
+qualifiedName'                  :: QName -> String -> String
+qualifiedName' (LP lp)          = (unXN lp ++)
+qualifiedName' (PX px n)        = (unXN px ++) . (':' :) . qualifiedName' n
+qualifiedName' (NS _ n)         = qualifiedName' n
 
 -- |
 -- builds the \"universal\" name, that is the namespace uri surrounded with \"{\" and \"}\" followed by the local part
@@ -295,7 +303,7 @@ universalUri                    = buildUniversalName (++)
 -- namespace uri and local part are combined with the combining function given by the first parameter
 
 buildUniversalName              :: (String -> String -> String) -> QName -> String
-buildUniversalName bf (NS ns n) = show ns `bf` localPart n
+buildUniversalName bf (NS ns n) = unXN ns `bf` localPart n
 buildUniversalName _  n         = localPart n
 
 -- ------------------------------------------------------------
@@ -472,8 +480,8 @@ isWellformedQualifiedName s
 -- predicate is used in filter 'valdateNamespaces'.
 
 isWellformedQName               :: QName -> Bool
-isWellformedQName (LP lp)       = isNCName . show $ lp                          -- rule [8] XML Namespaces
-isWellformedQName (PX px n)     = (isNCName . show) px                          -- rule [7] XML Namespaces
+isWellformedQName (LP lp)       = (isNCName . unXN) lp                          -- rule [8] XML Namespaces
+isWellformedQName (PX px n)     = (isNCName . unXN) px                          -- rule [7] XML Namespaces
                                   &&
                                   isWellformedQName n
 isWellformedQName (NS _ n)      = isWellformedQName n

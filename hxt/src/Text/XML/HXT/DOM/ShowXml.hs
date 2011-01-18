@@ -22,6 +22,8 @@ module Text.XML.HXT.DOM.ShowXml
     )
 where
 
+import Prelude                           hiding (showChar, showString)
+
 import Data.Maybe
 import Data.Tree.Class
 import Data.Tree.NTree.TypeDefs
@@ -55,7 +57,9 @@ xshowBlob ts                    = stringToBlob $ xshow ts
 
 -- ------------------------------------------------------------
 
-showXmlTree             :: XmlTree  -> String -> String
+type StringFct          = String -> String
+
+showXmlTree             :: XmlTree  -> StringFct
 
 showXmlTree (NTree (XText s) _)                         -- common cases first
     = showString s
@@ -95,7 +99,7 @@ showXmlTree (NTree (XPi n al) _)
       .
       showString "?>"
       where
-      showPiAttr        :: XmlTree -> String -> String
+      showPiAttr        :: XmlTree -> StringFct
       showPiAttr a@(NTree (XAttr an) cs)
           | qualifiedName an == a_value
               = showBlank . showXmlTrees cs
@@ -112,20 +116,23 @@ showXmlTree (NTree (XError l e) _)
 
 -- ------------------------------------------------------------
 
-showXmlTrees            :: XmlTrees -> String -> String
+showXmlTrees            :: XmlTrees -> StringFct
 showXmlTrees            = foldr (.) id . map showXmlTree
+{-# INLINE showXmlTrees #-}
 
-showXmlTrees'           :: XmlTrees -> String -> String
+showXmlTrees'           :: XmlTrees -> StringFct
 showXmlTrees'           = foldr (\ x y -> x . showNL . y) id . map showXmlTree
+{-# INLINE showXmlTrees' #-}
 
 -- ------------------------------------------------------------
 
-showQName               :: QName -> String -> String
-showQName               = showString . qualifiedName
+showQName               :: QName -> StringFct
+showQName               = qualifiedName'
+{-# INLINE showQName #-}
 
 -- ------------------------------------------------------------
 
-showQuoteString         :: String -> String -> String
+showQuoteString         :: String -> StringFct
 showQuoteString s
     | '\"' `elem` s     = showApos . showString s . showApos
     | otherwise         = showQuot . showString s . showQuot
@@ -133,12 +140,12 @@ showQuoteString s
 
 -- ------------------------------------------------------------
 
-showAttr                :: String -> Attributes -> String -> String
+showAttr                :: String -> Attributes -> StringFct
 showAttr k al           = showString (fromMaybe "" . lookup k $ al)
 
 -- ------------------------------------------------------------
 
-showPEAttr      :: Attributes -> String -> String
+showPEAttr      :: Attributes -> StringFct
 showPEAttr al
     = showPE (lookup a_peref al)
       where
@@ -147,7 +154,7 @@ showPEAttr al
 
 -- ------------------------------------------------------------
 
-showExternalId  :: Attributes -> String -> String
+showExternalId  :: Attributes -> StringFct
 showExternalId al
     = id2Str (lookup k_system al) (lookup k_public al)
       where
@@ -158,7 +165,7 @@ showExternalId al
 
 -- ------------------------------------------------------------
 
-showNData       :: Attributes -> String -> String
+showNData       :: Attributes -> StringFct
 showNData al
     = nd2Str (lookup k_ndata al)
       where
@@ -167,7 +174,7 @@ showNData al
 
 -- ------------------------------------------------------------
 
-showXmlDTD              :: DTDElem -> Attributes -> XmlTrees -> String -> String
+showXmlDTD              :: DTDElem -> Attributes -> XmlTrees -> StringFct
 
 showXmlDTD DOCTYPE al cs
     = showString "<!DOCTYPE "
@@ -238,7 +245,7 @@ showXmlDTD ATTLIST al cs
             .
             showString ")"
             where
-            getEnum     :: Attributes -> String -> String
+            getEnum     :: Attributes -> StringFct
             getEnum l = showAttr a_name l . showPEAttr l
 
       showAttrKind k
@@ -293,7 +300,7 @@ showXmlDTD de al _cs
 
 -- ------------------------------------------------------------
 
-showElemType    :: String -> XmlTrees -> String -> String
+showElemType    :: String -> XmlTrees -> StringFct
 showElemType t cs
     | t == v_pcdata
         = showLpar . showString v_pcdata . showRpar
@@ -324,7 +331,7 @@ showElemType t cs
     where
     [(NTree (XDTD CONTENT al1) cs1)] = cs
 
-    mixedContent :: Attributes -> String -> String
+    mixedContent :: Attributes -> StringFct
     mixedContent l
         = showString " | " . showAttr a_name l . showPEAttr l
 
@@ -334,11 +341,11 @@ showElemType t cs
 
 -- ------------------------------------------------------------
 
-showContent     :: XmlTree -> String -> String
+showContent     :: XmlTree -> StringFct
 showContent (NTree (XDTD de al) cs)
     = cont2String de
       where
-      cont2String       :: DTDElem -> String -> String
+      cont2String       :: DTDElem -> StringFct
       cont2String NAME
           = showAttr a_name al
       cont2String PEREF
@@ -368,7 +375,7 @@ showContent n
 
 -- ------------------------------------------------------------
 
-showEntity      :: String -> Attributes -> XmlTrees -> String -> String
+showEntity      :: String -> Attributes -> XmlTrees -> StringFct
 
 showEntity kind al cs
     = showString "<!ENTITY "
@@ -387,7 +394,7 @@ showEntity kind al cs
 
 -- ------------------------------------------------------------
 
-showEntityValue :: XmlTrees -> String -> String
+showEntityValue :: XmlTrees -> StringFct
 
 showEntityValue []
     = id
@@ -398,17 +405,44 @@ showEntityValue cs
 -- ------------------------------------------------------------
 
 showBlank,
-  showEq, showLt, showGt, showSlash, showApos, showQuot, showLpar, showRpar, showNL :: String -> String
+  showEq, showLt, showGt, showSlash, showApos, showQuot, showLpar, showRpar, showNL :: StringFct
 
 showBlank       = showChar ' '
+{-# INLINE showBlank #-}
+
 showEq          = showChar '='
+{-# INLINE showEq #-}
+
 showLt          = showChar '<'
+{-# INLINE showLt #-}
+
 showGt          = showChar '>'
+{-# INLINE showGt #-}
+
 showSlash       = showChar '/'
+{-# INLINE showSlash #-}
+
 showApos        = showChar '\''
+{-# INLINE showApos #-}
+
 showQuot        = showChar '\"'
+{-# INLINE showQuot #-}
+
 showLpar        = showChar '('
+{-# INLINE showLpar #-}
+
 showRpar        = showChar ')'
+{-# INLINE showRpar #-}
+
 showNL          = showChar '\n'
+{-# INLINE showNL #-}
+
+showChar	:: Char -> StringFct
+showChar        = (:)
+{-# INLINE showChar #-}
+
+showString      :: String -> StringFct
+showString      = (++)
+{-# INLINE showString #-}
 
 -- -----------------------------------------------------------------------------

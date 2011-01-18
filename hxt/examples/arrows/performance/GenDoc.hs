@@ -10,6 +10,9 @@ import Text.XML.HXT.Core hiding (trace)
 -- import Text.XML.HXT.TagSoup
 -- import Text.XML.HXT.Expat
 
+import Data.Char (isDigit)
+import Data.List (foldl')
+
 import Data.String.Unicode
     ( unicodeToXmlEntity
     )
@@ -263,21 +266,29 @@ sattr' an av            = constA (mkAttr' (mkName an) [mkText' av])
 
 -- ----------------------------------------
 
+readMaybe xs
+    | all isDigit xs 	= Just . foldl' (\ r c -> 10 * r + (fromEnum c - fromEnum '0')) 0 $ xs
+readMaybe ('-' : xs)	= fmap (0 -) . readMaybe $ xs
+readMaybe ('+' : xs)	=              readMaybe $ xs
+readMaybe _             = Nothing
+
+
 genDoc          :: Int -> String -> IOSArrow b XmlTree
-genDoc d out    = constA (mkBTree d)
+genDoc d out    = constA (let t = mkBTree d in rnf t `seq` t)
                   >>>
                   xpickleVal xpickle
-                  >>>
-                  strictA
-                  >>>
-                  writeBinaryValue (out ++ ".bin")
-                  >>>
-                  readBinaryValue (out ++ ".bin")
+                  -- >>>
+                  -- strictA
+                  -- >>>
+                  -- perform (writeBinaryValue (out ++ ".bin"))
+                  -- {-
+                  -- >>>
+                  -- readBinaryValue (out ++ ".bin")
                   >>>
                   strictA
                   >>>
                   putDoc out
-
+                  -- -}
 -- ----------------------------------------
 
 readDoc :: String -> IOSArrow b XmlTree
@@ -338,6 +349,10 @@ data BTree      = Leaf Int
                 | Fork BTree BTree
                   deriving (Show)
 
+instance NFData BTree where
+    rnf (Leaf i)	= rnf i
+    rnf (Fork t1 t2)	= rnf t1 `seq` rnf t2
+
 instance XmlPickler BTree where
     xpickle = xpAlt tag ps
         where
@@ -345,7 +360,7 @@ instance XmlPickler BTree where
         tag (Fork _ _   ) = 1
 
         ps = [ xpWrap ( Leaf, \ (Leaf i) -> i)
-               ( xpElem "leaf" $ xpAttr "value" $ xpickle )
+               ( xpElem "leaf" $ xpAttr "value" $ xpInt )
              , xpWrap ( uncurry Fork, \ (Fork l r) -> (l, r))
                ( xpElem "fork" $ xpPair xpickle xpickle )
              ]
