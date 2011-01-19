@@ -107,29 +107,55 @@ import           Data.Maybe
 
 canonicalizeTree'       :: LA XmlTree XmlTree -> LA XmlTree XmlTree
 canonicalizeTree' toBeRemoved
-    = processChildren (none `when` isText)
+    = processChildren
+      ( (none `when` (isText <+> isXmlPi))	-- remove XML PI and all text around XML root element
+        >>>
+        (deep isPi `when` isDTD)                -- remove DTD parts, except PIs whithin DTD
+      )
       >>>
-      processBottomUp canonicalize1Node
-      where
-      canonicalize1Node :: LA XmlTree XmlTree
-      canonicalize1Node
-          = (deep isPi `when` isDTD)            -- remove DTD parts, except PIs
-            >>>
-            (none `when` toBeRemoved)           -- remove uninteresting nodes
-            >>>
-            ( processAttrl ( processChildren transfCharRef
-                             >>>
-                             collapseXText
-                           )
-              `when` isElem
-            )
-            >>>
-            transfCdata                         -- CDATA -> text
-            >>>
-            transfCharRef                       -- Char refs -> text
-            >>>
-            collapseXText                       -- combine text
+      processBottomUp (canonicalize1Node toBeRemoved)
 
+canonicalize1Node 	:: LA XmlTree XmlTree -> LA XmlTree XmlTree
+canonicalize1Node toBeRemoved
+    = choiceA
+      [ toBeRemoved 	:-> none
+      , isElem     	:-> ( processAttrl
+                              ( processChildren transfCharRef
+                                >>>
+                                collapseXText'	-- combine text in attribute values
+                              )
+                              >>>
+                              collapseXText'    -- combine text in content
+                            )
+      , isCharRef   	:-> ( getCharRef
+                              >>>
+                              arr (\ i -> [toEnum i])
+                              >>>
+                              mkText
+                            )
+      , isCdata     	:-> ( getCdata
+                              >>>
+                              mkText
+                            )
+      , this        	:-> this
+      ]
+{-
+    = ( none `when` toBeRemoved )         	-- remove uninteresting nodes
+      >>>
+      ( ( processAttrl ( processChildren transfCharRef
+                         >>>
+                         collapseXText		-- combine text in attribute values
+                       )
+          >>>
+          collapseXText                   	-- combine text in content
+        )
+        `when` isElem
+      )
+      >>>
+      transfCdata                         	-- CDATA -> text
+      >>>
+      transfCharRef                       	-- Char refs -> text
+-}
 
 -- |
 -- Applies some "Canonical XML" rules to a document tree.
@@ -151,12 +177,9 @@ canonicalizeTree' toBeRemoved
 --  - Special characters in attribute values and character content are replaced by character references
 
 canonicalizeAllNodes    :: ArrowList a => a XmlTree XmlTree
-canonicalizeAllNodes
-    = fromLA $
-      canonicalizeTree' ( isCmt         -- remove comment
-                          <+>
-                          isXmlPi       -- remove xml declaration
-                        )
+canonicalizeAllNodes    = fromLA $
+                          canonicalizeTree' isCmt         		-- remove comment
+{-# INLINE canonicalizeAllNodes #-}
 
 -- |
 -- Canonicalize a tree for XPath
@@ -165,9 +188,8 @@ canonicalizeAllNodes
 -- see 'canonicalizeAllNodes'
 
 canonicalizeForXPath    :: ArrowList a => a XmlTree XmlTree
-canonicalizeForXPath
-    = fromLA $
-      canonicalizeTree' isXmlPi
+canonicalizeForXPath    = fromLA $ canonicalizeTree' none		-- comment remains there
+{-# INLINE canonicalizeForXPath #-}
 
 -- |
 -- Canonicalize the contents of a document
@@ -179,24 +201,9 @@ canonicalizeForXPath
 -- see 'canonicalizeAllNodes'
 
 canonicalizeContents    :: ArrowList a => a XmlTree XmlTree
-canonicalizeContents
-    = fromLA $
-      processBottomUp canonicalize1Node
-      where
-      canonicalize1Node :: LA XmlTree XmlTree
-      canonicalize1Node
-          = ( processAttrl ( processChildren transfCharRef
-                             >>>
-                             collapseXText
-                           )
-              `when` isElem
-            )
-            >>>
-            transfCdata                         -- CDATA -> text
-            >>>
-            transfCharRef                       -- Char refs -> text
-            >>>
-            collapseXText                       -- combine text
+canonicalizeContents    = fromLA $
+                          processBottomUp (canonicalize1Node none)
+{-# INLINE canonicalizeContents #-}
 
 -- ------------------------------------------------------------
 
@@ -221,9 +228,7 @@ collapseXText'
 -- This is useful, e.g. after char and entity reference substitution
 
 collapseXText           :: ArrowList a => a XmlTree XmlTree
-collapseXText
-    = fromLA $
-      collapseXText'
+collapseXText		= fromLA collapseXText'
 
 -- |
 -- Applies collapseXText recursively.
@@ -232,9 +237,7 @@ collapseXText
 -- see also : 'collapseXText'
 
 collapseAllXText        :: ArrowList a => a XmlTree XmlTree
-collapseAllXText
-    = fromLA $
-      processBottomUp collapseXText'
+collapseAllXText	= fromLA $ processBottomUp collapseXText'
 
 -- ------------------------------------------------------------
 

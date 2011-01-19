@@ -41,6 +41,7 @@ import Text.XML.HXT.Arrow.XmlState.TypeDefs
 
 import Text.XML.HXT.Arrow.ParserInterface       ( parseXmlDoc
                                                 , parseHtmlDoc
+                                                , substXmlEntityRefs
                                                 , substHtmlEntityRefs
                                                 )
 
@@ -102,9 +103,16 @@ parseXmlDocument validate'
         >>>
         processDTD
         >>>
-        processGeneralEntities
-        >>>
-        transfAllCharRef
+        ( ifA (fromLA getDTDSubset)		-- DTD decl there: set of general entities must be computed
+               ( processGeneralEntities
+                 >>>
+                 transfAllCharRef
+               )
+              ( substXmlEntityRefs		-- else only the 5 predefined entities are there
+                >>>
+                transfAllCharRef		-- these 2 arrows can be merged into a single one
+              )
+        )
         >>>
         ( if validate'
           then validateDocument
