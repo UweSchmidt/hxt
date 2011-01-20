@@ -47,7 +47,7 @@ import Text.XML.HXT.DOM.XmlNode                 ( mkDTDElem
 xshow                           :: XmlTrees -> String
 xshow [(NTree (XText s) _)]     = s                     -- special case optimisation
 xshow [(NTree (XBlob b) _)]     = blobToString b        -- special case optimisation
-xshow ts                        = showXmlTrees (const id) (const id) ts ""
+xshow ts                        = showXmlTrees showString showString ts ""
 
 -- | convert an XML tree into a binary large object (a bytestring)
 
@@ -143,8 +143,8 @@ showXmlTrees cf af
                                           = showBlank . showTrees cs
                                       | otherwise
                                           = showXmlTree a
-                                  showPiAttr _
-                                      = id
+                                  showPiAttr a
+                                      = showXmlTree a -- id
 
       showXmlTree (NTree (XDTD de al) cs)
     				= showXmlDTD de al cs

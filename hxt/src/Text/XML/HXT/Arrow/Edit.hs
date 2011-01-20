@@ -68,6 +68,7 @@ import           Control.Arrow.ArrowList
 import           Control.Arrow.ArrowIf
 import           Control.Arrow.ArrowTree
 import           Control.Arrow.ListArrow
+import           Control.Arrow.NTreeEdit
 
 import           Data.Char.Properties.XMLCharProps      ( isXmlSpaceChar )
 
@@ -113,8 +114,8 @@ canonicalizeTree' toBeRemoved
         (deep isPi `when` isDTD)                -- remove DTD parts, except PIs whithin DTD
       )
       >>>
-      processBottomUp (canonicalize1Node toBeRemoved)
-
+      canonicalizeNodes toBeRemoved
+{-
 canonicalize1Node 	:: LA XmlTree XmlTree -> LA XmlTree XmlTree
 canonicalize1Node toBeRemoved
     = choiceA
@@ -139,23 +140,37 @@ canonicalize1Node toBeRemoved
                             )
       , this        	:-> this
       ]
-{-
-    = ( none `when` toBeRemoved )         	-- remove uninteresting nodes
-      >>>
-      ( ( processAttrl ( processChildren transfCharRef
-                         >>>
-                         collapseXText		-- combine text in attribute values
-                       )
-          >>>
-          collapseXText                   	-- combine text in content
-        )
-        `when` isElem
-      )
-      >>>
-      transfCdata                         	-- CDATA -> text
-      >>>
-      transfCharRef                       	-- Char refs -> text
 -}
+canonicalizeNodes 	:: LA XmlTree XmlTree -> LA XmlTree XmlTree
+canonicalizeNodes toBeRemoved
+    = editNTreeA $
+      [ toBeRemoved 	:-> none
+      , ( isElem >>> getAttrl >>> deep isCharRef )		-- canonicalize attribute list
+	                :-> ( processAttrl
+                              ( processChildren transfCharRef
+                                >>>
+                                collapseXText'			-- combine text in attribute values
+                              )
+                              >>>
+                              ( collapseXText'  		-- and combine text in content
+                                `when`
+                                (getChildren >>. has2XText)
+                              )
+                            )
+      , ( isElem >>> (getChildren >>. has2XText) )
+		     	:-> collapseXText'      		-- combine text in content
+
+      , isCharRef   	:-> ( getCharRef
+                              >>>
+                              arr (\ i -> [toEnum i])
+                              >>>
+                              mkText
+                            )
+      , isCdata     	:-> ( getCdata
+                              >>>
+                              mkText
+                            )
+      ]
 
 -- |
 -- Applies some "Canonical XML" rules to a document tree.
@@ -202,10 +217,18 @@ canonicalizeForXPath    = fromLA $ canonicalizeTree' none		-- comment remains th
 
 canonicalizeContents    :: ArrowList a => a XmlTree XmlTree
 canonicalizeContents    = fromLA $
-                          processBottomUp (canonicalize1Node none)
+                          canonicalizeNodes none
 {-# INLINE canonicalizeContents #-}
 
 -- ------------------------------------------------------------
+
+has2XText               :: XmlTrees -> XmlTrees
+has2XText ts0@(t1 : ts1@(t2 : ts2))
+    | XN.isText t1	= if XN.isText t2
+                          then ts0
+                          else has2XText ts2
+    | otherwise         = has2XText ts1
+has2XText _             = []
 
 collapseXText'          :: LA XmlTree XmlTree
 collapseXText'
@@ -316,24 +339,20 @@ lookupRef c             = fromMaybe ('#' : show (fromEnum c))
 
 preventEmptyElements    :: ArrowList a => [String] -> Bool -> a XmlTree XmlTree
 preventEmptyElements ns isHtml
-    = fromLA $ insertDummyElem
+    = fromLA $
+      editNTreeA [ ( isElem
+                     >>>
+                     isNoneEmpty
+                     >>>
+                     neg getChildren
+                   )
+                   :-> replaceChildren (txt "")
+                 ]
     where
     isNoneEmpty
         | not (null ns) = hasNameWith (localPart >>> (`elem` ns))
         | isHtml        = hasNameWith (localPart >>> (`notElem` emptyHtmlTags))
         | otherwise     = this
-
-    insertDummyElem
-        = processBottomUp
-          ( replaceChildren (txt "")
-            `when`
-            ( isElem
-              >>>
-              isNoneEmpty
-              >>>
-              neg getChildren
-            )
-          )
 
 -- ------------------------------------------------------------
 
@@ -393,25 +412,19 @@ addHeadlineToXmlDoc
 
 -- ------------------------------------------------------------
 
-removeComment'          :: LA XmlTree XmlTree
-removeComment'          = none `when` isCmt
-
 -- |
--- remove Comments: @none `when` isCmt@
+-- remove a Comment node
 
 removeComment           :: ArrowXml a => a XmlTree XmlTree
-removeComment           = fromLA $ removeComment'
+removeComment           = none `when` isCmt
 
 -- |
--- remove all comments recursively
+-- remove all comments in a tree recursively
 
 removeAllComment        :: ArrowXml a => a XmlTree XmlTree
-removeAllComment        = fromLA $ processBottomUp removeComment'
+removeAllComment	= fromLA $ editNTreeA [isCmt :-> none]
 
--- ----------
-
-removeWhiteSpace'       :: LA XmlTree XmlTree
-removeWhiteSpace'       = none `when` isWhiteSpace
+-- ------------------------------------------------------------
 
 -- |
 -- simple filter for removing whitespace.
@@ -422,7 +435,7 @@ removeWhiteSpace'       = none `when` isWhiteSpace
 -- see also : 'removeAllWhiteSpace', 'removeDocWhiteSpace'
 
 removeWhiteSpace        :: ArrowXml a => a XmlTree XmlTree
-removeWhiteSpace        = fromLA $ removeWhiteSpace'
+removeWhiteSpace        = fromLA $ none `when` isWhiteSpace
 
 -- |
 -- simple recursive filter for removing all whitespace.
@@ -433,7 +446,10 @@ removeWhiteSpace        = fromLA $ removeWhiteSpace'
 -- see also : 'removeWhiteSpace', 'removeDocWhiteSpace'
 
 removeAllWhiteSpace     :: ArrowXml a => a XmlTree XmlTree
-removeAllWhiteSpace     = fromLA $ processBottomUp removeWhiteSpace'
+removeAllWhiteSpace	= fromLA $ editNTreeA [isWhiteSpace :-> none]
+                       -- fromLA $ processBottomUp removeWhiteSpace'	-- less efficient
+
+-- ------------------------------------------------------------
 
 -- |
 -- filter for removing all not significant whitespace.
@@ -625,43 +641,33 @@ insertNothing _         = none
 
 -- ------------------------------------------------------------
 
-transfCdata'            :: LA XmlTree XmlTree
-transfCdata'            = (getCdata >>> mkText) `when` isCdata
-
 -- |
--- converts a CDATA section node into a normal text node
+-- converts a CDATA section into normal text nodes
 
 transfCdata             :: ArrowXml a => a XmlTree XmlTree
 transfCdata             = fromLA $
-                          transfCdata'
+                          (getCdata >>> mkText) `when` isCdata
 
 -- |
 -- converts CDATA sections in whole document tree into normal text nodes
 
 transfAllCdata          :: ArrowXml a => a XmlTree XmlTree
-transfAllCdata          = fromLA $
-                          processBottomUp transfCdata'
-
---
-
-transfCharRef'          :: LA XmlTree XmlTree
-transfCharRef'          = ( getCharRef >>> arr (\ i -> [toEnum i]) >>> mkText )
-                          `when`
-                          isCharRef
+transfAllCdata		= fromLA $ editNTreeA [isCdata :-> (getCdata >>> mkText)]
 
 -- |
--- converts character references to normal text
+-- converts a character reference to normal text
 
 transfCharRef           :: ArrowXml a => a XmlTree XmlTree
 transfCharRef           = fromLA $
-                          transfCharRef'
+                          ( getCharRef >>> arr (\ i -> [toEnum i]) >>> mkText )
+                          `when`
+                          isCharRef
 
 -- |
 -- recursively converts all character references to normal text
 
 transfAllCharRef        :: ArrowXml a => a XmlTree XmlTree
-transfAllCharRef        = fromLA $
-                          processBottomUp transfCharRef'
+transfAllCharRef        = fromLA $ editNTreeA [isCharRef :-> (getCharRef >>> arr (\ i -> [toEnum i]) >>> mkText)]
 
 -- ------------------------------------------------------------
 

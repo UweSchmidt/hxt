@@ -351,7 +351,7 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
 
     -- | constant arrow for simple processing instructions, see 'mkPi'
     spi                 :: String -> String -> a n XmlTree
-    spi piName piCont   = constA (XN.mkPi   (mkName piName) [XN.mkText piCont])
+    spi piName piCont   = constA (XN.mkPi (mkName piName) [XN.mkAttr (mkName a_value) [XN.mkText piCont]])
     {-# INLINE spi #-}
 
     -- | constant arrow for attribute nodes, attribute name is a qualified name and value is a text,

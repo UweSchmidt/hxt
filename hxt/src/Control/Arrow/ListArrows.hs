@@ -30,6 +30,8 @@ module Control.Arrow.ListArrows
     , module Control.Arrow.StateListArrow
     , module Control.Arrow.IOListArrow
     , module Control.Arrow.IOStateListArrow
+
+    , module Control.Arrow.NTreeEdit            -- extra arrows
     )
 where
 
@@ -47,5 +49,7 @@ import Control.Arrow.ListArrow                  -- arrow types
 import Control.Arrow.StateListArrow
 import Control.Arrow.IOListArrow
 import Control.Arrow.IOStateListArrow
+
+import Control.Arrow.NTreeEdit                  -- extra arrows
 
 -- ------------------------------------------------------------

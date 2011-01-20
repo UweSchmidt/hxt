@@ -109,6 +109,7 @@ parseXmlDocument validate'
                  transfAllCharRef
                )
               ( substXmlEntityRefs		-- else only the 5 predefined entities are there
+                -- TODO: error reporting when finding illegal entity references
                 >>>
                 transfAllCharRef		-- these 2 arrows can be merged into a single one
               )

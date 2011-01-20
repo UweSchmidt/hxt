@@ -201,7 +201,8 @@ instance XmlNode XNode where
     {-# INLINE mkCmt #-}
     mkCdata                     = XCdata
     {-# INLINE mkCdata #-}
-    mkPi n c                    = XPi n (if null c then [] else [mkAttr (mkName a_value) c])
+    mkPi                        = XPi
+    {-# INLINE mkPi #-}
 
     mkError                     = XError
     {-# INLINE mkError #-}

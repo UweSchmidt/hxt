@@ -35,8 +35,6 @@ import           Debug.Trace
 
 -- ------------------------------------------------------------
 
--- ----------------------------------------
-
 main    :: IO ()
 main
     = do
@@ -73,6 +71,10 @@ main2 i
       [x] <- runX (setTraceLevel 1
                    >>>
                    readDoc (fn i)
+                   >>>
+                   traceMsg 1 "start rnfA"
+                   >>>
+                   rnfA this
                    >>>
                    traceMsg 1 "start unpickle"
                    >>>
@@ -277,28 +279,34 @@ genDoc d out    = constA (let t = mkBTree d in rnf t `seq` t)
                   -- {-
                   -- >>>
                   -- readBinaryValue (out ++ ".bin")
-                  >>>
-                  strictA
+                  -- >>>
+                  -- strictA
                   >>>
                   putDoc out
-                  -- -}
+
 -- ----------------------------------------
 
 readDoc :: String -> IOSArrow b XmlTree
 readDoc src
     = readDocument [ withParseHTML no
+                   , withTrace 4
                    , withValidate no
                    , withInputEncoding isoLatin1
                    , withWarnings yes
                    , withTrace 1
                    , withStrictInput no
-                   -- , withRemoveWS yes
+                   , withCanonicalize yes
+                   , withRemoveWS yes
                    -- , withExpat yes
                    -- , withTagSoup
                    ] src
       >>>
-      strictA
-      --- >>>
+      perform ( writeDocument [ withShowTree no
+                              , withOutputHTML
+                              ] ""
+              )
+      -- strictA
+      -- >>>
       -- processChildren (isElem `guards` this)
 
 -- ----------------------------------------
@@ -372,6 +380,16 @@ mkBTree depth   = evalState (mkT depth) 0
             r <- mkT (n-1)
             return (Fork l r)
 
+bTreeToNTree	:: BTree -> NTree Int
+bTreeToNTree (Leaf i)	= NTree i []
+bTreeToNTree (Fork l r) = NTree j [l',r']
+    where
+    l' = bTreeToNTree l
+    r' = bTreeToNTree r
+    j  = T.getNode l' + T.getNode r'
+
+mkNTree = bTreeToNTree . mkBTree
+
 -- ----------------------------------------
 
 foldT1  :: (Int -> Int -> Int) -> BTree -> Int
@@ -389,7 +407,7 @@ foldT1 op (Fork l r)    = foldT1 op l `op` foldT1 op r
 
 putDoc  :: String -> IOStateArrow s XmlTree XmlTree
 putDoc dst
-    = writeDocument [ withOutputEncoding utf8
+    = writeDocument [ withOutputEncoding isoLatin1
                     , withOutputXML
                     ] dst
 
