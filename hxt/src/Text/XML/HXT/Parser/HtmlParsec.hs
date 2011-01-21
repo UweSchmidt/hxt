@@ -33,78 +33,69 @@ module Text.XML.HXT.Parser.HtmlParsec
 
 where
 
+import Data.Char				( toLower
+                                                , toUpper
+                                                )
+import Data.Maybe				( fromMaybe
+                                                , fromJust
+                                                )
+import Text.ParserCombinators.Parsec		( Parser
+                                                , SourcePos
+                                                , anyChar
+                                                , between
+                                                , char
+                                                , eof
+                                                , getPosition
+                                                , many
+                                                , noneOf
+                                                , option
+                                                , parse
+                                                , satisfy
+                                                , string
+                                                , try
+                                                , (<|>)
+                                                )
+
 import Text.XML.HXT.DOM.Interface
-
-import Text.XML.HXT.DOM.XmlNode
-    ( mkText
-    , mkError
-    , mkCmt
-    , mkElement
-    , mkAttr
-    , mkDTDElem
-    )
-
-import Text.ParserCombinators.Parsec
-    ( Parser
-    , SourcePos
-    , anyChar
-    , between
-    , char
-    , eof
-    , getPosition
-    , many
-    , noneOf
-    , option
-    , parse
-    , satisfy
-    , string
-    , try
-    , (<|>)
-    )
-
-import Text.XML.HXT.Parser.XmlTokenParser
-    ( allBut
-    , dq
-    , eq
-    , gt
-    , name
-    , pubidLiteral
-    , skipS
-    , skipS0
-    , sq
-    , systemLiteral
-
-    , singleCharsT
-    , referenceT
-    )
-
-import Text.XML.HXT.Parser.XmlParsec
-    ( cDSect
-    , charData'
-    , misc
-    , parseXmlText
-    , pI
-    , xMLDecl'
-    )
-
-import Text.XML.HXT.Parser.XmlCharParser
-    ( xmlChar
-    )
-
-import Data.Maybe
-    ( fromMaybe
-    )
-
-import Data.Char
-    ( toLower
-    , toUpper
-    )
+import Text.XML.HXT.DOM.XmlNode    		( mkText
+                                                , mkError
+                                                , mkCmt
+                                                , mkCharRef
+                                                , mkElement
+                                                , mkAttr
+                                                , mkDTDElem
+                                                , isEntityRef
+                                                , getEntityRef
+                                                )
+import Text.XML.HXT.Parser.XmlTokenParser	( allBut
+                                                , dq
+                                                , eq
+                                                , gt
+                                                , name
+                                                , pubidLiteral
+                                                , skipS
+                                                , skipS0
+                                                , sq
+                                                , systemLiteral
+                                                , singleCharsT
+                                                , referenceT
+                                                )
+import Text.XML.HXT.Parser.XmlParsec    	( cDSect
+                                                , charData'
+                                                , misc
+                                                , parseXmlText
+                                                , pI
+                                                , xMLDecl'
+                                                )
+import Text.XML.HXT.Parser.XmlCharParser    	( xmlChar
+                                                )
+import Text.XML.HXT.Parser.XhtmlEntities	( xhtmlEntities
+                                                )
 
 -- ------------------------------------------------------------
 
-parseHtmlText   :: String -> XmlTree -> XmlTrees
-parseHtmlText loc t
-    = parseXmlText htmlDocument loc $ t
+parseHtmlText   	:: String -> XmlTree -> XmlTrees
+parseHtmlText loc t     = parseXmlText htmlDocument loc $ t
 
 -- ------------------------------------------------------------
 
@@ -239,7 +230,7 @@ hSimpleData     :: Parser XmlTree
 hSimpleData
     = charData'
       <|>
-      try referenceT
+      try hReferenceT
       <|>
       try hComment
       <|>
@@ -333,12 +324,33 @@ hAttrValue'' notAllowed
 
 hReference'     :: Parser XmlTree
 hReference'
-    = try referenceT
+    = try hReferenceT
       <|>
       ( do
         _ <- char '&'
         return (mkText "&")
       )
+
+hReferenceT	:: Parser XmlTree
+hReferenceT
+    = do
+      r <- referenceT
+      return ( if isEntityRef r
+               then substRef  r
+               else r
+             )
+    where
+    -- optimization: HTML entity refs are substituted by char refs, so a later entity ref substituion isn't required
+    substRef r
+        = case (lookup en xhtmlEntities) of
+          Just i	-> mkCharRef i
+          Nothing       -> r				-- not found: the entity ref remains as it is
+			   				-- this is also done in the XML parser
+{- alternative def
+          Nothing       -> mkText ("&" ++ en ++ ";")	-- not found: the entity ref is taken as text
+-}
+        where
+        en = fromJust . getEntityRef $ r
 
 hContent        :: Context -> Parser Context
 hContent context

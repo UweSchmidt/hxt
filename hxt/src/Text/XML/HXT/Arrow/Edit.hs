@@ -145,7 +145,7 @@ canonicalizeNodes 	:: LA XmlTree XmlTree -> LA XmlTree XmlTree
 canonicalizeNodes toBeRemoved
     = editNTreeA $
       [ toBeRemoved 	:-> none
-      , ( isElem >>> getAttrl >>> deep isCharRef )		-- canonicalize attribute list
+      , ( isElem >>> getAttrl >>> getChildren >>> isCharRef )	-- canonicalize attribute list
 	                :-> ( processAttrl
                               ( processChildren transfCharRef
                                 >>>

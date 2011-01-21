@@ -2,7 +2,7 @@
 
 {- |
    Module     : Text.XML.HXT.Arrow.ProcessDocument
-   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   Copyright  : Copyright (C) 2011 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
@@ -32,6 +32,7 @@ import Control.Arrow.ArrowList
 import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
 import Control.Arrow.ListArrow                  ( fromLA )
+import Control.Arrow.NTreeEdit
 
 import Text.XML.HXT.DOM.Interface
 
@@ -41,8 +42,6 @@ import Text.XML.HXT.Arrow.XmlState.TypeDefs
 
 import Text.XML.HXT.Arrow.ParserInterface       ( parseXmlDoc
                                                 , parseHtmlDoc
-                                                , substXmlEntityRefs
-                                                , substHtmlEntityRefs
                                                 )
 
 import Text.XML.HXT.Arrow.Edit                  ( transfAllCharRef
@@ -104,23 +103,38 @@ parseXmlDocument validate'
         processDTD
         >>>
         ( ifA (fromLA getDTDSubset)		-- DTD decl there: set of general entities must be computed
-               ( processGeneralEntities
+          ( processGeneralEntities
+            >>>
+            transfAllCharRef
+            >>>
+            ( if validate'			-- validation only possible if DTD there
+              then validateDocument
+              else this
+            )
+          )
+          ( if validate'			-- validation only consists of checking for undefined entity refs
+                                                -- predefined XML entity refs are substituted in the XML parser into char refs
+                                                -- so there is no need for an entity substitution
+            then perform checkUndefinedEntityRefs
                  >>>
-                 transfAllCharRef
-               )
-              ( substXmlEntityRefs		-- else only the 5 predefined entities are there
-                -- TODO: error reporting when finding illegal entity references
-                >>>
-                transfAllCharRef		-- these 2 arrows can be merged into a single one
-              )
-        )
-        >>>
-        ( if validate'
-          then validateDocument
-          else this
+                 setDocumentStatusFromSystemState "decoding document"
+            else this
+          )
         )
       )
       `when` documentStatusOk
+
+checkUndefinedEntityRefs	:: IOStateArrow s XmlTree XmlTree
+checkUndefinedEntityRefs
+    = deep isEntityRef
+      >>>
+      getEntityRef
+      >>>
+      arr (\ en -> "general entity reference \"&" ++ en ++ ";\" is undefined")
+      >>>
+      mkError c_err
+      >>>
+      filterErrorMsg
 
 -- ------------------------------------------------------------
 
@@ -150,10 +164,9 @@ parseHtmlDocument       :: IOStateArrow s XmlTree XmlTree
 parseHtmlDocument
     = ( perform ( getAttrValue a_source >>> traceValue 1 (("parseHtmlDoc: parse HTML document " ++) . show) )
         >>>
-        ( parseHtml $< getSysVar (theTagSoup .&&&. theExpat) )
+        ( parseHtml      $< getSysVar (theTagSoup  .&&&. theExpat) )
         >>>
-        ( removeWarnings $< getSysVar (theWarnings .&&&. theTagSoup )
-        )
+        ( removeWarnings $< getSysVar (theWarnings .&&&. theTagSoup) )
         >>>
         setDocumentStatusFromSystemState "parse HTML document"
         >>>
@@ -181,23 +194,17 @@ parseHtmlDocument
                               xshow getChildren
                             )                                   -- get string to be parsed
                             >>>
-                            parseHtmlDoc                        -- run parser
+                            parseHtmlDoc                        -- run parser, entity substituion is done in parser
                           )
-                          >>>
-                          substHtmlEntityRefs                   -- substitute entity refs
 
     removeWarnings (warnings, withTagSoup')
-        | withTagSoup'
-          &&
-          not warnings  = this
-        | otherwise     = processTopDownWithAttrl
-                          ( if warnings                         -- remove warnings inserted by parser and entity subst
-                            then filterErrorMsg
-                            else ( none
-                                   `when`
-                                   isError
-                                 )
-                          )
+        | warnings	= processTopDownWithAttrl               -- remove warnings inserted by parser and entity subst
+                          filterErrorMsg
+        | withTagSoup'	= this					-- warnings are not generated in tagsoup
+
+        | otherwise     = fromLA $
+                          editNTreeA [isError :-> none]		-- remove all warnings from document
+
 
 -- ------------------------------------------------------------
 

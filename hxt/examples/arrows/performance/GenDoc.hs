@@ -301,13 +301,15 @@ readDoc src
                    -- , withTagSoup
                    ] src
       >>>
+      perform ( writeDocument [ withShowTree yes
+                              , withOutputHTML
+                              ] ""
+              )
+      >>>
       perform ( writeDocument [ withShowTree no
                               , withOutputHTML
                               ] ""
               )
-      -- strictA
-      -- >>>
-      -- processChildren (isElem `guards` this)
 
 -- ----------------------------------------
 

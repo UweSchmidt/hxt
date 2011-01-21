@@ -364,8 +364,7 @@ readString config content
 -- the arrow version of 'readString', the arrow input is the source URI
 
 readFromString          :: SysConfigList -> IOStateArrow s String XmlTree
-readFromString config
-                        = applyA ( arr $ readString config )
+readFromString config   = applyA ( arr $ readString config )
 
 -- ------------------------------------------------------------
 
@@ -377,26 +376,21 @@ readFromString config
 -- Does not run in the IO monad
 
 hread                   :: ArrowXml a => a String XmlTree
-hread
-    = parseHtmlContent
-      >>>
-      substHtmlEntityRefs
-      >>>
-      processTopDown ( none `when` isError )
-      >>>
-      canonicalizeContents
+hread			= fromLA $
+                          parseHtmlContent			-- substHtmlEntityRefs is done in parser
+                          >>>
+                          editNTreeA [isError :-> none]		-- ignore all errors
+                          >>>
+                          canonicalizeContents
 
 -- |
 -- parse a string as XML content, substitute all predefined XML entity refs and canonicalize tree
 -- (substitute char refs, ...)
 
 xread                   :: ArrowXml a => a String XmlTree
-xread
-    = parseXmlContent
-      >>>
-      substXmlEntityRefs
-      >>>
-      canonicalizeContents
+xread			= parseXmlContent	-- substXmlEntityRefs is done in parser
+                          >>>
+                          canonicalizeContents
 
 -- ------------------------------------------------------------
 

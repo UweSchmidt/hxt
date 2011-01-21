@@ -270,7 +270,6 @@ reference
         return ("&" ++ n ++ ";")
       )
 
-
 checkCharRef    :: Int -> GenParser Char state Int
 checkCharRef i
     = if ( i <= fromEnum (maxBound::Char)
@@ -293,7 +292,6 @@ charRef
       _ <- semi
       checkCharRef (decimalStringToInt d)
       <?> "character reference"
-
 
 entityRef       :: GenParser Char state String
 entityRef
@@ -519,13 +517,25 @@ charRefT        :: GenParser Char state XmlTree
 charRefT
     = do
       i <- charRef
-      return $! (mkCharRef $! i)
+      return $! (mkCharRef i)
 
 entityRefT      :: GenParser Char state XmlTree
 entityRefT
     = do
       n <- entityRef
-      return $! (mkEntityRef $! n)
+      return $! (maybe (mkEntityRef n) mkCharRef . lookup n $ predefinedXmlEntities)
+
+-- optimization: predefined XML entity refs are converted into equivalent char refs
+-- so there is no need for an entitiy substitution phase, if there is no DTD
+
+predefinedXmlEntities	:: [(String, Int)]
+predefinedXmlEntities
+    = [ ("lt",   60)
+      , ("gt",   62)
+      , ("amp",  38)
+      , ("apos", 39)
+      , ("quot", 34)
+      ]
 
 bypassedEntityRefT      :: GenParser Char state XmlTree
 bypassedEntityRefT
