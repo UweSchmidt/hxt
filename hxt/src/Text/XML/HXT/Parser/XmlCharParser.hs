@@ -48,36 +48,42 @@ import Text.ParserCombinators.Parsec
 
 xmlChar                 :: GenParser Char state Unicode
 xmlChar                 = satisfy isXmlChar <?> "legal XML character"
+{-# INLINE xmlChar #-}
 
 -- |
 -- parse a XML name character
 
 xmlNameChar             :: GenParser Char state Unicode
 xmlNameChar             = satisfy isXmlNameChar <?> "legal XML name character"
+{-# INLINE xmlNameChar #-}
 
 -- |
 -- parse a XML name start character
 
 xmlNameStartChar        :: GenParser Char state Unicode
 xmlNameStartChar        = satisfy isXmlNameStartChar <?> "legal XML name start character"
+{-# INLINE xmlNameStartChar #-}
 
 -- |
 -- parse a XML NCName character
 
 xmlNCNameChar           :: GenParser Char state Unicode
 xmlNCNameChar           = satisfy isXmlNCNameChar <?> "legal XML NCName character"
+{-# INLINE xmlNCNameChar #-}
 
 -- |
 -- parse a XML NCName start character
 
 xmlNCNameStartChar      :: GenParser Char state Unicode
 xmlNCNameStartChar      = satisfy isXmlNCNameStartChar <?> "legal XML NCName start character"
+{-# INLINE xmlNCNameStartChar #-}
 
 -- |
 -- parse a XML letter character
 
 xmlLetter               :: GenParser Char state Unicode
 xmlLetter               = satisfy isXmlLetter <?> "legal XML letter"
+{-# INLINE xmlLetter #-}
 
 -- |
 -- White Space (2.3)
@@ -90,6 +96,7 @@ xmlLetter               = satisfy isXmlLetter <?> "legal XML letter"
 
 xmlSpaceChar            :: GenParser Char state Char
 xmlSpaceChar            = satisfy isXmlSpaceChar <?> "white space"
+{-# INLINE xmlSpaceChar #-}
 
 -- ------------------------------------------------------------
 

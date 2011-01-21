@@ -31,6 +31,7 @@ module Text.XML.HXT.DOM.XmlNode
 where
 
 import Control.Monad
+import Control.FlatSeq
 
 import Data.Maybe
 import Data.Tree.Class
@@ -447,5 +448,53 @@ addAttr a al
 
 mergeAttrl      :: XmlTrees -> XmlTrees -> XmlTrees
 mergeAttrl      = foldr addAttr
+
+-- ------------------------------------------------------------
+
+-- | weak normalform versions of constructors
+
+mkElement'              :: QName -> XmlTrees -> XmlTrees -> XmlTree
+mkElement' n al cl      = id $!! mkElement n al cl
+{-# INLINE mkElement' #-}
+
+mkRoot'                 :: XmlTrees -> XmlTrees -> XmlTree
+mkRoot' al cl           = id $!! mkRoot al cl
+{-# INLINE mkRoot' #-}
+
+mkAttr'                 :: QName -> XmlTrees -> XmlTree
+mkAttr' n av            = id $!! mkAttr n av
+{-# INLINE mkAttr' #-}
+
+mkText'                 :: String -> XmlTree
+mkText' t               = id $!! mkText t
+{-# INLINE mkText' #-}
+
+mkCharRef'              :: Int    -> XmlTree
+mkCharRef' i            = id $!! mkCharRef i
+{-# INLINE mkCharRef' #-}
+
+mkEntityRef'            :: String -> XmlTree
+mkEntityRef' n          = id $!! mkEntityRef n
+{-# INLINE mkEntityRef' #-}
+
+mkCmt'                  :: String -> XmlTree
+mkCmt' c                = id $!! mkCmt c
+{-# INLINE mkCmt' #-}
+
+mkCdata'                :: String -> XmlTree
+mkCdata' d              = id $!! mkCdata d
+{-# INLINE mkCdata' #-}
+
+mkPi'                   :: QName  -> XmlTrees -> XmlTree
+mkPi' n v               = id $!! mkPi n v
+{-# INLINE mkPi' #-}
+
+mkError'                :: Int -> String   -> XmlTree
+mkError' l m            = id $!! mkError l m
+{-# INLINE mkError' #-}
+
+mkDTDElem'              :: DTDElem -> Attributes -> XmlTrees -> XmlTree
+mkDTDElem' e al cl      = id $!! mkDTDElem e al cl
+{-# INLINE mkDTDElem' #-}
 
 -- ------------------------------------------------------------

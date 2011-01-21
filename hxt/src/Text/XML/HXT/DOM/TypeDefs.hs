@@ -110,7 +110,7 @@ instance WNFData XNode where
     rwnf (XError n e)           = n `seq` rwnf e
 
 -- | Evaluate an assoc list of strings
-rwnfAttributes  		:: Attributes -> ()
+rwnfAttributes                  :: Attributes -> ()
 rwnfAttributes [] = ()
 rwnfAttributes ((k, v) : as)    = rwnf k `seq` rwnf v `seq` rwnfAttributes as
 

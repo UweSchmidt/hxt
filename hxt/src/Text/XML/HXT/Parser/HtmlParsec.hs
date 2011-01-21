@@ -33,13 +33,13 @@ module Text.XML.HXT.Parser.HtmlParsec
 
 where
 
-import Data.Char				( toLower
+import Data.Char                                ( toLower
                                                 , toUpper
                                                 )
-import Data.Maybe				( fromMaybe
+import Data.Maybe                               ( fromMaybe
                                                 , fromJust
                                                 )
-import Text.ParserCombinators.Parsec		( Parser
+import Text.ParserCombinators.Parsec            ( Parser
                                                 , SourcePos
                                                 , anyChar
                                                 , between
@@ -57,17 +57,17 @@ import Text.ParserCombinators.Parsec		( Parser
                                                 )
 
 import Text.XML.HXT.DOM.Interface
-import Text.XML.HXT.DOM.XmlNode    		( mkText
-                                                , mkError
-                                                , mkCmt
-                                                , mkCharRef
-                                                , mkElement
-                                                , mkAttr
-                                                , mkDTDElem
+import Text.XML.HXT.DOM.XmlNode                 ( mkText'
+                                                , mkError'
+                                                , mkCmt'
+                                                , mkCharRef'
+                                                , mkElement'
+                                                , mkAttr'
+                                                , mkDTDElem'
                                                 , isEntityRef
                                                 , getEntityRef
                                                 )
-import Text.XML.HXT.Parser.XmlTokenParser	( allBut
+import Text.XML.HXT.Parser.XmlTokenParser       ( allBut
                                                 , dq
                                                 , eq
                                                 , gt
@@ -80,28 +80,28 @@ import Text.XML.HXT.Parser.XmlTokenParser	( allBut
                                                 , singleCharsT
                                                 , referenceT
                                                 )
-import Text.XML.HXT.Parser.XmlParsec    	( cDSect
+import Text.XML.HXT.Parser.XmlParsec            ( cDSect
                                                 , charData'
                                                 , misc
                                                 , parseXmlText
                                                 , pI
                                                 , xMLDecl'
                                                 )
-import Text.XML.HXT.Parser.XmlCharParser    	( xmlChar
+import Text.XML.HXT.Parser.XmlCharParser        ( xmlChar
                                                 )
-import Text.XML.HXT.Parser.XhtmlEntities	( xhtmlEntities
+import Text.XML.HXT.Parser.XhtmlEntities        ( xhtmlEntities
                                                 )
 
 -- ------------------------------------------------------------
 
-parseHtmlText   	:: String -> XmlTree -> XmlTrees
+parseHtmlText           :: String -> XmlTree -> XmlTrees
 parseHtmlText loc t     = parseXmlText htmlDocument loc $ t
 
 -- ------------------------------------------------------------
 
 parseHtmlFromString     :: Parser XmlTrees -> String -> String -> XmlTrees
 parseHtmlFromString parser loc
-    = either ((:[]) . mkError c_err . (++ "\n") . show) id . parse parser loc
+    = either ((:[]) . mkError' c_err . (++ "\n") . show) id . parse parser loc
 
 parseHtmlDocument       :: String -> String -> XmlTrees
 parseHtmlDocument       = parseHtmlFromString htmlDocument
@@ -128,7 +128,7 @@ htmlProlog
                ( do
                  pos <- getPosition
                  _ <- try (string "<?")
-                 return $ [mkError c_warn (show pos ++ " wrong XML declaration")]
+                 return $ [mkError' c_warn (show pos ++ " wrong XML declaration")]
                )
              )
       misc1   <- many misc
@@ -138,7 +138,7 @@ htmlProlog
                    ( do
                      pos <- getPosition
                      _ <- try (upperCaseString "<!DOCTYPE")
-                     return $ [mkError c_warn (show pos ++ " HTML DOCTYPE declaration ignored")]
+                     return $ [mkError' c_warn (show pos ++ " HTML DOCTYPE declaration ignored")]
                    )
                  )
       return (xml ++ misc1 ++ dtdPart)
@@ -154,7 +154,7 @@ doctypedecl
                   option [] externalID
                 )
         skipS0
-        return [mkDTDElem DOCTYPE ((a_name, n) : exId) []]
+        return [mkDTDElem' DOCTYPE ((a_name, n) : exId) []]
       )
 
 externalID      :: Parser Attributes
@@ -207,7 +207,7 @@ hElement context
         c   <- xmlChar
         return ( addHtmlWarn (show pos ++ " markup char " ++ show c ++ " not allowed in this context")
                  .
-                 addHtmlElems [mkText [c]]
+                 addHtmlElems [mkText' [c]]
                  $
                  context
                )
@@ -296,7 +296,7 @@ hAttrList
             n <- lowerCaseName
             v <- hAttrValue
             skipS0
-            return $ mkAttr (mkName n) v
+            return $ mkAttr' (mkName n) v
 
 hAttrValue      :: Parser XmlTrees
 hAttrValue
@@ -315,7 +315,7 @@ hAttrValue'
       <|>
       ( do                      -- HTML allows unquoted attribute values
         cs <- many (noneOf " \r\t\n>\"\'")
-        return [mkText cs]
+        return [mkText' cs]
       )
 
 hAttrValue''    :: String -> Parser XmlTrees
@@ -328,10 +328,10 @@ hReference'
       <|>
       ( do
         _ <- char '&'
-        return (mkText "&")
+        return (mkText' "&")
       )
 
-hReferenceT	:: Parser XmlTree
+hReferenceT     :: Parser XmlTree
 hReferenceT
     = do
       r <- referenceT
@@ -343,11 +343,11 @@ hReferenceT
     -- optimization: HTML entity refs are substituted by char refs, so a later entity ref substituion isn't required
     substRef r
         = case (lookup en xhtmlEntities) of
-          Just i	-> mkCharRef i
-          Nothing       -> r				-- not found: the entity ref remains as it is
-			   				-- this is also done in the XML parser
+          Just i        -> mkCharRef' i
+          Nothing       -> r                            -- not found: the entity ref remains as it is
+                                                        -- this is also done in the XML parser
 {- alternative def
-          Nothing       -> mkText ("&" ++ en ++ ";")	-- not found: the entity ref is taken as text
+          Nothing       -> mkText' ("&" ++ en ++ ";")   -- not found: the entity ref is taken as text
 -}
         where
         en = fromJust . getEntityRef $ r
@@ -367,7 +367,7 @@ hComment                :: Parser XmlTree
 hComment
     = do
       c <- between (try $ string "<!--") (string "-->") (allBut many "-->")
-      return (mkCmt c)
+      return (mkCmt' c)
 
 checkSymbol     :: Parser a -> String -> Context -> Parser Context
 checkSymbol p msg context
@@ -393,11 +393,11 @@ upperCaseString
 
 addHtmlTag      :: String -> XmlTrees -> XmlTrees -> Context -> Context
 addHtmlTag tn al body (body1, openTags)
-    = ([mkElement (mkName tn) al (reverse body)] ++ body1, openTags)
+    = ([mkElement' (mkName tn) al (reverse body)] ++ body1, openTags)
 
 addHtmlWarn     :: String -> Context -> Context
 addHtmlWarn msg
-    = addHtmlElems [mkError c_warn msg]
+    = addHtmlElems [mkError' c_warn msg]
 
 addHtmlElems    :: XmlTrees -> Context -> Context
 addHtmlElems elems (body, openTags)

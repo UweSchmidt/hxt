@@ -1,0 +1,23 @@
+performance test with ReadDoc 18
+
+code changes
+
+* strictness annotations with $!! (rwnf) in XML parser
+  at mkElement, mkAttr, mkText, ...
+
+results
+
+* runtime remains as it was
+* total space alloc remains as it was
+* BUT: maximum space for Strings reduces
+  from about 380Mb to 280Mb
+* test with native HTML parser results in
+  a total of about 120Mb space, this is the expected
+  size
+* the time is spend in parsec with both parsers
+* the total time for HTML is 8.64 for XML 19.86
+
+problems
+
+* the parsec (2.1) XML parser has a space leak,
+  the parsec HTML parser with striktness annotations works fine

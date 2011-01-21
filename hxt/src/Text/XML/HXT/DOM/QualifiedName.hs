@@ -77,9 +77,9 @@ module Text.XML.HXT.DOM.QualifiedName
 
 where
 
-{- -}
+{-
 import           Debug.Trace
-{- -}
+ -}
 
 import           Control.Arrow                  ( (***) )
 
@@ -560,7 +560,7 @@ theQNames        = unsafePerformIO (newMVar M.empty)
 
 insertQName     :: QName -> QNames -> (QNames, QName)
 insertQName n m = maybe ( M.insert
-                          ( trace (show n)
+                          ( -- trace (show n)
                             n
                           )
                           n m

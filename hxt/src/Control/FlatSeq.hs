@@ -24,8 +24,15 @@ import Data.Word
 
 -- ------------------------------------------------------------
 
+infixr 0 $!!
+
+($!!)                           :: WNFData a => (a -> b) -> a -> b
+f $!! x                         = rwnf x `seq` f x
+{-# INLINE ($!!) #-}
+
 flatseq                         :: WNFData a => a -> b -> b
 flatseq a b                     = rwnf a `seq` b
+{-# INLINE flatseq #-}
 
 rlnf                            :: (a -> ()) -> [a] -> ()
 rlnf _ []                       = ()

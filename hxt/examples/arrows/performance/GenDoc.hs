@@ -68,14 +68,14 @@ main1 i
 main2   :: Int -> IO ()
 main2 i
     = do
-      [x] <- runX (setTraceLevel 1
+      [x] <- runX (setTraceLevel 2
                    >>>
                    readDoc (fn i)
                    >>>
-                   traceMsg 1 "start rnfA"
-                   >>>
-                   rnfA this
-                   >>>
+                   -- traceMsg 1 "start rnfA"
+                   -- >>>
+                   -- rnfA this
+                   -- >>>
                    traceMsg 1 "start unpickle"
                    >>>
                    unpickleTree
@@ -289,17 +289,18 @@ genDoc d out    = constA (let t = mkBTree d in rnf t `seq` t)
 readDoc :: String -> IOSArrow b XmlTree
 readDoc src
     = readDocument [ withParseHTML no
-                   , withTrace 4
+                   , withTrace 2
                    , withValidate no
                    , withInputEncoding isoLatin1
                    , withWarnings yes
                    , withTrace 1
                    , withStrictInput no
                    , withCanonicalize yes
-                   , withRemoveWS yes
+                   , withRemoveWS no
                    -- , withExpat yes
                    -- , withTagSoup
                    ] src
+{-
       >>>
       perform ( writeDocument [ withShowTree yes
                               , withOutputHTML
@@ -310,7 +311,7 @@ readDoc src
                               , withOutputHTML
                               ] ""
               )
-
+-}
 -- ----------------------------------------
 
 unpickleTree    :: ArrowXml a => a XmlTree BTree
