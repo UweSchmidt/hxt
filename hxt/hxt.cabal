@@ -78,12 +78,15 @@ library
   Control.Arrow.IOStateListArrow,
   Control.Arrow.ListArrow,
   Control.Arrow.ListArrows,
+  Control.Arrow.NTreeEdit,
   Control.Arrow.StateListArrow,
+  Control.FlatSeq,
   Data.AssocList,
   Data.Atom,
   Data.Function.Selector,
   Data.Tree.Class,
   Data.Tree.NTree.TypeDefs,
+  Data.Tree.NTree.Edit,
   Data.Tree.NTree.Zipper.TypeDefs,
   Data.Tree.NavigatableTree.Class,
   Data.Tree.NavigatableTree.XPathAxis,
@@ -149,6 +152,7 @@ library
  hs-source-dirs: src
 
  ghc-options: -Wall
+ ghc-prof-options: -auto-all -caf-all
 
  extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances
 

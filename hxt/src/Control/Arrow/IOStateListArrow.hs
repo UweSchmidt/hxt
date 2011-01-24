@@ -223,4 +223,6 @@ instance (NFData s) => ArrowNF (IOSLA s) where
                                            res <- f s x
                                            deepseq res $ return res
 
+instance ArrowWNF (IOSLA s)
+
 -- ------------------------------------------------------------

@@ -18,14 +18,7 @@ module Text.XML.HXT.Arrow.ParserInterface
     ( module Text.XML.HXT.Arrow.ParserInterface )
 where
 
-import Control.Arrow
 import Control.Arrow.ArrowList
-import Control.Arrow.ArrowIf
-import Control.Arrow.ArrowTree
-import Control.Arrow.ListArrow
-
-import Text.XML.HXT.Parser.XmlEntities  ( xmlEntities   )
-import Text.XML.HXT.Parser.XhtmlEntities( xhtmlEntities )
 
 import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlArrow
@@ -77,49 +70,5 @@ parseHtmlDoc                    = arr2L HP.parseHtmlDocument
 
 parseHtmlContent                :: ArrowList a => a String XmlTree
 parseHtmlContent                = arrL  HP.parseHtmlContent
-
--- ------------------------------------------------------------
-
--- | substitution of all predefined XHTMT entities for none ASCII chars
---
--- This arrow recurses through a whole XML tree and substitutes all
--- entity refs within text nodes and attribute values by a text node
--- containing of a single char corresponding to this entity.
---
--- Unknown entity refs remain unchanged
-
-substHtmlEntityRefs             :: ArrowList a => a XmlTree XmlTree
-substHtmlEntityRefs             = substEntityRefs xhtmlEntities
-
-
--- | substitution of the five predefined XMT entities, works like 'substHtmlEntityRefs'
-
-substXmlEntityRefs              :: ArrowList a => a XmlTree XmlTree
-substXmlEntityRefs              = substEntityRefs xmlEntities
-
--- | the entity substitution arrow called from 'substXmlEntityRefs' and 'substHtmlEntityRefs'
-
-substEntityRefs         :: ArrowList a => [(String, Int)] -> a XmlTree XmlTree
-substEntityRefs entities
-    = fromLA substEntities
-    where
-    substEntities               :: LA XmlTree XmlTree
-    substEntities
-        = choiceA
-          [ isEntityRef :-> ( substEntity $< getEntityRef )
-          , isElem      :-> ( processAttrl (processChildren substEntities)
-                              >>>
-                              processChildren substEntities
-                            )
-          , this        :-> this
-          ]
-        where
-        substEntity en
-            = case (lookup en entities) of
-              Just i
-                  -> txt [toEnum i]     -- constA i >>> mkCharRef
-              Nothing
-                  -> this
-
 
 -- ------------------------------------------------------------

@@ -25,7 +25,8 @@ module Text.XML.HXT.DOM.TypeDefs
 
 where
 
-import Control.DeepSeq
+import           Control.DeepSeq
+import           Control.FlatSeq
 
 import           Data.AssocList
 
@@ -38,7 +39,7 @@ import           Data.Tree.NTree.Zipper.TypeDefs
 
 import           Data.Typeable
 
-import Text.XML.HXT.DOM.QualifiedName
+import           Text.XML.HXT.DOM.QualifiedName
 
 -- -----------------------------------------------------------------------------
 --
@@ -94,6 +95,25 @@ instance NFData XNode where
     rnf (XDTD de al)            = rnf de `seq` rnf al
     rnf (XBlob b)               = BS.length b `seq` ()
     rnf (XError n e)            = rnf n  `seq` rnf e
+
+instance WNFData XNode where
+    rwnf (XText s)              = rwnf s
+    rwnf (XTag qn cs)           = rwnf qn `seq` rwnf cs
+    rwnf (XAttr qn)             = rwnf qn
+    rwnf (XCharRef i)           = i `seq` ()
+    rwnf (XEntityRef n)         = rwnf n
+    rwnf (XCmt c)               = rwnf c
+    rwnf (XCdata s)             = rwnf s
+    rwnf (XPi qn ts)            = rwnf qn `seq` rwnf ts
+    rwnf (XDTD de al)           = rwnf de `seq` rwnfAttributes al
+    rwnf (XBlob _b)             = () -- BS.length b `seq` () -- lazy bytestrings are not evaluated
+    rwnf (XError n e)           = n `seq` rwnf e
+
+-- | Evaluate an assoc list of strings
+rwnfAttributes                  :: Attributes -> ()
+rwnfAttributes [] = ()
+rwnfAttributes ((k, v) : as)    = rwnf k `seq` rwnf v `seq` rwnfAttributes as
+
 
 instance Binary XNode where
     put (XText s)               = put ( 0::Word8) >> put s
@@ -174,22 +194,13 @@ data DTDElem    = DOCTYPE       -- ^ attr: name, system, public,        XDTD ele
                   deriving (Eq, Ord, Enum, Show, Read, Typeable)
 
 instance NFData DTDElem
+instance WNFData DTDElem
 
 instance Binary DTDElem where
     put de                      = put ((toEnum . fromEnum $ de)::Word8)         -- DTDElem is not yet instance of Enum
     get                         = do
                                   tag <- getWord8
-                                  return . toEnum . fromEnum $ tag
-{-
-    put de                      = let
-                                  i = fromJust . elemIndex de $ dtdElems
-                                  in
-                                  put ((toEnum i)::Word8)
-
-    get                         = do
-                                  tag <- getWord8
-                                  return $ dtdElems !! (fromEnum tag)
--}
+                                  return $! (toEnum . fromEnum $ tag)
 
 -- -----------------------------------------------------------------------------
 
@@ -199,9 +210,11 @@ type Blob       = BS.ByteString
 
 blobToString    :: Blob -> String
 blobToString    = CS.unpack
+{-# INLINE blobToString #-}
 
 stringToBlob    :: String -> Blob
 stringToBlob    = CS.pack
+{-# INLINE stringToBlob #-}
 
 -- -----------------------------------------------------------------------------
 

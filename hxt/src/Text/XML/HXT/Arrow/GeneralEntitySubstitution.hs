@@ -108,10 +108,10 @@ processGeneralEntity context recl
                                       >>>
                                       processChildren (processGeneralEntity context recl)
                                     )
+              , isEntityRef     :-> substEntityRef
               , isDTDDoctype    :-> processChildren (processGeneralEntity context recl)
               , isDTDEntity     :-> addEntityDecl
               , isDTDAttlist    :-> substEntitiesInAttrDefaultValue
-              , isEntityRef     :-> substEntityRef
               , this            :-> this
               ]
     where

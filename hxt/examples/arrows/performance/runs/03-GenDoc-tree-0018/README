@@ -1,0 +1,12 @@
+performance test with GenDoc 18
+
+code changes
+
+* in hxt-charproperties inline directives added
+  for simple set operations and XML predicates
+* in ShowXml inline directives added
+
+result
+
+* escape in Data.String.Unicode called by putDoc via
+  unicodeTo XmlEntry is the bad one

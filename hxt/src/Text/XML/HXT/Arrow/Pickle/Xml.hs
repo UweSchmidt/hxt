@@ -42,6 +42,8 @@ where
 
 import           Control.Arrow.ListArrows
 
+import           Data.Char			 (isDigit)
+import           Data.List                       (foldl')
 import           Data.Maybe
 import           Data.Map (Map)
 import qualified Data.Map as M
@@ -475,6 +477,7 @@ xp24Tuple a b c d e f g h i j k l m n o p q r s t u v w x
 
 xpText  :: PU String
 xpText  = xpTextDT scString1
+{-# INLINE xpText #-}
 
 -- | Pickle a string into an XML text node
 --
@@ -506,6 +509,7 @@ xpTextDT sc
 
 xpText0 :: PU String
 xpText0 = xpText0DT scString1
+{-# INLINE xpText0 #-}
 
 -- | Pickle a possibly empty string with a datatype description into an XML node.
 --
@@ -535,6 +539,17 @@ xpPrim
         where
         val [(x,"")] = Just x
         val _        = Nothing
+
+-- | Pickle an unsigned 
+xpInt  :: PU Int
+xpInt
+    = xpWrapMaybe (readMaybe, show) xpText
+    where
+    readMaybe xs
+        | all isDigit xs 	= Just . foldl' (\ r c -> 10 * r + (fromEnum c - fromEnum '0')) 0 $ xs
+    readMaybe ('-' : xs)	= fmap (0 -) . readMaybe $ xs
+    readMaybe ('+' : xs)	=              readMaybe $ xs
+    readMaybe _                 = Nothing
 
 -- ------------------------------------------------------------
 

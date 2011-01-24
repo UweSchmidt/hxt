@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<html>
+  <head>
+    <title>&lt;&#32;&gt;&xxx;</title>
+    <script src="xxx"/>
+  </head>
+  <body>
+    <h1 v="&lt;&#32;">abc<![CDATA[xyz]]>123</h1>
+    <br/>
+    <!-- Created: Wed Jan 19 10:45:33 CET 2011 -->
+    <?abc hhmts end ?>
+  </body>
+</html>
+

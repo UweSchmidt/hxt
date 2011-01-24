@@ -1,0 +1,10 @@
+performance thest with GenDoc 18
+
+Code changes:
+* return $! mkQName
+  in Binary instance for QName (the ! is the importatnt point)
+
+Effects:
+* In GenDoc the peak in space usage for Strings and QNames dsappeared
+* No no effects in ReadDoc
+

@@ -120,6 +120,8 @@ instance ArrowNF LA where
                                       in
                                       deepseq res res
 
+instance ArrowWNF LA
+
 -- ------------------------------------------------------------
 
 -- | conversion of pure list arrows into other possibly more complex

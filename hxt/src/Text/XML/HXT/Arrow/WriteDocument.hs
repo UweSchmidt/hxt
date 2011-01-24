@@ -36,9 +36,7 @@ import Text.XML.HXT.Arrow.XmlState.TypeDefs
 import Text.XML.HXT.Arrow.XmlState.RunIOStateArrow
                                                 ( initialSysState
                                                 )
-import Text.XML.HXT.Arrow.Edit                  ( escapeHtmlDoc
-                                                , escapeXmlDoc
-                                                , haskellRepOfXmlDoc
+import Text.XML.HXT.Arrow.Edit                  ( haskellRepOfXmlDoc
                                                 , indentDoc
                                                 , addDefaultDTDecl
                                                 , preventEmptyElements
@@ -204,7 +202,7 @@ writeDocumentToString config
 -- |
 -- indent and format output
 
-prepareContents :: ArrowXml a => XIOSysState -> (Bool -> String -> a XmlTree XmlTree) -> a XmlTree XmlTree
+prepareContents :: ArrowXml a => XIOSysState -> (Bool -> Bool -> String -> a XmlTree XmlTree) -> a XmlTree XmlTree
 prepareContents config encodeDoc
     = indent
       >>>
@@ -237,26 +235,20 @@ prepareContents config encodeDoc
         | showHaskell'                  = haskellRepOfXmlDoc
         | outHtml'                      = preventEmptyElements noEEsFor' True
                                           >>>
-                                          escapeHtmlDoc                 -- escape al XML and HTML chars >= 128
-                                          >>>
                                           encodeDoc                     -- convert doc into text with respect to output encoding with ASCII as default
-                                            noPi' ( if null outEnc' then usAscii else outEnc' )
+                                            False noPi' ( if null outEnc' then usAscii else outEnc' )
 
         | outXhtml'                     = preventEmptyElements noEEsFor' True
                                           >>>
-                                          escapeXmlDoc                  -- escape lt, gt, amp, quot,
-                                          >>>
                                           encodeDoc                     -- convert doc into text with respect to output encoding
-                                            noPi' outEnc'
+                                            True noPi' outEnc'
         | outXml'                       = ( if null noEEsFor'
                                             then this
                                             else preventEmptyElements noEEsFor' False
                                           )
                                           >>>
-                                          escapeXmlDoc                  -- escape lt, gt, amp, quot,
-                                          >>>
                                           encodeDoc                     -- convert doc into text with respect to output encoding
-                                            noPi' outEnc'
+                                            True noPi' outEnc'
         | otherwise                     = this
 
 -- ------------------------------------------------------------

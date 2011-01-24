@@ -1,0 +1,13 @@
+profiling with GenDoc 18
+
+code changes
+
+* quoting of XML/HTML chars no longer done
+  in an extra tree traversal in escapeDoc
+  but moved into showXmlTrees
+
+results
+
+* conversion from string into blob
+  uses 25% of the time and 42% of space,
+  no further optimization during output seems to be neccesary

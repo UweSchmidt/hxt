@@ -33,9 +33,12 @@ import Control.Arrow.ListArrow
 
 import qualified
        Data.ByteString.Lazy                     as BS
-import Data.String.Unicode                      ( getOutputEncodingFct )
+import Data.Maybe
+import Data.String.Unicode                      ( getOutputEncodingFct' )
 
 import Text.XML.HXT.DOM.Interface
+import qualified
+       Text.XML.HXT.DOM.ShowXml                 as XS
 
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.Edit                  ( addHeadlineToXmlDoc
@@ -44,6 +47,8 @@ import Text.XML.HXT.Arrow.Edit                  ( addHeadlineToXmlDoc
                                                 , indentDoc
                                                 , numberLinesInXmlDoc
                                                 , treeRepOfXmlDoc
+                                                , escapeHtmlRefs
+                                                , escapeXmlRefs
                                                 )
 import Text.XML.HXT.Arrow.XmlState
 import Text.XML.HXT.Arrow.XmlState.TypeDefs
@@ -166,14 +171,14 @@ getOutputEncoding defaultEnc
     where
     getEC enc' = fromLA $ getOutputEncoding' defaultEnc enc'
 
-encodeDocument  :: Bool -> String -> IOStateArrow s XmlTree XmlTree
-encodeDocument supressXmlPi defaultEnc
+encodeDocument  :: Bool -> Bool -> String -> IOStateArrow s XmlTree XmlTree
+encodeDocument quoteXml supressXmlPi defaultEnc
     = encode $< getOutputEncoding defaultEnc
     where
     encode enc
         = traceMsg 2 ("encodeDocument: encoding is " ++ show enc)
           >>>
-          ( encodeDocument' supressXmlPi enc
+          ( encodeDocument' quoteXml supressXmlPi enc
             `orElse`
             ( issueFatal ("encoding scheme not supported: " ++ show enc)
               >>>
@@ -209,38 +214,51 @@ getOutputEncoding' defaultEnc defaultEnc2
             ]
       >. (head . filter (not . null))           -- make the filter deterministic: take 1. entry from list of guesses
 
-encodeDocument' :: ArrowXml a => Bool -> String -> a XmlTree XmlTree
-encodeDocument' supressXmlPi defaultEnc
+encodeDocument' :: ArrowXml a => Bool -> Bool -> String -> a XmlTree XmlTree
+encodeDocument' quoteXml supressXmlPi defaultEnc
     = fromLA (encode $< getOutputEncoding' defaultEnc utf8)
     where
     encode      :: String -> LA XmlTree XmlTree
     encode encodingScheme
-        = case getOutputEncodingFct encodingScheme of
-          Nothing       -> none
-          Just ef       -> ( if supressXmlPi
-                             then processChildren (none `when` isXmlPi)
-                             else ( addXmlPi
-                                    >>>
-                                    addXmlPiEncoding encodingScheme
-                                  )
-                           )
-                           >>>
-                           ( encodeBlob `orElse` encodeDoc ef )
-                           >>>
-                           addAttr a_output_encoding encodingScheme
+        | encodingScheme == unicodeString
+	    = this
+        | isNothing encodeFct
+            = none
+        | otherwise
+            = ( if supressXmlPi
+                then processChildren (none `when` isXmlPi)
+                else ( addXmlPi
+                       >>>
+                       addXmlPiEncoding encodingScheme
+                     )
+              )
+              >>>
+              ( isLatin1Blob
+                `orElse`
+                encodeDoc (fromJust encodeFct)
+              )
+              >>>
+              addAttr a_output_encoding encodingScheme
         where
+        (cQuot, aQuot)
+            | quoteXml	= escapeXmlRefs
+            | otherwise = escapeHtmlRefs
+
+        encodeFct       = getOutputEncodingFct' encodingScheme
+
         encodeDoc ef    = replaceChildren
-                          ( xshow getChildren
+                          ( xshowBlobWithEnc cQuot aQuot ef getChildren
                             >>>
-                            arr ef
-                            >>>
-                            mkText
+                            mkBlob
                           )
+        xshowBlobWithEnc cenc aenc enc f
+                        = f >. XS.xshow' cenc aenc enc 
+
         -- if encoding scheme is isolatin1 and the contents is a single blob (bytestring)
         -- the encoding is the identity.
         -- This optimization enables processing (copying) of none XML contents
         -- without any conversions from and to strings
-        encodeBlob
+        isLatin1Blob
             | encodingScheme /= isoLatin1
                         = none
             | otherwise = childIsSingleBlob `guards` this

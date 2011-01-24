@@ -1,0 +1,277 @@
+	Tue Jan 18 09:02 2011 Time and Allocation Profiling Report  (Final)
+
+	   GenDoc +RTS -P -hy -RTS 18
+
+	total time  =        3.58 secs   (179 ticks @ 20 ms)
+	total alloc = 1,894,865,496 bytes  (excludes profiling overheads)
+
+COST CENTRE                    MODULE                         %time %alloc  ticks     bytes
+
+escape                         Data.String.Unicode             34.1   30.6     61 580093848
+showXmlTree                    Text.XML.HXT.DOM.ShowXml        13.4   15.7     24 297796552
+xpCondSeq                      Text.XML.HXT.Arrow.Pickle.Xml   11.2   12.5     20 236728056
+qualifiedName'                 Text.XML.HXT.DOM.QualifiedName   8.4   13.2     15 249561648
+strictA                        Control.Arrow.ArrowNF            7.3    1.3     13  25165848
+showQuoteString                Text.XML.HXT.DOM.ShowXml         5.6    5.6     10 107025248
+putDoc                         Main                             5.0    0.2      9   4184144
+appPickle                      Text.XML.HXT.Arrow.Pickle.Xml    2.2    0.0      4         0
+xpAlt                          Text.XML.HXT.Arrow.Pickle.Xml    1.7    0.9      3  16777296
+xpInt                          Text.XML.HXT.Arrow.Pickle.Xml    1.1    0.6      2  10485800
+xpElemQN                       Text.XML.HXT.Arrow.Pickle.Xml    1.1    2.9      2  54526056
+xpAttrQN                       Text.XML.HXT.Arrow.Pickle.Xml    1.1    1.1      2  20971664
+contents                       Text.XML.HXT.Arrow.Pickle.Xml    1.1    2.0      2  37748712
+attributes                     Text.XML.HXT.Arrow.Pickle.Xml    1.1    1.0      2  18874368
+unicodeToXmlEntity             Data.String.Unicode              1.1    0.0      2         0
+mkBTree                        Main                             1.1    2.5      2  48234360
+incr                           Main                             0.6    1.2      1  23068672
+xpLift                         Text.XML.HXT.Arrow.Pickle.Xml    0.0    4.0      0  75497328
+addCont                        Text.XML.HXT.Arrow.Pickle.Xml    0.0    2.0      0  37748688
+
+
+                                                                                               individual    inherited
+COST CENTRE              MODULE                                               no.    entries  %time %alloc   %time %alloc  ticks     bytes
+
+MAIN                     MAIN                                                   1           0   0.0    0.0   100.0  100.0      0       696
+ main                    Main                                               13180           1   0.0    0.0   100.0  100.0      0      8800
+  main1                  Main                                               13184           1   0.0    0.0   100.0  100.0      0        48
+   fn                    Main                                               13303           4   0.0    0.0     0.0    0.0      0      1392
+   genDoc                Main                                               13191           1   0.6    0.0   100.0  100.0      1       520
+    mkBTree              Main                                               13214      543812   1.1    2.5     1.7    3.8      2  48234360
+     incr                Main                                               13215      524288   0.6    1.2     0.6    1.2      1  23068672
+    putDoc               Main                                               13194           1   5.0    0.2    68.2   66.4      9   4184144
+     xshow               Text.XML.HXT.DOM.ShowXml                           13309      262147   0.6    0.0    27.9   35.5      1       312
+      showXmlTree        Text.XML.HXT.DOM.ShowXml                           13322     1048582  13.4   15.7    27.4   35.5     24 297796200
+       showQuoteString   Text.XML.HXT.DOM.ShowXml                           13357      262146   5.6    5.6     5.6    5.6     10 107025248
+       qualifiedName     Text.XML.HXT.DOM.QualifiedName                     13351           2   0.0    0.0     0.0    0.0      0         0
+        unXN             Text.XML.HXT.DOM.QualifiedName                     13352           2   0.0    0.0     0.0    0.0      0         0
+       qualifiedName'    Text.XML.HXT.DOM.QualifiedName                     13329      786434   8.4   13.2     8.4   14.2     15 249561648
+        unXN             Text.XML.HXT.DOM.QualifiedName                     13330           0   0.0    1.0     0.0    1.0      0  18874416
+     unicodeToXmlEntity  Data.String.Unicode                                13301           0   1.1    0.0    35.2   30.6      2         0
+      escape             Data.String.Unicode                                13302           1  34.1   30.6    34.1   30.6     61 580093848
+     addXmlPi            Text.XML.HXT.Arrow.Edit                            13195           2   0.0    0.0     0.0    0.0      0      1080
+      hasXmlPi           Text.XML.HXT.Arrow.Edit                            13197           1   0.0    0.0     0.0    0.0      0        40
+       runLA             Control.Arrow.ListArrow                            13198           1   0.0    0.0     0.0    0.0      0        16
+      runLA              Control.Arrow.ListArrow                            13196           2   0.0    0.0     0.0    0.0      0        16
+    strictA              Control.Arrow.ArrowNF                              13193           1   7.3    1.3     7.3    1.3     13  25165848
+    xpickleVal           Text.XML.HXT.Arrow.Pickle                          13192           1   0.0    0.0    22.3   28.5      0        72
+     pickleDoc           Text.XML.HXT.Arrow.Pickle.Xml                      13199           1   0.0    0.0    22.3   28.5      0        56
+      xpAlt              Text.XML.HXT.Arrow.Pickle.Xml                      13213           0   1.7    0.9    22.3   28.5      3  16777184
+       xpWrap            Text.XML.HXT.Arrow.Pickle.Xml                      13221           0   0.6    0.0    20.7   27.7      1         0
+        xpSeq            Text.XML.HXT.Arrow.Pickle.Xml                      13222           0   0.6    0.0    20.1   27.7      1         0
+         xpCondSeq       Text.XML.HXT.Arrow.Pickle.Xml                      13223      277972  11.2   12.5    19.6   27.7     20 236727824
+          xpInt          Text.XML.HXT.Arrow.Pickle.Xml                      13293           0   1.1    0.6     1.1    0.6      2  10485720
+          xpLiftMaybe    Text.XML.HXT.Arrow.Pickle.Xml                      13290      262144   0.0    0.4     0.0    1.4      0   8388608
+           xpLift        Text.XML.HXT.Arrow.Pickle.Xml                      13291      262144   0.0    1.0     0.0    1.0      0  18874368
+          xpTextDT       Text.XML.HXT.Arrow.Pickle.Xml                      13288           0   0.0    0.6     0.6    1.5      0  10485760
+           addCont       Text.XML.HXT.Arrow.Pickle.Xml                      13289      262144   0.0    0.7     0.6    1.0      0  12582912
+            contents     Text.XML.HXT.Arrow.Pickle.Xml                      13292           0   0.6    0.3     0.6    0.3      1   6291456
+          xpPair         Text.XML.HXT.Arrow.Pickle.Xml                      13248           0   0.0    0.0     0.0    0.0      0         0
+          xpLift         Text.XML.HXT.Arrow.Pickle.Xml                      13234      786430   0.0    3.0     0.0    3.0      0  56622960
+          xpElem         Text.XML.HXT.Arrow.Pickle.Xml                      13229           0   0.0    0.0     5.6    8.6      0         0
+           xpElemQN      Text.XML.HXT.Arrow.Pickle.Xml                      13230           0   1.1    2.9     5.6    8.6      2  54525848
+            xpAttr       Text.XML.HXT.Arrow.Pickle.Xml                      13267           0   0.0    0.0     2.2    2.4      0         0
+             xpAttrQN    Text.XML.HXT.Arrow.Pickle.Xml                      13268           0   1.1    1.1     2.2    2.4      2  20971520
+              xpInt      Text.XML.HXT.Arrow.Pickle.Xml                      13285           0   0.0    0.0     0.0    0.0      0         0
+               xpWrapMaybe Text.XML.HXT.Arrow.Pickle.Xml                      13286           0   0.0    0.0     0.0    0.0      0         0
+              appPickle  Text.XML.HXT.Arrow.Pickle.Xml                      13278      262144   0.0    0.0     0.0    0.0      0         0
+              addAtt     Text.XML.HXT.Arrow.Pickle.Xml                      13270      262144   0.6    0.7     1.1    1.0      1  12582912
+               attributes Text.XML.HXT.Arrow.Pickle.Xml                      13271           0   0.6    0.3     0.6    0.3      1   6291456
+              contents   Text.XML.HXT.Arrow.Pickle.Xml                      13269           0   0.0    0.3     0.0    0.3      0   6291456
+            xpPair       Text.XML.HXT.Arrow.Pickle.Xml                      13247           0   0.0    0.0     0.0    0.0      0         0
+            appPickle    Text.XML.HXT.Arrow.Pickle.Xml                      13243      524287   1.1    0.0     1.1    0.0      2         0
+            addCont      Text.XML.HXT.Arrow.Pickle.Xml                      13233      524287   0.0    1.3     0.6    2.0      0  25165776
+             contents    Text.XML.HXT.Arrow.Pickle.Xml                      13236           0   0.6    0.7     0.6    0.7      1  12582888
+            attributes   Text.XML.HXT.Arrow.Pickle.Xml                      13232           0   0.6    0.7     0.6    0.7      1  12582888
+            contents     Text.XML.HXT.Arrow.Pickle.Xml                      13231           0   0.0    0.7     0.0    0.7      0  12582888
+          appPickle      Text.XML.HXT.Arrow.Pickle.Xml                      13224     2621434   1.1    0.0     1.1    0.0      2         0
+       appPickle         Text.XML.HXT.Arrow.Pickle.Xml                      13220      524287   0.0    0.0     0.0    0.0      0         0
+      appPickle          Text.XML.HXT.Arrow.Pickle.Xml                      13211           1   0.0    0.0     0.0    0.0      0         0
+      mkRoot             Text.XML.HXT.DOM.XmlNode                           13202           1   0.0    0.0     0.0    0.0      0        72
+      contents           Text.XML.HXT.Arrow.Pickle.Xml                      13201           0   0.0    0.0     0.0    0.0      0        24
+      attributes         Text.XML.HXT.Arrow.Pickle.Xml                      13200           0   0.0    0.0     0.0    0.0      0        24
+   runX                  Text.XML.HXT.Arrow.XmlState.RunIOStateArrow        13185           1   0.0    0.0     0.0    0.0      0        16
+    runXIOState          Text.XML.HXT.Arrow.XmlState.RunIOStateArrow        13186           1   0.0    0.0     0.0    0.0      0       120
+     runIOSLA            Control.Arrow.IOStateListArrow                     13187           1   0.0    0.0     0.0    0.0      0         0
+  pn                     Main                                               13181           2   0.0    0.0     0.0    0.0      0       664
+ CAF:$fXmlPicklerBTree_$cxpickle Main                                               13163           1   0.0    0.0     0.0    0.0      0        48
+  xpAlt                  Text.XML.HXT.Arrow.Pickle.Xml                      13212           1   0.0    0.0     0.0    0.0      0       112
+ CAF:lvl170_r4PQ         Main                                               13162           1   0.0    0.0     0.0    0.0      0        16
+  xpWrap                 Text.XML.HXT.Arrow.Pickle.Xml                      13216           1   0.0    0.0     0.0    0.0      0        32
+   theSchema             Text.XML.HXT.Arrow.Pickle.Xml                      13219           0   0.0    0.0     0.0    0.0      0        16
+   xpSeq                 Text.XML.HXT.Arrow.Pickle.Xml                      13217           1   0.0    0.0     0.0    0.0      0         0
+    xpCondSeq            Text.XML.HXT.Arrow.Pickle.Xml                      13218           1   0.0    0.0     0.0    0.0      0        32
+ CAF:w11_r4PI            Main                                               13160           1   0.0    0.0     0.0    0.0      0        16
+  xpElem                 Text.XML.HXT.Arrow.Pickle.Xml                      13225           1   0.0    0.0     0.0    0.0      0        32
+   xpElemQN              Text.XML.HXT.Arrow.Pickle.Xml                      13226           1   0.0    0.0     0.0    0.0      0       104
+    scElem               Text.XML.HXT.Arrow.Pickle.Schema                   13228           0   0.0    0.0     0.0    0.0      0        32
+    theSchema            Text.XML.HXT.Arrow.Pickle.Xml                      13227           0   0.0    0.0     0.0    0.0      0        24
+ CAF:w21_r4PG            Main                                               13159           1   0.0    0.0     0.0    0.0      0        48
+  xpPair                 Text.XML.HXT.Arrow.Pickle.Xml                      13244           1   0.0    0.0     0.0    0.0      0        64
+   xpSeq                 Text.XML.HXT.Arrow.Pickle.Xml                      13245           1   0.0    0.0     0.0    0.0      0         0
+    xpCondSeq            Text.XML.HXT.Arrow.Pickle.Xml                      13246           1   0.0    0.0     0.0    0.0      0        96
+ CAF:lvl166_r4PE         Main                                               13158           1   0.0    0.0     0.0    0.0      0        16
+  xpWrap                 Text.XML.HXT.Arrow.Pickle.Xml                      13249           1   0.0    0.0     0.0    0.0      0        32
+   theSchema             Text.XML.HXT.Arrow.Pickle.Xml                      13252           0   0.0    0.0     0.0    0.0      0        16
+   xpSeq                 Text.XML.HXT.Arrow.Pickle.Xml                      13250           1   0.0    0.0     0.0    0.0      0         0
+    xpCondSeq            Text.XML.HXT.Arrow.Pickle.Xml                      13251           1   0.0    0.0     0.0    0.0      0        32
+ CAF:w1_r4Pw             Main                                               13156           1   0.0    0.0     0.0    0.0      0        16
+  xpElem                 Text.XML.HXT.Arrow.Pickle.Xml                      13253           1   0.0    0.0     0.0    0.0      0        32
+   xpElemQN              Text.XML.HXT.Arrow.Pickle.Xml                      13254           1   0.0    0.0     0.0    0.0      0       104
+    scElem               Text.XML.HXT.Arrow.Pickle.Schema                   13256           0   0.0    0.0     0.0    0.0      0        32
+    theSchema            Text.XML.HXT.Arrow.Pickle.Xml                      13255           0   0.0    0.0     0.0    0.0      0        24
+ CAF:w2_r4Pu             Main                                               13155           1   0.0    0.0     0.0    0.0      0        16
+  xpAttr                 Text.XML.HXT.Arrow.Pickle.Xml                      13263           1   0.0    0.0     0.0    0.0      0        32
+   xpAttrQN              Text.XML.HXT.Arrow.Pickle.Xml                      13264           2   0.0    0.0     0.0    0.0      0       144
+    scAttr               Text.XML.HXT.Arrow.Pickle.Schema                   13266           0   0.0    0.0     0.0    0.0      0        32
+    theSchema            Text.XML.HXT.Arrow.Pickle.Xml                      13265           0   0.0    0.0     0.0    0.0      0        24
+ CAF:lvl162_r4Ps         Main                                               13154           1   0.0    0.0     0.0    0.0      0        16
+  xpAttr                 Text.XML.HXT.Arrow.Pickle.Xml                      13272           0   0.0    0.0     0.0    0.0      0         0
+   mkName                Text.XML.HXT.DOM.QualifiedName                     13273           1   0.0    0.0     0.0    0.0      0         0
+    mkPrefixLocalPart    Text.XML.HXT.DOM.QualifiedName                     13274           1   0.0    0.0     0.0    0.0      0        16
+     newQName            Text.XML.HXT.DOM.QualifiedName                     13275           1   0.0    0.0     0.0    0.0      0        16
+      newQName'          Text.XML.HXT.DOM.QualifiedName                     13276           1   0.0    0.0     0.0    0.0      0         0
+       insertQName       Text.XML.HXT.DOM.QualifiedName                     13277           1   0.0    0.0     0.0    0.0      0      1824
+ CAF:x2_r4Pq             Main                                               13153           1   0.0    0.0     0.0    0.0      0       392
+ CAF:lvl161_r4Po         Main                                               13152           1   0.0    0.0     0.0    0.0      0        16
+  xpElem                 Text.XML.HXT.Arrow.Pickle.Xml                      13257           0   0.0    0.0     0.0    0.0      0         0
+   mkName                Text.XML.HXT.DOM.QualifiedName                     13258           1   0.0    0.0     0.0    0.0      0         0
+    mkPrefixLocalPart    Text.XML.HXT.DOM.QualifiedName                     13259           1   0.0    0.0     0.0    0.0      0        16
+     newQName            Text.XML.HXT.DOM.QualifiedName                     13260           1   0.0    0.0     0.0    0.0      0        16
+      newQName'          Text.XML.HXT.DOM.QualifiedName                     13261           1   0.0    0.0     0.0    0.0      0         0
+       insertQName       Text.XML.HXT.DOM.QualifiedName                     13262           1   0.0    0.0     0.0    0.0      0      1744
+ CAF:x1_r4Pm             Main                                               13151           1   0.0    0.0     0.0    0.0      0       320
+ CAF:lvl160_r4Pk         Main                                               13150           1   0.0    0.0     0.0    0.0      0        16
+  xpElem                 Text.XML.HXT.Arrow.Pickle.Xml                      13237           0   0.0    0.0     0.0    0.0      0         0
+   mkName                Text.XML.HXT.DOM.QualifiedName                     13238           1   0.0    0.0     0.0    0.0      0         0
+    mkPrefixLocalPart    Text.XML.HXT.DOM.QualifiedName                     13239           1   0.0    0.0     0.0    0.0      0        16
+     newQName            Text.XML.HXT.DOM.QualifiedName                     13240           1   0.0    0.0     0.0    0.0      0        16
+      newQName'          Text.XML.HXT.DOM.QualifiedName                     13241           1   0.0    0.0     0.0    0.0      0         0
+       insertQName       Text.XML.HXT.DOM.QualifiedName                     13242           1   0.0    0.0     0.0    0.0      0      1648
+ CAF:x_r4Pi              Main                                               13149           1   0.0    0.0     0.0    0.0      0       320
+ CAF:fn2                 Main                                               13135           1   0.0    0.0     0.0    0.0      0        16
+ CAF:main61              Main                                               13120           1   0.0    0.0     0.0    0.0      0        16
+ CAF:lvl126_r4Nk         Main                                               13110           1   0.0    0.0     0.0    0.0      0        16
+  putDoc                 Main                                               13296           0   0.0    0.0     0.0    0.0      0         0
+   isoLatin1             Data.String.EncodingNames                          13297           1   0.0    0.0     0.0    0.0      0        16
+ CAF:lvl125_r4Ni         Main                                               13109           1   0.0    0.0     0.0    0.0      0        16
+  putDoc                 Main                                               13298           0   0.0    0.0     0.0    0.0      0         0
+   addXmlPiEncoding      Text.XML.HXT.Arrow.Edit                            13299           2   0.0    0.0     0.0    0.0      0      2112
+    mkName               Text.XML.HXT.DOM.QualifiedName                     13344           1   0.0    0.0     0.0    0.0      0         0
+     mkPrefixLocalPart   Text.XML.HXT.DOM.QualifiedName                     13347           1   0.0    0.0     0.0    0.0      0        16
+      newQName           Text.XML.HXT.DOM.QualifiedName                     13348           1   0.0    0.0     0.0    0.0      0        16
+       newQName'         Text.XML.HXT.DOM.QualifiedName                     13349           1   0.0    0.0     0.0    0.0      0         0
+        insertQName      Text.XML.HXT.DOM.QualifiedName                     13350           1   0.0    0.0     0.0    0.0      0      2256
+    qualifiedName        Text.XML.HXT.DOM.QualifiedName                     13312           1   0.0    0.0     0.0    0.0      0         0
+     unXN                Text.XML.HXT.DOM.QualifiedName                     13321           1   0.0    0.0     0.0    0.0      0         0
+    runLA                Control.Arrow.ListArrow                            13300           6   0.0    0.0     0.0    0.0      0         0
+ CAF:fn10                Main                                               13094           1   0.0    0.0     0.0    0.0      0        16
+ CAF:fn11                Main                                               13093           1   0.0    0.0     0.0    0.0      0        16
+  fn                     Main                                               13305           0   0.0    0.0     0.0    0.0      0       392
+ CAF:fn3                 Main                                               13092           1   0.0    0.0     0.0    0.0      0        16
+  fn                     Main                                               13308           0   0.0    0.0     0.0    0.0      0       320
+ CAF:fn7                 Main                                               13091           1   0.0    0.0     0.0    0.0      0        16
+  fn                     Main                                               13306           0   0.0    0.0     0.0    0.0      0       144
+ CAF:main62              Main                                               13018           1   0.0    0.0     0.0    0.0      0        16
+  main                   Main                                               13183           0   0.0    0.0     0.0    0.0      0       464
+ CAF                     Text.Read.Lex                                      12978           4   0.0    0.0     0.0    0.0      0      2360
+ CAF                     GHC.IO.Handle.FD                                   12948           2   0.0    0.0     0.0    0.0      0      2448
+ CAF                     System.Posix.Internals                             12947           1   0.0    0.0     0.0    0.0      0        32
+ CAF                     GHC.IO.FD                                          12932           3   0.0    0.0     0.0    0.0      0        96
+ CAF                     GHC.IO.Handle.Internals                            12912           1   0.0    0.0     0.0    0.0      0        32
+ CAF                     GHC.IO.Encoding.Iconv                              12906           2   0.0    0.0     0.0    0.0      0      1528
+ CAF                     GHC.Conc.Signal                                    12903           1   0.0    0.0     0.0    0.0      0       672
+ CAF                     Debug.Trace                                        12895           1   0.0    0.0     0.0    0.0      0       248
+ CAF                     Control.DeepSeq                                    12893           1   0.0    0.0     0.0    0.0      0        16
+ CAF:iso8859_1           Data.String.EncodingNames                          12676           1   0.0    0.0     0.0    0.0      0        16
+  iso8859_1              Data.String.EncodingNames                          13358           1   0.0    0.0     0.0    0.0      0         0
+ CAF:iso8859_111         Data.String.EncodingNames                          12633           1   0.0    0.0     0.0    0.0      0        16
+  iso8859_1              Data.String.EncodingNames                          13359           0   0.0    0.0     0.0    0.0      0       752
+ CAF:charPropXml1ByteChar Data.Char.Properties.XMLCharProps                  12616           1   0.0    0.0     0.0    0.0      0        16
+  charPropXml1ByteChar   Data.Char.Properties.XMLCharProps                  13325           1   0.0    0.0     0.0    0.0      0         0
+   unionCS               Data.Set.CharSet                                   13326           5   0.0    0.0     0.0    0.0      0       192
+ CAF:charPropXml1ByteChar5 Data.Char.Properties.XMLCharProps                  12586           1   0.0    0.0     0.0    0.0      0        16
+  charPropXml1ByteChar   Data.Char.Properties.XMLCharProps                  13327           0   0.0    0.0     0.0    0.0      0       144
+   unionCS               Data.Set.CharSet                                   13328           7   0.0    0.0     0.0    0.0      0       232
+ CAF:mergeAttrl          Text.XML.HXT.DOM.XmlNode                           12548           1   0.0    0.0     0.0    0.0      0        16
+  mergeAttrl             Text.XML.HXT.DOM.XmlNode                           13331           1   0.0    0.0     0.0    0.0      0        56
+   addAttr               Text.XML.HXT.DOM.XmlNode                           13332           1   0.0    0.0     0.0    0.0      0       168
+    qualifiedName        Text.XML.HXT.DOM.QualifiedName                     13342           2   0.0    0.0     0.0    0.0      0         0
+     unXN                Text.XML.HXT.DOM.QualifiedName                     13343           2   0.0    0.0     0.0    0.0      0         0
+ CAF:mkRoot1             Text.XML.HXT.DOM.XmlNode                           12530           1   0.0    0.0     0.0    0.0      0        16
+  mkRoot                 Text.XML.HXT.DOM.XmlNode                           13203           0   0.0    0.0     0.0    0.0      0         0
+   mkName                Text.XML.HXT.DOM.QualifiedName                     13204           1   0.0    0.0     0.0    0.0      0         0
+    mkPrefixLocalPart    Text.XML.HXT.DOM.QualifiedName                     13206           1   0.0    0.0     0.0    0.0      0        16
+     newQName            Text.XML.HXT.DOM.QualifiedName                     13207           1   0.0    0.0     0.0    0.0      0        16
+      newQName'          Text.XML.HXT.DOM.QualifiedName                     13208           1   0.0    0.0     0.0    0.0      0         0
+       insertQName       Text.XML.HXT.DOM.QualifiedName                     13210           1   0.0    0.0     0.0    0.0      0      1208
+ CAF:t_xml               Text.XML.HXT.DOM.XmlKeywords                       10220           1   0.0    0.0     0.0    0.0      0        16
+  t_xml                  Text.XML.HXT.DOM.XmlKeywords                       13315           1   0.0    0.0     0.0    0.0      0         0
+ CAF:t_root              Text.XML.HXT.DOM.XmlKeywords                       10219           1   0.0    0.0     0.0    0.0      0        16
+  t_root                 Text.XML.HXT.DOM.XmlKeywords                       13205           1   0.0    0.0     0.0    0.0      0        24
+ CAF:a_encoding          Text.XML.HXT.DOM.XmlKeywords                       10215           1   0.0    0.0     0.0    0.0      0        16
+  a_encoding             Text.XML.HXT.DOM.XmlKeywords                       13345           1   0.0    0.0     0.0    0.0      0         0
+ CAF:a_value             Text.XML.HXT.DOM.XmlKeywords                       10202           1   0.0    0.0     0.0    0.0      0        16
+  a_value                Text.XML.HXT.DOM.XmlKeywords                       13353           1   0.0    0.0     0.0    0.0      0         0
+ CAF:a_version           Text.XML.HXT.DOM.XmlKeywords                       10201           1   0.0    0.0     0.0    0.0      0        16
+  a_version              Text.XML.HXT.DOM.XmlKeywords                       13336           1   0.0    0.0     0.0    0.0      0         0
+ CAF:a_version1          Text.XML.HXT.DOM.XmlKeywords                       10105           1   0.0    0.0     0.0    0.0      0        16
+  a_version              Text.XML.HXT.DOM.XmlKeywords                       13337           0   0.0    0.0     0.0    0.0      0       536
+ CAF:a_value1            Text.XML.HXT.DOM.XmlKeywords                       10104           1   0.0    0.0     0.0    0.0      0        16
+  a_value                Text.XML.HXT.DOM.XmlKeywords                       13354           0   0.0    0.0     0.0    0.0      0       176
+ CAF:a_encoding1         Text.XML.HXT.DOM.XmlKeywords                       10092           1   0.0    0.0     0.0    0.0      0        16
+  a_encoding             Text.XML.HXT.DOM.XmlKeywords                       13346           0   0.0    0.0     0.0    0.0      0       608
+ CAF:t_xml1              Text.XML.HXT.DOM.XmlKeywords                       10088           1   0.0    0.0     0.0    0.0      0        16
+  t_xml                  Text.XML.HXT.DOM.XmlKeywords                       13316           0   0.0    0.0     0.0    0.0      0       248
+ CAF:$dNFData2_rbaM      Text.XML.HXT.DOM.TypeDefs                          10069           1   0.0    0.0     0.0    0.0      0        64
+ CAF:$fNFDataXNode       Text.XML.HXT.DOM.TypeDefs                          10068           1   0.0    0.0     0.0    0.0      0        16
+ CAF:theQNames_r3jl      Text.XML.HXT.DOM.QualifiedName                      9980           1   0.0    0.0     0.0    0.0      0        16
+  theQNames              Text.XML.HXT.DOM.QualifiedName                     13209           1   0.0    0.0     0.0    0.0      0        48
+ CAF:lvl5_r4ip           Text.XML.HXT.DOM.QualifiedName                      9977           1   0.0    0.0     0.0    0.0      0       248
+ CAF:lvl11_r12mL         Text.XML.HXT.DOM.ShowXml                            9400           1   0.0    0.0     0.0    0.0      0        16
+ CAF:lvl10_r12mJ         Text.XML.HXT.DOM.ShowXml                            9399           1   0.0    0.0     0.0    0.0      0        16
+  showXmlTree            Text.XML.HXT.DOM.ShowXml                           13324           0   0.0    0.0     0.0    0.0      0       176
+ CAF:lvl9_r12mH          Text.XML.HXT.DOM.ShowXml                            9398           1   0.0    0.0     0.0    0.0      0        16
+ CAF:lvl8_r12mF          Text.XML.HXT.DOM.ShowXml                            9397           1   0.0    0.0     0.0    0.0      0        16
+  showXmlTree            Text.XML.HXT.DOM.ShowXml                           13361           0   0.0    0.0     0.0    0.0      0       176
+ CAF:addXmlPi2           Text.XML.HXT.Arrow.Edit                             8708           1   0.0    0.0     0.0    0.0      0        16
+  addXmlPi               Text.XML.HXT.Arrow.Edit                            13295           0   0.0    0.0     0.0    0.0      0        64
+ CAF:addXmlPi9           Text.XML.HXT.Arrow.Edit                             8707           1   0.0    0.0     0.0    0.0      0        16
+  addXmlPi               Text.XML.HXT.Arrow.Edit                            13313           0   0.0    0.0     0.0    0.0      0         0
+   mkName                Text.XML.HXT.DOM.QualifiedName                     13314           1   0.0    0.0     0.0    0.0      0         0
+    mkPrefixLocalPart    Text.XML.HXT.DOM.QualifiedName                     13317           1   0.0    0.0     0.0    0.0      0        16
+     newQName            Text.XML.HXT.DOM.QualifiedName                     13318           1   0.0    0.0     0.0    0.0      0        16
+      newQName'          Text.XML.HXT.DOM.QualifiedName                     13319           1   0.0    0.0     0.0    0.0      0         0
+       insertQName       Text.XML.HXT.DOM.QualifiedName                     13320           1   0.0    0.0     0.0    0.0      0      1664
+ CAF:addXmlPi10          Text.XML.HXT.Arrow.Edit                             8706           1   0.0    0.0     0.0    0.0      0        16
+  addXmlPi               Text.XML.HXT.Arrow.Edit                            13310           0   0.0    0.0     0.0    0.0      0       792
+   mkName                Text.XML.HXT.DOM.QualifiedName                     13335           1   0.0    0.0     0.0    0.0      0         0
+    mkPrefixLocalPart    Text.XML.HXT.DOM.QualifiedName                     13338           1   0.0    0.0     0.0    0.0      0        16
+     newQName            Text.XML.HXT.DOM.QualifiedName                     13339           1   0.0    0.0     0.0    0.0      0        16
+      newQName'          Text.XML.HXT.DOM.QualifiedName                     13340           1   0.0    0.0     0.0    0.0      0         0
+       insertQName       Text.XML.HXT.DOM.QualifiedName                     13341           1   0.0    0.0     0.0    0.0      0      2176
+   mergeAttrl            Text.XML.HXT.DOM.XmlNode                           13333           0   0.0    0.0     0.0    0.0      0        56
+    addAttr              Text.XML.HXT.DOM.XmlNode                           13334           1   0.0    0.0     0.0    0.0      0        80
+   runLA                 Control.Arrow.ListArrow                            13311           1   0.0    0.0     0.0    0.0      0         0
+ CAF:addXmlPi11          Text.XML.HXT.Arrow.Edit                             8705           1   0.0    0.0     0.0    0.0      0        16
+ CAF:addXmlPi12          Text.XML.HXT.Arrow.Edit                             8704           1   0.0    0.0     0.0    0.0      0        16
+  addXmlPi               Text.XML.HXT.Arrow.Edit                            13356           0   0.0    0.0     0.0    0.0      0       248
+ CAF:addXmlPiEncoding1   Text.XML.HXT.Arrow.Edit                             8666           1   0.0    0.0     0.0    0.0      0        16
+ CAF:lvl6_r3ZSy          Text.XML.HXT.Arrow.Edit                             8664           1   0.0    0.0     0.0    0.0      0        16
+ CAF:runX4               Text.XML.HXT.Arrow.XmlState.RunIOStateArrow         7208           1   0.0    0.0     0.0    0.0      0        16
+  runXIOState            Text.XML.HXT.Arrow.XmlState.RunIOStateArrow        13188           0   0.0    0.0     0.0    0.0      0       696
+ CAF:runX5               Text.XML.HXT.Arrow.XmlState.RunIOStateArrow         7207           1   0.0    0.0     0.0    0.0      0        16
+  runXIOState            Text.XML.HXT.Arrow.XmlState.RunIOStateArrow        13190           0   0.0    0.0     0.0    0.0      0        24
+ CAF:runX7               Text.XML.HXT.Arrow.XmlState.RunIOStateArrow         7206           1   0.0    0.0     0.0    0.0      0        16
+  runXIOState            Text.XML.HXT.Arrow.XmlState.RunIOStateArrow        13189           0   0.0    0.0     0.0    0.0      0        24
+ CAF:xpInt               Text.XML.HXT.Arrow.Pickle.Xml                       6698           1   0.0    0.0     0.0    0.0      0        16
+  xpInt                  Text.XML.HXT.Arrow.Pickle.Xml                      13279           1   0.0    0.0     0.0    0.0      0         0
+   xpWrapMaybe           Text.XML.HXT.Arrow.Pickle.Xml                      13280           1   0.0    0.0     0.0    0.0      0        32
+    theSchema            Text.XML.HXT.Arrow.Pickle.Xml                      13284           0   0.0    0.0     0.0    0.0      0        16
+    xpSeq                Text.XML.HXT.Arrow.Pickle.Xml                      13282           1   0.0    0.0     0.0    0.0      0         0
+     xpCondSeq           Text.XML.HXT.Arrow.Pickle.Xml                      13283           1   0.0    0.0     0.0    0.0      0        72
+ CAF:xpText              Text.XML.HXT.Arrow.Pickle.Xml                       6693           1   0.0    0.0     0.0    0.0      0        16
+  xpTextDT               Text.XML.HXT.Arrow.Pickle.Xml                      13287           1   0.0    0.0     0.0    0.0      0        32
+ CAF:emptySt             Text.XML.HXT.Arrow.Pickle.Xml                       6628           1   0.0    0.0     0.0    0.0      0        16
+  emptySt                Text.XML.HXT.Arrow.Pickle.Xml                      13235           1   0.0    0.0     0.0    0.0      0        24
+ CAF:lvl38_r5Ctu         Text.XML.HXT.Arrow.Pickle.Xml                       6620           1   0.0    0.0     0.0    0.0      0        16
+  xpInt                  Text.XML.HXT.Arrow.Pickle.Xml                      13281           1   0.0    0.0     0.0    0.0      0        80

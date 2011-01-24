@@ -40,23 +40,29 @@ type CharSet            = [(Char, Char)]
 
 emptyCS                 :: CharSet
 emptyCS                 = []
+{-# INLINE emptyCS #-}
 
 allCS                   :: CharSet
 allCS                   = [(minBound, maxBound)]
+{-# INLINE allCS #-}
 
 singleCS                :: Char -> CharSet
 singleCS c              = [(c,c)]
+{-# INLINE singleCS #-}
 
 stringCS                :: String -> CharSet
 stringCS                = foldr (unionCS . singleCS) emptyCS
+{-# INLINE stringCS #-}
 
 rangeCS                 :: Char -> Char -> CharSet
 rangeCS l u
     | l <= u            = [(l,u)]
     | otherwise         = emptyCS
+{-# INLINE rangeCS #-}
 
 nullCS                  :: CharSet -> Bool
 nullCS                  = null
+{-# INLINE nullCS #-}
 
 fullCS                  :: CharSet -> Bool
 fullCS [(lb, ub)]
@@ -67,6 +73,7 @@ fullCS _                = False
 
 elemCS                  :: Char -> CharSet -> Bool
 elemCS i                = foldr (\ (lb, ub) b -> i >= lb && (i <= ub || b)) False
+{-# INLINE elemCS #-}
 
 toListCS                :: CharSet -> [Char]
 toListCS                = concatMap (\ (lb, ub) -> [lb..ub])

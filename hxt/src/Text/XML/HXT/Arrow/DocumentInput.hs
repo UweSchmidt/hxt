@@ -364,9 +364,15 @@ decodeDocument
               >>>
               setDocumentStatusFromSystemState "decoding document"
 
+{- just for performance test
+        decodeText _ _ = this
+-}
         decodeText df withEncErrors
             = processChildren
               ( getText                                                 -- get the document content
+                -- the following 3 lines
+                -- don't seem to raise the space problem in decodeText
+                -- space is allocated in blobToString and in parsec
                 >>> arr df                                              -- decode the text, result is (string, [errMsg])
                 >>> ( ( (fst >>> normalizeNewline)                      -- take decoded string, normalize newline and build text node
                         ^>> mkText

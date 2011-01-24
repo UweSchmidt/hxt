@@ -179,6 +179,8 @@ instance (NFData s) => ArrowNF (SLA s) where
                                          in
                                          deepseq res res
 
+instance ArrowWNF (SLA s)
+
 -- ------------------------------------------------------------
 
 -- | conversion of state list arrows into arbitray other

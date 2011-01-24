@@ -63,6 +63,7 @@ import Data.Set.CharSet
 
 isXmlChar :: Char -> Bool
 isXmlChar c = c `elemCS` charPropXmlChar
+{-# INLINE isXmlChar #-}
 
 charPropXmlChar :: CharSet
 charPropXmlChar
@@ -78,10 +79,11 @@ charPropXmlChar
 
 isXml1ByteChar :: Char -> Bool
 isXml1ByteChar c = c `elemCS` charPropXml1ByteChar
+{-# INLINE isXml1ByteChar #-}
 
 charPropXml1ByteChar :: CharSet
 charPropXml1ByteChar
-    = stringCS ['\x20', '\x09', '\x0D', '\x0A']
+    = stringCS ['\x09', '\x0A', '\x0D']
       `unionCS`
       [ ('\x20', '\x7F') ]
 
@@ -90,6 +92,7 @@ charPropXml1ByteChar
 
 isXmlLatin1Char :: Char -> Bool
 isXmlLatin1Char c = c `elemCS` charPropXmlLatin1Char
+{-# INLINE isXmlLatin1Char #-}
 
 charPropXmlLatin1Char :: CharSet
 charPropXmlLatin1Char
@@ -102,6 +105,7 @@ charPropXmlLatin1Char
 
 isXmlSpaceChar :: Char -> Bool
 isXmlSpaceChar c = c `elemCS` charPropXmlSpaceChar
+{-# INLINE isXmlSpaceChar #-}
 
 charPropXmlSpaceChar          :: CharSet
 charPropXmlSpaceChar
@@ -117,13 +121,14 @@ isXml11SpaceChar c = c `elemCS` charPropXml11SpaceChar
 
 charPropXml11SpaceChar                :: CharSet
 charPropXml11SpaceChar
-    = stringCS ['\x20', '\x09', '\x0D', '\x0A', '\x85', '\x2028']
+    = stringCS ['\x09', '\x0A', '\x0D', '\x20', '\x85', '\x2028']
 
 -- |
 -- checking for XML name character
 
 isXmlNameChar :: Char -> Bool
 isXmlNameChar c = c `elemCS` charPropXmlNameChar
+{-# INLINE isXmlNameChar #-}
 
 charPropXmlNameChar           :: CharSet
 charPropXmlNameChar
@@ -146,6 +151,7 @@ charPropXmlNameChar
 
 isXmlNameStartChar :: Char -> Bool
 isXmlNameStartChar c = c `elemCS` charPropXmlNameStartChar
+{-# INLINE isXmlNameStartChar #-}
 
 charPropXmlNameStartChar              :: CharSet
 charPropXmlNameStartChar
@@ -162,6 +168,7 @@ charPropXmlNameStartChar
 
 isXmlNCNameChar :: Char -> Bool
 isXmlNCNameChar c = c `elemCS` charPropXmlNCNameChar
+{-# INLINE isXmlNCNameChar #-}
 
 charPropXmlNCNameChar                 :: CharSet
 charPropXmlNCNameChar
@@ -176,6 +183,7 @@ charPropXmlNCNameChar
 
 isXmlNCNameStartChar :: Char -> Bool
 isXmlNCNameStartChar c = c `elemCS` charPropXmlNCNameStartChar
+{-# INLINE isXmlNCNameStartChar #-}
 
 charPropXmlNCNameStartChar            :: CharSet
 charPropXmlNCNameStartChar
@@ -204,6 +212,7 @@ charPropXmlPubidChar
 
 isXmlLetter :: Char -> Bool
 isXmlLetter c = c `elemCS` charPropXmlLetter
+{-# INLINE isXmlLetter #-}
 
 charPropXmlLetter             :: CharSet
 charPropXmlLetter
@@ -427,6 +436,7 @@ charPropXmlBaseChar
 
 isXmlIdeographicChar :: Char -> Bool
 isXmlIdeographicChar c = c `elemCS` charPropXmlIdeographicChar
+{-# INLINE isXmlIdeographicChar #-}
 
 charPropXmlIdeographicChar    :: CharSet
 charPropXmlIdeographicChar

@@ -96,6 +96,7 @@ module Text.XML.HXT.Arrow.Pickle
     , xpOption
     , xpPair
     , xpPrim
+    , xpInt
     , xpSeq
     , xpText
     , xpText0

@@ -1,0 +1,17 @@
+performance test with GenDoc 18
+
+Code changes:
+* QNames cached instead of only string caching
+* rwnf in MemTest used to construct the tree
+  This leads to the evaluation of 2^^19 QNames.
+  All these ONames are chached in a Map
+* when using constructing the tree and then run rnfA
+  for the evaluation of "node" and "leave" XNodes
+  the node and leave QNames are all shared,
+  so no string allocation is neccessary and the
+  program runs faster and uses les space
+
+Effects:
+* In MemTest 18 the space for QNames is about 10Mb before caching names
+* In MemTest 18 after caching QNames disapear in chart
+* But stil less efficient than MemTest1 with lazy tree and rnfA

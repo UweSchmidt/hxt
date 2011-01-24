@@ -25,6 +25,10 @@ reinstall:
 	$(foreach i,$(PL), ( cd $i && cabal install; ); )
 	ghc-pkg list
 
+reprofile:
+	$(foreach i,$(PL), ( cd $i && cabal install -p; ); )
+	ghc-pkg list
+
 global	:
 	$(foreach i,$(PL), ( cd $i && cabal configure && cabal build && cabal sdist && sudo cabal install --global; ); )
 	ghc-pkg list

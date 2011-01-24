@@ -50,6 +50,7 @@ module Text.XML.HXT.DOM.QualifiedName
     , setNamespaceUri'
 
     , qualifiedName
+    , qualifiedName'
     , universalName
     , universalUri
     , buildUniversalName
@@ -84,6 +85,7 @@ import           Control.Arrow                  ( (***) )
 
 import           Control.Concurrent.MVar
 import           Control.DeepSeq
+import           Control.FlatSeq
 
 import           Data.AssocList
 import           Data.Binary
@@ -110,7 +112,28 @@ import Data.Char.Properties.XMLCharProps        ( isXmlNCNameStartChar
 -- Names are always reduced to normal form, and they are stored internally in a name cache
 -- for sharing equal names by the same data structure
 
-type XName      = Atom
+newtype XName           = XN { unXN :: String }
+                          deriving (Eq, Ord, Typeable)
+
+instance Read XName where
+    readsPrec p str     = [ (newXName x, y) | (x, y) <- readsPrec p str ]
+
+instance Show XName where
+    show (XN s)         = show s
+
+instance NFData XName where
+    rnf (XN s)          = rnf s
+
+instance WNFData XName where
+    rwnf (XN s)         = rnf s
+
+-- |
+-- Type for the namespace association list, used when propagating namespaces by
+-- modifying the 'QName' values in a tree
+
+type NsEnv              = AssocList XName XName
+
+-----------------------------------------------------------------------------
 
 -- |
 -- Namespace support for element and attribute names.
@@ -121,16 +144,10 @@ type XName      = Atom
 -- When dealing with namespaces, the document tree must be processed by 'Text.XML.HXT.Arrow.Namespace.propagateNamespaces'
 -- to split names of structure \"prefix:localPart\" and label the name with the apropriate namespace uri
 
-data QName      = LP ! XName
-                | PX ! XName ! QName
-                | NS ! XName ! QName
+data QName      = LP   XName
+                | PX   XName   QName
+                | NS   XName   QName
              deriving (Ord, Show, Read, Typeable)
-
--- |
--- Type for the namespace association list, used when propagating namespaces by
--- modifying the 'QName' values in a tree
-
-type NsEnv = AssocList XName XName
 
 -- -----------------------------------------------------------------------------
 
@@ -150,7 +167,15 @@ instance Eq QName where
 -- uses XML names not in a systematical way
 -- and does things like "mkName("x:y") == mkPrefixLocalPart("x","y")
 
-instance NFData QName where
+instance NFData  QName where
+    rnf (LP lp)         = rnf lp
+    rnf (PX px lp)      = rnf px `seq` rnf lp
+    rnf (NS ns qn)      = rnf ns `seq` rnf qn
+
+instance WNFData QName where
+    rwnf                = rnf
+
+-- -----------------------------------------------------------------------------
 
 instance Binary QName where
     put qn              = let
@@ -163,15 +188,20 @@ instance Binary QName where
                           px <- get
                           lp <- get
                           ns <- get
-                          return $ mkQName px lp ns
+                          return $! mkQName px lp ns
+                          --     ^^
+                          -- strict apply !!!
+                          -- build the QNames strict, else the name sharing optimization will not be in effect
 
 -- -----------------------------------------------------------------------------
 
 newXName                :: String -> XName
-newXName                = newAtom
+newXName                = localPart' . newLPName
+{-# INLINE newXName #-}
 
 isNullXName             :: XName -> Bool
 isNullXName             = (== nullXName)
+{-# INLINE isNullXName #-}
 
 nullXName               :: XName
 nullXName               = newXName ""
@@ -197,13 +227,13 @@ namespaceUri' (NS ns _) = ns
 namespaceUri' _         = nullXName
 
 namePrefix              :: QName -> String
-namePrefix              = show . namePrefix'
+namePrefix              = unXN . namePrefix'
 
 localPart               :: QName -> String
-localPart               = show . localPart'
+localPart               = unXN . localPart'
 
 namespaceUri            :: QName -> String
-namespaceUri            = show . namespaceUri'
+namespaceUri            = unXN . namespaceUri'
 
 -- ------------------------------------------------------------
 
@@ -212,28 +242,28 @@ namespaceUri            = show . namespaceUri'
 setNamespaceUri'                :: XName -> QName -> QName
 setNamespaceUri' ns (NS _ n)    = if isNullXName ns
                                   then n
-                                  else NS ns n
+                                  else newNSName' ns n
 setNamespaceUri' ns n           = if isNullXName ns
                                   then n
-                                  else NS ns n
+                                  else newNSName' ns n
 
 -- | set local part
 
 setLocalPart'                   :: XName -> QName -> QName
-setLocalPart' lp (LP _)         = LP lp
-setLocalPart' lp (PX px n)      = PX px (setLocalPart' lp n)
-setLocalPart' lp (NS ns n)      = NS ns (setLocalPart' lp n)
+setLocalPart' lp (LP _)         = newLPName' lp
+setLocalPart' lp (PX px n)      = newPXName' px (setLocalPart' lp n)
+setLocalPart' lp (NS ns n)      = newNSName' ns (setLocalPart' lp n)
 
 -- | set name prefix
 
 setNamePrefix'                  :: XName -> QName -> QName
 setNamePrefix' px (PX _ n)      = if px == nullXName
                                   then n
-                                  else PX px n
+                                  else newPXName' px n
 setNamePrefix' px n@(LP _)      = if px == nullXName
                                   then n
-                                  else PX px n
-setNamePrefix' px (NS ns n)     = NS ns (setNamePrefix' px n)
+                                  else newPXName' px n
+setNamePrefix' px (NS ns n)     = newNSName' ns (setNamePrefix' px n)
 
 
 -- ------------------------------------------------------------
@@ -242,9 +272,16 @@ setNamePrefix' px (NS ns n)     = NS ns (setNamePrefix' px n)
 -- builds the full name \"prefix:localPart\", if prefix is not null, else the local part is the result
 
 qualifiedName                   :: QName -> String
-qualifiedName (LP lp)           = show lp
-qualifiedName (PX px n)         = show px ++ (':' : qualifiedName n)
+qualifiedName (LP lp)           = unXN lp
+qualifiedName (PX px n)         = unXN px ++ (':' : qualifiedName n)
 qualifiedName (NS _ n)          = qualifiedName n
+
+-- | functional list version of qualifiedName
+
+qualifiedName'                  :: QName -> String -> String
+qualifiedName' (LP lp)          = (unXN lp ++)
+qualifiedName' (PX px n)        = (unXN px ++) . (':' :) . qualifiedName' n
+qualifiedName' (NS _ n)         = qualifiedName' n
 
 -- |
 -- builds the \"universal\" name, that is the namespace uri surrounded with \"{\" and \"}\" followed by the local part
@@ -266,7 +303,7 @@ universalUri                    = buildUniversalName (++)
 -- namespace uri and local part are combined with the combining function given by the first parameter
 
 buildUniversalName              :: (String -> String -> String) -> QName -> String
-buildUniversalName bf (NS ns n) = show ns `bf` localPart n
+buildUniversalName bf (NS ns n) = unXN ns `bf` localPart n
 buildUniversalName _  n         = localPart n
 
 -- ------------------------------------------------------------
@@ -275,12 +312,12 @@ buildUniversalName _  n         = localPart n
 
 mkQName'                        :: XName -> XName -> XName -> QName
 mkQName' px lp ns
-    | isNullXName ns            =       px_lp
-    | otherwise                 = NS ns px_lp
+    | isNullXName ns            =               px_lp
+    | otherwise                 = newNSName' ns px_lp
     where
     px_lp
-        | isNullXName px        = LP lp
-        | otherwise             = PX px (LP lp)
+        | isNullXName px        = newLPName' lp
+        | otherwise             = newPXName' px (newLPName' lp)
 
 -- ------------------------------------------------------------
 
@@ -291,10 +328,10 @@ mkQName' px lp ns
 
 mkPrefixLocalPart               :: String -> String -> QName
 mkPrefixLocalPart px lp
-    | null px                   =                  n1
-    | otherwise                 = PX (newXName px) n1
+    | null px                   =              n1
+    | otherwise                 = newPXName px n1
     where
-    n1 = LP (newXName lp)
+    n1 = newLPName lp
 
 -- |
 -- constructs a simple, namespace unaware name.
@@ -320,8 +357,8 @@ mkName n
 
 mkQName                         :: String -> String -> String -> QName
 mkQName px lp ns
-    | null ns                   =                  n1
-    | otherwise                 = NS (newXName ns) n1
+    | null ns                   =              n1
+    | otherwise                 = newNSName ns n1
     where
     n1 = mkPrefixLocalPart px lp
 
@@ -332,6 +369,7 @@ mkQName px lp ns
 
 mkSNsName                       :: String -> QName
 mkSNsName                       = mkName
+{-# DEPRECATED mkSNsName "use mkName instead" #-}
 
 -- |
 -- constructs a simple, namespace aware name, with prefix:localPart as first parameter,
@@ -341,8 +379,10 @@ mkSNsName                       = mkName
 
 mkNsName                        :: String -> String -> QName
 mkNsName n ns
-    | null ns                   =                   mkName n
-    | otherwise                 = NS (newXName ns) (mkName n)
+    | null ns                   =              n'
+    | otherwise                 = newNSName ns n'
+    where
+    n' = mkName n
 
 -- ------------------------------------------------------------
 
@@ -390,10 +430,10 @@ normalizeNsUri                  = map toLower . stripSlash
 setNamespace                    :: NsEnv -> QName -> QName
 setNamespace env n@(PX px _)    = attachNS env px        n              -- none empty prefix found
 setNamespace env n@(LP _)       = attachNS env nullXName n              -- use default namespace uri
-setNamespace env (NS _ n)       = setNamespace env n
+setNamespace env   (NS _ n)     = setNamespace env n
 
 attachNS                        :: NsEnv -> XName -> QName -> QName
-attachNS env px n1              = maybe n1 (\ ns -> NS ns n1) . lookup px $ env
+attachNS env px n1              = maybe n1 (\ ns -> newNSName' ns n1) . lookup px $ env
 
 xmlnsNamespaceXName             :: XName
 xmlnsNamespaceXName             = newXName xmlnsNamespace
@@ -402,7 +442,7 @@ xmlnsXName                      :: XName
 xmlnsXName                      = newXName a_xmlns
 
 xmlnsQN                         :: QName
-xmlnsQN                         = NS xmlnsNamespaceXName (LP xmlnsXName)
+xmlnsQN                         = mkNsName xmlnsNamespace a_xmlns
 
 xmlNamespaceXName               :: XName
 xmlNamespaceXName               = newXName xmlNamespace
@@ -440,8 +480,8 @@ isWellformedQualifiedName s
 -- predicate is used in filter 'valdateNamespaces'.
 
 isWellformedQName               :: QName -> Bool
-isWellformedQName (LP lp)       = isNCName . show $ lp                          -- rule [8] XML Namespaces
-isWellformedQName (PX px n)     = (isNCName . show) px                          -- rule [7] XML Namespaces
+isWellformedQName (LP lp)       = (isNCName . unXN) lp                          -- rule [8] XML Namespaces
+isWellformedQName (PX px n)     = (isNCName . unXN) px                          -- rule [7] XML Namespaces
                                   &&
                                   isWellformedQName n
 isWellformedQName (NS _ n)      = isWellformedQName n
@@ -506,47 +546,66 @@ toNsEnv                         = map (newXName *** newXName)
 -- the name cache, same implementation strategy as in Data.Atom,
 -- but conversion to and from ByteString prevented
 
-type Atoms      = M.Map String String
-
-newtype Atom    = A String
-                  deriving (Eq, Ord, Typeable)
+type QNames      = M.Map QName QName
 
 -- ------------------------------------------------------------
 
--- | the internal cache for the strings
+-- | the internal cache for QNames (and name strings)
 
-theAtoms        :: MVar Atoms
-theAtoms        = unsafePerformIO (newMVar M.empty)
-{-# NOINLINE theAtoms #-}
+theQNames        :: MVar QNames
+theQNames        = unsafePerformIO (newMVar M.empty)
+{-# NOINLINE theQNames #-}
 
--- | insert a bytestring into the atom cache
+-- | insert a QName into the name cache
 
-insertAtom      :: String -> Atoms -> (Atoms, Atom)
-insertAtom s m  = maybe (M.insert {- (trace (show s) s) -} s s m, deepseq s (A s))
-                        (\ s' -> (m, A s'))
+insertQName     :: QName -> QNames -> (QNames, QName)
+insertQName n m = maybe ( M.insert
+                          ( -- trace (show n)
+                            n
+                          )
+                          n m
+                        , rnf n `seq` n
+                        )
+                        (\ n' -> (m, n'))
                   .
-                  M.lookup s $ m
+                  M.lookup n $ m
 
--- | creation of an @Atom@ from a @String@
 
-newAtom         :: String -> Atom
-newAtom         = unsafePerformIO . newAtom'
-{-# NOINLINE newAtom #-}
+newLPName        :: String -> QName
+newLPName        = newLPName' . XN
+{-# INLINE newLPName #-}
+
+newLPName'       :: XName -> QName
+newLPName'       = newQName . LP
+{-# INLINE newLPName' #-}
+
+newPXName        :: String -> QName -> QName
+newPXName        = newPXName' . newXName
+{-# INLINE newPXName #-}
+
+newPXName'       :: XName -> QName -> QName
+newPXName' px    = newQName . PX px
+{-# INLINE newPXName' #-}
+
+newNSName        :: String -> QName -> QName
+newNSName        = newNSName' . newXName
+{-# INLINE newNSName #-}
+
+newNSName'       :: XName -> QName -> QName
+newNSName' ns    = newQName . NS ns
+{-# INLINE newNSName' #-}
+
+newQName         :: QName -> QName
+newQName n       = unsafePerformIO (newQName' n)
+-- newQName n       = n		-- for profiling with/without caching
+{-# NOINLINE newQName #-}
 
 -- | The internal operation running in the IO monad
-newAtom'        :: String -> IO Atom
-newAtom' s      = do
-                  m <- takeMVar theAtoms
-                  let (m', a) = insertAtom s m
-                  putMVar theAtoms m'
-                  return a
-
-instance Read Atom where
-    readsPrec p str = [ (newAtom x, y) | (x, y) <- readsPrec p str ]
-
-instance Show Atom where
-    show (A s)  = s
-
-instance NFData Atom where
+newQName'       :: QName -> IO QName
+newQName' q     = do
+                  m <- takeMVar theQNames
+                  let (m', q') = insertQName q m
+                  putMVar theQNames m'
+                  m' `seq` q' `seq` return q'
 
 -----------------------------------------------------------------------------

@@ -78,30 +78,25 @@ module Text.XML.HXT.Parser.XmlTokenParser
     )
 where
 
-import Data.Char.Properties.XMLCharProps
-    ( isXmlChar
-    )
-import Data.String.Unicode
-    ( intToCharRef
-    , intToCharRefHex
-    )
-
+import Data.Char.Properties.XMLCharProps        ( isXmlChar
+                                                )
+import Data.String.Unicode                      ( intToCharRef
+                                                , intToCharRefHex
+                                                )
 import Text.ParserCombinators.Parsec
 
 import Text.XML.HXT.DOM.Interface
-import Text.XML.HXT.DOM.XmlNode
-    ( mkDTDElem
-    , mkText
-    , mkCharRef
-    , mkEntityRef
-    )
-import Text.XML.HXT.Parser.XmlCharParser
-    ( xmlNameChar
-    , xmlNameStartChar
-    , xmlNCNameChar
-    , xmlNCNameStartChar
-    , xmlSpaceChar
-    )
+import Text.XML.HXT.DOM.XmlNode                 ( mkDTDElem'
+                                                , mkText'
+                                                , mkCharRef'
+                                                , mkEntityRef'
+                                                )
+import Text.XML.HXT.Parser.XmlCharParser        ( xmlNameChar
+                                                , xmlNameStartChar
+                                                , xmlNCNameChar
+                                                , xmlNCNameStartChar
+                                                , xmlSpaceChar
+                                                )
 
 -- ------------------------------------------------------------
 --
@@ -270,7 +265,6 @@ reference
         return ("&" ++ n ++ ";")
       )
 
-
 checkCharRef    :: Int -> GenParser Char state Int
 checkCharRef i
     = if ( i <= fromEnum (maxBound::Char)
@@ -293,7 +287,6 @@ charRef
       _ <- semi
       checkCharRef (decimalStringToInt d)
       <?> "character reference"
-
 
 entityRef       :: GenParser Char state String
 entityRef
@@ -451,13 +444,13 @@ nameT           :: GenParser Char state XmlTree
 nameT
     = do
       n <- name
-      return (mkDTDElem NAME [(a_name, n)] [])
+      return (mkDTDElem' NAME [(a_name, n)] [])
 
 nmtokenT        :: GenParser Char state XmlTree
 nmtokenT
     = do
       n <- nmtoken
-      return (mkDTDElem NAME [(a_name, n)] [])
+      return (mkDTDElem' NAME [(a_name, n)] [])
 
 
 entityValueT    :: GenParser Char state XmlTrees
@@ -485,7 +478,7 @@ entityCharT notAllowed
       <|>
       ( do
         cs <- many1 (singleChar notAllowed)
-        return (mkText cs)
+        return (mkText' cs)
       )
 
 attrValueT      :: GenParser Char state XmlTrees
@@ -503,7 +496,7 @@ singleCharsT    :: String -> GenParser Char state XmlTree
 singleCharsT notAllowed
     = do
       cs <- singleChars notAllowed
-      return (mkText cs)
+      return (mkText' cs)
 
 -- ------------------------------------------------------------
 --
@@ -519,25 +512,37 @@ charRefT        :: GenParser Char state XmlTree
 charRefT
     = do
       i <- charRef
-      return $! (mkCharRef $! i)
+      return (mkCharRef' i)
 
 entityRefT      :: GenParser Char state XmlTree
 entityRefT
     = do
       n <- entityRef
-      return $! (mkEntityRef $! n)
+      return $! (maybe (mkEntityRef' n) mkCharRef' . lookup n $ predefinedXmlEntities)
+
+-- optimization: predefined XML entity refs are converted into equivalent char refs
+-- so there is no need for an entitiy substitution phase, if there is no DTD
+
+predefinedXmlEntities   :: [(String, Int)]
+predefinedXmlEntities
+    = [ ("lt",   60)
+      , ("gt",   62)
+      , ("amp",  38)
+      , ("apos", 39)
+      , ("quot", 34)
+      ]
 
 bypassedEntityRefT      :: GenParser Char state XmlTree
 bypassedEntityRefT
     = do
       n <- entityRef
-      return $! (mkText ("&" ++ n ++ ";"))
+      return $! (mkText' ("&" ++ n ++ ";"))
 
 peReferenceT    :: GenParser Char state XmlTree
 peReferenceT
     = do
       r <- peReference
-      return $! (mkDTDElem PEREF [(a_peref, r)] [])
+      return $! (mkDTDElem' PEREF [(a_peref, r)] [])
 
 -- ------------------------------------------------------------
 
