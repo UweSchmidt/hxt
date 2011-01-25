@@ -28,7 +28,7 @@ library
                , containers   >= 0.2  && < 1
                , old-time     >= 1.0  && < 2
                , directory    >= 1.0  && < 2
-               , parsec       >= 2.1  && < 4
+               , parsec       >= 3    && < 4
                , network      >= 2.1  && < 3
                , regex-compat >= 0.92 && < 1
                , html         >= 1.0  && < 2

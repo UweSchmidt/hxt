@@ -99,8 +99,12 @@ import Text.XML.HXT.Parser.XmlCharParser                ( xmlChar
 import qualified Text.XML.HXT.Parser.XmlTokenParser     as XT
 import qualified Text.XML.HXT.Parser.XmlDTDTokenParser  as XD
 
+import Control.FlatSeq
+
 import Data.Char                                        (toLower)
 import Data.Maybe
+
+-- import Debug.Trace
 
 -- ------------------------------------------------------------
 --
@@ -112,20 +116,34 @@ charData
 
 charData'               :: GenParser Char state XmlTree
 charData'
-    = try ( do
-            t <- XT.allBut1 many1 (\ c -> not (c `elem` "<&")) "]]>"
-            return (mkText' t)
-          )
+    =  do
+       t <- XT.allBut1 many1 (\ c -> not (c `elem` "<&")) "]]>"
+       return (mkText' t)
 
 -- ------------------------------------------------------------
 --
 -- Comments (2.5)
 
 comment         :: GenParser Char state XmlTree
-
 comment
+    = comment'' $ try (do
+		       _ <- string "<!--"
+		       return ()
+		      )
+
+-- the leading <! is already parsed
+
+comment'        :: GenParser Char state XmlTree
+comment'
+    = comment'' (do
+		 _ <- string "--"
+		 return ()
+		)
+
+comment''       :: GenParser Char state () -> GenParser Char state XmlTree
+comment'' op
     = ( do
-        c <- between (try $ string "<!--") (string "-->") (XT.allBut many "--")
+        c <- between op (string ("-->")) (XT.allBut many "--")
         return (mkCmt' c)
       ) <?> "comment"
 
@@ -133,9 +151,24 @@ comment
 --
 -- Processing Instructions
 
-pI              :: GenParser Char state XmlTree
-pI
-    = between (try $ string "<?") (string "?>")
+pI             :: GenParser Char state XmlTree
+pI = pI'' $ try (do
+		 _ <- string "<?"
+		 return ()
+		)
+
+
+-- the leading < is already parsed
+
+pI'             :: GenParser Char state XmlTree
+pI' = pI'' (do
+	    _ <- char '?'
+	    return ()
+	   )
+
+pI''             :: GenParser Char state () -> GenParser Char state XmlTree
+pI'' op
+    = between op (string "?>")
       ( do
         n <- pITarget
         p <- option "" (do
@@ -158,10 +191,25 @@ pI
 -- CDATA Sections (2.7)
 
 cDSect          :: GenParser Char state XmlTree
-
 cDSect
+    = cDSect'' $ try (do
+		      _ <- string "<![CDATA["
+		      return ()
+		     )
+
+-- the leading <! is already parsed, no try neccessary
+
+cDSect'         :: GenParser Char state XmlTree
+cDSect' 
+    = cDSect'' (do
+		_ <- string "[CDATA["
+		return ()
+	       )
+
+cDSect''        :: GenParser Char state () -> GenParser Char state XmlTree
+cDSect'' op
     = do
-      t <- between ( try $ string "<![CDATA[") (string "]]>") (XT.allBut many "]]>")
+      t <- between op (string "]]>") (XT.allBut many "]]>")
       return (mkCdata' t)
       <?> "CDATA section"
 
@@ -323,24 +371,25 @@ sDDecl
 
 element         :: GenParser Char state XmlTree
 element
+    = do
+      _ <- char '<'
+      element'
+
+element'         :: GenParser Char state XmlTree
+element'
     = ( do
         e <- elementStart
-        elementRest e
+        rwnf e `seq` elementRest e              -- evaluate name and attribute list before parsing contents
       ) <?> "element"
 
-elementStart            :: GenParser Char state (String, [(String, XmlTrees)])
+
+elementStart            :: GenParser Char state (QName, XmlTrees)
 elementStart
     = do
-      n <- ( try ( do
-                   _ <- char '<'
-                   n <- XT.name
-                   return n
-                 )
-             <?> "start tag"
-           )
-      ass <- attrList
+      n  <- XT.name
+      al <- attrList
       XT.skipS0
-      return (n, ass)
+      return (mkName n, al)
       where
       attrList
           = option [] ( do
@@ -351,47 +400,51 @@ elementStart
           = option [] ( do
                         a1 <- attribute
                         al <- attrList
-                        let (n, _v) = a1
-                        if isJust . lookup n $ al
-                          then unexpected ("attribute name " ++ show n ++ " occurs twice in attribute list")
+                        let n = fromJust . getAttrName $ a1
+                        if n `elem` map (fromJust . getAttrName) al
+                          then unexpected
+                               ( "attribute name " ++
+                                 show (qualifiedName n) ++
+                                 " occurs twice in attribute list"
+                               )
                           else return (a1 : al)
                       )
 
-elementRest     :: (String, [(String, XmlTrees)]) -> GenParser Char state XmlTree
+elementRest     :: (QName, XmlTrees) -> GenParser Char state XmlTree
 elementRest (n, al)
     = ( do
         _ <- try $ string "/>"
-        return $ mkElement' (mkName n) (map mkA al) []
+        return $ mkElement' n al []
       )
       <|>
       ( do
         _ <- XT.gt
         c <- content
         eTag n
-        return $ mkElement' (mkName n) (map mkA al) c
+        return $ mkElement' n al c
       )
       <?> "proper attribute list followed by \"/>\" or \">\""
-    where
-    mkA (n', ts') = mkAttr' (mkName n') ts'
 
-eTag            :: String -> GenParser Char state ()
+eTag            :: QName -> GenParser Char state ()
 eTag n'
     = do
       _ <- try ( string "</" ) <?> ""
       n <- XT.name
       XT.skipS0
       _ <- XT.gt
-      if n == n'
+      if n == qualifiedName n'
          then return ()
-         else unexpected ("illegal end tag </" ++ n ++ "> found, </" ++ n' ++ "> expected")
+         else unexpected ("illegal end tag </" ++ n ++ "> found, </" ++ qualifiedName n' ++ "> expected")
 
-attribute       :: GenParser Char state (String, XmlTrees)
+attribute       :: GenParser Char state XmlTree
 attribute
     = do
       n <- XT.name
       XT.eq
       v <- XT.attrValueT
-      return (n, v)
+      return $ mkAttr' (mkName n) v
+
+{- this parser corresponds to the XML spec but it's inefficent because of more than 1 char lookahead
 
 content         :: GenParser Char state XmlTrees
 content
@@ -411,6 +464,34 @@ content
               return (l : c)
             )
       return (c1 ++ concat cl)
+-}
+
+-- this simpler content parser does not need more than a single lookahead
+-- so no try parsers (inefficient) are neccessary
+
+content         :: GenParser Char state XmlTrees
+content
+    = many $
+      ( do
+	_ <- char '<'
+	markup
+      )
+      <|>
+      charData'
+      <|>
+      XT.referenceT
+    where
+    markup
+	= element'
+	  <|>
+	  pI'
+	  <|>
+	  ( do
+	    _ <- char '!'
+	    comment'
+	    <|>
+	    cDSect'
+	  )
 
 contentWithTextDecl     :: GenParser Char state XmlTrees
 contentWithTextDecl

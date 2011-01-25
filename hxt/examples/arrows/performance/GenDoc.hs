@@ -276,7 +276,6 @@ genDoc d out    = constA (let t = mkBTree d in rnf t `seq` t)
                   -- strictA
                   -- >>>
                   -- perform (writeBinaryValue (out ++ ".bin"))
-                  -- {-
                   -- >>>
                   -- readBinaryValue (out ++ ".bin")
                   -- >>>
@@ -293,7 +292,6 @@ readDoc src
                    , withValidate no
                    , withInputEncoding isoLatin1
                    , withWarnings yes
-                   , withTrace 1
                    , withStrictInput no
                    , withCanonicalize yes
                    , withRemoveWS no

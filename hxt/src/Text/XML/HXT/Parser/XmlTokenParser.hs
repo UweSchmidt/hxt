@@ -135,22 +135,20 @@ asciiLetter
 
 name            :: GenParser Char state String
 name
-    = try ( do
-            s1 <- xmlNameStartChar
-            sl <- many xmlNameChar
-            return (s1 : sl)
-          )
+    = do
+      s1 <- xmlNameStartChar
+      sl <- many xmlNameChar
+      return (s1 : sl)
       <?> "Name"
 
 -- Namespaces in XML: Rules [4-5] NCName:
 
 ncName          :: GenParser Char state String
 ncName
-    = try ( do
-            s1 <- xmlNCNameStartChar
-            sl <- many xmlNCNameChar
-            return (s1 : sl)
-          )
+    = do
+      s1 <- xmlNCNameStartChar
+      sl <- many xmlNCNameChar
+      return (s1 : sl)
       <?> "NCName"
 
 -- Namespaces in XML: Rules [6-8] QName:
