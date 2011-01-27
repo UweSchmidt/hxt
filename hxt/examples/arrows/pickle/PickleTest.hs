@@ -71,29 +71,45 @@ instance XmlPickler Expr where
 	tag (UnExpr _ _    ) = 3
 	tag (BinExpr _ _ _ ) = 4
 	ps = [ xpWrap ( IntConst
-		      , \ (IntConst i ) -> i ) ( xpElem "int"  $
-					         xpAttr "value" $
-					         xpickle )
+		      , \ (IntConst i ) -> i
+                      ) $
+               ( xpElem "int"   $
+		 xpAttr "value" $
+		 xpickle
+               )
 
 	     , xpWrap ( BoolConst
-		      , \ (BoolConst b) -> b)  ( xpElem "bool" $
-						 xpAttr "value" $
-						 xpWrap (toEnum, fromEnum) xpickle )
+		      , \ (BoolConst b) -> b
+                      ) $
+               ( xpElem "bool"  $
+		 xpAttr "value" $
+		 xpWrap (toEnum, fromEnum) xpickle
+               )
 
 	     , xpWrap ( Var
-		      , \ (Var n)       -> n)  ( xpElem "var"  $
-						 xpAttr "name"  $
-						 xpText )
+		      , \ (Var n)       -> n
+                      ) $
+               ( xpElem "var"   $
+		 xpAttr "name"  $
+		 xpText
+               )
 
 	     , xpWrap ( uncurry UnExpr
-		      , \ (UnExpr op e) -> (op, e))
-                                               ( xpElem "unex" $
-						 xpPair (xpAttr "op" xpickle) xpickle )
+		      , \ (UnExpr op e) -> (op, e)
+                      ) $
+               ( xpElem "unex" $
+		 xpPair (xpAttr "op" xpickle)
+                         xpickle
+               )
 
 	     , xpWrap ( uncurry3 $ BinExpr
-		      , \ (BinExpr op e1 e2) -> (op, e1, e2))
-                                               ( xpElem "binex" $
-						 xpTriple (xpAttr "op" xpickle) xpickle xpickle )
+		      , \ (BinExpr op e1 e2) -> (op, e1, e2)
+                      ) $
+               ( xpElem "binex" $
+		 xpTriple (xpAttr "op" xpickle)
+                           xpickle
+                           xpickle
+               )
 	     ]
 
 instance XmlPickler Stmt where
@@ -104,20 +120,33 @@ instance XmlPickler Stmt where
 	tag ( If _ _ _ )   = 2
 	tag ( While _ _ )  = 3
 	ps = [ xpWrap ( uncurry Assign
-		      , \ (Assign n v) -> (n, v))
-                                               ( xpElem "assign" $
-						 xpPair (xpAttr "name" xpText) xpickle )
+		      , \ (Assign n v) -> (n, v)
+                      ) $
+               ( xpElem "assign" $
+		 xpPair (xpAttr "name" xpText)
+                         xpickle
+               )
 	     , xpWrap ( Stmts
-		      , \ (Stmts sl) -> sl)    ( xpElem "block" $
-						 xpList xpickle )
+		      , \ (Stmts sl) -> sl
+                      ) $
+               ( xpElem "block" $
+		 xpList xpickle
+               )
 	     , xpWrap ( uncurry3 If
-		      , \ (If c t e) -> (c, t, e))
-                                               ( xpElem "if" $
-						 xpTriple xpickle xpickle xpickle )
+		      , \ (If c t e) -> (c, t, e)
+                      ) $
+               ( xpElem "if" $
+		 xpTriple xpickle
+                          xpickle
+                          xpickle
+               )
 	     , xpWrap ( uncurry While
-		      , \ (While c b) -> (c, b))
-                                               ( xpElem "while" $
-						 xpPair xpickle xpickle )
+		      , \ (While c b) -> (c, b)
+                      ) $
+               ( xpElem "while" $
+		 xpPair xpickle
+                        xpickle
+               )
 	     ]
 
 -- ------------------------------------------------------------
