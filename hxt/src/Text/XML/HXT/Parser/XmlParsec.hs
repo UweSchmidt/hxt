@@ -64,7 +64,9 @@ import Text.ParserCombinators.Parsec                    ( GenParser
                                                         , string
                                                         , eof
                                                         , between
-                                                        , many, many1
+                                                        , many
+                                                        , many1
+                                                        , notFollowedBy
                                                         , option
                                                         , try
                                                         , unexpected
@@ -472,8 +474,12 @@ content
 content         :: GenParser Char state XmlTrees
 content
     = many $
-      ( do
-	_ <- char '<'
+      ( do		-- parse markup but no closing tags
+        try ( do
+              _ <- char '<'
+              notFollowedBy (char '/')
+              return ()
+            )
 	markup
       )
       <|>

@@ -53,6 +53,7 @@ isNamespaceDeclAttr     :: ArrowXml a => a XmlTree XmlTree
 isNamespaceDeclAttr
     = fromLA $
       (getAttrName >>> isA isNameSpaceName) `guards` this
+{-# INLINE isNamespaceDeclAttr #-}
 
 -- | get the namespace prefix and the namespace URI out of
 -- an attribute tree with a namespace declaration (see 'isNamespaceDeclAttr')
@@ -276,8 +277,8 @@ attachEnv env
         = mkAttr qn (txt (show uri))
         where
         qn :: QName
-        qn | isNullXName n      = mkQName' nullXName  xmlnsXName xmlnsNamespaceXName
-           | otherwise          = mkQName' xmlnsXName n          xmlnsNamespaceXName
+        qn | isNullXName n      = newQName xmlnsXName nullXName  xmlnsNamespaceXName
+           | otherwise          = newQName n          xmlnsXName xmlnsNamespaceXName
 
 -- -----------------------------------------------------------------------------
 
