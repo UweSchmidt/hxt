@@ -128,19 +128,13 @@ charData'
 
 comment         :: GenParser Char state XmlTree
 comment
-    = comment'' $ try (do
-		       _ <- string "<!--"
-		       return ()
-		      )
+    = comment'' $ XT.checkString "<!--"
 
 -- the leading <! is already parsed
 
 comment'        :: GenParser Char state XmlTree
 comment'
-    = comment'' (do
-		 _ <- string "--"
-		 return ()
-		)
+    = comment'' (string "--" >> return ())
 
 comment''       :: GenParser Char state () -> GenParser Char state XmlTree
 comment'' op
@@ -154,27 +148,20 @@ comment'' op
 -- Processing Instructions
 
 pI             :: GenParser Char state XmlTree
-pI = pI'' $ try (do
-		 _ <- string "<?"
-		 return ()
-		)
-
+pI = pI'' $ XT.checkString "<?"
 
 -- the leading < is already parsed
 
 pI'             :: GenParser Char state XmlTree
-pI' = pI'' (do
-	    _ <- char '?'
-	    return ()
-	   )
+pI' = pI'' (char '?' >> return ())
 
 pI''             :: GenParser Char state () -> GenParser Char state XmlTree
 pI'' op
     = between op (string "?>")
       ( do
         n <- pITarget
-        p <- option "" (do
-                        _ <- XT.sPace
+        p <- option "" (XT.sPace
+                        >>
                         XT.allBut many "?>"
                        )
         return (mkPi' (mkName n) [mkAttr' (mkName a_value) [mkText' p]])
@@ -194,19 +181,13 @@ pI'' op
 
 cDSect          :: GenParser Char state XmlTree
 cDSect
-    = cDSect'' $ try (do
-		      _ <- string "<![CDATA["
-		      return ()
-		     )
+    = cDSect'' $ XT.checkString "<![CDATA["
 
 -- the leading <! is already parsed, no try neccessary
 
 cDSect'         :: GenParser Char state XmlTree
 cDSect' 
-    = cDSect'' (do
-		_ <- string "[CDATA["
-		return ()
-	       )
+    = cDSect'' (string "[CDATA[" >> return ())
 
 cDSect''        :: GenParser Char state () -> GenParser Char state XmlTree
 cDSect'' op
@@ -274,10 +255,12 @@ xMLDecl''
 versionInfo     :: GenParser Char state XmlTrees
 versionInfo
     = ( do
-        _ <- try ( do
-                   XT.skipS
-                   XT.keyword a_version
-                 )
+        try ( XT.skipS
+              >>
+              XT.keyword a_version
+              >>
+              return ()
+            )
         XT.eq
         vi <- XT.quoted XT.versionNum
         return [mkAttr' (mkName a_version) [mkText' vi]]
@@ -359,10 +342,12 @@ markupdecl
 sDDecl          :: GenParser Char state XmlTrees
 sDDecl
     = do
-      _ <- try (do
-                XT.skipS
-                XT.keyword a_standalone
-               )
+      try ( XT.skipS
+            >>
+            XT.keyword a_standalone
+            >>
+            return ()
+          )
       XT.eq
       sd <- XT.quoted (XT.keywords [v_yes, v_no])
       return [mkAttr' (mkName a_standalone) [mkText' sd]]
@@ -373,8 +358,8 @@ sDDecl
 
 element         :: GenParser Char state XmlTree
 element
-    = do
-      _ <- char '<'
+    = char '<'
+      >>
       element'
 
 element'         :: GenParser Char state XmlTree
@@ -415,12 +400,12 @@ elementStart
 elementRest     :: (QName, XmlTrees) -> GenParser Char state XmlTree
 elementRest (n, al)
     = ( do
-        _ <- try $ string "/>"
+        XT.checkString "/>"
         return $ mkElement' n al []
       )
       <|>
       ( do
-        _ <- XT.gt
+        XT.gt
         c <- content
         eTag n
         return $ mkElement' n al c
@@ -430,10 +415,10 @@ elementRest (n, al)
 eTag            :: QName -> GenParser Char state ()
 eTag n'
     = do
-      _ <- try ( string "</" ) <?> ""
+      XT.checkString "</" <?> ""
       n <- XT.name
       XT.skipS0
-      _ <- XT.gt
+      XT.gt
       if n == qualifiedName n'
          then return ()
          else unexpected ("illegal end tag </" ++ n ++ "> found, </" ++ qualifiedName n' ++ "> expected")
@@ -475,9 +460,10 @@ content         :: GenParser Char state XmlTrees
 content
     = many $
       ( do		-- parse markup but no closing tags
-        try ( do
-              _ <- char '<'
+        try ( XT.lt
+              >>
               notFollowedBy (char '/')
+              >>
               return ()
             )
 	markup
@@ -492,17 +478,18 @@ content
 	  <|>
 	  pI'
 	  <|>
-	  ( do
-	    _ <- char '!'
-	    comment'
-	    <|>
-	    cDSect'
+	  ( char '!'
+            >>
+	    ( comment'
+	      <|>
+	      cDSect'
+            )
 	  )
 
 contentWithTextDecl     :: GenParser Char state XmlTrees
 contentWithTextDecl
-    = do
-      _ <- option [] textDecl
+    = option [] textDecl
+      >>
       content
 
 -- ------------------------------------------------------------
@@ -516,7 +503,7 @@ contentWithTextDecl
 conditionalSect         :: GenParser Char state XmlTree
 conditionalSect
     = do
-      _ <- try $ string "<!["
+      XT.checkString "<!["
       cs <- many XD.dtdToken
       _ <- char '['
       sect <- condSectCont
@@ -525,13 +512,13 @@ conditionalSect
 
     condSectCont        :: GenParser Char state String
     condSectCont
-        = ( do
-            _ <- try $ string "]]>"
+        = ( XT.checkString "]]>"
+            >>
             return ""
           )
           <|>
           ( do
-            _ <- try $ string "<!["
+            XT.checkString "<!["
             cs1 <- condSectCont
             cs2 <- condSectCont
             return ("<![" ++ cs1 ++ "]]>" ++ cs2)
@@ -596,10 +583,12 @@ textDecl''
 encodingDecl    :: GenParser Char state XmlTrees
 encodingDecl
     = do
-      _ <- try ( do
-                 XT.skipS
-                 XT.keyword a_encoding
-               )
+      try ( XT.skipS
+            >>
+            XT.keyword a_encoding
+            >>
+            return ()
+          )
       XT.eq
       ed <- XT.quoted XT.encName
       return [mkAttr' (mkName a_encoding) [mkText' ed]]
@@ -666,8 +655,8 @@ removeEncodingSpec t
         = [t]
     where
     parser :: Parser String
-    parser = do
-             _ <- option [] textDecl
+    parser = option [] textDecl
+             >>
              getInput
 
 -- ------------------------------------------------------------

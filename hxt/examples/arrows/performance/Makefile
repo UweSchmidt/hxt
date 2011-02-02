@@ -2,7 +2,7 @@
 
 HXT_HOME	= ../../..
 PKGFLAGS	= 
-GHCFLAGS	= -Wall -O2 -rtsopts
+GHCFLAGS	= -Wall -O2
 GHC		= ghc $(GHCFLAGS) $(PKGFLAGS)
 
 DIST		= $(HXT_HOME)/dist/examples/arrows

@@ -72,10 +72,12 @@ main2 i
                    >>>
                    readDoc (fn i)
                    >>>
-                   -- traceMsg 1 "start rnfA"
-                   -- >>>
-                   -- rnfA this
-                   -- >>>
+-- {-
+                   traceMsg 1 "start rnfA"
+                   >>>
+                   rnfA this
+                   >>>
+-- -}
                    traceMsg 1 "start unpickle"
                    >>>
                    unpickleTree
@@ -272,22 +274,24 @@ genDoc          :: Int -> String -> IOSArrow b XmlTree
 genDoc d out    = constA (let t = mkBTree d in rnf t `seq` t)
                   >>>
                   xpickleVal xpickle
-                  -- >>>
-                  -- strictA
-                  -- >>>
-                  -- perform (writeBinaryValue (out ++ ".bin"))
-                  -- >>>
-                  -- readBinaryValue (out ++ ".bin")
-                  -- >>>
-                  -- strictA
                   >>>
+{-
+                  strictA
+                  >>>
+                  perform (writeBinaryValue (out ++ ".bin"))
+                  >>>
+                  readBinaryValue (out ++ ".bin")
+                  >>>
+                  strictA
+                  >>>
+-}
                   putDoc out
 
 -- ----------------------------------------
 
 readDoc :: String -> IOSArrow b XmlTree
 readDoc src
-    = readDocument [ withParseHTML no
+    = readDocument [ withParseHTML yes
                    , withTrace 2
                    , withValidate no
                    , withInputEncoding isoLatin1

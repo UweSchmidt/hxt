@@ -625,12 +625,12 @@ changeNameCache		:: NFData r => ChangeNameCache r -> r
 changeNameCache	action 	= unsafePerformIO changeNameCache'
     where
     changeNameCache'	= do
-                          putStrLn "takeMVar"
+                          -- putStrLn "takeMVar"
                           c <- takeMVar theNameCache
                           let (c', res) = action c
                           c' `seq` -- rnf res `seq`
                              putMVar theNameCache c'
-                          putStrLn "putMVar"
+                          -- putStrLn "putMVar"
                           return res
 
 {-# NOINLINE changeNameCache #-}
@@ -648,9 +648,10 @@ newXName' n c@(NC nxn xm qm)
 newQName'		:: XName -> XName -> XName -> ChangeNameCache QName
 newQName' lp px ns c@(NC nxn xm qm)
 			= case M.lookup q' qm of
-                          Just qn	-> (c, qn)
+                          Just qn	-> -- trace ("oldQName: " ++ show qn) $			-- log evaluation sequence
+                                           (c, qn)
                           Nothing	-> let qm'  = M.insert q' q qm in
-                                           trace ("newQName: " ++ show q) $
+                                           trace ("newQName: " ++ show q) $			-- log insertion of a new QName
                                            q `seq` (NC nxn xm qm', q)
     where
     q'			= (lp, px, ns)

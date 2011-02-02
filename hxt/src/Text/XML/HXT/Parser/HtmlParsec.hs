@@ -36,6 +36,8 @@ where
 import Data.Char                                ( toLower
                                                 , toUpper
                                                 )
+import Data.Char.Properties.XMLCharProps        ( isXmlChar
+                                                )
 import Data.Maybe                               ( fromMaybe
                                                 , fromJust
                                                 )
@@ -43,10 +45,11 @@ import Text.ParserCombinators.Parsec            ( Parser
                                                 , SourcePos
                                                 , anyChar
                                                 , between
-                                                , char
+                                                -- , char
                                                 , eof
                                                 , getPosition
                                                 , many
+                                                , many1
                                                 , noneOf
                                                 , option
                                                 , parse
@@ -68,20 +71,23 @@ import Text.XML.HXT.DOM.XmlNode                 ( mkText'
                                                 , getEntityRef
                                                 )
 import Text.XML.HXT.Parser.XmlTokenParser       ( allBut
+                                                , amp
                                                 , dq
                                                 , eq
                                                 , gt
+                                                , lt
                                                 , name
                                                 , pubidLiteral
                                                 , skipS
                                                 , skipS0
                                                 , sq
                                                 , systemLiteral
+                                                , checkString
                                                 , singleCharsT
                                                 , referenceT
                                                 )
 import Text.XML.HXT.Parser.XmlParsec            ( cDSect
-                                                , charData'
+                                                -- , charData'
                                                 , misc
                                                 , parseXmlText
                                                 , pI
@@ -111,6 +117,14 @@ parseHtmlContent        = parseHtmlFromString htmlContent "text"
 
 -- ------------------------------------------------------------
 
+type Context    = (XmlTreeFl, OpenTags)
+
+type XmlTreeFl  = XmlTrees -> XmlTrees
+
+type OpenTags   = [(String, XmlTrees, XmlTreeFl)]
+
+-- ------------------------------------------------------------
+
 htmlDocument    :: Parser XmlTrees
 htmlDocument
     = do
@@ -127,7 +141,7 @@ htmlProlog
                <|>
                ( do
                  pos <- getPosition
-                 _ <- try (string "<?")
+                 checkString "<?"
                  return $ [mkError' c_warn (show pos ++ " wrong XML declaration")]
                )
              )
@@ -137,7 +151,7 @@ htmlProlog
                    <|>
                    ( do
                      pos <- getPosition
-                     _ <- try (upperCaseString "<!DOCTYPE")
+                     upperCaseString "<!DOCTYPE"
                      return $ [mkError' c_warn (show pos ++ " HTML DOCTYPE declaration ignored")]
                    )
                  )
@@ -145,7 +159,7 @@ htmlProlog
 
 doctypedecl     :: Parser XmlTrees
 doctypedecl
-    = between (try $ upperCaseString "<!DOCTYPE") (char '>')
+    = between (upperCaseString "<!DOCTYPE") gt
       ( do
         skipS
         n <- name
@@ -160,7 +174,7 @@ doctypedecl
 externalID      :: Parser Attributes
 externalID
     = do
-      _ <- try (upperCaseString k_public)
+      upperCaseString k_public
       skipS
       pl <- pubidLiteral
       sl <- option "" $ try ( do
@@ -173,41 +187,41 @@ htmlContent     :: Parser XmlTrees
 htmlContent
     = option []
       ( do
-        context <- hContent ([], [])
+        context <- hContent (id, [])
         pos     <- getPosition
         return $ closeTags pos context
       )
       where
-      closeTags _ (body, [])
-          = reverse body
+      closeTags _pos (body, [])
+          = body []
       closeTags pos' (body, ((tn, al, body1) : restOpen))
-          = closeTags pos' (addHtmlWarn (show pos' ++ ": no closing tag found for \"<" ++ tn ++ " ...>\"")
-                            .
-                            addHtmlTag tn al body
-                            $
-                            (body1, restOpen)
-                           )
+          = closeTags pos'
+                      ( addHtmlWarn (show pos' ++ ": no closing tag found for \"<" ++ tn ++ " ...>\"")
+                        .
+                        addHtmlTag tn al body
+                        $
+                        (body1, restOpen)
+                      )
 
-type OpenTags   = [(String, XmlTrees, XmlTrees)]
-type Context    = (XmlTrees, OpenTags)
+-- ------------------------------------------------------------
 
 hElement        :: Context -> Parser Context
 hElement context
     = ( do
         t <- hSimpleData
-        return (addHtmlElems [t] context)
+        return (addHtmlElem t context)
       )
       <|>
-      hOpenTag context
-      <|>
       hCloseTag context
+      <|>
+      hOpenTag context
       <|>
       ( do                      -- wrong tag, take it as text
         pos <- getPosition
         c   <- xmlChar
         return ( addHtmlWarn (show pos ++ " markup char " ++ show c ++ " not allowed in this context")
                  .
-                 addHtmlElems [mkText' [c]]
+                 addHtmlElem (mkText' [c])
                  $
                  context
                )
@@ -228,23 +242,26 @@ hElement context
 
 hSimpleData     :: Parser XmlTree
 hSimpleData
-    = charData'
+    = charData''
       <|>
-      try hReferenceT
+      hReference'
       <|>
-      try hComment
+      hComment
       <|>
-      try pI
+      pI
       <|>
-      try cDSect
+      cDSect
+    where
+    charData''
+        = do
+          t <- many1 (satisfy (\ x -> isXmlChar x && not (x == '<' || x == '&')))
+          return (mkText' t)
 
 hCloseTag       :: Context -> Parser Context
 hCloseTag context
     = do
-      n <- try ( do
-                 _ <- string "</"
-                 lowerCaseName
-               )
+      checkString "</"
+      n <- lowerCaseName
       skipS0
       pos <- getPosition
       checkSymbol gt ("closing > in tag \"</" ++ n ++ "\" expected") (closeTag pos n context)
@@ -252,28 +269,28 @@ hCloseTag context
 hOpenTag        :: Context -> Parser Context
 hOpenTag context
     = ( do
-        pos <- getPosition
         e   <- hOpenTagStart
-        hOpenTagRest pos e context
+        hOpenTagRest e context
       )
 
-hOpenTagStart   :: Parser (String, XmlTrees)
+hOpenTagStart   :: Parser ((SourcePos, String), XmlTrees)
 hOpenTagStart
     = do
-      n <- try ( do
-                 _ <- char '<'
-                 n <- lowerCaseName
-                 return n
-               )
+      np <- try ( do
+                  lt
+                  pos <- getPosition
+                  n <- lowerCaseName
+                  return (pos, n)
+                )
       skipS0
       as <- hAttrList
-      return (n, as)
+      return (np, as)
 
-hOpenTagRest    :: SourcePos -> (String, XmlTrees) -> Context -> Parser Context
-hOpenTagRest pos (tn, al) context
+hOpenTagRest    :: ((SourcePos, String), XmlTrees) -> Context -> Parser Context
+hOpenTagRest ((pos, tn), al) context
     = ( do
-        _ <- try $ string "/>"
-        return (addHtmlTag tn al [] context)
+        checkString "/>"
+        return (addHtmlTag tn al id context)
       )
       <|>
       ( do
@@ -281,7 +298,7 @@ hOpenTagRest pos (tn, al) context
         return ( let context2 = closePrevTag pos tn context1
                  in
                  ( if isEmptyHtmlTag tn
-                   then addHtmlTag tn al []
+                   then addHtmlTag tn al id
                    else openTag tn al
                  ) context2
                )
@@ -301,11 +318,7 @@ hAttrList
 hAttrValue      :: Parser XmlTrees
 hAttrValue
     = option []
-      ( try ( do
-              eq
-              hAttrValue'
-            )
-      )
+      ( eq >> hAttrValue' )
 
 hAttrValue'     :: Parser XmlTrees
 hAttrValue'
@@ -327,7 +340,7 @@ hReference'
     = try hReferenceT
       <|>
       ( do
-        _ <- char '&'
+        amp
         return (mkText' "&")
       )
 
@@ -355,9 +368,9 @@ hReferenceT
 hContent        :: Context -> Parser Context
 hContent context
     = option context
-      ( do
-        context1 <- hElement context
-        hContent context1
+      ( hElement context
+        >>=
+        hContent
       )
 
 -- hComment allows "--" in comments
@@ -366,18 +379,20 @@ hContent context
 hComment                :: Parser XmlTree
 hComment
     = do
-      c <- between (try $ string "<!--") (string "-->") (allBut many "-->")
+      c <- between (checkString "<!--") (string "-->") (allBut many "-->")
       return (mkCmt' c)
 
-checkSymbol     :: Parser a -> String -> Context -> Parser Context
+checkSymbol     :: Parser () -> String -> Context -> Parser Context
 checkSymbol p msg context
-    = do
-      pos <- getPosition
-      option (addHtmlWarn (show pos ++ " " ++ msg) context)
-       ( do
-         _ <- try p
-         return context
-       )
+    = ( p
+        >>
+        return context
+      )
+      <|>
+      ( do
+        pos <- getPosition
+        return $ addHtmlWarn (show pos ++ " " ++ msg) context
+      )
 
 lowerCaseName   :: Parser String
 lowerCaseName
@@ -385,27 +400,30 @@ lowerCaseName
       n <- name
       return (map toLower n)
 
-upperCaseString :: String -> Parser String
-upperCaseString
-    = sequence . map (\ c -> satisfy (( == c) . toUpper))
+upperCaseString :: String -> Parser ()
+upperCaseString s
+    = try (sequence (map (\ c -> satisfy (( == c) . toUpper)) s)) >> return ()
 
 -- ------------------------------------------------------------
 
-addHtmlTag      :: String -> XmlTrees -> XmlTrees -> Context -> Context
-addHtmlTag tn al body (body1, openTags)
-    = ([mkElement' (mkName tn) al (reverse body)] ++ body1, openTags)
+addHtmlTag      :: String -> XmlTrees -> XmlTreeFl -> Context -> Context
+addHtmlTag tn al body context
+    = e `seq`
+      addHtmlElem e context
+    where
+    e = mkElement' (mkName tn) al (body [])
 
 addHtmlWarn     :: String -> Context -> Context
 addHtmlWarn msg
-    = addHtmlElems [mkError' c_warn msg]
+    = addHtmlElem (mkError' c_warn msg)
 
-addHtmlElems    :: XmlTrees -> Context -> Context
-addHtmlElems elems (body, openTags)
-    = (reverse elems ++ body, openTags)
+addHtmlElem    :: XmlTree -> Context -> Context
+addHtmlElem elem' (body, openTags)
+    = (body . (elem' :), openTags)
 
 openTag         :: String -> XmlTrees -> Context -> Context
 openTag tn al (body, openTags)
-    = ([], (tn, al, body) : openTags)
+    = (id, (tn, al, body) : openTags)
 
 closeTag        :: SourcePos -> String -> Context -> Context
 closeTag pos n context
@@ -414,7 +432,7 @@ closeTag pos n context
     | otherwise
         = addHtmlWarn (show pos ++ " no opening tag found for </" ++ n ++ ">")
           .
-          addHtmlTag n [] []
+          addHtmlTag n [] id
           $
           context
     where

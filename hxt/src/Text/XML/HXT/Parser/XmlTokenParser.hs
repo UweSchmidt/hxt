@@ -18,10 +18,12 @@
 module Text.XML.HXT.Parser.XmlTokenParser
     ( allBut
     , allBut1
+    , amp
     , asciiLetter
     , attrValue
     , bar
     , charRef
+    , checkString
     , comma
     , dq
     , encName
@@ -157,11 +159,11 @@ qName           :: GenParser Char state (String, String)
 qName
     = do
       s1 <- ncName
-      s2 <- option "" ( do
-                        _ <- char ':'
-                        ncName
-                      )
-      return ( if null s2 then (s2, s1) else (s1, s2) )
+      s2 <- option "" (char ':' >> ncName)
+      return ( if null s2
+               then (s2, s1)
+               else (s1, s2)
+             )
 
 nmtoken         :: GenParser Char state String
 nmtoken
@@ -274,24 +276,24 @@ checkCharRef i
 charRef         :: GenParser Char state Int
 charRef
     = do
-      _ <- try (string "&#x")
+      checkString "&#x"
       d <- many1 hexDigit
-      _ <- semi
+      semi
       checkCharRef (hexStringToInt d)
       <|>
       do
-      _ <- try (string "&#")
+      checkString "&#"
       d <- many1 digit
-      _ <- semi
+      semi
       checkCharRef (decimalStringToInt d)
       <?> "character reference"
 
 entityRef       :: GenParser Char state String
 entityRef
     = do
-      _ <- char '&'
+      amp
       n <- name
-      _ <- semi
+      semi
       return n
       <?> "entity reference"
 
@@ -300,7 +302,7 @@ peReference
     = try ( do
             _ <- char '%'
             n <- name
-            _ <- semi
+            semi
             return n
           )
       <?> "parameter-entity reference"
@@ -353,13 +355,21 @@ quoted p
 --
 -- simple char parsers
 
-dq, sq, lt, gt, semi    :: GenParser Char state Char
+dq, sq, lt, gt, semi, amp    :: GenParser Char state ()
 
-dq      = char '\"'
-sq      = char '\''
-lt      = char '<'
-gt      = char '>'
-semi    = char ';'
+dq      = char '\"' >> return ()
+sq      = char '\'' >> return ()
+lt      = char '<'  >> return ()
+gt      = char '>'  >> return ()
+semi    = char ';'  >> return ()
+amp     = char '&'  >> return ()
+
+{-# INLINE  dq #-}
+{-# INLINE  sq #-}
+{-# INLINE  lt #-}
+{-# INLINE  gt #-}
+{-# INLINE  semi #-}
+{-# INLINE  amp #-}
 
 separator       :: Char -> GenParser Char state ()
 separator c
@@ -377,17 +387,20 @@ bar     = separator '|'
 comma   = separator ','
 eq      = separator '='
 
-lpar
-    = do
-      _ <- char '('
-      skipS0
+{-# INLINE bar #-}
+{-# INLINE comma #-}
+{-# INLINE eq #-}
 
-rpar
-    = do
-      skipS0
-      _ <- char ')'
-      return ()
+lpar	= char '(' >> skipS0
+{-# INLINE lpar #-}
 
+rpar	= skipS0 >> char ')' >> return ()
+{-# INLINE rpar #-}
+
+checkString	:: String -> GenParser Char state ()
+checkString s
+    = try $ string s >> return ()
+{-# INLINE checkString #-}
 
 -- ------------------------------------------------------------
 --
@@ -401,12 +414,10 @@ allBut1         :: (GenParser Char state Char -> GenParser Char state String) ->
 allBut1 p prd (c:rest)
     = p ( satisfy (\ x -> isXmlChar x && prd x && not (x == c) )
           <|>
-          try ( do
-                _ <- char c
-                notFollowedBy ( do
-                                _ <- try (string rest)
-                                return c
-                              )
+          try ( char c
+                >>
+                notFollowedBy (try (string rest) >> return c)
+                >>
                 return c
               )
         )
