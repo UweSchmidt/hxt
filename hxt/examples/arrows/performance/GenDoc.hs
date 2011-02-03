@@ -72,12 +72,12 @@ main2 i
                    >>>
                    readDoc (fn i)
                    >>>
--- {-
+{-
                    traceMsg 1 "start rnfA"
                    >>>
                    rnfA this
                    >>>
--- -}
+-}
                    traceMsg 1 "start unpickle"
                    >>>
                    unpickleTree

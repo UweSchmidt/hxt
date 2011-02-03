@@ -4,14 +4,14 @@
 
 {- |
    Module     : Text.XML.HXT.DOM.QualifiedName
-   Copyright  : Copyright (C) 2008 Uwe Schmidt
+   Copyright  : Copyright (C) 2011 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : stable
    Portability: portable
 
-   The core data types of the HXT DOM.
+   The types and functions for qualified names
 
 -}
 
@@ -78,9 +78,9 @@ module Text.XML.HXT.DOM.QualifiedName
 
 where
 
--- {-
+{-
 import           Debug.Trace
--- -}
+ -}
 
 import           Control.Arrow                  ( (***) )
 
@@ -113,32 +113,32 @@ import Data.Char.Properties.XMLCharProps        ( isXmlNCNameStartChar
 -- Names are always reduced to normal form, and they are stored internally in a name cache
 -- for sharing equal names by the same data structure
 
-data XName           		= XN { _idXN 	:: ! Int	-- for optimization of equality test, see Eq instance
-                                     ,  unXN  	::   String
+data XName                      = XN { _idXN    :: ! Int        -- for optimization of equality test, see Eq instance
+                                     ,  unXN    ::   String
                                      }
                                   deriving (Typeable)
 
 instance Eq XName where
-    (XN id1 _) == (XN id2 _)	= id1 == id2
+    (XN id1 _) == (XN id2 _)    = id1 == id2
 
 instance Ord XName where
-    compare (XN _ n1) (XN _ n2)	= compare n1 n2
+    compare (XN _ n1) (XN _ n2) = compare n1 n2
 
 instance Read XName where
-    readsPrec p str     	= [ (newXName x, y) | (x, y) <- readsPrec p str ]
+    readsPrec p str             = [ (newXName x, y) | (x, y) <- readsPrec p str ]
 
 instance Show XName where
-    show (XN _ s)         	= show s
+    show (XN _ s)               = show s
 
 instance NFData XName where
-    rnf (XN _ s)          	= rnf s
+    rnf (XN _ s)                = rnf s
 
 instance WNFData XName where
-    rwnf (XN _ s)         	= rnf s
+    rwnf (XN _ s)               = rnf s
 
 instance Binary XName where
-    put (XN _ s)		= put s
-    get				= do
+    put (XN _ s)                = put s
+    get                         = do
                                   s <- get
                                   return $! newXName s
 
@@ -161,9 +161,9 @@ type NsEnv              = AssocList XName XName
 -- When dealing with namespaces, the document tree must be processed by 'Text.XML.HXT.Arrow.Namespace.propagateNamespaces'
 -- to split names of structure \"prefix:localPart\" and label the name with the apropriate namespace uri
 
-data QName      = QN { localPart' 	:: ! XName
-                     , namePrefix' 	:: ! XName
-                     , namespaceUri'	:: ! XName
+data QName      = QN { localPart'       :: ! XName
+                     , namePrefix'      :: ! XName
+                     , namespaceUri'    :: ! XName
                      }
              deriving (Show, Read, Typeable)
 
@@ -175,10 +175,10 @@ data QName      = QN { localPart' 	:: ! XName
 
 instance Eq QName where
     (QN lp1 px1 ns1) == (QN lp2 px2 ns2)
-        | ns1 /= ns2		= False			-- namespaces are set and differ
-        | not (isNullXName ns1)	= lp1 == lp2		-- namespaces are set and are equal: local parts must be equal
-        | otherwise		= lp1 == lp2		-- no namespaces are set: local parts must be equal
-                                  &&			-- and prefixes are not set or they are equal
+        | ns1 /= ns2            = False                 -- namespaces are set and differ
+        | not (isNullXName ns1) = lp1 == lp2            -- namespaces are set and are equal: local parts must be equal
+        | otherwise             = lp1 == lp2            -- no namespaces are set: local parts must be equal
+                                  &&                    -- and prefixes are not set or they are equal
                                   px1 == px2
 
 instance NFData  QName
@@ -221,18 +221,18 @@ namespaceUri            = unXN . namespaceUri'
 
 -- | set name prefix
 
-setNamespaceUri'                	:: XName -> QName -> QName
-setNamespaceUri' ns (QN lp px _ns)	= newQName lp px ns
+setNamespaceUri'                        :: XName -> QName -> QName
+setNamespaceUri' ns (QN lp px _ns)      = newQName lp px ns
 
 -- | set local part
 
-setLocalPart'                   	:: XName -> QName -> QName
-setLocalPart' lp (QN _lp px ns)		= newQName lp px ns
+setLocalPart'                           :: XName -> QName -> QName
+setLocalPart' lp (QN _lp px ns)         = newQName lp px ns
 
 -- | set name prefix
 
-setNamePrefix'                  	:: XName -> QName -> QName
-setNamePrefix' px (QN lp _px ns)	= newQName lp px ns
+setNamePrefix'                          :: XName -> QName -> QName
+setNamePrefix' px (QN lp _px ns)        = newQName lp px ns
 
 -- ------------------------------------------------------------
 
@@ -241,15 +241,15 @@ setNamePrefix' px (QN lp _px ns)	= newQName lp px ns
 
 qualifiedName                   :: QName -> String
 qualifiedName (QN lp px _ns)
-    | isNullXName px		= unXN lp
-    | otherwise			= unXN px ++ (':' : unXN lp)
+    | isNullXName px            = unXN lp
+    | otherwise                 = unXN px ++ (':' : unXN lp)
 
 -- | functional list version of qualifiedName used in xshow
 
 qualifiedName'                   :: QName -> String -> String
 qualifiedName' (QN lp px _ns)
-    | isNullXName px		= (unXN lp ++)
-    | otherwise			= (unXN px ++) . (':' :) . (unXN lp ++)
+    | isNullXName px            = (unXN lp ++)
+    | otherwise                 = (unXN px ++) . (':' :) . (unXN lp ++)
 
 -- |
 -- builds the \"universal\" name, that is the namespace uri surrounded with \"{\" and \"}\" followed by the local part
@@ -272,7 +272,7 @@ universalUri                    = buildUniversalName (++)
 
 buildUniversalName              :: (String -> String -> String) -> QName -> String
 buildUniversalName bf n@(QN _lp _px ns)
-    | isNullXName ns		= localPart n
+    | isNullXName ns            = localPart n
     | otherwise                 = unXN ns `bf` localPart n
 
 -- ------------------------------------------------------------
@@ -396,7 +396,7 @@ normalizeNsUri                  = map toLower . stripSlash
 
 setNamespace                    :: NsEnv -> QName -> QName
 setNamespace env n@(QN lp px _ns)
-				= maybe n (\ ns -> newQName lp px ns) . lookup px $ env
+                                = maybe n (\ ns -> newQName lp px ns) . lookup px $ env
 
 -- -----------------------------------------------------------------------------
 --
@@ -429,7 +429,7 @@ isWellformedQualifiedName s
 
 isWellformedQName               :: QName -> Bool
 isWellformedQName (QN lp px _ns)
-				= (isNCName . unXN) lp                          -- rule [8] XML Namespaces
+                                = (isNCName . unXN) lp                          -- rule [8] XML Namespaces
                                   &&
                                   ( isNullXName px
                                     ||
@@ -445,7 +445,7 @@ isWellformedQName (QN lp px _ns)
 
 isWellformedNSDecl              :: QName -> Bool
 isWellformedNSDecl n
-		                = not (isNameSpaceName n)
+                                = not (isNameSpaceName n)
                                   ||
                                   isWellformedNameSpaceName n
 
@@ -454,31 +454,31 @@ isWellformedNSDecl n
 
 isWellformedNameSpaceName       :: QName -> Bool
 isWellformedNameSpaceName n@(QN lp px _ns)
-    | isNullXName px		= lp == xmlnsXName
-    | otherwise			= px == xmlnsXName
+    | isNullXName px            = lp == xmlnsXName
+    | otherwise                 = px == xmlnsXName
                                   &&
                                   not (null lp')
                                   &&
                                   not (a_xml `isPrefixOf` lp')
     where
-    lp' 			= localPart n
+    lp'                         = localPart n
 
 
 -- |
 -- test whether a name is a namespace declaration attribute name
 
-isNameSpaceName                 	:: QName -> Bool
+isNameSpaceName                         :: QName -> Bool
 isNameSpaceName (QN lp px _ns)
-    | isNullXName px			= lp == xmlnsXName
-    | otherwise				= px == xmlnsXName
+    | isNullXName px                    = lp == xmlnsXName
+    | otherwise                         = px == xmlnsXName
 
 -- |
 --
 -- predicate is used in filter 'valdateNamespaces'.
 
-isDeclaredNamespace             	:: QName -> Bool
+isDeclaredNamespace                     :: QName -> Bool
 isDeclaredNamespace (QN _lp px ns)
-    | isNullXName px			= True                          -- no namespace used
+    | isNullXName px                    = True                          -- no namespace used
     | px == xmlnsXName                  = ns == xmlnsNamespaceXName     -- "xmlns" has a predefined namespace uri
     | px == xmlXName                    = ns == xmlNamespaceXName       -- "xml" has a predefiend namespace"
     | otherwise                         = not (isNullXName ns)          -- namespace values are not empty
@@ -569,28 +569,28 @@ newQName' q     = do
 
 -- the name and string cache
 
-data NameCache		= NC { _newXN	 :: ! Int
-                             , _xnCache	 :: ! (M.Map String XName)
-                             , _qnCache  :: ! (M.Map (XName, XName, XName) QName)	-- we need another type than QName
-                             }								-- for the key because of the unusable
-											-- Eq instance of QName
-type ChangeNameCache r	= NameCache -> (NameCache, r)
+data NameCache          = NC { _newXN    :: ! Int                                       -- next free name id
+                             , _xnCache  :: ! (M.Map String XName)
+                             , _qnCache  :: ! (M.Map (XName, XName, XName) QName)       -- we need another type than QName
+                             }                                                          -- for the key because of the unusable
+                                                                                        -- Eq instance of QName
+type ChangeNameCache r  = NameCache -> (NameCache, r)
 
 -- ------------------------------------------------------------
 
 -- | the internal cache for QNames (and name strings)
 
-theNameCache		:: MVar NameCache
-theNameCache    	= unsafePerformIO (newMVar $ initialCache)
+theNameCache            :: MVar NameCache
+theNameCache            = unsafePerformIO (newMVar $ initialCache)
 {-# NOINLINE theNameCache #-}
 
-initialXNames		:: [XName]
+initialXNames           :: [XName]
 
 nullXName
  , xmlnsNamespaceXName
  , xmlnsXName
  , xmlNamespaceXName
- , xmlXName		:: XName
+ , xmlXName             :: XName
 
 initialXNames@
  [ nullXName
@@ -598,7 +598,7 @@ initialXNames@
  , xmlnsXName
  , xmlNamespaceXName
  , xmlXName
- ]			= zipWith XN [0..] $
+ ]                      = zipWith XN [0..] $
                           [ ""
                           , xmlnsNamespace
                           , a_xmlns
@@ -606,25 +606,25 @@ initialXNames@
                           , a_xml
                           ]
 
-initialQNames		:: [QName]
+initialQNames           :: [QName]
 
-xmlnsQN			:: QName
+xmlnsQN                 :: QName
 
 initialQNames@
- [xmlnsQN]		= [QN xmlnsXName nullXName xmlnsNamespaceXName]
+ [xmlnsQN]              = [QN xmlnsXName nullXName xmlnsNamespaceXName]
 
-initialCache		:: NameCache
-initialCache		= NC
+initialCache            :: NameCache
+initialCache            = NC
                           (length initialXNames)
                           (M.fromList $ map (\ xn -> (unXN xn, xn)) initialXNames)
                           (M.fromList $ map (\ qn@(QN lp px ns) -> ((lp, px, ns), qn)) initialQNames)
 
 -- ------------------------------------------------------------
 
-changeNameCache		:: NFData r => ChangeNameCache r -> r
-changeNameCache	action 	= unsafePerformIO changeNameCache'
+changeNameCache         :: NFData r => ChangeNameCache r -> r
+changeNameCache action  = unsafePerformIO changeNameCache'
     where
-    changeNameCache'	= do
+    changeNameCache'    = do
                           -- putStrLn "takeMVar"
                           c <- takeMVar theNameCache
                           let (c', res) = action c
@@ -635,56 +635,56 @@ changeNameCache	action 	= unsafePerformIO changeNameCache'
 
 {-# NOINLINE changeNameCache #-}
 
-newXName'		:: String -> ChangeNameCache XName
+newXName'               :: String -> ChangeNameCache XName
 newXName' n c@(NC nxn xm qm)
-			= case M.lookup n xm of
-                          Just xn	-> (c, xn)
-                          Nothing	-> let nxn' = nxn + 1 in
-                                           let xn   = (XN nxn' n) in
+                        = case M.lookup n xm of
+                          Just xn       -> (c, xn)
+                          Nothing       -> let nxn' = nxn + 1 in
+                                           let xn   = (XN nxn n) in
                                            let xm'  = M.insert n xn xm in
-                                           trace ("newXName: XN " ++ show nxn' ++ " " ++ show n) $
+                                           -- trace ("newXName: XN " ++ show nxn ++ " " ++ show n) $
                                            rnf xn `seq` (NC nxn' xm' qm, xn)
 
-newQName'		:: XName -> XName -> XName -> ChangeNameCache QName
+newQName'               :: XName -> XName -> XName -> ChangeNameCache QName
 newQName' lp px ns c@(NC nxn xm qm)
-			= case M.lookup q' qm of
-                          Just qn	-> -- trace ("oldQName: " ++ show qn) $			-- log evaluation sequence
+                        = case M.lookup q' qm of
+                          Just qn       -> -- trace ("oldQName: " ++ show qn) $                 -- log evaluation sequence
                                            (c, qn)
-                          Nothing	-> let qm'  = M.insert q' q qm in
-                                           trace ("newQName: " ++ show q) $			-- log insertion of a new QName
+                          Nothing       -> let qm'  = M.insert q' q qm in
+                                           -- trace ("newQName: " ++ show q) $                  -- log insertion of a new QName
                                            q `seq` (NC nxn xm qm', q)
     where
-    q'			= (lp, px, ns)
-    q			= QN lp px ns
+    q'                  = (lp, px, ns)
+    q                   = QN lp px ns
 
-andThen			:: ChangeNameCache r1 ->
+andThen                 :: ChangeNameCache r1 ->
                            (r1 -> ChangeNameCache r2) -> ChangeNameCache r2
-andThen a1 a2 c0	= let (c1, r1) = a1 c0 in
+andThen a1 a2 c0        = let (c1, r1) = a1 c0 in
                           (a2 r1) c1
 
-newXName		:: String -> XName
-newXName n		= changeNameCache $
+newXName                :: String -> XName
+newXName n              = changeNameCache $
                           newXName' n
 
-newQName		:: XName -> XName -> XName -> QName
-newQName lp px ns	= lp `seq` px `seq` ns `seq`			-- XNames must be evaluated, else MVar blocks
+newQName                :: XName -> XName -> XName -> QName
+newQName lp px ns       = lp `seq` px `seq` ns `seq`                    -- XNames must be evaluated, else MVar blocks
                           ( changeNameCache $
                             newQName' lp px ns
                           )
 
-newLpName		:: String -> QName
+newLpName               :: String -> QName
 newLpName lp            = changeNameCache $
                           newXName' lp `andThen` \ lp' ->
                           newQName' lp' nullXName nullXName
 
-newPxName		:: String -> String -> QName
+newPxName               :: String -> String -> QName
 newPxName lp px         = changeNameCache $
                           newXName' lp `andThen` \ lp' ->
                           newXName' px `andThen` \ px' ->
                           newQName' lp' px' nullXName
 
-newNsName		:: String -> String -> String -> QName
-newNsName lp px ns     	= changeNameCache $
+newNsName               :: String -> String -> String -> QName
+newNsName lp px ns      = changeNameCache $
                           newXName' lp `andThen` \ lp' ->
                           newXName' px `andThen` \ px' ->
                           newXName' ns `andThen` \ ns' ->

@@ -41,6 +41,8 @@ import Data.Char.Properties.XMLCharProps        ( isXmlChar
 import Data.Maybe                               ( fromMaybe
                                                 , fromJust
                                                 )
+import qualified Data.Map                       as M
+
 import Text.ParserCombinators.Parsec            ( Parser
                                                 , SourcePos
                                                 , anyChar
@@ -62,11 +64,13 @@ import Text.ParserCombinators.Parsec            ( Parser
 import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.DOM.XmlNode                 ( mkText'
                                                 , mkError'
+                                                , mkCdata'
                                                 , mkCmt'
                                                 , mkCharRef'
                                                 , mkElement'
                                                 , mkAttr'
                                                 , mkDTDElem'
+                                                , mkPi'
                                                 , isEntityRef
                                                 , getEntityRef
                                                 )
@@ -80,17 +84,15 @@ import Text.XML.HXT.Parser.XmlTokenParser       ( allBut
                                                 , pubidLiteral
                                                 , skipS
                                                 , skipS0
+                                                , sPace
                                                 , sq
                                                 , systemLiteral
                                                 , checkString
                                                 , singleCharsT
                                                 , referenceT
                                                 )
-import Text.XML.HXT.Parser.XmlParsec            ( cDSect
-                                                -- , charData'
-                                                , misc
+import Text.XML.HXT.Parser.XmlParsec            ( misc
                                                 , parseXmlText
-                                                , pI
                                                 , xMLDecl'
                                                 )
 import Text.XML.HXT.Parser.XmlCharParser        ( xmlChar
@@ -248,9 +250,9 @@ hSimpleData
       <|>
       hComment
       <|>
-      pI
+      hpI
       <|>
-      cDSect
+      hcDSect
     where
     charData''
         = do
@@ -373,14 +375,69 @@ hContent context
         hContent
       )
 
+-- ------------------------------------------------------------
+
 -- hComment allows "--" in comments
 -- comment from XML spec does not
 
 hComment                :: Parser XmlTree
 hComment
     = do
-      c <- between (checkString "<!--") (string "-->") (allBut many "-->")
-      return (mkCmt' c)
+      checkString "<!--"
+      pos <- getPosition
+      c <- allBut many "-->"
+      closeCmt pos c
+    where
+    closeCmt pos c
+        = ( do
+            checkString "-->"
+            return (mkCmt' c)
+          )
+          <|>
+          ( return $
+            mkError' c_warn (show pos ++ " no closing comment sequence \"-->\" found")
+          )
+
+-- ------------------------------------------------------------
+
+hpI            	:: Parser XmlTree
+hpI = checkString "<?"
+      >>
+      ( try ( do
+              n <- name
+              p <- sPace >> allBut many "?>"
+              string "?>" >>
+                     return (mkPi' (mkName n) [mkAttr' (mkName a_value) [mkText' p]])
+            )
+        <|>
+        ( do
+          pos <- getPosition
+          return $
+            mkError' c_warn (show pos ++ " illegal PI found")
+        )
+      )
+
+-- ------------------------------------------------------------
+
+hcDSect        :: Parser XmlTree
+hcDSect
+    = do
+      checkString "<![CDATA["
+      pos <- getPosition
+      t <- allBut many "]]>"
+      closeCD pos t
+    where
+    closeCD pos t
+        = ( do
+            checkString "]]>"
+            return (mkCdata' t)
+          )
+          <|>
+          ( return $
+            mkError' c_warn (show pos ++ " no closing CDATA sequence \"]]>\" found")
+          )
+
+-- ------------------------------------------------------------
 
 checkSymbol     :: Parser () -> String -> Context -> Parser Context
 checkSymbol p msg context
@@ -457,7 +514,7 @@ closePrevTag    :: SourcePos -> String -> Context -> Context
 closePrevTag _pos _n context@(_body, [])
     = context
 closePrevTag pos n context@(body, (n1, al1, body1) : restOpen)
-    | n `closes` n1
+    | n `closesHtmlTag` n1
         = closePrevTag pos n
           ( addHtmlWarn (show pos ++ " tag \"<" ++ n1 ++ " ...>\" implicitly closed by opening tag \"<" ++ n ++ " ...>\"")
             .
@@ -491,6 +548,7 @@ emptyHtmlTags
       , "meta"
       , "param"
       ]
+{-# INLINE emptyHtmlTags #-}
 
 isInnerHtmlTagOf        :: String -> String -> Bool
 n `isInnerHtmlTagOf` tn
@@ -517,10 +575,51 @@ n `isInnerHtmlTagOf` tn
         ]
       )
 
-closesHtmlTag
-  , closes :: String -> String -> Bool
+-- a bit more efficient implementation of closes
 
+closesHtmlTag	:: String -> String -> Bool
+closesHtmlTag t t2
+    = fromMaybe False . fmap ($ t) . M.lookup t2 $ closedByTable
+{-# INLINE closesHtmlTag #-}
+
+closedByTable	:: M.Map String (String -> Bool)
+closedByTable
+    = M.fromList $
+      [ ("a", 	(== "a"))
+      , ("li", 	(== "li" ))
+      , ("th", 	(`elem` ["th", "td", "tr"] ))
+      , ("td", 	(`elem` ["th", "td", "tr"] ))
+      , ("tr", 	(== "tr"))
+      , ("dt", 	(`elem` ["dt", "dd"] ))
+      , ("dd", 	(`elem` ["dt", "dd"] ))
+      , ("p", 	(`elem` ["hr"
+                        , "h1", "h2", "h3", "h4", "h5", "h6", "dl", "ol", "ul", "table", "div", "p"] ))
+      , ("colgroup", 	(`elem` ["colgroup", "thead", "tfoot", "tbody"] ))
+      , ("form", 	(`elem` ["form"] ))
+      , ("label", 	(`elem` ["label"] ))
+      , ("map", 	(`elem` ["map"] ))
+      , ("option",	const True)
+      , ("script",	const True)
+      , ("style",	const True)
+      , ("textarea",	const True)
+      , ("title",	const True)
+      , ("select", 	( /= "option"))
+      , ("thead", 	(`elem` ["tfoot","tbody"] ))
+      , ("tbody", 	(== "tbody" ))
+      , ("tfoot", 	(== "tbody" ))
+      , ("h1", 	(`elem` ["h1", "h2", "h3", "h4", "h5", "h6", "dl", "ol", "ul", "table", "div", "p"] ))
+      , ("h2", 	(`elem` ["h1", "h2", "h3", "h4", "h5", "h6", "dl", "ol", "ul", "table", "div", "p"] ))
+      , ("h3", 	(`elem` ["h1", "h2", "h3", "h4", "h5", "h6", "dl", "ol", "ul", "table", "div", "p"] ))
+      , ("h4", 	(`elem` ["h1", "h2", "h3", "h4", "h5", "h6", "dl", "ol", "ul", "table", "div", "p"] ))
+      , ("h5", 	(`elem` ["h1", "h2", "h3", "h4", "h5", "h6", "dl", "ol", "ul", "table", "div", "p"] ))
+      , ("h6", 	(`elem` ["h1", "h2", "h3", "h4", "h5", "h6", "dl", "ol", "ul", "table", "div", "p"] ))
+      ]
+
+{-
+closesHtmlTag :: String -> String -> Bool
 closesHtmlTag   = closes
+
+closes :: String -> String -> Bool
 
 "a"     `closes` "a"                                    = True
 "li"    `closes` "li"                                   = True
@@ -563,5 +662,6 @@ t       `closes` t2 | t `elem` ["h1","h2","h3"
                                 ,"p"                    -- not "div"
                                 ]                       = True
 _       `closes` _                                      = False
+-}
 
 -- ------------------------------------------------------------
