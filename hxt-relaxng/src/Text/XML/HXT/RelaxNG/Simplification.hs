@@ -19,6 +19,7 @@
 module Text.XML.HXT.RelaxNG.Simplification
   ( createSimpleForm
   , getErrors
+  , resetStates
   )
 
 where
@@ -26,17 +27,12 @@ where
 
 import Control.Arrow.ListArrows
 
-import           Text.XML.HXT.DOM.Interface
-import qualified Text.XML.HXT.DOM.XmlNode as XN
-    ( mkAttr
-    , mkText
-    )
+import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.Edit                  ( removeWhiteSpace
                                                 )
 import Text.XML.HXT.Arrow.Namespace             ( processWithNsEnv
-                                                , propagateNamespaces
                                                 )
 import Text.XML.HXT.Arrow.XmlState
 import Text.XML.HXT.Arrow.XmlState.TypeDefs
@@ -53,20 +49,16 @@ import Text.XML.HXT.RelaxNG.SchemaGrammar as SG
 import Data.Maybe
     ( fromJust
     , fromMaybe
-    , isNothing
     )
 import Data.List
     ( elemIndices
-    , isPrefixOf
     , nub
     , deleteBy
     , find
     , (\\)
     )
 
-import System.Directory
-  ( doesFileExist )
-
+infixr 1 !>>>
 
 -- ------------------------------------------------------------
 
@@ -74,9 +66,9 @@ import System.Directory
 - 4.1. Annotations: Foreign attributes and elements are removed.
 - 4.2. Whitespace:
     - For each element other than value and param, each child that is a string
-      containing only whitespace characters is removed. -> fertig
+      containing only whitespace characters is removed.
     - Leading and trailing whitespace characters are removed from the value of each name,
-      type and combine attribute and from the content of each name element. -> fertig
+      type and combine attribute and from the content of each name element.
 - 4.3. datatypeLibrary attribute:
     - The value of each datatypeLibary attribute is transformed by escaping disallowed characters
     - For any data or value element that does not have a datatypeLibrary attribute,
@@ -96,7 +88,7 @@ simplificationStep1
         ( processHref $< getBaseURI )
         >>>
         -- 4.10 QNames
-        processWithNsEnv processEnvNames (toNsEnv [("xml",xmlNamespace)])
+        processWithNsEnv processEnvNames (toNsEnv [("xml", xmlNamespace)])
         >>>
         -- 4.4 For any data or value element that does not have a datatypeLibrary attribute,
         -- a datatypeLibrary attribute is added.
@@ -242,9 +234,7 @@ simplificationStep1
               `when`
               ( (isRngElement `orElse` isRngAttribute)
                 >>>
-                getRngAttrName
-                >>>
-                isA (elem ':')
+                hasRngAttrName
               )
             )
             >>>
@@ -254,34 +244,52 @@ simplificationStep1
             )
           )
         where
+
         createAttrL :: IOSArrow String XmlTree
         createAttrL
-            = setBaseUri &&& constA (map createAttr env) >>> arr2L (:)
+            = setBaseUri
+              <+>
+              ( fromLA $ txt "" >>> catA (map createAttr env) )
             where
 
-            createAttr :: (XName, XName) -> XmlTree
+            createAttr :: (XName, XName) -> LA XmlTree XmlTree
             createAttr (pre, uri)
-                = XN.mkAttr (mkName nm) [XN.mkText (show uri)]
+                = mkRngAttr nm (constA $ show uri)
                 where
-                nm  | isNullXName pre   = "RelaxContextDefault"
+                nm  | isNullXName pre   = contextAttributesDefault
                     | otherwise         = contextAttributes ++ show pre
 
+{- new stuff
+            createAttr :: (XName, XName) -> LA XmlTree XmlTree
+            createAttr (pre, uri)
+                = mkAttr qn (txt (unXN uri))
+                where
+                qn :: QName
+                qn  | isNullXName pre   = newQName rxcDef nullXName nullXName
+                    | otherwise         = newQName pre    rxcNam    nullXName
+
+                rxcDef                  = newXName contextDefaultName
+                rxcNam                  = newXName contextAttributes
+-}
+
             setBaseUri :: IOSArrow String XmlTree
-            setBaseUri = mkAttr (mkName contextBaseAttr) (txt $< this)
+            setBaseUri = mkRngAttrContextBase this
 
         replaceQNames :: NsEnv -> String -> IOSArrow XmlTree XmlTree
-        replaceQNames e name
-            | isNothing uri
-                = mkRelaxError "" ( "No Namespace-Mapping for the prefix " ++ show pre ++
-                                    " in the Context of Element: " ++ show name
+        replaceQNames env' name
+            | null px                                   -- no prefix, nothing to do
+                = this
+            | null ns                                   -- prefix there, but no namespace
+                = mkRelaxError "" ( "No namespace mapping for the prefix " ++ show px ++
+                                    " in the context of element: " ++ show name ++
+                                    ", namespace env is " ++ show env'
                                   )
-            | otherwise
-                = addAttr "name" ( "{" ++ (show . fromJust $ uri) ++ "}" ++ local )
+            | otherwise                                 -- build universal name
+                = addAttr "name" (universalName qn)
             where
-            (pre, local') = span (/= ':') name
-            local         = tail local'
-            uri         :: Maybe XName
-            uri           = lookup (newXName pre) e
+            qn = setNamespace env' . mkName $ name
+            px = namePrefix   qn
+            ns = namespaceUri qn
 
     -- The value of the added datatypeLibrary attribute is the value of the
     -- datatypeLibrary attribute of the nearest ancestor element that
@@ -291,22 +299,22 @@ simplificationStep1
     processdatatypeLib lib
         = processChildren $
           choiceA
-          [ ( isElem >>> hasRngAttrDatatypeLibrary
-            -- set the new datatypeLibrary value
-            )
-            :->
-            ( processdatatypeLib $< getRngAttrDatatypeLibrary )
+          [ hasRngAttrDatatypeLibrary
+            :-> ( processdatatypeLib $< getRngAttrDatatypeLibrary )             -- set the new datatypeLibrary value
+
           , ( (isRngData `orElse` isRngValue)
               >>>
               neg hasRngAttrDatatypeLibrary
-              -- add a datatypeLibrary attribute
             )
-            :->
-            ( addAttr "datatypeLibrary" lib >>> processdatatypeLib lib )
+            :-> ( addAttr "datatypeLibrary" lib                                 -- add a datatypeLibrary attribute
+                  >>>
+                  processdatatypeLib lib
+                )
+
           , this
-            :->
-            processdatatypeLib lib
+            :-> processdatatypeLib lib
           ]
+          `when` isElem
 
 -- ------------------------------------------------------------
 
@@ -364,95 +372,92 @@ simplificationStep2 validateExternalRef validateInclude extHRefs includeHRefs =
     )
   ) `when` collectErrors
   where
-  importExternalRef :: String -> String -> IOSArrow XmlTree XmlTree
+  -- returns the contents of the (validated) schema
+  -- or a relax error
+  importExternalRef     :: String -> String -> IOSArrow XmlTree XmlTree
   importExternalRef ns href
-    = ifA ( neg $ constA href
-                  >>> getPathFromURI
-                  >>> ( isA (not . ("illegal URI" `isPrefixOf`))
-                        `guards`
-                        isIOA doesFileExist
-                      )
-          )
-        ( mkRelaxError ""
-          ( show href ++
-            ": can't read URI, referenced in externalRef-Pattern"
-          )
-        )
-        ( ifP (const $ elem href extHRefs)
-           -- if the referenced name already exists in the list of processed ref attributes
-           -- we have found a loop
-            ( mkRelaxError ""
-              (  "loop in externalRef-Pattern, " ++
-                 formatStringListArr (reverse $ href:extHRefs)
+      | href `elem` extHRefs
+          = mkRelaxError ""
+            (  "loop in externalRef-Pattern, " ++ formatStringListArr (reverse $ href:extHRefs) )
+      | otherwise
+          = readForRelax href
+            >>>
+            ( mkRelaxError "" (show href ++ ": can't read URI, referenced in externalRef-Pattern")
+              `whenNot`
+              documentStatusOk
+            )
+            !>>>
+            ( if validateExternalRef                                            -- if validation parameters are set
+              then ( mkRelaxError ""
+                     ( "The content of the schema " ++ show href ++
+                       ", referenced in externalRef does not " ++
+                       "match the syntax for pattern"
+                     )
+                     `whenNot`
+                     validateWithRelax S.relaxSchemaArrow                       -- the referenced schema is validated with respect to
+                   )
+                else this
+              )
+            !>>>
+            ( simplificationStep1                                               -- perform the transformations from previous steps
+              >>>
+              simplificationStep2 validateExternalRef validateInclude (href:extHRefs) includeHRefs
+              >>>
+              getChildren                                                       -- remove the root node
+              >>>
+              isElem
+              >>>
+              ( -- Any ns attribute on the externalRef element
+                -- is transferred to the referenced element
+                addRngAttrNs ns
+                `when`
+                (getRngAttrNs >>> isA (\ a -> a == "" && ns /= ""))
               )
             )
-            ( ifA ( if validateExternalRef                                      -- if validation parameters are set
-                    then validateDocWithRelax S.relaxSchemaArrow [] href        -- the referenced schema is validated with respect to
-                    else none                                                   -- the Relax NG specification
-                  )
-                ( mkRelaxError ""
-                  ( "The content of the schema " ++ show href ++
-                    ", referenced in externalRef does not " ++
-                    "match the syntax for pattern"
-                  )
-                )
-                ( readForRelax href
-                  >>>
-                  simplificationStep1                                           -- perform the transformations from previous steps
-                  >>>
-                  simplificationStep2 validateExternalRef validateInclude (href:extHRefs) includeHRefs
-                  >>>
-                  getChildren -- remove the root node
-                  >>>
-                  ( -- Any ns attribute on the externalRef element
-                    -- is transferred to the referenced element
-                    addAttr "ns" ns
-                    `when`
-                    (getRngAttrNs >>> isA (\a -> a == "" && ns /= ""))
-                  )
-                )
-            )
-        )
+            >>>
+            traceDoc ("imported external ref: " ++ show href)
 
   importInclude :: String -> IOSArrow XmlTree XmlTree
   importInclude href
-    = ifA ( -- test whether the referenced schema exists
-            neg $ constA href >>> getPathFromURI >>> isIOA doesFileExist
-          )
-        ( mkRelaxError ""
-          ( "Can't read " ++ show href ++
-            ", referenced in include-Pattern"
-          )
-        )
-        ( ifP (const $ elem href includeHRefs)
-           -- if the referenced name still exists in the list of processed
-           -- ref attributes we have found a loop
-            ( mkRelaxError ""
-              ( "loop in include-Pattern, " ++
-                formatStringListArr (reverse $ href:includeHRefs)
-              )
+      | href `elem` includeHRefs
+          = mkRelaxError ""
+            ( "loop in include-Pattern, " ++ formatStringListArr (reverse $ href:includeHRefs) )
+      | otherwise
+          = processInclude' $< newDoc
+      where
+      processInclude' newDoc'
+          | not . null . runLA isRngRelaxError $ newDoc'
+              = constA newDoc'
+          | otherwise
+              = processInclude href newDoc'
+      newDoc
+          = readForRelax href
+            >>>
+            ( mkRelaxError "" (show href ++ ": can't read URI, referenced in include-Pattern")
+              `whenNot`
+              documentStatusOk
             )
-            ( ifA ( if validateInclude                                          -- if the parameter is set
-                    then validateDocWithRelax SG.relaxSchemaArrow [] href       -- the referenced schema is validated with respect to
-                    else none                                                   -- the Relax NG grammar element
-                  )
-                ( mkRelaxError ""
-                  ( "The content of the schema " ++ show href ++
-                    ", referenced in include does not match " ++
-                    "the syntax for grammar"
-                  )
-                )
-                ( processInclude href $< ( readForRelax href
-                                           >>>
-                                           simplificationStep1                          -- perform the transformations from previous steps
-                                           >>>
-                                           simplificationStep2 validateExternalRef validateInclude extHRefs (href:includeHRefs)
-                                           >>>
-                                           getChildren                                  -- remove the root node
-                                         )
-                )
+            !>>>
+            ( if validateInclude                                        -- if validation parameters are set
+              then ( mkRelaxError ""
+                     ( "The content of the schema " ++ show href ++
+                       ", referenced in include does not " ++
+                       "match the syntax for grammar"
+                     )
+                     `whenNot`
+                     validateWithRelax SG.relaxSchemaArrow              -- the referenced schema is validated with respect to
+                   )
+              else this
             )
-        )
+            !>>>
+            ( simplificationStep1                                       -- perform the transformations from previous steps
+              >>>
+              simplificationStep2 validateExternalRef validateInclude extHRefs (href:includeHRefs)
+              >>>
+              getChildren                                               -- remove the root node
+              >>>
+              isElem
+            )
 
   processInclude :: String -> XmlTree -> IOSArrow XmlTree XmlTree
   processInclude href newDoc
@@ -594,7 +599,7 @@ simplificationStep3 =
         >>>
         ( -- 4.8 If an attribute element has a name attribute but no ns attribute,
           --  then an ns="" attribute is added to the name child element
-           (processChildren (addAttr "ns" "" `when` isRngName))
+           (processChildren (addRngAttrNs "" `when` isRngName))
            `when`
            (isRngAttribute >>> hasRngAttrName >>> neg hasRngAttrNs)
         )
@@ -612,14 +617,17 @@ simplificationStep3 =
     processTopDown (
       ( -- 4.9 any ns attribute that is on an element other than name,
         -- nsName or value is removed.
-        (removeAttr "ns")
+        rmRngAttrNs
         `when`
-        (isElem >>> neg (isRngName `orElse` isRngNsName `orElse` isRngValue))
+        ( isElem
+          >>>
+          neg (isRngName `orElse` isRngNsName `orElse` isRngValue)
+        )
       )
       >>>
       ( -- 4.10 For any name element containing a prefix, the prefix is removed and an ns attribute
         -- is added replacing any existing ns attribute.
-        (replaceNameAttr $< (getChildren >>> isText >>> getText))
+        ( replaceNameAttr $< (getChildren >>> isText >>> getText) )
         `when`
         isRngName
       )
@@ -628,9 +636,13 @@ simplificationStep3 =
   where
   replaceNameAttr :: (ArrowXml a) => String -> a XmlTree XmlTree
   replaceNameAttr name
-    = (addAttr "ns" pre >>> processChildren (changeText $ const local))
-      `whenP`
-      (const $ elem '}' name)
+      | '}' `elem` name
+          = ( addRngAttrNs pre
+              >>>
+              processChildren (changeText $ const local)
+            )
+      | otherwise
+          = this
     where
     (pre', local') = span (/= '}') name
     pre            = tail pre'
@@ -639,17 +651,20 @@ simplificationStep3 =
   processnsAttribute :: String -> IOSArrow XmlTree XmlTree
   processnsAttribute name
     = processChildren $
-        choiceA [
-          -- set the new ns attribute value
-          (isElem >>> hasRngAttrNs)
-               :-> (processnsAttribute $< getRngAttrNs),
-          -- For any name, nsName or value element that does not have
-          -- an ns attribute, an ns attribute is added.
-          ( isNameNsNameValue >>> neg hasRngAttrNs)
-               :-> (addAttr "ns" name >>> processnsAttribute name),
-          this :-> (processnsAttribute name)
+        choiceA
+        [ (isElem >>> hasRngAttrNs)                     -- set the new ns attribute value
+          :-> (processnsAttribute $< getRngAttrNs)
+        , ( isNameNsNameValue
+            >>>
+            neg hasRngAttrNs
+          )                                             -- For any name, nsName or value element that does not have
+          :-> ( addRngAttrNs name                       -- an ns attribute, an ns attribute is added.
+                >>>
+                processnsAttribute name
+              )
+        , this
+          :-> processnsAttribute name
         ]
-
 
 -- ------------------------------------------------------------
 
@@ -987,9 +1002,10 @@ simplificationStep5
         ( renameDefines $<<
           ( getPatternNamesInGrammar "define"
             >>>
-            (createUniqueNames $< incrSysVar theRelaxDefineId)
-            &&&
-            constA []
+            ( createUniqueNames
+              &&&
+              constA []
+            )
           )
         )
         >>>
@@ -1027,34 +1043,21 @@ simplificationStep5
         = processChildren
           ( processTopDown ( none `when` isRngGrammar ) )
           >>>
-          listA ( (multi (isElem >>> hasRngName pattern))
+          listA ( (multi (hasRngElemName pattern))
                   >>>
                   getRngAttrName
                 )
-
-    createUniqueNames :: Int -> IOSArrow [String] RefList
-    createUniqueNames num
-        = arr (\ l -> unique l num)
-          >>>
-          perform (setSysAttrInt "define_id" $< arr (max num . getNextValue))
-        where
-        unique :: [String] -> Int -> RefList
-        unique []     _    = []
-        unique (x:xs) num' = (x, (show num')):(unique xs (num'+1))
-        getNextValue :: RefList -> Int
-        getNextValue [] = 0
-        getNextValue rl = maximum (map (read . snd) rl) + 1
 
     renameDefines :: RefList -> RefList -> IOSArrow XmlTree XmlTree
     renameDefines ref parentRef
         = processChildren
           ( choiceA
             [ isRngDefine
-              :-> ( -- the original name is needed for error messages
+              :-> (                                     -- the original name is needed for error messages
                     addAttr defineOrigName $< getRngAttrName
                     >>>
-                    -- rename the define-pattern
-                    -- the new name is looked up in the ref table
+                                                        -- rename the define-pattern
+                                                        -- the new name is looked up in the ref table
                     addAttr "name" $< ( getRngAttrName
                                         >>>
                                         arr (\n -> fromJust $ lookup n ref)
@@ -1063,33 +1066,34 @@ simplificationStep5
                     renameDefines ref parentRef
                   )
             , isRngGrammar
-              :-> ( renameDefines $<< ( ( -- compute all define names in the grammar
-                                          getPatternNamesInGrammar "define"
-                                          >>>
-                                          -- create a new (unique) name for all define names
-                                          (createUniqueNames $< (getSysAttrInt 0 "define_id"))
-                                        )
-                                        &&&
-                                        -- set the old ref list to be the new parentRef list
-                                        constA ref
-                                      )
+              :-> ( renameDefines $<<
+                    ( (                                 -- compute all define names in the grammar
+                        getPatternNamesInGrammar "define"
+                        >>>
+                                                        -- create a new (unique) name for all define names
+                        createUniqueNames
+                      )
+                      &&&
+                                                        -- set the old ref list to be the new parentRef list
+                      constA ref
+                    )
                   )
             , isRngRef
               :-> ( ifA ( getRngAttrName
                           >>>
                           isA (\name -> (elem name (map fst ref)))
                         )
-                    ( -- the original name is needed for error messages
+                    (                                   -- the original name is needed for error messages
                       addAttr defineOrigName $< getRngAttrName
                       >>>
-                      -- rename the ref-pattern
-                      -- the new name is looked up in the ref table
+                                                        -- rename the ref-pattern
+                                                        -- the new name is looked up in the ref table
                       addAttr "name" $< ( getRngAttrName
                                           >>>
                                           arr (\n -> fromJust $ lookup n ref)
                                         )
                     )
-                    ( -- the referenced pattern does not exist in the schema
+                    (                                   -- the referenced pattern does not exist in the schema
                       mkRelaxError "" $< ( getRngAttrName
                                            >>>
                                            arr (\ n -> ( "Define-Pattern with name " ++ show n ++
@@ -1100,7 +1104,7 @@ simplificationStep5
                                          )
                     )
                   )
-            , isRngParentRef -- same as ref, but the parentRef list is used
+            , isRngParentRef                            -- same as ref, but the parentRef list is used
               :-> ( ifA ( getRngAttrName
                           >>>
                           isA (\name -> (elem name (map fst parentRef)))
@@ -1183,7 +1187,7 @@ simplificationStep5
 
     createPatternElem :: (ArrowXml a) => String -> String -> String -> XmlTrees -> a n XmlTree
     createPatternElem pattern name combine trees
-        = mkRngElement pattern (mkAttr (mkName "name") (txt name))
+        = mkRngElement pattern (mkRngAttrName name)
           ( ( mkRngElement combine none
               (arrL (const trees) >>> getChildren)
             )
@@ -1221,9 +1225,7 @@ simplificationStep5
 
     isElemWithNameValue :: (ArrowXml a) => String -> String -> a XmlTree XmlTree
     isElemWithNameValue ename nvalue
-        = ( isElem
-            >>>
-            hasRngName ename
+        = ( hasRngElemName ename
             >>>
             getRngAttrName
             >>>
@@ -1339,10 +1341,11 @@ simplificationStep6 =
         [ isRngElement
           :-> ( ifP (const parentIsDefine)
                 (processElements False)
-                ( processElements' $<< ( (incrSysVar theRelaxDefineId >>^ show)
-                                         &&&
-                                         getDefineName
-                                       )
+                ( processElements' $<
+                  ( listA getDefineName                 -- create a new define id
+                    >>>
+                    createUniqueNames
+                  )
                 )
               )
         , isRngDefine
@@ -1359,11 +1362,13 @@ simplificationStep6 =
           >>>
           arr show
 
-    processElements' :: NewName -> OldName -> IOSArrow XmlTree XmlTree
-    processElements' name oldname
+    processElements' :: RefList -> IOSArrow XmlTree XmlTree
+    processElements' [(oldname, name)]
       = storeElement name oldname
         >>>
         mkRngRef (createAttr name oldname) none
+    processElements' l
+        = error $ "processElements' called with illegal arg: " ++ show l
 
     storeElement :: NewName -> OldName -> IOSArrow XmlTree XmlTree
     storeElement name oldname
@@ -1380,9 +1385,9 @@ simplificationStep6 =
 
     createAttr :: NewName -> OldName -> IOSArrow XmlTree XmlTree
     createAttr name oldname
-      = mkAttr (mkName "name") (txt name)
+      = mkRngAttrName name
         <+>
-        mkAttr (mkName defineOrigName) (txt $ "created for element " ++ oldname)
+        mkRngAttrDefineOrigName ("created for element " ++ oldname)
 
   getExpandableDefines :: (ArrowXml a) => a XmlTree Env
   getExpandableDefines
@@ -1873,7 +1878,7 @@ checkPattern
 occur :: String -> IOSArrow XmlTree XmlTree -> IOSArrow XmlTree XmlTree
 occur name fct
     = choiceA
-      [ ( isElem >>> hasRngName name )
+      [ hasRngElemName name
         :->
         fct
       , isChoiceGroupInterleaveOneOrMore
@@ -2091,6 +2096,26 @@ getAllDeepDefines
       ( getRngAttrName &&& this )
 
 
+createUniqueNames :: IOSArrow [String] RefList
+createUniqueNames
+    = createUnique $< incrSysVar theRelaxDefineId
+    where
+    createUnique num
+        = arr (unique num)                              -- assign numbers to names
+          >>>
+          ( this
+            ***
+            perform (setSysVar theRelaxDefineId)        -- store next unused number
+          )
+          >>>
+          arr fst
+        where
+        unique :: Int -> [String] -> (RefList, Int)
+        unique n0 l
+            = ( zipWith (\ x n -> (x, show n)) l [n0 ..]
+              , n0 + length l
+              )
+
 -- | Return all reachable defines from the start pattern
 
 getRefsFromStartPattern :: IOSArrow XmlTree [String]
@@ -2178,17 +2203,25 @@ wrapPattern2Two name
       :-> this
     ]
 
+(!>>>)          :: IOSArrow XmlTree XmlTree -> IOSArrow XmlTree XmlTree -> IOSArrow XmlTree XmlTree
+f !>>> g
+    = f
+      >>>
+      ifA (getSysVar theRelaxNoOfErrors >>> isA (> 0))
+          this
+          g
+
 mkRelaxError :: String -> String -> IOSArrow n XmlTree
 mkRelaxError changesStr errStr
   = perform (constA 1 >>> chgSysVar theRelaxNoOfErrors (+))
     >>>
-    mkRngRelaxError none none
+    mkRngRelaxError
     >>>
-    addAttr "desc" errStr
+    addRngAttrDescr errStr
     >>>
-    ( addAttr "changes" changesStr
-      `whenP`
-      (const $ changesStr /= "")
+    ( if null changesStr
+      then this
+      else addRngAttrChanges changesStr
     )
 
 collectErrors :: IOSArrow XmlTree XmlTree
@@ -2197,24 +2230,31 @@ collectErrors
     `when`
     ( (getSysVar theRelaxCollectErrors >>> isA not)
       >>>
-      (getSysVar theRelaxNoOfErrors    >>> isA (>0))
+      errorsFound
     )
+
+-- | errors found?
+errorsFound :: IOSArrow a a
+errorsFound
+    = ( getSysVar theRelaxNoOfErrors >>> isA (> 0) )
+      `guards`
+      this
 
 -- | Returns the list of simplification errors or 'none'
 getErrors :: IOSArrow XmlTree XmlTree
-getErrors = (getSysVar theRelaxNoOfErrors >>> isA (>0))
+getErrors = errorsFound
             `guards`
-            (root [] [multi isRngRelaxError])
+            multi isRngRelaxError
 
 setChangesAttr :: String -> IOSArrow XmlTree XmlTree
 setChangesAttr str
-  = ifA (hasAttr a_relaxSimplificationChanges)
+  = ifA (hasRngAttrRelaxSimplificationChanges)
       ( processAttrl $
           changeAttrValue (++ (", " ++ str))
           `when`
-          (hasRngName a_relaxSimplificationChanges)
+          isRngAttrRelaxSimplificationChanges
       )
-      (mkAttr (mkName a_relaxSimplificationChanges) (txt str))
+      (mkRngAttrRelaxSimplificationChanges str)
 
 
 getChangesAttr :: IOSArrow XmlTree String
@@ -2230,7 +2270,8 @@ getChangesAttr
 -- -------------------------------------------------------------------------------------------------------
 
 -- | Creates the simple form of a Relax NG schema
--- (see also: 'relaxOptions')
+-- 
+-- The schema document has to be parsed with namespace propagation
 
 createSimpleForm :: Bool -> Bool -> Bool -> IOSArrow XmlTree XmlTree
 createSimpleForm checkRestrictions validateExternalRef validateInclude
@@ -2244,28 +2285,31 @@ createSimpleForm checkRestrictions validateExternalRef validateInclude
 
     createSimpleWithRest :: IOSArrow XmlTree XmlTree
     createSimpleWithRest
-        = seqA $ concat [ simplificationPart1
-                        , return $ traceDoc "relax NG: simplificationPart1 done"
-                        , restrictionsPart1
-                        , return $ traceDoc "relax NG: restrictionsPart1 done"
-                        , simplificationPart2
-                        , return $ traceDoc "relax NG simplificationPart2 done"
-                        , restrictionsPart2
-                        , return $ traceDoc "relax NG: restrictionsPart2 done"
-                        , finalCleanUp
-                        , return $ traceDoc "relax NG: finalCleanUp done"
-                        ]
+        = foldr (!>>>) this $
+          concat [ return $ traceDoc "relax NG: simplificationPart1 starts"
+                 , simplificationPart1
+                 , return $ traceDoc "relax NG: simplificationPart1 done"
+                 , restrictionsPart1
+                 , return $ traceDoc "relax NG: restrictionsPart1 done"
+                 , simplificationPart2
+                 , return $ traceDoc "relax NG simplificationPart2 done"
+                 , restrictionsPart2
+                 , return $ traceDoc "relax NG: restrictionsPart2 done"
+                 , finalCleanUp
+                 , return $ traceDoc "relax NG: finalCleanUp done"
+                 ]
 
     createSimpleWithoutRest :: IOSArrow XmlTree XmlTree
     createSimpleWithoutRest
-        = seqA $ concat [ simplificationPart1
-                        , simplificationPart2
-                        , finalCleanUp
-                        ]
+        = foldr (!>>>) this $
+          concat [ simplificationPart1
+                 , simplificationPart2
+                 , finalCleanUp
+                 ]
+
     simplificationPart1 :: [IOSArrow XmlTree XmlTree]
     simplificationPart1
-        = [ propagateNamespaces
-          , simplificationStep1
+        = [ simplificationStep1
           , simplificationStep2 validateExternalRef validateInclude [] []
           , simplificationStep3
           , simplificationStep4
@@ -2293,7 +2337,6 @@ createSimpleForm checkRestrictions validateExternalRef validateInclude
     finalCleanUp :: [IOSArrow XmlTree XmlTree]
     finalCleanUp
         = [ cleanUp
-          , resetStates
           ]
 
     cleanUp :: IOSArrow XmlTree XmlTree

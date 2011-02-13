@@ -33,9 +33,11 @@ type Env = [(String, XmlTree)]
 --
 -- The value is always followed by the original attribute name and value
 
-contextAttributes :: String
-contextAttributes = "RelaxContext:"
+contextAttributes               :: String
+contextAttributes               = "RelaxContext-"
 
+contextAttributesDefault        :: String
+contextAttributesDefault        = "RelaxContextDefault"
 
 -- | Start of base uri attribute value
 -- (see also: 'simplificationStep1' in "Text.XML.HXT.RelaxNG.Simplification")

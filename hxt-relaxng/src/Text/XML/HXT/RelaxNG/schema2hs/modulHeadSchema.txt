@@ -1,7 +1,0 @@
-module Text.XML.HXT.RelaxNG.Schema
-where
-
-import Text.XML.HXT.DOM
-
-relaxSchema4Relax :: XmlTree
-relaxSchema4Relax =

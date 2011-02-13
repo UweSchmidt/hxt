@@ -162,6 +162,9 @@ instance NFData XIOSysState             -- all fields of interest are strict
 
 data XIOSysWriter       = XIOwrt  { xioErrorStatus              :: ! Int
                                   , xioErrorMsgList             :: ! XmlTrees
+                                  , xioRelaxNoOfErrors          :: ! Int
+                                  , xioRelaxDefineId            :: ! Int
+                                  , xioRelaxAttrList            ::   AssocList String XmlTrees
                                   }
 
 data XIOSysEnv          = XIOEnv  { xioTraceLevel               :: ! Int
@@ -224,9 +227,6 @@ data XIORelaxConfig     = XIORxc  { xioRelaxValidate            :: ! Bool
                                   , xioRelaxValidateExtRef      :: ! Bool
                                   , xioRelaxValidateInclude     :: ! Bool
                                   , xioRelaxCollectErrors       :: ! Bool
-                                  , xioRelaxNoOfErrors          :: ! Int
-                                  , xioRelaxDefineId            :: ! Int
-                                  , xioRelaxAttrList            ::   AssocList String XmlTrees
 				  , xioRelaxValidator           ::   IOSArrow XmlTree XmlTree
                                   }
 
@@ -276,6 +276,27 @@ theErrorMsgList                 = theSysWriter
                                   >>>
                                   S { getS = xioErrorMsgList
                                     , setS = \ x s -> s { xioErrorMsgList = x }
+                                    }
+
+theRelaxNoOfErrors              :: Selector XIOSysState Int
+theRelaxNoOfErrors              = theSysWriter
+                                  >>>
+                                  S { getS = xioRelaxNoOfErrors
+                                    , setS = \ x s -> s { xioRelaxNoOfErrors = x}
+                                    }
+
+theRelaxDefineId                :: Selector XIOSysState Int
+theRelaxDefineId                = theSysWriter
+                                  >>>
+                                  S { getS = xioRelaxDefineId
+                                    , setS = \ x s -> s { xioRelaxDefineId = x}
+                                    }
+
+theRelaxAttrList                :: Selector XIOSysState (AssocList String XmlTrees)
+theRelaxAttrList                = theSysWriter
+                                  >>>
+                                  S { getS = xioRelaxAttrList
+                                    , setS = \ x s -> s { xioRelaxAttrList = x}
                                     }
 
 -- ----------------------------------------
@@ -462,27 +483,6 @@ theRelaxCollectErrors           = theRelaxConfig
                                   >>>
                                   S { getS = xioRelaxCollectErrors
                                     , setS = \ x s -> s { xioRelaxCollectErrors = x}
-                                    }
-
-theRelaxNoOfErrors              :: Selector XIOSysState Int
-theRelaxNoOfErrors              = theRelaxConfig
-                                  >>>
-                                  S { getS = xioRelaxNoOfErrors
-                                    , setS = \ x s -> s { xioRelaxNoOfErrors = x}
-                                    }
-
-theRelaxDefineId                :: Selector XIOSysState Int
-theRelaxDefineId                = theRelaxConfig
-                                  >>>
-                                  S { getS = xioRelaxDefineId
-                                    , setS = \ x s -> s { xioRelaxDefineId = x}
-                                    }
-
-theRelaxAttrList                :: Selector XIOSysState (AssocList String XmlTrees)
-theRelaxAttrList                = theRelaxConfig
-                                  >>>
-                                  S { getS = xioRelaxAttrList
-                                    , setS = \ x s -> s { xioRelaxAttrList = x}
                                     }
 
 theRelaxValidator                :: Selector XIOSysState (IOSArrow XmlTree XmlTree)

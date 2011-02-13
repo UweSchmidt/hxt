@@ -8,7 +8,7 @@ where
 
 import Text.XML.HXT.RelaxNG.Validator
 import Text.XML.HXT.RelaxNG.Schema
-import Text.XML.HXT.Arrow 
+import Text.XML.HXT.Core
 import Text.XML.HXT.DOM.FormatXmlTree
 
 import Test.HUnit
@@ -38,38 +38,38 @@ runTest :: FilePath ->  IO Counts
 runTest filePath
     = do
       dir     <- readDir filePath ""
-      runTestTT $ TestList $ generateTestCases [] [dir] relaxSchemaTree
+      runTestTT $ TestList $ generateTestCases [dir] relaxSchemaTree
 
 
-generateTestCases :: Attributes -> [Entry] -> XmlTree -> [Test]
+generateTestCases :: [Entry] -> XmlTree -> [Test]
 
-generateTestCases _  [] _
+generateTestCases [] _
     = []
 
-generateTestCases _  [ DirContent "" _ ] _
+generateTestCases [ DirContent "" _ ] _
     = []
 
-generateTestCases al [ DirContent rngFile [] ] spezi
-    = [generateTestCase al rngFile "" spezi]
+generateTestCases [ DirContent rngFile [] ] spezi
+    = [generateTestCase rngFile "" spezi]
 
-generateTestCases al [ DirContent rngFile xmlFiles ] spezi
-    = map (\x -> generateTestCase al rngFile x spezi) xmlFiles
+generateTestCases [ DirContent rngFile xmlFiles ] spezi
+    = map (\x -> generateTestCase rngFile x spezi) xmlFiles
 
-generateTestCases al [ Dir xs ] spezi
-    = generateTestCases al xs spezi
+generateTestCases [ Dir xs ] spezi
+    = generateTestCases xs spezi
 
-generateTestCases al (x:xs) spezi
-    = generateTestCases al [x] spezi ++ generateTestCases al xs spezi
+generateTestCases (x:xs) spezi
+    = generateTestCases [x] spezi ++ generateTestCases xs spezi
 
  
-generateTestCase :: Attributes -> FilePath -> FilePath -> XmlTree -> Test
-generateTestCase al rngFile xmlFile spezi
+generateTestCase :: FilePath -> FilePath -> XmlTree -> Test
+generateTestCase rngFile xmlFile spezi
   = TestLabel formatLabel $ 
     TestCase $  
     do
     res <- runX $ constA spezi 
                   >>> 
-                  validateWithSpezification al xmlFile rngFile
+                  validateWithSpezification xmlFile rngFile
     assertBool (formatOutput res) 
                ( if ("i.rng" `isSuffixOf` rngFile) 
                  then not (null res)					-- the result of an incorrect schema must not be an empty list of errors

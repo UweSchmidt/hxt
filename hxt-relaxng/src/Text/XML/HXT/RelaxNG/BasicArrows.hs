@@ -2,13 +2,12 @@
 
 {- |
    Module     : Text.XML.HXT.RelaxNG.BasicArrows
-   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   Copyright  : Copyright (C) 2011 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id$
 
    Constants and basic arrows for Relax NG
 
@@ -23,24 +22,36 @@ import Control.Arrow.ListArrows
 
 import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlArrow
-    hiding
-    ( mkText
-    , mkError
+
+import Text.XML.HXT.RelaxNG.DataTypes
+    ( a_relaxSimplificationChanges
+    , defineOrigName
+    , contextBaseAttr
     )
 
-hasRngName      :: ArrowXml a => String -> a XmlTree XmlTree
-hasRngName s
-    = hasName s
-      `orElse`
-      ( hasLocalPart s >>> hasNamespaceUri relaxNamespace )
+-- ------------------------------------------------------------
+
+hasRngAttName           :: ArrowXml a => String -> a XmlTree XmlTree
+hasRngAttName s
+    = isAttr
+      >>>
+      hasLocalPart s
+      >>>
+      hasNamespaceUri ""
+
+hasRngElemName          :: ArrowXml a => String -> a XmlTree XmlTree
+hasRngElemName s
+    = isElem
+      >>>
+      hasLocalPart s
+      >>>
+      hasNamespaceUri relaxNamespace
 
 checkRngName :: ArrowXml a => [String] -> a XmlTree XmlTree
 checkRngName l
-    = ( isElem
-        >>>
-        catA (map hasRngName l)
-      )
-      `guards` this
+    = catA (map hasRngElemName l)
+      `guards`
+      this
 
 noOfChildren    :: ArrowXml a => (Int -> Bool) -> a XmlTree XmlTree
 noOfChildren p
@@ -101,97 +112,97 @@ isGroupInterleave
 -- ------------------------------------------------------------
 
 isRngAnyName            :: ArrowXml a => a XmlTree XmlTree
-isRngAnyName            = isElem >>> hasRngName "anyName"
+isRngAnyName            = hasRngElemName "anyName"
 
 isRngAttribute          :: ArrowXml a => a XmlTree XmlTree
-isRngAttribute          = isElem >>> hasRngName "attribute"
+isRngAttribute          = hasRngElemName "attribute"
 
 isRngChoice             :: ArrowXml a => a XmlTree XmlTree
-isRngChoice             = isElem >>> hasRngName "choice"
+isRngChoice             = hasRngElemName "choice"
 
 isRngCombine            :: ArrowXml a => a XmlTree XmlTree
-isRngCombine            = isElem >>> hasRngName "combine"
+isRngCombine            = hasRngElemName "combine"
 
 isRngData               :: ArrowXml a => a XmlTree XmlTree
-isRngData               = isElem >>> hasRngName "data"
+isRngData               = hasRngElemName "data"
 
 isRngDefine             :: ArrowXml a => a XmlTree XmlTree
-isRngDefine             = isElem >>> hasRngName "define"
+isRngDefine             = hasRngElemName "define"
 
 isRngDiv                :: ArrowXml a => a XmlTree XmlTree
-isRngDiv                = isElem >>> hasRngName "div"
+isRngDiv                = hasRngElemName "div"
 
 isRngElement            :: ArrowXml a => a XmlTree XmlTree
-isRngElement            = isElem >>> hasRngName "element"
+isRngElement            = hasRngElemName "element"
 
 isRngEmpty              :: ArrowXml a => a XmlTree XmlTree
-isRngEmpty              = isElem >>> hasRngName "empty"
+isRngEmpty              = hasRngElemName "empty"
 
 isRngExcept             :: ArrowXml a => a XmlTree XmlTree
-isRngExcept             = isElem >>> hasRngName "except"
+isRngExcept             = hasRngElemName "except"
 
 isRngExternalRef        :: ArrowXml a => a XmlTree XmlTree
-isRngExternalRef        = isElem >>> hasRngName "externalRef"
+isRngExternalRef        = hasRngElemName "externalRef"
 
 isRngGrammar            :: ArrowXml a => a XmlTree XmlTree
-isRngGrammar            = isElem >>> hasRngName "grammar"
+isRngGrammar            = hasRngElemName "grammar"
 
 isRngGroup              :: ArrowXml a => a XmlTree XmlTree
-isRngGroup              = isElem >>> hasRngName "group"
+isRngGroup              = hasRngElemName "group"
 
 isRngInclude            :: ArrowXml a => a XmlTree XmlTree
-isRngInclude            = isElem >>> hasRngName "include"
+isRngInclude            = hasRngElemName "include"
 
 isRngInterleave         :: ArrowXml a => a XmlTree XmlTree
-isRngInterleave         = isElem >>> hasRngName "interleave"
+isRngInterleave         = hasRngElemName "interleave"
 
 isRngList               :: ArrowXml a => a XmlTree XmlTree
-isRngList               = isElem >>> hasRngName "list"
+isRngList               = hasRngElemName "list"
 
 isRngMixed              :: ArrowXml a => a XmlTree XmlTree
-isRngMixed              = isElem >>> hasRngName "mixed"
+isRngMixed              = hasRngElemName "mixed"
 
 isRngName               :: ArrowXml a => a XmlTree XmlTree
-isRngName               = isElem >>> hasRngName "name"
+isRngName               = hasRngElemName "name"
 
 isRngNotAllowed         :: ArrowXml a => a XmlTree XmlTree
-isRngNotAllowed         = isElem >>> hasRngName "notAllowed"
+isRngNotAllowed         = hasRngElemName "notAllowed"
 
 isRngNsName             :: ArrowXml a => a XmlTree XmlTree
-isRngNsName             = isElem >>> hasRngName "nsName"
+isRngNsName             = hasRngElemName "nsName"
 
 isRngOneOrMore          :: ArrowXml a => a XmlTree XmlTree
-isRngOneOrMore          = isElem >>> hasRngName "oneOrMore"
+isRngOneOrMore          = hasRngElemName "oneOrMore"
 
 isRngOptional           :: ArrowXml a => a XmlTree XmlTree
-isRngOptional           = isElem >>> hasRngName "optional"
+isRngOptional           = hasRngElemName "optional"
 
 isRngParam              :: ArrowXml a => a XmlTree XmlTree
-isRngParam              = isElem >>> hasRngName "param"
+isRngParam              = hasRngElemName "param"
 
 isRngParentRef          :: ArrowXml a => a XmlTree XmlTree
-isRngParentRef          = isElem >>> hasRngName "parentRef"
+isRngParentRef          = hasRngElemName "parentRef"
 
 isRngRef                :: ArrowXml a => a XmlTree XmlTree
-isRngRef                = isElem >>> hasRngName "ref"
+isRngRef                = hasRngElemName "ref"
 
 isRngRelaxError         :: ArrowXml a => a XmlTree XmlTree
-isRngRelaxError         = isElem >>> hasRngName "relaxError"
+isRngRelaxError         = hasRngElemName "relaxError"
 
 isRngStart              :: ArrowXml a => a XmlTree XmlTree
-isRngStart              = isElem >>> hasRngName "start"
+isRngStart              = hasRngElemName "start"
 
 isRngText               :: ArrowXml a => a XmlTree XmlTree
-isRngText               = isElem >>> hasRngName "text"
+isRngText               = hasRngElemName "text"
 
 isRngType               :: ArrowXml a => a XmlTree XmlTree
-isRngType               = isElem >>> hasRngName "type"
+isRngType               = hasRngElemName "type"
 
 isRngValue              :: ArrowXml a => a XmlTree XmlTree
-isRngValue              = isElem >>> hasRngName "value"
+isRngValue              = hasRngElemName "value"
 
 isRngZeroOrMore         :: ArrowXml a => a XmlTree XmlTree
-isRngZeroOrMore         = isElem >>> hasRngName "zeroOrMore"
+isRngZeroOrMore         = hasRngElemName "zeroOrMore"
 
 -- ------------------------------------------------------------
 
@@ -228,8 +239,8 @@ mkRngOneOrMore          = mkRngElement "oneOrMore"
 mkRngRef                :: ArrowXml a => a n XmlTree -> a n XmlTree -> a n XmlTree
 mkRngRef                = mkRngElement "ref"
 
-mkRngRelaxError         :: ArrowXml a => a n XmlTree -> a n XmlTree -> a n XmlTree
-mkRngRelaxError         = mkRngElement "relaxError"
+mkRngRelaxError         :: ArrowXml a => a n XmlTree
+mkRngRelaxError         = mkRngElement "relaxError" none none
 
 mkRngStart              :: ArrowXml a => a n XmlTree -> a n XmlTree -> a n XmlTree
 mkRngStart              = mkRngElement "start"
@@ -253,27 +264,66 @@ setRngNameRef           = setRngName "ref"
 -- Attributes
 
 isRngAttrAttribute              :: ArrowXml a => a XmlTree XmlTree
-isRngAttrAttribute              = isAttr >>> hasRngName "attribute"
+isRngAttrAttribute              = hasRngAttName "attribute"
 
 isRngAttrCombine                :: ArrowXml a => a XmlTree XmlTree
-isRngAttrCombine                = isAttr >>> hasRngName "combine"
+isRngAttrCombine                = hasRngAttName "combine"
 
 isRngAttrDatatypeLibrary        :: ArrowXml a => a XmlTree XmlTree
-isRngAttrDatatypeLibrary        = isAttr >>> hasRngName "datatypeLibrary"
+isRngAttrDatatypeLibrary        = hasRngAttName "datatypeLibrary"
 
 isRngAttrHref                   :: ArrowXml a => a XmlTree XmlTree
-isRngAttrHref                   = isAttr >>> hasRngName "href"
+isRngAttrHref                   = hasRngAttName "href"
 
 isRngAttrName                   :: ArrowXml a => a XmlTree XmlTree
-isRngAttrName                   = isAttr >>> hasRngName "name"
+isRngAttrName                   = hasRngAttName "name"
 
 isRngAttrNs                     :: ArrowXml a => a XmlTree XmlTree
-isRngAttrNs                     = isAttr >>> hasRngName "ns"
+isRngAttrNs                     = hasRngAttName "ns"
 
 isRngAttrType                   :: ArrowXml a => a XmlTree XmlTree
-isRngAttrType                   = isAttr >>> hasRngName "type"
+isRngAttrType                   = hasRngAttName "type"
+
+isRngAttrRelaxSimplificationChanges     :: ArrowXml a => a XmlTree XmlTree
+isRngAttrRelaxSimplificationChanges     = hasRngAttName a_relaxSimplificationChanges
 
 -- ------------------------------------------------------------
+
+mkRngAttr                       :: ArrowXml a => String -> a b String -> a b XmlTree
+mkRngAttr name value            = mkAttr (mkName name) (value >>> mkText)
+
+mkRngAttrName                   :: ArrowXml a => String -> a b XmlTree
+mkRngAttrName value             = mkRngAttr "name" (constA value)
+
+mkRngAttrRelaxSimplificationChanges     :: ArrowXml a => String -> a b XmlTree
+mkRngAttrRelaxSimplificationChanges value
+                                = mkRngAttr a_relaxSimplificationChanges (constA value)
+
+mkRngAttrDefineOrigName         :: ArrowXml a => String -> a b XmlTree
+mkRngAttrDefineOrigName value   = mkRngAttr defineOrigName (constA value)
+
+mkRngAttrContextBase            :: ArrowXml a => a b String -> a b XmlTree
+mkRngAttrContextBase            = mkRngAttr contextBaseAttr
+
+addRngAttrName                  :: ArrowXml a => String -> a XmlTree XmlTree
+addRngAttrName value            = addAttr "name" value
+
+addRngAttrDescr                 :: ArrowXml a => String -> a XmlTree XmlTree
+addRngAttrDescr                 = addAttr "descr"
+
+addRngAttrChanges               :: ArrowXml a => String -> a XmlTree XmlTree
+addRngAttrChanges               = addAttr "changes"
+
+addRngAttrNs                    :: ArrowXml a => String -> a XmlTree XmlTree
+addRngAttrNs                    = addAttr "ns"
+
+rmRngAttrNs                     :: ArrowXml a => a XmlTree XmlTree
+rmRngAttrNs                     = removeAttr "ns"
+
+-- ------------------------------------------------------------
+
+hasRngAttrRelaxSimplificationChanges             :: ArrowXml a => a XmlTree XmlTree
+hasRngAttrRelaxSimplificationChanges             = hasAttr a_relaxSimplificationChanges
 
 hasRngAttrAttribute             :: ArrowXml a => a XmlTree XmlTree
 hasRngAttrAttribute             = hasAttr "attribute"
