@@ -42,8 +42,8 @@ import Text.XML.HXT.DOM.Interface       ( XmlTrees
                                         , NsEnv
                                         , toNsEnv
                                         , newXName
+                                        , newQName
                                         , nullXName
-                                        , mkQName'
                                         , mkName
                                         , isWellformedQualifiedName
                                         , c_warn
@@ -208,8 +208,8 @@ mkQN withNamespaces isAttr env s
     where
     qn1
         | isAttr && isSimpleName        = s'
-        | isSimpleName                  = mkQName' nullXName (newXName s) (nsUri nullXName)
-        | isWellformedQualifiedName s   = mkQName' px'        lp'         (nsUri px')
+        | isSimpleName                  = newQName (newXName s) nullXName (nsUri nullXName)
+        | isWellformedQualifiedName s   = newQName lp'          px'       (nsUri px')
         | otherwise                     = s'
     qn0                                 = s'
 

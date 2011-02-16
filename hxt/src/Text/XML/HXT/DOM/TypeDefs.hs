@@ -81,7 +81,7 @@ data XNode      = XText           String                        -- ^ ordinary te
                 | XDTD            DTDElem  Attributes           -- ^ DTD element with assoc list for dtd element features
                 | XAttr           QName                         -- ^ attribute with qualified name, the attribute value is stored in children
                 | XError          Int  String                   -- ^ error message with level and text
-                  deriving (Eq, Show, Read, Typeable)
+                  deriving (Eq, Show, Typeable)
 
 instance NFData XNode where
     rnf (XText s)               = rnf s

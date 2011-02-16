@@ -109,7 +109,7 @@ xmlTree2ArrowStr indent qNames
 
     qnDefs = concatMap qn2Str qnEnv
     qn2Str (qn, qnid)
-        = linebreak indent "" ++ qnid        ++ "       = "           ++ qname qn ++
+        = linebreak indent "" ++ qnid      ++  "        = "           ++ qname qn ++
           linebreak indent "" ++ "mkelem_" ++ qnid ++ " = mkElement " ++ qnid     ++
           linebreak indent "" ++ "mkattr_" ++ qnid ++ " = mkAttr    " ++ qnid
 
@@ -122,8 +122,8 @@ xmlTree2ArrowStr indent qNames
 
     qname       :: QName -> String
     qname qn
-        | null ns       = "mkSNsName " ++ show nm
-        | otherwise     = "mkNsName "  ++ show nm ++ " " ++ fromJust (lookup ns nsEnv)
+        | null ns       = "mkName   " ++ show nm
+        | otherwise     = "mkNsName " ++ show nm ++ " " ++ fromJust (lookup ns nsEnv)
         where
         ns = namespaceUri qn
         nm = qualifiedName qn

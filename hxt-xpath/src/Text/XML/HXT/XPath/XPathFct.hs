@@ -216,7 +216,7 @@ isNotInNodeList n xs' = nodeID' n `notElem` map nodeID' xs'
 data IdPathStep         = IdRoot String
                         | IdPos Int
                         | IdAttr QName
-                          deriving (Show, Eq, Ord)
+                          deriving (Show, Eq)
 
 nodeID                  :: Maybe NavXmlTree -> [IdPathStep]
 nodeID                  = maybe [] nodeID'

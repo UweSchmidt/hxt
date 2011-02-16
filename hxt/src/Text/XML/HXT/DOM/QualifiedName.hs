@@ -19,7 +19,7 @@
 
 module Text.XML.HXT.DOM.QualifiedName
     ( QName
-    , XName
+    , XName(unXN)
     , NsEnv
 
     , mkQName
@@ -123,13 +123,13 @@ instance Eq XName where
 
 instance Ord XName where
     compare (XN _ n1) (XN _ n2) = compare n1 n2
-
+{-
 instance Read XName where
     readsPrec p str             = [ (newXName x, y) | (x, y) <- readsPrec p str ]
 
 instance Show XName where
     show (XN _ s)               = show s
-
+-}
 instance NFData XName where
     rnf (XN _ s)                = rnf s
 
@@ -165,7 +165,7 @@ data QName      = QN { localPart'       :: ! XName
                      , namePrefix'      :: ! XName
                      , namespaceUri'    :: ! XName
                      }
-             deriving (Show, Read, Typeable)
+             deriving (Typeable)
 
 -- -----------------------------------------------------------------------------
 
@@ -183,6 +183,11 @@ instance Eq QName where
 
 instance NFData  QName
 instance WNFData QName
+
+instance Show QName where
+    show (QN lp px ns)          = "QN " ++ show (unXN lp) ++ " "
+                                        ++ show (unXN px) ++ " "
+                                        ++ show (unXN ns)
 
 -- -----------------------------------------------------------------------------
 
@@ -337,19 +342,18 @@ mkSNsName                       = mkName
 --
 -- see also 'mkName', 'mkPrefixLocalPart'
 
+{-
+mkNsName                          :: String -> String -> QName
+mkNsName n ns                     = trace ("mkNsName: " ++ show n ++ " " ++ show ns) (mkNsName' n ns)
+-}
+
 mkNsName                          :: String -> String -> QName
 mkNsName n ns
-    | (':' `elem` n)
-      &&
-      not (null px)                     -- more restrictive: isWellformedQualifiedName n
-                                = if null ns
-                                  then newPxName lp px
-                                  else newNsName lp px ns
-    | otherwise                 = if null ns
-                                  then newLpName n
-                                  else newNsName lp "" ns
+    | null ns			= qn
+    | otherwise			= setNamespaceUri' ns' qn
     where
-    (px, (_ : lp)) = span (/= ':') n
+    qn                          = mkName n
+    ns'				= newXName ns
 
 -- ------------------------------------------------------------
 
@@ -488,83 +492,6 @@ isDeclaredNamespace (QN _lp px ns)
 toNsEnv                         :: AssocList String String -> NsEnv
 toNsEnv                         = map (newXName *** newXName)
 
--- -----------------------------------------------------------------------------
-{-
--- the name cache, same implementation strategy as in Data.Atom,
--- but conversion to and from ByteString prevented
-
-type QNames      = M.Map QName QName
-
--- ------------------------------------------------------------
-
--- | the internal cache for QNames (and name strings)
-
-theQNames        :: MVar QNames
-theQNames        = unsafePerformIO (newMVar M.empty)
-{-# NOINLINE theQNames #-}
-
--- | insert a QName into the name cache
-
-insertQName     :: QName -> QNames -> (QNames, QName)
-insertQName n m = maybe ( M.insert
-                          ( -- trace (show n)
-                            n
-                          )
-                          n m
-                        , rnf n `seq` n
-                        )
-                        (\ n' -> (m, n'))
-                  .
-                  M.lookup n $ m
-
-
-newLPName        :: String -> QName
-newLPName        = newLPName' . XN 0
-{-# INLINE newLPName #-}
-
-newLPName'       :: XName -> QName
-newLPName'       = newQName . LP
-{-# INLINE newLPName' #-}
-
-newPXName        :: String -> QName -> QName
-newPXName        = newPXName' . newXName
-{-# INLINE newPXName #-}
-
-newPXName'       :: XName -> QName -> QName
-newPXName' px    = newQName . PX px
-{-# INLINE newPXName' #-}
-
-newNSName        :: String -> QName -> QName
-newNSName        = newNSName' . newXName
-{-# INLINE newNSName #-}
-
-newNSName'       :: XName -> QName -> QName
-newNSName' ns    = newQName . NS ns
-{-# INLINE newNSName' #-}
-
-newQName         :: QName -> QName
-newQName n       = rnf n `seq` unsafePerformIO (newQName' n)
-{-
-newQName n       = rnf n `seq` n                        -- for profiling with/without caching
--}
-{-# NOINLINE newQName #-}
-
--- | The internal operation running in the IO monad
--- the QName parameter must be fully evaluated (must be in normal form)
--- else the MVar may block
-
-newQName'       :: QName -> IO QName
-newQName' q     = do
-                                                        -- putStrLn "befor takeMVar"
-                  m <- takeMVar theQNames
-                  let (m', q') = insertQName q m
-                                                        -- putStrLn (show q')
-                  m' `seq` putMVar theQNames m'
-                                                        -- putStrLn "after putMVar"
-                  return q'
-
-{-# NOINLINE newQName' #-}
--}
 -- -----------------------------------------------------------------------------
 
 -- the name and string cache

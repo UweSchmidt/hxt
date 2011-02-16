@@ -274,7 +274,7 @@ attachEnv env
 
     nsDeclToAttr        :: (XName, XName) -> LA XmlTree XmlTree
     nsDeclToAttr (n, uri)
-        = mkAttr qn (txt (show uri))
+        = mkAttr qn (txt (unXN uri))
         where
         qn :: QName
         qn | isNullXName n      = newQName xmlnsXName nullXName  xmlnsNamespaceXName

@@ -251,26 +251,22 @@ simplificationStep1
               <+>
               ( fromLA $ txt "" >>> catA (map createAttr env) )
             where
-
+{- old stuff
             createAttr :: (XName, XName) -> LA XmlTree XmlTree
             createAttr (pre, uri)
                 = mkRngAttr nm (constA $ show uri)
                 where
                 nm  | isNullXName pre   = contextAttributesDefault
                     | otherwise         = contextAttributes ++ show pre
+-}
 
-{- new stuff
             createAttr :: (XName, XName) -> LA XmlTree XmlTree
             createAttr (pre, uri)
                 = mkAttr qn (txt (unXN uri))
                 where
                 qn :: QName
-                qn  | isNullXName pre   = newQName rxcDef nullXName nullXName
-                    | otherwise         = newQName pre    rxcNam    nullXName
-
-                rxcDef                  = newXName contextDefaultName
-                rxcNam                  = newXName contextAttributes
--}
+                qn  | isNullXName pre   = mkName $ contextAttributesDefault
+                    | otherwise         = mkName $ contextAttributes ++ unXN pre
 
             setBaseUri :: IOSArrow String XmlTree
             setBaseUri = mkRngAttrContextBase this
@@ -282,7 +278,7 @@ simplificationStep1
             | null ns                                   -- prefix there, but no namespace
                 = mkRelaxError "" ( "No namespace mapping for the prefix " ++ show px ++
                                     " in the context of element: " ++ show name ++
-                                    ", namespace env is " ++ show env'
+                                    ", namespace env is " ++ show (map (unXN *** unXN) env')
                                   )
             | otherwise                                 -- build universal name
                 = addAttr "name" (universalName qn)
