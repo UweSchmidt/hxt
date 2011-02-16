@@ -33,9 +33,9 @@ import System.Console.GetOpt
 
 withRelaxNG                     :: String -> SysConfig
 withRelaxNG s                   = setS (theRelaxValidate
-					.&&&. theRelaxSchema
-					.&&&. theRelaxValidator
-				       ) (True, (s, validateDocumentWithRelaxSchema [] s))
+                                        .&&&. theRelaxSchema
+                                        .&&&. theRelaxValidator
+                                       ) (True, (s, validateDocumentWithRelaxSchema [] s))
 
 withRelaxCheckRestr             ::  Bool -> SysConfig
 withRelaxCheckRestr             = setS theRelaxCheckRestr

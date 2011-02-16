@@ -72,11 +72,11 @@ generateTestCase al rngFile xmlFile spezi
                   validateWithSpezification al xmlFile rngFile
     assertBool (formatOutput res) 
                ( if ("i.rng" `isSuffixOf` rngFile) 
-                 then not (null res)					-- the result of an incorrect schema must not be an empty list of errors
-		 else ("i.xml" `isSuffixOf` xmlFile) == not (null res)
-									-- correct schema, but incorrect document:
-									-- the result of in incorrect xml document
-									-- must not be an empty list of errors
+                 then not (null res)                                    -- the result of an incorrect schema must not be an empty list of errors
+                 else ("i.xml" `isSuffixOf` xmlFile) == not (null res)
+                                                                        -- correct schema, but incorrect document:
+                                                                        -- the result of in incorrect xml document
+                                                                        -- must not be an empty list of errors
                )
     where
     formatLabel  = "Schema=" ++ rngFile ++ 
