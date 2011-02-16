@@ -217,6 +217,7 @@ mkRelaxValue = getDatatype &&& getValue &&& getContext
   where
   getContext :: LA XmlTree Context
   getContext = getAttrValue contextBaseAttr &&& getMapping
+
   getMapping :: LA XmlTree [(Prefix, Uri)]
   getMapping = listA $ getAttrl >>>
                        ( (getName >>> isA (contextAttributes `isPrefixOf`))
@@ -226,6 +227,7 @@ mkRelaxValue = getDatatype &&& getValue &&& getContext
                            (getChildren >>> getText)
                          )
                        )
+
   getValue :: LA XmlTree String
   getValue = (getChildren >>> getText) `orElse` (constA "")
 

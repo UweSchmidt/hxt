@@ -76,6 +76,9 @@ initialSysWriter                = XIOwrt
                                   { xioErrorStatus       = c_ok
                                   , xioErrorMsgList      = []
                                   , xioExpatErrors       = none
+                                  , xioRelaxNoOfErrors   = 0
+                                  , xioRelaxDefineId     = 0
+                                  , xioRelaxAttrList     = []
                                   }
 
 initialSysEnv                   :: XIOSysEnv
@@ -148,9 +151,6 @@ initialRelaxConfig              = XIORxc
                                   , xioRelaxValidateExtRef      = True
                                   , xioRelaxValidateInclude     = True
                                   , xioRelaxCollectErrors       = True
-                                  , xioRelaxNoOfErrors          = 0
-                                  , xioRelaxDefineId            = 0
-                                  , xioRelaxAttrList            = []
                                   , xioRelaxValidator           = dummyRelaxValidator
                                   }
 

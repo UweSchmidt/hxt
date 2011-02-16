@@ -18,7 +18,7 @@
 -- ------------------------------------------------------------
 
 module Text.XML.HXT.RelaxNG.Validation
-    ( validateWithRelaxAndHandleErrors
+    ( validateWithRelax
     , validateDocWithRelax
     , validateRelax
     , readForRelax
@@ -61,43 +61,13 @@ import qualified Debug.Trace as T
 
 -- ------------------------------------------------------------
 
-validateWithRelaxAndHandleErrors        :: IOSArrow XmlTree XmlTree -> IOSArrow XmlTree XmlTree
-validateWithRelaxAndHandleErrors theSchema
-    = validateWithRelax theSchema
-      >>>
-      handleErrors
-
 validateWithRelax       :: IOSArrow XmlTree XmlTree -> IOSArrow XmlTree XmlTree
 validateWithRelax theSchema
     = traceMsg 2 "validate with Relax NG schema"
       >>>
-      ( ( normalizeForRelaxValidation           -- prepare the document for validation
-          >>>
-          getChildren
-          >>>
-          isElem                                -- and select the root element
-        )
-        &&&
-        theSchema
-      )
+      normalizeForRelaxValidation             -- prepare the document for validation
       >>>
-      arr2A validateRelax                       -- compute vaidation errors as a document
-
-handleErrors    :: IOSArrow XmlTree XmlTree
-handleErrors
-    = traceDoc "error found when validating with Relax NG schema"
-      >>>
-      ( getChildren                             -- prepare error format
-        >>>
-        getText
-        >>>
-        arr ("Relax NG validation: " ++)
-        >>>
-        mkError c_err
-      )
-      >>>
-      filterErrorMsg                            -- issue errors and set system status
-
+      ( validateRelax $< theSchema )          -- compute and issue validation errors
 
 {- |
    normalize a document for validation with Relax NG: remove all namespace declaration attributes,
@@ -140,41 +110,53 @@ normalizeForRelaxValidation
 validateDocWithRelax :: IOSArrow XmlTree XmlTree -> SysConfigList -> String -> IOSArrow XmlTree XmlTree
 validateDocWithRelax theSchema config doc
     = localSysEnv
-      $
-      configSysVars config
-      >>>
-      ( if null doc
-        then root [] []
-        else readForRelax doc
+      ( configSysVars config
+        >>>
+        readForRelax doc
+        >>>
+        validateWithRelax theSchema
       )
-      >>>
-      validateWithRelax theSchema
-      >>>
-      perform handleErrors
-
 
 {- | Validates a xml document with respect to a Relax NG schema
 
-   * 1.parameter  :  XML document
+   * 1.parameter  :  Relax NG schema
 
-   - arrow-input  :  Relax NG schema
+   - arrow-input  :  XML document
 
-   - arrow-output :  list of errors or 'none'
+   - arrow-output :  the document or in case of errors none
 -}
 
 validateRelax :: XmlTree -> IOSArrow XmlTree XmlTree
-validateRelax xmlDoc
-  = fromLA
-    ( createPatternFromXmlTree
-      >>>
-      arr (\p -> childDeriv ("",[]) p xmlDoc)
-      >>>
-      ( (not . nullable)
-        `guardsP`
-        root [] [ (take 1024 . show) ^>> mkText ]       -- pattern may be recursive, so the string representation
-                                                        -- is truncated to 1024 chars to assure termination
+validateRelax rngSchema
+    = ( fromLA
+        ( ( ( constA rngSchema
+              >>>
+              createPatternFromXmlTree
+            )
+            &&&
+            ( getChildren                       -- remove the root node
+              >>>
+              isElem                            -- and select the root element
+            )
+          )
+          >>>
+          arr2 (\ pattern xmlDoc -> childDeriv ("", []) pattern xmlDoc)
+          >>>
+          isA (not . nullable)
+          >>>
+          arr ( take 1024                      -- pattern may be recursive, so the string representation
+                                               -- is truncated to 1024 chars to assure termination
+                . ("when validating with Relax NG schema: " ++)
+                . show
+              )
+          >>>
+          mkError c_err
+        )
+        `orElse`
+        this
       )
-    )
+      >>>
+      filterErrorMsg
 
 -- ------------------------------------------------------------
 

@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-unused-binds #-}
+
 {- |
    Module     : Text.HXT.RelaxNG.SchemaGrammar
 
@@ -20,287 +22,337 @@ relaxSchemaArrow = constA relaxSchemaTree
 relaxSchemaTree :: XmlTree
 relaxSchemaTree =
   let
-  ns1   = "http://relaxng.org/ns/structure/1.0"
-  qn1   = mkSNsName "RelaxContext:xml"
-  qn2   = mkSNsName "RelaxContextBaseURI"
-  qn3   = mkSNsName "RelaxContextDefault"
-  qn4   = mkNsName "anyName" ns1
-  qn5   = mkNsName "attribute" ns1
-  qn6   = mkNsName "choice" ns1
-  qn7   = mkNsName "data" ns1
-  qn8   = mkSNsName "datatypeLibrary"
-  qn9   = mkNsName "define" ns1
-  qn10  = mkNsName "element" ns1
-  qn11  = mkNsName "empty" ns1
-  qn12  = mkNsName "except" ns1
-  qn13  = mkNsName "grammar" ns1
-  qn14  = mkNsName "group" ns1
-  qn15  = mkNsName "interleave" ns1
-  qn16  = mkSNsName "name"
-  qn17  = mkNsName "name" ns1
-  qn18  = mkSNsName "ns"
-  qn19  = mkNsName "nsName" ns1
-  qn20  = mkNsName "oneOrMore" ns1
-  qn21  = mkNsName "ref" ns1
-  qn22  = mkNsName "start" ns1
-  qn23  = mkNsName "text" ns1
-  qn24  = mkSNsName "type"
-  qn25  = mkNsName "value" ns1
+  ns1 = "http://relaxng.org/ns/structure/1.0"
+  qn1       = mkSNsName "RelaxContext-xml"
+  mkelem_qn1 = mkElement qn1
+  mkattr_qn1 = mkAttr    qn1
+  qn2       = mkSNsName "RelaxContextBaseURI"
+  mkelem_qn2 = mkElement qn2
+  mkattr_qn2 = mkAttr    qn2
+  qn3       = mkSNsName "RelaxContextDefault"
+  mkelem_qn3 = mkElement qn3
+  mkattr_qn3 = mkAttr    qn3
+  qn4       = mkNsName "anyName" ns1
+  mkelem_qn4 = mkElement qn4
+  mkattr_qn4 = mkAttr    qn4
+  qn5       = mkNsName "attribute" ns1
+  mkelem_qn5 = mkElement qn5
+  mkattr_qn5 = mkAttr    qn5
+  qn6       = mkNsName "choice" ns1
+  mkelem_qn6 = mkElement qn6
+  mkattr_qn6 = mkAttr    qn6
+  qn7       = mkNsName "data" ns1
+  mkelem_qn7 = mkElement qn7
+  mkattr_qn7 = mkAttr    qn7
+  qn8       = mkSNsName "datatypeLibrary"
+  mkelem_qn8 = mkElement qn8
+  mkattr_qn8 = mkAttr    qn8
+  qn9       = mkNsName "define" ns1
+  mkelem_qn9 = mkElement qn9
+  mkattr_qn9 = mkAttr    qn9
+  qn10       = mkNsName "element" ns1
+  mkelem_qn10 = mkElement qn10
+  mkattr_qn10 = mkAttr    qn10
+  qn11       = mkNsName "empty" ns1
+  mkelem_qn11 = mkElement qn11
+  mkattr_qn11 = mkAttr    qn11
+  qn12       = mkNsName "except" ns1
+  mkelem_qn12 = mkElement qn12
+  mkattr_qn12 = mkAttr    qn12
+  qn13       = mkNsName "grammar" ns1
+  mkelem_qn13 = mkElement qn13
+  mkattr_qn13 = mkAttr    qn13
+  qn14       = mkNsName "group" ns1
+  mkelem_qn14 = mkElement qn14
+  mkattr_qn14 = mkAttr    qn14
+  qn15       = mkNsName "interleave" ns1
+  mkelem_qn15 = mkElement qn15
+  mkattr_qn15 = mkAttr    qn15
+  qn16       = mkSNsName "name"
+  mkelem_qn16 = mkElement qn16
+  mkattr_qn16 = mkAttr    qn16
+  qn17       = mkNsName "name" ns1
+  mkelem_qn17 = mkElement qn17
+  mkattr_qn17 = mkAttr    qn17
+  qn18       = mkSNsName "ns"
+  mkelem_qn18 = mkElement qn18
+  mkattr_qn18 = mkAttr    qn18
+  qn19       = mkNsName "nsName" ns1
+  mkelem_qn19 = mkElement qn19
+  mkattr_qn19 = mkAttr    qn19
+  qn20       = mkNsName "oneOrMore" ns1
+  mkelem_qn20 = mkElement qn20
+  mkattr_qn20 = mkAttr    qn20
+  qn21       = mkNsName "ref" ns1
+  mkelem_qn21 = mkElement qn21
+  mkattr_qn21 = mkAttr    qn21
+  qn22       = mkNsName "start" ns1
+  mkelem_qn22 = mkElement qn22
+  mkattr_qn22 = mkAttr    qn22
+  qn23       = mkNsName "text" ns1
+  mkelem_qn23 = mkElement qn23
+  mkattr_qn23 = mkAttr    qn23
+  qn24       = mkSNsName "type"
+  mkelem_qn24 = mkElement qn24
+  mkattr_qn24 = mkAttr    qn24
+  qn25       = mkNsName "value" ns1
+  mkelem_qn25 = mkElement qn25
+  mkattr_qn25 = mkAttr    qn25
   in
   mkRoot []
-    [ mkElement qn13 []
-      [ mkElement qn22 []
-        [ mkElement qn21
-          [ mkAttr qn16 [ mkText "14" ]
+    [ mkelem_qn13 []
+      [ mkelem_qn22 []
+        [ mkelem_qn21
+          [ mkattr_qn16 [ mkText "14" ]
           ] []
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "44" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "44" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "externalRef"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn5 []
-                [ mkElement qn17
-                  [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn5 []
+                [ mkelem_qn17
+                  [ mkattr_qn18 [ mkText "" ]
                   ]
                   [ mkText "href"
                   ]
-                , mkElement qn7
-                  [ mkAttr qn24 [ mkText "anyURI" ]
-                  , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                , mkelem_qn7
+                  [ mkattr_qn24 [ mkText "anyURI" ]
+                  , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                   ] []
                 ]
-              , mkElement qn14 []
-                [ mkElement qn14 []
-                  [ mkElement qn6 []
-                    [ mkElement qn11 [] []
-                    , mkElement qn5 []
-                      [ mkElement qn17
-                        [ mkAttr qn18 [ mkText "" ]
+              , mkelem_qn14 []
+                [ mkelem_qn14 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn11 [] []
+                    , mkelem_qn5 []
+                      [ mkelem_qn17
+                        [ mkattr_qn18 [ mkText "" ]
                         ]
                         [ mkText "ns"
                         ]
-                      , mkElement qn23 [] []
+                      , mkelem_qn23 [] []
                       ]
                     ]
-                  , mkElement qn6 []
-                    [ mkElement qn11 [] []
-                    , mkElement qn5 []
-                      [ mkElement qn17
-                        [ mkAttr qn18 [ mkText "" ]
+                  , mkelem_qn6 []
+                    [ mkelem_qn11 [] []
+                    , mkelem_qn5 []
+                      [ mkelem_qn17
+                        [ mkattr_qn18 [ mkText "" ]
                         ]
                         [ mkText "datatypeLibrary"
                         ]
-                      , mkElement qn7
-                        [ mkAttr qn24 [ mkText "anyURI" ]
-                        , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                      , mkelem_qn7
+                        [ mkattr_qn24 [ mkText "anyURI" ]
+                        , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                         ] []
                       ]
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn20 []
-                    [ mkElement qn5 []
-                      [ mkElement qn4 []
-                        [ mkElement qn12 []
-                          [ mkElement qn6 []
-                            [ mkElement qn19
-                              [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn20 []
+                    [ mkelem_qn5 []
+                      [ mkelem_qn4 []
+                        [ mkelem_qn12 []
+                          [ mkelem_qn6 []
+                            [ mkelem_qn19
+                              [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                               ] []
-                            , mkElement qn19
-                              [ mkAttr qn18 [ mkText "" ]
+                            , mkelem_qn19
+                              [ mkattr_qn18 [ mkText "" ]
                               ] []
                             ]
                           ]
                         ]
-                      , mkElement qn23 [] []
+                      , mkelem_qn23 [] []
                       ]
                     ]
                   ]
                 ]
               ]
-            , mkElement qn6 []
-              [ mkElement qn11 [] []
-              , mkElement qn20 []
-                [ mkElement qn21
-                  [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn6 []
+              [ mkelem_qn11 [] []
+              , mkelem_qn20 []
+                [ mkelem_qn21
+                  [ mkattr_qn16 [ mkText "16" ]
                   ] []
                 ]
               ]
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "43" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "43" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "notAllowed"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "ns"
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "datatypeLibrary"
                       ]
-                    , mkElement qn7
-                      [ mkAttr qn24 [ mkText "anyURI" ]
-                      , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                    , mkelem_qn7
+                      [ mkattr_qn24 [ mkText "anyURI" ]
+                      , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 []
-                      [ mkElement qn12 []
-                        [ mkElement qn6 []
-                          [ mkElement qn19
-                            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 []
+                      [ mkelem_qn12 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn19
+                            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                             ] []
-                          , mkElement qn19
-                            [ mkAttr qn18 [ mkText "" ]
+                          , mkelem_qn19
+                            [ mkattr_qn18 [ mkText "" ]
                             ] []
                           ]
                         ]
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
                 ]
               ]
-            , mkElement qn6 []
-              [ mkElement qn11 [] []
-              , mkElement qn20 []
-                [ mkElement qn21
-                  [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn6 []
+              [ mkelem_qn11 [] []
+              , mkelem_qn20 []
+                [ mkelem_qn21
+                  [ mkattr_qn16 [ mkText "16" ]
                   ] []
                 ]
               ]
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "40" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "40" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "data"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn5 []
-                [ mkElement qn17
-                  [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn5 []
+                [ mkelem_qn17
+                  [ mkattr_qn18 [ mkText "" ]
                   ]
                   [ mkText "type"
                   ]
-                , mkElement qn7
-                  [ mkAttr qn24 [ mkText "NCName" ]
-                  , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                , mkelem_qn7
+                  [ mkattr_qn24 [ mkText "NCName" ]
+                  , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                   ] []
                 ]
-              , mkElement qn14 []
-                [ mkElement qn14 []
-                  [ mkElement qn6 []
-                    [ mkElement qn11 [] []
-                    , mkElement qn5 []
-                      [ mkElement qn17
-                        [ mkAttr qn18 [ mkText "" ]
+              , mkelem_qn14 []
+                [ mkelem_qn14 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn11 [] []
+                    , mkelem_qn5 []
+                      [ mkelem_qn17
+                        [ mkattr_qn18 [ mkText "" ]
                         ]
                         [ mkText "ns"
                         ]
-                      , mkElement qn23 [] []
+                      , mkelem_qn23 [] []
                       ]
                     ]
-                  , mkElement qn6 []
-                    [ mkElement qn11 [] []
-                    , mkElement qn5 []
-                      [ mkElement qn17
-                        [ mkAttr qn18 [ mkText "" ]
+                  , mkelem_qn6 []
+                    [ mkelem_qn11 [] []
+                    , mkelem_qn5 []
+                      [ mkelem_qn17
+                        [ mkattr_qn18 [ mkText "" ]
                         ]
                         [ mkText "datatypeLibrary"
                         ]
-                      , mkElement qn7
-                        [ mkAttr qn24 [ mkText "anyURI" ]
-                        , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                      , mkelem_qn7
+                        [ mkattr_qn24 [ mkText "anyURI" ]
+                        , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                         ] []
                       ]
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn20 []
-                    [ mkElement qn5 []
-                      [ mkElement qn4 []
-                        [ mkElement qn12 []
-                          [ mkElement qn6 []
-                            [ mkElement qn19
-                              [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn20 []
+                    [ mkelem_qn5 []
+                      [ mkelem_qn4 []
+                        [ mkelem_qn12 []
+                          [ mkelem_qn6 []
+                            [ mkelem_qn19
+                              [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                               ] []
-                            , mkElement qn19
-                              [ mkAttr qn18 [ mkText "" ]
+                            , mkelem_qn19
+                              [ mkattr_qn18 [ mkText "" ]
                               ] []
                             ]
                           ]
                         ]
-                      , mkElement qn23 [] []
+                      , mkelem_qn23 [] []
                       ]
                     ]
                   ]
                 ]
               ]
-            , mkElement qn15 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn21
-                    [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn15 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn21
+                    [ mkattr_qn16 [ mkText "16" ]
                     ] []
                   ]
                 ]
-              , mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn20 []
-                    [ mkElement qn21
-                      [ mkAttr qn16 [ mkText "41" ]
+              , mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn20 []
+                    [ mkelem_qn21
+                      [ mkattr_qn16 [ mkText "41" ]
                       ] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn21
-                    [ mkAttr qn16 [ mkText "42" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn21
+                    [ mkattr_qn16 [ mkText "42" ]
                     ] []
                   ]
                 ]
@@ -308,166 +360,166 @@ relaxSchemaTree =
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "42" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "42" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "except"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "ns"
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "datatypeLibrary"
                       ]
-                    , mkElement qn7
-                      [ mkAttr qn24 [ mkText "anyURI" ]
-                      , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                    , mkelem_qn7
+                      [ mkattr_qn24 [ mkText "anyURI" ]
+                      , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 []
-                      [ mkElement qn12 []
-                        [ mkElement qn6 []
-                          [ mkElement qn19
-                            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 []
+                      [ mkelem_qn12 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn19
+                            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                             ] []
-                          , mkElement qn19
-                            [ mkAttr qn18 [ mkText "" ]
+                          , mkelem_qn19
+                            [ mkattr_qn18 [ mkText "" ]
                             ] []
                           ]
                         ]
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
                 ]
               ]
-            , mkElement qn15 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn21
-                    [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn15 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn21
+                    [ mkattr_qn16 [ mkText "16" ]
                     ] []
                   ]
                 ]
-              , mkElement qn20 []
-                [ mkElement qn6 []
-                  [ mkElement qn6 []
-                    [ mkElement qn6 []
-                      [ mkElement qn6 []
-                        [ mkElement qn6 []
-                          [ mkElement qn6 []
-                            [ mkElement qn6 []
-                              [ mkElement qn6 []
-                                [ mkElement qn6 []
-                                  [ mkElement qn6 []
-                                    [ mkElement qn6 []
-                                      [ mkElement qn6 []
-                                        [ mkElement qn6 []
-                                          [ mkElement qn6 []
-                                            [ mkElement qn6 []
-                                              [ mkElement qn6 []
-                                                [ mkElement qn6 []
-                                                  [ mkElement qn6 []
-                                                    [ mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "25" ]
+              , mkelem_qn20 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn6 []
+                      [ mkelem_qn6 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn6 []
+                            [ mkelem_qn6 []
+                              [ mkelem_qn6 []
+                                [ mkelem_qn6 []
+                                  [ mkelem_qn6 []
+                                    [ mkelem_qn6 []
+                                      [ mkelem_qn6 []
+                                        [ mkelem_qn6 []
+                                          [ mkelem_qn6 []
+                                            [ mkelem_qn6 []
+                                              [ mkelem_qn6 []
+                                                [ mkelem_qn6 []
+                                                  [ mkelem_qn6 []
+                                                    [ mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "25" ]
                                                       ] []
-                                                    , mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "26" ]
+                                                    , mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "26" ]
                                                       ] []
                                                     ]
-                                                  , mkElement qn21
-                                                    [ mkAttr qn16 [ mkText "27" ]
+                                                  , mkelem_qn21
+                                                    [ mkattr_qn16 [ mkText "27" ]
                                                     ] []
                                                   ]
-                                                , mkElement qn21
-                                                  [ mkAttr qn16 [ mkText "28" ]
+                                                , mkelem_qn21
+                                                  [ mkattr_qn16 [ mkText "28" ]
                                                   ] []
                                                 ]
-                                              , mkElement qn21
-                                                [ mkAttr qn16 [ mkText "29" ]
+                                              , mkelem_qn21
+                                                [ mkattr_qn16 [ mkText "29" ]
                                                 ] []
                                               ]
-                                            , mkElement qn21
-                                              [ mkAttr qn16 [ mkText "30" ]
+                                            , mkelem_qn21
+                                              [ mkattr_qn16 [ mkText "30" ]
                                               ] []
                                             ]
-                                          , mkElement qn21
-                                            [ mkAttr qn16 [ mkText "31" ]
+                                          , mkelem_qn21
+                                            [ mkattr_qn16 [ mkText "31" ]
                                             ] []
                                           ]
-                                        , mkElement qn21
-                                          [ mkAttr qn16 [ mkText "32" ]
+                                        , mkelem_qn21
+                                          [ mkattr_qn16 [ mkText "32" ]
                                           ] []
                                         ]
-                                      , mkElement qn21
-                                        [ mkAttr qn16 [ mkText "33" ]
+                                      , mkelem_qn21
+                                        [ mkattr_qn16 [ mkText "33" ]
                                         ] []
                                       ]
-                                    , mkElement qn21
-                                      [ mkAttr qn16 [ mkText "34" ]
+                                    , mkelem_qn21
+                                      [ mkattr_qn16 [ mkText "34" ]
                                       ] []
                                     ]
-                                  , mkElement qn21
-                                    [ mkAttr qn16 [ mkText "35" ]
+                                  , mkelem_qn21
+                                    [ mkattr_qn16 [ mkText "35" ]
                                     ] []
                                   ]
-                                , mkElement qn21
-                                  [ mkAttr qn16 [ mkText "36" ]
+                                , mkelem_qn21
+                                  [ mkattr_qn16 [ mkText "36" ]
                                   ] []
                                 ]
-                              , mkElement qn21
-                                [ mkAttr qn16 [ mkText "37" ]
+                              , mkelem_qn21
+                                [ mkattr_qn16 [ mkText "37" ]
                                 ] []
                               ]
-                            , mkElement qn21
-                              [ mkAttr qn16 [ mkText "38" ]
+                            , mkelem_qn21
+                              [ mkattr_qn16 [ mkText "38" ]
                               ] []
                             ]
-                          , mkElement qn21
-                            [ mkAttr qn16 [ mkText "39" ]
+                          , mkelem_qn21
+                            [ mkattr_qn16 [ mkText "39" ]
                             ] []
                           ]
-                        , mkElement qn21
-                          [ mkAttr qn16 [ mkText "40" ]
+                        , mkelem_qn21
+                          [ mkattr_qn16 [ mkText "40" ]
                           ] []
                         ]
-                      , mkElement qn21
-                        [ mkAttr qn16 [ mkText "43" ]
+                      , mkelem_qn21
+                        [ mkattr_qn16 [ mkText "43" ]
                         ] []
                       ]
-                    , mkElement qn21
-                      [ mkAttr qn16 [ mkText "44" ]
+                    , mkelem_qn21
+                      [ mkattr_qn16 [ mkText "44" ]
                       ] []
                     ]
-                  , mkElement qn21
-                    [ mkAttr qn16 [ mkText "14" ]
+                  , mkelem_qn21
+                    [ mkattr_qn16 [ mkText "14" ]
                     ] []
                   ]
                 ]
@@ -475,316 +527,316 @@ relaxSchemaTree =
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "41" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "41" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "param"
             ]
-          , mkElement qn14 []
-            [ mkElement qn5 []
-              [ mkElement qn17
-                [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn5 []
+              [ mkelem_qn17
+                [ mkattr_qn18 [ mkText "" ]
                 ]
                 [ mkText "name"
                 ]
-              , mkElement qn7
-                [ mkAttr qn24 [ mkText "NCName" ]
-                , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+              , mkelem_qn7
+                [ mkattr_qn24 [ mkText "NCName" ]
+                , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                 ] []
               ]
-            , mkElement qn23 [] []
+            , mkelem_qn23 [] []
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "39" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "39" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "value"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn5 []
-                  [ mkElement qn17
-                    [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn5 []
+                  [ mkelem_qn17
+                    [ mkattr_qn18 [ mkText "" ]
                     ]
                     [ mkText "type"
                     ]
-                  , mkElement qn7
-                    [ mkAttr qn24 [ mkText "NCName" ]
-                    , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                  , mkelem_qn7
+                    [ mkattr_qn24 [ mkText "NCName" ]
+                    , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                     ] []
                   ]
                 ]
-              , mkElement qn14 []
-                [ mkElement qn14 []
-                  [ mkElement qn6 []
-                    [ mkElement qn11 [] []
-                    , mkElement qn5 []
-                      [ mkElement qn17
-                        [ mkAttr qn18 [ mkText "" ]
+              , mkelem_qn14 []
+                [ mkelem_qn14 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn11 [] []
+                    , mkelem_qn5 []
+                      [ mkelem_qn17
+                        [ mkattr_qn18 [ mkText "" ]
                         ]
                         [ mkText "ns"
                         ]
-                      , mkElement qn23 [] []
+                      , mkelem_qn23 [] []
                       ]
                     ]
-                  , mkElement qn6 []
-                    [ mkElement qn11 [] []
-                    , mkElement qn5 []
-                      [ mkElement qn17
-                        [ mkAttr qn18 [ mkText "" ]
+                  , mkelem_qn6 []
+                    [ mkelem_qn11 [] []
+                    , mkelem_qn5 []
+                      [ mkelem_qn17
+                        [ mkattr_qn18 [ mkText "" ]
                         ]
                         [ mkText "datatypeLibrary"
                         ]
-                      , mkElement qn7
-                        [ mkAttr qn24 [ mkText "anyURI" ]
-                        , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                      , mkelem_qn7
+                        [ mkattr_qn24 [ mkText "anyURI" ]
+                        , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                         ] []
                       ]
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn20 []
-                    [ mkElement qn5 []
-                      [ mkElement qn4 []
-                        [ mkElement qn12 []
-                          [ mkElement qn6 []
-                            [ mkElement qn19
-                              [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn20 []
+                    [ mkelem_qn5 []
+                      [ mkelem_qn4 []
+                        [ mkelem_qn12 []
+                          [ mkelem_qn6 []
+                            [ mkelem_qn19
+                              [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                               ] []
-                            , mkElement qn19
-                              [ mkAttr qn18 [ mkText "" ]
+                            , mkelem_qn19
+                              [ mkattr_qn18 [ mkText "" ]
                               ] []
                             ]
                           ]
                         ]
-                      , mkElement qn23 [] []
+                      , mkelem_qn23 [] []
                       ]
                     ]
                   ]
                 ]
               ]
-            , mkElement qn23 [] []
+            , mkelem_qn23 [] []
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "38" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "38" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "text"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "ns"
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "datatypeLibrary"
                       ]
-                    , mkElement qn7
-                      [ mkAttr qn24 [ mkText "anyURI" ]
-                      , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                    , mkelem_qn7
+                      [ mkattr_qn24 [ mkText "anyURI" ]
+                      , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 []
-                      [ mkElement qn12 []
-                        [ mkElement qn6 []
-                          [ mkElement qn19
-                            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 []
+                      [ mkelem_qn12 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn19
+                            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                             ] []
-                          , mkElement qn19
-                            [ mkAttr qn18 [ mkText "" ]
+                          , mkelem_qn19
+                            [ mkattr_qn18 [ mkText "" ]
                             ] []
                           ]
                         ]
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
                 ]
               ]
-            , mkElement qn6 []
-              [ mkElement qn11 [] []
-              , mkElement qn20 []
-                [ mkElement qn21
-                  [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn6 []
+              [ mkelem_qn11 [] []
+              , mkelem_qn20 []
+                [ mkelem_qn21
+                  [ mkattr_qn16 [ mkText "16" ]
                   ] []
                 ]
               ]
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "37" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "37" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "empty"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "ns"
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "datatypeLibrary"
                       ]
-                    , mkElement qn7
-                      [ mkAttr qn24 [ mkText "anyURI" ]
-                      , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                    , mkelem_qn7
+                      [ mkattr_qn24 [ mkText "anyURI" ]
+                      , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 []
-                      [ mkElement qn12 []
-                        [ mkElement qn6 []
-                          [ mkElement qn19
-                            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 []
+                      [ mkelem_qn12 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn19
+                            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                             ] []
-                          , mkElement qn19
-                            [ mkAttr qn18 [ mkText "" ]
+                          , mkelem_qn19
+                            [ mkattr_qn18 [ mkText "" ]
                             ] []
                           ]
                         ]
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
                 ]
               ]
-            , mkElement qn6 []
-              [ mkElement qn11 [] []
-              , mkElement qn20 []
-                [ mkElement qn21
-                  [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn6 []
+              [ mkelem_qn11 [] []
+              , mkelem_qn20 []
+                [ mkelem_qn21
+                  [ mkattr_qn16 [ mkText "16" ]
                   ] []
                 ]
               ]
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "36" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "36" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "parentRef"
             ]
-          , mkElement qn14 []
-            [ mkElement qn5 []
-              [ mkElement qn17
-                [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn5 []
+              [ mkelem_qn17
+                [ mkattr_qn18 [ mkText "" ]
                 ]
                 [ mkText "name"
                 ]
-              , mkElement qn7
-                [ mkAttr qn24 [ mkText "NCName" ]
-                , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+              , mkelem_qn7
+                [ mkattr_qn24 [ mkText "NCName" ]
+                , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                 ] []
               ]
-            , mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+            , mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "ns"
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "datatypeLibrary"
                       ]
-                    , mkElement qn7
-                      [ mkAttr qn24 [ mkText "anyURI" ]
-                      , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                    , mkelem_qn7
+                      [ mkattr_qn24 [ mkText "anyURI" ]
+                      , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 []
-                      [ mkElement qn12 []
-                        [ mkElement qn6 []
-                          [ mkElement qn19
-                            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 []
+                      [ mkelem_qn12 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn19
+                            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                             ] []
-                          , mkElement qn19
-                            [ mkAttr qn18 [ mkText "" ]
+                          , mkelem_qn19
+                            [ mkattr_qn18 [ mkText "" ]
                             ] []
                           ]
                         ]
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
                 ]
@@ -792,72 +844,72 @@ relaxSchemaTree =
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "35" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "35" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "ref"
             ]
-          , mkElement qn14 []
-            [ mkElement qn5 []
-              [ mkElement qn17
-                [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn5 []
+              [ mkelem_qn17
+                [ mkattr_qn18 [ mkText "" ]
                 ]
                 [ mkText "name"
                 ]
-              , mkElement qn7
-                [ mkAttr qn24 [ mkText "NCName" ]
-                , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+              , mkelem_qn7
+                [ mkattr_qn24 [ mkText "NCName" ]
+                , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                 ] []
               ]
-            , mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+            , mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "ns"
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "datatypeLibrary"
                       ]
-                    , mkElement qn7
-                      [ mkAttr qn24 [ mkText "anyURI" ]
-                      , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                    , mkelem_qn7
+                      [ mkattr_qn24 [ mkText "anyURI" ]
+                      , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 []
-                      [ mkElement qn12 []
-                        [ mkElement qn6 []
-                          [ mkElement qn19
-                            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 []
+                      [ mkelem_qn12 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn19
+                            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                             ] []
-                          , mkElement qn19
-                            [ mkAttr qn18 [ mkText "" ]
+                          , mkelem_qn19
+                            [ mkattr_qn18 [ mkText "" ]
                             ] []
                           ]
                         ]
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
                 ]
@@ -865,166 +917,166 @@ relaxSchemaTree =
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "34" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "34" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "mixed"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "ns"
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "datatypeLibrary"
                       ]
-                    , mkElement qn7
-                      [ mkAttr qn24 [ mkText "anyURI" ]
-                      , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                    , mkelem_qn7
+                      [ mkattr_qn24 [ mkText "anyURI" ]
+                      , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 []
-                      [ mkElement qn12 []
-                        [ mkElement qn6 []
-                          [ mkElement qn19
-                            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 []
+                      [ mkelem_qn12 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn19
+                            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                             ] []
-                          , mkElement qn19
-                            [ mkAttr qn18 [ mkText "" ]
+                          , mkelem_qn19
+                            [ mkattr_qn18 [ mkText "" ]
                             ] []
                           ]
                         ]
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
                 ]
               ]
-            , mkElement qn15 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn21
-                    [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn15 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn21
+                    [ mkattr_qn16 [ mkText "16" ]
                     ] []
                   ]
                 ]
-              , mkElement qn20 []
-                [ mkElement qn6 []
-                  [ mkElement qn6 []
-                    [ mkElement qn6 []
-                      [ mkElement qn6 []
-                        [ mkElement qn6 []
-                          [ mkElement qn6 []
-                            [ mkElement qn6 []
-                              [ mkElement qn6 []
-                                [ mkElement qn6 []
-                                  [ mkElement qn6 []
-                                    [ mkElement qn6 []
-                                      [ mkElement qn6 []
-                                        [ mkElement qn6 []
-                                          [ mkElement qn6 []
-                                            [ mkElement qn6 []
-                                              [ mkElement qn6 []
-                                                [ mkElement qn6 []
-                                                  [ mkElement qn6 []
-                                                    [ mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "25" ]
+              , mkelem_qn20 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn6 []
+                      [ mkelem_qn6 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn6 []
+                            [ mkelem_qn6 []
+                              [ mkelem_qn6 []
+                                [ mkelem_qn6 []
+                                  [ mkelem_qn6 []
+                                    [ mkelem_qn6 []
+                                      [ mkelem_qn6 []
+                                        [ mkelem_qn6 []
+                                          [ mkelem_qn6 []
+                                            [ mkelem_qn6 []
+                                              [ mkelem_qn6 []
+                                                [ mkelem_qn6 []
+                                                  [ mkelem_qn6 []
+                                                    [ mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "25" ]
                                                       ] []
-                                                    , mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "26" ]
+                                                    , mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "26" ]
                                                       ] []
                                                     ]
-                                                  , mkElement qn21
-                                                    [ mkAttr qn16 [ mkText "27" ]
+                                                  , mkelem_qn21
+                                                    [ mkattr_qn16 [ mkText "27" ]
                                                     ] []
                                                   ]
-                                                , mkElement qn21
-                                                  [ mkAttr qn16 [ mkText "28" ]
+                                                , mkelem_qn21
+                                                  [ mkattr_qn16 [ mkText "28" ]
                                                   ] []
                                                 ]
-                                              , mkElement qn21
-                                                [ mkAttr qn16 [ mkText "29" ]
+                                              , mkelem_qn21
+                                                [ mkattr_qn16 [ mkText "29" ]
                                                 ] []
                                               ]
-                                            , mkElement qn21
-                                              [ mkAttr qn16 [ mkText "30" ]
+                                            , mkelem_qn21
+                                              [ mkattr_qn16 [ mkText "30" ]
                                               ] []
                                             ]
-                                          , mkElement qn21
-                                            [ mkAttr qn16 [ mkText "31" ]
+                                          , mkelem_qn21
+                                            [ mkattr_qn16 [ mkText "31" ]
                                             ] []
                                           ]
-                                        , mkElement qn21
-                                          [ mkAttr qn16 [ mkText "32" ]
+                                        , mkelem_qn21
+                                          [ mkattr_qn16 [ mkText "32" ]
                                           ] []
                                         ]
-                                      , mkElement qn21
-                                        [ mkAttr qn16 [ mkText "33" ]
+                                      , mkelem_qn21
+                                        [ mkattr_qn16 [ mkText "33" ]
                                         ] []
                                       ]
-                                    , mkElement qn21
-                                      [ mkAttr qn16 [ mkText "34" ]
+                                    , mkelem_qn21
+                                      [ mkattr_qn16 [ mkText "34" ]
                                       ] []
                                     ]
-                                  , mkElement qn21
-                                    [ mkAttr qn16 [ mkText "35" ]
+                                  , mkelem_qn21
+                                    [ mkattr_qn16 [ mkText "35" ]
                                     ] []
                                   ]
-                                , mkElement qn21
-                                  [ mkAttr qn16 [ mkText "36" ]
+                                , mkelem_qn21
+                                  [ mkattr_qn16 [ mkText "36" ]
                                   ] []
                                 ]
-                              , mkElement qn21
-                                [ mkAttr qn16 [ mkText "37" ]
+                              , mkelem_qn21
+                                [ mkattr_qn16 [ mkText "37" ]
                                 ] []
                               ]
-                            , mkElement qn21
-                              [ mkAttr qn16 [ mkText "38" ]
+                            , mkelem_qn21
+                              [ mkattr_qn16 [ mkText "38" ]
                               ] []
                             ]
-                          , mkElement qn21
-                            [ mkAttr qn16 [ mkText "39" ]
+                          , mkelem_qn21
+                            [ mkattr_qn16 [ mkText "39" ]
                             ] []
                           ]
-                        , mkElement qn21
-                          [ mkAttr qn16 [ mkText "40" ]
+                        , mkelem_qn21
+                          [ mkattr_qn16 [ mkText "40" ]
                           ] []
                         ]
-                      , mkElement qn21
-                        [ mkAttr qn16 [ mkText "43" ]
+                      , mkelem_qn21
+                        [ mkattr_qn16 [ mkText "43" ]
                         ] []
                       ]
-                    , mkElement qn21
-                      [ mkAttr qn16 [ mkText "44" ]
+                    , mkelem_qn21
+                      [ mkattr_qn16 [ mkText "44" ]
                       ] []
                     ]
-                  , mkElement qn21
-                    [ mkAttr qn16 [ mkText "14" ]
+                  , mkelem_qn21
+                    [ mkattr_qn16 [ mkText "14" ]
                     ] []
                   ]
                 ]
@@ -1032,166 +1084,166 @@ relaxSchemaTree =
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "33" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "33" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "list"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "ns"
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "datatypeLibrary"
                       ]
-                    , mkElement qn7
-                      [ mkAttr qn24 [ mkText "anyURI" ]
-                      , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                    , mkelem_qn7
+                      [ mkattr_qn24 [ mkText "anyURI" ]
+                      , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 []
-                      [ mkElement qn12 []
-                        [ mkElement qn6 []
-                          [ mkElement qn19
-                            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 []
+                      [ mkelem_qn12 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn19
+                            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                             ] []
-                          , mkElement qn19
-                            [ mkAttr qn18 [ mkText "" ]
+                          , mkelem_qn19
+                            [ mkattr_qn18 [ mkText "" ]
                             ] []
                           ]
                         ]
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
                 ]
               ]
-            , mkElement qn15 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn21
-                    [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn15 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn21
+                    [ mkattr_qn16 [ mkText "16" ]
                     ] []
                   ]
                 ]
-              , mkElement qn20 []
-                [ mkElement qn6 []
-                  [ mkElement qn6 []
-                    [ mkElement qn6 []
-                      [ mkElement qn6 []
-                        [ mkElement qn6 []
-                          [ mkElement qn6 []
-                            [ mkElement qn6 []
-                              [ mkElement qn6 []
-                                [ mkElement qn6 []
-                                  [ mkElement qn6 []
-                                    [ mkElement qn6 []
-                                      [ mkElement qn6 []
-                                        [ mkElement qn6 []
-                                          [ mkElement qn6 []
-                                            [ mkElement qn6 []
-                                              [ mkElement qn6 []
-                                                [ mkElement qn6 []
-                                                  [ mkElement qn6 []
-                                                    [ mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "25" ]
+              , mkelem_qn20 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn6 []
+                      [ mkelem_qn6 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn6 []
+                            [ mkelem_qn6 []
+                              [ mkelem_qn6 []
+                                [ mkelem_qn6 []
+                                  [ mkelem_qn6 []
+                                    [ mkelem_qn6 []
+                                      [ mkelem_qn6 []
+                                        [ mkelem_qn6 []
+                                          [ mkelem_qn6 []
+                                            [ mkelem_qn6 []
+                                              [ mkelem_qn6 []
+                                                [ mkelem_qn6 []
+                                                  [ mkelem_qn6 []
+                                                    [ mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "25" ]
                                                       ] []
-                                                    , mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "26" ]
+                                                    , mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "26" ]
                                                       ] []
                                                     ]
-                                                  , mkElement qn21
-                                                    [ mkAttr qn16 [ mkText "27" ]
+                                                  , mkelem_qn21
+                                                    [ mkattr_qn16 [ mkText "27" ]
                                                     ] []
                                                   ]
-                                                , mkElement qn21
-                                                  [ mkAttr qn16 [ mkText "28" ]
+                                                , mkelem_qn21
+                                                  [ mkattr_qn16 [ mkText "28" ]
                                                   ] []
                                                 ]
-                                              , mkElement qn21
-                                                [ mkAttr qn16 [ mkText "29" ]
+                                              , mkelem_qn21
+                                                [ mkattr_qn16 [ mkText "29" ]
                                                 ] []
                                               ]
-                                            , mkElement qn21
-                                              [ mkAttr qn16 [ mkText "30" ]
+                                            , mkelem_qn21
+                                              [ mkattr_qn16 [ mkText "30" ]
                                               ] []
                                             ]
-                                          , mkElement qn21
-                                            [ mkAttr qn16 [ mkText "31" ]
+                                          , mkelem_qn21
+                                            [ mkattr_qn16 [ mkText "31" ]
                                             ] []
                                           ]
-                                        , mkElement qn21
-                                          [ mkAttr qn16 [ mkText "32" ]
+                                        , mkelem_qn21
+                                          [ mkattr_qn16 [ mkText "32" ]
                                           ] []
                                         ]
-                                      , mkElement qn21
-                                        [ mkAttr qn16 [ mkText "33" ]
+                                      , mkelem_qn21
+                                        [ mkattr_qn16 [ mkText "33" ]
                                         ] []
                                       ]
-                                    , mkElement qn21
-                                      [ mkAttr qn16 [ mkText "34" ]
+                                    , mkelem_qn21
+                                      [ mkattr_qn16 [ mkText "34" ]
                                       ] []
                                     ]
-                                  , mkElement qn21
-                                    [ mkAttr qn16 [ mkText "35" ]
+                                  , mkelem_qn21
+                                    [ mkattr_qn16 [ mkText "35" ]
                                     ] []
                                   ]
-                                , mkElement qn21
-                                  [ mkAttr qn16 [ mkText "36" ]
+                                , mkelem_qn21
+                                  [ mkattr_qn16 [ mkText "36" ]
                                   ] []
                                 ]
-                              , mkElement qn21
-                                [ mkAttr qn16 [ mkText "37" ]
+                              , mkelem_qn21
+                                [ mkattr_qn16 [ mkText "37" ]
                                 ] []
                               ]
-                            , mkElement qn21
-                              [ mkAttr qn16 [ mkText "38" ]
+                            , mkelem_qn21
+                              [ mkattr_qn16 [ mkText "38" ]
                               ] []
                             ]
-                          , mkElement qn21
-                            [ mkAttr qn16 [ mkText "39" ]
+                          , mkelem_qn21
+                            [ mkattr_qn16 [ mkText "39" ]
                             ] []
                           ]
-                        , mkElement qn21
-                          [ mkAttr qn16 [ mkText "40" ]
+                        , mkelem_qn21
+                          [ mkattr_qn16 [ mkText "40" ]
                           ] []
                         ]
-                      , mkElement qn21
-                        [ mkAttr qn16 [ mkText "43" ]
+                      , mkelem_qn21
+                        [ mkattr_qn16 [ mkText "43" ]
                         ] []
                       ]
-                    , mkElement qn21
-                      [ mkAttr qn16 [ mkText "44" ]
+                    , mkelem_qn21
+                      [ mkattr_qn16 [ mkText "44" ]
                       ] []
                     ]
-                  , mkElement qn21
-                    [ mkAttr qn16 [ mkText "14" ]
+                  , mkelem_qn21
+                    [ mkattr_qn16 [ mkText "14" ]
                     ] []
                   ]
                 ]
@@ -1199,166 +1251,166 @@ relaxSchemaTree =
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "32" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "32" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "oneOrMore"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "ns"
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "datatypeLibrary"
                       ]
-                    , mkElement qn7
-                      [ mkAttr qn24 [ mkText "anyURI" ]
-                      , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                    , mkelem_qn7
+                      [ mkattr_qn24 [ mkText "anyURI" ]
+                      , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 []
-                      [ mkElement qn12 []
-                        [ mkElement qn6 []
-                          [ mkElement qn19
-                            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 []
+                      [ mkelem_qn12 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn19
+                            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                             ] []
-                          , mkElement qn19
-                            [ mkAttr qn18 [ mkText "" ]
+                          , mkelem_qn19
+                            [ mkattr_qn18 [ mkText "" ]
                             ] []
                           ]
                         ]
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
                 ]
               ]
-            , mkElement qn15 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn21
-                    [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn15 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn21
+                    [ mkattr_qn16 [ mkText "16" ]
                     ] []
                   ]
                 ]
-              , mkElement qn20 []
-                [ mkElement qn6 []
-                  [ mkElement qn6 []
-                    [ mkElement qn6 []
-                      [ mkElement qn6 []
-                        [ mkElement qn6 []
-                          [ mkElement qn6 []
-                            [ mkElement qn6 []
-                              [ mkElement qn6 []
-                                [ mkElement qn6 []
-                                  [ mkElement qn6 []
-                                    [ mkElement qn6 []
-                                      [ mkElement qn6 []
-                                        [ mkElement qn6 []
-                                          [ mkElement qn6 []
-                                            [ mkElement qn6 []
-                                              [ mkElement qn6 []
-                                                [ mkElement qn6 []
-                                                  [ mkElement qn6 []
-                                                    [ mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "25" ]
+              , mkelem_qn20 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn6 []
+                      [ mkelem_qn6 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn6 []
+                            [ mkelem_qn6 []
+                              [ mkelem_qn6 []
+                                [ mkelem_qn6 []
+                                  [ mkelem_qn6 []
+                                    [ mkelem_qn6 []
+                                      [ mkelem_qn6 []
+                                        [ mkelem_qn6 []
+                                          [ mkelem_qn6 []
+                                            [ mkelem_qn6 []
+                                              [ mkelem_qn6 []
+                                                [ mkelem_qn6 []
+                                                  [ mkelem_qn6 []
+                                                    [ mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "25" ]
                                                       ] []
-                                                    , mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "26" ]
+                                                    , mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "26" ]
                                                       ] []
                                                     ]
-                                                  , mkElement qn21
-                                                    [ mkAttr qn16 [ mkText "27" ]
+                                                  , mkelem_qn21
+                                                    [ mkattr_qn16 [ mkText "27" ]
                                                     ] []
                                                   ]
-                                                , mkElement qn21
-                                                  [ mkAttr qn16 [ mkText "28" ]
+                                                , mkelem_qn21
+                                                  [ mkattr_qn16 [ mkText "28" ]
                                                   ] []
                                                 ]
-                                              , mkElement qn21
-                                                [ mkAttr qn16 [ mkText "29" ]
+                                              , mkelem_qn21
+                                                [ mkattr_qn16 [ mkText "29" ]
                                                 ] []
                                               ]
-                                            , mkElement qn21
-                                              [ mkAttr qn16 [ mkText "30" ]
+                                            , mkelem_qn21
+                                              [ mkattr_qn16 [ mkText "30" ]
                                               ] []
                                             ]
-                                          , mkElement qn21
-                                            [ mkAttr qn16 [ mkText "31" ]
+                                          , mkelem_qn21
+                                            [ mkattr_qn16 [ mkText "31" ]
                                             ] []
                                           ]
-                                        , mkElement qn21
-                                          [ mkAttr qn16 [ mkText "32" ]
+                                        , mkelem_qn21
+                                          [ mkattr_qn16 [ mkText "32" ]
                                           ] []
                                         ]
-                                      , mkElement qn21
-                                        [ mkAttr qn16 [ mkText "33" ]
+                                      , mkelem_qn21
+                                        [ mkattr_qn16 [ mkText "33" ]
                                         ] []
                                       ]
-                                    , mkElement qn21
-                                      [ mkAttr qn16 [ mkText "34" ]
+                                    , mkelem_qn21
+                                      [ mkattr_qn16 [ mkText "34" ]
                                       ] []
                                     ]
-                                  , mkElement qn21
-                                    [ mkAttr qn16 [ mkText "35" ]
+                                  , mkelem_qn21
+                                    [ mkattr_qn16 [ mkText "35" ]
                                     ] []
                                   ]
-                                , mkElement qn21
-                                  [ mkAttr qn16 [ mkText "36" ]
+                                , mkelem_qn21
+                                  [ mkattr_qn16 [ mkText "36" ]
                                   ] []
                                 ]
-                              , mkElement qn21
-                                [ mkAttr qn16 [ mkText "37" ]
+                              , mkelem_qn21
+                                [ mkattr_qn16 [ mkText "37" ]
                                 ] []
                               ]
-                            , mkElement qn21
-                              [ mkAttr qn16 [ mkText "38" ]
+                            , mkelem_qn21
+                              [ mkattr_qn16 [ mkText "38" ]
                               ] []
                             ]
-                          , mkElement qn21
-                            [ mkAttr qn16 [ mkText "39" ]
+                          , mkelem_qn21
+                            [ mkattr_qn16 [ mkText "39" ]
                             ] []
                           ]
-                        , mkElement qn21
-                          [ mkAttr qn16 [ mkText "40" ]
+                        , mkelem_qn21
+                          [ mkattr_qn16 [ mkText "40" ]
                           ] []
                         ]
-                      , mkElement qn21
-                        [ mkAttr qn16 [ mkText "43" ]
+                      , mkelem_qn21
+                        [ mkattr_qn16 [ mkText "43" ]
                         ] []
                       ]
-                    , mkElement qn21
-                      [ mkAttr qn16 [ mkText "44" ]
+                    , mkelem_qn21
+                      [ mkattr_qn16 [ mkText "44" ]
                       ] []
                     ]
-                  , mkElement qn21
-                    [ mkAttr qn16 [ mkText "14" ]
+                  , mkelem_qn21
+                    [ mkattr_qn16 [ mkText "14" ]
                     ] []
                   ]
                 ]
@@ -1366,166 +1418,166 @@ relaxSchemaTree =
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "31" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "31" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "zeroOrMore"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "ns"
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "datatypeLibrary"
                       ]
-                    , mkElement qn7
-                      [ mkAttr qn24 [ mkText "anyURI" ]
-                      , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                    , mkelem_qn7
+                      [ mkattr_qn24 [ mkText "anyURI" ]
+                      , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 []
-                      [ mkElement qn12 []
-                        [ mkElement qn6 []
-                          [ mkElement qn19
-                            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 []
+                      [ mkelem_qn12 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn19
+                            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                             ] []
-                          , mkElement qn19
-                            [ mkAttr qn18 [ mkText "" ]
+                          , mkelem_qn19
+                            [ mkattr_qn18 [ mkText "" ]
                             ] []
                           ]
                         ]
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
                 ]
               ]
-            , mkElement qn15 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn21
-                    [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn15 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn21
+                    [ mkattr_qn16 [ mkText "16" ]
                     ] []
                   ]
                 ]
-              , mkElement qn20 []
-                [ mkElement qn6 []
-                  [ mkElement qn6 []
-                    [ mkElement qn6 []
-                      [ mkElement qn6 []
-                        [ mkElement qn6 []
-                          [ mkElement qn6 []
-                            [ mkElement qn6 []
-                              [ mkElement qn6 []
-                                [ mkElement qn6 []
-                                  [ mkElement qn6 []
-                                    [ mkElement qn6 []
-                                      [ mkElement qn6 []
-                                        [ mkElement qn6 []
-                                          [ mkElement qn6 []
-                                            [ mkElement qn6 []
-                                              [ mkElement qn6 []
-                                                [ mkElement qn6 []
-                                                  [ mkElement qn6 []
-                                                    [ mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "25" ]
+              , mkelem_qn20 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn6 []
+                      [ mkelem_qn6 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn6 []
+                            [ mkelem_qn6 []
+                              [ mkelem_qn6 []
+                                [ mkelem_qn6 []
+                                  [ mkelem_qn6 []
+                                    [ mkelem_qn6 []
+                                      [ mkelem_qn6 []
+                                        [ mkelem_qn6 []
+                                          [ mkelem_qn6 []
+                                            [ mkelem_qn6 []
+                                              [ mkelem_qn6 []
+                                                [ mkelem_qn6 []
+                                                  [ mkelem_qn6 []
+                                                    [ mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "25" ]
                                                       ] []
-                                                    , mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "26" ]
+                                                    , mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "26" ]
                                                       ] []
                                                     ]
-                                                  , mkElement qn21
-                                                    [ mkAttr qn16 [ mkText "27" ]
+                                                  , mkelem_qn21
+                                                    [ mkattr_qn16 [ mkText "27" ]
                                                     ] []
                                                   ]
-                                                , mkElement qn21
-                                                  [ mkAttr qn16 [ mkText "28" ]
+                                                , mkelem_qn21
+                                                  [ mkattr_qn16 [ mkText "28" ]
                                                   ] []
                                                 ]
-                                              , mkElement qn21
-                                                [ mkAttr qn16 [ mkText "29" ]
+                                              , mkelem_qn21
+                                                [ mkattr_qn16 [ mkText "29" ]
                                                 ] []
                                               ]
-                                            , mkElement qn21
-                                              [ mkAttr qn16 [ mkText "30" ]
+                                            , mkelem_qn21
+                                              [ mkattr_qn16 [ mkText "30" ]
                                               ] []
                                             ]
-                                          , mkElement qn21
-                                            [ mkAttr qn16 [ mkText "31" ]
+                                          , mkelem_qn21
+                                            [ mkattr_qn16 [ mkText "31" ]
                                             ] []
                                           ]
-                                        , mkElement qn21
-                                          [ mkAttr qn16 [ mkText "32" ]
+                                        , mkelem_qn21
+                                          [ mkattr_qn16 [ mkText "32" ]
                                           ] []
                                         ]
-                                      , mkElement qn21
-                                        [ mkAttr qn16 [ mkText "33" ]
+                                      , mkelem_qn21
+                                        [ mkattr_qn16 [ mkText "33" ]
                                         ] []
                                       ]
-                                    , mkElement qn21
-                                      [ mkAttr qn16 [ mkText "34" ]
+                                    , mkelem_qn21
+                                      [ mkattr_qn16 [ mkText "34" ]
                                       ] []
                                     ]
-                                  , mkElement qn21
-                                    [ mkAttr qn16 [ mkText "35" ]
+                                  , mkelem_qn21
+                                    [ mkattr_qn16 [ mkText "35" ]
                                     ] []
                                   ]
-                                , mkElement qn21
-                                  [ mkAttr qn16 [ mkText "36" ]
+                                , mkelem_qn21
+                                  [ mkattr_qn16 [ mkText "36" ]
                                   ] []
                                 ]
-                              , mkElement qn21
-                                [ mkAttr qn16 [ mkText "37" ]
+                              , mkelem_qn21
+                                [ mkattr_qn16 [ mkText "37" ]
                                 ] []
                               ]
-                            , mkElement qn21
-                              [ mkAttr qn16 [ mkText "38" ]
+                            , mkelem_qn21
+                              [ mkattr_qn16 [ mkText "38" ]
                               ] []
                             ]
-                          , mkElement qn21
-                            [ mkAttr qn16 [ mkText "39" ]
+                          , mkelem_qn21
+                            [ mkattr_qn16 [ mkText "39" ]
                             ] []
                           ]
-                        , mkElement qn21
-                          [ mkAttr qn16 [ mkText "40" ]
+                        , mkelem_qn21
+                          [ mkattr_qn16 [ mkText "40" ]
                           ] []
                         ]
-                      , mkElement qn21
-                        [ mkAttr qn16 [ mkText "43" ]
+                      , mkelem_qn21
+                        [ mkattr_qn16 [ mkText "43" ]
                         ] []
                       ]
-                    , mkElement qn21
-                      [ mkAttr qn16 [ mkText "44" ]
+                    , mkelem_qn21
+                      [ mkattr_qn16 [ mkText "44" ]
                       ] []
                     ]
-                  , mkElement qn21
-                    [ mkAttr qn16 [ mkText "14" ]
+                  , mkelem_qn21
+                    [ mkattr_qn16 [ mkText "14" ]
                     ] []
                   ]
                 ]
@@ -1533,166 +1585,166 @@ relaxSchemaTree =
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "30" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "30" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "optional"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "ns"
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "datatypeLibrary"
                       ]
-                    , mkElement qn7
-                      [ mkAttr qn24 [ mkText "anyURI" ]
-                      , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                    , mkelem_qn7
+                      [ mkattr_qn24 [ mkText "anyURI" ]
+                      , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 []
-                      [ mkElement qn12 []
-                        [ mkElement qn6 []
-                          [ mkElement qn19
-                            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 []
+                      [ mkelem_qn12 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn19
+                            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                             ] []
-                          , mkElement qn19
-                            [ mkAttr qn18 [ mkText "" ]
+                          , mkelem_qn19
+                            [ mkattr_qn18 [ mkText "" ]
                             ] []
                           ]
                         ]
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
                 ]
               ]
-            , mkElement qn15 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn21
-                    [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn15 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn21
+                    [ mkattr_qn16 [ mkText "16" ]
                     ] []
                   ]
                 ]
-              , mkElement qn20 []
-                [ mkElement qn6 []
-                  [ mkElement qn6 []
-                    [ mkElement qn6 []
-                      [ mkElement qn6 []
-                        [ mkElement qn6 []
-                          [ mkElement qn6 []
-                            [ mkElement qn6 []
-                              [ mkElement qn6 []
-                                [ mkElement qn6 []
-                                  [ mkElement qn6 []
-                                    [ mkElement qn6 []
-                                      [ mkElement qn6 []
-                                        [ mkElement qn6 []
-                                          [ mkElement qn6 []
-                                            [ mkElement qn6 []
-                                              [ mkElement qn6 []
-                                                [ mkElement qn6 []
-                                                  [ mkElement qn6 []
-                                                    [ mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "25" ]
+              , mkelem_qn20 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn6 []
+                      [ mkelem_qn6 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn6 []
+                            [ mkelem_qn6 []
+                              [ mkelem_qn6 []
+                                [ mkelem_qn6 []
+                                  [ mkelem_qn6 []
+                                    [ mkelem_qn6 []
+                                      [ mkelem_qn6 []
+                                        [ mkelem_qn6 []
+                                          [ mkelem_qn6 []
+                                            [ mkelem_qn6 []
+                                              [ mkelem_qn6 []
+                                                [ mkelem_qn6 []
+                                                  [ mkelem_qn6 []
+                                                    [ mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "25" ]
                                                       ] []
-                                                    , mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "26" ]
+                                                    , mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "26" ]
                                                       ] []
                                                     ]
-                                                  , mkElement qn21
-                                                    [ mkAttr qn16 [ mkText "27" ]
+                                                  , mkelem_qn21
+                                                    [ mkattr_qn16 [ mkText "27" ]
                                                     ] []
                                                   ]
-                                                , mkElement qn21
-                                                  [ mkAttr qn16 [ mkText "28" ]
+                                                , mkelem_qn21
+                                                  [ mkattr_qn16 [ mkText "28" ]
                                                   ] []
                                                 ]
-                                              , mkElement qn21
-                                                [ mkAttr qn16 [ mkText "29" ]
+                                              , mkelem_qn21
+                                                [ mkattr_qn16 [ mkText "29" ]
                                                 ] []
                                               ]
-                                            , mkElement qn21
-                                              [ mkAttr qn16 [ mkText "30" ]
+                                            , mkelem_qn21
+                                              [ mkattr_qn16 [ mkText "30" ]
                                               ] []
                                             ]
-                                          , mkElement qn21
-                                            [ mkAttr qn16 [ mkText "31" ]
+                                          , mkelem_qn21
+                                            [ mkattr_qn16 [ mkText "31" ]
                                             ] []
                                           ]
-                                        , mkElement qn21
-                                          [ mkAttr qn16 [ mkText "32" ]
+                                        , mkelem_qn21
+                                          [ mkattr_qn16 [ mkText "32" ]
                                           ] []
                                         ]
-                                      , mkElement qn21
-                                        [ mkAttr qn16 [ mkText "33" ]
+                                      , mkelem_qn21
+                                        [ mkattr_qn16 [ mkText "33" ]
                                         ] []
                                       ]
-                                    , mkElement qn21
-                                      [ mkAttr qn16 [ mkText "34" ]
+                                    , mkelem_qn21
+                                      [ mkattr_qn16 [ mkText "34" ]
                                       ] []
                                     ]
-                                  , mkElement qn21
-                                    [ mkAttr qn16 [ mkText "35" ]
+                                  , mkelem_qn21
+                                    [ mkattr_qn16 [ mkText "35" ]
                                     ] []
                                   ]
-                                , mkElement qn21
-                                  [ mkAttr qn16 [ mkText "36" ]
+                                , mkelem_qn21
+                                  [ mkattr_qn16 [ mkText "36" ]
                                   ] []
                                 ]
-                              , mkElement qn21
-                                [ mkAttr qn16 [ mkText "37" ]
+                              , mkelem_qn21
+                                [ mkattr_qn16 [ mkText "37" ]
                                 ] []
                               ]
-                            , mkElement qn21
-                              [ mkAttr qn16 [ mkText "38" ]
+                            , mkelem_qn21
+                              [ mkattr_qn16 [ mkText "38" ]
                               ] []
                             ]
-                          , mkElement qn21
-                            [ mkAttr qn16 [ mkText "39" ]
+                          , mkelem_qn21
+                            [ mkattr_qn16 [ mkText "39" ]
                             ] []
                           ]
-                        , mkElement qn21
-                          [ mkAttr qn16 [ mkText "40" ]
+                        , mkelem_qn21
+                          [ mkattr_qn16 [ mkText "40" ]
                           ] []
                         ]
-                      , mkElement qn21
-                        [ mkAttr qn16 [ mkText "43" ]
+                      , mkelem_qn21
+                        [ mkattr_qn16 [ mkText "43" ]
                         ] []
                       ]
-                    , mkElement qn21
-                      [ mkAttr qn16 [ mkText "44" ]
+                    , mkelem_qn21
+                      [ mkattr_qn16 [ mkText "44" ]
                       ] []
                     ]
-                  , mkElement qn21
-                    [ mkAttr qn16 [ mkText "14" ]
+                  , mkelem_qn21
+                    [ mkattr_qn16 [ mkText "14" ]
                     ] []
                   ]
                 ]
@@ -1700,166 +1752,166 @@ relaxSchemaTree =
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "29" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "29" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "choice"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "ns"
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "datatypeLibrary"
                       ]
-                    , mkElement qn7
-                      [ mkAttr qn24 [ mkText "anyURI" ]
-                      , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                    , mkelem_qn7
+                      [ mkattr_qn24 [ mkText "anyURI" ]
+                      , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 []
-                      [ mkElement qn12 []
-                        [ mkElement qn6 []
-                          [ mkElement qn19
-                            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 []
+                      [ mkelem_qn12 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn19
+                            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                             ] []
-                          , mkElement qn19
-                            [ mkAttr qn18 [ mkText "" ]
+                          , mkelem_qn19
+                            [ mkattr_qn18 [ mkText "" ]
                             ] []
                           ]
                         ]
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
                 ]
               ]
-            , mkElement qn15 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn21
-                    [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn15 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn21
+                    [ mkattr_qn16 [ mkText "16" ]
                     ] []
                   ]
                 ]
-              , mkElement qn20 []
-                [ mkElement qn6 []
-                  [ mkElement qn6 []
-                    [ mkElement qn6 []
-                      [ mkElement qn6 []
-                        [ mkElement qn6 []
-                          [ mkElement qn6 []
-                            [ mkElement qn6 []
-                              [ mkElement qn6 []
-                                [ mkElement qn6 []
-                                  [ mkElement qn6 []
-                                    [ mkElement qn6 []
-                                      [ mkElement qn6 []
-                                        [ mkElement qn6 []
-                                          [ mkElement qn6 []
-                                            [ mkElement qn6 []
-                                              [ mkElement qn6 []
-                                                [ mkElement qn6 []
-                                                  [ mkElement qn6 []
-                                                    [ mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "25" ]
+              , mkelem_qn20 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn6 []
+                      [ mkelem_qn6 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn6 []
+                            [ mkelem_qn6 []
+                              [ mkelem_qn6 []
+                                [ mkelem_qn6 []
+                                  [ mkelem_qn6 []
+                                    [ mkelem_qn6 []
+                                      [ mkelem_qn6 []
+                                        [ mkelem_qn6 []
+                                          [ mkelem_qn6 []
+                                            [ mkelem_qn6 []
+                                              [ mkelem_qn6 []
+                                                [ mkelem_qn6 []
+                                                  [ mkelem_qn6 []
+                                                    [ mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "25" ]
                                                       ] []
-                                                    , mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "26" ]
+                                                    , mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "26" ]
                                                       ] []
                                                     ]
-                                                  , mkElement qn21
-                                                    [ mkAttr qn16 [ mkText "27" ]
+                                                  , mkelem_qn21
+                                                    [ mkattr_qn16 [ mkText "27" ]
                                                     ] []
                                                   ]
-                                                , mkElement qn21
-                                                  [ mkAttr qn16 [ mkText "28" ]
+                                                , mkelem_qn21
+                                                  [ mkattr_qn16 [ mkText "28" ]
                                                   ] []
                                                 ]
-                                              , mkElement qn21
-                                                [ mkAttr qn16 [ mkText "29" ]
+                                              , mkelem_qn21
+                                                [ mkattr_qn16 [ mkText "29" ]
                                                 ] []
                                               ]
-                                            , mkElement qn21
-                                              [ mkAttr qn16 [ mkText "30" ]
+                                            , mkelem_qn21
+                                              [ mkattr_qn16 [ mkText "30" ]
                                               ] []
                                             ]
-                                          , mkElement qn21
-                                            [ mkAttr qn16 [ mkText "31" ]
+                                          , mkelem_qn21
+                                            [ mkattr_qn16 [ mkText "31" ]
                                             ] []
                                           ]
-                                        , mkElement qn21
-                                          [ mkAttr qn16 [ mkText "32" ]
+                                        , mkelem_qn21
+                                          [ mkattr_qn16 [ mkText "32" ]
                                           ] []
                                         ]
-                                      , mkElement qn21
-                                        [ mkAttr qn16 [ mkText "33" ]
+                                      , mkelem_qn21
+                                        [ mkattr_qn16 [ mkText "33" ]
                                         ] []
                                       ]
-                                    , mkElement qn21
-                                      [ mkAttr qn16 [ mkText "34" ]
+                                    , mkelem_qn21
+                                      [ mkattr_qn16 [ mkText "34" ]
                                       ] []
                                     ]
-                                  , mkElement qn21
-                                    [ mkAttr qn16 [ mkText "35" ]
+                                  , mkelem_qn21
+                                    [ mkattr_qn16 [ mkText "35" ]
                                     ] []
                                   ]
-                                , mkElement qn21
-                                  [ mkAttr qn16 [ mkText "36" ]
+                                , mkelem_qn21
+                                  [ mkattr_qn16 [ mkText "36" ]
                                   ] []
                                 ]
-                              , mkElement qn21
-                                [ mkAttr qn16 [ mkText "37" ]
+                              , mkelem_qn21
+                                [ mkattr_qn16 [ mkText "37" ]
                                 ] []
                               ]
-                            , mkElement qn21
-                              [ mkAttr qn16 [ mkText "38" ]
+                            , mkelem_qn21
+                              [ mkattr_qn16 [ mkText "38" ]
                               ] []
                             ]
-                          , mkElement qn21
-                            [ mkAttr qn16 [ mkText "39" ]
+                          , mkelem_qn21
+                            [ mkattr_qn16 [ mkText "39" ]
                             ] []
                           ]
-                        , mkElement qn21
-                          [ mkAttr qn16 [ mkText "40" ]
+                        , mkelem_qn21
+                          [ mkattr_qn16 [ mkText "40" ]
                           ] []
                         ]
-                      , mkElement qn21
-                        [ mkAttr qn16 [ mkText "43" ]
+                      , mkelem_qn21
+                        [ mkattr_qn16 [ mkText "43" ]
                         ] []
                       ]
-                    , mkElement qn21
-                      [ mkAttr qn16 [ mkText "44" ]
+                    , mkelem_qn21
+                      [ mkattr_qn16 [ mkText "44" ]
                       ] []
                     ]
-                  , mkElement qn21
-                    [ mkAttr qn16 [ mkText "14" ]
+                  , mkelem_qn21
+                    [ mkattr_qn16 [ mkText "14" ]
                     ] []
                   ]
                 ]
@@ -1867,166 +1919,166 @@ relaxSchemaTree =
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "28" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "28" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "interleave"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "ns"
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "datatypeLibrary"
                       ]
-                    , mkElement qn7
-                      [ mkAttr qn24 [ mkText "anyURI" ]
-                      , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                    , mkelem_qn7
+                      [ mkattr_qn24 [ mkText "anyURI" ]
+                      , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 []
-                      [ mkElement qn12 []
-                        [ mkElement qn6 []
-                          [ mkElement qn19
-                            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 []
+                      [ mkelem_qn12 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn19
+                            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                             ] []
-                          , mkElement qn19
-                            [ mkAttr qn18 [ mkText "" ]
+                          , mkelem_qn19
+                            [ mkattr_qn18 [ mkText "" ]
                             ] []
                           ]
                         ]
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
                 ]
               ]
-            , mkElement qn15 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn21
-                    [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn15 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn21
+                    [ mkattr_qn16 [ mkText "16" ]
                     ] []
                   ]
                 ]
-              , mkElement qn20 []
-                [ mkElement qn6 []
-                  [ mkElement qn6 []
-                    [ mkElement qn6 []
-                      [ mkElement qn6 []
-                        [ mkElement qn6 []
-                          [ mkElement qn6 []
-                            [ mkElement qn6 []
-                              [ mkElement qn6 []
-                                [ mkElement qn6 []
-                                  [ mkElement qn6 []
-                                    [ mkElement qn6 []
-                                      [ mkElement qn6 []
-                                        [ mkElement qn6 []
-                                          [ mkElement qn6 []
-                                            [ mkElement qn6 []
-                                              [ mkElement qn6 []
-                                                [ mkElement qn6 []
-                                                  [ mkElement qn6 []
-                                                    [ mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "25" ]
+              , mkelem_qn20 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn6 []
+                      [ mkelem_qn6 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn6 []
+                            [ mkelem_qn6 []
+                              [ mkelem_qn6 []
+                                [ mkelem_qn6 []
+                                  [ mkelem_qn6 []
+                                    [ mkelem_qn6 []
+                                      [ mkelem_qn6 []
+                                        [ mkelem_qn6 []
+                                          [ mkelem_qn6 []
+                                            [ mkelem_qn6 []
+                                              [ mkelem_qn6 []
+                                                [ mkelem_qn6 []
+                                                  [ mkelem_qn6 []
+                                                    [ mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "25" ]
                                                       ] []
-                                                    , mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "26" ]
+                                                    , mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "26" ]
                                                       ] []
                                                     ]
-                                                  , mkElement qn21
-                                                    [ mkAttr qn16 [ mkText "27" ]
+                                                  , mkelem_qn21
+                                                    [ mkattr_qn16 [ mkText "27" ]
                                                     ] []
                                                   ]
-                                                , mkElement qn21
-                                                  [ mkAttr qn16 [ mkText "28" ]
+                                                , mkelem_qn21
+                                                  [ mkattr_qn16 [ mkText "28" ]
                                                   ] []
                                                 ]
-                                              , mkElement qn21
-                                                [ mkAttr qn16 [ mkText "29" ]
+                                              , mkelem_qn21
+                                                [ mkattr_qn16 [ mkText "29" ]
                                                 ] []
                                               ]
-                                            , mkElement qn21
-                                              [ mkAttr qn16 [ mkText "30" ]
+                                            , mkelem_qn21
+                                              [ mkattr_qn16 [ mkText "30" ]
                                               ] []
                                             ]
-                                          , mkElement qn21
-                                            [ mkAttr qn16 [ mkText "31" ]
+                                          , mkelem_qn21
+                                            [ mkattr_qn16 [ mkText "31" ]
                                             ] []
                                           ]
-                                        , mkElement qn21
-                                          [ mkAttr qn16 [ mkText "32" ]
+                                        , mkelem_qn21
+                                          [ mkattr_qn16 [ mkText "32" ]
                                           ] []
                                         ]
-                                      , mkElement qn21
-                                        [ mkAttr qn16 [ mkText "33" ]
+                                      , mkelem_qn21
+                                        [ mkattr_qn16 [ mkText "33" ]
                                         ] []
                                       ]
-                                    , mkElement qn21
-                                      [ mkAttr qn16 [ mkText "34" ]
+                                    , mkelem_qn21
+                                      [ mkattr_qn16 [ mkText "34" ]
                                       ] []
                                     ]
-                                  , mkElement qn21
-                                    [ mkAttr qn16 [ mkText "35" ]
+                                  , mkelem_qn21
+                                    [ mkattr_qn16 [ mkText "35" ]
                                     ] []
                                   ]
-                                , mkElement qn21
-                                  [ mkAttr qn16 [ mkText "36" ]
+                                , mkelem_qn21
+                                  [ mkattr_qn16 [ mkText "36" ]
                                   ] []
                                 ]
-                              , mkElement qn21
-                                [ mkAttr qn16 [ mkText "37" ]
+                              , mkelem_qn21
+                                [ mkattr_qn16 [ mkText "37" ]
                                 ] []
                               ]
-                            , mkElement qn21
-                              [ mkAttr qn16 [ mkText "38" ]
+                            , mkelem_qn21
+                              [ mkattr_qn16 [ mkText "38" ]
                               ] []
                             ]
-                          , mkElement qn21
-                            [ mkAttr qn16 [ mkText "39" ]
+                          , mkelem_qn21
+                            [ mkattr_qn16 [ mkText "39" ]
                             ] []
                           ]
-                        , mkElement qn21
-                          [ mkAttr qn16 [ mkText "40" ]
+                        , mkelem_qn21
+                          [ mkattr_qn16 [ mkText "40" ]
                           ] []
                         ]
-                      , mkElement qn21
-                        [ mkAttr qn16 [ mkText "43" ]
+                      , mkelem_qn21
+                        [ mkattr_qn16 [ mkText "43" ]
                         ] []
                       ]
-                    , mkElement qn21
-                      [ mkAttr qn16 [ mkText "44" ]
+                    , mkelem_qn21
+                      [ mkattr_qn16 [ mkText "44" ]
                       ] []
                     ]
-                  , mkElement qn21
-                    [ mkAttr qn16 [ mkText "14" ]
+                  , mkelem_qn21
+                    [ mkattr_qn16 [ mkText "14" ]
                     ] []
                   ]
                 ]
@@ -2034,166 +2086,166 @@ relaxSchemaTree =
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "27" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "27" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "group"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "ns"
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "datatypeLibrary"
                       ]
-                    , mkElement qn7
-                      [ mkAttr qn24 [ mkText "anyURI" ]
-                      , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                    , mkelem_qn7
+                      [ mkattr_qn24 [ mkText "anyURI" ]
+                      , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 []
-                      [ mkElement qn12 []
-                        [ mkElement qn6 []
-                          [ mkElement qn19
-                            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 []
+                      [ mkelem_qn12 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn19
+                            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                             ] []
-                          , mkElement qn19
-                            [ mkAttr qn18 [ mkText "" ]
+                          , mkelem_qn19
+                            [ mkattr_qn18 [ mkText "" ]
                             ] []
                           ]
                         ]
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
                 ]
               ]
-            , mkElement qn15 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn21
-                    [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn15 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn21
+                    [ mkattr_qn16 [ mkText "16" ]
                     ] []
                   ]
                 ]
-              , mkElement qn20 []
-                [ mkElement qn6 []
-                  [ mkElement qn6 []
-                    [ mkElement qn6 []
-                      [ mkElement qn6 []
-                        [ mkElement qn6 []
-                          [ mkElement qn6 []
-                            [ mkElement qn6 []
-                              [ mkElement qn6 []
-                                [ mkElement qn6 []
-                                  [ mkElement qn6 []
-                                    [ mkElement qn6 []
-                                      [ mkElement qn6 []
-                                        [ mkElement qn6 []
-                                          [ mkElement qn6 []
-                                            [ mkElement qn6 []
-                                              [ mkElement qn6 []
-                                                [ mkElement qn6 []
-                                                  [ mkElement qn6 []
-                                                    [ mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "25" ]
+              , mkelem_qn20 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn6 []
+                      [ mkelem_qn6 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn6 []
+                            [ mkelem_qn6 []
+                              [ mkelem_qn6 []
+                                [ mkelem_qn6 []
+                                  [ mkelem_qn6 []
+                                    [ mkelem_qn6 []
+                                      [ mkelem_qn6 []
+                                        [ mkelem_qn6 []
+                                          [ mkelem_qn6 []
+                                            [ mkelem_qn6 []
+                                              [ mkelem_qn6 []
+                                                [ mkelem_qn6 []
+                                                  [ mkelem_qn6 []
+                                                    [ mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "25" ]
                                                       ] []
-                                                    , mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "26" ]
+                                                    , mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "26" ]
                                                       ] []
                                                     ]
-                                                  , mkElement qn21
-                                                    [ mkAttr qn16 [ mkText "27" ]
+                                                  , mkelem_qn21
+                                                    [ mkattr_qn16 [ mkText "27" ]
                                                     ] []
                                                   ]
-                                                , mkElement qn21
-                                                  [ mkAttr qn16 [ mkText "28" ]
+                                                , mkelem_qn21
+                                                  [ mkattr_qn16 [ mkText "28" ]
                                                   ] []
                                                 ]
-                                              , mkElement qn21
-                                                [ mkAttr qn16 [ mkText "29" ]
+                                              , mkelem_qn21
+                                                [ mkattr_qn16 [ mkText "29" ]
                                                 ] []
                                               ]
-                                            , mkElement qn21
-                                              [ mkAttr qn16 [ mkText "30" ]
+                                            , mkelem_qn21
+                                              [ mkattr_qn16 [ mkText "30" ]
                                               ] []
                                             ]
-                                          , mkElement qn21
-                                            [ mkAttr qn16 [ mkText "31" ]
+                                          , mkelem_qn21
+                                            [ mkattr_qn16 [ mkText "31" ]
                                             ] []
                                           ]
-                                        , mkElement qn21
-                                          [ mkAttr qn16 [ mkText "32" ]
+                                        , mkelem_qn21
+                                          [ mkattr_qn16 [ mkText "32" ]
                                           ] []
                                         ]
-                                      , mkElement qn21
-                                        [ mkAttr qn16 [ mkText "33" ]
+                                      , mkelem_qn21
+                                        [ mkattr_qn16 [ mkText "33" ]
                                         ] []
                                       ]
-                                    , mkElement qn21
-                                      [ mkAttr qn16 [ mkText "34" ]
+                                    , mkelem_qn21
+                                      [ mkattr_qn16 [ mkText "34" ]
                                       ] []
                                     ]
-                                  , mkElement qn21
-                                    [ mkAttr qn16 [ mkText "35" ]
+                                  , mkelem_qn21
+                                    [ mkattr_qn16 [ mkText "35" ]
                                     ] []
                                   ]
-                                , mkElement qn21
-                                  [ mkAttr qn16 [ mkText "36" ]
+                                , mkelem_qn21
+                                  [ mkattr_qn16 [ mkText "36" ]
                                   ] []
                                 ]
-                              , mkElement qn21
-                                [ mkAttr qn16 [ mkText "37" ]
+                              , mkelem_qn21
+                                [ mkattr_qn16 [ mkText "37" ]
                                 ] []
                               ]
-                            , mkElement qn21
-                              [ mkAttr qn16 [ mkText "38" ]
+                            , mkelem_qn21
+                              [ mkattr_qn16 [ mkText "38" ]
                               ] []
                             ]
-                          , mkElement qn21
-                            [ mkAttr qn16 [ mkText "39" ]
+                          , mkelem_qn21
+                            [ mkattr_qn16 [ mkText "39" ]
                             ] []
                           ]
-                        , mkElement qn21
-                          [ mkAttr qn16 [ mkText "40" ]
+                        , mkelem_qn21
+                          [ mkattr_qn16 [ mkText "40" ]
                           ] []
                         ]
-                      , mkElement qn21
-                        [ mkAttr qn16 [ mkText "43" ]
+                      , mkelem_qn21
+                        [ mkattr_qn16 [ mkText "43" ]
                         ] []
                       ]
-                    , mkElement qn21
-                      [ mkAttr qn16 [ mkText "44" ]
+                    , mkelem_qn21
+                      [ mkattr_qn16 [ mkText "44" ]
                       ] []
                     ]
-                  , mkElement qn21
-                    [ mkAttr qn16 [ mkText "14" ]
+                  , mkelem_qn21
+                    [ mkattr_qn16 [ mkText "14" ]
                     ] []
                   ]
                 ]
@@ -2201,210 +2253,210 @@ relaxSchemaTree =
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "26" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "26" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "attribute"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn14 []
-                  [ mkElement qn6 []
-                    [ mkElement qn11 [] []
-                    , mkElement qn5 []
-                      [ mkElement qn17
-                        [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn14 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn11 [] []
+                    , mkelem_qn5 []
+                      [ mkelem_qn17
+                        [ mkattr_qn18 [ mkText "" ]
                         ]
                         [ mkText "ns"
                         ]
-                      , mkElement qn23 [] []
+                      , mkelem_qn23 [] []
                       ]
                     ]
-                  , mkElement qn6 []
-                    [ mkElement qn11 [] []
-                    , mkElement qn5 []
-                      [ mkElement qn17
-                        [ mkAttr qn18 [ mkText "" ]
+                  , mkelem_qn6 []
+                    [ mkelem_qn11 [] []
+                    , mkelem_qn5 []
+                      [ mkelem_qn17
+                        [ mkattr_qn18 [ mkText "" ]
                         ]
                         [ mkText "datatypeLibrary"
                         ]
-                      , mkElement qn7
-                        [ mkAttr qn24 [ mkText "anyURI" ]
-                        , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                      , mkelem_qn7
+                        [ mkattr_qn24 [ mkText "anyURI" ]
+                        , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                         ] []
                       ]
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn20 []
-                    [ mkElement qn5 []
-                      [ mkElement qn4 []
-                        [ mkElement qn12 []
-                          [ mkElement qn6 []
-                            [ mkElement qn19
-                              [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn20 []
+                    [ mkelem_qn5 []
+                      [ mkelem_qn4 []
+                        [ mkelem_qn12 []
+                          [ mkelem_qn6 []
+                            [ mkelem_qn19
+                              [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                               ] []
-                            , mkElement qn19
-                              [ mkAttr qn18 [ mkText "" ]
+                            , mkelem_qn19
+                              [ mkattr_qn18 [ mkText "" ]
                               ] []
                             ]
                           ]
                         ]
-                      , mkElement qn23 [] []
+                      , mkelem_qn23 [] []
                       ]
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn5 []
-                  [ mkElement qn17
-                    [ mkAttr qn18 [ mkText "" ]
+              , mkelem_qn6 []
+                [ mkelem_qn5 []
+                  [ mkelem_qn17
+                    [ mkattr_qn18 [ mkText "" ]
                     ]
                     [ mkText "name"
                     ]
-                  , mkElement qn7
-                    [ mkAttr qn24 [ mkText "QName" ]
-                    , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                  , mkelem_qn7
+                    [ mkattr_qn24 [ mkText "QName" ]
+                    , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                     ] []
                   ]
-                , mkElement qn15 []
-                  [ mkElement qn6 []
-                    [ mkElement qn11 [] []
-                    , mkElement qn20 []
-                      [ mkElement qn21
-                        [ mkAttr qn16 [ mkText "16" ]
+                , mkelem_qn15 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn11 [] []
+                    , mkelem_qn20 []
+                      [ mkelem_qn21
+                        [ mkattr_qn16 [ mkText "16" ]
                         ] []
                       ]
                     ]
-                  , mkElement qn6 []
-                    [ mkElement qn6 []
-                      [ mkElement qn6 []
-                        [ mkElement qn21
-                          [ mkAttr qn16 [ mkText "18" ]
+                  , mkelem_qn6 []
+                    [ mkelem_qn6 []
+                      [ mkelem_qn6 []
+                        [ mkelem_qn21
+                          [ mkattr_qn16 [ mkText "18" ]
                           ] []
-                        , mkElement qn21
-                          [ mkAttr qn16 [ mkText "19" ]
+                        , mkelem_qn21
+                          [ mkattr_qn16 [ mkText "19" ]
                           ] []
                         ]
-                      , mkElement qn21
-                        [ mkAttr qn16 [ mkText "20" ]
+                      , mkelem_qn21
+                        [ mkattr_qn16 [ mkText "20" ]
                         ] []
                       ]
-                    , mkElement qn21
-                      [ mkAttr qn16 [ mkText "21" ]
+                    , mkelem_qn21
+                      [ mkattr_qn16 [ mkText "21" ]
                       ] []
                     ]
                   ]
                 ]
               ]
-            , mkElement qn15 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn21
-                    [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn15 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn21
+                    [ mkattr_qn16 [ mkText "16" ]
                     ] []
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn6 []
-                  [ mkElement qn6 []
-                    [ mkElement qn6 []
-                      [ mkElement qn6 []
-                        [ mkElement qn6 []
-                          [ mkElement qn6 []
-                            [ mkElement qn6 []
-                              [ mkElement qn6 []
-                                [ mkElement qn6 []
-                                  [ mkElement qn6 []
-                                    [ mkElement qn6 []
-                                      [ mkElement qn6 []
-                                        [ mkElement qn6 []
-                                          [ mkElement qn6 []
-                                            [ mkElement qn6 []
-                                              [ mkElement qn6 []
-                                                [ mkElement qn6 []
-                                                  [ mkElement qn6 []
-                                                    [ mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "25" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn6 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn6 []
+                      [ mkelem_qn6 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn6 []
+                            [ mkelem_qn6 []
+                              [ mkelem_qn6 []
+                                [ mkelem_qn6 []
+                                  [ mkelem_qn6 []
+                                    [ mkelem_qn6 []
+                                      [ mkelem_qn6 []
+                                        [ mkelem_qn6 []
+                                          [ mkelem_qn6 []
+                                            [ mkelem_qn6 []
+                                              [ mkelem_qn6 []
+                                                [ mkelem_qn6 []
+                                                  [ mkelem_qn6 []
+                                                    [ mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "25" ]
                                                       ] []
-                                                    , mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "26" ]
+                                                    , mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "26" ]
                                                       ] []
                                                     ]
-                                                  , mkElement qn21
-                                                    [ mkAttr qn16 [ mkText "27" ]
+                                                  , mkelem_qn21
+                                                    [ mkattr_qn16 [ mkText "27" ]
                                                     ] []
                                                   ]
-                                                , mkElement qn21
-                                                  [ mkAttr qn16 [ mkText "28" ]
+                                                , mkelem_qn21
+                                                  [ mkattr_qn16 [ mkText "28" ]
                                                   ] []
                                                 ]
-                                              , mkElement qn21
-                                                [ mkAttr qn16 [ mkText "29" ]
+                                              , mkelem_qn21
+                                                [ mkattr_qn16 [ mkText "29" ]
                                                 ] []
                                               ]
-                                            , mkElement qn21
-                                              [ mkAttr qn16 [ mkText "30" ]
+                                            , mkelem_qn21
+                                              [ mkattr_qn16 [ mkText "30" ]
                                               ] []
                                             ]
-                                          , mkElement qn21
-                                            [ mkAttr qn16 [ mkText "31" ]
+                                          , mkelem_qn21
+                                            [ mkattr_qn16 [ mkText "31" ]
                                             ] []
                                           ]
-                                        , mkElement qn21
-                                          [ mkAttr qn16 [ mkText "32" ]
+                                        , mkelem_qn21
+                                          [ mkattr_qn16 [ mkText "32" ]
                                           ] []
                                         ]
-                                      , mkElement qn21
-                                        [ mkAttr qn16 [ mkText "33" ]
+                                      , mkelem_qn21
+                                        [ mkattr_qn16 [ mkText "33" ]
                                         ] []
                                       ]
-                                    , mkElement qn21
-                                      [ mkAttr qn16 [ mkText "34" ]
+                                    , mkelem_qn21
+                                      [ mkattr_qn16 [ mkText "34" ]
                                       ] []
                                     ]
-                                  , mkElement qn21
-                                    [ mkAttr qn16 [ mkText "35" ]
+                                  , mkelem_qn21
+                                    [ mkattr_qn16 [ mkText "35" ]
                                     ] []
                                   ]
-                                , mkElement qn21
-                                  [ mkAttr qn16 [ mkText "36" ]
+                                , mkelem_qn21
+                                  [ mkattr_qn16 [ mkText "36" ]
                                   ] []
                                 ]
-                              , mkElement qn21
-                                [ mkAttr qn16 [ mkText "37" ]
+                              , mkelem_qn21
+                                [ mkattr_qn16 [ mkText "37" ]
                                 ] []
                               ]
-                            , mkElement qn21
-                              [ mkAttr qn16 [ mkText "38" ]
+                            , mkelem_qn21
+                              [ mkattr_qn16 [ mkText "38" ]
                               ] []
                             ]
-                          , mkElement qn21
-                            [ mkAttr qn16 [ mkText "39" ]
+                          , mkelem_qn21
+                            [ mkattr_qn16 [ mkText "39" ]
                             ] []
                           ]
-                        , mkElement qn21
-                          [ mkAttr qn16 [ mkText "40" ]
+                        , mkelem_qn21
+                          [ mkattr_qn16 [ mkText "40" ]
                           ] []
                         ]
-                      , mkElement qn21
-                        [ mkAttr qn16 [ mkText "43" ]
+                      , mkelem_qn21
+                        [ mkattr_qn16 [ mkText "43" ]
                         ] []
                       ]
-                    , mkElement qn21
-                      [ mkAttr qn16 [ mkText "44" ]
+                    , mkelem_qn21
+                      [ mkattr_qn16 [ mkText "44" ]
                       ] []
                     ]
-                  , mkElement qn21
-                    [ mkAttr qn16 [ mkText "14" ]
+                  , mkelem_qn21
+                    [ mkattr_qn16 [ mkText "14" ]
                     ] []
                   ]
                 ]
@@ -2412,209 +2464,209 @@ relaxSchemaTree =
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "25" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "25" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "element"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn6 []
-                [ mkElement qn5 []
-                  [ mkElement qn17
-                    [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn6 []
+                [ mkelem_qn5 []
+                  [ mkelem_qn17
+                    [ mkattr_qn18 [ mkText "" ]
                     ]
                     [ mkText "name"
                     ]
-                  , mkElement qn7
-                    [ mkAttr qn24 [ mkText "QName" ]
-                    , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                  , mkelem_qn7
+                    [ mkattr_qn24 [ mkText "QName" ]
+                    , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                     ] []
                   ]
-                , mkElement qn15 []
-                  [ mkElement qn6 []
-                    [ mkElement qn11 [] []
-                    , mkElement qn20 []
-                      [ mkElement qn21
-                        [ mkAttr qn16 [ mkText "16" ]
+                , mkelem_qn15 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn11 [] []
+                    , mkelem_qn20 []
+                      [ mkelem_qn21
+                        [ mkattr_qn16 [ mkText "16" ]
                         ] []
                       ]
                     ]
-                  , mkElement qn6 []
-                    [ mkElement qn6 []
-                      [ mkElement qn6 []
-                        [ mkElement qn21
-                          [ mkAttr qn16 [ mkText "18" ]
+                  , mkelem_qn6 []
+                    [ mkelem_qn6 []
+                      [ mkelem_qn6 []
+                        [ mkelem_qn21
+                          [ mkattr_qn16 [ mkText "18" ]
                           ] []
-                        , mkElement qn21
-                          [ mkAttr qn16 [ mkText "19" ]
+                        , mkelem_qn21
+                          [ mkattr_qn16 [ mkText "19" ]
                           ] []
                         ]
-                      , mkElement qn21
-                        [ mkAttr qn16 [ mkText "20" ]
+                      , mkelem_qn21
+                        [ mkattr_qn16 [ mkText "20" ]
                         ] []
                       ]
-                    , mkElement qn21
-                      [ mkAttr qn16 [ mkText "21" ]
+                    , mkelem_qn21
+                      [ mkattr_qn16 [ mkText "21" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn14 []
-                [ mkElement qn14 []
-                  [ mkElement qn6 []
-                    [ mkElement qn11 [] []
-                    , mkElement qn5 []
-                      [ mkElement qn17
-                        [ mkAttr qn18 [ mkText "" ]
+              , mkelem_qn14 []
+                [ mkelem_qn14 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn11 [] []
+                    , mkelem_qn5 []
+                      [ mkelem_qn17
+                        [ mkattr_qn18 [ mkText "" ]
                         ]
                         [ mkText "ns"
                         ]
-                      , mkElement qn23 [] []
+                      , mkelem_qn23 [] []
                       ]
                     ]
-                  , mkElement qn6 []
-                    [ mkElement qn11 [] []
-                    , mkElement qn5 []
-                      [ mkElement qn17
-                        [ mkAttr qn18 [ mkText "" ]
+                  , mkelem_qn6 []
+                    [ mkelem_qn11 [] []
+                    , mkelem_qn5 []
+                      [ mkelem_qn17
+                        [ mkattr_qn18 [ mkText "" ]
                         ]
                         [ mkText "datatypeLibrary"
                         ]
-                      , mkElement qn7
-                        [ mkAttr qn24 [ mkText "anyURI" ]
-                        , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                      , mkelem_qn7
+                        [ mkattr_qn24 [ mkText "anyURI" ]
+                        , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                         ] []
                       ]
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn20 []
-                    [ mkElement qn5 []
-                      [ mkElement qn4 []
-                        [ mkElement qn12 []
-                          [ mkElement qn6 []
-                            [ mkElement qn19
-                              [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn20 []
+                    [ mkelem_qn5 []
+                      [ mkelem_qn4 []
+                        [ mkelem_qn12 []
+                          [ mkelem_qn6 []
+                            [ mkelem_qn19
+                              [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                               ] []
-                            , mkElement qn19
-                              [ mkAttr qn18 [ mkText "" ]
+                            , mkelem_qn19
+                              [ mkattr_qn18 [ mkText "" ]
                               ] []
                             ]
                           ]
                         ]
-                      , mkElement qn23 [] []
+                      , mkelem_qn23 [] []
                       ]
                     ]
                   ]
                 ]
               ]
-            , mkElement qn15 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn21
-                    [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn15 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn21
+                    [ mkattr_qn16 [ mkText "16" ]
                     ] []
                   ]
                 ]
-              , mkElement qn20 []
-                [ mkElement qn6 []
-                  [ mkElement qn6 []
-                    [ mkElement qn6 []
-                      [ mkElement qn6 []
-                        [ mkElement qn6 []
-                          [ mkElement qn6 []
-                            [ mkElement qn6 []
-                              [ mkElement qn6 []
-                                [ mkElement qn6 []
-                                  [ mkElement qn6 []
-                                    [ mkElement qn6 []
-                                      [ mkElement qn6 []
-                                        [ mkElement qn6 []
-                                          [ mkElement qn6 []
-                                            [ mkElement qn6 []
-                                              [ mkElement qn6 []
-                                                [ mkElement qn6 []
-                                                  [ mkElement qn6 []
-                                                    [ mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "25" ]
+              , mkelem_qn20 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn6 []
+                      [ mkelem_qn6 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn6 []
+                            [ mkelem_qn6 []
+                              [ mkelem_qn6 []
+                                [ mkelem_qn6 []
+                                  [ mkelem_qn6 []
+                                    [ mkelem_qn6 []
+                                      [ mkelem_qn6 []
+                                        [ mkelem_qn6 []
+                                          [ mkelem_qn6 []
+                                            [ mkelem_qn6 []
+                                              [ mkelem_qn6 []
+                                                [ mkelem_qn6 []
+                                                  [ mkelem_qn6 []
+                                                    [ mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "25" ]
                                                       ] []
-                                                    , mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "26" ]
+                                                    , mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "26" ]
                                                       ] []
                                                     ]
-                                                  , mkElement qn21
-                                                    [ mkAttr qn16 [ mkText "27" ]
+                                                  , mkelem_qn21
+                                                    [ mkattr_qn16 [ mkText "27" ]
                                                     ] []
                                                   ]
-                                                , mkElement qn21
-                                                  [ mkAttr qn16 [ mkText "28" ]
+                                                , mkelem_qn21
+                                                  [ mkattr_qn16 [ mkText "28" ]
                                                   ] []
                                                 ]
-                                              , mkElement qn21
-                                                [ mkAttr qn16 [ mkText "29" ]
+                                              , mkelem_qn21
+                                                [ mkattr_qn16 [ mkText "29" ]
                                                 ] []
                                               ]
-                                            , mkElement qn21
-                                              [ mkAttr qn16 [ mkText "30" ]
+                                            , mkelem_qn21
+                                              [ mkattr_qn16 [ mkText "30" ]
                                               ] []
                                             ]
-                                          , mkElement qn21
-                                            [ mkAttr qn16 [ mkText "31" ]
+                                          , mkelem_qn21
+                                            [ mkattr_qn16 [ mkText "31" ]
                                             ] []
                                           ]
-                                        , mkElement qn21
-                                          [ mkAttr qn16 [ mkText "32" ]
+                                        , mkelem_qn21
+                                          [ mkattr_qn16 [ mkText "32" ]
                                           ] []
                                         ]
-                                      , mkElement qn21
-                                        [ mkAttr qn16 [ mkText "33" ]
+                                      , mkelem_qn21
+                                        [ mkattr_qn16 [ mkText "33" ]
                                         ] []
                                       ]
-                                    , mkElement qn21
-                                      [ mkAttr qn16 [ mkText "34" ]
+                                    , mkelem_qn21
+                                      [ mkattr_qn16 [ mkText "34" ]
                                       ] []
                                     ]
-                                  , mkElement qn21
-                                    [ mkAttr qn16 [ mkText "35" ]
+                                  , mkelem_qn21
+                                    [ mkattr_qn16 [ mkText "35" ]
                                     ] []
                                   ]
-                                , mkElement qn21
-                                  [ mkAttr qn16 [ mkText "36" ]
+                                , mkelem_qn21
+                                  [ mkattr_qn16 [ mkText "36" ]
                                   ] []
                                 ]
-                              , mkElement qn21
-                                [ mkAttr qn16 [ mkText "37" ]
+                              , mkelem_qn21
+                                [ mkattr_qn16 [ mkText "37" ]
                                 ] []
                               ]
-                            , mkElement qn21
-                              [ mkAttr qn16 [ mkText "38" ]
+                            , mkelem_qn21
+                              [ mkattr_qn16 [ mkText "38" ]
                               ] []
                             ]
-                          , mkElement qn21
-                            [ mkAttr qn16 [ mkText "39" ]
+                          , mkelem_qn21
+                            [ mkattr_qn16 [ mkText "39" ]
                             ] []
                           ]
-                        , mkElement qn21
-                          [ mkAttr qn16 [ mkText "40" ]
+                        , mkelem_qn21
+                          [ mkattr_qn16 [ mkText "40" ]
                           ] []
                         ]
-                      , mkElement qn21
-                        [ mkAttr qn16 [ mkText "43" ]
+                      , mkelem_qn21
+                        [ mkattr_qn16 [ mkText "43" ]
                         ] []
                       ]
-                    , mkElement qn21
-                      [ mkAttr qn16 [ mkText "44" ]
+                    , mkelem_qn21
+                      [ mkattr_qn16 [ mkText "44" ]
                       ] []
                     ]
-                  , mkElement qn21
-                    [ mkAttr qn16 [ mkText "14" ]
+                  , mkelem_qn21
+                    [ mkattr_qn16 [ mkText "14" ]
                     ] []
                   ]
                 ]
@@ -2622,101 +2674,101 @@ relaxSchemaTree =
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "24" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "24" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "include"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn5 []
-                [ mkElement qn17
-                  [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn5 []
+                [ mkelem_qn17
+                  [ mkattr_qn18 [ mkText "" ]
                   ]
                   [ mkText "href"
                   ]
-                , mkElement qn7
-                  [ mkAttr qn24 [ mkText "anyURI" ]
-                  , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                , mkelem_qn7
+                  [ mkattr_qn24 [ mkText "anyURI" ]
+                  , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                   ] []
                 ]
-              , mkElement qn14 []
-                [ mkElement qn14 []
-                  [ mkElement qn6 []
-                    [ mkElement qn11 [] []
-                    , mkElement qn5 []
-                      [ mkElement qn17
-                        [ mkAttr qn18 [ mkText "" ]
+              , mkelem_qn14 []
+                [ mkelem_qn14 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn11 [] []
+                    , mkelem_qn5 []
+                      [ mkelem_qn17
+                        [ mkattr_qn18 [ mkText "" ]
                         ]
                         [ mkText "ns"
                         ]
-                      , mkElement qn23 [] []
+                      , mkelem_qn23 [] []
                       ]
                     ]
-                  , mkElement qn6 []
-                    [ mkElement qn11 [] []
-                    , mkElement qn5 []
-                      [ mkElement qn17
-                        [ mkAttr qn18 [ mkText "" ]
+                  , mkelem_qn6 []
+                    [ mkelem_qn11 [] []
+                    , mkelem_qn5 []
+                      [ mkelem_qn17
+                        [ mkattr_qn18 [ mkText "" ]
                         ]
                         [ mkText "datatypeLibrary"
                         ]
-                      , mkElement qn7
-                        [ mkAttr qn24 [ mkText "anyURI" ]
-                        , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                      , mkelem_qn7
+                        [ mkattr_qn24 [ mkText "anyURI" ]
+                        , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                         ] []
                       ]
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn20 []
-                    [ mkElement qn5 []
-                      [ mkElement qn4 []
-                        [ mkElement qn12 []
-                          [ mkElement qn6 []
-                            [ mkElement qn19
-                              [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn20 []
+                    [ mkelem_qn5 []
+                      [ mkelem_qn4 []
+                        [ mkelem_qn12 []
+                          [ mkelem_qn6 []
+                            [ mkelem_qn19
+                              [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                               ] []
-                            , mkElement qn19
-                              [ mkAttr qn18 [ mkText "" ]
+                            , mkelem_qn19
+                              [ mkattr_qn18 [ mkText "" ]
                               ] []
                             ]
                           ]
                         ]
-                      , mkElement qn23 [] []
+                      , mkelem_qn23 [] []
                       ]
                     ]
                   ]
                 ]
               ]
-            , mkElement qn15 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn21
-                    [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn15 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn21
+                    [ mkattr_qn16 [ mkText "16" ]
                     ] []
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn6 []
-                    [ mkElement qn6 []
-                      [ mkElement qn21
-                        [ mkAttr qn16 [ mkText "11" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn6 []
+                      [ mkelem_qn21
+                        [ mkattr_qn16 [ mkText "11" ]
                         ] []
-                      , mkElement qn21
-                        [ mkAttr qn16 [ mkText "10" ]
+                      , mkelem_qn21
+                        [ mkattr_qn16 [ mkText "10" ]
                         ] []
                       ]
-                    , mkElement qn21
-                      [ mkAttr qn16 [ mkText "22" ]
+                    , mkelem_qn21
+                      [ mkattr_qn16 [ mkText "22" ]
                       ] []
                     ]
                   ]
@@ -2725,93 +2777,93 @@ relaxSchemaTree =
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "23" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "23" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "div"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "ns"
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "datatypeLibrary"
                       ]
-                    , mkElement qn7
-                      [ mkAttr qn24 [ mkText "anyURI" ]
-                      , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                    , mkelem_qn7
+                      [ mkattr_qn24 [ mkText "anyURI" ]
+                      , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 []
-                      [ mkElement qn12 []
-                        [ mkElement qn6 []
-                          [ mkElement qn19
-                            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 []
+                      [ mkelem_qn12 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn19
+                            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                             ] []
-                          , mkElement qn19
-                            [ mkAttr qn18 [ mkText "" ]
+                          , mkelem_qn19
+                            [ mkattr_qn18 [ mkText "" ]
                             ] []
                           ]
                         ]
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
                 ]
               ]
-            , mkElement qn15 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn21
-                    [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn15 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn21
+                    [ mkattr_qn16 [ mkText "16" ]
                     ] []
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn6 []
-                    [ mkElement qn6 []
-                      [ mkElement qn6 []
-                        [ mkElement qn21
-                          [ mkAttr qn16 [ mkText "11" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn6 []
+                      [ mkelem_qn6 []
+                        [ mkelem_qn21
+                          [ mkattr_qn16 [ mkText "11" ]
                           ] []
-                        , mkElement qn21
-                          [ mkAttr qn16 [ mkText "10" ]
+                        , mkelem_qn21
+                          [ mkattr_qn16 [ mkText "10" ]
                           ] []
                         ]
-                      , mkElement qn21
-                        [ mkAttr qn16 [ mkText "23" ]
+                      , mkelem_qn21
+                        [ mkattr_qn16 [ mkText "23" ]
                         ] []
                       ]
-                    , mkElement qn21
-                      [ mkAttr qn16 [ mkText "24" ]
+                    , mkelem_qn21
+                      [ mkattr_qn16 [ mkText "24" ]
                       ] []
                     ]
                   ]
@@ -2820,88 +2872,88 @@ relaxSchemaTree =
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "22" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "22" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "div"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "ns"
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "datatypeLibrary"
                       ]
-                    , mkElement qn7
-                      [ mkAttr qn24 [ mkText "anyURI" ]
-                      , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                    , mkelem_qn7
+                      [ mkattr_qn24 [ mkText "anyURI" ]
+                      , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 []
-                      [ mkElement qn12 []
-                        [ mkElement qn6 []
-                          [ mkElement qn19
-                            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 []
+                      [ mkelem_qn12 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn19
+                            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                             ] []
-                          , mkElement qn19
-                            [ mkAttr qn18 [ mkText "" ]
+                          , mkelem_qn19
+                            [ mkattr_qn18 [ mkText "" ]
                             ] []
                           ]
                         ]
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
                 ]
               ]
-            , mkElement qn15 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn21
-                    [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn15 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn21
+                    [ mkattr_qn16 [ mkText "16" ]
                     ] []
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn6 []
-                    [ mkElement qn6 []
-                      [ mkElement qn21
-                        [ mkAttr qn16 [ mkText "11" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn6 []
+                      [ mkelem_qn21
+                        [ mkattr_qn16 [ mkText "11" ]
                         ] []
-                      , mkElement qn21
-                        [ mkAttr qn16 [ mkText "10" ]
+                      , mkelem_qn21
+                        [ mkattr_qn16 [ mkText "10" ]
                         ] []
                       ]
-                    , mkElement qn21
-                      [ mkAttr qn16 [ mkText "22" ]
+                    , mkelem_qn21
+                      [ mkattr_qn16 [ mkText "22" ]
                       ] []
                     ]
                   ]
@@ -2910,91 +2962,91 @@ relaxSchemaTree =
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "21" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "21" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "choice"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "ns"
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "datatypeLibrary"
                       ]
-                    , mkElement qn7
-                      [ mkAttr qn24 [ mkText "anyURI" ]
-                      , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                    , mkelem_qn7
+                      [ mkattr_qn24 [ mkText "anyURI" ]
+                      , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 []
-                      [ mkElement qn12 []
-                        [ mkElement qn6 []
-                          [ mkElement qn19
-                            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 []
+                      [ mkelem_qn12 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn19
+                            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                             ] []
-                          , mkElement qn19
-                            [ mkAttr qn18 [ mkText "" ]
+                          , mkelem_qn19
+                            [ mkattr_qn18 [ mkText "" ]
                             ] []
                           ]
                         ]
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
                 ]
               ]
-            , mkElement qn15 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn21
-                    [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn15 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn21
+                    [ mkattr_qn16 [ mkText "16" ]
                     ] []
                   ]
                 ]
-              , mkElement qn20 []
-                [ mkElement qn6 []
-                  [ mkElement qn6 []
-                    [ mkElement qn6 []
-                      [ mkElement qn21
-                        [ mkAttr qn16 [ mkText "18" ]
+              , mkelem_qn20 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn6 []
+                      [ mkelem_qn21
+                        [ mkattr_qn16 [ mkText "18" ]
                         ] []
-                      , mkElement qn21
-                        [ mkAttr qn16 [ mkText "19" ]
+                      , mkelem_qn21
+                        [ mkattr_qn16 [ mkText "19" ]
                         ] []
                       ]
-                    , mkElement qn21
-                      [ mkAttr qn16 [ mkText "20" ]
+                    , mkelem_qn21
+                      [ mkattr_qn16 [ mkText "20" ]
                       ] []
                     ]
-                  , mkElement qn21
-                    [ mkAttr qn16 [ mkText "21" ]
+                  , mkelem_qn21
+                    [ mkattr_qn16 [ mkText "21" ]
                     ] []
                   ]
                 ]
@@ -3002,372 +3054,372 @@ relaxSchemaTree =
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "20" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "20" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "nsName"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "ns"
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "datatypeLibrary"
                       ]
-                    , mkElement qn7
-                      [ mkAttr qn24 [ mkText "anyURI" ]
-                      , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                    , mkelem_qn7
+                      [ mkattr_qn24 [ mkText "anyURI" ]
+                      , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 []
-                      [ mkElement qn12 []
-                        [ mkElement qn6 []
-                          [ mkElement qn19
-                            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 []
+                      [ mkelem_qn12 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn19
+                            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                             ] []
-                          , mkElement qn19
-                            [ mkAttr qn18 [ mkText "" ]
+                          , mkelem_qn19
+                            [ mkattr_qn18 [ mkText "" ]
                             ] []
                           ]
                         ]
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
                 ]
               ]
-            , mkElement qn15 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn21
-                    [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn15 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn21
+                    [ mkattr_qn16 [ mkText "16" ]
                     ] []
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn21
-                  [ mkAttr qn16 [ mkText "17" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn21
+                  [ mkattr_qn16 [ mkText "17" ]
                   ] []
                 ]
               ]
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "19" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "19" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "anyName"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "ns"
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "datatypeLibrary"
                       ]
-                    , mkElement qn7
-                      [ mkAttr qn24 [ mkText "anyURI" ]
-                      , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                    , mkelem_qn7
+                      [ mkattr_qn24 [ mkText "anyURI" ]
+                      , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 []
-                      [ mkElement qn12 []
-                        [ mkElement qn6 []
-                          [ mkElement qn19
-                            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 []
+                      [ mkelem_qn12 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn19
+                            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                             ] []
-                          , mkElement qn19
-                            [ mkAttr qn18 [ mkText "" ]
+                          , mkelem_qn19
+                            [ mkattr_qn18 [ mkText "" ]
                             ] []
                           ]
                         ]
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
                 ]
               ]
-            , mkElement qn15 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn21
-                    [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn15 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn21
+                    [ mkattr_qn16 [ mkText "16" ]
                     ] []
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn21
-                  [ mkAttr qn16 [ mkText "17" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn21
+                  [ mkattr_qn16 [ mkText "17" ]
                   ] []
                 ]
               ]
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "18" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "18" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "name"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "ns"
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "datatypeLibrary"
                       ]
-                    , mkElement qn7
-                      [ mkAttr qn24 [ mkText "anyURI" ]
-                      , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                    , mkelem_qn7
+                      [ mkattr_qn24 [ mkText "anyURI" ]
+                      , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 []
-                      [ mkElement qn12 []
-                        [ mkElement qn6 []
-                          [ mkElement qn19
-                            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 []
+                      [ mkelem_qn12 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn19
+                            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                             ] []
-                          , mkElement qn19
-                            [ mkAttr qn18 [ mkText "" ]
+                          , mkelem_qn19
+                            [ mkattr_qn18 [ mkText "" ]
                             ] []
                           ]
                         ]
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
                 ]
               ]
-            , mkElement qn7
-              [ mkAttr qn24 [ mkText "QName" ]
-              , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+            , mkelem_qn7
+              [ mkattr_qn24 [ mkText "QName" ]
+              , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
               ] []
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "17" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "17" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "except"
             ]
-          , mkElement qn15 []
-            [ mkElement qn6 []
-              [ mkElement qn11 [] []
-              , mkElement qn20 []
-                [ mkElement qn21
-                  [ mkAttr qn16 [ mkText "16" ]
+          , mkelem_qn15 []
+            [ mkelem_qn6 []
+              [ mkelem_qn11 [] []
+              , mkelem_qn20 []
+                [ mkelem_qn21
+                  [ mkattr_qn16 [ mkText "16" ]
                   ] []
                 ]
               ]
-            , mkElement qn20 []
-              [ mkElement qn6 []
-                [ mkElement qn6 []
-                  [ mkElement qn6 []
-                    [ mkElement qn21
-                      [ mkAttr qn16 [ mkText "18" ]
+            , mkelem_qn20 []
+              [ mkelem_qn6 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn21
+                      [ mkattr_qn16 [ mkText "18" ]
                       ] []
-                    , mkElement qn21
-                      [ mkAttr qn16 [ mkText "19" ]
+                    , mkelem_qn21
+                      [ mkattr_qn16 [ mkText "19" ]
                       ] []
                     ]
-                  , mkElement qn21
-                    [ mkAttr qn16 [ mkText "20" ]
+                  , mkelem_qn21
+                    [ mkattr_qn16 [ mkText "20" ]
                     ] []
                   ]
-                , mkElement qn21
-                  [ mkAttr qn16 [ mkText "21" ]
+                , mkelem_qn21
+                  [ mkattr_qn16 [ mkText "21" ]
                   ] []
                 ]
               ]
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "16" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "16" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn4 []
-            [ mkElement qn12 []
-              [ mkElement qn19
-                [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn4 []
+            [ mkelem_qn12 []
+              [ mkelem_qn19
+                [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                 ] []
               ]
             ]
-          , mkElement qn6 []
-            [ mkElement qn11 [] []
-            , mkElement qn20 []
-              [ mkElement qn6 []
-                [ mkElement qn6 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 [] []
-                    , mkElement qn23 [] []
+          , mkelem_qn6 []
+            [ mkelem_qn11 [] []
+            , mkelem_qn20 []
+              [ mkelem_qn6 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 [] []
+                    , mkelem_qn23 [] []
                     ]
-                  , mkElement qn23 [] []
+                  , mkelem_qn23 [] []
                   ]
-                , mkElement qn21
-                  [ mkAttr qn16 [ mkText "0" ]
+                , mkelem_qn21
+                  [ mkattr_qn16 [ mkText "0" ]
                   ] []
                 ]
               ]
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "0" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "0" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn4 [] []
-          , mkElement qn6 []
-            [ mkElement qn11 [] []
-            , mkElement qn20 []
-              [ mkElement qn6 []
-                [ mkElement qn6 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 [] []
-                    , mkElement qn23 [] []
+        [ mkelem_qn10 []
+          [ mkelem_qn4 [] []
+          , mkelem_qn6 []
+            [ mkelem_qn11 [] []
+            , mkelem_qn20 []
+              [ mkelem_qn6 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 [] []
+                    , mkelem_qn23 [] []
                     ]
-                  , mkElement qn23 [] []
+                  , mkelem_qn23 [] []
                   ]
-                , mkElement qn21
-                  [ mkAttr qn16 [ mkText "0" ]
+                , mkelem_qn21
+                  [ mkattr_qn16 [ mkText "0" ]
                   ] []
                 ]
               ]
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "10" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "10" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "define"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn5 []
-                  [ mkElement qn17
-                    [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn5 []
+                  [ mkelem_qn17
+                    [ mkattr_qn18 [ mkText "" ]
                     ]
                     [ mkText "name"
                     ]
-                  , mkElement qn7
-                    [ mkAttr qn24 [ mkText "NCName" ]
-                    , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                  , mkelem_qn7
+                    [ mkattr_qn24 [ mkText "NCName" ]
+                    , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                     ] []
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "combine"
                       ]
-                    , mkElement qn6 []
-                      [ mkElement qn25
-                        [ mkAttr qn1 [ mkText "http://www.w3.org/XML/1998/namespace" ]
-                        , mkAttr qn3 [ mkText "http://relaxng.org/ns/structure/1.0" ]
-                        , mkAttr qn2 [ mkText "file:///home/uwe/haskell/hxt/curr/src/Text/XML/HXT/RelaxNG/schema2hs/SchemaGrammar.rng" ]
-                        , mkAttr qn8 [ mkText "" ]
-                        , mkAttr qn24 [ mkText "token" ]
-                        , mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+                    , mkelem_qn6 []
+                      [ mkelem_qn25
+                        [ mkattr_qn1 [ mkText "http://www.w3.org/XML/1998/namespace" ]
+                        , mkattr_qn3 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+                        , mkattr_qn2 [ mkText "file:///home/theo/haskell/hxt/hxt-relaxng/src/Text/XML/HXT/RelaxNG/schema2hs/SchemaGrammar.rng" ]
+                        , mkattr_qn8 [ mkText "" ]
+                        , mkattr_qn24 [ mkText "token" ]
+                        , mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                         ]
                         [ mkText "choice"
                         ]
-                      , mkElement qn25
-                        [ mkAttr qn1 [ mkText "http://www.w3.org/XML/1998/namespace" ]
-                        , mkAttr qn3 [ mkText "http://relaxng.org/ns/structure/1.0" ]
-                        , mkAttr qn2 [ mkText "file:///home/uwe/haskell/hxt/curr/src/Text/XML/HXT/RelaxNG/schema2hs/SchemaGrammar.rng" ]
-                        , mkAttr qn8 [ mkText "" ]
-                        , mkAttr qn24 [ mkText "token" ]
-                        , mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+                      , mkelem_qn25
+                        [ mkattr_qn1 [ mkText "http://www.w3.org/XML/1998/namespace" ]
+                        , mkattr_qn3 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+                        , mkattr_qn2 [ mkText "file:///home/theo/haskell/hxt/hxt-relaxng/src/Text/XML/HXT/RelaxNG/schema2hs/SchemaGrammar.rng" ]
+                        , mkattr_qn8 [ mkText "" ]
+                        , mkattr_qn24 [ mkText "token" ]
+                        , mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                         ]
                         [ mkText "interleave"
                         ]
@@ -3375,157 +3427,157 @@ relaxSchemaTree =
                     ]
                   ]
                 ]
-              , mkElement qn14 []
-                [ mkElement qn14 []
-                  [ mkElement qn6 []
-                    [ mkElement qn11 [] []
-                    , mkElement qn5 []
-                      [ mkElement qn17
-                        [ mkAttr qn18 [ mkText "" ]
+              , mkelem_qn14 []
+                [ mkelem_qn14 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn11 [] []
+                    , mkelem_qn5 []
+                      [ mkelem_qn17
+                        [ mkattr_qn18 [ mkText "" ]
                         ]
                         [ mkText "ns"
                         ]
-                      , mkElement qn23 [] []
+                      , mkelem_qn23 [] []
                       ]
                     ]
-                  , mkElement qn6 []
-                    [ mkElement qn11 [] []
-                    , mkElement qn5 []
-                      [ mkElement qn17
-                        [ mkAttr qn18 [ mkText "" ]
+                  , mkelem_qn6 []
+                    [ mkelem_qn11 [] []
+                    , mkelem_qn5 []
+                      [ mkelem_qn17
+                        [ mkattr_qn18 [ mkText "" ]
                         ]
                         [ mkText "datatypeLibrary"
                         ]
-                      , mkElement qn7
-                        [ mkAttr qn24 [ mkText "anyURI" ]
-                        , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                      , mkelem_qn7
+                        [ mkattr_qn24 [ mkText "anyURI" ]
+                        , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                         ] []
                       ]
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn20 []
-                    [ mkElement qn5 []
-                      [ mkElement qn4 []
-                        [ mkElement qn12 []
-                          [ mkElement qn6 []
-                            [ mkElement qn19
-                              [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn20 []
+                    [ mkelem_qn5 []
+                      [ mkelem_qn4 []
+                        [ mkelem_qn12 []
+                          [ mkelem_qn6 []
+                            [ mkelem_qn19
+                              [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                               ] []
-                            , mkElement qn19
-                              [ mkAttr qn18 [ mkText "" ]
+                            , mkelem_qn19
+                              [ mkattr_qn18 [ mkText "" ]
                               ] []
                             ]
                           ]
                         ]
-                      , mkElement qn23 [] []
+                      , mkelem_qn23 [] []
                       ]
                     ]
                   ]
                 ]
               ]
-            , mkElement qn15 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn21
-                    [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn15 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn21
+                    [ mkattr_qn16 [ mkText "16" ]
                     ] []
                   ]
                 ]
-              , mkElement qn20 []
-                [ mkElement qn6 []
-                  [ mkElement qn6 []
-                    [ mkElement qn6 []
-                      [ mkElement qn6 []
-                        [ mkElement qn6 []
-                          [ mkElement qn6 []
-                            [ mkElement qn6 []
-                              [ mkElement qn6 []
-                                [ mkElement qn6 []
-                                  [ mkElement qn6 []
-                                    [ mkElement qn6 []
-                                      [ mkElement qn6 []
-                                        [ mkElement qn6 []
-                                          [ mkElement qn6 []
-                                            [ mkElement qn6 []
-                                              [ mkElement qn6 []
-                                                [ mkElement qn6 []
-                                                  [ mkElement qn6 []
-                                                    [ mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "25" ]
+              , mkelem_qn20 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn6 []
+                      [ mkelem_qn6 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn6 []
+                            [ mkelem_qn6 []
+                              [ mkelem_qn6 []
+                                [ mkelem_qn6 []
+                                  [ mkelem_qn6 []
+                                    [ mkelem_qn6 []
+                                      [ mkelem_qn6 []
+                                        [ mkelem_qn6 []
+                                          [ mkelem_qn6 []
+                                            [ mkelem_qn6 []
+                                              [ mkelem_qn6 []
+                                                [ mkelem_qn6 []
+                                                  [ mkelem_qn6 []
+                                                    [ mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "25" ]
                                                       ] []
-                                                    , mkElement qn21
-                                                      [ mkAttr qn16 [ mkText "26" ]
+                                                    , mkelem_qn21
+                                                      [ mkattr_qn16 [ mkText "26" ]
                                                       ] []
                                                     ]
-                                                  , mkElement qn21
-                                                    [ mkAttr qn16 [ mkText "27" ]
+                                                  , mkelem_qn21
+                                                    [ mkattr_qn16 [ mkText "27" ]
                                                     ] []
                                                   ]
-                                                , mkElement qn21
-                                                  [ mkAttr qn16 [ mkText "28" ]
+                                                , mkelem_qn21
+                                                  [ mkattr_qn16 [ mkText "28" ]
                                                   ] []
                                                 ]
-                                              , mkElement qn21
-                                                [ mkAttr qn16 [ mkText "29" ]
+                                              , mkelem_qn21
+                                                [ mkattr_qn16 [ mkText "29" ]
                                                 ] []
                                               ]
-                                            , mkElement qn21
-                                              [ mkAttr qn16 [ mkText "30" ]
+                                            , mkelem_qn21
+                                              [ mkattr_qn16 [ mkText "30" ]
                                               ] []
                                             ]
-                                          , mkElement qn21
-                                            [ mkAttr qn16 [ mkText "31" ]
+                                          , mkelem_qn21
+                                            [ mkattr_qn16 [ mkText "31" ]
                                             ] []
                                           ]
-                                        , mkElement qn21
-                                          [ mkAttr qn16 [ mkText "32" ]
+                                        , mkelem_qn21
+                                          [ mkattr_qn16 [ mkText "32" ]
                                           ] []
                                         ]
-                                      , mkElement qn21
-                                        [ mkAttr qn16 [ mkText "33" ]
+                                      , mkelem_qn21
+                                        [ mkattr_qn16 [ mkText "33" ]
                                         ] []
                                       ]
-                                    , mkElement qn21
-                                      [ mkAttr qn16 [ mkText "34" ]
+                                    , mkelem_qn21
+                                      [ mkattr_qn16 [ mkText "34" ]
                                       ] []
                                     ]
-                                  , mkElement qn21
-                                    [ mkAttr qn16 [ mkText "35" ]
+                                  , mkelem_qn21
+                                    [ mkattr_qn16 [ mkText "35" ]
                                     ] []
                                   ]
-                                , mkElement qn21
-                                  [ mkAttr qn16 [ mkText "36" ]
+                                , mkelem_qn21
+                                  [ mkattr_qn16 [ mkText "36" ]
                                   ] []
                                 ]
-                              , mkElement qn21
-                                [ mkAttr qn16 [ mkText "37" ]
+                              , mkelem_qn21
+                                [ mkattr_qn16 [ mkText "37" ]
                                 ] []
                               ]
-                            , mkElement qn21
-                              [ mkAttr qn16 [ mkText "38" ]
+                            , mkelem_qn21
+                              [ mkattr_qn16 [ mkText "38" ]
                               ] []
                             ]
-                          , mkElement qn21
-                            [ mkAttr qn16 [ mkText "39" ]
+                          , mkelem_qn21
+                            [ mkattr_qn16 [ mkText "39" ]
                             ] []
                           ]
-                        , mkElement qn21
-                          [ mkAttr qn16 [ mkText "40" ]
+                        , mkelem_qn21
+                          [ mkattr_qn16 [ mkText "40" ]
                           ] []
                         ]
-                      , mkElement qn21
-                        [ mkAttr qn16 [ mkText "43" ]
+                      , mkelem_qn21
+                        [ mkattr_qn16 [ mkText "43" ]
                         ] []
                       ]
-                    , mkElement qn21
-                      [ mkAttr qn16 [ mkText "44" ]
+                    , mkelem_qn21
+                      [ mkattr_qn16 [ mkText "44" ]
                       ] []
                     ]
-                  , mkElement qn21
-                    [ mkAttr qn16 [ mkText "14" ]
+                  , mkelem_qn21
+                    [ mkattr_qn16 [ mkText "14" ]
                     ] []
                   ]
                 ]
@@ -3533,292 +3585,292 @@ relaxSchemaTree =
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "11" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "11" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "start"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn5 []
-                  [ mkElement qn17
-                    [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn5 []
+                  [ mkelem_qn17
+                    [ mkattr_qn18 [ mkText "" ]
                     ]
                     [ mkText "combine"
                     ]
-                  , mkElement qn6 []
-                    [ mkElement qn25
-                      [ mkAttr qn1 [ mkText "http://www.w3.org/XML/1998/namespace" ]
-                      , mkAttr qn3 [ mkText "http://relaxng.org/ns/structure/1.0" ]
-                      , mkAttr qn2 [ mkText "file:///home/uwe/haskell/hxt/curr/src/Text/XML/HXT/RelaxNG/schema2hs/SchemaGrammar.rng" ]
-                      , mkAttr qn8 [ mkText "" ]
-                      , mkAttr qn24 [ mkText "token" ]
-                      , mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+                  , mkelem_qn6 []
+                    [ mkelem_qn25
+                      [ mkattr_qn1 [ mkText "http://www.w3.org/XML/1998/namespace" ]
+                      , mkattr_qn3 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+                      , mkattr_qn2 [ mkText "file:///home/theo/haskell/hxt/hxt-relaxng/src/Text/XML/HXT/RelaxNG/schema2hs/SchemaGrammar.rng" ]
+                      , mkattr_qn8 [ mkText "" ]
+                      , mkattr_qn24 [ mkText "token" ]
+                      , mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                       ]
                       [ mkText "choice"
                       ]
-                    , mkElement qn25
-                      [ mkAttr qn1 [ mkText "http://www.w3.org/XML/1998/namespace" ]
-                      , mkAttr qn3 [ mkText "http://relaxng.org/ns/structure/1.0" ]
-                      , mkAttr qn2 [ mkText "file:///home/uwe/haskell/hxt/curr/src/Text/XML/HXT/RelaxNG/schema2hs/SchemaGrammar.rng" ]
-                      , mkAttr qn8 [ mkText "" ]
-                      , mkAttr qn24 [ mkText "token" ]
-                      , mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+                    , mkelem_qn25
+                      [ mkattr_qn1 [ mkText "http://www.w3.org/XML/1998/namespace" ]
+                      , mkattr_qn3 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+                      , mkattr_qn2 [ mkText "file:///home/theo/haskell/hxt/hxt-relaxng/src/Text/XML/HXT/RelaxNG/schema2hs/SchemaGrammar.rng" ]
+                      , mkattr_qn8 [ mkText "" ]
+                      , mkattr_qn24 [ mkText "token" ]
+                      , mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                       ]
                       [ mkText "interleave"
                       ]
                     ]
                   ]
                 ]
-              , mkElement qn14 []
-                [ mkElement qn14 []
-                  [ mkElement qn6 []
-                    [ mkElement qn11 [] []
-                    , mkElement qn5 []
-                      [ mkElement qn17
-                        [ mkAttr qn18 [ mkText "" ]
+              , mkelem_qn14 []
+                [ mkelem_qn14 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn11 [] []
+                    , mkelem_qn5 []
+                      [ mkelem_qn17
+                        [ mkattr_qn18 [ mkText "" ]
                         ]
                         [ mkText "ns"
                         ]
-                      , mkElement qn23 [] []
+                      , mkelem_qn23 [] []
                       ]
                     ]
-                  , mkElement qn6 []
-                    [ mkElement qn11 [] []
-                    , mkElement qn5 []
-                      [ mkElement qn17
-                        [ mkAttr qn18 [ mkText "" ]
+                  , mkelem_qn6 []
+                    [ mkelem_qn11 [] []
+                    , mkelem_qn5 []
+                      [ mkelem_qn17
+                        [ mkattr_qn18 [ mkText "" ]
                         ]
                         [ mkText "datatypeLibrary"
                         ]
-                      , mkElement qn7
-                        [ mkAttr qn24 [ mkText "anyURI" ]
-                        , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                      , mkelem_qn7
+                        [ mkattr_qn24 [ mkText "anyURI" ]
+                        , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                         ] []
                       ]
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn20 []
-                    [ mkElement qn5 []
-                      [ mkElement qn4 []
-                        [ mkElement qn12 []
-                          [ mkElement qn6 []
-                            [ mkElement qn19
-                              [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn20 []
+                    [ mkelem_qn5 []
+                      [ mkelem_qn4 []
+                        [ mkelem_qn12 []
+                          [ mkelem_qn6 []
+                            [ mkelem_qn19
+                              [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                               ] []
-                            , mkElement qn19
-                              [ mkAttr qn18 [ mkText "" ]
+                            , mkelem_qn19
+                              [ mkattr_qn18 [ mkText "" ]
                               ] []
                             ]
                           ]
                         ]
-                      , mkElement qn23 [] []
+                      , mkelem_qn23 [] []
                       ]
                     ]
                   ]
                 ]
               ]
-            , mkElement qn15 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn21
-                    [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn15 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn21
+                    [ mkattr_qn16 [ mkText "16" ]
                     ] []
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn6 []
-                  [ mkElement qn6 []
-                    [ mkElement qn6 []
-                      [ mkElement qn6 []
-                        [ mkElement qn6 []
-                          [ mkElement qn6 []
-                            [ mkElement qn6 []
-                              [ mkElement qn6 []
-                                [ mkElement qn6 []
-                                  [ mkElement qn6 []
-                                    [ mkElement qn6 []
-                                      [ mkElement qn6 []
-                                        [ mkElement qn6 []
-                                          [ mkElement qn6 []
-                                            [ mkElement qn6 []
-                                              [ mkElement qn6 []
-                                                [ mkElement qn6 []
-                                                  [ mkElement qn21
-                                                    [ mkAttr qn16 [ mkText "25" ]
+              , mkelem_qn6 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn6 []
+                      [ mkelem_qn6 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn6 []
+                            [ mkelem_qn6 []
+                              [ mkelem_qn6 []
+                                [ mkelem_qn6 []
+                                  [ mkelem_qn6 []
+                                    [ mkelem_qn6 []
+                                      [ mkelem_qn6 []
+                                        [ mkelem_qn6 []
+                                          [ mkelem_qn6 []
+                                            [ mkelem_qn6 []
+                                              [ mkelem_qn6 []
+                                                [ mkelem_qn6 []
+                                                  [ mkelem_qn21
+                                                    [ mkattr_qn16 [ mkText "25" ]
                                                     ] []
-                                                  , mkElement qn21
-                                                    [ mkAttr qn16 [ mkText "26" ]
+                                                  , mkelem_qn21
+                                                    [ mkattr_qn16 [ mkText "26" ]
                                                     ] []
                                                   ]
-                                                , mkElement qn21
-                                                  [ mkAttr qn16 [ mkText "27" ]
+                                                , mkelem_qn21
+                                                  [ mkattr_qn16 [ mkText "27" ]
                                                   ] []
                                                 ]
-                                              , mkElement qn21
-                                                [ mkAttr qn16 [ mkText "28" ]
+                                              , mkelem_qn21
+                                                [ mkattr_qn16 [ mkText "28" ]
                                                 ] []
                                               ]
-                                            , mkElement qn21
-                                              [ mkAttr qn16 [ mkText "29" ]
+                                            , mkelem_qn21
+                                              [ mkattr_qn16 [ mkText "29" ]
                                               ] []
                                             ]
-                                          , mkElement qn21
-                                            [ mkAttr qn16 [ mkText "30" ]
+                                          , mkelem_qn21
+                                            [ mkattr_qn16 [ mkText "30" ]
                                             ] []
                                           ]
-                                        , mkElement qn21
-                                          [ mkAttr qn16 [ mkText "31" ]
+                                        , mkelem_qn21
+                                          [ mkattr_qn16 [ mkText "31" ]
                                           ] []
                                         ]
-                                      , mkElement qn21
-                                        [ mkAttr qn16 [ mkText "32" ]
+                                      , mkelem_qn21
+                                        [ mkattr_qn16 [ mkText "32" ]
                                         ] []
                                       ]
-                                    , mkElement qn21
-                                      [ mkAttr qn16 [ mkText "33" ]
+                                    , mkelem_qn21
+                                      [ mkattr_qn16 [ mkText "33" ]
                                       ] []
                                     ]
-                                  , mkElement qn21
-                                    [ mkAttr qn16 [ mkText "34" ]
+                                  , mkelem_qn21
+                                    [ mkattr_qn16 [ mkText "34" ]
                                     ] []
                                   ]
-                                , mkElement qn21
-                                  [ mkAttr qn16 [ mkText "35" ]
+                                , mkelem_qn21
+                                  [ mkattr_qn16 [ mkText "35" ]
                                   ] []
                                 ]
-                              , mkElement qn21
-                                [ mkAttr qn16 [ mkText "36" ]
+                              , mkelem_qn21
+                                [ mkattr_qn16 [ mkText "36" ]
                                 ] []
                               ]
-                            , mkElement qn21
-                              [ mkAttr qn16 [ mkText "37" ]
+                            , mkelem_qn21
+                              [ mkattr_qn16 [ mkText "37" ]
                               ] []
                             ]
-                          , mkElement qn21
-                            [ mkAttr qn16 [ mkText "38" ]
+                          , mkelem_qn21
+                            [ mkattr_qn16 [ mkText "38" ]
                             ] []
                           ]
-                        , mkElement qn21
-                          [ mkAttr qn16 [ mkText "39" ]
+                        , mkelem_qn21
+                          [ mkattr_qn16 [ mkText "39" ]
                           ] []
                         ]
-                      , mkElement qn21
-                        [ mkAttr qn16 [ mkText "40" ]
+                      , mkelem_qn21
+                        [ mkattr_qn16 [ mkText "40" ]
                         ] []
                       ]
-                    , mkElement qn21
-                      [ mkAttr qn16 [ mkText "43" ]
+                    , mkelem_qn21
+                      [ mkattr_qn16 [ mkText "43" ]
                       ] []
                     ]
-                  , mkElement qn21
-                    [ mkAttr qn16 [ mkText "44" ]
+                  , mkelem_qn21
+                    [ mkattr_qn16 [ mkText "44" ]
                     ] []
                   ]
-                , mkElement qn21
-                  [ mkAttr qn16 [ mkText "14" ]
+                , mkelem_qn21
+                  [ mkattr_qn16 [ mkText "14" ]
                   ] []
                 ]
               ]
             ]
           ]
         ]
-      , mkElement qn9
-        [ mkAttr qn16 [ mkText "14" ]
+      , mkelem_qn9
+        [ mkattr_qn16 [ mkText "14" ]
         ]
-        [ mkElement qn10 []
-          [ mkElement qn17
-            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+        [ mkelem_qn10 []
+          [ mkelem_qn17
+            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
             ]
             [ mkText "grammar"
             ]
-          , mkElement qn14 []
-            [ mkElement qn14 []
-              [ mkElement qn14 []
-                [ mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+          , mkelem_qn14 []
+            [ mkelem_qn14 []
+              [ mkelem_qn14 []
+                [ mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "ns"
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
-                , mkElement qn6 []
-                  [ mkElement qn11 [] []
-                  , mkElement qn5 []
-                    [ mkElement qn17
-                      [ mkAttr qn18 [ mkText "" ]
+                , mkelem_qn6 []
+                  [ mkelem_qn11 [] []
+                  , mkelem_qn5 []
+                    [ mkelem_qn17
+                      [ mkattr_qn18 [ mkText "" ]
                       ]
                       [ mkText "datatypeLibrary"
                       ]
-                    , mkElement qn7
-                      [ mkAttr qn24 [ mkText "anyURI" ]
-                      , mkAttr qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
+                    , mkelem_qn7
+                      [ mkattr_qn24 [ mkText "anyURI" ]
+                      , mkattr_qn8 [ mkText "http://www.w3.org/2001/XMLSchema-datatypes" ]
                       ] []
                     ]
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn5 []
-                    [ mkElement qn4 []
-                      [ mkElement qn12 []
-                        [ mkElement qn6 []
-                          [ mkElement qn19
-                            [ mkAttr qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn5 []
+                    [ mkelem_qn4 []
+                      [ mkelem_qn12 []
+                        [ mkelem_qn6 []
+                          [ mkelem_qn19
+                            [ mkattr_qn18 [ mkText "http://relaxng.org/ns/structure/1.0" ]
                             ] []
-                          , mkElement qn19
-                            [ mkAttr qn18 [ mkText "" ]
+                          , mkelem_qn19
+                            [ mkattr_qn18 [ mkText "" ]
                             ] []
                           ]
                         ]
                       ]
-                    , mkElement qn23 [] []
+                    , mkelem_qn23 [] []
                     ]
                   ]
                 ]
               ]
-            , mkElement qn15 []
-              [ mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn21
-                    [ mkAttr qn16 [ mkText "16" ]
+            , mkelem_qn15 []
+              [ mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn21
+                    [ mkattr_qn16 [ mkText "16" ]
                     ] []
                   ]
                 ]
-              , mkElement qn6 []
-                [ mkElement qn11 [] []
-                , mkElement qn20 []
-                  [ mkElement qn6 []
-                    [ mkElement qn6 []
-                      [ mkElement qn6 []
-                        [ mkElement qn21
-                          [ mkAttr qn16 [ mkText "11" ]
+              , mkelem_qn6 []
+                [ mkelem_qn11 [] []
+                , mkelem_qn20 []
+                  [ mkelem_qn6 []
+                    [ mkelem_qn6 []
+                      [ mkelem_qn6 []
+                        [ mkelem_qn21
+                          [ mkattr_qn16 [ mkText "11" ]
                           ] []
-                        , mkElement qn21
-                          [ mkAttr qn16 [ mkText "10" ]
+                        , mkelem_qn21
+                          [ mkattr_qn16 [ mkText "10" ]
                           ] []
                         ]
-                      , mkElement qn21
-                        [ mkAttr qn16 [ mkText "23" ]
+                      , mkelem_qn21
+                        [ mkattr_qn16 [ mkText "23" ]
                         ] []
                       ]
-                    , mkElement qn21
-                      [ mkAttr qn16 [ mkText "24" ]
+                    , mkelem_qn21
+                      [ mkattr_qn16 [ mkText "24" ]
                       ] []
                     ]
                   ]
