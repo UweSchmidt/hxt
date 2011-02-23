@@ -30,8 +30,8 @@ import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.XmlState
 
 import Text.XML.HXT.Arrow.ParserInterface
-    ( parseXmlAttrValue
-    , parseXmlGeneralEntityValue
+    ( parseXmlEntityValueAsAttrValue
+    , parseXmlEntityValueAsContent
     )
 
 import Text.XML.HXT.Arrow.Edit
@@ -71,7 +71,7 @@ newtype GEEnv   = GEEnv (M.Map String GESubstArrow)
 emptyGeEnv      :: GEEnv
 emptyGeEnv      = GEEnv M.empty
 
-lookupGeEnv             :: String -> GEEnv -> Maybe GESubstArrow
+lookupGeEnv     :: String -> GEEnv -> Maybe GESubstArrow
 lookupGeEnv k (GEEnv env)
     = M.lookup k env
 
@@ -129,45 +129,35 @@ processGeneralEntity context recl
 
     addInternalEntity   :: GEArrow XmlTree b
     addInternalEntity
-        = ( ( getDTDAttrValue a_name
+        = insertInternal $<<
+          ( ( getDTDAttrValue a_name
               >>>
               traceValue 2 (("processGeneralEntity: general entity definition for " ++) . show)
             )
             &&&
             xshow (getChildren >>> isText)
           )
-          >>>
-          applyA ( arr2 $ \ entity str ->
-                   listA ( ( ( txt str
-                               >>>
-                               parseXmlGeneralEntityValue ("general internal entity" ++ show entity)
-                               >>>
-                               filterErrorMsg
-                             )
-                             `orElse` txt ""
-                           )
-                           >>>
-                           processGeneralEntity ReferenceInEntityValue (entity : recl)
-                         )
-                   >>>
-                   applyA (arr $ \ ts -> insertEntity (substInternal ts) entity)
-                 )
-          >>>
-          none
+        where
+        insertInternal entity contents
+            = insertEntity (substInternal contents) entity
+              >>>
+              none
 
     addExternalEntity   :: GEArrow XmlTree b
     addExternalEntity
-        = ( ( getDTDAttrValue a_name
+        = insertExternal $<<
+          ( ( getDTDAttrValue a_name
               >>>
               traceValue 2 (("processGeneralEntity: external entity definition for " ++) . show)
             )
             &&&
             getDTDAttrValue a_url                       -- the absolute URL, not the relative in attr: k_system
           )
-          >>>
-          applyA (arr2 $ \ entity uri -> insertEntity (substExternalParsed1Time uri) entity)
-          >>>
-          none
+        where
+        insertExternal entity uri
+            = insertEntity (substExternalParsed1Time uri) entity
+              >>>
+              none
 
     addUnparsedEntity   :: GEArrow XmlTree b
     addUnparsedEntity
@@ -194,6 +184,8 @@ processGeneralEntity context recl
             ok  = this
             alreadyDefined _
                 = issueWarn ("entity " ++ show entity ++ " already defined, repeated definition ignored")
+                  >>>
+                  none
 
     addEntity   :: (String -> GESubstArrow) -> String -> GEArrow b b
     addEntity fct entity
@@ -207,8 +199,8 @@ processGeneralEntity context recl
                            >>>                                          -- substitute entities
                            mkText                                       -- and convert value into a string
                            >>>
-                           parseXmlAttrValue "default value of attribute"
-                           >>>
+                           parseXmlEntityValueAsAttrValue "default value of attribute"
+                           >>>                                         
                            filterErrorMsg
                            >>>
                            substEntitiesInAttrValue
@@ -244,7 +236,6 @@ processGeneralEntity context recl
                    ) >>>
                    arr2 substA
                  )
-          `orElse` this
           where
           substA        :: String -> GEEnv -> GEArrow XmlTree XmlTree
           substA entity geEnv
@@ -268,45 +259,43 @@ processGeneralEntity context recl
                     >>>
                     runInLocalURIContext ( root [sattr a_source uri] []         -- uri must be an absolute uri
                                            >>>                                  -- abs uri is computed during parameter entity handling
-                                           listA ( getXmlEntityContents
-                                                   >>>
-                                                   processExternalEntityContents
-                                                 )
+                                           getXmlEntityContents
+                                           >>>
+                                           processExternalEntityContents
                                          )
                     >>>
-                    applyA ( arr $ \ ts -> addEntity (substExternalParsed ts) entity )
+                    applyA ( arr $ \ s -> addEntity (substExternalParsed s) entity )
                   )
           >>>
           processGeneralEntity cx rl
         where
-        processExternalEntityContents   :: IOStateArrow s XmlTree XmlTree
+        processExternalEntityContents   :: IOStateArrow s XmlTree String
         processExternalEntityContents
-            = ( ( documentStatusOk                              -- reading entity succeeded
-                  >>>                                           -- with content stored in a text node
-                  (getChildren >>> isText)
+            = ( ( ( documentStatusOk                              -- reading entity succeeded
+                    >>>                                           -- with content stored in a text node
+                    (getChildren >>> isText)
+                  )
+                  `guards`
+                  this
                 )
-                `guards`
-                ( getChildren
-                  >>>
-                  parseXmlGeneralEntityValue ("external parsed entity " ++ show entity)
-                  >>>
-                  filterErrorMsg
-                )
+                `orElse`
+                issueErr ("illegal value for external parsed entity " ++ show entity)
               )
-              `orElse`
-              issueErr ("illegal value for external parsed entity " ++ show entity)
+              >>>
+              xshow (getChildren >>> isText)
 
-    substExternalParsed                                 :: XmlTrees -> String -> GESubstArrow
-    substExternalParsed ts entity ReferenceInContent rl = includedIfValidating ts rl entity
-    substExternalParsed _  entity ReferenceInAttributeValue _
+
+    substExternalParsed                                 :: String -> String -> GESubstArrow
+    substExternalParsed s entity ReferenceInContent rl  = includedIfValidating s rl entity
+    substExternalParsed _ entity ReferenceInAttributeValue _
                                                         = forbidden entity "external parsed general" "in attribute value"
-    substExternalParsed _  _      ReferenceInEntityValue _
+    substExternalParsed _ _      ReferenceInEntityValue _
                                                         = bypassed
 
-    substInternal                                       :: XmlTrees -> String -> GESubstArrow
-    substInternal ts entity ReferenceInContent rl       = included          ts rl entity
-    substInternal ts entity ReferenceInAttributeValue rl= includedInLiteral ts rl entity
-    substInternal _  _      ReferenceInEntityValue _    = bypassed
+    substInternal                                       :: String -> String -> GESubstArrow
+    substInternal s entity ReferenceInContent rl        = included          s rl entity
+    substInternal s entity ReferenceInAttributeValue rl = includedInLiteral s rl entity
+    substInternal _ _      ReferenceInEntityValue _     = bypassed
 
     substUnparsed                                       :: String -> GESubstArrow
     substUnparsed entity ReferenceInContent        _    = forbidden entity "unparsed" "content"
@@ -314,27 +303,37 @@ processGeneralEntity context recl
     substUnparsed entity ReferenceInEntityValue    _    = forbidden entity "unparsed" "entity value"
 
                                                                         -- XML 1.0 chapter 4.4.2
-    included            :: XmlTrees -> RecList -> String -> GEArrow XmlTree XmlTree
-    included ts rl entity
-        = arrL (const ts)
+    included            :: String -> RecList -> String -> GEArrow XmlTree XmlTree
+    included s rl entity
+        = traceMsg 3 ("substituting general entity " ++ show entity ++ " with value " ++ show s)
+          >>>
+          txt s
+          >>>
+          parseXmlEntityValueAsContent ("substituting general entity " ++ show entity ++ " in contents")
+          >>>
+          filterErrorMsg
           >>>
           processGeneralEntity context (entity : rl)
 
                                                                         -- XML 1.0 chapter 4.4.3
-    includedIfValidating                :: XmlTrees -> RecList -> String -> GEArrow XmlTree XmlTree
+    includedIfValidating                :: String -> RecList -> String -> GEArrow XmlTree XmlTree
     includedIfValidating
         = included
-
                                                                         -- XML 1.0 chapter 4.4.4
     forbidden           :: String -> String -> String -> GEArrow XmlTree XmlTree
     forbidden entity msg cx
         = issueErr ("reference of " ++ msg ++ show entity ++ " forbidden in " ++ cx)
 
                                                                         -- XML 1.0 chapter 4.4.5
-    includedInLiteral           :: XmlTrees -> RecList -> String -> GEArrow XmlTree XmlTree
-    includedInLiteral
-        = included
-
+    includedInLiteral           :: String -> RecList -> String -> GEArrow XmlTree XmlTree
+    includedInLiteral s rl entity
+        = txt s
+          >>>
+          parseXmlEntityValueAsAttrValue ("substituting general entity " ++ show entity ++ " in attribute value")
+          >>>
+          filterErrorMsg
+          >>>
+          processGeneralEntity context (entity : rl)
                                                                         -- XML 1.0 chapter 4.4.7
     bypassed            :: GEArrow XmlTree XmlTree
     bypassed

@@ -125,8 +125,7 @@ options
       ++
       showOptions
       ++
-      [ Option "f"      ["output-file"] (ReqArg  (withSysAttr "output-file") "FILE") "output file for resulting document (default: stdout)"
-      , Option "q"      ["no-output"]   (NoArg $  withSysAttr "no-output"      "1")   "no output of resulting document"
+      [ Option "q"      ["no-output"]   (NoArg $  withSysAttr "no-output"      "1")   "no output of resulting document"
       , Option "x"      ["action"]      (ReqArg  (withSysAttr "action")   "ACTION")   "actions are: only-text, indent, no-op"
       ]
       -- the last 2 option values will be stored by withAttr in the system key-value list

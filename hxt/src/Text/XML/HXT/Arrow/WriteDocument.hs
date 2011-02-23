@@ -165,6 +165,8 @@ writeDocument' textMode dst
         >>>
         ( (flip prepareContents) encodeDocument $< getSysVar idS )
         >>>
+        traceDoc "document after encoding"
+        >>>
         putXmlDocument textMode dst
         >>>
         traceMsg 1 "writeDocument: finished"

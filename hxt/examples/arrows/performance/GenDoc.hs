@@ -291,7 +291,7 @@ genDoc d out    = constA (let t = mkBTree d in rnf t `seq` t)
 
 readDoc :: String -> IOSArrow b XmlTree
 readDoc src
-    = readDocument [ withParseHTML yes
+    = readDocument [ withParseHTML no
                    , withTrace 2
                    , withValidate no
                    , withInputEncoding isoLatin1

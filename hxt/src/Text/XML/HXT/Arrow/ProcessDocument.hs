@@ -62,6 +62,7 @@ import Text.XML.HXT.Arrow.Namespace            ( propagateNamespaces
                                                )
 import Text.XML.HXT.DTDValidation.Validation   ( validate
                                                , getDTDSubset
+                                               , generalEntitiesDefined
                                                , transform
                                                )
 
@@ -100,10 +101,13 @@ parseXmlDocument validate'
         >>>
         setDocumentStatusFromSystemState "parse XML document"
         >>>
-        processDTD
-        >>>
-        ( ifA (fromLA getDTDSubset)		-- DTD decl there: set of general entities must be computed
-          ( processGeneralEntities
+        ( ifA (fromLA getDTDSubset)
+          ( processDTD
+            >>>
+            ( processGeneralEntities		-- DTD contains general entity definitions
+              `when`
+              fromLA generalEntitiesDefined
+            )
             >>>
             transfAllCharRef
             >>>
@@ -115,7 +119,11 @@ parseXmlDocument validate'
           ( if validate'			-- validation only consists of checking for undefined entity refs
                                                 -- predefined XML entity refs are substituted in the XML parser into char refs
                                                 -- so there is no need for an entity substitution
-            then perform checkUndefinedEntityRefs
+            then traceMsg 2 "checkUndefinedEntityRefs: looking for undefined entity refs"
+                 >>>
+                 perform checkUndefinedEntityRefs
+                 >>>
+                 traceMsg 2 "checkUndefinedEntityRefs: looking for undefined entity refs done"
                  >>>
                  setDocumentStatusFromSystemState "decoding document"
             else this

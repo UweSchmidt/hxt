@@ -260,11 +260,23 @@ getXmlContents
 
 getXmlEntityContents            :: IOStateArrow s XmlTree XmlTree
 getXmlEntityContents
-    = getXmlContents' parseXmlEntityEncodingSpec
+    = traceMsg 2 "getXmlEntityContents"
       >>>
-      processChildren removeEncodingSpec
+      addAttr transferMimeType text_xml_external_parsed_entity	-- the default transfer mimetype
+      >>>
+      getXmlContents' parseXmlEntityEncodingSpec
+      >>>
+      addAttr transferMimeType text_xml_external_parsed_entity
+      >>>
+      processChildren
+      ( removeEncodingSpec
+        >>>
+        changeText normalizeNL			-- newline normalization must be done here
+      )                                         -- the following calls of the parsers don't do this
       >>>
       setBaseURIFromDoc
+      >>>
+      traceMsg 2 "getXmlEntityContents done"
 
 getXmlContents'         :: IOStateArrow s XmlTree XmlTree -> IOStateArrow s XmlTree XmlTree
 getXmlContents' parseEncodingSpec
@@ -286,9 +298,7 @@ getXmlContents' parseEncodingSpec
                   traceValue 1 (("getXmlContents: content read and decoded for " ++) . show)
                 )
         >>>
-        traceTree
-        >>>
-        traceSource
+        traceDoc "getXmlContents'"
       )
       `when`
       isRoot
@@ -334,22 +344,21 @@ getTextEncoding
 decodeDocument  :: IOStateArrow s XmlTree XmlTree
 decodeDocument
     = choiceA
-      [ ( isRoot >>> isXmlHtmlDoc )   :-> ( decodeX                $< getSysVar theExpat)
-                                  -- old: ( decodeArr normalizeNL  $< getEncoding )
-      , ( isRoot >>> isTextDoc )      :-> ( decodeArr id           $< getTextEncoding )
+      [ ( isRoot >>> isXmlHtmlDoc )   :-> ( decodeX   $< getSysVar theExpat)
+      , ( isRoot >>> isTextDoc )      :-> ( decodeArr $< getTextEncoding )
       , this                          :-> this
       ]
     where
     decodeX             :: Bool -> IOStateArrow s XmlTree XmlTree
-    decodeX False       = decodeArr normalizeNL  $< getEncoding
-    decodeX True        = noDecode               $< getEncoding         -- parse with expat
+    decodeX False       = decodeArr $< getEncoding
+    decodeX True        = noDecode  $< getEncoding         -- parse with expat
 
     noDecode enc        = traceMsg 2 ("no decoding (done by expat): encoding is " ++ show enc)
                           >>>
                           addAttr transferEncoding enc
 
-    decodeArr   :: (String -> String) -> String -> IOStateArrow s XmlTree XmlTree
-    decodeArr normalizeNewline enc
+    decodeArr   :: String -> IOStateArrow s XmlTree XmlTree
+    decodeArr enc
         = maybe notFound found . getDecodingFct $ enc
         where
         found df
@@ -374,9 +383,7 @@ decodeDocument
                 -- don't seem to raise the space problem in decodeText
                 -- space is allocated in blobToString and in parsec
                 >>> arr df                                              -- decode the text, result is (string, [errMsg])
-                >>> ( ( (fst >>> normalizeNewline)                      -- take decoded string, normalize newline and build text node
-                        ^>> mkText
-                      )
+                >>> ( ( fst ^>> mkText )                                -- take decoded string and build text node
                       <+>
                       ( if withEncErrors
                         then

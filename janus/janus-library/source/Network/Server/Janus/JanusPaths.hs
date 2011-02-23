@@ -4,6 +4,8 @@ where
 import Text.ParserCombinators.Parsec
 
 import Text.XML.HXT.Core
+import Text.XML.HXT.Parser.XmlCharParser
+
 import Text.XML.HXT.XPath
 import Text.XML.HXT.XPath.XPathDataTypes
     (
@@ -33,7 +35,7 @@ jp	:: String -> JanusPath
 jp xpath
     = let
       path  = base xpath
-      parts = case runParser parseXPath [] "" xpath
+      parts = case runParser parseXPath (withNormNewline []) "" xpath
 	      of
 	      Right xpExpr -> local_xpath xpExpr
 	      Left _       -> Nothing

@@ -28,6 +28,10 @@ import Text.XML.HXT.DOM.TypeDefs
 import Text.XML.HXT.XPath.XPathKeywords
 import Text.XML.HXT.XPath.XPathDataTypes
 
+import Text.XML.HXT.Parser.XmlCharParser        ( XParser
+                                                , XPState(..)
+                                                , withNormNewline
+                                                )
 import Text.XML.HXT.Parser.XmlTokenParser       ( separator
                                                 , systemLiteral
                                                 , skipS0
@@ -58,7 +62,7 @@ enhanceQN                               ::  AxisSpec -> NsEnv -> QName -> Maybe 
 enhanceQN Attribute                     = enhanceAttrQName
 enhanceQN _                             = enhanceQName
 
-type XParser a                          = GenParser Char NsEnv a
+type XPathParser a                      = XParser NsEnv a
 
 -- ------------------------------------------------------------
 -- parse functions which are used in the XPathFct module
@@ -71,13 +75,13 @@ type XParser a                          = GenParser Char NsEnv a
 --                or 'XPVNumber' 'NaN' in case of error
 parseNumber :: String -> XPathValue
 parseNumber s
-    = case (runParser parseNumber' [] {- Map.empty -} "" s) of
+    = case (runParser parseNumber' (withNormNewline []) {- Map.empty -} "" s) of
         Left _ -> XPVNumber NaN
         Right x  -> if (read x :: Float) == 0
                       then (XPVNumber Pos0)
                       else XPVNumber (Float (read x))
 
-parseNumber' :: XParser String
+parseNumber' :: XPathParser String
 parseNumber'
     = do
       skipS0
@@ -94,7 +98,7 @@ parseNumber'
 -- the main entry point:
 -- parsing a XPath expression
 
-parseXPath :: XParser Expr
+parseXPath :: XPathParser Expr
 parseXPath
     = do
       skipS0
@@ -105,7 +109,7 @@ parseXPath
 
 
 -- some useful token and symbol parser
-lpar, rpar, lbra, rbra, slash, dslash   :: XParser ()
+lpar, rpar, lbra, rbra, slash, dslash   :: XPathParser ()
 
 lpar   = tokenParser (symbol "(")
 rpar   = tokenParser (symbol ")")
@@ -115,7 +119,7 @@ slash  = tokenParser (symbol "/")
 dslash = tokenParser (symbol "//")
 
 
-tokenParser :: XParser String -> XParser ()
+tokenParser :: XPathParser String -> XPathParser ()
 tokenParser p
     = try ( do
             skipS0
@@ -124,20 +128,20 @@ tokenParser p
            )
 
 
-symbolParser :: (String, a) -> XParser a
+symbolParser :: (String, a) -> XPathParser a
 symbolParser (s,a)
     = do
       tokenParser (symbol s)
       return a
 
 
-symbol :: String -> XParser String
+symbol :: String -> XPathParser String
 symbol s = try (string s)
 
 
 
 --  operation parser
-orOp, andOp, eqOp, relOp, addOp, multiOp, unionOp :: XParser Op
+orOp, andOp, eqOp, relOp, addOp, multiOp, unionOp :: XPathParser Op
 
 orOp  = symbolParser ("or", Or)
 andOp = symbolParser ("and", And)
@@ -189,7 +193,7 @@ mkExprNode e1 l@((op, _): _) =
 --GenExpr op (e1:(map snd l))
 
 
-exprRest :: XParser Op -> XParser Expr -> XParser (Op, Expr)
+exprRest :: XPathParser Op -> XPathParser Expr -> XPathParser (Op, Expr)
 exprRest parserOp parserExpr
     = do
       op <- parserOp
@@ -208,7 +212,7 @@ descOrSelfStep = (Step DescendantOrSelf (TypeTest XPNode) [])
 
 
 -- [1] LocationPath
-locPath :: XParser LocationPath
+locPath :: XPathParser LocationPath
 locPath
     = absLocPath
       <|>
@@ -216,7 +220,7 @@ locPath
 
 
 -- [2] AbsoluteLocationPath
-absLocPath :: XParser LocationPath
+absLocPath :: XPathParser LocationPath
 absLocPath
     = do -- [10]
       dslash
@@ -231,13 +235,13 @@ absLocPath
 
 
 -- [3] RelativeLocationPath
-relLocPath' :: XParser LocationPath
+relLocPath' :: XPathParser LocationPath
 relLocPath'
     = do
       rel <- relLocPath
       return (LocPath Rel rel)
 
-relLocPath :: XParser [XStep]
+relLocPath :: XPathParser [XStep]
 relLocPath
     = do
       s1 <- step
@@ -249,7 +253,7 @@ relLocPath
 -- Location Steps (2.1)
 --
 -- [4] Step
-step' :: XParser [XStep]
+step' :: XPathParser [XStep]
 step'
     = do -- [11]
       dslash
@@ -262,7 +266,7 @@ step'
       return [s]
       <?> "step'"
 
-step :: XParser XStep
+step :: XPathParser XStep
 step
     = abbrStep
       <|>
@@ -275,7 +279,7 @@ step
 
 
 -- [5] AxisSpecifier
-axisSpecifier' :: XParser AxisSpec
+axisSpecifier' :: XPathParser AxisSpec
 axisSpecifier'
     = do  -- [13]
       tokenParser (symbol "@")
@@ -295,7 +299,7 @@ axisSpecifier'
 -- Axes (2.2)
 --
 -- [6] AxisName
-axisSpecifier :: XParser AxisSpec
+axisSpecifier :: XPathParser AxisSpec
 axisSpecifier
     = choice [ symbolParser (a_ancestor_or_self, AncestorOrSelf)
              , symbolParser (a_ancestor, Ancestor)
@@ -317,7 +321,7 @@ axisSpecifier
 -- Node Tests (2.3)
 --
 -- [7] NodeTest
-nodeTest :: AxisSpec -> XParser NodeTest
+nodeTest :: AxisSpec -> XPathParser NodeTest
 nodeTest as
     = do
       nt <- try nodeType'
@@ -332,7 +336,7 @@ nodeTest as
       return (NameTest nt)
       <?> "nodeTest"
 
-pI :: XParser String
+pI :: XPathParser String
 pI
     = do
       tokenParser (symbol n_processing_instruction)
@@ -345,7 +349,7 @@ pI
 --
 -- [8] Predicate
 -- [9] PredicateExpr
-predicate :: XParser Expr
+predicate :: XPathParser Expr
 predicate
     = do
       ex <- between lbra rbra expr
@@ -358,7 +362,7 @@ predicate
 -- [11] AbbreviatedRelativeLocationPath: q.v. [4]
 
 -- [12] AbbreviatedStep
-abbrStep :: XParser XStep
+abbrStep :: XPathParser XStep
 abbrStep
     = do
       tokenParser (symbol "..")
@@ -379,12 +383,12 @@ abbrStep
 -- Basics (3.1)
 --
 -- [14] Expr
-expr :: XParser Expr
+expr :: XPathParser Expr
 expr = orExpr
 
 
 -- [15] PrimaryExpr
-primaryExpr ::  XParser Expr
+primaryExpr ::  XPathParser Expr
 primaryExpr
     = do
       vr <- variableReference
@@ -412,7 +416,7 @@ primaryExpr
 --
 -- [16] FunctionCall
 -- [17] Argument
-functionCall :: XParser Expr
+functionCall :: XPathParser Expr
 functionCall
     = do
       fn <- functionName
@@ -424,7 +428,7 @@ functionCall
 -- Node-sets (3.3)
 --
 -- [18] UnionExpr
-unionExpr :: XParser Expr
+unionExpr :: XPathParser Expr
 unionExpr
     = do
       e1 <- pathExpr
@@ -433,7 +437,7 @@ unionExpr
 
 
 -- [19] PathExpr
-pathExpr :: XParser Expr
+pathExpr :: XPathParser Expr
 pathExpr
     = do
       fe <- try filterExpr
@@ -457,7 +461,7 @@ pathExpr
 
 
 -- [20] FilterExpr
-filterExpr :: XParser Expr
+filterExpr :: XPathParser Expr
 filterExpr
     = do
       prim <- primaryExpr
@@ -471,7 +475,7 @@ filterExpr
 -- Booleans (3.4)
 --
 -- [21] OrExpr
-orExpr :: XParser Expr
+orExpr :: XPathParser Expr
 orExpr
     = do
       e1 <- andExpr
@@ -481,7 +485,7 @@ orExpr
 
 
 -- [22] AndExpr
-andExpr :: XParser Expr
+andExpr :: XPathParser Expr
 andExpr
     = do
       e1 <- equalityExpr
@@ -491,7 +495,7 @@ andExpr
 
 
 -- [23] EqualityExpr
-equalityExpr :: XParser Expr
+equalityExpr :: XPathParser Expr
 equalityExpr
     = do
       e1 <- relationalExpr
@@ -501,7 +505,7 @@ equalityExpr
 
 
 -- [24] RelationalExpr
-relationalExpr :: XParser Expr
+relationalExpr :: XPathParser Expr
 relationalExpr
     = do
       e1 <- additiveExpr
@@ -513,7 +517,7 @@ relationalExpr
 -- Numbers (3.5)
 --
 -- [25] AdditiveExpr
-additiveExpr :: XParser Expr
+additiveExpr :: XPathParser Expr
 additiveExpr
     = do
       e1 <- multiplicativeExpr
@@ -523,7 +527,7 @@ additiveExpr
 
 
 -- [26] MultiplicativeExpr
-multiplicativeExpr :: XParser Expr
+multiplicativeExpr :: XPathParser Expr
 multiplicativeExpr
     = do
       e1 <- unaryExpr
@@ -533,7 +537,7 @@ multiplicativeExpr
 
 
 -- [27] UnaryExpr
-unaryExpr :: XParser Expr
+unaryExpr :: XPathParser Expr
 unaryExpr
     = do
       tokenParser (symbol "-")
@@ -550,12 +554,12 @@ unaryExpr
 --
 -- [29] Literal
 -- systemLiteral from XmlParser is used
-literal :: XParser String
+literal :: XPathParser String
 literal = systemLiteral
 
 
 -- [30] Number
-number :: XParser String
+number :: XPathParser String
 number
     = do
       tokenParser (symbol ".")
@@ -583,7 +587,7 @@ number
 --         name             name
 --         pref:name        {http://uri-for-pref}name
 
-functionName :: XParser String
+functionName :: XPathParser String
 functionName
     = do (p, n) <- try qName
          fn     <- enhanceName Attribute $ mkPrefixLocalPart p n
@@ -596,7 +600,7 @@ functionName
 
 
 -- [36] VariableReference
-variableReference :: XParser (String, String)
+variableReference :: XPathParser (String, String)
 variableReference
     = do tokenParser (symbol "$")
          (p, n) <- qName
@@ -606,7 +610,7 @@ variableReference
 
 
 -- [37] NameTest
-nameTest :: AxisSpec -> XParser QName
+nameTest :: AxisSpec -> XPathParser QName
 nameTest axs
     = do tokenParser (symbol "*")
          enhanceName axs $ mkPrefixLocalPart "" "*"
@@ -621,16 +625,16 @@ nameTest axs
          enhanceName axs $ mkPrefixLocalPart pre local
       <?> "nameTest"
 
-enhanceName     :: AxisSpec -> QName -> XParser QName
+enhanceName     :: AxisSpec -> QName -> XPathParser QName
 enhanceName axs qn
-    = do uris <- getState
+    = do uris <- getState >>= return . xps_userState
          case enhanceQN axs uris qn of
            Nothing  -> fail $ "no namespace uri given for prefix " ++ show (namePrefix qn)
            Just qn' -> return qn'
       <?> "qualified name with defined namespace uri"
 
 -- [38] NodeType
-nodeType' :: XParser XPathNode
+nodeType' :: XPathParser XPathNode
 nodeType'
     = do
       nt <- nodeType
@@ -639,7 +643,7 @@ nodeType'
       return nt
       <?> "nodeType'"
 
-nodeType :: XParser XPathNode
+nodeType :: XPathParser XPathNode
 nodeType
     = choice [ symbolParser (n_comment, XPCommentNode)
              , symbolParser (n_text, XPTextNode)

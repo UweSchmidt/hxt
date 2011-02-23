@@ -33,6 +33,11 @@ where
 
 import Text.ParserCombinators.Parsec
 
+import Text.XML.HXT.Parser.XmlCharParser
+    ( SimpleXParser
+    , withNormNewline
+    )
+
 import Text.XML.HXT.Parser.XmlTokenParser
     ( skipS0
     , nmtoken
@@ -89,9 +94,11 @@ normalizeURI uri
                     else uri
                   )
 
-checkByParsing  :: Parser String -> String -> Bool
+checkByParsing  :: SimpleXParser String -> String -> Bool
 checkByParsing p s
-    = either (const False) (const True) (parse p' "" s)
+    = either (const False)
+             (const True)
+             (runParser p' (withNormNewline ()) "" s)
       where
       p' = do
            r <- p
@@ -103,7 +110,7 @@ isNumber :: String -> Bool
 isNumber
     = checkByParsing parseNumber'
     where
-    parseNumber' :: Parser String
+    parseNumber' :: SimpleXParser String
     parseNumber'
         = do
           skipS0

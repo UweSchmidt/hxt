@@ -17,9 +17,11 @@
 
 module Data.Char.Properties.XMLCharProps
     ( isXmlChar
+    , isXmlCharCR
     , isXml1ByteChar
     , isXmlLatin1Char
     , isXmlSpaceChar
+    , isXmlSpaceCharCR
     , isXml11SpaceChar
     , isXmlNameChar
     , isXmlNameStartChar
@@ -35,9 +37,11 @@ module Data.Char.Properties.XMLCharProps
     , isXmlControlOrPermanentlyUndefined
 
     , charPropXmlChar
+    , charPropXmlCharCR
     , charPropXml1ByteChar
     , charPropXmlLatin1Char
     , charPropXmlSpaceChar
+    , charPropXmlSpaceCharCR
     , charPropXml11SpaceChar
     , charPropXmlNameChar
     , charPropXmlNameStartChar
@@ -62,13 +66,60 @@ import Data.Set.CharSet
 -- checking for valid XML characters
 
 isXmlChar :: Char -> Bool
+isXmlChar c                                     -- optimized
+    = ( c >= ' ' && c <= '\55295' )
+      ||
+      c `elem` ['\n', '\t', '\r']
+      ||
+      ( c >= '\57344'
+        &&
+        ( c <= '\65533'
+          ||
+          c >= '\65536' &&   c <= '\1114111'
+        )
+      )
+
+{- old
 isXmlChar c = c `elemCS` charPropXmlChar
+-}
+
 {-# INLINE isXmlChar #-}
 
 charPropXmlChar :: CharSet
 charPropXmlChar
     = [ ('\x0009', '\x000A')
       , ('\x000D', '\x000D')
+      , ('\x0020', '\xD7FF')
+      , ('\xE000', '\xFFFD')
+      , ('\x10000', '\x10FFFF')
+      ]
+
+-- |
+-- checking for valid XML characters, except CR
+
+isXmlCharCR :: Char -> Bool
+isXmlCharCR c                                     -- optimized
+    = ( c >= ' ' && c <= '\55295' )
+      ||
+      c `elem` ['\n', '\t']
+      ||
+      ( c >= '\57344'
+        &&
+        ( c <= '\65533'
+          ||
+          c >= '\65536' &&   c <= '\1114111'
+        )
+      )
+
+{- old
+isXmlCharCR c = c `elemCS` charPropXmlCharCR
+-}
+
+{-# INLINE isXmlCharCR #-}
+
+charPropXmlCharCR :: CharSet
+charPropXmlCharCR
+    = [ ('\x0009', '\x000A')
       , ('\x0020', '\xD7FF')
       , ('\xE000', '\xFFFD')
       , ('\x10000', '\x10FFFF')
@@ -104,12 +155,43 @@ charPropXmlLatin1Char
 -- checking for XML space character: \\\n, \\\r, \\\t and \" \"
 
 isXmlSpaceChar :: Char -> Bool
+isXmlSpaceChar c
+    = c == ' '
+      ||
+      c == '\n'
+      ||
+      c == '\t'
+      ||
+      c == '\r'
+
+{- old
 isXmlSpaceChar c = c `elemCS` charPropXmlSpaceChar
+-}
 {-# INLINE isXmlSpaceChar #-}
 
 charPropXmlSpaceChar          :: CharSet
 charPropXmlSpaceChar
     = stringCS ['\x20', '\x09', '\x0D', '\x0A']
+
+-- |
+-- checking for XML space character: \\\n, \\\t and \" \"
+
+isXmlSpaceCharCR :: Char -> Bool
+isXmlSpaceCharCR c
+    = c == ' '
+      ||
+      c == '\n'
+      ||
+      c == '\t'
+
+{- old
+isXmlSpaceCharCR c = c `elemCS` charPropXmlSpaceCharCR
+-}
+{-# INLINE isXmlSpaceCharCR #-}
+
+charPropXmlSpaceCharCR          :: CharSet
+charPropXmlSpaceCharCR
+    = stringCS ['\x20', '\x09', '\x0A']
 
 -- |
 -- checking for XML1.1 space character: additional space 0x85 and 0x2028
@@ -127,7 +209,19 @@ charPropXml11SpaceChar
 -- checking for XML name character
 
 isXmlNameChar :: Char -> Bool
-isXmlNameChar c = c `elemCS` charPropXmlNameChar
+isXmlNameChar c                        -- optimized for ASCII chars
+    | c <= 'z'
+        = c >= 'a'
+          ||
+          ( c >= 'A' && c <= 'Z' )
+          ||
+          ( c >= '0' && c <= '9' )
+          ||
+          c `elem` ['-', '.', ':', '_']
+    | c >= '\183'
+        = c `elemCS` charPropXmlNameChar 
+    | otherwise
+        = False
 {-# INLINE isXmlNameChar #-}
 
 charPropXmlNameChar           :: CharSet
@@ -150,7 +244,17 @@ charPropXmlNameChar
 -- see also : 'isXmlNameChar'
 
 isXmlNameStartChar :: Char -> Bool
-isXmlNameStartChar c = c `elemCS` charPropXmlNameStartChar
+isXmlNameStartChar c                                            -- optimized for ASCII chars
+    | c <= 'z'
+        = c >= 'a'
+          ||
+          ( c >= 'A' && c <= 'Z' )
+          ||
+          c `elem` [':', '_']
+    | c >= '\192'
+        = c `elemCS` charPropXmlNameStartChar
+    | otherwise
+        = False
 {-# INLINE isXmlNameStartChar #-}
 
 charPropXmlNameStartChar              :: CharSet
@@ -167,14 +271,26 @@ charPropXmlNameStartChar
 -- see also : 'isXmlNameChar'
 
 isXmlNCNameChar :: Char -> Bool
-isXmlNCNameChar c = c `elemCS` charPropXmlNCNameChar
+isXmlNCNameChar c                                               -- optimized for ASCII chars
+    | c <= 'z'
+        = c >= 'a'
+          ||
+          ( c >= 'A' && c <= 'Z' )
+          ||
+          ( c >= '0' && c <= '9' )
+          ||
+          c `elem` ['-', '.', '_']
+    | c >= '\183'
+        = c `elemCS` charPropXmlNameChar 
+    | otherwise
+        = False
 {-# INLINE isXmlNCNameChar #-}
 
 charPropXmlNCNameChar                 :: CharSet
 charPropXmlNCNameChar
     = charPropXmlNameChar
       `diffCS`
-      singleCS '\x3A'
+      singleCS '\x3A'                                           -- no :
 
 -- |
 -- checking for XML NCName start character: no \":\" allowed
@@ -182,14 +298,24 @@ charPropXmlNCNameChar
 -- see also : 'isXmlNameChar', 'isXmlNCNameChar'
 
 isXmlNCNameStartChar :: Char -> Bool
-isXmlNCNameStartChar c = c `elemCS` charPropXmlNCNameStartChar
+isXmlNCNameStartChar c                                          -- optimized for ASCII chars
+    | c <= 'z'
+        = c >= 'a'
+          ||
+          ( c >= 'A' && c <= 'Z' )
+          ||
+          c == '_'
+    | c >= '\192'
+        = c `elemCS` charPropXmlNameStartChar
+    | otherwise
+        = False
 {-# INLINE isXmlNCNameStartChar #-}
 
 charPropXmlNCNameStartChar            :: CharSet
 charPropXmlNCNameStartChar
     = charPropXmlNameStartChar
       `diffCS`
-      singleCS '\x3A'
+      singleCS '\x3A'                                           -- no :
 
 -- |
 -- checking for XML public id character

@@ -217,6 +217,8 @@ import System.Time
 
 import Text.ParserCombinators.Parsec
 
+import Text.XML.HXT.Parser.XmlCharParser
+
 import Text.XML.HXT.Core
 import Text.XML.HXT.XPath
 import Text.XML.HXT.XPath.XPathDataTypes
@@ -776,7 +778,7 @@ Builds a StateIdentifier value from an XPath expression string.
 -}
 toId				:: String -> StateIdentifier -> Maybe StateIdentifier
 toId str cursor =
-    case (runParser parseXPath [] "" str) of
+    case (runParser parseXPath (withNormNewline []) "" str) of
         Left _      -> Nothing
         Right (PathExpr _ (Just (LocPath Abs path)))    -> Just (path)
         Right (PathExpr _ (Just (LocPath Rel path)))    -> Just (cursor ++ path)

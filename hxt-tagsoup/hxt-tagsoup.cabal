@@ -36,4 +36,5 @@ library
                 haskell98          >= 1    && < 2,
                 tagsoup            >= 0.10 && < 0.13,
                 hxt-charproperties >= 9    && < 10,
+                hxt-unicode        >= 9    && < 10,
                 hxt                >= 9.1  && < 10

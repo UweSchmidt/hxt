@@ -128,25 +128,14 @@ processDTD
               >>>
               setSysAttrString a_standalone ""
               >>>
-              ( addDocType
-                `whenNot`
-                ( getChildren >>> isDTDDoctype )
-              )
-              >>>
               processChildren substParamEntities
               >>>
               setDocumentStatusFromSystemState "in XML DTD processing"
+              >>>
+              traceMsg 1 ("processDTD: parameter entities processed")
             )
             `when`
             documentStatusOk
-          where
-          addDocType
-              = replaceChildren ( (getChildren >>> isXmlPi)
-                                  <+>
-                                  mkDTDDoctype [] none
-                                  <+>
-                                  (getChildren >>> neg isXmlPi)
-                                )
 
 substParamEntities      :: IOStateArrow s XmlTree XmlTree
 substParamEntities
@@ -214,7 +203,9 @@ substParamEntity loc recList
                               >>>
                               parseXmlDTDdecl
                               >>>
-                              substRefsInEntityValue
+                              substPeRefsInEntityValue
+                              >>>
+                              traceDTD "ENTITY declaration after PE substitution"
                               >>>
                               processEntityDecl
                               >>>
@@ -259,17 +250,24 @@ substParamEntity loc recList
         processExternalEntity                                           -- only the current base uri must be remembered
             = setDTDAttrValue a_url $< ( getDTDAttrValue k_system >>> mkAbsURI )
 
-        processInternalEntity   :: DTDStateArrow XmlTree XmlTree        -- just combine all parts of the entity value
-        processInternalEntity                                           -- into one string
-            = replaceChildren (xshow getChildren >>> mkText)
+        processInternalEntity   :: DTDStateArrow XmlTree XmlTree
+        processInternalEntity
+            = this                                                      -- everything is already done in substPeRefsInEntityValue
 
         processParamEntity      :: String -> DTDStateArrow XmlTree XmlTree
         processParamEntity peName
             = ifA (constA peName >>> getPeValue)
-              ( issueWarn ("parameter entity " ++ show peName ++ " already defined") )
+              ( issueWarn ("parameter entity " ++ show peName ++ " already defined")
+                >>>
+                none                                                    -- second def must be ignored
+              )
               ( ( ifA ( hasDTDAttr k_system )                           -- is external param entity ?
-                  ( runInLocalURIContext getExternalParamEntityValue )
-                  ( replaceChildren (xshow getChildren >>> mkText) )    -- just combine all parts of the entity value into one string
+                  ( setDTDAttrValue a_url $<                            -- store absolut url
+                    ( getDTDAttrValue k_system >>> mkAbsURI )
+                  )
+                  -- this is too early, pe may be not referenced and file may be not there
+                  -- ( runInLocalURIContext getExternalParamEntityValue )
+                  ( this )                                              -- everything is already done in substPeRefsInEntityValue
                 )
                 >>>
                 addPe peName
@@ -278,32 +276,50 @@ substParamEntity loc recList
     substPERef                  :: String -> DTDStateArrow XmlTree XmlTree
     substPERef pn
         = choiceA
-          [ isInternalRef       :-> issueErr ("a parameter entity reference of " ++ show pn ++ " occurs in the internal subset of the DTD")
-          , isUndefinedRef      :-> issueErr ("parameter entity " ++ show pn ++ " not found (forward reference?)")
+          [ isUndefinedRef      :-> issueErr ("parameter entity " ++ show pn ++ " not found (forward reference?)")
+          , isInternalRef       :-> issueErr ("a parameter entity reference of " ++ show pn ++ " occurs in the internal subset of the DTD")
+          , isUnreadExternalRef :-> ( perform
+                                      ( peVal                           -- load the external pe value
+                                        >>>                             -- update the pe env
+                                        getExternalParamEntityValue pn  -- and try again
+                                        >>>
+                                        addPe pn
+                                      )
+                                      >>>
+                                      substPERef pn
+                                    )
           , this                :-> substPE
           ]
           `when`
           isDTDPERef
         where
-        isInternalRef   = isA (const (loc == Internal))
-        peVal           = constA pn >>> getPeValue
-        isUndefinedRef  = neg peVal
-        substPE
-            = replaceChildren (peVal >>> getChildren)                   -- store PE value in children component
-              >>>
-              ( ( setBase $< (peVal >>> getDTDAttrValue a_url) )        -- store base uri for external refs
-                `orElse`
-                this
-              )
-            where
-            setBase uri = setDTDAttrValue a_url uri
+        peVal                   = constA pn >>> getPeValue
 
-    substRefsInEntityValue      :: DTDStateArrow XmlTree XmlTree
-    substRefsInEntityValue
-        = ( ( processChildren ( transfCharRef
-                                >>>
-                                substPeRefsInValue []
-                              )
+        isUnreadExternalRef     = ( peVal
+                                    >>>
+                                    getDTDAttrValue a_url
+                                    >>>
+                                    isA (not . null)
+                                  )
+                                  `guards`
+                                  this
+
+        isInternalRef   = none -- isA (const (loc == Internal))         -- TODO: check this restriction, it seams rather meaningless
+        isUndefinedRef  = neg peVal
+        substPE         = replaceChildren (peVal >>> getChildren)       -- store PE value in children component
+
+    substPeRefsInEntityValue      :: DTDStateArrow XmlTree XmlTree
+    substPeRefsInEntityValue
+        = ( ( replaceChildren
+              ( xshow ( getChildren                                     -- substitute char entites
+                        >>>                                             -- and parameter references
+                        transfCharRef                                   -- combine all pieces to a single string
+                        >>>                                             -- as the new entity value
+                        substPeRefsInValue []
+                      )
+                >>>
+                mkText
+              )
             )
             `whenNot`
             hasDTDAttr k_system                                         -- only apply for internal entities
@@ -365,8 +381,8 @@ substParamEntity loc recList
               >>>
               parseXmlDTDEntityValue
               >>>
-              transfCharRef
-              >>>
+              -- transfCharRef             this must be done somewhere else
+              -- >>>
               substPeRefsInValue (pn : recl)
 
     substPeRefsInCondSect       :: RecList -> DTDStateArrow XmlTree XmlTree
@@ -473,36 +489,30 @@ getExternalDTDPart src
       >>>
       getChildren
 
-getExternalParamEntityValue     :: DTDStateArrow XmlTree XmlTree
-getExternalParamEntityValue
+getExternalParamEntityValue     :: String -> DTDStateArrow XmlTree XmlTree
+getExternalParamEntityValue pn
     = isDTDPEntity
       `guards`
-      ( setEntityValue $<<< ( getDTDAttrl
-                              &&&
-                              listA ( getEntityValue $< getDTDAttrl )
-                              &&&
-                              getBaseURI
-                            )
-      )
+      ( setEntityValue $< ( listA ( getEntityValue $< getDTDAttrValue a_url ) ) )
     where
-    getEntityValue      :: Attributes -> DTDStateArrow XmlTree XmlTree
-    getEntityValue al
-        = root [sattr a_source (lookup1 k_system al){- <+> catA (map (uncurry sattr) al)-}] []
+    getEntityValue      :: String -> DTDStateArrow XmlTree XmlTree
+    getEntityValue url
+        = root [sattr a_source url] []
           >>>
-          getXmlEntityContents
+          runInLocalURIContext getXmlEntityContents
           >>>
-          traceMsg 2 "getExternalParamEntityValue: contents read"
+          traceMsg 2 ("getExternalParamEntityValue: contents read for " ++ show pn ++ " from " ++ show url)
           >>>
           getChildren
 
-    setEntityValue      :: Attributes -> XmlTrees -> String -> DTDStateArrow XmlTree XmlTree
-    setEntityValue al res base
+    setEntityValue      :: XmlTrees -> DTDStateArrow XmlTree XmlTree
+    setEntityValue res
         | null res
-            = issueErr ("illegal external parameter entity value for entity %" ++ peName ++";")
+            = issueErr ("illegal external parameter entity value for entity %" ++ pn ++";")
         | otherwise
-            = mkDTDElem PENTITY ((a_url, base) : al) (arrL $ const res)
-        where
-        peName = lookup1 a_name al
+            = replaceChildren (constL res)
+              >>>
+              setDTDAttrValue a_url ""                          -- mark entity as read
 
 traceDTD        :: String -> DTDStateArrow XmlTree XmlTree
 traceDTD msg    = traceMsg 3 msg >>> traceTree

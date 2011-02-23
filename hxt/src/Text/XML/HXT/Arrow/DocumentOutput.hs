@@ -221,7 +221,11 @@ encodeDocument' quoteXml supressXmlPi defaultEnc
     encode      :: String -> LA XmlTree XmlTree
     encode encodingScheme
         | encodingScheme == unicodeString
-	    = this
+	    = replaceChildren
+              ( (getChildren >. XS.xshow'' cQuot aQuot)
+                >>>
+                mkText
+              )
         | isNothing encodeFct
             = none
         | otherwise

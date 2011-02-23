@@ -19,7 +19,7 @@ PL	= $(PL1) \
 
 all	:
 	$(foreach i,$(PL), ( cd $i && cabal configure && cabal build && cabal install && cabal sdist; ); )
-	ghc-pkg list
+	@ echo not done: ghc-pkg list
 
 reinstall:
 	$(foreach i,$(PL), ( cd $i && cabal install; ); )

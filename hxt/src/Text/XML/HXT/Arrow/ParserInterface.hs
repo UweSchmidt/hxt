@@ -56,12 +56,11 @@ parseXmlDTDdecl                 =  arrL DP.parseXmlDTDdecl
 parseXmlDTDEntityValue          :: ArrowXml a => a XmlTree XmlTree
 parseXmlDTDEntityValue          =  arrL DP.parseXmlDTDEntityValue
 
-parseXmlAttrValue               :: ArrowXml a => String -> a XmlTree XmlTree
-parseXmlAttrValue context       =  arrL (XP.parseXmlAttrValue context)
+parseXmlEntityValueAsContent    :: ArrowXml a => String -> a XmlTree XmlTree
+parseXmlEntityValueAsContent    =  arrL . XP.parseXmlEntityValueAsContent
 
-parseXmlGeneralEntityValue      :: ArrowXml a => String -> a XmlTree XmlTree
-parseXmlGeneralEntityValue context
-                                =  arrL (XP.parseXmlGeneralEntityValue context)
+parseXmlEntityValueAsAttrValue  :: ArrowXml a => String -> a XmlTree XmlTree
+parseXmlEntityValueAsAttrValue  =  arrL . XP.parseXmlEntityValueAsAttrValue
 
 -- ------------------------------------------------------------
 

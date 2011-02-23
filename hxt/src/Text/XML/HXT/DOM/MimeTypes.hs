@@ -47,6 +47,7 @@ application_xhtml,
  text_html,
  text_pdf,
  text_plain,
+ text_xdtd,
  text_xml,
  text_xml_external_parsed_entity        :: String
 
@@ -58,6 +59,7 @@ application_xml_dtd                     = "application/xml-dtd"
 text_html                               = "text/html"
 text_pdf                                = "text/pdf"
 text_plain                              = "text/plain"
+text_xdtd                               = "text/x-dtd"
 text_xml                                = "text/xml"
 text_xml_external_parsed_entity         = "text/xml-external-parsed-entity"
 
@@ -74,6 +76,7 @@ isXmlMimeType t                         = ( t `elem` [ application_xhtml
                                                      , application_xml_dtd
                                                      , text_xml
                                                      , text_xml_external_parsed_entity
+                                                     , text_xdtd
                                                      ]
                                             ||
                                             "+xml" `isSuffixOf` t               -- application/mathml+xml

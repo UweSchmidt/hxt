@@ -53,11 +53,11 @@ import Text.XML.HXT.DOM.Interface       ( XmlTrees
                                         , xmlnsNamespace
                                         )
 import Text.XML.HXT.DOM.XmlNode         ( isElem
-                                        , mkError
-                                        , mkCmt
-                                        , mkText
+                                        , mkError'
+                                        , mkCmt'
+                                        , mkText'
                                         , mkElement
-                                        , mkAttr
+                                        , mkAttr'
                                         )
 
 -- ----------------------------------------
@@ -359,18 +359,18 @@ parseHtmlTagSoup withNamespaces withWarnings withComment removeWhiteSpace asHtml
     wrap                = (:[])
 
     warn
-        | withWarnings  = wrap . mkError c_warn . show . (doc ++) . (" " ++)
+        | withWarnings  = wrap . mkError' c_warn . show . (doc ++) . (" " ++)
         | otherwise     = const []
     cmt
-        | withComment   = wrap . mkCmt
+        | withComment   = wrap . mkCmt'
         | otherwise     = const []
     txt
         | removeWhiteSpace
                         = \ t ->
                           if all isXmlSpaceChar t
                           then []
-                          else wrap . mkText $ t
-        | otherwise     = wrap . mkText
+                          else wrap . mkText' $ t
+        | otherwise     = wrap . mkText'
 
     isEmptyElem
         | asHtml        = isEmptyHtmlTag
@@ -486,7 +486,7 @@ parseHtmlTagSoup withNamespaces withWarnings withComment removeWhiteSpace asHtml
             mkAttrs             = mapM (uncurry mkA)
             mkA an av           = do
                                   qan <- mkAttrQN nenv an
-                                  return (mkAttr qan (wrap . mkText $ av))
+                                  return (mkAttr' qan (wrap . mkText' $ av))
 
         closeAll                :: ([String], NsEnv) -> Parser XmlTrees
         closeAll (ns',_)        = return (concatMap wrn ns')

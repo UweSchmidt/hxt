@@ -33,26 +33,32 @@ import Text.ParserCombinators.Parsec.Pos
 
 import Text.XML.HXT.DOM.Interface
 
-
-
 import Text.XML.HXT.DOM.ShowXml
     ( xshow
     )
-import Text.XML.HXT.DOM.XmlNode
-    ( mkDTDElem
-    , mkText
-    , mkError
-    , isText
-    , isDTD
-    , getText
-    , getDTDPart
-    , getDTDAttrl
-    , getChildren
-    , setChildren
-    )
+import Text.XML.HXT.DOM.XmlNode                        ( mkDTDElem'
+                                                       , mkText'
+                                                       , mkError'
+                                                       , isText
+                                                       , isDTD
+                                                       , getText
+                                                       , getDTDPart
+                                                       , getDTDAttrl
+                                                       , getChildren
+                                                       , setChildren
+                                                       )
 import qualified Text.XML.HXT.Parser.XmlTokenParser    as XT
-import qualified Text.XML.HXT.Parser.XmlCharParser     as XC ( xmlSpaceChar )
-import qualified Text.XML.HXT.Parser.XmlDTDTokenParser as XD ( dtdToken )
+
+import           Text.XML.HXT.Parser.XmlCharParser     ( XParser
+                                                       , XPState(..)
+                                                       , withoutNormNewline
+                                                       )
+
+import qualified Text.XML.HXT.Parser.XmlCharParser     as XC
+                                                       ( xmlSpaceChar )
+
+import qualified Text.XML.HXT.Parser.XmlDTDTokenParser as XD
+                                                       ( dtdToken )
 
 -----------------------------------------------------------
 --
@@ -61,21 +67,25 @@ import qualified Text.XML.HXT.Parser.XmlDTDTokenParser as XD ( dtdToken )
 
 type LocalState = (Int, [(Int, String, SourcePos)])
 
-type SParser a  = GenParser Char LocalState a
+type SParser a  = XParser LocalState a
 
-initialLocalState       :: SourcePos -> LocalState
-initialLocalState p     = (0, [(0, sourceName p, p)])
+initialState    :: SourcePos -> XPState LocalState
+initialState p  = withoutNormNewline (0, [(0, sourceName p, p)])
+
+updateLocalState :: (LocalState -> LocalState) -> SParser ()
+updateLocalState upd
+                = updateState $ \ xps -> xps { xps_userState = upd $ xps_userState xps }
 
 pushPar         :: String -> SParser ()
 pushPar n       = do
                   p <- getPosition
-                  updateState (\ (i, s) -> (i+1, (i+1, n, p) : s))
+                  updateLocalState (\ (i, s) -> (i+1, (i+1, n, p) : s))
                   setPosition ( newPos (sourceName p ++ " (line " ++ show (sourceLine p) ++ ", column " ++ show (sourceColumn p) ++ ") in content of parameter entity ref %" ++ n ++ ";") 1 1)
 
 popPar          :: SParser ()
 popPar          = do
                   oldPos <- getPos
-                  updateState pop
+                  updateLocalState pop
                   setPosition oldPos
                 where
                 pop (i, [(_, s, p)]) = (i+1, [(i+1, s, p)])     -- if param entity substitution is correctly implemented, this case does not occur
@@ -84,12 +94,14 @@ popPar          = do
 
 getParNo        :: SParser Int
 getParNo        = do
-                  (_i, (top, _n, _p) : _s) <- getState
+                  s <- getState
+                  let (_i, (top, _n, _p) : _s) = xps_userState s
                   return top
 
 getPos          :: SParser SourcePos
 getPos          = do
-                  (_i, (_top, _n, p) : _s) <- getState
+                  s <- getState
+                  let (_i, (_top, _n, p) : _s) = xps_userState s
                   return p
 
 delPE   :: SParser ()
@@ -129,8 +141,8 @@ inSamePE p
 -- ------------------------------------------------------------
 
 xmlSpaceChar    :: SParser ()
-xmlSpaceChar    = ( do
-                    _ <- XC.xmlSpaceChar
+xmlSpaceChar    = ( XC.xmlSpaceChar
+                    >>
                     return ()
                   )
                   <|>
@@ -141,27 +153,27 @@ xmlSpaceChar    = ( do
 
 skipS           :: SParser ()
 skipS
-    = do
-      skipMany1 xmlSpaceChar
+    = skipMany1 xmlSpaceChar
+      >>
       return ()
 
 skipS0          :: SParser ()
 skipS0
-    = do
-      skipMany xmlSpaceChar
+    = skipMany xmlSpaceChar
+      >>
       return ()
 
 name            :: SParser XmlTree
 name
     = do
       n <- XT.name
-      return (mkDTDElem NAME [(a_name, n)] [])
+      return (mkDTDElem' NAME [(a_name, n)] [])
 
 nmtoken         :: SParser XmlTree
 nmtoken
     = do
       n <- XT.nmtoken
-      return (mkDTDElem NAME [(a_name, n)] [])
+      return (mkDTDElem' NAME [(a_name, n)] [])
 
 -- ------------------------------------------------------------
 --
@@ -179,7 +191,7 @@ elementDeclBody
       skipS
       (al, cl) <- contentspec
       skipS0
-      return [mkDTDElem ELEMENT ((a_name, n) : al) cl]
+      return [mkDTDElem' ELEMENT ((a_name, n) : al) cl]
 
 contentspec     :: SParser (Attributes, XmlTrees)
 contentspec
@@ -206,7 +218,7 @@ children
     = ( do
         (al, cl) <- choiceOrSeq
         modifier <- optOrRep
-        return ([(a_type, v_children)], [mkDTDElem CONTENT (modifier ++ al) cl])
+        return ([(a_type, v_children)], [mkDTDElem' CONTENT (modifier ++ al) cl])
       )
       <?> "element content"
 
@@ -261,14 +273,14 @@ cp
         m <- optOrRep
         return ( case m of
                  [(_, "")] -> n
-                 _         -> mkDTDElem CONTENT (m ++ [(a_kind, v_seq)]) [n]
+                 _         -> mkDTDElem' CONTENT (m ++ [(a_kind, v_seq)]) [n]
                )
       )
       <|>
       ( do
         (al, cl) <- choiceOrSeq
         m <- optOrRep
-        return (mkDTDElem CONTENT (m ++ al) cl)
+        return (mkDTDElem' CONTENT (m ++ al) cl)
       )
 
 -- ------------------------------------------------------------
@@ -296,7 +308,7 @@ mixed
           else do
                _ <- char '*' <?> "closing parent for mixed content (\")*\")"
                return ( [ (a_type, v_mixed) ]
-                      , [ mkDTDElem CONTENT [ (a_modifier, "*")
+                      , [ mkDTDElem' CONTENT [ (a_modifier, "*")
                                              , (a_kind, v_choice)
                                              ] nl
                         ]
@@ -322,7 +334,7 @@ attlistDeclBody
       return (map (mkDTree n) al)
     where
     mkDTree n' (al, cl)
-        = mkDTDElem ATTLIST ((a_name, n') : al) cl
+        = mkDTDElem' ATTLIST ((a_name, n') : al) cl
 
 attDef          :: SParser (Attributes, XmlTrees)
 attDef
@@ -426,7 +438,7 @@ geDecl
       skipS
       (al, cl) <- entityDef
       skipS0
-      return [mkDTDElem ENTITY ((a_name, n) : al) cl]
+      return [mkDTDElem' ENTITY ((a_name, n) : al) cl]
 
 entityDef               :: SParser (Attributes, XmlTrees)
 entityDef
@@ -450,7 +462,7 @@ peDecl
       skipS
       (al, cs) <- peDef
       skipS0
-      return [mkDTDElem PENTITY ((a_name, n) : al) cs]
+      return [mkDTDElem' PENTITY ((a_name, n) : al) cs]
 
 peDef                   :: SParser (Attributes, XmlTrees)
 peDef
@@ -460,7 +472,7 @@ peDef
       al <- externalID
       return (al, [])
 
-entityValue     :: GenParser Char state (Attributes, XmlTrees)
+entityValue     :: XParser s (Attributes, XmlTrees)
 entityValue
     = do
       v <- XT.entityValueT
@@ -520,7 +532,7 @@ notationDeclBody
                publicID
              )
       skipS0
-      return [mkDTDElem NOTATION ((a_name, n) : eid) []]
+      return [mkDTDElem' NOTATION ((a_name, n) : eid) []]
 
 publicID                :: SParser Attributes
 publicID
@@ -540,7 +552,7 @@ condSectCondBody
       skipS0
       let n' = stringToUpper n
       if n' `elem` [k_include, k_ignore]
-         then return [mkText  n']
+         then return [mkText'  n']
          else fail $ "INCLUDE or IGNORE expected in conditional section"
 
 -- ------------------------------------------------------------
@@ -579,13 +591,13 @@ parseXmlDTDEntityValue  :: XmlTree -> XmlTrees
 parseXmlDTDEntityValue t        -- (NTree (XDTD PEREF al) cl)
     | isDTDPEref t
         = ( either
-            ( (:[]) . mkError c_err . (++ "\n") . show )
+            ( (:[]) . mkError' c_err . (++ "\n") . show )
             ( \cl' -> if null cl'
-                         then [mkText ""]
+                         then [mkText' ""]
                          else cl'
             )
             .
-            parse parser source
+            runParser parser (withoutNormNewline ()) source
           ) input
     | otherwise
         = []
@@ -608,10 +620,10 @@ parseXmlDTDdeclPart t           -- @(NTree (XDTD PEREF al) cl)
         = ( (:[])
             .
             either
-               ( mkError c_err . (++ "\n") . show )
+               ( mkError' c_err . (++ "\n") . show )
                ( flip setChildren $ t ) -- \ cl' -> setChildren cl' t)
             .
-            parse parser source
+            runParser parser (withoutNormNewline ()) source
           ) input
     | otherwise
         = []
@@ -640,9 +652,9 @@ parseXmlDTDdeclPart n
 parseXmlDTDdecl :: XmlTree -> XmlTrees
 parseXmlDTDdecl t       -- (NTree (XDTD dtdElem al) cl)
     | isDTD t
-        = ( either ((:[]) . mkError c_err . (++ "\n") . show) id
+        = ( either ((:[]) . mkError' c_err . (++ "\n") . show) id
             .
-            runParser parser (initialLocalState pos) source
+            runParser parser (initialState pos) source
           ) input
     | otherwise
         = []

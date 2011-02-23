@@ -32,6 +32,7 @@ test		: $(prog)
 		$(MAKE) test0 test1 test2 test3 test4
 
 EX1		= ./example1.xml
+EX1a		= ./example1CRLF.xml
 EXi		= ./invalid.xml
 EX2		= ../../xhtml/xhtml.xml
 EX3		= ./namespace0.xml
@@ -75,6 +76,9 @@ test1		:
 		@echo
 		@sleep 2 ; echo ; echo "===> once again, but without any markup" ; echo ; sleep 2
 		$(prog) --action=only-text --output-encoding=ISO-8859-1 $(EX1)
+		@echo
+		@sleep 2 ; echo ; echo "===> same source, but with CRLF, parser will emit UTF-8" ; echo ; sleep 2
+		$(prog) --output-encoding=UTF-8 $(EX1a)
 		@echo
 
 test2		:

@@ -376,10 +376,10 @@ readFromString config   = applyA ( arr $ readString config )
 -- Does not run in the IO monad
 
 hread                   :: ArrowXml a => a String XmlTree
-hread			= fromLA $
-                          parseHtmlContent			-- substHtmlEntityRefs is done in parser
+hread                   = fromLA $
+                          parseHtmlContent                      -- substHtmlEntityRefs is done in parser
                           >>>
-                          editNTreeA [isError :-> none]		-- ignore all errors
+                          editNTreeA [isError :-> none]         -- ignore all errors
                           >>>
                           canonicalizeContents
 
@@ -388,7 +388,7 @@ hread			= fromLA $
 -- (substitute char refs, ...)
 
 xread                   :: ArrowXml a => a String XmlTree
-xread			= parseXmlContent	-- substXmlEntityRefs is done in parser
+xread                   = parseXmlContent       -- substXmlEntityRefs is done in parser
                           >>>
                           canonicalizeContents
 

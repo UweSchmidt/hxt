@@ -43,8 +43,7 @@ import Data.Maybe                               ( fromMaybe
                                                 )
 import qualified Data.Map                       as M
 
-import Text.ParserCombinators.Parsec            ( Parser
-                                                , SourcePos
+import Text.ParserCombinators.Parsec            ( SourcePos
                                                 , anyChar
                                                 , between
                                                 -- , char
@@ -54,7 +53,7 @@ import Text.ParserCombinators.Parsec            ( Parser
                                                 , many1
                                                 , noneOf
                                                 , option
-                                                , parse
+                                                , runParser
                                                 , satisfy
                                                 , string
                                                 , try
@@ -96,6 +95,8 @@ import Text.XML.HXT.Parser.XmlParsec            ( misc
                                                 , xMLDecl'
                                                 )
 import Text.XML.HXT.Parser.XmlCharParser        ( xmlChar
+                                                , SimpleXParser
+                                                , withNormNewline
                                                 )
 import Text.XML.HXT.Parser.XhtmlEntities        ( xhtmlEntities
                                                 )
@@ -103,13 +104,13 @@ import Text.XML.HXT.Parser.XhtmlEntities        ( xhtmlEntities
 -- ------------------------------------------------------------
 
 parseHtmlText           :: String -> XmlTree -> XmlTrees
-parseHtmlText loc t     = parseXmlText htmlDocument loc $ t
+parseHtmlText loc t     = parseXmlText htmlDocument (withNormNewline ()) loc $ t
 
 -- ------------------------------------------------------------
 
-parseHtmlFromString     :: Parser XmlTrees -> String -> String -> XmlTrees
+parseHtmlFromString     :: SimpleXParser XmlTrees -> String -> String -> XmlTrees
 parseHtmlFromString parser loc
-    = either ((:[]) . mkError' c_err . (++ "\n") . show) id . parse parser loc
+    = either ((:[]) . mkError' c_err . (++ "\n") . show) id . runParser parser (withNormNewline ()) loc
 
 parseHtmlDocument       :: String -> String -> XmlTrees
 parseHtmlDocument       = parseHtmlFromString htmlDocument
@@ -127,7 +128,7 @@ type OpenTags   = [(String, XmlTrees, XmlTreeFl)]
 
 -- ------------------------------------------------------------
 
-htmlDocument    :: Parser XmlTrees
+htmlDocument    :: SimpleXParser XmlTrees
 htmlDocument
     = do
       pl <- htmlProlog
@@ -135,7 +136,7 @@ htmlDocument
       eof
       return (pl ++ el)
 
-htmlProlog      :: Parser XmlTrees
+htmlProlog      :: SimpleXParser XmlTrees
 htmlProlog
     = do
       xml <- option []
@@ -159,7 +160,7 @@ htmlProlog
                  )
       return (xml ++ misc1 ++ dtdPart)
 
-doctypedecl     :: Parser XmlTrees
+doctypedecl     :: SimpleXParser XmlTrees
 doctypedecl
     = between (upperCaseString "<!DOCTYPE") gt
       ( do
@@ -173,7 +174,7 @@ doctypedecl
         return [mkDTDElem' DOCTYPE ((a_name, n) : exId) []]
       )
 
-externalID      :: Parser Attributes
+externalID      :: SimpleXParser Attributes
 externalID
     = do
       upperCaseString k_public
@@ -185,7 +186,7 @@ externalID
                             )
       return $ (k_public, pl) : if null sl then [] else [(k_system, sl)]
 
-htmlContent     :: Parser XmlTrees
+htmlContent     :: SimpleXParser XmlTrees
 htmlContent
     = option []
       ( do
@@ -207,7 +208,7 @@ htmlContent
 
 -- ------------------------------------------------------------
 
-hElement        :: Context -> Parser Context
+hElement        :: Context -> SimpleXParser Context
 hElement context
     = ( do
         t <- hSimpleData
@@ -242,7 +243,7 @@ hElement context
       )
 
 
-hSimpleData     :: Parser XmlTree
+hSimpleData     :: SimpleXParser XmlTree
 hSimpleData
     = charData''
       <|>
@@ -259,7 +260,7 @@ hSimpleData
           t <- many1 (satisfy (\ x -> isXmlChar x && not (x == '<' || x == '&')))
           return (mkText' t)
 
-hCloseTag       :: Context -> Parser Context
+hCloseTag       :: Context -> SimpleXParser Context
 hCloseTag context
     = do
       checkString "</"
@@ -268,14 +269,14 @@ hCloseTag context
       pos <- getPosition
       checkSymbol gt ("closing > in tag \"</" ++ n ++ "\" expected") (closeTag pos n context)
 
-hOpenTag        :: Context -> Parser Context
+hOpenTag        :: Context -> SimpleXParser Context
 hOpenTag context
     = ( do
         e   <- hOpenTagStart
         hOpenTagRest e context
       )
 
-hOpenTagStart   :: Parser ((SourcePos, String), XmlTrees)
+hOpenTagStart   :: SimpleXParser ((SourcePos, String), XmlTrees)
 hOpenTagStart
     = do
       np <- try ( do
@@ -288,7 +289,7 @@ hOpenTagStart
       as <- hAttrList
       return (np, as)
 
-hOpenTagRest    :: ((SourcePos, String), XmlTrees) -> Context -> Parser Context
+hOpenTagRest    :: ((SourcePos, String), XmlTrees) -> Context -> SimpleXParser Context
 hOpenTagRest ((pos, tn), al) context
     = ( do
         checkString "/>"
@@ -306,7 +307,7 @@ hOpenTagRest ((pos, tn), al) context
                )
       )
 
-hAttrList       :: Parser XmlTrees
+hAttrList       :: SimpleXParser XmlTrees
 hAttrList
     = many (try hAttribute)
       where
@@ -317,12 +318,12 @@ hAttrList
             skipS0
             return $ mkAttr' (mkName n) v
 
-hAttrValue      :: Parser XmlTrees
+hAttrValue      :: SimpleXParser XmlTrees
 hAttrValue
     = option []
       ( eq >> hAttrValue' )
 
-hAttrValue'     :: Parser XmlTrees
+hAttrValue'     :: SimpleXParser XmlTrees
 hAttrValue'
     = try ( between dq dq (hAttrValue'' "&\"") )
       <|>
@@ -333,11 +334,11 @@ hAttrValue'
         return [mkText' cs]
       )
 
-hAttrValue''    :: String -> Parser XmlTrees
+hAttrValue''    :: String -> SimpleXParser XmlTrees
 hAttrValue'' notAllowed
     = many ( hReference' <|> singleCharsT notAllowed)
 
-hReference'     :: Parser XmlTree
+hReference'     :: SimpleXParser XmlTree
 hReference'
     = try hReferenceT
       <|>
@@ -346,7 +347,7 @@ hReference'
         return (mkText' "&")
       )
 
-hReferenceT     :: Parser XmlTree
+hReferenceT     :: SimpleXParser XmlTree
 hReferenceT
     = do
       r <- referenceT
@@ -367,7 +368,7 @@ hReferenceT
         where
         en = fromJust . getEntityRef $ r
 
-hContent        :: Context -> Parser Context
+hContent        :: Context -> SimpleXParser Context
 hContent context
     = option context
       ( hElement context
@@ -380,7 +381,7 @@ hContent context
 -- hComment allows "--" in comments
 -- comment from XML spec does not
 
-hComment                :: Parser XmlTree
+hComment                :: SimpleXParser XmlTree
 hComment
     = do
       checkString "<!--"
@@ -400,7 +401,7 @@ hComment
 
 -- ------------------------------------------------------------
 
-hpI            	:: Parser XmlTree
+hpI            	:: SimpleXParser XmlTree
 hpI = checkString "<?"
       >>
       ( try ( do
@@ -419,7 +420,7 @@ hpI = checkString "<?"
 
 -- ------------------------------------------------------------
 
-hcDSect        :: Parser XmlTree
+hcDSect        :: SimpleXParser XmlTree
 hcDSect
     = do
       checkString "<![CDATA["
@@ -439,7 +440,7 @@ hcDSect
 
 -- ------------------------------------------------------------
 
-checkSymbol     :: Parser () -> String -> Context -> Parser Context
+checkSymbol     :: SimpleXParser () -> String -> Context -> SimpleXParser Context
 checkSymbol p msg context
     = ( p
         >>
@@ -451,13 +452,13 @@ checkSymbol p msg context
         return $ addHtmlWarn (show pos ++ " " ++ msg) context
       )
 
-lowerCaseName   :: Parser String
+lowerCaseName   :: SimpleXParser String
 lowerCaseName
     = do
       n <- name
       return (map toLower n)
 
-upperCaseString :: String -> Parser ()
+upperCaseString :: String -> SimpleXParser ()
 upperCaseString s
     = try (sequence (map (\ c -> satisfy (( == c) . toUpper)) s)) >> return ()
 

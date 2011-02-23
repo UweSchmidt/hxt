@@ -55,6 +55,8 @@ import Text.XML.HXT.XPath.XPathToNodeSet( xPValue2XmlNodeSet
                                         , emptyXmlNodeSet
                                         )
 
+import Text.XML.HXT.Parser.XmlCharParser( withNormNewline )
+
 import Text.ParserCombinators.Parsec    ( runParser )
 
 -- ----------------------------------------
@@ -210,7 +212,7 @@ parseXPathExpr                          = parseXPathExprWithNsEnv []
 -- and return an expr tree or an error message
 
 parseXPathExprWithNsEnv                 :: Attributes -> String -> Either String Expr
-parseXPathExprWithNsEnv nsEnv xpStr     = left fmtErr . runParser parseXPath (toNsEnv nsEnv) "" $ xpStr
+parseXPathExprWithNsEnv nsEnv xpStr     = left fmtErr . runParser parseXPath (withNormNewline (toNsEnv nsEnv)) "" $ xpStr
     where
     fmtErr parseError                   = "Syntax error in XPath expression " ++
                                           show xpStr ++ ": " ++

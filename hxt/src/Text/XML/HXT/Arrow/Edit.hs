@@ -24,9 +24,6 @@ module Text.XML.HXT.Arrow.Edit
 
     , xshowEscapeXml
 
-    -- , escapeXmlDoc
-    -- , escapeHtmlDoc
-
     , escapeXmlRefs
     , escapeHtmlRefs
 
@@ -109,64 +106,64 @@ import           Data.Maybe
 canonicalizeTree'       :: LA XmlTree XmlTree -> LA XmlTree XmlTree
 canonicalizeTree' toBeRemoved
     = processChildren
-      ( (none `when` (isText <+> isXmlPi))	-- remove XML PI and all text around XML root element
+      ( (none `when` (isText <+> isXmlPi))      -- remove XML PI and all text around XML root element
         >>>
         (deep isPi `when` isDTD)                -- remove DTD parts, except PIs whithin DTD
       )
       >>>
       canonicalizeNodes toBeRemoved
 {-
-canonicalize1Node 	:: LA XmlTree XmlTree -> LA XmlTree XmlTree
+canonicalize1Node       :: LA XmlTree XmlTree -> LA XmlTree XmlTree
 canonicalize1Node toBeRemoved
     = choiceA
-      [ toBeRemoved 	:-> none
-      , isElem     	:-> ( processAttrl
+      [ toBeRemoved     :-> none
+      , isElem          :-> ( processAttrl
                               ( processChildren transfCharRef
                                 >>>
-                                collapseXText'	-- combine text in attribute values
+                                collapseXText'  -- combine text in attribute values
                               )
                               >>>
                               collapseXText'    -- combine text in content
                             )
-      , isCharRef   	:-> ( getCharRef
+      , isCharRef       :-> ( getCharRef
                               >>>
                               arr (\ i -> [toEnum i])
                               >>>
                               mkText
                             )
-      , isCdata     	:-> ( getCdata
+      , isCdata         :-> ( getCdata
                               >>>
                               mkText
                             )
-      , this        	:-> this
+      , this            :-> this
       ]
 -}
-canonicalizeNodes 	:: LA XmlTree XmlTree -> LA XmlTree XmlTree
+canonicalizeNodes       :: LA XmlTree XmlTree -> LA XmlTree XmlTree
 canonicalizeNodes toBeRemoved
     = editNTreeA $
-      [ toBeRemoved 	:-> none
-      , ( isElem >>> getAttrl >>> getChildren >>> isCharRef )	-- canonicalize attribute list
-	                :-> ( processAttrl
+      [ toBeRemoved     :-> none
+      , ( isElem >>> getAttrl >>> getChildren >>> isCharRef )   -- canonicalize attribute list
+                        :-> ( processAttrl
                               ( processChildren transfCharRef
                                 >>>
-                                collapseXText'			-- combine text in attribute values
+                                collapseXText'                  -- combine text in attribute values
                               )
                               >>>
-                              ( collapseXText'  		-- and combine text in content
+                              ( collapseXText'                  -- and combine text in content
                                 `when`
                                 (getChildren >>. has2XText)
                               )
                             )
       , ( isElem >>> (getChildren >>. has2XText) )
-		     	:-> collapseXText'      		-- combine text in content
+                        :-> collapseXText'                      -- combine text in content
 
-      , isCharRef   	:-> ( getCharRef
+      , isCharRef       :-> ( getCharRef
                               >>>
                               arr (\ i -> [toEnum i])
                               >>>
                               mkText
                             )
-      , isCdata     	:-> ( getCdata
+      , isCdata         :-> ( getCdata
                               >>>
                               mkText
                             )
@@ -193,7 +190,7 @@ canonicalizeNodes toBeRemoved
 
 canonicalizeAllNodes    :: ArrowList a => a XmlTree XmlTree
 canonicalizeAllNodes    = fromLA $
-                          canonicalizeTree' isCmt         		-- remove comment
+                          canonicalizeTree' isCmt                       -- remove comment
 {-# INLINE canonicalizeAllNodes #-}
 
 -- |
@@ -203,7 +200,7 @@ canonicalizeAllNodes    = fromLA $
 -- see 'canonicalizeAllNodes'
 
 canonicalizeForXPath    :: ArrowList a => a XmlTree XmlTree
-canonicalizeForXPath    = fromLA $ canonicalizeTree' none		-- comment remains there
+canonicalizeForXPath    = fromLA $ canonicalizeTree' none               -- comment remains there
 {-# INLINE canonicalizeForXPath #-}
 
 -- |
@@ -224,7 +221,7 @@ canonicalizeContents    = fromLA $
 
 has2XText               :: XmlTrees -> XmlTrees
 has2XText ts0@(t1 : ts1@(t2 : ts2))
-    | XN.isText t1	= if XN.isText t2
+    | XN.isText t1      = if XN.isText t2
                           then ts0
                           else has2XText ts2
     | otherwise         = has2XText ts1
@@ -251,7 +248,7 @@ collapseXText'
 -- This is useful, e.g. after char and entity reference substitution
 
 collapseXText           :: ArrowList a => a XmlTree XmlTree
-collapseXText		= fromLA collapseXText'
+collapseXText           = fromLA collapseXText'
 
 -- |
 -- Applies collapseXText recursively.
@@ -260,7 +257,7 @@ collapseXText		= fromLA collapseXText'
 -- see also : 'collapseXText'
 
 collapseAllXText        :: ArrowList a => a XmlTree XmlTree
-collapseAllXText	= fromLA $ processBottomUp collapseXText'
+collapseAllXText        = fromLA $ processBottomUp collapseXText'
 
 -- ------------------------------------------------------------
 
@@ -422,7 +419,7 @@ removeComment           = none `when` isCmt
 -- remove all comments in a tree recursively
 
 removeAllComment        :: ArrowXml a => a XmlTree XmlTree
-removeAllComment	= fromLA $ editNTreeA [isCmt :-> none]
+removeAllComment        = fromLA $ editNTreeA [isCmt :-> none]
 
 -- ------------------------------------------------------------
 
@@ -446,8 +443,8 @@ removeWhiteSpace        = fromLA $ none `when` isWhiteSpace
 -- see also : 'removeWhiteSpace', 'removeDocWhiteSpace'
 
 removeAllWhiteSpace     :: ArrowXml a => a XmlTree XmlTree
-removeAllWhiteSpace	= fromLA $ editNTreeA [isWhiteSpace :-> none]
-                       -- fromLA $ processBottomUp removeWhiteSpace'	-- less efficient
+removeAllWhiteSpace     = fromLA $ editNTreeA [isWhiteSpace :-> none]
+                       -- fromLA $ processBottomUp removeWhiteSpace'    -- less efficient
 
 -- ------------------------------------------------------------
 
@@ -652,7 +649,7 @@ transfCdata             = fromLA $
 -- converts CDATA sections in whole document tree into normal text nodes
 
 transfAllCdata          :: ArrowXml a => a XmlTree XmlTree
-transfAllCdata		= fromLA $ editNTreeA [isCdata :-> (getCdata >>> mkText)]
+transfAllCdata          = fromLA $ editNTreeA [isCdata :-> (getCdata >>> mkText)]
 
 -- |
 -- converts a character reference to normal text
@@ -699,7 +696,7 @@ addDefaultDTDecl
             <+>
             txt "\n"
             <+>
-            ( getChildren >>> (none `when` isDTDDoctype) )      -- remove old DTD stuff
+            ( getChildren >>> (none `when` isDTDDoctype) )      -- remove old DTD decl
           )
 
 -- ------------------------------------------------------------
@@ -781,112 +778,4 @@ addDoctypeDecl rootElem public system
         getChildren
       )
 
--- ------------------------------------------------------------
-
-{- old stuff: XML quoting is done in ShowXml
-
-escapeText''    :: (Char -> XmlTree) -> (Char -> Bool) -> XmlTree -> XmlTrees
-escapeText'' escChar isEsc t
-    = maybe [t] escape' . XN.getText $ t
-    where
-    escape' "" = [t]            -- empty text nodes remain empty text nodes
-    escape' s  = escape s       -- they do not disapear
-
-    escape ""
-        = []
-    escape (c:s1)
-        | isEsc c
-            = escChar c : escape s1
-    escape s
-        = XN.mkText s1 : escape s2
-        where
-        (s1, s2) = break isEsc s
-
-{-
-escapeCharRef   :: Char -> XmlTree
-escapeCharRef   = XN.mkCharRef . fromEnum
--}
-
-escapeEntityRef :: EntityRefTable -> Char -> XmlTree
-escapeEntityRef entityTable c
-    = maybe (XN.mkCharRef c') XN.mkEntityRef . M.lookup c' $ entityTable
-    where
-    c' = fromEnum c
-
-escapeXmlEntityRef      :: Char -> XmlTree
-escapeXmlEntityRef      = escapeEntityRef xmlEntityRefTable
-
-escapeHtmlEntityRef     :: Char -> XmlTree
-escapeHtmlEntityRef     = escapeEntityRef xhtmlEntityRefTable
-
- end old stuff: XML quoting is done in ShowXml
--}
-
--- ------------------------------------------------------------
-
-{- old stuff: XML quoting is done in ShowXml
-
--- |
--- escape all special XML chars into XML entity references or char references
---
--- convert the special XML chars \< and & in text nodes into prefefiened XML entity references,
--- in attribute values also \', \", \>, \\n, \\r and \\t are converted into entity or char references,
--- in comments nothing is converted (see XML standard 2.4, useful e.g. for JavaScript).
-
-escapeXmlDoc            :: ArrowList a => a XmlTree XmlTree
-escapeXmlDoc
-    = fromLA $ escapeDoc escXmlText escXmlAttrValue
-    where
-    escXmlText
-        = arrL $ escapeText'' escapeXmlEntityRef (`elem` "<&")          -- no escape for ", ' and > required: XML standard 2.4
-    escXmlAttrValue
-        = arrL $ escapeText'' escapeXmlEntityRef (`elem` "<>\"\'&\n\r\t")
-
-
--- |
--- escape all special HTML chars into XHTML entity references or char references
---
--- convert the special XML chars \< and & and all none ASCII chars in text nodes into prefefiened XML or XHTML entity references,
--- in attribute values also \', \", \>, \\n, \\r and \\t are converted into entity or char references,
--- in comments nothing is converted
-
--- ------------------------------------------------------------
-
-escapeHtmlDoc           :: ArrowList a => a XmlTree XmlTree
-escapeHtmlDoc
-    = fromLA $ escapeDoc escHtmlText escHtmlAttrValue
-    where
-    escHtmlText
-        = arrL $ escapeText'' escapeHtmlEntityRef isHtmlTextEsc
-    escHtmlAttrValue
-        = arrL $ escapeText'' escapeHtmlEntityRef isHtmlAttrEsc
-
-    isHtmlTextEsc c
-        = c >= toEnum(128) || ( c `elem` "<&" )
-    isHtmlAttrEsc c
-        = c >= toEnum(128) || ( c `elem` "<>\"\'&\n\r\t" )
-
--- ------------------------------------------------------------
-
-escapeDoc               :: LA XmlTree XmlTree -> LA XmlTree XmlTree -> LA XmlTree XmlTree
-escapeDoc escText escAttr
-    = escape
-    where
-    escape
-        = choiceA
-          [ isElem  :-> ( processChildren escape
-                          >>>
-                          processAttrl escVal
-                        )
-          , isText  :-> escText
-          -- , isCmt   :-> escCmt
-          , isDTD   :-> processTopDown escDTD
-          , this    :-> this
-          ]
-    escVal   = processChildren escAttr
-    escDTD   = escVal `when` ( isDTDEntity <+> isDTDPEntity )
-
-
- end old stuff: XML quoting is done in ShowXml
--}
 -- ------------------------------------------------------------

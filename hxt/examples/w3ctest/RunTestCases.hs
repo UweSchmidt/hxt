@@ -165,7 +165,7 @@ runTestCases t
 			 .>>
 			 ( if null testOUT
 			   then thisM
-			   else ( liftMf canonicalizeAllNodes
+			   else ( liftMf
 				  .>>
 				  liftMf (processChildren (isXTag +++ isXPi))
 				  .>>

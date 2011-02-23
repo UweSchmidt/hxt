@@ -1,5 +1,5 @@
 name:          janus-library
-version:	0.6.0
+version:	0.7.0
 license:       OtherLicense
 license-file:  LICENSE
 author:        Christian Uhlig
@@ -32,8 +32,8 @@ library
                , network      >= 2.1  && < 3
                , regex-compat >= 0.92 && < 1
                , html         >= 1.0  && < 2
-               , hxt          >= 9    && < 10
-               , hxt-xpath    >= 9    && < 10
+               , hxt          >= 9.1  && < 10
+               , hxt-xpath    >= 9.1  && < 10
 
   if flag(withHsPlugins)
     build-depends: plugins    >= 1.1

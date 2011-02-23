@@ -258,8 +258,12 @@ xpickleVal xp           = arr (pickleDoc xp)
 -- | The arrow version of the unpickler function
 
 xunpickleVal            :: ArrowXml a => PU b -> a XmlTree b
-xunpickleVal xp         = arrL (maybeToList . unpickleDoc xp)
-
+xunpickleVal xp         = ( processChildren (none `whenNot` isElem)     -- remove all stuff surrounding the root element
+                            `when`
+                            isRoot
+                          )
+                          >>>
+                          arrL (maybeToList . unpickleDoc xp)
 
 -- | Compute the associated DTD of a pickler
 

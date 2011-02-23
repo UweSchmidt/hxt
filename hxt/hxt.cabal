@@ -167,6 +167,6 @@ library
                 deepseq    >= 1.1 && < 2,
                 bytestring >= 0.9 && < 1,
                 binary     >= 0.5 && < 1,
-                hxt-charproperties  >= 9 && < 10,
-                hxt-unicode         >= 9 && < 10,
-                hxt-regex-xmlschema >= 9 && < 10
+                hxt-charproperties  >= 9.1 && < 10,
+                hxt-unicode         >= 9   && < 10,
+                hxt-regex-xmlschema >= 9   && < 10

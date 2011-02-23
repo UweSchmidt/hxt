@@ -26,6 +26,7 @@
 
 module Text.XML.HXT.DTDValidation.Validation
     ( getDTDSubset
+    , generalEntitiesDefined
     , validate
     , validateDTD
     , validateDoc
@@ -126,5 +127,9 @@ getDTDSubset            = getChildren
                           >>>
                           ( filterA $ isDTDDoctype >>> getDTDAttrl >>> isA (hasEntry a_name) )
 
+generalEntitiesDefined	:: XmlArrow
+generalEntitiesDefined	= getDTDSubset
+                          >>>
+                          deep isDTDEntity
 
 -- ------------------------------------------------------------

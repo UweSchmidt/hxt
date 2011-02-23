@@ -30,6 +30,8 @@ import           Data.Map                               ( Map )
 
 import           Text.ParserCombinators.Parsec.Prim     ( runParser )
 
+import           Text.XML.HXT.Parser.XmlCharParser      ( withNormNewline )
+
 import           Text.XML.HXT.XSLT.Common
 import           Text.XML.HXT.XSLT.Names
 import           Text.XML.HXT.XSLT.CompiledStylesheet
@@ -48,7 +50,10 @@ parseExpr :: UriMapping -> String -> Expr
 parseExpr uris selectStr
     = either (error.show) id parseResult
     where
-    parseResult = runParser parseXPath (toNsEnv . Map.toList $ uris) ("select-expr:"++selectStr) selectStr
+    parseResult = runParser parseXPath
+                            (withNormNewline (toNsEnv . Map.toList $ uris))
+                            ("select-expr: " ++ selectStr)
+                            selectStr
 
 parseSelect :: UriMapping -> String -> SelectExpr
 parseSelect uris

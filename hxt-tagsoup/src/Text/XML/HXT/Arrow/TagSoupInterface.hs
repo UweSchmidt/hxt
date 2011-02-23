@@ -22,6 +22,8 @@ import Control.Arrow
 import Control.Arrow.ArrowList
 import Control.Arrow.ArrowTree
 
+import Data.String.Unicode            ( normalizeNL )
+
 import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlArrow
@@ -83,8 +85,8 @@ parseHtmlTagSoup                = parse
                                   replaceChildren
                                   ( ( getAttrValue a_source               -- get source name
                                       &&&
-                                      xshow getChildren
-                                    )                                     -- get string to be parsed
+                                      (xshow getChildren >>^ normalizeNL) -- get string to be parsed and normalize newline char
+                                    )
                                     >>>
                                     arr2L (TS.parseHtmlTagSoup withNamespaces' withWarnings' preserveCmt' removeWS' lowerCaseNames')
                                   )
