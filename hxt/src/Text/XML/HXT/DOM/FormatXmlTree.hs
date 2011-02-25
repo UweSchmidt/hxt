@@ -49,7 +49,7 @@ xnode2String n
     where
 
 showName        :: XNode -> String
-showName        = maybe "" showQn . getName
+showName        = maybe "" show . getName
 
 showAtts        :: XNode -> String
 showAtts        = concatMap showAl . fromMaybe [] . getAttrl
@@ -57,18 +57,9 @@ showAtts        = concatMap showAl . fromMaybe [] . getAttrl
 showAl          :: XmlTree -> String
 showAl t        -- (NTree (XAttr an) av)
     | isAttr t
-        = "\n|   " ++ (maybe "" showQn . getName $ t) ++ "=" ++ show (xshow . getChildren $ t)
+        = "\n|   " ++ (maybe "" show . getName $ t) ++ "=" ++ show (xshow . getChildren $ t)
     | otherwise
         = show t
-
-showQn          :: QName -> String
-showQn n
-    | null ns
-        = show $ qualifiedName n
-    | otherwise
-        = show $ "{" ++ ns ++ "}" ++ qualifiedName n
-    where
-    ns = namespaceUri n
 
 -- ------------------------------------------------------------
 

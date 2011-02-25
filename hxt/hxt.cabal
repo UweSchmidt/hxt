@@ -48,6 +48,7 @@ extra-source-files:
  examples/arrows/HelloWorld/Mini.hs
  examples/arrows/hparser/emptyElements.html
  examples/arrows/hparser/example1.xml
+ examples/arrows/hparser/example1CRLF.xml
  examples/arrows/hparser/HXmlParser.hs
  examples/arrows/hparser/invalid1.xml
  examples/arrows/hparser/invalid2.rng
@@ -63,6 +64,14 @@ extra-source-files:
  examples/arrows/performance/Makefile
  examples/arrows/pickle/Makefile
  examples/arrows/pickle/PickleTest.hs
+ examples/xhtml/tmp.xml
+ examples/xhtml/xhtml1-frameset.dtd
+ examples/xhtml/xhtml1-strict.dtd
+ examples/xhtml/xhtml1-transitional.dtd
+ examples/xhtml/xhtml-lat1.ent
+ examples/xhtml/xhtml-special.ent
+ examples/xhtml/xhtml-symbol.ent
+ examples/xhtml/xhtml.xml
 
 library
  exposed-modules:

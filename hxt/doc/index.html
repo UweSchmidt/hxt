@@ -86,6 +86,15 @@
       (the thesis as <a href="cookbook/doc/thesis.pdf">PDF</a>)
     </p>
 
+    <p>New Features in hxt-9.1:</p>
+    <ul>
+      <li>Space optimizations for DOM tree via sharing the internal structures
+	for XML element and attribute names</li>
+      <li>Space and time optimization within native XML and HTML parsers by adding
+	strictness annotations</li>
+      <li>Interface to expat parser via <a href="http://hackage.haskell.org/package/hexpat">hexpat package</a></li>
+    </ul>
+
     <p>Features:</p>
     <ul>
       <li>Unicode and UTF-8, US-ASCII and ISO-Laitin-1 support</li>
@@ -98,11 +107,13 @@
 	... &gt; as HTML/XML</li>
       <li>liberal and lasy lightweight HTML/XML parser based on
 	<a href="http://www-users.cs.york.ac.uk/~ndm/tagsoup/">tagsoup</a></li>
+      <li>Interface to expat parser via <a href="http://hackage.haskell.org/package/hexpat">hexpat package</a></li>
       <li><a href="http://www.relaxng.org/">Relax NG</a> schema
 	validator</li>
       <li>integrated <a href="http://www.w3.org/TR/xslt">XSLT</a> transformer</li>
       <li>easy conversion between user defined data structures and XML
 	by the use of pickler functions</li>
+      <li>efficient caching of parsed XML/HTML pages<li>
     </ul>
 
     <a name="docu"></a>
@@ -203,6 +214,7 @@
       <li><a href="http://hackage.haskell.org/package/hxt-xslt">hxt-xslt</a>: XSLT transformer</li>
       <li><a href="http://hackage.haskell.org/package/hxt-relaxng">hxt-relaxng</a>: RelaxNG validator</li>
       <li><a href="http://hackage.haskell.org/package/hxt-tagsoup">hxt-tagsoup</a>: Lazy HTML parser based on tagsoup</li>
+      <li><a href="http://hackage.haskell.org/package/hxt-expat">hxt-expat</a>: Binding to expat parser via hexpat package</li>
       <li><a href="http://hackage.haskell.org/package/hxt-charproperties">hxt-charproperties</a>: Basic package for XML and Unicode character properties</li>
       <li><a href="http://hackage.haskell.org/package/hxt-unicode">hxt-unicode</a>: Basic package for decoding various encodings into Unicode</li>
       <li><a href="http://hackage.haskell.org/package/hxt-regex-xmlschema">hxt-regex-xmlschema</a>: A lightweight and stand alone regex package for XML Schema regular expressions</li>

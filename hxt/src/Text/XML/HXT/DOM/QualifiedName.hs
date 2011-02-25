@@ -185,9 +185,7 @@ instance NFData  QName
 instance WNFData QName
 
 instance Show QName where
-    show (QN lp px ns)          = "QN " ++ show (unXN lp) ++ " "
-                                        ++ show (unXN px) ++ " "
-                                        ++ show (unXN ns)
+    show                        = showQN
 
 -- -----------------------------------------------------------------------------
 
@@ -279,6 +277,13 @@ buildUniversalName              :: (String -> String -> String) -> QName -> Stri
 buildUniversalName bf n@(QN _lp _px ns)
     | isNullXName ns            = localPart n
     | otherwise                 = unXN ns `bf` localPart n
+
+showQN                          :: QName -> String
+showQN n
+    | null ns                   = show $ qualifiedName n
+    | otherwise                 = show $ "{" ++ ns ++ "}" ++ qualifiedName n
+    where
+    ns = namespaceUri n
 
 -- ------------------------------------------------------------
 --

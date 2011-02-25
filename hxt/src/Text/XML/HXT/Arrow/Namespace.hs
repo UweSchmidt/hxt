@@ -375,7 +375,7 @@ validate1Namespaces
 
                          , ( getQName >>> isA (not . isWellformedNSDecl )
                            )
-                           `guards`  nsError (\ n -> "illegal namespace declaration for name " ++ n ++ " starting with reserved prefix " ++ show "xml" )
+                           `guards`  nsError (\ n -> "illegal namespace declaration for name " ++ show n ++ " starting with reserved prefix " ++ show "xml" )
                          ]
 
       , isDTD   :-> catA [ isDTDDoctype <+> isDTDAttlist <+> isDTDElement <+> isDTDName
@@ -414,11 +414,11 @@ validate1Namespaces
                          ]
       ]
     where
-    nsError     :: (String -> String) -> LA XmlTree XmlTree
+    nsError     :: (QName -> String) -> LA XmlTree XmlTree
     nsError msg
-        = (getQName >>> arr show) >>> nsErr msg
+        = getQName >>> nsErr msg
 
-    nsErr       :: (String -> String) -> LA String XmlTree
+    nsErr       :: (a -> String) -> LA a XmlTree
     nsErr msg   = arr msg >>> mkError c_err
 
     doubleOcc   :: String -> LA XmlTree XmlTree
