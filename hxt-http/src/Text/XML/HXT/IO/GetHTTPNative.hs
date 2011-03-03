@@ -38,14 +38,18 @@ import qualified Data.ByteString.Lazy           as B
 
 import Data.Char                                ( isDigit
 						)
+import Data.List                                ( isPrefixOf
+                                                )
 import Data.Maybe                               ( fromJust
 						)
+
 import System.IO                                ( hPutStrLn
 						, stderr
 						)
 import System.IO.Error                          ( ioeGetErrorString
 						, try
 						)
+
 import Network.Browser                          ( Proxy(..)
 						, BrowserAction
 						, browse
@@ -102,7 +106,9 @@ getCont strictInput proxy uri redirect options
                )
 
     processResponse response
-        | rc >= 200 && rc < 300
+        | (rc >= 200 && rc < 300)
+          ||
+          rc == 304		-- not modified is o.k., this rc only occurs together with if-modified-since
             = if strictInput
               then B.length cs `seq` return res
               else                   return res
@@ -143,7 +149,7 @@ getCont strictInput proxy uri redirect options
 
         configHeaders :: Request B.ByteString -> Request B.ByteString
 	configHeaders
-	    = foldr (>>>) id . map (uncurry replaceHeader) . concatMap (uncurry setHOption) $ options
+	    = foldr (>>>) id . map (uncurry replaceHeader) . concatMap (uncurry setHOption) $ options'
 
 	configHttp
 	    = setOutHandler (trcFct)
@@ -204,6 +210,8 @@ getCont strictInput proxy uri redirect options
 
 setOption	:: String -> String -> [BrowserAction t ()]
 setOption k v
+    | curlPrefix `isPrefixOf` k		= setOption (drop (length curlPrefix) k) v
+
     | k == "max-redirs"
       &&
       isIntArg v                        = [setMaxRedirects (Just $ read v)]
@@ -213,10 +221,19 @@ setOption k v
 
     | otherwise	                        = []
 
+curlPrefix	:: String
+curlPrefix      = "curl--"
+
 setHOption	:: String -> String -> [(HeaderName, String)]
 setHOption k v
-    | k `elem` ["-A", "user-agent"]     = [(HdrUserAgent,         v)]
-    | k `elem` ["-e", "referer"]        = [(HdrReferer,           v)]
+    | curlPrefix `isPrefixOf` k		= setHOption (drop (length curlPrefix) k) v
+
+    | k `elem` [ "-A"
+               , "user-agent"
+               , "curl--user-agent"
+               ]                        = [(HdrUserAgent,         v)]
+    | k `elem` [ "-e"
+               , "referer"]             = [(HdrReferer,           v)]
     | k == a_if_modified_since          = [(HdrIfModifiedSince,   v)]
     | k == a_if_unmodified_since        = [(HdrIfUnmodifiedSince, v)]
     | otherwise                         = []

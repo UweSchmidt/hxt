@@ -115,6 +115,7 @@ module Text.XML.HXT.Arrow.XmlState
     , withCompression
     , withCheckNamespaces
     , withDefaultBaseURI
+    , withStrictDeserialize
     , withEncodingErrors
     , withErrors
     , withFileMimeType

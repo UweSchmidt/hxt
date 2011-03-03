@@ -174,10 +174,10 @@ instance ArrowTree (SLA s)
 
 instance ArrowNavigatableTree (SLA s)
 
-instance (NFData s) => ArrowNF (SLA s) where
+instance ArrowNF (SLA s) where
     rnfA (SLA f)        = SLA $ \ s x -> let res = f s x
                                          in
-                                         deepseq res res
+                                         snd res `deepseq`  res
 
 instance ArrowWNF (SLA s)
 

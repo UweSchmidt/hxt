@@ -235,8 +235,10 @@ opt2copt k v
     | k `elem` ["-H", "header"]         = [CurlHttpHeaders         $ lines   v]
     | k == "ignore-content-length"      = [CurlIgnoreContentLength $ isTrue  v]
     | k `elem` ["-I", "head"]           = [CurlNoBody              $ isTrue  v]
-    | k `elem` ["-L", "location", a_redirect]
-                                        = [CurlFollowLocation      $ isTrue  v]
+    | k `elem` [ "-L"
+               , "location"
+               , a_redirect
+               ]                        = [CurlFollowLocation      $ isTrue  v]
     | k == "max-filesize"
       &&
       isIntArg v                        = [CurlMaxFileSizeLarge    $ read    v]
@@ -250,8 +252,10 @@ opt2copt k v
     | k `elem` ["-R", "remote-time"]    = [CurlFiletime            $ isTrue  v]
     | k `elem` ["-u", "user"]           = [CurlUserPwd                       v]
     | k `elem` ["-U", "proxy-user"]     = [CurlProxyUserPwd                  v]
-    | k `elem` ["-x", "proxy", a_proxy]
-                                        =  proxyOptions
+    | k `elem` [ "-x"
+               , "proxy"
+               , a_proxy
+               ]                        =  proxyOptions
     | k `elem` ["-X", "request"]        = [CurlCustomRequest                 v]
     | k `elem` ["-y", "speed-time"]
       &&
@@ -262,8 +266,10 @@ opt2copt k v
     | k == a_if_modified_since          = [CurlHttpHeaders         $ ["If-Modified-Since: "   ++ v] ]
     | k == a_if_unmodified_since        = [CurlHttpHeaders         $ ["If-Unmodified-Since: " ++ v] ]
                                         -- CurlTimeValue seems to be buggy, therefore the above workaround
-    | k `elem` ["-z", "time-cond", a_if_modified_since]
-                                        =  ifModifiedOptions
+    | k `elem` [ "-z"
+               , "time-cond"
+               , a_if_modified_since
+               ]                        =  ifModifiedOptions
 
     | k == "max-redirs"
       &&

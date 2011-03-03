@@ -230,6 +230,11 @@ withShowHaskell                 = setS theShowHaskell
 withCompression                 :: (CompressionFct, DeCompressionFct) -> SysConfig
 withCompression                 = setS (theBinaryCompression .&&&. theBinaryDeCompression)
 
+-- | Strict input for deserialization of binary data
+
+withStrictDeserialize           :: Bool -> SysConfig
+withStrictDeserialize           = setS theStrictDeserialize
+
 -- ------------------------------------------------------------
 
 yes                             :: Bool

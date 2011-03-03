@@ -234,7 +234,7 @@ readCache f             = readC $< getSysVar theCacheDir
     readC cdir          = readCache' $ uncurry (</>) $ cacheFile cdir f
 
 readCache'              :: (NFData c, Binary c) => String -> IOStateArrow s b c
-readCache' cf           = withLock cf $ readBinaryValue cf
+readCache' cf           = rnfA $ withLock cf $ readBinaryValue cf
 
 writeCache              :: (Binary b) => String -> IOStateArrow s b ()
 writeCache f            = writeC $< getSysVar theCacheDir

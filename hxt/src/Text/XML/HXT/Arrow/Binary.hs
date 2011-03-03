@@ -25,32 +25,47 @@ import           Control.Arrow.ArrowExc
 import           Control.Arrow.ArrowList
 import           Control.Arrow.ArrowIO
 
-import           Control.DeepSeq
-
 import           Data.Binary
 import qualified Data.ByteString.Lazy   as B
+
+import           System.IO              ( openBinaryFile
+                                        , hClose
+                                        , IOMode(..)
+                                        )
 
 import           Text.XML.HXT.Arrow.XmlState.ErrorHandling
 import           Text.XML.HXT.Arrow.XmlState.TypeDefs
 
 -- ------------------------------------------------------------
 
-readBinaryValue         :: (NFData a, Binary a) => String -> IOStateArrow s b a
-readBinaryValue file    = flip decodeBinaryValue file $< getSysVar theBinaryDeCompression
+readBinaryValue         :: (Binary a) => String -> IOStateArrow s b a
+readBinaryValue file
+                        = (uncurry $ decodeBinaryValue file)
+                          $< getSysVar ( theStrictDeserialize
+                                         .&&&.
+                                         theBinaryDeCompression
+                                       )
 
 -- | Read a serialied value from a file, optionally decompress it and decode the value
 -- In case of an error, the error message is issued and the arrow fails
 
-decodeBinaryValue         :: (NFData a, Binary a) => DeCompressionFct -> String -> IOStateArrow s b a
-decodeBinaryValue decompress file
-                          = arrIO0 ( do
-                                     r <- dec
-                                     rnf r `seq` return r
-                                   )
+decodeBinaryValue         :: (Binary a) => String -> Bool -> DeCompressionFct -> IOStateArrow s b a
+decodeBinaryValue file strict decompress
+                          = arrIO0 dec
                             `catchA`
                             issueExc "readBinaryValue"
     where
-    dec                 = B.readFile file >>= return . decode . decompress
+    dec                 = ( if strict
+                            then readItAll
+                            else B.readFile file
+                          ) >>= return . decode . decompress
+    readItAll           = do
+                          h <- openBinaryFile file ReadMode
+                          c <- B.hGetContents h
+                          B.length c `seq`
+                           do
+                           hClose h
+                           return c	-- hack: force reading whole file and close it immediately
 
 -- | Serialize a value, optionally compress it, and write it to a file.
 -- In case of an error, the error message is issued and the arrow fails

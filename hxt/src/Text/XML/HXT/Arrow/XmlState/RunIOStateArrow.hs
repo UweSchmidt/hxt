@@ -163,6 +163,7 @@ initialCacheConfig              = XIOCch
                                    , xioDocumentAge             = 0
                                    , xioCache404Err             = False
                                    , xioCacheRead               = dummyCacheRead
+                                   , xioStrictDeserialize       = False
                                    }
 
 -- ------------------------------------------------------------

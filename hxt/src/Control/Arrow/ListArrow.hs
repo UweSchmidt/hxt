@@ -118,7 +118,7 @@ instance ArrowNavigatableTree LA
 instance ArrowNF LA where
     rnfA (LA f)         = LA $ \ x -> let res = f x
                                       in
-                                      deepseq res res
+                                      res `deepseq` res
 
 instance ArrowWNF LA
 

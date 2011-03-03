@@ -42,7 +42,9 @@ import Control.DeepSeq
 import Control.Exception                ( SomeException
                                         , try
                                         )
-
+{-
+import qualified Debug.Trace as T
+-}
 -- ------------------------------------------------------------
 
 -- | list arrow combined with a state and the IO monad
@@ -218,10 +220,16 @@ instance ArrowTree (IOSLA s)
 
 instance ArrowNavigatableTree (IOSLA s)
 
-instance (NFData s) => ArrowNF (IOSLA s) where
+instance ArrowNF (IOSLA s) where
     rnfA (IOSLA f)      = IOSLA $ \ s x -> do
                                            res <- f s x
-                                           deepseq res $ return res
+                                           ( -- T.trace "start rnfA for IOSLA" $
+                                             snd res
+                                             )
+                                             `deepseq`
+                                              return ( -- T.trace "end rnfA for IOSLA" $
+                                                       res
+                                                     )
 
 instance ArrowWNF (IOSLA s)
 

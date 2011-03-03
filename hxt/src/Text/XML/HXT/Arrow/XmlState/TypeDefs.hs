@@ -240,6 +240,7 @@ data XIOCacheConfig     = XIOCch  { xioBinaryCompression        ::   Compression
                                   , xioDocumentAge              :: ! Int
                                   , xioCache404Err              :: ! Bool
                                   , xioCacheRead                ::   String -> IOSArrow XmlTree XmlTree
+                                  , xioStrictDeserialize        :: ! Bool
                                   }
 
 type CompressionFct     = ByteString -> ByteString
@@ -745,6 +746,13 @@ theCacheRead                    = theCacheConfig
                                   >>>
                                   S { getS = xioCacheRead
                                     , setS = \ x s -> s { xioCacheRead = x}
+                                    }
+
+theStrictDeserialize            :: Selector XIOSysState Bool
+theStrictDeserialize            = theCacheConfig
+                                  >>>
+                                  S { getS = xioStrictDeserialize
+                                    , setS = \ x s -> s { xioStrictDeserialize = x}
                                     }
 
 -- ------------------------------------------------------------

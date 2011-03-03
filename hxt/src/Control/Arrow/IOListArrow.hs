@@ -145,7 +145,7 @@ instance ArrowNavigatableTree IOLA
 instance ArrowNF IOLA where
     rnfA (IOLA f)       = IOLA $ \ x -> do
                                         res <- f x
-                                        deepseq res $ return res
+                                        res `deepseq` return res
 
 
 instance ArrowWNF IOLA
