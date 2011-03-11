@@ -2,7 +2,7 @@
 
 {- |
    Module     : Text.XML.HXT.XPath.XPathEval
-   Copyright  : Copyright (C) 2006-2010 Uwe Schmidt
+   Copyright  : Copyright (C) 2006-2011 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
@@ -275,8 +275,8 @@ evalSpezExpr _ _ _                      = XPVError "Call to evalExpr with a wron
 filterEval                              :: Env -> Context -> [Expr] -> XPathFilter
 filterEval env cont (prim:predicates) ns
                                         = case evalExpr env cont prim ns of
-                                          new_ns@(XPVNode _) -> evalPredL env predicates new_ns
-                                          _                  -> XPVError "Return of a filterexpression is not a nodeset"
+                                          (XPVNode nns) -> evalStep'' env predicates . Right . fromNodeSet $ nns         -- old: evalPredL env predicates new_ns
+                                          _             -> XPVError "Return of a filterexpression is not a nodeset"
 filterEval _ _ _ _                      = XPVError "Call to filterEval without an expression"
 
 
@@ -412,6 +412,34 @@ getRoot                                 = withXPVNode "Call to getRoot without a
 
 -- -----------------------------------------------------------------------------
 
+type NodeList = NavXmlTrees
+
+type NodeListRes = Either XPathValue NodeList
+
+nodeListResToXPathValue :: NodeListRes -> XPathValue
+nodeListResToXPathValue = either id (XPVNode . toNodeSet)
+
+nullNL  :: NodeListRes
+nullNL  = Right []
+
+plusNL  :: NodeListRes -> NodeListRes -> NodeListRes
+plusNL res@(Left _) _                   = res
+plusNL _            res@(Left _)        = res
+plusNL (Right ns1)  (Right ns2)         = Right $ ns1 ++ ns2
+
+sumNL   :: [NodeListRes] -> NodeListRes
+sumNL   = foldr plusNL nullNL
+
+mapNL   :: (NavXmlTree -> NodeListRes) -> NodeListRes -> NodeListRes
+mapNL f res@(Left _)    = res
+mapNL f (Right ns)      = sumNL . map f $ ns
+
+mapNL'  :: (Int -> NavXmlTree -> NodeListRes) -> NodeListRes -> NodeListRes
+mapNL' f res@(Left _)   = res
+mapNL' f (Right ns)     = sumNL . zipWith f [1..] $ ns
+
+-- ------------------------------------------------------------
+
 -- |
 -- Filter for accessing all nodes of a XPath-axis
 --
@@ -422,6 +450,9 @@ getAxisNodes as                         = withXPVNode "Call to getAxis without a
     where
     evalAxis                            = XPVNode .
                                           withNodeSet (concatMap (fromJust $ lookup as axisFctL))
+
+getAxisNodes'                           :: AxisSpec ->  NodeSet -> NodeListRes
+getAxisNodes' as                        = Right . (concatMap (fromJust $ lookup as axisFctL)) . fromNodeSet
 
 -- |
 -- Axis-Function-Table.
@@ -456,26 +487,29 @@ locPathEval env (LocPath Abs steps)     = evalSteps env steps . getRoot
 -- -----------------------------------------------------------------------------
 
 evalSteps                               :: Env -> [XStep] -> XPathFilter
-evalSteps env steps ns                  = foldl (evalStep env) ns steps
+evalSteps env steps ns                  = foldl (flip $ evalStep env) ns steps
 
 -- |
 -- evaluate a single XPath step
 -- namespace-axis is not supported
 
-evalStep                                :: Env -> XPathValue -> XStep -> XPathValue
+evalStep                                :: Env -> XStep -> XPathFilter
 
-evalStep _   _  (Step Namespace _ _)    = XPVError "namespace-axis not supported"
-evalStep _   ns (Step Attribute nt _)   = evalAttr nt (getAxisNodes Attribute ns)
-evalStep env ns (Step axisSpec nt pr)   = evalStep' env pr nt (getAxisNodes axisSpec ns)
+evalStep _   (Step Namespace _  _ ) _   = XPVError "namespace-axis not supported"
+evalStep _   (Step Attribute nt _ ) ns  = withXPVNode "Call to getAxis without a nodeset"
+                                          ( evalAttr nt . getAxisNodes' Attribute )
+                                          ns
+evalStep env (Step axisSpec  nt pr) ns  = withXPVNode "Call to getAxis without a nodeset"
+                                          ( evalStep' env pr nt . getAxisNodes' axisSpec )
+                                          ns
 
 -- -----------------------------------------------------------------------------
 
-evalAttr                                :: NodeTest -> XPathFilter
-evalAttr nt                             = withXPVNode "Call to evalAttr without a nodeset" $
-                                          evalTest
-    where
-    evalTest                            = XPVNode .
-                                          withNodeSet (concatMap . evalAttrNodeTest $ nt)
+-- the goal:
+-- evalAttr                                :: NodeTest -> NavXmlTrees -> XPathValue
+
+evalAttr                                :: NodeTest -> NodeListRes -> XPathValue
+evalAttr nt                             = nodeListResToXPathValue . mapNL (Right . evalAttrNodeTest nt)
 
 evalAttrNodeTest                        :: NodeTest -> NavXmlTree -> NavXmlTrees
 evalAttrNodeTest (NameTest qn)
@@ -497,18 +531,38 @@ evalAttrNodeTest (TypeTest XPNode)
                                         = [ns]
 evalAttrNodeTest _ _                    = []
 
-evalStep'                               :: Env -> [Expr] -> NodeTest -> XPathFilter
-evalStep' env pr nt                     = evalPredL env pr . nodeTest nt
-
 -- -----------------------------------------------------------------------------
 
-evalPredL                               :: Env -> [Expr] -> XPathFilter
+evalStep'                               :: Env -> [Expr] -> NodeTest -> NodeListRes -> XPathValue
+evalStep' env pr nt                     = evalStep'' env pr . nodeTest nt
+
+evalStep''                              :: Env -> [Expr] -> NodeListRes -> XPathValue
+evalStep'' env pr                       = nodeListResToXPathValue . evalPredL' env pr
+
+evalPredL'                              :: Env -> [Expr] -> NodeListRes -> NodeListRes
+evalPredL' env pr ns                    = foldl (flip $ evalPred' env) ns pr
+
+evalPred'                               :: Env -> Expr -> NodeListRes -> NodeListRes
+evalPred' env ex res@(Left _)           = res
+evalPred' env ex arg@(Right ns)         = mapNL' (evalPred'' env ex (length ns)) arg 
+
+evalPred''                              :: Env -> Expr -> Int -> Int -> NavXmlTree -> NodeListRes
+evalPred'' env ex len pos x             = case testPredicate env (pos, len, x) ex (XPVNode . singletonNodeSet $ x) of
+                                          e@(XPVError _) -> Left e
+                                          XPVBool True   -> Right [x]
+                                          XPVBool False  -> Right []
+                                          _              -> Left $ XPVError "Value of testPredicate is not a boolean"
+
+-- ----------------------------------------
+{- old stuff
+
+evalPredL                               :: Env -> [Expr] -> XPathValue -> XPathValue
 evalPredL env pr n                      = withXPVNode "Call to evalPredL without a nodeset" evalPl n
     where
-    evalPl ns                           = foldl (evalPred env 1 (cardNodeSet ns)) n pr
+    evalPl ns                           = foldl (flip (evalPred env 1 (cardNodeSet ns))) n pr
 
-evalPred                                :: Env -> Int -> Int -> XPathValue -> Expr -> XPathValue
-evalPred env pos len nv@(XPVNode ns) ex
+evalPred                                :: Env -> Int -> Int -> Expr -> XPathValue -> XPathValue
+evalPred env pos len ex nv@(XPVNode ns)
     | nullNodeSet ns                    = nv
     | otherwise                         = case testPredicate env (pos, len, x) ex (XPVNode . singletonNodeSet $ x) of
                                           e@(XPVError _) -> e
@@ -518,9 +572,10 @@ evalPred env pos len nv@(XPVNode ns) ex
                                           where
                                           (xp, x)               = head . elemsNodeSet $ ns
                                           xs                    = deleteNodeSet xp ns
-                                          nextNode@(XPVNode n) = evalPred env (pos + 1) len (XPVNode xs) ex
+                                          nextNode@(XPVNode n) = evalPred env (pos + 1) len ex (XPVNode xs)
 evalPred _ _ _ _ _                      = XPVError "Call to evalPred without a nodeset"
 
+end old stuff -}
 
 testPredicate                                   :: Env -> Context -> Expr -> XPathFilter
 testPredicate env context@(pos, _, _) ex ns     = case evalExpr env context ex ns of
@@ -538,22 +593,31 @@ testPredicate env context@(pos, _, _) ex ns     = case evalExpr env context ex n
 --
 --    Bugfix : "*" (or any other name-test) must not match the root node
 
-nodeTest                                :: NodeTest -> XPathFilter
+nodeTest                                :: NodeTest -> NodeListRes -> NodeListRes
+nodeTest _ res@(Left _)                 = res
+nodeTest t (Right ns)                   = Right . nodeTest' t $ ns
 
--- nodeTest (NameTest (QN "" "*" ""))      = filterNodes (\n -> isXTagNode n && not (isRootNode n))
--- nodeTest (NameTest (QN _ "*" uri))      = filterNodes (filterd uri)
-
-nodeTest (NameTest q)
-    | isWildcardTest                    = filterNodes (wildcardTest q)
-    | otherwise                         = filterNodes (nameTest     q)          -- old: (isOfTagNode1 q)
+nodeTest'                               :: NodeTest -> NodeList -> NodeList
+nodeTest' (NameTest q)
+    | isWildcardTest                    = filterNodes' (wildcardTest q)
+    | otherwise                         = filterNodes' (nameTest     q)
       where
       isWildcardTest                    = localPart q == "*"
 
-nodeTest (PI n)                         = filterNodes isPiNode
+nodeTest' (PI n)                        = filterNodes' isPiNode
                                           where
                                           isPiNode = maybe False ((== n) . qualifiedName) . XN.getPiName
 
-nodeTest (TypeTest t)                   = typeTest t
+nodeTest' (TypeTest t)                  = typeTest t
+
+-- |
+-- the filter selects the NTree part of a navigable tree and
+-- tests whether the node is of the necessary type
+--
+--    * 1.parameter fct :  filter function from the XmlTreeFilter module which tests the type of a node
+
+filterNodes'                            :: (XNode -> Bool) -> NodeList -> NodeList
+filterNodes' fct                        = filter (fct . dataNT)
 
 -- -----------------------------------------------------------------------------
 
@@ -585,13 +649,15 @@ wildcardTest _ _                        = False
 -- |
 -- tests whether a node is of a special type
 --
-typeTest                                :: XPathNode -> XPathFilter
+typeTest                                :: XPathNode -> NodeList -> NodeList
 typeTest XPNode                         = id
-typeTest XPCommentNode                  = filterNodes XN.isCmt
-typeTest XPPINode                       = filterNodes XN.isPi
-typeTest XPTextNode                     = filterNodes XN.isText
+typeTest XPCommentNode                  = filterNodes' XN.isCmt
+typeTest XPPINode                       = filterNodes' XN.isPi
+typeTest XPTextNode                     = filterNodes' XN.isText
 
 -- -----------------------------------------------------------------------------
+{- old stuff
+
 -- |
 -- the filter selects the NTree part of a navigable tree and
 -- tests whether the node is of the necessary type
@@ -601,6 +667,7 @@ typeTest XPTextNode                     = filterNodes XN.isText
 filterNodes                             :: (XNode -> Bool) -> XPathFilter
 filterNodes fct                         = withXPVNode "Call to filterNodes without a nodeset" $
                                           (XPVNode . withNodeSet (filter (fct . dataNT)))
+end old stuff -}
 
 -- -----------------------------------------------------------------------------
 -- |

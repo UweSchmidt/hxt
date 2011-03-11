@@ -1,7 +1,7 @@
 module NameSpace
 where
 
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 import Text.XML.HXT.XPath
 
 simpleXml :: String
