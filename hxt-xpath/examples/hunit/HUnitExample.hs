@@ -8,7 +8,7 @@ module Main where
 
 import System
 import Test.HUnit
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 import Text.XML.HXT.XPath
 
 

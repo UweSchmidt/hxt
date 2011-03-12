@@ -1,6 +1,6 @@
 -- arch-tag: Haskell XML Toolbox XPath Package
 Name:           hxt-xpath
-Version:        9.1.0
+Version:        9.1.1
 Synopsis:       The XPath modules for HXT.
 Description:    The Haskell XML Toolbox XPath library.
                 Since version 8.5 this library is packed in a separate package.
@@ -21,8 +21,6 @@ extra-source-files:
  examples/hunit/mini1.xml
  examples/hunit/mini2.xml
  examples/hxpath/example1.xml
- examples/hxpath/.ghci
- examples/hxpath/.gitignore
  examples/hxpath/HXPath.hs
  examples/hxpath/Makefile
  examples/hxpath/W3CTestData.hs

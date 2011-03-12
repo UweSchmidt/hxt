@@ -27,6 +27,8 @@ import Text.XML.HXT.Core
 import Text.XML.HXT.XPath
 import Text.XML.HXT.Curl
 
+import Text.XML.HXT.Parser.XmlCharParser( withNormNewline )
+
 import System.Console.Editline.Readline
 import System.Environment
 
@@ -105,7 +107,7 @@ evalXPath path env doc
       ]
     where
     pathS       = show                                  $ path
-    pathEx      = runParser parseXPath (toNsEnv env) "" $ path
+    pathEx      = runParser parseXPath (withNormNewline (toNsEnv env)) "" $ path
     pathString  = either show show                      $ pathEx
     pathTree    = either show formatXPathTree           $ pathEx
     xr          = runLA ( xshow $ getXPathTreesWithNsEnv env path) doc

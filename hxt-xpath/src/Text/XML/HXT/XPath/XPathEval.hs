@@ -431,11 +431,11 @@ sumNL   :: [NodeListRes] -> NodeListRes
 sumNL   = foldr plusNL nullNL
 
 mapNL   :: (NavXmlTree -> NodeListRes) -> NodeListRes -> NodeListRes
-mapNL f res@(Left _)    = res
+mapNL _ res@(Left _)    = res
 mapNL f (Right ns)      = sumNL . map f $ ns
 
 mapNL'  :: (Int -> NavXmlTree -> NodeListRes) -> NodeListRes -> NodeListRes
-mapNL' f res@(Left _)   = res
+mapNL' _ res@(Left _)   = res
 mapNL' f (Right ns)     = sumNL . zipWith f [1..] $ ns
 
 -- ------------------------------------------------------------
@@ -445,14 +445,9 @@ mapNL' f (Right ns)     = sumNL . zipWith f [1..] $ ns
 --
 --    * 1.parameter as :  axis specifier
 --
-getAxisNodes                            :: AxisSpec ->  XPathFilter
-getAxisNodes as                         = withXPVNode "Call to getAxis without a nodeset" evalAxis
-    where
-    evalAxis                            = XPVNode .
-                                          withNodeSet (concatMap (fromJust $ lookup as axisFctL))
 
-getAxisNodes'                           :: AxisSpec ->  NodeSet -> NodeListRes
-getAxisNodes' as                        = Right . (concatMap (fromJust $ lookup as axisFctL)) . fromNodeSet
+getAxisNodes                            :: AxisSpec ->  NodeSet -> NodeListRes
+getAxisNodes as                         = Right . (concatMap (fromJust $ lookup as axisFctL)) . fromNodeSet
 
 -- |
 -- Axis-Function-Table.
@@ -497,10 +492,10 @@ evalStep                                :: Env -> XStep -> XPathFilter
 
 evalStep _   (Step Namespace _  _ ) _   = XPVError "namespace-axis not supported"
 evalStep _   (Step Attribute nt _ ) ns  = withXPVNode "Call to getAxis without a nodeset"
-                                          ( evalAttr nt . getAxisNodes' Attribute )
+                                          ( evalAttr nt . getAxisNodes Attribute )
                                           ns
 evalStep env (Step axisSpec  nt pr) ns  = withXPVNode "Call to getAxis without a nodeset"
-                                          ( evalStep' env pr nt . getAxisNodes' axisSpec )
+                                          ( evalStep' env pr nt . getAxisNodes axisSpec )
                                           ns
 
 -- -----------------------------------------------------------------------------
@@ -537,51 +532,28 @@ evalStep'                               :: Env -> [Expr] -> NodeTest -> NodeList
 evalStep' env pr nt                     = evalStep'' env pr . nodeTest nt
 
 evalStep''                              :: Env -> [Expr] -> NodeListRes -> XPathValue
-evalStep'' env pr                       = nodeListResToXPathValue . evalPredL' env pr
+evalStep'' env pr                       = nodeListResToXPathValue . evalPredL env pr
 
-evalPredL'                              :: Env -> [Expr] -> NodeListRes -> NodeListRes
-evalPredL' env pr ns                    = foldl (flip $ evalPred' env) ns pr
+evalPredL                               :: Env -> [Expr] -> NodeListRes -> NodeListRes
+evalPredL env pr ns                     = foldl (flip $ evalPred env) ns pr
 
-evalPred'                               :: Env -> Expr -> NodeListRes -> NodeListRes
-evalPred' env ex res@(Left _)           = res
-evalPred' env ex arg@(Right ns)         = mapNL' (evalPred'' env ex (length ns)) arg 
+evalPred                                :: Env -> Expr -> NodeListRes -> NodeListRes
+evalPred _   _  res@(Left _)            = res
+evalPred env ex arg@(Right ns)          = mapNL' (evalPred' env ex (length ns)) arg 
 
-evalPred''                              :: Env -> Expr -> Int -> Int -> NavXmlTree -> NodeListRes
-evalPred'' env ex len pos x             = case testPredicate env (pos, len, x) ex (XPVNode . singletonNodeSet $ x) of
+evalPred'                               :: Env -> Expr -> Int -> Int -> NavXmlTree -> NodeListRes
+evalPred' env ex len pos x              = case testPredicate env (pos, len, x) ex (XPVNode . singletonNodeSet $ x) of
                                           e@(XPVError _) -> Left e
                                           XPVBool True   -> Right [x]
                                           XPVBool False  -> Right []
                                           _              -> Left $ XPVError "Value of testPredicate is not a boolean"
 
--- ----------------------------------------
-{- old stuff
-
-evalPredL                               :: Env -> [Expr] -> XPathValue -> XPathValue
-evalPredL env pr n                      = withXPVNode "Call to evalPredL without a nodeset" evalPl n
-    where
-    evalPl ns                           = foldl (flip (evalPred env 1 (cardNodeSet ns))) n pr
-
-evalPred                                :: Env -> Int -> Int -> Expr -> XPathValue -> XPathValue
-evalPred env pos len ex nv@(XPVNode ns)
-    | nullNodeSet ns                    = nv
-    | otherwise                         = case testPredicate env (pos, len, x) ex (XPVNode . singletonNodeSet $ x) of
-                                          e@(XPVError _) -> e
-                                          XPVBool True   -> XPVNode $ insertNodeSet x n
-                                          XPVBool False  -> nextNode
-                                          _              -> XPVError "Value of testPredicate is not a boolean"
-                                          where
-                                          (xp, x)               = head . elemsNodeSet $ ns
-                                          xs                    = deleteNodeSet xp ns
-                                          nextNode@(XPVNode n) = evalPred env (pos + 1) len ex (XPVNode xs)
-evalPred _ _ _ _ _                      = XPVError "Call to evalPred without a nodeset"
-
-end old stuff -}
-
 testPredicate                                   :: Env -> Context -> Expr -> XPathFilter
-testPredicate env context@(pos, _, _) ex ns     = case evalExpr env context ex ns of
-                                                  XPVNumber (Float f) -> XPVBool (f == fromIntegral pos)
-                                                  XPVNumber _         -> XPVBool False
-                                                  _                   -> xboolean context env [evalExpr env context ex ns]
+testPredicate env context@(pos, _, _) ex ns
+                                        = case evalExpr env context ex ns of
+                                          XPVNumber (Float f) -> XPVBool (f == fromIntegral pos)
+                                          XPVNumber _         -> XPVBool False
+                                          _                   -> xboolean context env [evalExpr env context ex ns]
 
 -- -----------------------------------------------------------------------------
 -- |
