@@ -1,6 +1,6 @@
 -- arch-tag: Haskell XML Toolbox main description file
 Name:           hxt
-Version:        9.1.1
+Version:        9.1.2
 Synopsis:       A collection of tools for processing XML with Haskell.
 Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
                 but introduces a more general approach for processing XML with Haskell.
@@ -15,7 +15,7 @@ Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
                 hxt-curl, hxt-tagsoup, hxt-relaxng, hxt-xpath, hxt-xslt, hxt-regex-xmlschema contain the extensions.
                 hxt-unicode contains encoding and decoding functions,
                 hxt-charproperties char properties for unicode and XML.
-License:        OtherLicense
+License:        MIT
 License-file:   LICENSE
 Author:         Uwe Schmidt, Martin Schmidt, Torben Kuseler
 Maintainer:     Uwe Schmidt <uwe@fh-wedel.de>
@@ -176,6 +176,6 @@ library
                 deepseq    >= 1.1 && < 2,
                 bytestring >= 0.9 && < 1,
                 binary     >= 0.5 && < 1,
-                hxt-charproperties  >= 9.1 && < 10,
-                hxt-unicode         >= 9   && < 10,
-                hxt-regex-xmlschema >= 9   && < 10
+                hxt-charproperties  >= 9.1    && < 10,
+                hxt-unicode         >= 9.0.1  && < 10,
+                hxt-regex-xmlschema >= 9      && < 10

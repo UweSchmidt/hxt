@@ -76,12 +76,12 @@ library
   if flag(withHsPlugins)
     extensions:  CPP
     cpp-options: -DPLUGINS=1
-    ghc-options: -Wall
+    ghc-options: -Wall -fno-warn-unused-do-bind
     ghc-prof-options: -auto-all -caf-all
   else
     extensions:  CPP
     cpp-options: -DPLUGINS=0
-    ghc-options: -Wall
+    ghc-options: -Wall -fno-warn-unused-do-bind
     ghc-prof-options: -auto-all -caf-all
 
 executable janus-conf

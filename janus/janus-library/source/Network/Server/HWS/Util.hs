@@ -51,7 +51,7 @@ import System.Time
 -- #else
 import GHC.Base
 import GHC.Conc
-import GHC.IOBase
+-- import GHC.IOBase
 -- #endif
 
 -- TODO #ifdef DEBUG
