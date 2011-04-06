@@ -65,7 +65,17 @@ example5	:
 		$(prog) ./valid1.xml ./invalid3.rng || true
 		@echo
 
-EX		= $(wildcard *valid*.xml *valid*.rng)
+example6	:
+		@echo "===> Validate a valid xml file with a valid Relax NG schema with name prefixes" ; echo ; sleep 1
+		$(prog) ./simple.xml ./simple-qualified.rng
+		@echo
+
+example6a	:
+		@echo "===> Validate a valid xml file with a valid Relax NG schema without name prefixes" ; echo ; sleep 1
+		$(prog) ./simple.xml ./simple-unqualified.rng
+		@echo
+
+EX		= $(wildcard *valid*.xml *valid*.rng simple*.xml simple*.rng)
 
 dist		:
 		[ -d $(DIST_DIR) ] || mkdir -p $(DIST_DIR)

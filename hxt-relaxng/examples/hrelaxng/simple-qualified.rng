@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rng:grammar
+  xmlns:rng="http://relaxng.org/ns/structure/1.0"
+  datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <rng:start>
+    <rng:ref name="simple.object"/>
+  </rng:start>
+  <rng:define name="simple.object">
+    <rng:element name="object">
+      <rng:interleave>
+        <rng:ref name="simple.colour"/>
+        <rng:ref name="simple.name"/>
+        <rng:ref name="simple.material"/>
+      </rng:interleave>
+    </rng:element>
+  </rng:define>
+  <rng:define name="simple.colour">
+    <rng:element name="colour">
+      <rng:data type="token"/>
+    </rng:element>
+  </rng:define>
+  <rng:define name="simple.name">
+    <rng:element name="name">
+      <rng:data type="token"/>
+    </rng:element>
+  </rng:define>
+  <rng:define name="simple.material">
+    <rng:element name="material">
+      <rng:data type="token"/>
+    </rng:element>
+  </rng:define>
+</rng:grammar>

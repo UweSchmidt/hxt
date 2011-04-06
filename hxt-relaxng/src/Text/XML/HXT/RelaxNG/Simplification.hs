@@ -744,7 +744,7 @@ simplificationStep4 =
       >>>
       ( -- A choice, group or interleave element is transformed so
         -- that it has exactly two child elements.
-        ((wrapPattern2Two $< getName) >>> simplificationStep4)
+        ((wrapPattern2Two $< getQName) >>> simplificationStep4)
         `when`
         (  isChoiceGroupInterleave
            >>>
@@ -1152,26 +1152,29 @@ simplificationStep5
 
     createPatternElems :: String -> String -> IOSArrow XmlTree XmlTree
     createPatternElems pattern name
-        = ( ( (listA (getElems pattern name >>> getRngAttrCombine))
+        = ( ( listA (getElems pattern name >>> getRngAttrCombine)
               >>>
               checkPatternCombine pattern name
             )
             -- After determining this unique value, the combine attributes are removed.
             &&&
-            (listA (getElems pattern name >>> removeAttr "combine")))
-          >>> -- ((errorCode::Int,errorMessage::String), result::XmlTrees)
+            listA (getElems pattern name >>> removeAttr "combine"))
+          >>>                           -- ((errorCode::Int, errorMessage::String), result::XmlTrees)
           choiceA
-          [ isA (\ ((code,_) , _)   -> code == 0)
+          [ isA (\ ((code, _) , _)  -> code == 0)
             :->
             (mkRelaxError "" $< arr (snd . fst))
-          , isA (\ ((code,str) , _) -> code == 1 && str == "")
+
+          , isA (\ ((code, str) , _) -> code == 1 && str == "")
             :->
             arrL snd
-          , isA (\ ((code,str) , _) -> code == 1 && str /= "")
+
+          , isA (\ ((code, str) , _) -> code == 1 && str /= "")
             :->
             ( createPatternElem pattern name $<<
               ( arr (snd . fst) &&& (arr snd) )
             )
+
           , this
             :->
             ( mkRelaxError ""
@@ -1188,7 +1191,7 @@ simplificationStep5
               (arrL (const trees) >>> getChildren)
             )
             >>>
-            wrapPattern2Two combine
+            (wrapPattern2Two $< getQName)
           )
 
     checkPatternCombine :: (ArrowXml a) => String -> String -> a [String] (Int, String)
@@ -1198,12 +1201,14 @@ simplificationStep5
             (isA (\ cl -> length cl == 1))
             :->
             constA (1, "")
+
           , (isA (\ cl -> (length $ elemIndices "" cl) > 1))
             :->
             constA ( 0
                    , "More than one " ++ pattern ++ "-Pattern: " ++ show name ++
                      " without an combine-attribute in the same grammar"
                    )
+
           , (isA (\ cl -> (length $ nub $ deleteBy (==) "" cl) > 1))
             :->
             arr (\ cl -> ( 0
@@ -1213,6 +1218,7 @@ simplificationStep5
                            show name ++ " in the same grammar"
                          )
                 )
+
           , -- ok -> combine value is returned
             this
             :->
@@ -2180,11 +2186,11 @@ checkElemName l
       `guards`
       this
 
-wrapPattern2Two :: (ArrowXml a) => String -> a XmlTree XmlTree
+wrapPattern2Two :: (ArrowXml a) => QName -> a XmlTree XmlTree
 wrapPattern2Two name
   = choiceA
     [ noOfChildren (> 2)
-      :-> ( replaceChildren ( (mkRngElement name none
+      :-> ( replaceChildren ( (mkElement name none
                                (getChildren >>. take 2)
                               )
                               <+>

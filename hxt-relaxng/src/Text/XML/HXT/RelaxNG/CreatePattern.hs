@@ -28,7 +28,9 @@ import Data.Maybe
 
 import Data.List
     ( isPrefixOf )
-
+{-
+import qualified Debug.Trace as T
+-}
 -- ------------------------------------------------------------
 
 -- | Creates the 'Pattern' datastructure from a simplified Relax NG schema.
@@ -49,24 +51,23 @@ createPatternFromXmlTree = createPatternFromXml $< createEnv
 
 createPatternFromXml :: Env -> LA XmlTree Pattern
 createPatternFromXml env
- = choiceA [
-     isRoot                            :-> processRoot env,
-     isRngEmpty      :-> constA Empty,
-     isRngNotAllowed :-> mkNotAllowed,
-     isRngText       :-> constA Text,
-     isRngChoice     :-> mkRelaxChoice env,
-     isRngInterleave :-> mkRelaxInterleave env,
-     isRngGroup      :-> mkRelaxGroup env,
-     isRngOneOrMore  :-> mkRelaxOneOrMore env,
-     isRngList       :-> mkRelaxList env,
-     isRngData       :-> mkRelaxData env,
-     isRngValue      :-> mkRelaxValue,
-     isRngAttribute  :-> mkRelaxAttribute env,
-     isRngElement    :-> mkRelaxElement env,
-     isRngRef        :-> mkRelaxRef env,
-     this                              :-> mkRelaxError ""
+ = choiceA
+   [ isRoot          :-> processRoot env
+   , isRngEmpty      :-> constA Empty
+   , isRngNotAllowed :-> mkNotAllowed
+   , isRngText       :-> constA Text
+   , isRngChoice     :-> mkRelaxChoice env
+   , isRngInterleave :-> mkRelaxInterleave env
+   , isRngGroup      :-> mkRelaxGroup env
+   , isRngOneOrMore  :-> mkRelaxOneOrMore env
+   , isRngList       :-> mkRelaxList env
+   , isRngData       :-> mkRelaxData env
+   , isRngValue      :-> mkRelaxValue
+   , isRngAttribute  :-> mkRelaxAttribute env
+   , isRngElement    :-> mkRelaxElement env
+   , isRngRef        :-> mkRelaxRef env
+   , this            :-> mkRelaxError "internal HXT RelaxNG error"
    ]
-
 
 processRoot :: Env -> LA XmlTree Pattern
 processRoot env
@@ -75,7 +76,7 @@ processRoot env
     choiceA [
       isRngRelaxError :-> (mkRelaxError $< getRngAttrDescr),
       isRngGrammar    :-> (processGrammar env),
-      this                              :-> (mkRelaxError "no grammar-pattern in schema")
+      this            :-> (mkRelaxError "no grammar-pattern in schema")
     ]
 
 
@@ -83,11 +84,11 @@ processGrammar :: Env -> LA XmlTree Pattern
 processGrammar env
   = getChildren
     >>>
-    choiceA [
-      isRngDefine     :-> none,
-      isRngRelaxError :-> (mkRelaxError $< getAttrValue "desc"),
-      isRngStart      :-> (getChildren >>> createPatternFromXml env),
-      this            :-> (mkRelaxError "no start-pattern in schema")
+    choiceA
+    [ isRngDefine     :-> none
+    , isRngRelaxError :-> (mkRelaxError $< getAttrValue "desc")
+    , isRngStart      :-> (getChildren >>> createPatternFromXml env)
+    , this            :-> (mkRelaxError "no start-pattern in schema")
     ]
 
 
@@ -119,25 +120,26 @@ mkNotAllowed = constA $ notAllowed "notAllowed-pattern in Relax NG schema defini
 -- | Creates an error message.
 mkRelaxError :: String -> LA XmlTree Pattern
 mkRelaxError errStr
- = choiceA [
-     isRngRelaxError :-> (getRngAttrDescr >>> arr notAllowed),
-     isElem  :-> ( getName
+ = choiceA
+   [ isRngRelaxError :-> (getRngAttrDescr >>> arr notAllowed)
+   , isElem  :-> ( getName
                    >>>
                    arr (\n -> notAllowed $ "Pattern " ++ n ++
-                                           " is not allowed in Relax NG schema"
+                                           " is not allowed in Relax NG schema" ++
+                                           " (" ++ errStr ++ ")"
                        )
-                 ),
-     isAttr  :-> ( getName
+                 )
+   , isAttr  :-> ( getName
                    >>>
                    arr (\n -> notAllowed $ "Attribute " ++ n ++
                                            " is not allowed in Relax NG schema"
                        )
-                 ),
-     isError :-> (getErrorMsg >>> arr notAllowed),
-     this    :-> (arr (\e -> notAllowed $ if errStr /= ""
+                 )
+   , isError :-> ( getErrorMsg >>> arr notAllowed )
+
+   , this    :-> arr ( \e -> notAllowed $ if errStr /= ""
                                           then errStr
                                           else "Can't create pattern from " ++ show e)
-                 )
    ]
 
 
