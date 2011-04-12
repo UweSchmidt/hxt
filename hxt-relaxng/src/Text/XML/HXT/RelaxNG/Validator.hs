@@ -5,6 +5,7 @@
 module Text.XML.HXT.RelaxNG.Validator
   ( validateDocumentWithRelaxSchema
   , validateDocumentWithRelax
+  , validateSchemaWithRelax
   , validateWithSpezification
   , validateSchemaWithSpezification
 
@@ -64,7 +65,7 @@ validateDocumentWithRelaxSchema config relaxSchema
         >>>
         traceMsg 1 ( "start validating document with Relax NG schema: " ++ show relaxSchema )
         >>>
-        ( ( ( validate' $< validateSchema relaxSchema)    -- try to validate, only possible if schema is o.k.
+        ( ( ( validate' $< validateSchemaWithRelax relaxSchema)    -- try to validate, only possible if schema is o.k.
             >>>
             traceMsg 1 ( "validating document with Relax NG schema done" )
           )
@@ -83,8 +84,8 @@ validateDocumentWithRelaxSchema config relaxSchema
           >>>
           validateDocumentWithRelax schema
 
-validateSchema                  :: String -> IOSArrow XmlTree XmlTree
-validateSchema relaxSchema
+validateSchemaWithRelax         :: String -> IOSArrow XmlTree XmlTree
+validateSchemaWithRelax relaxSchema
     = traceMsg 2 ( "read and check Relax NG schema document: " ++ show relaxSchema )
       >>>
       readForRelax relaxSchema
@@ -153,82 +154,11 @@ validateDocumentWithRelax schema
       )
       `when` documentStatusOk                           -- only do something when document status is ok
 
-
-{- |
-   normalize a document for Relax NG validation,
-   call the 'Text.XML.HXT.RelaxNG.Validation.validateRelax' function for doing the hard work,
-   and issue errors
-
-   * 1.parameter  : the arrow for computing the schema
-
-   - arrow-input  : the document to be validated
-
-   - arrow-output : nothing
--}
-
--- ------------------------------------------------------------
-
-{- | Document validation
-
-Validates a xml document with respect to a Relax NG schema.
-
-First, the schema is validated with respect to the Relax NG Spezification. If no error is found, the xml document is validated with respect to the schema.
-
-   * 1.parameter :  list of options; namespace progagation is always done
-
-   - 2.parameter :  XML document
-
-   - 3.parameter :  Relax NG schema file
-
-available options:
-
-    * 'a_do_not_check_restrictions' : do not check Relax NG schema restrictions (includes do-not-validate-externalRef, do-not-validate-include)
-
-    - 'a_do_not_validate_externalRef' : do not validate a Relax NG schema referenced by a externalRef-Pattern
-
-    - 'a_validate_externalRef' : validate a Relax NG schema referenced by a externalRef-Pattern (default)
-
-    - 'a_do_not_validate_include' : do not validate a Relax NG schema referenced by a include-Pattern
-
-    - 'a_validate_include' : validate a Relax NG schema referenced by a include-Pattern (default)
-
-    - 'a_output_changes' : output Pattern transformations in case of an error
-
-    - 'a_do_not_collect_errors' : stop Relax NG simplification after the first error has occurred
-
-    - all 'Text.XML.HXT.Arrow.ReadDocument.readDocument' options
-
-example:
-
-> validate [(a_do_not_check_restrictions, "1")] "test.xml" "testSchema.rng"
-
--} {-
-validate :: String -> String -> IOSArrow n XmlTree
-validate xmlDocument relaxSchema
-  = S.relaxSchemaArrow
-    >>>
-    validateWithSpezification xmlDocument relaxSchema
--}
-
-
-
-{- | Relax NG schema validation
-
-Validates a Relax NG schema with respect to the Relax NG Spezification.
-
-   * 1.parameter :  Relax NG schema file
-
--} {-
-validateSchema :: String -> IOSArrow n XmlTree
-validateSchema relaxSchema
-  = validate "" relaxSchema
--}
-
 -- ------------------------------------------------------------
 
 {- | Relax NG schema validation
 
-    see 'validateSchema' and 'validateWithSpezification'
+    see 'validateSchemaWithRelax' and 'validateWithSpezification'
 
    * 1.parameter :  Relax NG schema file
 
@@ -253,7 +183,7 @@ Validates a xml document with respect to a Relax NG schema
 
 validateWithSpezification :: String -> String -> IOSArrow XmlTree XmlTree
 validateWithSpezification xmlDocument relaxSchema
-    = validDoc $< listA (validateSchema relaxSchema)
+    = validDoc $< listA (validateSchemaWithRelax relaxSchema)
     where
     validDoc [theSchema]
         | null xmlDocument

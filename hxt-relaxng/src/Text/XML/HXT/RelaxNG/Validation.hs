@@ -21,6 +21,7 @@ module Text.XML.HXT.RelaxNG.Validation
     ( validateWithRelax
     , validateDocWithRelax
     , validateRelax
+    , validateRelax'
     , readForRelax
     , normalizeForRelaxValidation
     , contains
@@ -117,7 +118,10 @@ validateDocWithRelax theSchema config doc
         validateWithRelax theSchema
       )
 
-{- | Validates a xml document with respect to a Relax NG schema
+{- | Validates an XML document with respect to a Relax NG schema
+   and issues error messages.
+
+   See also: `validateRelax'`
 
    * 1.parameter  :  Relax NG schema
 
@@ -126,37 +130,51 @@ validateDocWithRelax theSchema config doc
    - arrow-output :  the document or in case of errors none
 -}
 
+-- ------------------------------------------------------------
+
 validateRelax :: XmlTree -> IOSArrow XmlTree XmlTree
 validateRelax rngSchema
-    = ( fromLA
-        ( ( ( constA rngSchema
-              >>>
-              createPatternFromXmlTree
-            )
-            &&&
-            ( getChildren                       -- remove the root node
-              >>>
-              isElem                            -- and select the root element
-            )
-          )
-          >>>
-          arr2 (\ pattern xmlDoc -> childDeriv ("", []) pattern xmlDoc)
-          >>>
-          isA (not . nullable)
-          >>>
-          arr ( take 1024                      -- pattern may be recursive, so the string representation
-                                               -- is truncated to 1024 chars to assure termination
-                . ("when validating with Relax NG schema: " ++)
-                . show
-              )
-          >>>
-          mkError c_err
-        )
-        `orElse`
-        this
-      )
+    = fromLA (validateRelax' rngSchema)
       >>>
       filterErrorMsg
+
+{- | Validates an XML document with respect to a Relax NG schema
+   This arrow is pure. It does not need IO or any configuration parameters.
+
+   * 1.parameter  :  Relax NG schema
+
+   - arrow-input  :  XML document
+
+   - arrow-output :  the unchanged document or an error message
+-}
+
+validateRelax' :: XmlTree -> LA XmlTree XmlTree
+validateRelax' rngSchema
+    = ( ( ( constA rngSchema
+            >>>
+            createPatternFromXmlTree
+          )
+          &&&
+          ( getChildren                       -- remove the root node
+            >>>
+            isElem                            -- and select the root element
+          )
+        )
+        >>>
+        arr2 (\ pattern xmlDoc -> childDeriv ("", []) pattern xmlDoc)
+        >>>
+        isA (not . nullable)
+        >>>
+        arr ( take 1024                      -- pattern may be recursive, so the string representation
+                                             -- is truncated to 1024 chars to assure termination
+              . ("when validating with Relax NG schema: " ++)
+              . show
+            )
+        >>>
+        mkError c_err
+      )
+      `orElse`
+      this
 
 -- ------------------------------------------------------------
 
