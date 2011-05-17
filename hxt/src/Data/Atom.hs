@@ -32,8 +32,8 @@
    up in the table of atoms. If it is already there, the value in the map is used as atom, else
    the new @ByteString@ is inserted into the map.
 
-   Of course the implementation of this name cache uses @unsavePerformIO@ and @MVar@s
-   for managing this kind of global state.
+   Of course the implementation of this name cache uses @unsavePerformIO@.
+   The global cache is managed by ue of an @IORef@ and atomicModifyIORef.
 
    The following laws hold for atoms
 
@@ -59,11 +59,11 @@ module Data.Atom (
    share                -- :: String -> String
  ) where
 
-import           Control.Concurrent.MVar
 import           Control.DeepSeq
 
 import           Data.ByteString.Internal       ( toForeignPtr, c2w, w2c )
 import           Data.ByteString                ( ByteString, pack, unpack )
+import           Data.IORef
 import qualified Data.Map                       as M
 import           Data.String.UTF8Decoding       ( decodeUtf8 )
 import           Data.String.Unicode            ( unicodeToUtf8 )
@@ -82,8 +82,8 @@ newtype Atom    = A { bs :: ByteString }
 
 -- | the internal cache for the strings
 
-theAtoms        :: MVar Atoms
-theAtoms        = unsafePerformIO (newMVar M.empty)
+theAtoms        :: IORef Atoms
+theAtoms        = unsafePerformIO (newIORef M.empty)
 {-# NOINLINE theAtoms #-}
 
 -- | insert a bytestring into the atom cache
@@ -103,10 +103,14 @@ newAtom         = unsafePerformIO . newAtom'
 -- | The internal operation running in the IO monad
 newAtom'        :: String -> IO Atom
 newAtom' s      = do
-                  m <- takeMVar theAtoms
-                  let (m', a) = insertAtom (pack. map c2w . unicodeToUtf8 $ s) m
-                  putMVar theAtoms m'
-                  return a
+                  -- putStrLn "insert atom into cache"
+                  res <- atomicModifyIORef theAtoms insert
+                  -- putStrLn "atom cache updated"
+                  return res
+  where
+    insert m    = let r = insertAtom (pack. map c2w . unicodeToUtf8 $ s) m 
+                  in
+                   fst r `seq` r
 
 -- | Insert a @String@ into the atom cache and convert the atom back into a @String@.
 --

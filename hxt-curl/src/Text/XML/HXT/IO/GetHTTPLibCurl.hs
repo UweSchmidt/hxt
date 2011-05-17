@@ -72,8 +72,8 @@ initCurl        :: IO ()
 initCurl
     = do
       i <- takeMVar isInitCurl
-      when (not i) ( do
-                     _ <- curl_global_init 3
+      when (not i) ( curl_global_init 3
+                     >>
                      return ()
                    )
       putMVar isInitCurl True
@@ -182,25 +182,26 @@ getCont strictInput options uri
               statusLine (words rsl)
 
         contentT
-            = map (first stringToLower)                 -- all header names to lowercase
+            = map (first stringToLower)           -- all header names to lowercase
               >>>
-              filter ((== "content-type") . fst)        -- select content-type header
+              filter ((== "content-type") . fst)  -- select content-type header
               >>>
-              reverse                                   -- when libcurl is called with automatic redirects, there are more than one content-type headers
+              reverse                             -- when libcurl is called with automatic redirects,
+              >>>                                 -- there are more than one content-type headers
+              take 1                              -- take the last one, (if at leat one is found)
               >>>
-              take 1                                    -- take the last one, (if at leat one is found)
-              >>>
-              map snd                                   -- select content-type value
+              map snd                             -- select content-type value
               >>>
               map ( either (const []) id
-                    . parse parseContentType ""         -- parse the content-type for mimetype and charset
+                    . parse parseContentType ""   -- parse the content-type for mimetype and charset
                   )
               >>>
               concat
 
-        statusLine (vers : _code : msg)                 -- the status line of the curl response can be an old one, e.g. in the case of a redirect,
-            = [ mkH transferVersion   vers              -- so the return code is taken from the status field, which is contains the last status
-              , mkH transferMessage $ unwords msg
+        statusLine (vers : _code : msg)           -- the status line of the curl response can be an old one, 
+                                                  -- e.g. in the case of a redirect,
+            = [ mkH transferVersion   vers        -- so the return code is taken from that status field,
+              , mkH transferMessage $ unwords msg -- which is contains the last status
               , mkH transferStatus  $ show rs
               ]
         statusLine _

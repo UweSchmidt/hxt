@@ -84,13 +84,13 @@ import           Debug.Trace
 
 import           Control.Arrow                  ( (***) )
 
-import           Control.Concurrent.MVar
 import           Control.DeepSeq
 import           Control.FlatSeq
 
 import           Data.AssocList
 import           Data.Binary
 import           Data.Char                      ( toLower )
+import           Data.IORef
 import           Data.List                      ( isPrefixOf )
 import qualified Data.Map               as M
 import           Data.Typeable
@@ -354,11 +354,11 @@ mkNsName n ns                     = trace ("mkNsName: " ++ show n ++ " " ++ show
 
 mkNsName                          :: String -> String -> QName
 mkNsName n ns
-    | null ns			= qn
-    | otherwise			= setNamespaceUri' ns' qn
+    | null ns                   = qn
+    | otherwise                 = setNamespaceUri' ns' qn
     where
     qn                          = mkName n
-    ns'				= newXName ns
+    ns'                         = newXName ns
 
 -- ------------------------------------------------------------
 
@@ -512,8 +512,8 @@ type ChangeNameCache r  = NameCache -> (NameCache, r)
 
 -- | the internal cache for QNames (and name strings)
 
-theNameCache            :: MVar NameCache
-theNameCache            = unsafePerformIO (newMVar $ initialCache)
+theNameCache            :: IORef NameCache
+theNameCache            = unsafePerformIO (newIORef $ initialCache)
 {-# NOINLINE theNameCache #-}
 
 initialXNames           :: [XName]
@@ -556,14 +556,17 @@ initialCache            = NC
 changeNameCache         :: NFData r => ChangeNameCache r -> r
 changeNameCache action  = unsafePerformIO changeNameCache'
     where
-    changeNameCache'    = do
-                          -- putStrLn "takeMVar"
-                          c <- takeMVar theNameCache
-                          let (c', res) = action c
-                          c' `seq` -- rnf res `seq`
-                             putMVar theNameCache c'
-                          -- putStrLn "putMVar"
-                          return res
+    action' c = 
+      let r = action c 
+      in 
+       fst r `seq` r    -- eval name cache to whnf
+       
+    changeNameCache' = 
+      do
+      -- putStrLn "modify cache"
+      res <- atomicModifyIORef theNameCache action'
+      -- putStrLn "cache modified"
+      return res
 
 {-# NOINLINE changeNameCache #-}
 
@@ -599,7 +602,7 @@ newXName n              = changeNameCache $
                           newXName' n
 
 newQName                :: XName -> XName -> XName -> QName
-newQName lp px ns       = lp `seq` px `seq` ns `seq`                    -- XNames must be evaluated, else MVar blocks
+newQName lp px ns       = lp `seq` px `seq` ns `seq`            -- XNames must be evaluated, else MVar blocks
                           ( changeNameCache $
                             newQName' lp px ns
                           )
