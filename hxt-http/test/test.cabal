@@ -1,0 +1,16 @@
+Name:                test
+Version:             0.1
+Synopsis:            hxt-http test
+License:             PublicDomain
+License-file:        LICENSE
+Author:              uwe
+Maintainer:          uwe
+Category:            Testing
+Build-type:          Simple
+Cabal-version:       >=1.2
+
+
+Executable test
+  Main-is:             Test.hs
+  hs-source-dirs:      . ../src ../../hxt/src
+  
