@@ -1,120 +1,191 @@
 module Date
 where
 
-import Control.Arrow                                   ( second )
-import Data.Char                                       ( toLower
-                                                       , toUpper
-                                                       )
-import Data.Char.Properties.XMLCharProps
-import Data.List                                       ( isPrefixOf )
-import Data.Maybe
+import Control.Arrow  ( second )
+import Data.Char      ( toLower
+                      , toUpper
+                      )
+-- import Data.Char.Properties.XMLCharProps
+import Data.List      ( isPrefixOf )
+-- import Data.Maybe
 
 import Text.Parsec
 import Text.Regex.XMLSchema.String
 
--- ------------------------------------------------------------
 
+-- ------------------------------------------------------------
 -- some little helpers for building r.e.s
 
-star           = (++ "*") . pars
-plus           = (++ "+") . pars
-opt            = (++ "?") . pars
-dot            = (++ "\\.")
-pars           = ("(" ++) . (++ ")")
-orr x y        = pars $ pars x ++ "|" ++ pars y
-xor x y        = pars $ pars x ++ "{|}" ++ pars y
-nocase (x:xs)  = '[' : toUpper x : toLower x : ']' : xs
-alt            = pars . foldr1 orr
-altNC          = pars . alt . map nocase
-subex n e      = pars $ "{" ++ n ++ "}" ++ pars e
+star                  :: String -> String
+star                  = (++ "*") . pars
 
-ws             = "\\s"
-ws0            = star ws
-ws1            = plus ws
-s0 x y         = x ++ ws0 ++ y
+plus                  :: String -> String
+plus                  = (++ "+") . pars
+
+opt                   :: String -> String
+opt                   = (++ "?") . pars
+
+dot                   :: String -> String
+dot                   = (++ "\\.")
+
+pars                  :: String -> String
+pars                  = ("(" ++) . (++ ")")
+
+orr                   :: String -> String -> String
+orr x y               = pars $ pars x ++ "|" ++ pars y
+
+xor                   :: String -> String -> String
+xor x y               = pars $ pars x ++ "{|}" ++ pars y
+
+nocase                :: String -> String
+nocase                (x:xs)  = '[' : toUpper x : toLower x : ']' : xs
+nocase []             = error "nocase with empty list"
+
+alt                   :: [String] -> String
+alt                   = pars . foldr1 orr
+
+altNC                 :: [String] -> String
+altNC                 = pars . alt . map nocase
+
+subex                 :: String -> String -> String
+subex n e             = pars $ "{" ++ n ++ "}" ++ pars e
+
+ws                    :: String
+ws                    = "\\s"
+
+ws0                   :: String
+ws0                   = star ws
+
+ws1                   :: String
+ws1                   = plus ws
+
+s0                    :: String -> String -> String
+s0 x y                = x ++ ws0 ++ y
 
 -- the date and time r.e.s
 
-day            = "(0?[1-9]|[12][0-9]|3[01])"
-month          = "(0?[1-9]|1[0-2])"
-year2          = "[0-5][0-9]"
-year4          = "20" ++ year2
-year           = year4 `orr` year2
-year'          = "'" ++ year2
+day                   :: String
+day                   = "(0?[1-9]|[12][0-9]|3[01])"
 
-dayD           = dot day
-monthD         = dot month
+month                 :: String
+month                 = "(0?[1-9]|1[0-2])"
 
-dayMonthYear   = dayD `s0` monthD `s0` year
-dayMonth       = dayD `s0` monthD
+year2                 :: String
+year2                 = "[0-5][0-9]"
 
-dayOfWeekL     = altNC
-                 [ "montag"
-                 , "dienstag"
-                 , "mittwoch"
-                 , "donnerstag"
-                 , "freitag"
-                 , "samstag"
-                 , "sonnabend"
-                 , "sonntag"
-                 ]
-dayOfWeekA     = alt . map dot $
-                 [ "Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
-dayOfWeek      = dayOfWeekL `orr` dayOfWeekA
+year4                 :: String
+year4                 = "20" ++ year2
 
-monthL         = altNC
-                 [ "januar"
-                 , "februar"
-                 , "märz"
-                 , "april"
-                 , "mai"
-                 , "juni"
-                 , "juli"
-                 , "august"
-                 , "september"
-                 , "oktober"
-                 , "november"
-                 , "dezember"
-                 ]
-monthA         = altNC . map dot $ map snd monthAbr
+year                  :: String
+year                  = year4 `orr` year2
 
-monthAbr       = (9, "sept") :
-                 zip [1..12]
-                 [ "jan", "feb", "mär", "apr", "mai", "jun", "jul", "aug", "sep", "okt", "nov", "dez"]
+year'                 :: String
+year'                 = "'" ++ year2
 
-monthN         = pars $ monthL `orr` monthA
+dayD                  :: String
+dayD                  = dot day
+monthD                :: String
+monthD                = dot month
 
-hour           = pars "([0-1]?[0-9])|(2[0-4])"
-minute         = pars "(0?[0-9])|([1-5][0-9])"
-uhr            = ws0 ++ nocase "uhr"
-hourMin        = hour ++ ":" ++ minute ++ opt uhr
+dayMonthYear          :: String
+dayMonthYear          = dayD `s0` monthD `s0` year
+dayMonth              :: String
+dayMonth              = dayD `s0` monthD
 
-wsyear         = year ++ "/[0-9]{2}"
-wsem           = ("Wi?Se?" `orr` nocase "Wintersemester") ++ ws0 ++ wsyear
-ssem           = ("So?Se?" `orr` nocase "Sommersemester") ++ ws0 ++ year
-sem            = wsem `orr` ssem
+dayOfWeekL            :: String
+dayOfWeekL            = altNC
+                        [ "montag"
+                        , "dienstag"
+                        , "mittwoch"
+                        , "donnerstag"
+                        , "freitag"
+                        , "samstag"
+                        , "sonnabend"
+                        , "sonntag"
+                        ]
 
-num            = "\\d+"
+dayOfWeekA            :: String
+dayOfWeekA            = alt . map dot $
+                        [ "Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+
+dayOfWeek             :: String
+dayOfWeek             = dayOfWeekL `orr` dayOfWeekA
+
+monthL                :: String
+monthL                = altNC
+                        [ "januar"
+                        , "februar"
+                        , "märz"
+                        , "april"
+                        , "mai"
+                        , "juni"
+                        , "juli"
+                        , "august"
+                        , "september"
+                        , "oktober"
+                        , "november"
+                        , "dezember"
+                        ]
+
+monthA                :: String
+monthA                = altNC . map dot $ map snd monthAbr
+
+monthAbr              :: [(Integer, String)]
+monthAbr              = (9, "sept") :
+                        zip [1..12]
+                        [ "jan", "feb", "mär", "apr", "mai", "jun", "jul", "aug", "sep", "okt", "nov", "dez"]
+
+monthN                :: String
+monthN                = pars $ monthL `orr` monthA
+
+hour                  :: String
+hour                  = pars "([0-1]?[0-9])|(2[0-4])"
+
+minute                :: String
+minute                = pars "(0?[0-9])|([1-5][0-9])"
+
+uhr                   :: String
+uhr                   = ws0 ++ nocase "uhr"
+
+hourMin               :: String
+hourMin               = hour ++ ":" ++ minute ++ opt uhr
+
+wsyear                :: String
+wsyear                = year ++ "/[0-9]{2}"
+
+wsem                  :: String
+wsem                  = ("Wi?Se?" `orr` nocase "Wintersemester") ++ ws0 ++ wsyear
+
+ssem                  :: String
+ssem                  = ("So?Se?" `orr` nocase "Sommersemester") ++ ws0 ++ year
+
+sem                   :: String
+sem                   = wsem `orr` ssem
+
+num                   :: String
+num                   = "\\d+"
 
 -- the token types
 
-tokenRE         = foldr1 xor $
-                 map (uncurry subex) $
-                 [ ( "ddmmyyyy",    dayMonthYear )
-                 , ( "ddMonthyyyy", dayD `s0` monthN `s0` (year `orr` year') )
-                 , ( "ddmm",        dayMonth)
-                 , ( "ddMonth",     dayD `s0` monthN )
-                 , ( "yyyymmdd",    year ++ "[-/]" ++ month ++ "[-/]" ++ day )
-                 , ( "yyyy",        year4 `orr` ("'" ++ year2) )
-                 , ( "month",       monthN )
-                 , ( "weekday",     dayOfWeek )
-                 , ( "HHMM",        hourMin ++ opt uhr )
-                 , ( "HH",          hour    ++ uhr )
-                 , ( "wsem",        wsem)
-                 , ( "ssem",        ssem)
-                 , ( "word",        "[\\w\\d]+")
-                 , ( "del",         "[^\\w\\d]+")
-                 ]
+tokenRE               :: String
+tokenRE               = foldr1 xor $
+                        map  (uncurry subex) $
+                        [  ( "ddmmyyyy",    dayMonthYear )
+                        , ( "ddMonthyyyy", dayD `s0` monthN `s0` (year `orr` year') )
+                        , ( "ddmm",        dayMonth)
+                        , ( "ddMonth",     dayD `s0` monthN )
+                        , ( "yyyymmdd",    year ++ "[-/]" ++ month ++ "[-/]" ++ day )
+                        , ( "yyyy",        year4 `orr` ("'" ++ year2) )
+                        , ( "month",       monthN )
+                        , ( "weekday",     dayOfWeek )
+                        , ( "HHMM",        hourMin ++ opt uhr )
+                        , ( "HH",          hour    ++ uhr )
+                        , ( "wsem",        wsem)
+                        , ( "ssem",        ssem)
+                        , ( "word",        "[\\w\\d]+")
+                        , ( "del",         "[^\\w\\d]+")
+                        ]
+
 
 -- ------------------------------------------------------------
 
@@ -127,12 +198,12 @@ type Text          = String -> String           -- for fast concatenation
 
 -- must be extended for weekday or semester, if neccessay
 
-data DateVal       = DT { _year   :: ! Int
-                        , _month  :: ! Int
-                        , _day    :: ! Int
-                        , _hour   :: ! Int
-                        , _min    :: ! Int
-                        }
+data DateVal       = DT  { _year   :: ! Int
+                         , _month  :: ! Int
+                         , _day    :: ! Int
+                         , _hour   :: ! Int
+                         , _min    :: ! Int
+                         }
                      deriving (Eq, Show)
 
 data DateParse     = DP { _pre    ::   Text
@@ -218,9 +289,8 @@ dateSearch'     = map datePToDateRep .
 -- does not contain a valid date, but just the context behind the last real date
 
 dateSearch      :: TokenStream -> [DateParse]
-dateSearch ts   = either (const []) id .
-                  parse (many (dateParser emptyDateParse)) "" $
-                  ts
+dateSearch      = either (const []) id .
+                  parse (many (dateParser emptyDateParse)) ""
 
 -- all date parsers thread a state the subparsers to accumulate
 -- the parts of a date, the context, the external representation and
@@ -336,8 +406,8 @@ parseHour d     = ( do
 -- parse a token of a given type and add the text to the external rep.
 
 parseDateTok    :: String -> DateParse -> DateParser (String, DateParse)
-parseDateTok tt d
-                = dateTok (isTokType (== tt)) d
+parseDateTok tty d
+                = dateTok (isTokType (== tty)) d
 
 dateTok         :: DateParser String -> DateParse -> DateParser (String, DateParse)
 dateTok t d     = ( do
@@ -360,11 +430,11 @@ lookAheadN n p d
 
 -- the interface to the primitive parsec token parser
 tok             :: (Token -> Bool) -> DateParser Token
-tok pred        = tokenPrim showTok nextPos testTok
+tok prd         = tokenPrim showTok nextPos testTok
     where
       showTok               = show . fst
       nextPos pos _tok _ts  = incSourceColumn pos 1
-      testTok tok           = if pred tok then Just tok else Nothing
+      testTok tk            = if prd tk then Just tk else Nothing
 
 -- check for specific token type and in case of success return the text value
 isTokType       :: (String -> Bool) -> DateParser String
@@ -391,8 +461,8 @@ fillTok         = delTok <|> wordTok
 
 -- semester tokens, not yet interpreted
 semTok'         :: String -> DateParser (String, Int, Bool)
-semTok' sem     = do v <- isTokType (== sem)
-                     return (v, read . head . tokenizeExt year $ v, sem == "ssem")
+semTok' sem'     = do v <- isTokType (== sem')
+                      return (v, read . head . tokenizeExt year $ v, sem' == "ssem")
 
 semTok          :: DateParser (String, Int, Bool)
 semTok          = semTok' "ssem" <|> semTok' "wsem"
@@ -411,8 +481,8 @@ monthToM m
 
 -- ------------------------------------------------------------
 
-t :: String
-t = "Am Sonntag, dem 17. Februar '03 findet um 9 Uhr ein wichtiger Termin für das Sommersemester 2000 statt. "
+ts :: String
+ts = "Am Sonntag, dem 17. Februar '03 findet um 9 Uhr ein wichtiger Termin für das Sommersemester 2000 statt. "
     ++ "Dieser wird allerdings auf Montag verschoben. Und zwar auf den ersten Montag im Wintersemester 11/12, 12:30. "
     ++ "Ein wichtiger Termin findet im SoSe 2011 statt. Im Jahr '12 gibt es Termine, aber auch in WS 2010/11. "
     ++ "Ein weiterer Termin ist  am 2.4.11 um 12 Uhr. Oder war es doch Di. der 3.4.? Egal. "
@@ -422,13 +492,25 @@ t = "Am Sonntag, dem 17. Februar '03 findet um 9 Uhr ein wichtiger Termin für d
     ++ "Freitag, der 13. Juli ist kein Glückstag"
     ++ "und Freitag, der 13. Juli um 11:55 Uhr ist es zu spät."
 
-r = map _r . dateSearch' . tokenizeSubex tokenRE $ t
-d = map _d . dateSearch' . tokenizeSubex tokenRE $ t
-a =          dateSearch' . tokenizeSubex tokenRE $ t
+rrr :: [String]
+rrr = map _r . dateSearch' . tokenizeSubex tokenRE $ ts
 
+ddd :: [DateVal]
+ddd = map _d . dateSearch' . tokenizeSubex tokenRE $ ts
+
+aaa :: [DateRep]
+aaa =          dateSearch' . tokenizeSubex tokenRE $ ts
+
+tt :: String -> [(String, String)]
 tt = tokenizeSubex tokenRE
+
+dd :: String -> [DateVal]
 dd = map _d . dateSearch' . tt
+
+rr :: String -> [String]
 rr = map _r . dateSearch' . tt
+
+pp :: String -> [String]
 pp = map _p . dateSearch' . tt
 
 -- ------------------------------------------------------------
