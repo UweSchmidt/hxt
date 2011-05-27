@@ -122,6 +122,7 @@ e5 = Binary Mul (Binary Add e4
                             (Const 1)
                 ) e4
 e6 = (Try e1 (Const 1))
+e7 = (Try e1 e2)
 e4' = Let "x" (Const 42) e4
 e5' = Let "x" (Const 6)  e5 
  
