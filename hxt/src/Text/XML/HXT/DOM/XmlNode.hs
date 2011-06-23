@@ -304,7 +304,7 @@ instance XmlNode XNode where
     {-# INLINE changeAttrName #-}
 
     changePiName cf (XPi n al)          = XPi    (cf n) al
-    changePiName _ _                    = error "changeAttrName undefined"
+    changePiName _ _                    = error "changePiName undefined"
     {-# INLINE changePiName #-}
 
     changeDTDAttrl cf (XDTD p al)       = XDTD p (cf al)
