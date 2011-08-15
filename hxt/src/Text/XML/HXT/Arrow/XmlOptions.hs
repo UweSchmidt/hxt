@@ -63,6 +63,10 @@ inputOptions
       , Option "Q"      [a_do_not_issue_warnings]       (NoArg  (withWarnings          False))  "ignore warnings, when parsing HTML"
       , Option ""       [a_validate]                    (NoArg  (withValidate           True))  "document validation when parsing XML (default)"
       , Option "w"      [a_do_not_validate]             (NoArg  (withValidate          False))  "only wellformed check, no validation"
+      , Option ""       [a_subst_dtd_entities]          (NoArg  (withSubstDTDEntities   True))  "entities defined in DTD are substituted when parsing XML (default)"
+      , Option ""       [a_do_not_subst_dtd_entities]   (NoArg  (withSubstDTDEntities  False))  "entities defined in DTD are NOT substituted when parsing XML"
+      , Option ""       [a_subst_html_entities]         (NoArg  (withSubstHTMLEntities   True)) "entities defined in XHTML are substituted when parsing XML, only in effect when prev. option is switched off"
+      , Option ""       [a_do_not_subst_html_entities]  (NoArg  (withSubstHTMLEntities  False)) "only entities predefined in XML are substituted when parsing XML (default)"
       , Option ""       [a_canonicalize]                (NoArg  (withCanonicalize       True))  "canonicalize document, remove DTD, comment, transform CDATA, CharRef's, ... (default)"
       , Option "c"      [a_do_not_canonicalize]         (NoArg  (withCanonicalize      False))  "do not canonicalize document, don't remove DTD, comment, don't transform CDATA, CharRef's, ..."
       , Option "C"      [a_preserve_comment]            (NoArg  (withPreserveComment    True))  "don't remove comments during canonicalisation"
@@ -142,6 +146,8 @@ a_accept_mimetypes,
  a_do_not_issue_warnings,
  a_do_not_preserve_comment,
  a_do_not_remove_whitespace,
+ a_do_not_subst_dtd_entities,
+ a_do_not_subst_html_entities,
  a_do_not_validate,
  a_error,
  a_error_log,
@@ -173,6 +179,8 @@ a_accept_mimetypes,
  a_show_haskell,
  a_show_tree,
  a_strict_input,
+ a_subst_dtd_entities,
+ a_subst_html_entities,
  a_text_mode,
  a_trace,
  a_validate,
@@ -190,6 +198,8 @@ a_do_not_issue_errors           = "do-not-issue-errors"
 a_do_not_issue_warnings         = "do-not-issue-warnings"
 a_do_not_preserve_comment       = "do-not-preserve-comment"
 a_do_not_remove_whitespace      = "do-not-remove-whitespace"
+a_do_not_subst_dtd_entities     = "do-not-subst-dtd-entities"
+a_do_not_subst_html_entities    = "do-not-subst-html-entities"
 a_do_not_validate               = "do-not-validate"
 a_error                         = "error"
 a_error_log                     = "errorLog"
@@ -221,6 +231,8 @@ a_remove_whitespace             = "remove-whitespace"
 a_show_haskell                  = "show-haskell"
 a_show_tree                     = "show-tree"
 a_strict_input                  = "strict-input"
+a_subst_dtd_entities            = "subst-dtd-entities"
+a_subst_html_entities           = "subst-html-entities"
 a_text_mode                     = "text-mode"
 a_trace                         = "trace"
 a_validate                      = "validate"

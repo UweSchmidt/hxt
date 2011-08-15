@@ -99,10 +99,24 @@ withParseByMimeType             = setS theParseByMimeType
 withParseHTML                   :: Bool -> SysConfig
 withParseHTML                   = setS theParseHTML
 
--- | @withValidate yes/no@: read option, validate document againsd DTD, default is 'yes'
+-- | @withValidate yes/no@: read option, validate document against DTD, default is 'yes'
 
 withValidate                    :: Bool -> SysConfig
 withValidate                    = setS theValidate
+
+-- | @withSubstDTDEntities yes/no@: read option, substitute general entities defined in DTD, default is 'yes'.
+-- switching this option and the validate option off can lead to faster parsing, because then
+-- there is no need to access the DTD
+
+withSubstDTDEntities            :: Bool -> SysConfig
+withSubstDTDEntities            = setS theSubstDTDEntities
+
+-- | @withSubstHTMLEntities yes/no@: read option, substitute general entities defined in HTML DTD, default is 'no'.
+-- switching this option on and the substDTDEntities and validate options off can lead to faster parsing
+-- because there is no need to access a DTD, but still the HTML general entities are substituted
+
+withSubstHTMLEntities            :: Bool -> SysConfig
+withSubstHTMLEntities            = setS theSubstHTMLEntities
 
 -- | @withCheckNamespaces yes/no@: read option, check namespaces, default is 'no'
 

@@ -202,6 +202,8 @@ data XIOParseConfig     = XIOPcfg { xioMimeTypes                ::   MimeTypeTab
                                   , xioLowerCaseNames           :: ! Bool
                                   , xioPreserveComment          :: ! Bool
                                   , xioValidate                 :: ! Bool
+                                  , xioSubstDTDEntities         :: ! Bool
+                                  , xioSubstHTMLEntities        :: ! Bool
                                   , xioCheckNamespaces          :: ! Bool
                                   , xioCanonicalize             :: ! Bool
                                   , xioIgnoreNoneXmlContents    :: ! Bool
@@ -632,6 +634,20 @@ theValidate                     = theParseConfig
                                   >>>
                                   S { getS = xioValidate
                                     , setS = \ x s -> s { xioValidate = x }
+                                    }
+
+theSubstDTDEntities            :: Selector XIOSysState Bool
+theSubstDTDEntities            = theParseConfig
+                                  >>>
+                                  S { getS = xioSubstDTDEntities
+                                    , setS = \ x s -> s { xioSubstDTDEntities = x }
+                                    }
+
+theSubstHTMLEntities            :: Selector XIOSysState Bool
+theSubstHTMLEntities            = theParseConfig
+                                  >>>
+                                  S { getS = xioSubstHTMLEntities
+                                    , setS = \ x s -> s { xioSubstHTMLEntities = x }
                                     }
 
 theCheckNamespaces              :: Selector XIOSysState Bool

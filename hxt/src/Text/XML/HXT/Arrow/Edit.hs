@@ -46,6 +46,9 @@ module Text.XML.HXT.Arrow.Edit
     , transfCharRef
     , transfAllCharRef
 
+    , substAllXHTMLEntityRefs
+    , substXHTMLEntityRef
+
     , rememberDTDAttrl
     , addDefaultDTDecl
 
@@ -112,32 +115,7 @@ canonicalizeTree' toBeRemoved
       )
       >>>
       canonicalizeNodes toBeRemoved
-{-
-canonicalize1Node       :: LA XmlTree XmlTree -> LA XmlTree XmlTree
-canonicalize1Node toBeRemoved
-    = choiceA
-      [ toBeRemoved     :-> none
-      , isElem          :-> ( processAttrl
-                              ( processChildren transfCharRef
-                                >>>
-                                collapseXText'  -- combine text in attribute values
-                              )
-                              >>>
-                              collapseXText'    -- combine text in content
-                            )
-      , isCharRef       :-> ( getCharRef
-                              >>>
-                              arr (\ i -> [toEnum i])
-                              >>>
-                              mkText
-                            )
-      , isCdata         :-> ( getCdata
-                              >>>
-                              mkText
-                            )
-      , this            :-> this
-      ]
--}
+
 canonicalizeNodes       :: LA XmlTree XmlTree -> LA XmlTree XmlTree
 canonicalizeNodes toBeRemoved
     = editNTreeA $
@@ -263,8 +241,10 @@ collapseAllXText        = fromLA $ processBottomUp collapseXText'
 
 -- | apply an arrow to the input and convert the resulting XML trees into an XML escaped string
 --
--- This is a save variant for converting a tree into an XML string representation that is parsable with 'Text.XML.HXT.Arrow.ReadDocument'.
--- It is implemented with 'Text.XML.HXT.Arrow.XmlArrow.xshow', but xshow does no XML escaping. The XML escaping is done with
+-- This is a save variant for converting a tree into an XML string representation
+-- that is parsable with 'Text.XML.HXT.Arrow.ReadDocument'.
+-- It is implemented with 'Text.XML.HXT.Arrow.XmlArrow.xshow',
+-- but xshow does no XML escaping. The XML escaping is done with
 -- 'Text.XML.HXT.Arrow.Edit.escapeXmlDoc' before xshow is applied.
 --
 -- So the following law holds
@@ -290,6 +270,31 @@ xhtmlEntityRefTable     = buildEntityRefTable $ xhtmlEntities
 
 buildEntityRefTable     :: [(String, Int)] -> EntityRefTable
 buildEntityRefTable     = M.fromList . map (\ (x,y) -> (y,x) )
+
+type EntitySubstTable   = M.Map String String
+
+xhtmlEntitySubstTable   :: EntitySubstTable
+xhtmlEntitySubstTable   = M.fromList . map (second $ (:[]) . toEnum) $ xhtmlEntities
+
+-- ------------------------------------------------------------
+
+substXHTMLEntityRef	:: LA XmlTree XmlTree
+substXHTMLEntityRef
+    = ( getEntityRef
+        >>>
+        arrL subst
+        >>>
+        mkText
+      )
+      `orElse` this
+    where
+      subst name
+          = maybe [] (:[]) $ M.lookup name xhtmlEntitySubstTable
+
+substAllXHTMLEntityRefs	:: ArrowXml a => a XmlTree XmlTree
+substAllXHTMLEntityRefs
+    = fromLA $
+      processBottomUp substXHTMLEntityRef
 
 -- ------------------------------------------------------------
 

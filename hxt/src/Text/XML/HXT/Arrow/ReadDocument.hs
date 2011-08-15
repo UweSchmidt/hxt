@@ -59,6 +59,20 @@ for all available options see module 'Text.XML.HXT.XmlState.SystemConfig'
 - @withValidate yes\/no@ :
   switch on\/off DTD validation. Only for XML parsed documents, not for HTML parsing.
 
+- @withSubstDTDEntities yes\/no@ :
+  switch on\/off entity substitution for general entities defined in DTD validation.
+  Default is @yes@.
+  Switching this option and the validation off can lead to faster parsing, in that case
+  reading the DTD documents is not longer necessary.
+  Only used with XML parsed documents, not with HTML parsing.
+
+- @withSubstHTMLEntities yes\/no@ :
+  switch on\/off entity substitution for general entities defined in HTML validation.
+  Default is @no@.
+  Switching this option on and the validation and substDTDEntities off can lead to faster parsing, in that case
+  reading the DTD documents is not longer necessary, HTML general entities are still substituted.
+  Only used with XML parsed documents, not with HTML parsing.
+
 - @withParseHTML yes\/no@ :
   switch on HTML parsing.
 
@@ -151,10 +165,28 @@ This requires packages \"hxt-curl\" and \"hxt-tagsoup\" to be installed
 >              , withHTTP              []
 >              ] "http://www.w3c.org/"
 
-read w3c home page (xhtml), validate and check namespaces, remove whitespace between tags, trace activities with level 2.
+read w3c home page (xhtml), validate and check namespaces, remove whitespace between tags,
+trace activities with level 2.
 HTTP access is done with Haskell HTTP package
 
-for minimal complete examples see 'Text.XML.HXT.Arrow.WriteDocument.writeDocument' and 'runX', the main starting point for running an XML arrow.
+> readDocument [ withValidate          no
+>              , withSubstDTDEntities  no
+>              ...
+>              ] "http://www.w3c.org/"
+
+read w3c home page (xhtml), but without accessing the DTD given in that document.
+Only the predefined XML general entity refs are substituted.
+
+> readDocument [ withValidate          no
+>              , withSubstDTDEntities  no
+>              , withSubstHTMLEntities yes
+>              ...
+>              ] "http://www.w3c.org/"
+
+same as above, but with substituion of all general entity refs defined in XHTML.
+
+for minimal complete examples see 'Text.XML.HXT.Arrow.WriteDocument.writeDocument'
+and 'runX', the main starting point for running an XML arrow.
 -}
 
 readDocument    :: SysConfigList -> String -> IOStateArrow s b XmlTree
@@ -205,8 +237,10 @@ readDocument'' src
           >>>
           ( if isAcceptedMimeType acceptedMimeTypes mimeType
             then ( ifA (fromLA hasEmptyBody)
-                   ( replaceChildren none )                                     -- empty response, e.g. in if-modified-since request
+                   ( replaceChildren none )               -- empty response, e.g. in if-modified-since request
                    ( ( parse $< getSysVar (theValidate              .&&&.
+                                           theSubstDTDEntities      .&&&.
+                                           theSubstHTMLEntities     .&&&.
                                            theIgnoreNoneXmlContents .&&&.
                                            theTagSoup               .&&&.
                                            theExpat
@@ -272,7 +306,7 @@ readDocument'' src
                                             (mi == mis || mis == "*")
                                           )
                                           || r
-        parse (validate, (removeNoneXml, (withTagSoup', withExpat')))
+        parse (validate, (substDTD, (substHTML, (removeNoneXml, (withTagSoup', withExpat')))))
             | not isXmlOrHtml           = if removeNoneXml
                                           then replaceChildren none             -- don't parse, if mime type is not XML nor HTML
                                           else this                             -- but remove contents when option is set
@@ -285,7 +319,7 @@ readDocument'' src
 
             | isXml                     = if withExpat'
                                           then parseXmlDocumentWithExpat
-                                          else parseXmlDocument (not validateWithRelax && validate)
+                                          else parseXmlDocument validate substDTD substHTML validateWithRelax
                                                                                 -- parse as XML
             | otherwise                 = this                                  -- suppress warning
 

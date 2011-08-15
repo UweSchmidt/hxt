@@ -45,6 +45,7 @@ import Text.XML.HXT.Arrow.ParserInterface       ( parseXmlDoc
                                                 )
 
 import Text.XML.HXT.Arrow.Edit                  ( transfAllCharRef
+                                                , substAllXHTMLEntityRefs
                                                 )
 
 import Text.XML.HXT.Arrow.GeneralEntitySubstitution
@@ -87,8 +88,8 @@ Example:
 This parser is useful for applications processing correct XML documents.
 -}
 
-parseXmlDocument        :: Bool -> IOStateArrow s XmlTree XmlTree
-parseXmlDocument validate'
+parseXmlDocument        :: Bool -> Bool -> Bool -> Bool -> IOStateArrow s XmlTree XmlTree
+parseXmlDocument validateD substDTD substHTML validateRX
     = ( replaceChildren ( ( getAttrValue a_source
                             &&&
                             xshow getChildren
@@ -102,22 +103,17 @@ parseXmlDocument validate'
         setDocumentStatusFromSystemState "parse XML document"
         >>>
         ( ifA (fromLA getDTDSubset)
-          ( processDTD
-            >>>
-            ( processGeneralEntities		-- DTD contains general entity definitions
-              `when`
-              fromLA generalEntitiesDefined
-            )
-            >>>
-            transfAllCharRef
+          ( processDTDandEntities
             >>>
             ( if validate'			-- validation only possible if DTD there
               then validateDocument
               else this
             )
           )
-          ( if validate'			-- validation only consists of checking for undefined entity refs
-                                                -- predefined XML entity refs are substituted in the XML parser into char refs
+          ( if validate'			-- validation only consists of checking
+                                                -- for undefined entity refs
+                                                -- predefined XML entity refs are substituted
+                                                -- in the XML parser into char refs
                                                 -- so there is no need for an entity substitution
             then traceMsg 2 "checkUndefinedEntityRefs: looking for undefined entity refs"
                  >>>
@@ -131,6 +127,27 @@ parseXmlDocument validate'
         )
       )
       `when` documentStatusOk
+    where
+      validate'
+          = validateD && not validateRX
+
+      processDTDandEntities
+          = ( if validateD || substDTD
+              then processDTD
+              else this
+            )
+            >>>
+            ( if substDTD
+              then ( processGeneralEntities		-- DTD contains general entity definitions
+                     `when`
+                     fromLA generalEntitiesDefined
+                   )
+              else if substHTML
+                   then substAllXHTMLEntityRefs
+                   else this
+            )
+            >>>
+            transfAllCharRef
 
 checkUndefinedEntityRefs	:: IOStateArrow s XmlTree XmlTree
 checkUndefinedEntityRefs
@@ -170,7 +187,10 @@ arbitray errors, but the application is only interested in parts of the document
 
 parseHtmlDocument       :: IOStateArrow s XmlTree XmlTree
 parseHtmlDocument
-    = ( perform ( getAttrValue a_source >>> traceValue 1 (("parseHtmlDoc: parse HTML document " ++) . show) )
+    = ( perform ( getAttrValue a_source
+                  >>>
+                  traceValue 1 (("parseHtmlDoc: parse HTML document " ++) . show)
+                )
         >>>
         ( parseHtml      $< getSysVar (theTagSoup  .&&&. theExpat) )
         >>>
