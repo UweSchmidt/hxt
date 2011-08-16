@@ -1,6 +1,6 @@
 -- arch-tag: Haskell XML Toolbox main description file
 Name:           hxt-relaxng
-Version:        9.1.2
+Version:        9.1.3
 Synopsis:       The HXT RelaxNG validator
 Description:    The HXT RelaxNG validator
 License:        MIT
@@ -70,6 +70,6 @@ library
                 containers >= 0.2 && < 1,
                 parsec     >= 2.1 && < 4,
                 network    >= 2.1 && < 3,
-                hxt                 >= 9.1   && < 10,
+                hxt                 >= 9.1.3 && < 10,
                 hxt-charproperties  >= 9     && < 10,
                 hxt-regex-xmlschema >= 9     && < 10

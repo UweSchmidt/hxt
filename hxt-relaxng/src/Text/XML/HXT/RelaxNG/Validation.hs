@@ -182,7 +182,7 @@ readForRelax    :: String -> IOSArrow b XmlTree
 readForRelax schema
     = getDocumentContents schema
       >>>
-      parseXmlDocument False
+      parseXmlDocument False True False True
       >>>
       canonicalizeAllNodes
       >>>

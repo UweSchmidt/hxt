@@ -141,6 +141,8 @@ module Text.XML.HXT.Arrow.XmlState
     , withShowHaskell
     , withShowTree
     , withStrictInput
+    , withSubstDTDEntities
+    , withSubstHTMLEntities
     , withTextMode
     , withTrace
     , withValidate
