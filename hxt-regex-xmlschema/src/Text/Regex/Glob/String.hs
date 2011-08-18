@@ -17,7 +17,9 @@
 module Text.Regex.Glob.String
     ( Regex
     , match
+    , matchNoCase
     , parseRegex
+    , parseRegexNoCase
     )
 where
 
@@ -28,5 +30,8 @@ import Text.Regex.Glob.String.RegexParser
 
 match           :: String -> String -> Bool
 match           = matchWithRegex . parseRegex
+
+matchNoCase     :: String -> String -> Bool
+matchNoCase     = matchWithRegex . parseRegexNoCase
 
 -- ------------------------------------------------------------
