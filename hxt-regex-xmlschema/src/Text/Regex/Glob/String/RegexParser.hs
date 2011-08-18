@@ -61,7 +61,7 @@ pattern mkS
     where
       part :: Parser Regex
       part
-          = ( many1 (noneOf "\\?*[{") >>= return . mkWord )
+          = ( many1 (noneOf "\\?*[{") >>= return . mkWord' )
             <|>
             ( char '?' >> return mkDot )
             <|>
@@ -71,11 +71,15 @@ pattern mkS
             <|>
             ( between (char '[') (char ']') charSet )
             <|>
-            ( char '\\' >> anyChar >>= return . mkSym1 )
+            ( do c <- char '\\' >> anyChar
+                 return $ mkS c c
+            )
+      mkWord'
+          = mkSeqs . map (\ c -> mkS c c)
 
       wordList :: Parser Regex
       wordList
-          = sepBy (many1 (noneOf ",}")) (char ',') >>= return . foldr mkAlt (mkZero "") . map mkWord
+          = sepBy (many1 (noneOf ",}")) (char ',') >>= return . foldr mkAlt (mkZero "") . map mkWord'
 
       charSet :: Parser Regex
       charSet
