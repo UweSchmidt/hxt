@@ -1,3 +1,4 @@
+{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies #-}
 {-# OPTIONS -fno-warn-orphans #-}
 
 -- ------------------------------------------------------------

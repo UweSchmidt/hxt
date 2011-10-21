@@ -608,7 +608,8 @@ encodingDecl
 --
 -- the string parameter is parsed with the XML content parser.
 -- result is the list of trees or in case of an error a single element list with the
--- error message as node. No entity or character subtitution is done.
+-- error message as node. No entity or character subtitution is done here,
+-- but the XML parser can do this for the predefined XML or the char references for performance reasons
 --
 -- see also: 'parseXmlContent'
 
