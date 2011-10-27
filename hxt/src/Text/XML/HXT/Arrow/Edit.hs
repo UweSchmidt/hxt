@@ -90,7 +90,7 @@ import           Data.Maybe
 -- |
 -- Applies some "Canonical XML" rules to a document tree.
 --
--- The rule differ slightly for canonical XML and XPath in handling of comments
+-- The rules differ slightly for canonical XML and XPath in handling of comments
 --
 -- Note: This is not the whole canonicalization as it is specified by the W3C
 -- Recommendation. Adding attribute defaults or sorting attributes in lexicographic
