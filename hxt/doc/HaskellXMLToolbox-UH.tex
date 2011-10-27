@@ -1,7 +1,8 @@
+% HaskellXMLToolbox-UH.tex
 \begin{hcarentry}[updated]{Haskell XML Toolbox}
 \label{hxt}
-\report{Uwe Schmidt}%05/10
-\status{seventh major release (current release: 8.5.2)}
+\report{Uwe Schmidt}%05/11
+\status{seventh major release (current release: 9.1)}
 \makeheader
 
 \subsubsection*{Description}
@@ -13,60 +14,88 @@ almost fully the Extensible Markup Language (XML) 1.0 (Second Edition).
 There is a validator based on DTDs and a new more powerful one for
 Relax~NG schemas.
 
-The Haskell XML Toolbox is based on the ideas of HaXml~\cref{haxml} and HXML,
+The Haskell XML Toolbox is based on the ideas of HaXml %(\url{http://haskell.org/communities/05-2009/html/report.html#sect5.13.2})
+and HXML,
 but introduces a more general approach for processing XML with Haskell.
 The processing model is based on arrows. The arrow interface is more flexible
 than the filter approach taken in the earlier HXT versions and in HaXml.
 It is also safer; type checking of combinators becomes possible with the arrow
 approach.
 
-HXT is partitioned into 6 packages: The base package {\tt hxt}, the package for the
-old approach working with filter {\tt hxt-filter} (this one will not be further
-developed), the package {\tt hxt-xpath} for XPath functionality, {\tt hxt-xslt}
-for the XSLT interpreter, {\tt hxt-binary} a small package for binary (de-)serialization
-of HXT DOM trees, and {\tt hxt-cache}, a package for caching XML/HTML documents in parsed
-format.
+HXT is partitioned into a collection of smaller packages: The core
+package is
+{\tt hxt}. It contains a validating XML parser, an HTML parser,
+filters for manipulating XML/HTML and so called XML pickler for
+converting XML to and from native Haskell data.
+
+Basic functionality for character handling and decoding is
+separated into the packages {\tt hxt-charproperties} and {\tt
+ hxt-unicode}. These packages may be generally useful even for non XML projects.
+
+HTTP access can be done with the help of the packages
+{\tt hxt-http} for native Haskell HTTP access and {\tt hxt-curl} via a
+libcurl binding. An alternative lazy non validating parser for XML and HTML can be
+found in {\tt hxt-tagsoup}. 
+
+The XPath interpreter is in package {\tt hxt-xpath}, the XSLT part in
+{\tt hxt-xslt}
+and the Relax~NG validator in {\tt hxt-relaxng}. For checking the XML
+Schema Datatype definitions, also used with Relax~NG, there is a
+separate and generally useful regex package {\tt hxt-regex-xmlschema}.
+
+The old HXT approach working with filter {\tt hxt-filter} is still
+available,
+but currently only with hxt-8. It has not (yet) been updated to the
+hxt-9 mayor version.
 
 \subsubsection*{Features}
 
-\begin{itemize}
+\begin{compactitem}
 \item Validating XML parser
 \item Very liberal HTML parser
 \item Lightweight lazy parser for XML/HTML based on Tagsoup~\cref{tagsoup}
+\item Binding to the expat parser via hexpat package
 \item Easy de-/serialization between native Haskell data and XML by pickler and pickler combinators
 \item XPath support
 \item Full Unicode support
 \item Support for XML namespaces
 \item Cabal package support for GHC
-\item HTTP access via Haskell bindings to libcurl
+\item HTTP access via Haskell bindings to libcurl and via Haskell HTTP
+  package
 \item Tested with W3C XML validation suite
 \item Example programs
 \item Relax~NG schema validator
+\item Lightweight regex library with full support of Unicode and XML Schema
+  Datatype regular expression syntax
 \item An HXT Cookbook for using the toolbox and the arrow interface
 \item Basic XSLT support
-\item Git repository with current development versions of all packages
-  \url{http://git.fh-wedel.de/repos/hxt.git}
-\end{itemize}
+\item GitHub repository with current development versions of all packages
+  \url{http://github.com/UweSchmidt/hxt}
+\end{compactitem}
 
 \subsubsection*{Current Work}
 
-Currently mainly maintenance work is done. This includes
-space and runtime optimizations.
+Besides maintenance work, there were some activities for
+better IO and parser performance. The native XML as well as the HTML parser have
+been optimized for speed and space. The input and output routines now work
+with bytestrings instead of native Haskell IO. Furthermore the XPath component
+has internally been changed for better performance, especially for the
+handling of XPath node sets.
 
-The HXT library is extensively used in the Holumbus
-project~\cref{holumbus}, there it forms the basis for the index generation.
-Development is currently driven by the needs of the Holumbus project.
+There are some plans to further develop the Relax~NG validator
+for full XML Schema Datatype support and for the native Relax~NG
+schema notation. Another topic in this field is the (semi-)automatic
+Haskell datatype derivation out of Relax~NG schemas and the generation
+of picklers between the schema and the Haskell types.
 
 \FurtherReading
 The Haskell XML Toolbox Web page
 (\url{http://www.fh-wedel.de/~si/HXmlToolbox/index.html})
-includes downloads, online API documentation, a cookbook with nontrivial examples
-of XML processing using arrows and RDF documents, and master theses describing the
-design of the toolbox, the DTD validator, the arrow based Relax~NG
-validator, and the XSLT system.
+includes links to downloads,  documentation, and further information.
 
-A getting started tutorial about HXT is available in the Haskell Wiki (\url{http://www.haskell.org/haskellwiki/HXT}
-). The conversion between XML and native Haskell datatypes is
+A getting started tutorial about HXT is available
+ in the Haskell Wiki (\url{http://www.haskell.org/haskellwiki/HXT}
+). The conversion between XML and native Haskell data types is
 described in another Wiki page
 (\url{http://www.haskell.org/haskellwiki/HXT/Conversion_of_Haskell_data_from/to_XML}).
 \end{hcarentry}

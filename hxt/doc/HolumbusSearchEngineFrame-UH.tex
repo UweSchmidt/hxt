@@ -1,8 +1,9 @@
+% HolumbusSearchEngineFrame-UH.tex
 \begin{hcarentry}[updated]{Holumbus Search Engine Framework}
 \label{holumbus}
-\report{Uwe Schmidt}%05/10
+\report{Uwe Schmidt}%05/11
 \participants{Timo~B.\ H\"ubel, Sebastian Gauck,
-  Stefan Schmidt, Bj\"orn Peem\"oller, Stefan Roggensack, Sebastian Reese, Alexander Treptow, Uwe Schmidt}
+  Stefan Schmidt, Sebastian Schr\"oder}
 \status{first release}
 \makeheader
 
@@ -15,8 +16,7 @@ of a given type of documents, e.g., documents of a web site, and store it in an 
 The second part is the search engine for querying the index.
 
 An instance of the Holumbus framework is the Haskell API search engine Hayoo!\
-(\url{http://holumbus.fh-wedel.de/hayoo/}). The web interface for Hayoo!\ is
-implemented with the Janus web server, written in Haskell and based on HXT~\cref{hxt}.
+(\url{http://holumbus.fh-wedel.de/hayoo/}).
 
 The framework supports distributed computations for building indexes
 and searching indexes. This is done with a MapReduce like framework.
@@ -27,12 +27,12 @@ with Haskell.
 The framework is now separated into four packages, all available on
 Hackage.
 
-\begin{itemize}
+\begin{compactitem}
 \item The Holumbus Search Engine 
 \item The Holumbus Distribution Library
 \item The Holumbus Storage System
 \item The Holumbus MapReduce Framework
-\end{itemize}
+\end{compactitem}
 
 The search engine package includes the indexer and search modules,
 the MapReduce package bundles the distributed MapReduce system.
@@ -42,7 +42,7 @@ and a distributed storage system.
 
 \subsubsection*{Features}
 
-\begin{itemize}
+\begin{compactitem}
 \item Highly configurable crawler module for flexible indexing of structured data
 \item Customizable index structure for an effective search
 \item {\em find as you type} search
@@ -51,45 +51,17 @@ and a distributed storage system.
 \item Customizable result ranking
 \item Index structure designed for distributed search
 \item Git repository containing the current development version of all packages under
-  \url{http://holumbus.fh-wedel.de/src.git}
+  \url{https://github.com/fortytools/holumbus}
 \item Distributed building of search indexes
-\end{itemize}
+\end{compactitem}
 
 \subsubsection*{Current Work}
 
-The data structures of the Holumbus indexes have been optimized
-for space and time. There is a new and efficient prefix tree structure,
-which further enables index updates.
-
-The indexer and search module is used
-to support the Hayoo!\ engine for searching the hackage package library
-(http://holumbus.fh-wedel.de/hayoo/hayoo.html). Because of the fast growing number
-of packages on hackage, the Hayoo! search engine will be extended by a package search.
-
-Sebastian Reese has finished his work on applying the
-the MapReduce framework and for giving
-tuning and configuration hints. Benchmarks for various small problems
-and for generating search indexes have shown, that the architecture
-scales very well.
-
-In the subproject of Holumbus, the so called Hawk framework, 
-Bj\"orn Peem\"oller and Stefan Roggensack have developed a web framework
-for Haskell. Currently Alexander Treptow is applying, testing and extending the
-framework. A first application is a customizable search for Hayoo!
-
-The Hawk system is comparable in functionality and architecture with Ruby on Rail
-and other web frameworks. Its architecture follows the MVC pattern.
-It consists of a simple relational database mapper for persistent storage of data
-and a template system for the view component. This template system has two
-interesting features: Fist the templates are valid XHTML documents. The parts,
-where data has to be filled in, are marked with Hawk specific elements and attributes.
-These parts are in a different namespace, so they do not destroy the XHTML structure.
-The second interesting feature is, that the templates contain type descriptions for
-the values to be filled in. This type information enables a static type check, whether
-the models and views fit together.
-
-The Hawk framework is independent of the Holumbus search engine.
-It will be applicable for the development of arbitrary web applications.
+There are two running projects. The first, a masters thesis done by Sebastian Schr\"oder,
+deals with the development of a framework for news systems. The functionality
+will be like with google news, but the target is to build news systems for specialized topics.
+In the second project a search engine for the FH-Wedel web site will be built. The new aspect in
+this application is a specialized search for appointments, deadlines, announcements, meetings and other dates.
 
 \FurtherReading
 
@@ -104,5 +76,5 @@ Sebastian Gauck's  thesis dealing with the crawler component is
 available at
 \url{http://holumbus.fh-wedel.de/src/doc/thesis-indexing.pdf}
 The thesis of Stefan Schmidt describing the Holumbus MapReduce is
-available via \url{http://holumbus.fh-wedel.de/src/doc/thesis-mapreduce.pdf}
+available via \url{http://holumbus.fh-wedel.de/src/doc/thesis-mapreduce.pdf}.
 \end{hcarentry}
