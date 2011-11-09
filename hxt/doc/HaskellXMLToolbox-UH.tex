@@ -1,7 +1,7 @@
 % HaskellXMLToolbox-UH.tex
 \begin{hcarentry}[updated]{Haskell XML Toolbox}
 \label{hxt}
-\report{Uwe Schmidt}%05/11
+\report{Uwe Schmidt}%11/11
 \status{seventh major release (current release: 9.1)}
 \makeheader
 
@@ -75,18 +75,15 @@ hxt-9 mayor version.
 
 \subsubsection*{Current Work}
 
-Besides maintenance work, there were some activities for
-better IO and parser performance. The native XML as well as the HTML parser have
-been optimized for speed and space. The input and output routines now work
-with bytestrings instead of native Haskell IO. Furthermore the XPath component
-has internally been changed for better performance, especially for the
-handling of XPath node sets.
-
-There are some plans to further develop the Relax~NG validator
-for full XML Schema Datatype support and for the native Relax~NG
-schema notation. Another topic in this field is the (semi-)automatic
-Haskell datatype derivation out of Relax~NG schemas and the generation
-of picklers between the schema and the Haskell types.
+In October 2011 a project has been started as part of a master thesis
+for an XML validator based on XML Schema. Experiences with developing
+the Relax-NG have shown, that such a project may be done within such a limited
+time. The XML picklers can be used to easily parse XML Schema an transform it
+into an AST. So the core work consists of developing an appropriate abstract
+syntax and to normalize, check and transform this AST before validating XML documents.
+Within this project the XML data type library already in use with Relax-NG is planned
+to be completed. In the current version, time and date data types are not yet supported.
+We expect to finish the work in March 2012.
 
 \FurtherReading
 The Haskell XML Toolbox Web page
