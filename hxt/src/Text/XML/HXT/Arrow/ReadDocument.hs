@@ -32,7 +32,6 @@ import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.Edit                  ( canonicalizeAllNodes
                                                 , canonicalizeForXPath
-                                                , canonicalizeContents
                                                 , rememberDTDAttrl
                                                 , removeDocWhiteSpace
                                                 )
