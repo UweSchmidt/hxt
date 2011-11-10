@@ -57,51 +57,53 @@ module Text.XML.HXT.Parser.XmlParsec
     )
 where
 
-import Text.ParserCombinators.Parsec                    ( runParser
-                                                        , (<?>), (<|>)
-                                                        , char
-                                                        , string
-                                                        , eof
-                                                        , between
-                                                        , many
-                                                        , many1
-                                                        , notFollowedBy
-                                                        , option
-                                                        , try
-                                                        , unexpected
-                                                        , getPosition
-                                                        , getInput
-                                                        , sourceName
-                                                        )
+import Control.Applicative                      ( (<$>) )
 
-import Text.XML.HXT.DOM.ShowXml                         ( xshow
-                                                        )
+import Text.ParserCombinators.Parsec            ( runParser
+                                                , (<?>), (<|>)
+                                                , char
+                                                , string
+                                                , eof
+                                                , between
+                                                , many
+                                                , many1
+                                                , notFollowedBy
+                                                , option
+                                                , try
+                                                , unexpected
+                                                , getPosition
+                                                , getInput
+                                                , sourceName
+                                                )
+
+import Text.XML.HXT.DOM.ShowXml                 ( xshow
+                                                )
 import Text.XML.HXT.DOM.Interface
-import Text.XML.HXT.DOM.XmlNode                         ( mkElement'
-                                                        , mkAttr'
-                                                        , mkRoot'
-                                                        , mkDTDElem'
-                                                        , mkText'
-                                                        , mkCmt'
-                                                        , mkCdata'
-                                                        , mkError'
-                                                        , mkPi'
-                                                        , isText
-                                                        , isRoot
-                                                        , getText
-                                                        , getChildren
-                                                        , getAttrl
-                                                        , getAttrName
-                                                        , changeAttrl
-                                                        , mergeAttrl
-                                                        )
-import Text.XML.HXT.Parser.XmlCharParser                ( xmlChar
-                                                        , XParser
-                                                        , SimpleXParser
-                                                        , XPState
-                                                        , withNormNewline
-                                                        , withoutNormNewline
-                                                        )
+import Text.XML.HXT.DOM.XmlNode                 ( mkElement'
+                                                , mkAttr'
+                                                , mkRoot'
+                                                , mkDTDElem'
+                                                , mkText'
+                                                , mkCmt'
+                                                , mkCdata'
+                                                , mkError'
+                                                , mkPi'
+                                                , isText
+                                                , isRoot
+                                                , getText
+                                                , getChildren
+                                                , getAttrl
+                                                , getAttrName
+                                                , changeAttrl
+                                                , mergeAttrl
+                                                )
+import Text.XML.HXT.Parser.XmlCharParser        ( xmlChar
+                                                , XParser
+                                                , SimpleXParser
+                                                , XPState
+                                                , withNormNewline
+                                                , withoutNormNewline
+                                                )
 import qualified Text.XML.HXT.Parser.XmlTokenParser     as XT
 import qualified Text.XML.HXT.Parser.XmlDTDTokenParser  as XD
 
@@ -462,20 +464,22 @@ content
 
 content         :: XParser s XmlTrees
 content
-    = many $
-      ( do		-- parse markup but no closing tags
-        try ( XT.lt
-              >>
-              notFollowedBy (char '/')
-              >>
-              return ()
-            )
-	markup
+    = XT.mergeTextNodes <$>
+      many
+      ( ( do		-- parse markup but no closing tags
+          try ( XT.lt
+                >>
+                notFollowedBy (char '/')
+                >>
+                return ()
+              )
+	  markup
+        )
+        <|>
+        charData'
+        <|>
+        XT.referenceT
       )
-      <|>
-      charData'
-      <|>
-      XT.referenceT
     where
     markup
 	= element'

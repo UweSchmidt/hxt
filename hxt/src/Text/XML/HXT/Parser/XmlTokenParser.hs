@@ -78,8 +78,12 @@ module Text.XML.HXT.Parser.XmlTokenParser
     , peReferenceT
 
     , singleCharsT
+
+    , mergeTextNodes
     )
 where
+
+import Control.Applicative                      ( (<$>) )
 
 import Data.Char.Properties.XMLCharProps        ( isXmlChar
                                                 , isXmlCharCR
@@ -87,6 +91,7 @@ import Data.Char.Properties.XMLCharProps        ( isXmlChar
 import Data.String.Unicode                      ( intToCharRef
                                                 , intToCharRefHex
                                                 )
+
 import Text.ParserCombinators.Parsec
 
 import Text.XML.HXT.DOM.Interface
@@ -94,6 +99,7 @@ import Text.XML.HXT.DOM.XmlNode                 ( mkDTDElem'
                                                 , mkText'
                                                 , mkCharRef'
                                                 , mkEntityRef'
+                                                , mergeText
                                                 )
 import Text.XML.HXT.Parser.XmlCharParser        ( xmlNameChar
                                                 , xmlNameStartChar
@@ -196,24 +202,24 @@ singleChars             :: String -> XParser s String
 singleChars notAllowed
     = many1 (singleChar notAllowed)
 
-entityValue	:: XParser s String
+entityValue     :: XParser s String
 entityValue
     = ( do
-	v <- entityValueDQ
-	return ("\"" ++ v ++ "\"")
+        v <- entityValueDQ
+        return ("\"" ++ v ++ "\"")
       )
       <|>
       ( do
-	v <- entityValueSQ
-	return ("'" ++ v ++ "'")
+        v <- entityValueSQ
+        return ("'" ++ v ++ "'")
       )
       <?> "entity value (in quotes)"
 
-entityValueDQ	:: XParser s String
+entityValueDQ   :: XParser s String
 entityValueDQ
     = between dq dq (concRes $ many $ attrChar "&\"")
 
-entityValueSQ	:: XParser s String
+entityValueSQ   :: XParser s String
 entityValueSQ
     = between sq sq (concRes $ many $ attrChar "&\'")
 
@@ -413,13 +419,13 @@ eq      = separator '='
 {-# INLINE comma #-}
 {-# INLINE eq #-}
 
-lpar	= char '(' >> skipS0
+lpar    = char '(' >> skipS0
 {-# INLINE lpar #-}
 
-rpar	= skipS0 >> char ')' >> return ()
+rpar    = skipS0 >> char ')' >> return ()
 {-# INLINE rpar #-}
 
-checkString	:: String -> XParser s ()
+checkString     :: String -> XParser s ()
 checkString s
     = try $ string s >> return ()
 {-# INLINE checkString #-}
@@ -523,7 +529,7 @@ attrValueT
 
 attrValueT'     :: String -> XParser s XmlTrees
 attrValueT' notAllowed
-    = many ( referenceT <|> singleCharsT notAllowed)
+    = mergeTextNodes <$> many ( referenceT <|> singleCharsT notAllowed)
 
 singleCharsT    :: String -> XParser s XmlTree
 singleCharsT notAllowed
@@ -579,6 +585,18 @@ peReferenceT
     = do
       r <- peReference
       return $! (mkDTDElem' PEREF [(a_peref, r)] [])
+
+-- ------------------------------------------------------------
+
+mergeTextNodes :: XmlTrees -> XmlTrees
+mergeTextNodes
+    = foldr addText []
+    where 
+      addText :: XmlTree -> XmlTrees -> XmlTrees
+      addText t []
+          = [t]
+      addText t (t1 : ts)
+          = mergeText t t1 ++ ts
 
 -- ------------------------------------------------------------
 

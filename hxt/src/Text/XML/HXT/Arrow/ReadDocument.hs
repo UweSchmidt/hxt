@@ -403,28 +403,40 @@ readFromString config   = applyA ( arr $ readString config )
 -- ------------------------------------------------------------
 
 -- |
--- parse a string as HTML content, substitute all HTML entity refs and canonicalize tree
+-- parse a string as HTML content, substitute all HTML entity refs and canonicalize tree.
 -- (substitute char refs, ...). Errors are ignored.
 --
--- A simpler version of 'readFromString' but with less functionality.
--- Does not run in the IO monad
+-- This arrow delegates all work to the parseHtmlContent parser in module HtmlParser.
+--
+-- This is a simpler version of 'readFromString' without any options,
+-- but it does not run in the IO monad.
 
 hread                   :: ArrowXml a => a String XmlTree
 hread                   = fromLA $
                           parseHtmlContent                      -- substHtmlEntityRefs is done in parser
-                          >>>
-                          editNTreeA [isError :-> none]         -- ignore all errors
+                          >>>                                   -- as well as subst HTML char refs
+                          editNTreeA [isError :-> none]         -- ignores all errors
+
+{- no longer neccesary, text nodes are merged in parser
                           >>>
                           canonicalizeContents
+-}
+
+-- ------------------------------------------------------------
 
 -- |
 -- parse a string as XML content, substitute all predefined XML entity refs and canonicalize tree
--- (substitute char refs, ...)
+-- This xread arrow delegates all work to the xread parser function in module XmlParsec
 
 xread                   :: ArrowXml a => a String XmlTree
-xread                   = parseXmlContent       -- substXmlEntityRefs is done in parser
+xread                   = parseXmlContent
+{- -- the old version, where the parser does not subst char refs and cdata
+xread                   = root [] [parseXmlContent]       -- substXmlEntityRefs is done in parser
                           >>>
                           canonicalizeContents
+                          >>>
+                          getChildren
+-}
 
 -- ------------------------------------------------------------
 

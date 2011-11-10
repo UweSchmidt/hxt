@@ -35,7 +35,10 @@ where
 import Control.Monad
 import Control.FlatSeq
 
-import Data.Maybe
+import Data.Function            ( on )
+import Data.Maybe               ( fromMaybe
+                                , fromJust
+                                )
 import Data.Tree.Class
 import Data.Tree.NTree.TypeDefs
 
@@ -498,5 +501,34 @@ mkError' l m            = id $!! mkError l m
 mkDTDElem'              :: DTDElem -> Attributes -> XmlTrees -> XmlTree
 mkDTDElem' e al cl      = id $!! mkDTDElem e al cl
 {-# INLINE mkDTDElem' #-}
+
+-- ------------------------------------------------------------
+
+toText :: XmlTree -> XmlTree
+toText t
+    | isCharRef t
+        = mkText
+          . (:[]) . toEnum
+          . fromJust
+          . getCharRef
+          $ t
+    | isCdata t
+        = mkText
+          . fromJust
+          . getCdata
+          $ t
+    | otherwise
+        = t
+
+concText :: XmlTree -> XmlTree -> XmlTrees
+concText t1 t2
+    | isText t1 && isText t2
+        = (:[]) . mkText $ fromJust (getText t1) ++ fromJust (getText t2)
+    | otherwise
+        = [t1, t2]
+
+mergeText :: XmlTree -> XmlTree -> XmlTrees
+mergeText
+    = concText `on` toText
 
 -- ------------------------------------------------------------

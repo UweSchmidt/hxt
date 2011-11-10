@@ -33,6 +33,8 @@ module Text.XML.HXT.Parser.HtmlParsec
 
 where
 
+import Control.Applicative                      ( (<$>) )
+
 import Data.Char                                ( toLower
                                                 , toUpper
                                                 )
@@ -89,6 +91,7 @@ import Text.XML.HXT.Parser.XmlTokenParser       ( allBut
                                                 , checkString
                                                 , singleCharsT
                                                 , referenceT
+                                                , mergeTextNodes
                                                 )
 import Text.XML.HXT.Parser.XmlParsec            ( misc
                                                 , parseXmlText
@@ -188,6 +191,10 @@ externalID
 
 htmlContent     :: SimpleXParser XmlTrees
 htmlContent
+    = mergeTextNodes <$> htmlContent'
+
+htmlContent'    :: SimpleXParser XmlTrees
+htmlContent'
     = option []
       ( do
         context <- hContent (id, [])
@@ -401,7 +408,7 @@ hComment
 
 -- ------------------------------------------------------------
 
-hpI            	:: SimpleXParser XmlTree
+hpI             :: SimpleXParser XmlTree
 hpI = checkString "<?"
       >>
       ( try ( do
@@ -578,42 +585,42 @@ n `isInnerHtmlTagOf` tn
 
 -- a bit more efficient implementation of closes
 
-closesHtmlTag	:: String -> String -> Bool
+closesHtmlTag   :: String -> String -> Bool
 closesHtmlTag t t2
     = fromMaybe False . fmap ($ t) . M.lookup t2 $ closedByTable
 {-# INLINE closesHtmlTag #-}
 
-closedByTable	:: M.Map String (String -> Bool)
+closedByTable   :: M.Map String (String -> Bool)
 closedByTable
     = M.fromList $
-      [ ("a", 	(== "a"))
-      , ("li", 	(== "li" ))
-      , ("th", 	(`elem` ["th", "td", "tr"] ))
-      , ("td", 	(`elem` ["th", "td", "tr"] ))
-      , ("tr", 	(== "tr"))
-      , ("dt", 	(`elem` ["dt", "dd"] ))
-      , ("dd", 	(`elem` ["dt", "dd"] ))
-      , ("p", 	(`elem` ["hr"
+      [ ("a",   (== "a"))
+      , ("li",  (== "li" ))
+      , ("th",  (`elem` ["th", "td", "tr"] ))
+      , ("td",  (`elem` ["th", "td", "tr"] ))
+      , ("tr",  (== "tr"))
+      , ("dt",  (`elem` ["dt", "dd"] ))
+      , ("dd",  (`elem` ["dt", "dd"] ))
+      , ("p",   (`elem` ["hr"
                         , "h1", "h2", "h3", "h4", "h5", "h6", "dl", "ol", "ul", "table", "div", "p"] ))
-      , ("colgroup", 	(`elem` ["colgroup", "thead", "tfoot", "tbody"] ))
-      , ("form", 	(`elem` ["form"] ))
-      , ("label", 	(`elem` ["label"] ))
-      , ("map", 	(`elem` ["map"] ))
-      , ("option",	const True)
-      , ("script",	const True)
-      , ("style",	const True)
-      , ("textarea",	const True)
-      , ("title",	const True)
-      , ("select", 	( /= "option"))
-      , ("thead", 	(`elem` ["tfoot","tbody"] ))
-      , ("tbody", 	(== "tbody" ))
-      , ("tfoot", 	(== "tbody" ))
-      , ("h1", 	(`elem` ["h1", "h2", "h3", "h4", "h5", "h6", "dl", "ol", "ul", "table", "div", "p"] ))
-      , ("h2", 	(`elem` ["h1", "h2", "h3", "h4", "h5", "h6", "dl", "ol", "ul", "table", "div", "p"] ))
-      , ("h3", 	(`elem` ["h1", "h2", "h3", "h4", "h5", "h6", "dl", "ol", "ul", "table", "div", "p"] ))
-      , ("h4", 	(`elem` ["h1", "h2", "h3", "h4", "h5", "h6", "dl", "ol", "ul", "table", "div", "p"] ))
-      , ("h5", 	(`elem` ["h1", "h2", "h3", "h4", "h5", "h6", "dl", "ol", "ul", "table", "div", "p"] ))
-      , ("h6", 	(`elem` ["h1", "h2", "h3", "h4", "h5", "h6", "dl", "ol", "ul", "table", "div", "p"] ))
+      , ("colgroup",    (`elem` ["colgroup", "thead", "tfoot", "tbody"] ))
+      , ("form",        (`elem` ["form"] ))
+      , ("label",       (`elem` ["label"] ))
+      , ("map",         (`elem` ["map"] ))
+      , ("option",      const True)
+      , ("script",      const True)
+      , ("style",       const True)
+      , ("textarea",    const True)
+      , ("title",       const True)
+      , ("select",      ( /= "option"))
+      , ("thead",       (`elem` ["tfoot","tbody"] ))
+      , ("tbody",       (== "tbody" ))
+      , ("tfoot",       (== "tbody" ))
+      , ("h1",  (`elem` ["h1", "h2", "h3", "h4", "h5", "h6", "dl", "ol", "ul", "table", "div", "p"] ))
+      , ("h2",  (`elem` ["h1", "h2", "h3", "h4", "h5", "h6", "dl", "ol", "ul", "table", "div", "p"] ))
+      , ("h3",  (`elem` ["h1", "h2", "h3", "h4", "h5", "h6", "dl", "ol", "ul", "table", "div", "p"] ))
+      , ("h4",  (`elem` ["h1", "h2", "h3", "h4", "h5", "h6", "dl", "ol", "ul", "table", "div", "p"] ))
+      , ("h5",  (`elem` ["h1", "h2", "h3", "h4", "h5", "h6", "dl", "ol", "ul", "table", "div", "p"] ))
+      , ("h6",  (`elem` ["h1", "h2", "h3", "h4", "h5", "h6", "dl", "ol", "ul", "table", "div", "p"] ))
       ]
 
 {-
