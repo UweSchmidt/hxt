@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SEASON YEAR="1998">
+  <LEAGUE NAME="National League">
+    <DIVISION NAME="East">
+      <TEAM CITY="Atlanta" NAME="Braves">
+        <PLAYER GIVEN_NAME="Marty" SURNAME="Malloy"
+            POSITION="Second Base" GAMES="11"
+            GAMES_STARTED="8" AT_BATS="28" RUNS="3"
+            HITS="5" DOUBLES="1" TRIPLES="0"
+            HOME_RUNS="1" RBI="1" STEALS="0"
+            CAUGHT_STEALING="0" SACRIFICE_HITS="0"
+            SACRIFICE_FLIES="0" ERRORS="0"
+            WALKS="2" STRUCK_OUT="2" HIT_BY_PITCH="0">
+        </PLAYER>
+        <PLAYER GIVEN_NAME="Ozzie" SURNAME="Guillen"
+            POSITION="Shortstop" GAMES="83"
+            GAMES_STARTED="59" AT_BATS="264" RUNS="35"
+            HITS="73" DOUBLES="15" TRIPLES="1"
+            HOME_RUNS="1" RBI="22" STEALS="1"
+            CAUGHT_STEALING="4" SACRIFICE_HITS="4"
+            SACRIFICE_FLIES="2" ERRORS="6"
+            WALKS="24" STRUCK_OUT="25" HIT_BY_PITCH="1">
+        </PLAYER>
+      </TEAM>
+      <TEAM CITY="Florida" NAME="Marlins">
+      </TEAM>
+      <TEAM CITY="Montreal" NAME="Expos">
+      </TEAM>
+      <TEAM CITY="New York" NAME="Mets">
+      </TEAM>
+      <TEAM CITY="Philadelphia" NAME="Phillies">
+      </TEAM>
+    </DIVISION>
+  </LEAGUE>
+</SEASON>
