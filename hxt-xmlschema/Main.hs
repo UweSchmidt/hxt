@@ -1,128 +1,90 @@
 import Text.XML.HXT.Core
 
-import Data.Map (Map, fromList, toList)
+import Data.Map (Map, fromList, toList, keys)
 
-data Season = Season
-    { sYear    :: Int
-    , sLeagues :: Leagues
-    }
-	      deriving (Show, Eq)
- 
-type Leagues   = Map String Divisions
- 
-type Divisions = Map String [Team]
- 
-data Team = Team
-    { teamName :: String
-    , city     :: String
-    , players  :: [Player]
-    }
-	    deriving (Show, Eq)
- 
-data Player = Player
-    { firstName :: String
-    , lastName  :: String
-    , position  :: String
-    , atBats    :: Maybe Int
-    , hits      :: Maybe Int
-    , era       :: Maybe Float
-    }
-	      deriving (Show, Eq)
+data XmlSchema = XmlSchema
+  { sElements     :: Elements
+  , sSimpleTypes  :: SimpleTypes
+  , sComplexTypes :: ComplexTypes
+  }
+  deriving (Show, Eq)
 
-instance XmlPickler Season where
-    xpickle = xpSeason
- 
-instance XmlPickler Team where
-    xpickle = xpTeam
- 
-instance XmlPickler Player where
-    xpickle = xpPlayer
+type Elements     = Map String Element
+type SimpleTypes  = Map String SimpleType
+type ComplexTypes = Map String ComplexType
+
+type Element      = XmlTree
+type SimpleType   = XmlTree
+type ComplexType  = XmlTree
+
+instance XmlPickler XmlSchema where
+  xpickle = xpXmlSchema
 
 -- root pickler for root node
-xpSeason	:: PU Season
-xpSeason
-    = xpElem "SEASON" $
-      xpWrap ( uncurry Season
-	     , \ s -> (sYear s, sLeagues s)) $
-      xpPair (xpAttr "YEAR" xpickle) xpLeagues
+xpXmlSchema :: PU XmlSchema
+xpXmlSchema
+  = xpElem "xs:schema" $
+    xpWrap ( uncurry3 XmlSchema
+           , \ s -> (sElements s, sSimpleTypes s, sComplexTypes s) ) $
+    xpTriple xpElements xpSimpleTypes xpComplexTypes
 
-xpLeagues	:: PU Leagues
-xpLeagues
-    = xpWrap ( fromList
-	     , toList ) $
-      xpList $
-      xpElem "LEAGUE" $
-      xpPair (xpAttr "NAME" xpText) xpDivisions
+xpElements :: PU Elements
+xpElements
+  = xpWrap ( fromList
+           , toList
+           ) $
+    xpList $
+    xpElem "xs:element" $
+    xpPair (xpAttr "name" xpText) xpTree
 
-xpDivisions	:: PU Divisions
-xpDivisions
-    = xpWrap ( fromList
-	     , toList
-	     ) $
-      xpList $
-      xpElem "DIVISION" $
-      xpPair (xpAttr "NAME" xpText) xpickle
+xpSimpleTypes :: PU SimpleTypes
+xpSimpleTypes
+  = xpWrap ( fromList
+           , toList
+           ) $
+    xpList $
+    xpElem "xs:simpleType" $
+    xpPair (xpAttr "name" xpText) xpTree
 
-xpTeam	:: PU Team
-xpTeam
-    = xpElem "TEAM" $
-      xpWrap ( uncurry3 Team
-	     , \ t -> ( teamName t
-                      , city t
-                      , players t
-                      )
-             ) $
-      xpTriple (xpAttr "NAME" xpText)
-               (xpAttr "CITY" xpText)
-               (xpList xpickle)
+xpComplexTypes :: PU SimpleTypes
+xpComplexTypes
+  = xpWrap ( fromList
+           , toList
+           ) $
+    xpList $
+    xpElem "xs:complexType" $
+    xpPair (xpAttr "name" xpText) xpTree
 
-xpPlayer        :: PU Player
-xpPlayer
-    = xpElem "PLAYER" $
-      xpWrap ( \ ((f,l,p,a,h,e)) -> Player f l p a h e
-             , \ t -> (firstName t, lastName t
-                      , position t, atBats t
-                      , hits t, era t
-                      )
-             ) $
-      xp6Tuple (xpAttr           "GIVEN_NAME" xpText  )
-               (xpAttr           "SURNAME"    xpText  )
-               (xpAttr           "POSITION"   xpText  )
-               (xpOption (xpAttr "AT_BATS"    xpickle))
-               (xpOption (xpAttr "HITS"       xpickle))
-               (xpOption (xpAttr "ERA"        xpPrim ))
-
-loadSeason :: IO Season
-loadSeason
+loadXmlSchema :: IO XmlSchema
+loadXmlSchema
   = do
-    [s] <- runX
-            ( 
-              xunpickleDocument xpSeason
-                                [ withValidate yes       -- validate source
-                                , withTrace 1            -- trace processing steps
-                                , withRemoveWS yes       -- remove redundant whitespace
-                                , withPreserveComment no -- remove comments
-                                ] "example.xml"
-            )
-    return s
+    s <- runX ( 
+                xunpickleDocument xpXmlSchema
+                                  [ withValidate no        -- validate source
+                                  , withTrace 1            -- trace processing steps
+                                  , withRemoveWS yes       -- remove redundant whitespace
+                                  , withPreserveComment no -- remove comments
+                                  ] "example.xsd"
+              )
+    return $ head s
 
-storeSeason :: Season -> IO ()
-storeSeason s
+storeXmlSchema :: XmlSchema -> IO ()
+storeXmlSchema s
   = do
     _ <- runX ( constA s
                 >>>
-	        xpickleDocument   xpSeason
-                                  [ withIndent yes       -- indent generated xml
-                                  ] "new-example.xml"
-         )
+                xpickleDocument   xpXmlSchema
+                                  [ withIndent yes         -- indent generated xml
+                                  ] "new-example.xsd"
+              )
     return ()
 
-main	:: IO ()
+main :: IO ()
 main
-    = do
-      season <- loadSeason
-      print season
-      storeSeason season
-      return ()
+  = do
+    xmlschema <- loadXmlSchema
+    putStrLn $ concat $ map (\ s -> s ++ " ") $ keys (sElements xmlschema)
+    storeXmlSchema xmlschema
+    return ()
 
 
