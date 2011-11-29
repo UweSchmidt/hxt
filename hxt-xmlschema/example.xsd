@@ -1,5 +1,160 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.example.com/example">
+
+  <!-- base types -->
+
+  <!--
+   Vordefinierte Typen (unvollständig):
+
+   xs:string
+   xs:decimal
+   xs:integer
+   xs:float
+   xs:boolean
+   xs:date
+   xs:time
+
+   QName: Qualified Name, global eindeutiger Bezeichner, einzelne NCNames werden mittels Punkt (.) zu einem QName zusammengesetzt.
+   anyURI: Uniform Resource Identifier (URI)
+   language: Sprachbezeichnung, z. B. de-DE, en-US, fr
+   ID: Identifikationsattribut innerhalb von XML-Elementen
+   IDREF: Referenz auf einen ID-Wert
+  -->
+
+  <!-- simple types (restrictions) -->
+
+  <xs:simpleType name="monatInt">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="1"/>
+      <xs:maxInclusive value="12"/>
+      <!-- also: minExclusive / maxExclusive -->
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="celsiusKörperTemp">
+    <xs:restriction base="xs:decimal">
+      <xs:totalDigits value="3"/>
+      <xs:fractionDigits value="1"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="monatsname">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Jan"/>
+      <xs:enumeration value="Feb"/>
+      <xs:enumeration value="Mär"/>
+      <xs:enumeration value="Apr"/>
+      <xs:enumeration value="Mai"/>
+      <xs:enumeration value="Jun"/>
+      <xs:enumeration value="Jul"/>
+      <xs:enumeration value="Aug"/>
+      <xs:enumeration value="Sep"/>
+      <xs:enumeration value="Okt"/>
+      <xs:enumeration value="Nov"/>
+      <xs:enumeration value="Dez"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="plz">
+     <xs:restriction base="xs:string">
+       <xs:pattern value="(D )?[0-9]{5}"/>
+     </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="password">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="5"/>
+      <xs:maxLength value="30"/>
+      <!-- also: length -->
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- simple types (list / union) -->
+
+  <xs:simpleType name="monate">
+    <xs:list itemType="monatInt"/>
+  </xs:simpleType>
+
+  <xs:simpleType name="monat">
+    <xs:union memberTypes="monatsname monatInt"/>
+  </xs:simpleType>
+
+  <!-- complex types (sequence, choice, all) -->
+
+  <xs:complexType name="pc-Typ">
+    <xs:sequence>
+      <xs:element name="name"       type="xs:string"/>
+      <xs:element name="hersteller" type="xs:string"/>
+      <xs:element name="prozessor"  type="xs:string"/>
+      <xs:element name="mhz"        type="xs:integer" minOccurs="0"/>
+      <xs:element name="kommentar"  type="xs:string"  minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:integer"/>
+  </xs:complexType>  
+
+  <xs:complexType name="computer">
+    <xs:choice>
+      <xs:element name="desktop" type="pc-Typ"/>
+      <xs:element name="laptop" type="pc-Typ"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="set">
+    <xs:all>
+      <!--
+       xs:all: Mittels des xs:all-Tags lässt sich eine Gruppe von Kindelementen definieren,
+       von denen jedes maximal einmal auftreten darf (min- und maxOccurs der Kindelemente dürfen nur die Werte 0 oder 1 annehmen).
+       Die Reihenfolge der Elemente ist beliebig.
+      -->
+    </xs:all>
+  </xs:complexType>
+
+  <!-- complex types (extension / restriction) -->
+
+  <xs:complexType name="myPC-Typ">
+    <xs:complexContent>
+      <xs:extension base="pc-Typ">
+        <xs:sequence>
+          <xs:element name="ram" type="xs:integer"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="myPC-Typ2">
+    <xs:complexContent>
+      <xs:restriction base="pc-Typ">
+        <xs:sequence>
+         <xs:element name="name"       type="xs:string"/>
+         <xs:element name="hersteller" type="xs:string"/>
+         <xs:element name="prozessor"  type="xs:string"/>
+         <xs:element name="mhz"        type="xs:integer" minOccurs="0"/>
+         <xs:element name="kommentar"  type="xs:string" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+      </xs:restriction>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <!--
+   Bei der Definition eines Typs ist es möglich festzulegen, ob und auf welche Art von diesem Typ weitere XML-Elementtypen abgeleitet werden dürfen.
+   So kann man zum Beispiel festlegen, dass von einem Typ pc-Typ weitere Typen nur durch das Setzen weiterer Einschränkungen abgeleitet werden dürfen
+   und nicht durch das Hinzufügen neuer Kindelemente.
+  -->
+
+  <!-- element definitions (with anonymous type declarations) -->
+
+  <!-- type references -->
+
+  <xs:element name="head">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="title" type="xs:string"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- element references -->
+
   <xs:element name="html">
     <xs:complexType>
       <xs:sequence>
@@ -8,11 +163,60 @@
       </xs:sequence>
     </xs:complexType>
   </xs:element>
-  <xs:element name="head">
-    <xs:complexType>
+
+  <!-- includes / imports / redefines -->
+
+  <!--
+   <include schemaLocation="http://www.example.com/schemata/harddisk.xsd"/>
+   <include schemaLocation="http://www.example.com/schemata/ram.xsd"/>
+   
+   targetNamespace des harddisk.xsd muss mit dem des inkludierenden Schemas übereinstimmen.
+  -->
+
+  <!--
+   <redefine schemaLocation="http://www.example.com/schemata/harddisk.xsd">
+     <complexType name="Hersteller">
+       <complexContent>
+         <restriction base="pcTeile:Hersteller">
+           <sequence>
+             <element name="hersteller" type="string" minOccurs="10" maxOccurs="10"/>
+           </sequence>
+         </restriction>
+       </complexContent>
+     </complexType>
+   </redefine>
+  -->
+
+  <!--
+   <schema xmlns="http://www.w3.org/2001/XMLSchema"
+           xmlns:pcTeile="http://www.example.com/pcTeile"
+           targetNamespace="http://www.example.com/firma">
+     <import namespace="http://www.example.com/pcTeile"/>
+   
+     <xs:attribute name="xyz" type="pcTeile:superTyp"/>
+  -->
+
+  <!-- cabinet of curiosities -->
+
+  <xs:element name="kommentar" type="xs:anyType"/>
+
+  <xs:element name="tagname">
+    <xs:complexType mixed="true">  <!-- text and tags can occur in mixed order -->
       <xs:sequence>
-        <xs:element name="title" type="xs:string"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" name="child" type="xs:integer"/>
+        <!-- Weitere Elemente … -->
       </xs:sequence>
     </xs:complexType>
   </xs:element>
+
+  <!--
+   Von leeren XML-Elementen spricht man, wenn das jeweilige Element aus nur einem einzelnen XML-Tag besteht und keine weiteren XML-Elemente oder Text umschließt
+   (z. B. der XHTML-Zeilenumbruch: <br />). XML Schema bedient sich an dieser   Stelle eines kleinen Tricks: Es wird mittels xs:complexType ein neuer Typ definiert,
+   ohne ein Kindelement anzugeben. Da xs:complexType nach Vorgabe nur komplexe XML-Kindelemente als Inhalt zulässt, bleibt das jeweilige Element in diesem Fall leer.
+  -->
+
+  <!--
+   Schlüssel: xs:key, xs:unique, xs:keyref ...
+  -->
+
 </xs:schema>
