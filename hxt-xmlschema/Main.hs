@@ -3,19 +3,35 @@ import Text.XML.HXT.Core
 import Data.Map (Map, fromList, toList, keys)
 
 data XmlSchema = XmlSchema
-  { sSimpleTypes  :: SimpleTypes
-  , sComplexTypes :: ComplexTypes
-  , sElements     :: Elements
+  { sSimpleTypes   :: SimpleTypes
+  , sComplexTypes  :: ComplexTypes
+  , sElements      :: Elements
+  -- , sIncludes ...
   }
   deriving (Show, Eq)
 
-type SimpleTypes  = Map String SimpleType
-type ComplexTypes = Map String ComplexType
-type Elements     = Map String Element
+type SimpleTypes   = Map String SimpleType
+type ComplexTypes  = Map String ComplexType
+type Elements      = Map String Element
 
-type SimpleType   = XmlTree
-type ComplexType  = XmlTree
-type Element      = XmlTree
+type XmlSchema'    = [XmlSchemaPart]
+type XmlSchemaPart = (String, Part)
+data Part          = St SimpleType
+                   | Ct ComplexType
+                   | El Element
+
+type SimpleType    = XmlTree
+type ComplexType   = XmlTree
+type Element       = XmlTree
+
+toSchema :: XmlSchema' -> XmlSchema
+toSchema [] = []
+toSchema ((s, St st):xs) = 
+toSchema ((s, Ct ct):xs) = 
+toSchema ((s, El el):xs) = 
+
+fromSchema :: XmlSchema -> XmlSchema'
+fromSchema s =
 
 instance XmlPickler XmlSchema where
   xpickle = xpXmlSchema
@@ -23,7 +39,7 @@ instance XmlPickler XmlSchema where
 -- root pickler for root node
 xpXmlSchema :: PU XmlSchema
 xpXmlSchema
-  = xpElem "xs:schema" $
+  = xpElem "xs:schema" $ -- xpElem "schema" $ + ns einzeln testen
     xpWrap ( uncurry3 XmlSchema
            , \ s -> (sSimpleTypes s, sComplexTypes s, sElements s) ) $
     xpTriple xpSimpleTypes xpComplexTypes xpElements
