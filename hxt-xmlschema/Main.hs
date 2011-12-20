@@ -22,9 +22,17 @@ data Part          = St SimpleType
                    | Ct ComplexType
                    | El Element
 
-type SimpleType    = XmlTree
-type ComplexType   = XmlTree
-type Element       = XmlTree
+data SimpleType    = Rstr Restriction
+                   | Lst List
+                   | Un Union
+                   deriving (Show, Eq)
+
+type Restriction   = XmlTrees
+type List          = XmlTrees
+type Union         = XmlTrees
+
+type ComplexType   = XmlTrees
+type Element       = XmlTrees
 
 -- Conversion between XmlSchemaPart and (String, SimpleType) etc.
 
@@ -88,9 +96,21 @@ xpSchemaPart
     tag (_, St _) = 0
     tag (_, Ct _) = 1
     tag (_, El _) = 2
-    ps = [ xpWrap (toSchemaPartSt, fromSchemaPartSt) $ xpElem "xs:simpleType"  $ xpPair (xpAttr "name" xpText) xpTree
-         , xpWrap (toSchemaPartCt, fromSchemaPartCt) $ xpElem "xs:complexType" $ xpPair (xpAttr "name" xpText) xpTree
-         , xpWrap (toSchemaPartEl, fromSchemaPartEl) $ xpElem "xs:element"     $ xpPair (xpAttr "name" xpText) xpTree
+    ps = [ xpWrap (toSchemaPartSt, fromSchemaPartSt) $ xpElem "xs:simpleType"  $ xpPair (xpAttr "name" xpText) xpSimpleType
+         , xpWrap (toSchemaPartCt, fromSchemaPartCt) $ xpElem "xs:complexType" $ xpPair (xpAttr "name" xpText) xpTrees
+         , xpWrap (toSchemaPartEl, fromSchemaPartEl) $ xpElem "xs:element"     $ xpPair (xpAttr "name" xpText) xpTrees
+         ]
+
+xpSimpleType :: PU SimpleType
+xpSimpleType
+  = xpAlt tag ps
+    where
+    tag (Rstr _) = 0
+    tag (Lst _)  = 1
+    tag (Un _)   = 2
+    ps = [ xpWrap (Rstr, \ (Rstr r) -> r) $ xpElem "xs:restriction" $ xpTrees
+         , xpWrap (Lst,  \ (Lst l)  -> l) $ xpElem "xs:list"        $ xpTrees
+         , xpWrap (Un,   \ (Un u)   -> u) $ xpElem "xs:union"       $ xpTrees
          ]
 
 loadXmlSchema :: IO XmlSchema
