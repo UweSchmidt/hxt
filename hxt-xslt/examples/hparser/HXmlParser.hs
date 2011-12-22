@@ -93,7 +93,7 @@ processDocument :: String -> IOSArrow XmlTree XmlTree
 processDocument xsltUri
     = traceMsg 1 ("applying XSLT stylesheet " ++ show xsltUri)
       >>>
-      xsltApplyStylesheetFromURI $< getSysAttr xsltUri
+      xsltApplyStylesheetFromURI xsltUri
 
 -- ------------------------------------------------------------
 --
