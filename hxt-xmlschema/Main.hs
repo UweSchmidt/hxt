@@ -2,7 +2,7 @@
 
 import Text.XML.HXT.Core
 
-import Data.Map (Map, fromList, toList, keys, empty, insert)
+import Data.Map (Map, toList, keys, empty, insert)
 
 data XmlSchema = XmlSchema
   { sSimpleTypes   :: SimpleTypes
@@ -12,50 +12,45 @@ data XmlSchema = XmlSchema
   }
   deriving (Show, Eq)
 
-type SimpleTypes   = Map String SimpleType
-type ComplexTypes  = Map String ComplexType
-type Elements      = Map String Element
+type Name          = String
+
+type SimpleTypes   = Map Name SimpleType
+type ComplexTypes  = Map Name ComplexType
+type Elements      = Map Name Element
 
 type XmlSchema'    = [XmlSchemaPart]
-type XmlSchemaPart = (String, Part)
-data Part          = St SimpleType
-                   | Ct ComplexType
-                   | El Element
+data XmlSchemaPart = St {unSt :: (Name, SimpleType)}
+                   | Ct {unCt :: (Name, ComplexType)}
+                   | El {unEl :: (Name, Element)}
 
-data SimpleType    = Rstr Restriction
-                   | Lst List
-                   | Un Union
+data SimpleType    = Restr {unRestr :: Restriction}
+                   | Lst   {unLst   :: List}
+                   | Un    {unUn    :: Union}
                    deriving (Show, Eq)
 
-type Restriction   = XmlTrees
+type Restriction   = (Base, RestrAttrs)
+type Base          = String
+type RestrAttrs    = [RestrAttr]
+data RestrAttr     = MinIncl        {unMinIncl        :: Value}
+                   | MaxIncl        {unMaxIncl        :: Value}
+                   | MinExcl        {unMinExcl        :: Value}
+                   | MaxExcl        {unMaxExcl        :: Value}
+                   | TotalDigits    {unTotalDigits    :: Value}
+                   | FractionDigits {unFractionDigits :: Value}
+                   | Enumeration    {unEnumeration    :: Value}
+                   | Pattern        {unPattern        :: Value}
+                   | MinLength      {unMinLength      :: Value}
+                   | MaxLength      {unMaxLength      :: Value}
+                   | Length         {unLength         :: Value} -- TODO: more possible restriction attributes?
+                   deriving (Show, Eq)
+type Value         = String
+-- type RestrFunc     = String -> Maybe String -- Nothing: true, Just x: error with message x
+
 type List          = XmlTrees
 type Union         = XmlTrees
 
 type ComplexType   = XmlTrees
 type Element       = XmlTrees
-
--- Conversion between XmlSchemaPart and (String, SimpleType) etc.
-
-toSchemaPartSt :: (String, SimpleType) -> (String, Part)
-toSchemaPartSt (s, st) = (s, St st)
-
-toSchemaPartCt :: (String, ComplexType) -> (String, Part)
-toSchemaPartCt (s, ct) = (s, Ct ct)
-
-toSchemaPartEl :: (String, Element) -> (String, Part)
-toSchemaPartEl (s, el) = (s, El el)
-
-fromSchemaPartSt :: (String, Part) -> (String, SimpleType)
-fromSchemaPartSt (s, St st) = (s, st)
--- Handling of Ct and El?
-
-fromSchemaPartCt :: (String, Part) -> (String, ComplexType)
-fromSchemaPartCt (s, Ct ct) = (s, ct)
--- Handling of St and El?
-
-fromSchemaPartEl :: (String, Part) -> (String, Element)
-fromSchemaPartEl (s, El el) = (s, el)
--- Handling of St and Ct?
 
 -- Conversion between Schema and Schema'
 
@@ -63,54 +58,87 @@ toSchema :: XmlSchema' -> XmlSchema
 toSchema s
   = toSchemaRec s empty empty empty
     where
-    toSchemaRec []              sts cts els = XmlSchema {sSimpleTypes = sts,
-                                                         sComplexTypes = cts,
-                                                         sElements = els}
-    -- Error message if value already exists in map?
-    toSchemaRec ((k, St st):xs) sts cts els = toSchemaRec xs (insert k st sts) cts els
-    toSchemaRec ((k, Ct ct):xs) sts cts els = toSchemaRec xs sts (insert k ct cts) els
-    toSchemaRec ((k, El el):xs) sts cts els = toSchemaRec xs sts cts (insert k el els)
+    toSchemaRec []                sts cts els = XmlSchema {sSimpleTypes  = sts,
+                                                           sComplexTypes = cts,
+                                                           sElements     = els}
+    -- Error message if value already exists in map? Valid XML Schema input file?
+    toSchemaRec ((St (k, st)):xs) sts cts els = toSchemaRec xs (insert k st sts) cts els
+    toSchemaRec ((Ct (k, ct)):xs) sts cts els = toSchemaRec xs sts (insert k ct cts) els
+    toSchemaRec ((El (k, el)):xs) sts cts els = toSchemaRec xs sts cts (insert k el els)
 
 fromSchema :: XmlSchema -> XmlSchema'
 fromSchema s
   = concat [sts, cts, els]
     where 
-    sts = map toSchemaPartSt $ toList $ sSimpleTypes s
-    cts = map toSchemaPartCt $ toList $ sComplexTypes s
-    els = map toSchemaPartEl $ toList $ sElements s
+    sts = map St $ toList $ sSimpleTypes s
+    cts = map Ct $ toList $ sComplexTypes s
+    els = map El $ toList $ sElements s
 
 -- Pickler definitions
 
 instance XmlPickler XmlSchema' where
   xpickle = xpXmlSchema'
 
+-- TODO: Namespace-Handling: xpElem "schema" + ns seperate test
+
 xpXmlSchema' :: PU XmlSchema'
 xpXmlSchema'
-  = xpElem "xs:schema" $ -- xpElem "schema" $ + ns einzeln testen
-    xpList $ xpSchemaPart
+  = xpElem "xs:schema" $ xpList $ xpSchemaPart
 
 xpSchemaPart :: PU XmlSchemaPart
 xpSchemaPart
   = xpAlt tag ps
     where
-    tag (_, St _) = 0
-    tag (_, Ct _) = 1
-    tag (_, El _) = 2
-    ps = [ xpWrap (toSchemaPartSt, fromSchemaPartSt) $ xpElem "xs:simpleType"  $ xpPair (xpAttr "name" xpText) xpSimpleType
-         , xpWrap (toSchemaPartCt, fromSchemaPartCt) $ xpElem "xs:complexType" $ xpPair (xpAttr "name" xpText) xpTrees
-         , xpWrap (toSchemaPartEl, fromSchemaPartEl) $ xpElem "xs:element"     $ xpPair (xpAttr "name" xpText) xpTrees
+    tag (St _) = 0
+    tag (Ct _) = 1
+    tag (El _) = 2
+    ps = [ xpWrap (St, unSt) $ xpElem "xs:simpleType"  $ xpPair (xpAttr "name" xpText) xpSimpleType
+         , xpWrap (Ct, unCt) $ xpElem "xs:complexType" $ xpPair (xpAttr "name" xpText) xpTrees
+         , xpWrap (El, unEl) $ xpElem "xs:element"     $ xpPair (xpAttr "name" xpText) xpTrees
          ]
 
 xpSimpleType :: PU SimpleType
 xpSimpleType
   = xpAlt tag ps
     where
-    tag (Rstr _) = 0
-    tag (Lst _)  = 1
-    tag (Un _)   = 2
-    ps = [ xpWrap (Rstr, \ (Rstr r) -> r) $ xpElem "xs:restriction" $ xpTrees
-         , xpWrap (Lst,  \ (Lst l)  -> l) $ xpElem "xs:list"        $ xpTrees
-         , xpWrap (Un,   \ (Un u)   -> u) $ xpElem "xs:union"       $ xpTrees
+    tag (Restr _) = 0
+    tag (Lst _)   = 1
+    tag (Un _)    = 2
+    ps = [ xpWrap (Restr, unRestr) $ xpElem "xs:restriction" $ xpRestriction
+         , xpWrap (Lst,   unLst)   $ xpElem "xs:list"        $ xpTrees
+         , xpWrap (Un,    unUn)    $ xpElem "xs:union"       $ xpTrees
+         ]
+
+xpRestriction :: PU Restriction
+xpRestriction
+  = xpPair (xpAttr "base" xpText) $ xpList $ xpRestrAttr
+
+xpRestrAttr :: PU RestrAttr
+xpRestrAttr
+  = xpAlt tag ps
+    where
+    tag (MinIncl _)        = 0
+    tag (MaxIncl _)        = 1
+    tag (MinExcl _)        = 2
+    tag (MaxExcl _)        = 3
+    tag (TotalDigits _)    = 4
+    tag (FractionDigits _) = 5
+    tag (Enumeration _)    = 6
+    tag (Pattern _)        = 7
+    tag (MinLength _)      = 8
+    tag (MaxLength _)      = 9
+    tag (Length _)         = 10
+    ps = [ xpWrap (MinIncl,        unMinIncl)        $ xpElem "xs:minInclusive"   $ xpAttr "value" xpText
+         , xpWrap (MaxIncl,        unMaxIncl)        $ xpElem "xs:maxInclusive"   $ xpAttr "value" xpText
+         , xpWrap (MinExcl,        unMinExcl)        $ xpElem "xs:minExclusive"   $ xpAttr "value" xpText
+         , xpWrap (MaxExcl,        unMaxExcl)        $ xpElem "xs:maxExclusive"   $ xpAttr "value" xpText
+         , xpWrap (TotalDigits,    unTotalDigits)    $ xpElem "xs:totalDigits"    $ xpAttr "value" xpText
+         , xpWrap (FractionDigits, unFractionDigits) $ xpElem "xs:fractionDigits" $ xpAttr "value" xpText
+         , xpWrap (Enumeration,    unEnumeration)    $ xpElem "xs:enumeration"    $ xpAttr "value" xpText
+         , xpWrap (Pattern,        unPattern)        $ xpElem "xs:pattern"        $ xpAttr "value" xpText
+         , xpWrap (MinLength,      unMinLength)      $ xpElem "xs:minLength"      $ xpAttr "value" xpText
+         , xpWrap (MaxLength,      unMaxLength)      $ xpElem "xs:maxLength"      $ xpAttr "value" xpText
+         , xpWrap (Length,         unLength)         $ xpElem "xs:Length"         $ xpAttr "value" xpText
          ]
 
 loadXmlSchema :: IO XmlSchema
@@ -141,9 +169,9 @@ main :: IO ()
 main
   = do
     xmlschema <- loadXmlSchema
-    putStrLn $ "SimpleTypes:\t" ++ (concat $ map (\ s -> s ++ " ") $ keys (sSimpleTypes xmlschema))
-    putStrLn $ "ComplexTypes:\t" ++ (concat $ map (\ s -> s ++ " ") $ keys (sComplexTypes xmlschema))
-    putStrLn $ "Elements:\t" ++ (concat $ map (\ s -> s ++ " ") $ keys (sElements xmlschema))
+    putStrLn $ "SimpleTypes:\t"  ++ (concat $ map (\ (k, s) -> k ++ ":\n\t\t" ++ (show s) ++ "\n\n\t\t") $ toList  $ sSimpleTypes xmlschema)
+    putStrLn $ "ComplexTypes:\t" ++ (concat $ map (\ s -> s ++ " ") $ keys  $ sComplexTypes xmlschema)
+    putStrLn $ "Elements:\t"     ++ (concat $ map (\ s -> s ++ " ") $ keys  $ sElements xmlschema)
     storeXmlSchema xmlschema
     return ()
 
