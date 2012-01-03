@@ -2,55 +2,74 @@
 
 import Text.XML.HXT.Core
 
-import Data.Map (Map, toList, keys, empty, insert)
+import Data.Map (Map, toList, empty, insert)
 
 data XmlSchema = XmlSchema
-  { sSimpleTypes   :: SimpleTypes
-  , sComplexTypes  :: ComplexTypes
-  , sElements      :: Elements
+  { sSimpleTypes    :: SimpleTypes
+  , sComplexTypes   :: ComplexTypes
+  , sElements       :: Elements
   -- , sIncludes ...
   }
   deriving (Show, Eq)
 
-type Name          = String
+type Name           = String
 
-type SimpleTypes   = Map Name SimpleType
-type ComplexTypes  = Map Name ComplexType
-type Elements      = Map Name Element
+type SimpleTypes    = Map Name SimpleType
+type ComplexTypes   = Map Name ComplexType
+type Elements       = Map Name Element
 
-type XmlSchema'    = [XmlSchemaPart]
-data XmlSchemaPart = St {unSt :: (Name, SimpleType)}
-                   | Ct {unCt :: (Name, ComplexType)}
-                   | El {unEl :: (Name, Element)}
+type XmlSchema'     = [XmlSchemaPart]
+data XmlSchemaPart  = St {unSt :: (Name, SimpleType)}
+                    | Ct {unCt :: (Name, ComplexType)}
+                    | El {unEl :: (Name, Element)}
 
-data SimpleType    = Restr {unRestr :: Restriction}
-                   | Lst   {unLst   :: List}
-                   | Un    {unUn    :: Union}
-                   deriving (Show, Eq)
+data SimpleType     = Restr {unRestr :: Restriction}
+                    | Lst   {unLst   :: List}
+                    | Un    {unUn    :: Union}
+                    deriving (Show, Eq)
 
-type Restriction   = (Base, RestrAttrs)
-type Base          = String
-type RestrAttrs    = [RestrAttr]
-data RestrAttr     = MinIncl        {unMinIncl        :: Value}
-                   | MaxIncl        {unMaxIncl        :: Value}
-                   | MinExcl        {unMinExcl        :: Value}
-                   | MaxExcl        {unMaxExcl        :: Value}
-                   | TotalDigits    {unTotalDigits    :: Value}
-                   | FractionDigits {unFractionDigits :: Value}
-                   | Enumeration    {unEnumeration    :: Value}
-                   | Pattern        {unPattern        :: Value}
-                   | MinLength      {unMinLength      :: Value}
-                   | MaxLength      {unMaxLength      :: Value}
-                   | Length         {unLength         :: Value} -- TODO: more possible restriction attributes?
-                   deriving (Show, Eq)
-type Value         = String
--- type RestrFunc     = String -> Maybe String -- Nothing: true, Just x: error with message x
+type Restriction    = (Base, RestrAttrs)
+type Base           = String
+type RestrAttrs     = [RestrAttr]
+data RestrAttr      = MinIncl        {unMinIncl        :: Value}
+                    | MaxIncl        {unMaxIncl        :: Value}
+                    | MinExcl        {unMinExcl        :: Value}
+                    | MaxExcl        {unMaxExcl        :: Value}
+                    | TotalDigits    {unTotalDigits    :: Value}
+                    | FractionDigits {unFractionDigits :: Value}
+                    | Enumeration    {unEnumeration    :: Value}
+                    | Pattern        {unPattern        :: Value}
+                    | MinLength      {unMinLength      :: Value}
+                    | MaxLength      {unMaxLength      :: Value}
+                    | Length         {unLength         :: Value} -- TODO: more possible restriction attributes?
+                    deriving (Show, Eq)
+type Value          = String
+-- type RestrFunc      = String -> Maybe String -- Nothing: true, Just x: error with message x
 
-type List          = XmlTrees
-type Union         = XmlTrees
+type List           = ItemType
+type ItemType       = String
 
-type ComplexType   = XmlTrees
-type Element       = XmlTrees
+type Union          = MemberTypes
+type MemberTypes    = String
+
+type ComplexType    = XmlTrees
+type ComplexType2   = [CTElems] -- mixed-attribute?
+data CTElems        = Sq    {unSq    :: Sequence}
+                    | Ch    {unCh    :: Choice}
+                    | Al    {unAl    :: All}
+                    | Attr  {unAttr  :: Attribute}
+                    | CCont {unCCont :: ComplexContent}
+type Sequence       = [Element]
+type Choice         = [Element]
+type All            = [Element]
+type Attribute      = (Name, Type)
+type Type           = String
+data ComplexContent = CCExt   {unCCExt   :: CCExtension}
+                    | CCRestr {unCCRestr :: CCRestriction}
+type CCExtension    = (Base, Sequence)
+type CCRestriction  = (Base, Sequence) -- re-use Restriction type?
+
+type Element        = XmlTrees -- Either (Name (Either Type ComplexType) (Maybe MinOcc) (Maybe MaxOcc)) Ref 
 
 -- Conversion between Schema and Schema'
 
@@ -93,8 +112,8 @@ xpSchemaPart
     tag (Ct _) = 1
     tag (El _) = 2
     ps = [ xpWrap (St, unSt) $ xpElem "xs:simpleType"  $ xpPair (xpAttr "name" xpText) xpSimpleType
-         , xpWrap (Ct, unCt) $ xpElem "xs:complexType" $ xpPair (xpAttr "name" xpText) xpTrees
-         , xpWrap (El, unEl) $ xpElem "xs:element"     $ xpPair (xpAttr "name" xpText) xpTrees
+         , xpWrap (Ct, unCt) $ xpElem "xs:complexType" $ xpPair (xpAttr "name" xpText) xpComplexType
+         , xpWrap (El, unEl) $ xpElem "xs:element"     $ xpPair (xpAttr "name" xpText) xpElement
          ]
 
 xpSimpleType :: PU SimpleType
@@ -105,8 +124,8 @@ xpSimpleType
     tag (Lst _)   = 1
     tag (Un _)    = 2
     ps = [ xpWrap (Restr, unRestr) $ xpElem "xs:restriction" $ xpRestriction
-         , xpWrap (Lst,   unLst)   $ xpElem "xs:list"        $ xpTrees
-         , xpWrap (Un,    unUn)    $ xpElem "xs:union"       $ xpTrees
+         , xpWrap (Lst,   unLst)   $ xpElem "xs:list"        $ xpAttr "itemType" xpText    -- xpListType?
+         , xpWrap (Un,    unUn)    $ xpElem "xs:union"       $ xpAttr "memberTypes" xpText -- xpUnionType?
          ]
 
 xpRestriction :: PU Restriction
@@ -141,15 +160,23 @@ xpRestrAttr
          , xpWrap (Length,         unLength)         $ xpElem "xs:Length"         $ xpAttr "value" xpText
          ]
 
+xpComplexType :: PU ComplexType
+xpComplexType
+  = xpTrees
+
+xpElement :: PU Element
+xpElement
+  = xpTrees
+
 loadXmlSchema :: IO XmlSchema
 loadXmlSchema
   = do
     s <- runX ( 
                 xunpickleDocument xpXmlSchema'
-                                  [ withValidate no        -- validate source
+                                  [ withValidate yes       -- validate source
                                   , withTrace 1            -- trace processing steps
                                   , withRemoveWS yes       -- remove redundant whitespace
-                                  , withPreserveComment no -- remove comments
+                                  , withPreserveComment no -- keep comments
                                   ] "example.xsd"
               )
     return $ toSchema $ head s
@@ -168,10 +195,14 @@ storeXmlSchema s
 main :: IO ()
 main
   = do
+    putStrLn "\n--------------------------------------------- Pickling ---------------------------------------------\n"
     xmlschema <- loadXmlSchema
-    putStrLn $ "SimpleTypes:\t"  ++ (concat $ map (\ (k, s) -> k ++ ":\n\t\t" ++ (show s) ++ "\n\n\t\t") $ toList  $ sSimpleTypes xmlschema)
-    putStrLn $ "ComplexTypes:\t" ++ (concat $ map (\ s -> s ++ " ") $ keys  $ sComplexTypes xmlschema)
-    putStrLn $ "Elements:\t"     ++ (concat $ map (\ s -> s ++ " ") $ keys  $ sElements xmlschema)
+    putStrLn "\n------------------------------------------- Simple Types -------------------------------------------"
+    putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sSimpleTypes xmlschema
+    putStrLn "------------------------------------------- Complex Types ------------------------------------------"
+    putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sComplexTypes xmlschema
+    putStrLn "--------------------------------------------- Elements ---------------------------------------------"
+    putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sElements xmlschema
     storeXmlSchema xmlschema
     return ()
 
