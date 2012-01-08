@@ -166,35 +166,34 @@
 
   <!-- includes / imports / redefines -->
 
-  <!--
-   <include schemaLocation="http://www.example.com/schemata/harddisk.xsd"/>
-   <include schemaLocation="http://www.example.com/schemata/ram.xsd"/>
-   
+  <include schemaLocation="http://www.example.com/schemata/harddisk.xsd"/>
+
+  <!--   
    targetNamespace des harddisk.xsd muss mit dem des inkludierenden Schemas übereinstimmen.
   -->
 
-  <!--
-   <redefine schemaLocation="http://www.example.com/schemata/harddisk.xsd">
-     <complexType name="Hersteller">
-       <complexContent>
-         <restriction base="pcTeile:Hersteller">
-           <sequence>
-             <element name="hersteller" type="string" minOccurs="10" maxOccurs="10"/>
-           </sequence>
-         </restriction>
-       </complexContent>
-     </complexType>
-   </redefine>
-  -->
+  <import namespace="http://www.example.com/pcTeile"/>
 
   <!--
    <schema xmlns="http://www.w3.org/2001/XMLSchema"
            xmlns:pcTeile="http://www.example.com/pcTeile"
            targetNamespace="http://www.example.com/firma">
-     <import namespace="http://www.example.com/pcTeile"/>
+     
    
      <xs:attribute name="xyz" type="pcTeile:superTyp"/>
   -->
+
+  <redefine schemaLocation="http://www.example.com/schemata/harddisk.xsd">
+    <complexType name="Hersteller">
+      <complexContent>
+        <restriction base="pcTeile:Hersteller">
+          <sequence>
+            <element name="hersteller" type="string" minOccurs="10" maxOccurs="10"/>
+          </sequence>
+        </restriction>
+      </complexContent>
+    </complexType>
+  </redefine>
 
   <!-- cabinet of curiosities -->
 

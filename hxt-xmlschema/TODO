@@ -1,1 +1,8 @@
 Mechanismus zur Erkennung noch nicht erfasster Schema-Bestandteile?
+Eigener data-Typ statt Paar in Typdefinitionen?
+xpListType / xpUnionType : Typen für jedes Unterelement?
+Namespace-Handling: xpElem "schema", Namespace separat testen?
+Fehlermeldung falls Werte bereits in Map existieren (z.B. Redefinition von Typen)?
+Restriction und CCRestriction : zusammenfassen?
+Mixed-Attribut bei ComplexType oder anderen Elementen?
+Includes Bestandteil von Schema-Datentyp?
