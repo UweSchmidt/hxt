@@ -85,7 +85,7 @@ data ElTypeDef      = TRef  {unTRef  :: Name}
 
 data Include        = Incl {unIncl :: String}
                     | Imp  {unImp  :: String}
-                    | Redef {unRedef :: XmlTrees}
+                    | Redef {unRedef :: (String, XmlTrees)}
                     deriving (Show, Eq)
 
 -- Conversion between Schema and Schema'
@@ -239,7 +239,7 @@ xpInclude
     tag (Redef _)  = 2
     ps = [ xpElem "include"  $ xpWrap (Incl,  unIncl)  $ xpAttr "schemaLocation" xpText
          , xpElem "import"   $ xpWrap (Imp,   unImp)   $ xpAttr "namespace" xpText
-         , xpElem "redefine" $ xpWrap (Redef, unRedef) $ xpTrees
+         , xpElem "redefine" $ xpWrap (Redef, unRedef) $ xpPair (xpAttr "schemaLocation" xpText) $ xpTrees
          ]
 
 loadXmlSchema :: IO XmlSchema

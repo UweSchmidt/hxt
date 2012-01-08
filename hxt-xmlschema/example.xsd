@@ -56,9 +56,9 @@
   </xs:simpleType>
 
   <xs:simpleType name="plz">
-     <xs:restriction base="xs:string">
-       <xs:pattern value="(D )?[0-9]{5}"/>
-     </xs:restriction>
+    <xs:restriction base="xs:string">
+      <xs:pattern value="(D )?[0-9]{5}"/>
+    </xs:restriction>
   </xs:simpleType>
 
   <xs:simpleType name="password">
@@ -83,14 +83,14 @@
 
   <xs:complexType name="pc-Typ">
     <xs:sequence>
-      <xs:element name="name"       type="xs:string"/>
+      <xs:element name="name" type="xs:string"/>
       <xs:element name="hersteller" type="xs:string"/>
-      <xs:element name="prozessor"  type="xs:string"/>
-      <xs:element name="mhz"        type="xs:integer" minOccurs="0"/>
-      <xs:element name="kommentar"  type="xs:string"  minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="prozessor" type="xs:string"/>
+      <xs:element name="mhz" type="xs:integer" minOccurs="0"/>
+      <xs:element name="kommentar" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
     <xs:attribute name="id" type="xs:integer"/>
-  </xs:complexType>  
+  </xs:complexType>
 
   <xs:complexType name="computer">
     <xs:choice>
@@ -125,11 +125,11 @@
     <xs:complexContent>
       <xs:restriction base="pc-Typ">
         <xs:sequence>
-         <xs:element name="name"       type="xs:string"/>
-         <xs:element name="hersteller" type="xs:string"/>
-         <xs:element name="prozessor"  type="xs:string"/>
-         <xs:element name="mhz"        type="xs:integer" minOccurs="0"/>
-         <xs:element name="kommentar"  type="xs:string" minOccurs="0" maxOccurs="1"/>
+          <xs:element name="name" type="xs:string"/>
+          <xs:element name="hersteller" type="xs:string"/>
+          <xs:element name="prozessor" type="xs:string"/>
+          <xs:element name="mhz" type="xs:integer" minOccurs="0"/>
+          <xs:element name="kommentar" type="xs:string" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
       </xs:restriction>
     </xs:complexContent>
@@ -202,7 +202,7 @@
   <xs:element name="tagname">
     <xs:complexType mixed="true">  <!-- text and tags can occur in mixed order -->
       <xs:sequence>
-        <xs:element minOccurs="0" maxOccurs="unbounded" name="child" type="xs:integer"/>
+        <xs:element name="child" type="xs:integer" minOccurs="0" maxOccurs="unbounded"/>
         <!-- Weitere Elemente … -->
       </xs:sequence>
     </xs:complexType>
