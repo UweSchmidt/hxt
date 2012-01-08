@@ -52,13 +52,13 @@ type ItemType       = String
 type Union          = MemberTypes
 type MemberTypes    = String
 
-type ComplexType    = XmlTrees
-type ComplexType2   = [CTElems] -- mixed-attribute?
+type ComplexType    = [CTElems] -- mixed-attribute?
 data CTElems        = Sq    {unSq    :: Sequence}
                     | Ch    {unCh    :: Choice}
                     | Al    {unAl    :: All}
                     | Attr  {unAttr  :: Attribute}
                     | CCont {unCCont :: ComplexContent}
+                    deriving (Show, Eq)
 type Sequence       = [Element]
 type Choice         = [Element]
 type All            = [Element]
@@ -66,6 +66,7 @@ type Attribute      = (Name, Type)
 type Type           = String
 data ComplexContent = CCExt   {unCCExt   :: CCExtension}
                     | CCRestr {unCCRestr :: CCRestriction}
+                    deriving (Show, Eq)
 type CCExtension    = (Base, Sequence)
 type CCRestriction  = (Base, Sequence) -- re-use Restriction type?
 
@@ -157,12 +158,39 @@ xpRestrAttr
          , xpWrap (Pattern,        unPattern)        $ xpElem "xs:pattern"        $ xpAttr "value" xpText
          , xpWrap (MinLength,      unMinLength)      $ xpElem "xs:minLength"      $ xpAttr "value" xpText
          , xpWrap (MaxLength,      unMaxLength)      $ xpElem "xs:maxLength"      $ xpAttr "value" xpText
-         , xpWrap (Length,         unLength)         $ xpElem "xs:Length"         $ xpAttr "value" xpText
+         , xpWrap (Length,         unLength)         $ xpElem "xs:length"         $ xpAttr "value" xpText
          ]
 
 xpComplexType :: PU ComplexType
 xpComplexType
-  = xpTrees
+  = xpList $ 
+    xpAlt tag ps
+    where
+    tag (Sq _)    = 0
+    tag (Ch _)    = 1
+    tag (Al _)    = 2
+    tag (Attr _)  = 3
+    tag (CCont _) = 4
+    ps = [ xpWrap (Sq,    unSq)    $ xpElem "xs:sequence"       $ xpSequence
+         , xpWrap (Ch,    unCh)    $ xpElem "xs:choice"         $ xpList $ xpElem "xs:element" $ xpElement
+         , xpWrap (Al,    unAl)    $ xpElem "xs:all"            $ xpList $ xpElem "xs:element" $ xpElement
+         , xpWrap (Attr,  unAttr)  $ xpElem "xs:attribute"      $ xpPair (xpAttr "name" xpText) (xpAttr "type" xpText)
+         , xpWrap (CCont, unCCont) $ xpElem "xs:complexContent" $ xpComplexContent
+         ]
+
+xpSequence :: PU Sequence
+xpSequence
+  = xpList $ xpElem "xs:element" $ xpElement
+
+xpComplexContent :: PU ComplexContent
+xpComplexContent
+  = xpAlt tag ps
+    where
+    tag (CCExt _)   = 0
+    tag (CCRestr _) = 1
+    ps = [ xpWrap (CCExt,   unCCExt)   $ xpElem "xs:extension"   $ xpPair (xpAttr "base" xpText) $ xpElem "xs:sequence" $ xpSequence
+         , xpWrap (CCRestr, unCCRestr) $ xpElem "xs:restriction" $ xpPair (xpAttr "base" xpText) $ xpElem "xs:sequence" $ xpSequence
+         ]  
 
 xpElement :: PU Element
 xpElement
