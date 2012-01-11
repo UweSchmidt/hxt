@@ -6,3 +6,6 @@ Fehlermeldung falls Werte bereits in Map existieren (z.B. Redefinition von Typen
 Restriction und CCRestriction : zusammenfassen?
 Mixed-Attribut bei ComplexType oder anderen Elementen?
 Includes Bestandteil von Schema-Datentyp?
+Attribute xmlns:xs / targetNamespace von xs:schema einlesen?
+Name-Attribut bei xs:element wo einlesen?
+

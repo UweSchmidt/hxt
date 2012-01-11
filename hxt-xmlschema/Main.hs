@@ -102,7 +102,7 @@ toSchema s
     toSchemaRec ((St (k, st)):xs) sts cts els ins = toSchemaRec xs (insert k st sts) cts els ins
     toSchemaRec ((Ct (k, ct)):xs) sts cts els ins = toSchemaRec xs sts (insert k ct cts) els ins
     toSchemaRec ((El (k, el)):xs) sts cts els ins = toSchemaRec xs sts cts (insert k el els) ins
-    toSchemaRec ((In incl)   :xs) sts cts els ins = toSchemaRec xs sts cts els (incl:ins)
+    toSchemaRec ((In incl)   :xs) sts cts els ins = toSchemaRec xs sts cts els (ins ++ [incl]) -- keep ordering
 
 fromSchema :: XmlSchema -> XmlSchema'
 fromSchema s
@@ -237,9 +237,9 @@ xpInclude
     tag (Incl _)   = 0
     tag (Imp _)    = 1
     tag (Redef _)  = 2
-    ps = [ xpElem "include"  $ xpWrap (Incl,  unIncl)  $ xpAttr "schemaLocation" xpText
-         , xpElem "import"   $ xpWrap (Imp,   unImp)   $ xpAttr "namespace" xpText
-         , xpElem "redefine" $ xpWrap (Redef, unRedef) $ xpPair (xpAttr "schemaLocation" xpText) $ xpTrees
+    ps = [ xpElem "xs:include"  $ xpWrap (Incl,  unIncl)  $ xpAttr "schemaLocation" xpText
+         , xpElem "xs:import"   $ xpWrap (Imp,   unImp)   $ xpAttr "namespace" xpText
+         , xpElem "xs:redefine" $ xpWrap (Redef, unRedef) $ xpPair (xpAttr "schemaLocation" xpText) $ xpTrees
          ]
 
 loadXmlSchema :: IO XmlSchema
