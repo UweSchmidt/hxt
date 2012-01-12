@@ -1,5 +1,5 @@
 Name:                hxt-unicode
-Version:             9.0.1
+Version:             9.0.2
 Synopsis:            Unicode en-/decoding functions for utf8, iso-latin-* and other encodings
 Description:         Unicode encoding and decoding functions for utf8, iso-latin-* and somes other encodings,
                      used in the Haskell XML Toolbox.

@@ -73,7 +73,7 @@ import Network.URI                              ( URI
 						, parseURIReference
 						)
 
-import qualified Debug.Trace as T
+-- import qualified Debug.Trace as T
 -- ------------------------------------------------------------
 --
 -- the native http protocol handler

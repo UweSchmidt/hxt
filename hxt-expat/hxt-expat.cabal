@@ -1,5 +1,5 @@
 Name:           hxt-expat
-Version:        9.1.0
+Version:        9.1.1
 Synopsis:       Expat parser for HXT
 Description:    The Expat interface for the HXT.
 License:        OtherLicense
@@ -31,7 +31,6 @@ library
  extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances
 
  build-depends: base               >= 4      && < 5,
-                haskell98          >= 1      && < 2,
                 bytestring         >= 0.9    && < 1,
                 hexpat             >= 0.19.3 && < 1,
                 hxt                >= 9.1    && < 10
