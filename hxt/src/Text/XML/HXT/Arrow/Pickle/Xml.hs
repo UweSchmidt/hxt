@@ -4,11 +4,11 @@
 
 {- |
    Module     : Text.XML.HXT.Arrow.Pickle.Xml
-   Copyright  : Copyright (C) 2005-2008 Uwe Schmidt
+   Copyright  : Copyright (C) 2005-2012 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
-   Stability  : experimental
+   Stability  : stable
    Portability: portable
 
    Pickler functions for converting between user defined data types
@@ -31,7 +31,7 @@
 
    There is an example program demonstrating the use
    of the picklers for a none trivial data structure.
-   (see \"examples\/arrows\/pickle\" directory)
+   (see \"examples\/arrows\/pickle\" directory in the hxt distribution)
 
 -}
 
@@ -42,14 +42,14 @@ where
 
 import           Control.Arrow.ListArrows
 
-import           Data.Char			 (isDigit)
-import           Data.List                       (foldl')
+import           Data.Char			  (isDigit)
+import           Data.List                        (foldl')
 import           Data.Maybe
-import           Data.Map (Map)
-import qualified Data.Map as M
+import           Data.Map                         (Map)
+import qualified Data.Map                         as M
 
 import           Text.XML.HXT.DOM.Interface
-import qualified Text.XML.HXT.DOM.XmlNode as XN
+import qualified Text.XML.HXT.DOM.XmlNode         as XN
 
 import           Text.XML.HXT.Arrow.Edit          (xshowEscapeXml)
 import           Text.XML.HXT.Arrow.Pickle.Schema
@@ -74,25 +74,35 @@ emptySt         =  St { attributes = []
                       , contents   = []
                       }
 
-addAtt          :: XmlTree -> St -> St
-addAtt x s      = s {attributes = x : attributes s}
+addAtt          :: QName -> [XmlTree] -> St -> St
+addAtt qn v s   = s {attributes = x : attributes s}
+                  where
+                    x = XN.mkAttr qn v
+{-# INLINE addAtt #-}
 
 addCont         :: XmlTree -> St -> St
 addCont x s     = s {contents = x : contents s}
+{-# INLINE addCont #-}
 
-dropCont        :: St -> St
-dropCont s      = s { contents = drop 1 (contents s) }
+splitCont       :: St -> Maybe (XmlTree, St)
+splitCont s     = case contents s of
+                    []       -> Nothing
+                    (x : xs) -> Just (x, s {contents = xs})
+{-# INLINE splitCont #-}
 
-getAtt          :: QName -> St -> Maybe XmlTree
-getAtt qn s
-    = listToMaybe $
-      runLA ( arrL attributes
-              >>>
-              isAttr >>> hasQName qn
-            ) s
+splitAtt        :: QName -> St -> Maybe (XmlTree, St)
+splitAtt qn s	= fmap (uncurry wrap) (findAtt $ attributes s)
+    where
+      wrap a as = (a, s {attributes = as})
+      findAtt	= findElem (maybe False (== qn) . XN.getAttrName)
 
-getCont         :: St -> Maybe XmlTree
-getCont s       = listToMaybe . contents $ s
+findElem       :: (a -> Bool) -> [a] -> Maybe (a, [a])
+findElem p xs  = find' id xs
+    where
+      find' _ []         = Nothing
+      find' prefix (x : xs)
+          | p x		 = Just (x, prefix xs)
+          | otherwise    = find' (prefix . (x:)) xs
 
 -- ------------------------------------------------------------
 
@@ -111,7 +121,7 @@ pickleDoc p v
 --
 -- The inverse of 'pickleDoc'.
 -- This law should hold for all picklers: @ unpickle px . pickle px $ v == Just v @.
--- Not every possible combination of picklers make sense.
+-- Not every possible combination of picklers does make sense.
 -- For reconverting a value from an XML tree, is becomes neccessary,
 -- to introduce \"enough\" markup for unpickling the value
 
@@ -495,9 +505,9 @@ xpTextDT sc
     where
     unpickleString st
         = do
-          t <- getCont st
-          s <- XN.getText t
-          return (Just s, dropCont st)
+          (t, st') <- splitCont st
+          s        <- XN.getText t
+          return (Just s, st')
 
 -- | Pickle a possibly empty string into an XML node.
 --
@@ -565,8 +575,8 @@ xpTree  = PU { appPickle   = \ (s, st) -> addCont s st
     where
     unpickleTree st
         = do
-          t <- getCont st
-          return (Just t, dropCont st)
+          (t, st') <- splitCont st
+          return (Just t, st')
 
 -- | Pickle a whole list of XmlTrees by just adding the list, unpickle is done by taking all element contents.
 --
@@ -732,15 +742,19 @@ xpElemQN qn pa
       where
       unpickleElement st
           = do
-            t <- getCont st
-            n <- XN.getElemName t
+            (t, st') <- splitCont st
+            n        <- XN.getElemName t
             if n /= qn
                then fail ("element name " ++ show n ++ " does not match" ++ show qn)
                else do
                     let cs = XN.getChildren t
-                    al <- XN.getAttrl t
-                    res <- fst . appUnPickle pa $ St {attributes = al, contents = cs}
-                    return (Just res, dropCont st)
+                    al  <-   XN.getAttrl t
+                    res <- fst
+                           . appUnPickle pa
+                           $ St { attributes = al
+                                , contents   = cs
+                                }
+                    return (Just res, st')
 
 -- | convenient Pickler for xpElemQN
 --
@@ -748,6 +762,15 @@ xpElemQN qn pa
 
 xpElem          :: String -> PU a -> PU a
 xpElem          = xpElemQN . mkName
+
+-- | convenient Pickler for xpElemQN
+--   for pickling elements with respect to namespaces
+--
+-- > xpElemNS ns px lp = xpElemQN (mkQName px lp ns)
+
+xpElemNS        :: String -> String -> String -> PU a -> PU a
+xpElemNS ns px lp
+                = xpElemQN $ mkQName px lp ns
 
 -- ------------------------------------------------------------
 
@@ -795,14 +818,18 @@ xpElemWithAttrValue name an av pa
                              )
       unpickleElement st
           = do
-            t <- getCont st
+            (t, st') <- splitCont st
             if noMatch t
                then fail "element name or attr value does not match"
                else do
                     let cs = XN.getChildren t
-                    al <- XN.getAttrl t
-                    res <- fst . appUnPickle pa $ St {attributes = al, contents = cs}
-                    return (Just res, dropCont st)
+                    al  <-   XN.getAttrl t
+                    res <- fst
+                           . appUnPickle pa
+                           $ St { attributes = al
+                                , contents   = cs
+                                }
+                    return (Just res, st')
 
 -- ------------------------------------------------------------
 
@@ -816,19 +843,21 @@ xpAttrQN qn pa
                            let
                            st' = appPickle pa (a, emptySt)
                            in
-                           addAtt (XN.mkAttr qn (contents st')) st
+                           addAtt qn (contents st') st
                          )
          , appUnPickle = \ st -> fromMaybe (Nothing, st) (unpickleAttr st)
          , theSchema   = scAttr (qualifiedName qn) (theSchema pa)
          }
       where
       unpickleAttr st
-          = do
-            a <- getAtt qn st
-            let av = XN.getChildren a
-            res <- fst . appUnPickle pa $ St {attributes = [], contents = av}
-            return (Just res, st)       -- attribute is not removed from attribute list,
-                                        -- attributes are selected by name
+          = do				-- Maybe monad
+            (a, st') <- splitAtt qn st
+            res      <- fst
+                        . appUnPickle pa
+                        $ St { attributes = []
+                             , contents   = XN.getChildren a
+                             }
+            return (Just res, st')
 
 -- | convenient Pickler for xpAttrQN
 --
@@ -836,6 +865,14 @@ xpAttrQN qn pa
 
 xpAttr          :: String -> PU a -> PU a
 xpAttr          = xpAttrQN . mkName
+
+-- | convenient Pickler for xpAttrQN
+--
+-- > xpAttr ns px lp = xpAttrQN (mkQName px lp ns)
+
+xpAttrNS        :: String -> String -> String -> PU a -> PU a
+xpAttrNS ns px lp
+                = xpAttrQN (mkQName px lp ns)
 
 -- | A text attribute.
 xpTextAttr :: String -> PU String
@@ -855,9 +892,8 @@ xpAttrFixed name val
         xpAttr name xpText
       ) { theSchema   = scAttr name (scFixed val) }
 
--- | Add an attribute with a fixed value.
+-- | Add/Check an attribute with a fixed value.
 --
--- Useful e.g. to declare namespaces. Is implemented by 'xpAttrFixed'
 
 xpAddFixedAttr  :: String -> String -> PU a -> PU a
 xpAddFixedAttr name val pa
@@ -865,6 +901,22 @@ xpAddFixedAttr name val pa
              , (,) ()
              ) $
       xpPair (xpAttrFixed name val) pa
+
+-- | Add a namespace declaration.
+--
+-- When generating XML the namespace decl is added,
+-- when reading a document, this pickler is the identity
+
+xpAddNSDecl  :: String -> String -> PU a -> PU a
+xpAddNSDecl name val pa
+    = xpWrap ( snd
+             , \ y -> (Just (), y)
+             ) $
+      xpPair (xpOption $ xpAttrFixed name' val) pa
+    where
+      name'
+          | null name = "xmlns"
+          | otherwise = "xmlns:" ++ name
 
 -- ------------------------------------------------------------
 
@@ -909,43 +961,5 @@ instance XmlPickler a => XmlPickler [a] where
 instance XmlPickler a => XmlPickler (Maybe a) where
     xpickle = xpOption xpickle
 
--- ------------------------------------------------------------
-
--- ------------------------------------------------------------
-{-
--- | Extra library functions for HXT.
-module Text.XML.HXT.Extras(
-                     showPickled,
-                     textAttr,
-                     xp7Tuple,
-                     xp8Tuple,
-                     xp9Tuple,
-                     xp10Tuple,
-                     xp11Tuple,
-                     xp12Tuple,
-                     xp13Tuple,
-                     xp14Tuple,
-                     xp15Tuple,
-                     xp16Tuple,
-                     xp17Tuple,
-                     xp18Tuple,
-                     xp19Tuple,
-                     xp20Tuple,
-                     xp21Tuple,
-                     xp22Tuple,
-                     xp23Tuple,
-                     xp24Tuple
-                   ) where
-
-import Text.XML.HXT.Arrow
-
--- | Pickles a value then writes the document to a string.
-showPickled :: (XmlPickler a) => Attributes -> a -> String
-showPickled a = concat . (pickleDoc xpickle >>> runLA (writeDocumentToString a))
-
--- | A text attribute.
-textAttr :: String -> PU String
-textAttr = flip xpAttr xpText
--}
 -- ------------------------------------------------------------
 

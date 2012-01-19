@@ -77,8 +77,10 @@ module Text.XML.HXT.Arrow.Pickle
     , xp24Tuple
 
     , xpAddFixedAttr
+    , xpAddNSDecl
     , xpAlt
     , xpAttr
+    , xpAttrNS
     , xpTextAttr
     , xpAttrFixed
     , xpAttrImplied
@@ -86,6 +88,7 @@ module Text.XML.HXT.Arrow.Pickle
     , xpCondSeq
     , xpDefault
     , xpElem
+    , xpElemNS
     , xpElemWithAttrValue
     , xpickle
     , xpLift
