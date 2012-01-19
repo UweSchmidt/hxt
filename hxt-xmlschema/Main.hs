@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances #-}
+{- LANGUAGE TypeSynonymInstances #-}
 
 import Text.XML.HXT.Core
 
@@ -114,9 +114,6 @@ fromSchema s
     ins = map In $ sIncludes s
 
 -- Pickler definitions
-
-instance XmlPickler XmlSchema' where
-  xpickle = xpXmlSchema'
 
 xpXmlSchema' :: PU XmlSchema'
 xpXmlSchema'

@@ -1,11 +1,34 @@
 Mechanismus zur Erkennung noch nicht erfasster Schema-Bestandteile?
+-> xpAttribute' welches gefundenes Element aus Liste von Attributen löscht
+-> Attribute anderer Namensräume erfassen
+
 Eigener data-Typ statt Paar in Typdefinitionen?
 xpListType / xpUnionType : Typen für jedes Unterelement?
-Namespace-Handling: xpElem "schema", Namespace separat testen?
-Fehlermeldung falls Werte bereits in Map existieren (z.B. Redefinition von Typen)?
-Restriction und CCRestriction : zusammenfassen?
-Mixed-Attribut bei ComplexType oder anderen Elementen?
-Includes Bestandteil von Schema-Datentyp?
-Attribute xmlns:xs / targetNamespace von xs:schema einlesen?
-Name-Attribut bei xs:element wo einlesen?
+newtype, konstruktor, xpWrap
 
+Restriction und CCRestriction : zusammenfassen?
+eher nach Kontext trennen
+
+Mixed-Attribut bei ComplexType oder anderen Elementen?
+beim picklen nur merken
+
+Attribute xmlns:xs / targetNamespace von xs:schema einlesen?
+Namespace-Handling: xpElem "schema", Namespace separat testen?
+
+Name-Attribut bei xs:element wo einlesen? -> nur in Element picklen
+Name immer da?
+
+Wrapper für Annotations (Funktor):
+data Annotation a = Ann { c   :: a
+                          ann :: Maybe XmlTree
+                        }
+
+type AnnotatedValue = Annotation Value
+
+class Funktor f where
+fmap :: (a -> b) -> f a -> f b
+
+instance Funktor [] where
+fmap = map
+
+map :: (a -> b) -> [a] -> [b]
