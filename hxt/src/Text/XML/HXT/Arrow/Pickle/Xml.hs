@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+{-# OPTIONS -XMultiParamTypeClasses -XTypeSynonymInstances #-}
 
 -- ------------------------------------------------------------
 
@@ -41,6 +42,9 @@ module Text.XML.HXT.Arrow.Pickle.Xml
 where
 
 import           Control.Arrow.ListArrows
+import           Control.Monad
+import           Control.Monad.Error
+import           Control.Monad.State
 
 import           Data.Char			  (isDigit)
 import           Data.List                        (foldl')
@@ -50,28 +54,142 @@ import qualified Data.Map                         as M
 
 import           Text.XML.HXT.DOM.Interface
 import qualified Text.XML.HXT.DOM.XmlNode         as XN
-
+import qualified Text.XML.HXT.DOM.ShowXml         as XN
 import           Text.XML.HXT.Arrow.Edit          (xshowEscapeXml)
 import           Text.XML.HXT.Arrow.Pickle.Schema
 import           Text.XML.HXT.Arrow.ReadDocument  (xread)
 import           Text.XML.HXT.Arrow.WriteDocument (writeDocumentToString)
-import           Text.XML.HXT.Arrow.XmlArrow
 import           Text.XML.HXT.Arrow.XmlState
+
+{- just for embedded test cases
+import           Text.XML.HXT.Arrow.XmlArrow
+import qualified Control.Arrow.ListArrows         as X
+-- -}
 
 -- ------------------------------------------------------------
 
 data St         = St { attributes :: [XmlTree]
                      , contents   :: [XmlTree]
-                     }
+                     , nesting    :: Int		-- the remaining 3 fields are used only for unpickling
+                     , pname      :: QName		-- to generate appropriate error messages
+                     , pelem      :: Bool
+                     } deriving (Show)
 
-data PU a       = PU { appPickle   :: (a, St) -> St
-                     , appUnPickle :: St -> (Maybe a, St)
+data PU a      	= PU { appPickle   :: (a, St) -> St
+                     , appUnPickle :: Unpickler a
                      , theSchema   :: Schema
                      }
+
+-- --------------------
+--
+-- The unpickler monad, a combination of state and error monad
+
+newtype Unpickler a	= UP { runUP :: St -> (UnpickleVal a, St) }
+
+type UnpickleVal a	= Either UnpickleErr a
+
+type UnpickleErr        = (String, St)
+
+instance Monad Unpickler where
+    return x	= UP $ \ st -> (Right x, st)
+    u >>= f     = UP $ \ st ->
+                  let (r, st') = runUP u st in
+                  case r of
+                    Left err -> (Left err, st')
+                    Right v  -> runUP (f v) st'
+    fail        = throwMsg				-- don't use fail, use throwError
+
+
+instance MonadState St Unpickler where
+    get         = UP $ \ st -> (Right st, st)
+    put st      = UP $ \ _  -> (Right (), st)
+
+instance MonadError UnpickleErr Unpickler where
+    throwError err
+                = UP $ \ st -> (Left err, st)
+
+    -- redundant, not (yet) used
+    catchError u handler
+                = UP $ \ st ->
+                  let (r, st') = runUP u st in
+                  case r of
+                    Left err -> runUP (handler err) st	-- not st', state will be reset in error case
+                    _        -> (r, st')
+
+throwMsg	:: String -> Unpickler a
+throwMsg msg    = UP $ \ st -> (Left (msg, st), st)
+
+-- | Choice combinator for unpickling
+--
+-- first 2 arguments are applied sequentially, but if the 1. one fails the
+-- 3. arg is applied
+
+mchoice 	:: Unpickler a -> (a -> Unpickler b) -> Unpickler b -> Unpickler b
+mchoice u f v	= UP $ \ st ->
+                  let (r, st') = runUP u st in
+                  case r of
+                    Right x
+                        -> runUP (f x) st'			-- success
+                    Left e@(_msg, st'')
+                        -> if nesting st'' == nesting st	-- true: failure in parsing curr contents
+                           then runUP v st			-- try the alternative unpickler
+                           else (Left e, st')			-- false: failure in unpickling a subtree of
+                                                                -- the current contents, so the whole unpickler
+                                                                -- must fail
+
+-- | Lift a Maybe value into the Unpickler monad.
+--
+-- The 1. arg is the attached error message
+
+liftMaybe	:: String -> Maybe a -> Unpickler a
+liftMaybe e v  = case v of
+                    Nothing -> throwMsg e
+                    Just x  -> return x
+
+-- | Lift an Either value into the Unpickler monad
+
+liftUnpickleVal		:: UnpickleVal a -> Unpickler a
+liftUnpickleVal v  	= UP $ \ st -> (v, st)
+
+-- --------------------
+
+getCont         :: Unpickler XmlTree
+getCont         = do cs <- gets contents
+                     case cs of
+                       []       -> throwMsg "no more contents to be read"
+                       (x : xs) -> do modify (\ s -> s {contents = xs})
+                                      return x
+
+getAtt        	:: QName -> Unpickler XmlTree
+getAtt qn     	= do as <- gets attributes
+                     case findAtt as of
+                       Nothing -> throwMsg $ "no attribute value found for " ++ show qn
+                       Just (a, as') -> do modify (\ s -> s {attributes = as'})
+                                           return a
+    where
+      findAtt	= findElem (maybe False (== qn) . XN.getAttrName)
+
+getNSAtt       	:: String -> Unpickler ()
+getNSAtt ns    	= do as <- gets attributes
+                     case findNS as of
+                       Nothing        -> throwMsg $
+                                         "no namespace declaration found for namespace " ++ show ns
+                       Just (_a, as') -> do modify (\ s -> s {attributes = as'})
+                                            return ()
+    where
+      isNS t    = (fromMaybe False . fmap isNameSpaceName . XN.getAttrName $ t)
+                  &&
+                  XN.xshow (XN.getChildren t) == ns
+      findNS	= findElem isNS
+
+-- --------------------
 
 emptySt         :: St
 emptySt         =  St { attributes = []
                       , contents   = []
+                      , nesting    = 0
+                      , pname      = mkName "/"
+                      , pelem      = True
                       }
 
 addAtt          :: QName -> [XmlTree] -> St -> St
@@ -84,17 +202,9 @@ addCont         :: XmlTree -> St -> St
 addCont x s     = s {contents = x : contents s}
 {-# INLINE addCont #-}
 
-splitCont       :: St -> Maybe (XmlTree, St)
-splitCont s     = case contents s of
-                    []       -> Nothing
-                    (x : xs) -> Just (x, s {contents = xs})
-{-# INLINE splitCont #-}
-
-splitAtt        :: QName -> St -> Maybe (XmlTree, St)
-splitAtt qn s	= fmap (uncurry wrap) (findAtt $ attributes s)
-    where
-      wrap a as = (a, s {attributes = as})
-      findAtt	= findElem (maybe False (== qn) . XN.getAttrName)
+-- --------------------
+--
+-- generally useful function for splitting a value from a list
 
 findElem       :: (a -> Bool) -> [a] -> Maybe (a, [a])
 findElem p xs  = find' id xs
@@ -105,6 +215,30 @@ findElem p xs  = find' id xs
           | otherwise    = find' (prefix . (x:)) xs
 
 -- ------------------------------------------------------------
+--
+-- | Format the context of an error message.
+
+formatSt		:: St -> String
+formatSt st	  	= fcx ++
+                          fa (attributes st) ++
+                          fc (contents   st)
+    where
+      fcx               = "\n" ++ "context:    " ++
+                          ( if pelem st
+                            then "element"
+                            else "attribute"
+                          ) ++
+                          " " ++ show (pname st)
+      fc []             = ""
+      fc cs             = "\n" ++ "contents:   " ++ formatXML cs
+      fa []             = ""
+      fa as             = "\n" ++ "attributes: " ++ formatXML as
+      formatXML         = format 80 . showXML
+      showXML   	= concat . runLA ( xshowEscapeXml unlistA )
+      format n s        = let s' = take (n + 1) s in
+                          if length s' <= n then s' else take n s ++ "..."
+
+-- ------------------------------------------------------------
 
 -- | conversion of an arbitrary value into an XML document tree.
 --
@@ -112,10 +246,9 @@ findElem p xs  = find' id xs
 -- Result is a complete document tree including a root node
 
 pickleDoc       :: PU a -> a -> XmlTree
-pickleDoc p v
-    = XN.mkRoot (attributes st) (contents st)
+pickleDoc p v 	= XN.mkRoot (attributes st) (contents st)
     where
-    st = appPickle p (v, emptySt)
+      st 	= appPickle p (v, emptySt)
 
 -- | Conversion of an XML document tree into an arbitrary data type
 --
@@ -125,14 +258,36 @@ pickleDoc p v
 -- For reconverting a value from an XML tree, is becomes neccessary,
 -- to introduce \"enough\" markup for unpickling the value
 
-unpickleDoc :: PU a -> XmlTree -> Maybe a
-unpickleDoc p t
-    | XN.isRoot t
-        = fst . appUnPickle p $ St { attributes = fromJust . XN.getAttrl $  t
-                                   , contents   =            XN.getChildren t
-                                   }
-    | otherwise
-        = unpickleDoc p (XN.mkRoot [] [t])
+unpickleDoc 	:: PU a -> XmlTree -> Maybe a
+unpickleDoc p   = either (const Nothing) Just
+                  . unpickleDoc' p
+
+-- | Like unpickleDoc but with a (sometimes) useful error message, when unpickling failed.
+
+unpickleDoc' 	:: PU a -> XmlTree -> Either String a
+unpickleDoc' p t
+    | XN.isRoot t	= mapErr $
+                          unpickleElem' p 0              t
+    | otherwise        	= unpickleDoc'  p (XN.mkRoot [] [t])
+    where
+      mapErr 		= either ( Left .
+                                   \ (msg, st) -> msg ++ formatSt st
+                                 ) Right
+
+-- | The main entry for unpickling, called by unpickleDoc
+
+unpickleElem' 	:: PU a -> Int -> XmlTree -> UnpickleVal a
+unpickleElem' p l t
+    = fst
+      . runUP (appUnPickle p)
+      $ St { attributes = fromMaybe [] .
+                          XN.getAttrl $  t
+           , contents   = XN.getChildren t
+           , nesting    = l
+           , pname      = fromJust .
+                          XN.getName  $  t
+           , pelem      = XN.isElem      t
+           }
 
 -- ------------------------------------------------------------
 
@@ -147,25 +302,59 @@ showPickled a = concat . (pickleDoc xpickle >>> runLA (writeDocumentToString a))
 --
 -- Encodes nothing, fails always during unpickling
 
-xpZero                  :: PU a
-xpZero                  =  PU { appPickle   = snd
-                              , appUnPickle = \ s -> (Nothing, s)
+xpZero                 	:: String -> PU a
+xpZero err             	=  PU { appPickle   = snd
+                              , appUnPickle = throwMsg err
                               , theSchema   = scNull
                               }
 
--- unit pickler
+-- | unit pickler
 
-xpUnit                  :: PU ()
+xpUnit             	:: PU ()
 xpUnit                  = xpLift ()
 
--- | Lift a value to a pickler
+-- | Check EOF pickler.
 --
--- When pickling, nothing is encoded, when unpickling, the given value is inserted.
--- This pickler always succeeds.
+-- When pickling, this behaves like the unit pickler.
+-- The unpickler fails, when there is some unprocessed XML contents left.
+
+xpCheckEmptyContents	:: PU a -> PU a
+xpCheckEmptyContents pa =  PU { appPickle   = appPickle pa
+                              , appUnPickle = do res <- appUnPickle pa
+                                                 cs <- gets contents
+                                                 if null cs
+                                                    then return res
+                                                    else contentsLeft
+                              , theSchema   = scNull
+                              }
+    where
+      contentsLeft	= throwMsg
+                          "xpCheckEmptyContents: unprocessed XML content detected"
+
+-- | Like xpCheckEmptyContents, but checks the attribute list
+
+xpCheckEmptyAttributes	:: PU a -> PU a
+xpCheckEmptyAttributes pa
+                        =  PU { appPickle   = appPickle pa
+                              , appUnPickle = do res <- appUnPickle pa
+                                                 as <- gets attributes
+                                                 if null as
+                                                    then return res
+                                                    else attributesLeft
+                              , theSchema   = scNull
+                              }
+    where
+      attributesLeft	= throwMsg
+                          "xpCheckEmptyAttributes: unprocessed XML attribute(s) detected"
+
+-- | Composition of xpCheckEmptyContents and xpCheckAttributes
+
+xpCheckEmpty		:: PU a -> PU a
+xpCheckEmpty		= xpCheckEmptyAttributes . xpCheckEmptyContents
 
 xpLift                  :: a -> PU a
 xpLift x                =  PU { appPickle   = snd
-                              , appUnPickle = \ s -> (Just x, s)
+                              , appUnPickle = return x
                               , theSchema   = scEmpty
                               }
 
@@ -173,50 +362,51 @@ xpLift x                =  PU { appPickle   = snd
 --
 -- @Nothing@ is mapped to the zero pickler, @Just x@ is pickled with @xpLift x@.
 
-xpLiftMaybe             :: Maybe a -> PU a
-xpLiftMaybe v           = (xpLiftMaybe' v) { theSchema = scOption scEmpty }
+xpLiftMaybe             	:: Maybe a -> PU a
+xpLiftMaybe v           	= (xpLiftMaybe'' v) { theSchema = scOption scEmpty }
     where
-    xpLiftMaybe' Nothing        = xpZero
-    xpLiftMaybe' (Just x)       = xpLift x
+    xpLiftMaybe'' Nothing      	= xpZero "xpLiftMaybe: got Nothing"
+    xpLiftMaybe'' (Just x)      = xpLift x
+
+xpLiftEither            	:: Either String a -> PU a
+xpLiftEither v        		= (xpLiftEither'' v) { theSchema = scOption scEmpty }
+    where
+    xpLiftEither'' (Left err)   = xpZero err
+    xpLiftEither'' (Right x)	= xpLift x
 
 
--- | pickle\/unpickle combinator for sequence and choice.
---
--- When the first unpickler fails,
--- the second one is taken, else the third one configured with the result from the first
--- is taken. This pickler is a generalisation for 'xpSeq' and 'xpChoice' .
---
--- The schema must be attached later, e.g. in xpPair or other higher level combinators
-
-xpCondSeq       :: PU b -> (b -> a) -> PU a -> (a -> PU b) -> PU b
-xpCondSeq pd f pa k
-    = PU { appPickle   = ( \ (b, s) ->
+{-
+xpCondSeq'       :: PU b -> (b -> a) -> PU a -> (a -> PU b) -> PU b
+xpCondSeq' pd f pa k
+    = PU { appPickle  = ( \ (b, s) ->
                            let
                            a  = f b
                            pb = k a
                            in
                            appPickle pa (a, (appPickle pb (b, s)))
                          )
-         , appUnPickle = ( \ s ->
-                           let
-                           (a, s') = appUnPickle pa s
-                           in
-                           case a of
-                           Nothing -> appUnPickle pd     s
-                           Just a' -> appUnPickle (k a') s'
-                         )
+         , appUnPickle = mchoice (appUnPickle pa) (appUnPickle . k) (appUnPickle pd)
          , theSchema   = undefined
          }
-
+-- -}
 
 -- | Combine two picklers sequentially.
 --
 -- If the first fails during
 -- unpickling, the whole unpickler fails
 
-xpSeq   :: (b -> a) -> PU a -> (a -> PU b) -> PU b
-xpSeq   = xpCondSeq xpZero
-
+xpSeq 		:: (b -> a) -> PU a -> (a -> PU b) -> PU b
+xpSeq f pa k
+    = PU { appPickle  = ( \ (b, s) ->
+                           let
+                           a  = f b
+                           pb = k a
+                           in
+                           appPickle pa (a, (appPickle pb (b, s)))
+                         )
+         , appUnPickle = appUnPickle pa >>= (appUnPickle . k)
+         , theSchema   = undefined
+         }
 
 -- | combine tow picklers with a choice
 --
@@ -225,8 +415,8 @@ xpSeq   = xpCondSeq xpZero
 -- an alternative pickler (first argument) is applied.
 -- This pickler is only used as combinator for unpickling.
 
-xpChoice                :: PU b -> PU a -> (a -> PU b) -> PU b
-xpChoice pb     = xpCondSeq pb undefined
+xpChoice        	:: PU b -> PU a -> (a -> PU b) -> Unpickler b
+xpChoice pb pa k	= mchoice (appUnPickle pa) (appUnPickle . k) (appUnPickle pb)
 
 
 -- | map value into another domain and apply pickler there
@@ -240,9 +430,19 @@ xpWrap (i, j) pa        = (xpSeq j pa (xpLift . i)) { theSchema = theSchema pa }
 --
 -- Map a value into another domain. If the inverse mapping is
 -- undefined (Nothing), the unpickler fails
+--
+-- Deprecated: Use xpWrapEither, this gives better error messages
 
 xpWrapMaybe             :: (a -> Maybe b, b -> a) -> PU a -> PU b
 xpWrapMaybe (i, j) pa   = (xpSeq j pa (xpLiftMaybe . i)) { theSchema = theSchema pa }
+
+-- | like 'xpWrap', but if the inverse mapping is undefined, the unpickler fails
+--
+-- Map a value into another domain. If the inverse mapping is
+-- undefined, the unpickler fails with an error message in the Left component
+
+xpWrapEither             :: (a -> Either String b, b -> a) -> PU a -> PU b
+xpWrapEither (i, j) pa   = (xpSeq j pa (xpLiftEither . i)) { theSchema = theSchema pa }
 
 -- ------------------------------------------------------------
 
@@ -496,18 +696,12 @@ xpText  = xpTextDT scString1
 -- In 'Text.XML.HXT.Arrow.Pickle.Schema' there are some more functions for creating
 -- simple datatype descriptions.
 
-xpTextDT        :: Schema -> PU String
-xpTextDT sc
-    = PU { appPickle   = \ (s, st) -> addCont (XN.mkText s) st
-         , appUnPickle = \ st -> fromMaybe (Nothing, st) (unpickleString st)
-         , theSchema   = sc
-         }
-    where
-    unpickleString st
-        = do
-          (t, st') <- splitCont st
-          s        <- XN.getText t
-          return (Just s, st')
+xpTextDT     	:: Schema -> PU String
+xpTextDT sc     = PU { appPickle   = \ (s, st) -> addCont (XN.mkText s) st
+                     , appUnPickle = do t <- getCont
+                                        liftMaybe "xpText: XML text expected" $ XN.getText t
+                     , theSchema   = sc
+                     }
 
 -- | Pickle a possibly empty string into an XML node.
 --
@@ -517,8 +711,8 @@ xpTextDT sc
 -- So the empty text node becomes nothing, and the pickler must deliver an empty string,
 -- if there is no text node in the document.
 
-xpText0 :: PU String
-xpText0 = xpText0DT scString1
+xpText0 	:: PU String
+xpText0 	= xpText0DT scString1
 {-# INLINE xpText0 #-}
 
 -- | Pickle a possibly empty string with a datatype description into an XML node.
@@ -526,8 +720,9 @@ xpText0 = xpText0DT scString1
 -- Like 'xpText0' but with extra Parameter for datatype description as in 'xpTextDT'.
 
 xpText0DT       :: Schema -> PU String
-xpText0DT sc
-    = xpWrap (fromMaybe "", emptyToNothing) $ xpOption $ xpTextDT sc
+xpText0DT sc    = xpWrap (fromMaybe "", emptyToNothing) $
+                  xpOption $
+                  xpTextDT sc
     where
     emptyToNothing "" = Nothing
     emptyToNothing x  = Just x
@@ -539,27 +734,24 @@ xpText0DT sc
 -- One of the most often used pimitive picklers. Applicable for all
 -- types which are instances of @Read@ and @Show@
 
-xpPrim  :: (Read a, Show a) => PU a
-xpPrim
-    = xpWrapMaybe (readMaybe, show) xpText
+xpPrim  		:: (Read a, Show a) => PU a
+xpPrim    		= xpWrapEither (readMaybe, show) xpText
     where
-    readMaybe   :: Read a => String -> Maybe a
-    readMaybe str
-        = val (reads str)
+    readMaybe   	:: Read a => String -> Either String a
+    readMaybe str       = val (reads str)
         where
-        val [(x,"")] = Just x
-        val _        = Nothing
+          val [(x,"")] 	= Right x
+          val _        	= Left $ "xpPrim: reading string " ++ show str ++ " failed"
 
--- | Pickle an unsigned 
-xpInt  :: PU Int
-xpInt
-    = xpWrapMaybe (readMaybe, show) xpText
+-- | Pickle an Int
+xpInt  			:: PU Int
+xpInt                   = xpWrapEither (readMaybe, show) xpText
     where
-    readMaybe xs
-        | all isDigit xs 	= Just . foldl' (\ r c -> 10 * r + (fromEnum c - fromEnum '0')) 0 $ xs
-    readMaybe ('-' : xs)	= fmap (0 -) . readMaybe $ xs
-    readMaybe ('+' : xs)	=              readMaybe $ xs
-    readMaybe _                 = Nothing
+      readMaybe xs
+          | all isDigit xs = Right . foldl' (\ r c -> 10 * r + (fromEnum c - fromEnum '0')) 0 $ xs
+      readMaybe ('-' : xs) = fmap (0 -) . readMaybe $ xs
+      readMaybe ('+' : xs) =              readMaybe $ xs
+      readMaybe        xs  = Left $ "xpInt: reading an Int from string " ++ show xs ++ " failed"
 
 -- ------------------------------------------------------------
 
@@ -567,23 +759,18 @@ xpInt
 --
 -- Usefull for components of type XmlTree in other data structures
 
-xpTree  :: PU XmlTree
-xpTree  = PU { appPickle   = \ (s, st) -> addCont s st
-             , appUnPickle = \ st -> fromMaybe (Nothing, st) (unpickleTree st)
-             , theSchema   = Any
-             }
-    where
-    unpickleTree st
-        = do
-          (t, st') <- splitCont st
-          return (Just t, st')
+xpTree  	:: PU XmlTree
+xpTree  	= PU { appPickle   = \ (s, st) -> addCont s st
+                     , appUnPickle = getCont
+                     , theSchema   = Any
+                     }
 
 -- | Pickle a whole list of XmlTrees by just adding the list, unpickle is done by taking all element contents.
 --
 -- This pickler should always be combined with 'xpElem' for taking the whole contents of an element.
 
-xpTrees :: PU [XmlTree]
-xpTrees = (xpList xpTree) { theSchema = Any }
+xpTrees 	:: PU [XmlTree]
+xpTrees 	= (xpList xpTree) { theSchema = Any }
 
 -- | Pickle a string representing XML contents by inserting the tree representation into the XML document.
 --
@@ -593,11 +780,10 @@ xpTrees = (xpList xpTree) { theSchema = Any }
 -- Pickling is done with 'Text.XML.HXT.Arrow.ReadDocument.xread'
 
 xpXmlText       :: PU String
-xpXmlText
-    = xpWrap ( showXML, readXML ) $ xpTrees
+xpXmlText       = xpWrap ( showXML, readXML ) $ xpTrees
     where
-    showXML = concat . runLA ( xshowEscapeXml unlistA )
-    readXML = runLA xread
+      showXML 	= concat . runLA ( xshowEscapeXml unlistA )
+      readXML 	= runLA xread
 
 -- ------------------------------------------------------------
 
@@ -607,18 +793,16 @@ xpXmlText
 -- The default pickler for Maybe types
 
 xpOption        :: PU a -> PU (Maybe a)
-xpOption pa
-    = PU { appPickle   = ( \ (a, st) ->
-                           case a of
-                           Nothing -> st
-                           Just x  -> appPickle pa (x, st)
-                         )
+xpOption pa    	= PU { appPickle  = ( \ (a, st) ->
+                                          case a of
+                                            Nothing -> st
+                                            Just x  -> appPickle pa (x, st)
+                                    )
 
-         , appUnPickle = appUnPickle $
-                         xpChoice (xpLift Nothing) pa (xpLift . Just)
+                     , appUnPickle = xpChoice (xpLift Nothing) pa (xpLift . Just)
 
-         , theSchema   = scOption (theSchema pa)
-         }
+                     , theSchema   = scOption (theSchema pa)
+                     }
 
 -- | Optional conversion with default value
 --
@@ -626,11 +810,10 @@ xpOption pa
 -- during unpickling the default value is inserted if the pickler fails
 
 xpDefault       :: (Eq a) => a -> PU a -> PU a
-xpDefault df
-    = xpWrap ( fromMaybe df
-             , \ x -> if x == df then Nothing else Just x
-             ) .
-      xpOption
+xpDefault df    = xpWrap ( fromMaybe df
+                         , \ x -> if x == df then Nothing else Just x
+                         ) .
+                  xpOption
 
 -- ------------------------------------------------------------
 
@@ -640,36 +823,35 @@ xpDefault df
 -- The standard pickler for lists. Can also be used in combination with 'xpWrap'
 -- for constructing set and map picklers
 
-xpList  :: PU a -> PU [a]
-xpList pa
-    = PU { appPickle   = ( \ (a, st) ->
-                           case a of
-                           []  -> st
-                           _:_ -> appPickle pc (a, st)
-                         )
-         , appUnPickle = appUnPickle $
-                         xpChoice (xpLift []) pa
-                           (\ x -> xpSeq id (xpList pa) (\xs -> xpLift (x:xs)))
+xpList  	:: PU a -> PU [a]
+xpList pa    	= PU { appPickle  = ( \ (a, st) ->
+                                          case a of
+                                            []  -> st
+                                            _:_ -> appPickle pc (a, st)
+                                    )
+                     , appUnPickle = xpChoice
+                                     (xpLift [])
+                                     pa
+                                     (\ x -> xpSeq id (xpList pa) (\xs -> xpLift (x:xs)))
 
-         , theSchema   = scList (theSchema pa)
-         }
+                     , theSchema   = scList (theSchema pa)
+                     }
       where
-      pc = xpSeq head  pa       (\ x ->
-           xpSeq tail (xpList pa) (\ xs ->
-           xpLift (x:xs)))
+      pc 	= xpSeq head  pa         (\ x  ->
+                  xpSeq tail (xpList pa) (\ xs ->
+                  xpLift (x:xs)          ))
 
 -- | Encoding of a none empty list of values
 --
 -- Attention: when calling this pickler with an empty list,
 -- an internal error \"head of empty list is raised\".
 
-xpList1 :: PU a -> PU [a]
-xpList1 pa
-    = ( xpWrap (\ (x, xs) -> x : xs
-               ,\ x -> (head x, tail x)
-               ) $
-        xpPair pa (xpList pa)
-      ) { theSchema = scList1 (theSchema pa) }
+xpList1 	:: PU a -> PU [a]
+xpList1 pa      = ( xpWrap (\ (x, xs) -> x : xs
+                           ,\ x -> (head x, tail x)
+                           ) $
+                    xpPair pa (xpList pa)
+                  ) { theSchema = scList1 (theSchema pa) }
 
 -- ------------------------------------------------------------
 
@@ -680,15 +862,14 @@ xpList1 pa
 -- the key is encoded as an attribute named by the 2. argument,
 -- the 3. arg is the pickler for the keys, the last one for the values
 
-xpMap   :: Ord k => String -> String -> PU k -> PU v -> PU (Map k v)
+xpMap   	:: Ord k => String -> String -> PU k -> PU v -> PU (Map k v)
 xpMap en an xpk xpv
-    = xpWrap ( M.fromList
-             , M.toList
-             ) $
-      xpList $
-      xpElem en $
-      xpPair ( xpAttr an $ xpk ) xpv
-
+    		= xpWrap ( M.fromList
+                         , M.toList
+                         ) $
+                  xpList $
+                  xpElem en $
+                  xpPair ( xpAttr an $ xpk ) xpv
 
 -- ------------------------------------------------------------
 
@@ -697,21 +878,19 @@ xpMap en an xpk xpv
 -- Every constructor is mapped to an index into the list of picklers.
 -- The index is used only during pickling, not during unpickling, there the 1. match is taken
 
-xpAlt   :: (a -> Int) -> [PU a] -> PU a
-xpAlt tag ps
-    = PU { appPickle   = ( \ (a, st) ->
-                           let
-                           pa = ps !! (tag a)
-                           in
-                           appPickle pa (a, st)
-                         )
-         , appUnPickle = appUnPickle $
-                         ( case ps of
-                           []     -> xpZero
-                           pa:ps1 -> xpChoice (xpAlt tag ps1) pa xpLift
-                         )
-         , theSchema   = scAlts (map theSchema ps)
-         }
+xpAlt   	:: (a -> Int) -> [PU a] -> PU a
+xpAlt tag ps    = PU { appPickle   = ( \ (a, st) ->
+                                           let
+                                               pa = ps !! (tag a)
+                                           in
+                                             appPickle pa (a, st)
+                                     )
+                     , appUnPickle = case ps of
+                                       []     -> throwMsg "xpAlt: no matching unpickler found for a sum datatype"
+                                       pa:ps1 -> xpChoice (xpAlt tag ps1) pa xpLift
+
+                     , theSchema   = scAlts (map theSchema ps)
+                     }
 
 -- ------------------------------------------------------------
 
@@ -729,32 +908,21 @@ xpAlt tag ps
 -- > <number>42</number>
 
 xpElemQN        :: QName -> PU a -> PU a
-xpElemQN qn pa
-    = PU { appPickle   = ( \ (a, st) ->
-                           let
-                           st' = appPickle pa (a, emptySt)
-                           in
-                           addCont (XN.mkElement qn (attributes st') (contents st')) st
-                         )
-         , appUnPickle = \ st -> fromMaybe (Nothing, st) (unpickleElement st)
-         , theSchema   = scElem (qualifiedName qn) (theSchema pa)
-         }
+xpElemQN qn pa  = PU { appPickle   = ( \ (a, st) ->
+                                           let st' = appPickle pa (a, emptySt)
+                                           in
+                                             addCont (XN.mkElement qn (attributes st') (contents st')) st
+                                     )
+                     , appUnPickle = upElem
+                     , theSchema   = scElem (qualifiedName qn) (theSchema pa)
+                     }
       where
-      unpickleElement st
-          = do
-            (t, st') <- splitCont st
-            n        <- XN.getElemName t
-            if n /= qn
-               then fail ("element name " ++ show n ++ " does not match" ++ show qn)
-               else do
-                    let cs = XN.getChildren t
-                    al  <-   XN.getAttrl t
-                    res <- fst
-                           . appUnPickle pa
-                           $ St { attributes = al
-                                , contents   = cs
-                                }
-                    return (Just res, st')
+      upElem	= do t <- getCont
+                     n <- liftMaybe "xpElem: XML element expected" $ XN.getElemName t
+                     if n /= qn
+                        then throwMsg ("xpElem: got element name " ++ show n ++ ", but expected " ++ show qn)
+                        else do n <- gets nesting
+                                liftUnpickleVal $ unpickleElem' (xpCheckEmpty pa) (n + 1) t
 
 -- | convenient Pickler for xpElemQN
 --
@@ -799,37 +967,9 @@ xpElemNS ns px lp
 
 xpElemWithAttrValue     :: String -> String -> String -> PU a -> PU a
 xpElemWithAttrValue name an av pa
-    = PU { appPickle   = ( \ (a, st) ->
-                           let
-                           st' = appPickle pa' (a, emptySt)
-                           in
-                           addCont (XN.mkElement (mkName name) (attributes st') (contents st')) st
-                         )
-         , appUnPickle = \ st -> fromMaybe (Nothing, st) (unpickleElement st)
-         , theSchema   = scElem name (theSchema pa')
-         }
-      where
-      pa' = xpAddFixedAttr an av $ pa
-      noMatch = null . runLA ( isElem
-                               >>>
-                               hasName name
-                               >>>
-                               hasAttrValue an (==av)
-                             )
-      unpickleElement st
-          = do
-            (t, st') <- splitCont st
-            if noMatch t
-               then fail "element name or attr value does not match"
-               else do
-                    let cs = XN.getChildren t
-                    al  <-   XN.getAttrl t
-                    res <- fst
-                           . appUnPickle pa
-                           $ St { attributes = al
-                                , contents   = cs
-                                }
-                    return (Just res, st')
+    		= xpElem name $
+                  xpAddFixedAttr an av $
+                  pa
 
 -- ------------------------------------------------------------
 
@@ -838,26 +978,18 @@ xpElemWithAttrValue name an av pa
 -- The attribute is inserted in the surrounding element constructed by the 'xpElem' pickler
 
 xpAttrQN        :: QName -> PU a -> PU a
-xpAttrQN qn pa
-    = PU { appPickle   = ( \ (a, st) ->
-                           let
-                           st' = appPickle pa (a, emptySt)
-                           in
-                           addAtt qn (contents st') st
-                         )
-         , appUnPickle = \ st -> fromMaybe (Nothing, st) (unpickleAttr st)
-         , theSchema   = scAttr (qualifiedName qn) (theSchema pa)
-         }
+xpAttrQN qn pa  = PU { appPickle   = ( \ (a, st) ->
+                                           let st' = appPickle pa (a, emptySt)
+                                           in
+                                             addAtt qn (contents st') st
+                                     )
+                     , appUnPickle = upAttr
+                     , theSchema   = scAttr (qualifiedName qn) (theSchema pa)
+                     }
       where
-      unpickleAttr st
-          = do				-- Maybe monad
-            (a, st') <- splitAtt qn st
-            res      <- fst
-                        . appUnPickle pa
-                        $ St { attributes = []
-                             , contents   = XN.getChildren a
-                             }
-            return (Just res, st')
+      upAttr	= do a <- getAtt qn
+                     l <- gets nesting
+                     liftUnpickleVal $ unpickleElem' (xpCheckEmptyContents pa) l a
 
 -- | convenient Pickler for xpAttrQN
 --
@@ -875,32 +1007,39 @@ xpAttrNS ns px lp
                 = xpAttrQN (mkQName px lp ns)
 
 -- | A text attribute.
-xpTextAttr :: String -> PU String
-xpTextAttr = flip xpAttr xpText
+xpTextAttr 	:: String -> PU String
+xpTextAttr 	= flip xpAttr xpText
 
 -- | Add an optional attribute for an optional value (Maybe a).
 
 xpAttrImplied   :: String -> PU a -> PU (Maybe a)
 xpAttrImplied name pa
-    = xpOption $ xpAttr name pa
+    		= xpOption $ xpAttr name pa
 
 xpAttrFixed     :: String -> String -> PU ()
 xpAttrFixed name val
-    = ( xpWrapMaybe ( \ v -> if v == val then Just () else Nothing
-                    , const val
-                    ) $
-        xpAttr name xpText
-      ) { theSchema   = scAttr name (scFixed val) }
+    		= ( xpWrapEither ( \ v ->
+                                   if v == val
+                                   then Right ()
+                                   else Left ( "xpAttrFixed: value "
+                                               ++ show val
+                                               ++ " expected, but got "
+                                               ++ show v
+                                             )
+                                 , const val
+                                 ) $
+                    xpAttr name xpText
+                  ) { theSchema   = scAttr name (scFixed val) }
 
 -- | Add/Check an attribute with a fixed value.
 --
 
 xpAddFixedAttr  :: String -> String -> PU a -> PU a
 xpAddFixedAttr name val pa
-    = xpWrap ( snd
-             , (,) ()
-             ) $
-      xpPair (xpAttrFixed name val) pa
+    		= xpWrap ( snd
+                         , (,) ()
+                         ) $
+                  xpPair (xpAttrFixed name val) pa
 
 -- | Add a namespace declaration.
 --
@@ -909,14 +1048,21 @@ xpAddFixedAttr name val pa
 
 xpAddNSDecl  :: String -> String -> PU a -> PU a
 xpAddNSDecl name val pa
-    = xpWrap ( snd
-             , \ y -> (Just (), y)
-             ) $
-      xpPair (xpOption $ xpAttrFixed name' val) pa
+    		= xpWrap ( snd
+                         , \ y -> (Just (), y)
+                         ) $
+                  xpPair (xpOption $ xpAttrNSDecl name' val) pa
     where
       name'
           | null name = "xmlns"
           | otherwise = "xmlns:" ++ name
+
+xpAttrNSDecl     :: String -> String -> PU ()
+xpAttrNSDecl name ns
+                 = PU { appPickle   = \ (_, st) -> addAtt (mkName name) [XN.mkText ns] st
+                      , appUnPickle = getNSAtt ns
+                      , theSchema   = scAttr name (scFixed ns)
+                      }
 
 -- ------------------------------------------------------------
 
@@ -963,3 +1109,239 @@ instance XmlPickler a => XmlPickler (Maybe a) where
 
 -- ------------------------------------------------------------
 
+{- begin embeded test cases
+
+-- ------------------------------------------------------------
+--
+-- a somewhat complex data structure
+-- for representing programs of a simple
+-- imperative language
+
+type Program	= Stmt
+
+type StmtList	= [Stmt]
+
+data Stmt
+    = Assign  Ident  Expr
+    | Stmts   StmtList 
+    | If      Expr  Stmt (Maybe Stmt)
+    | While   Expr  Stmt
+      deriving (Eq, Show)
+
+type Ident	= String
+
+data Expr
+    = IntConst	Int
+    | BoolConst Bool
+    | Var       Ident
+    | UnExpr	UnOp  Expr
+    | BinExpr	Op    Expr  Expr
+      deriving (Eq, Show)
+
+data Op
+    = Add | Sub | Mul | Div | Mod | Eq | Neq
+      deriving (Eq, Ord, Enum, Show)
+
+data UnOp
+    = UPlus | UMinus | Neg
+      deriving (Eq, Ord, Read, Show)
+
+-- ------------------------------------------------------------
+--
+-- the pickler definition for the data types
+
+-- the main pickler
+
+xpProgram :: PU Program
+xpProgram = xpElem "program" $
+	    xpAddNSDecl "" "program42" $
+	    xpickle
+
+xpMissingRootElement	:: PU Program
+xpMissingRootElement 	= xpickle
+
+instance XmlPickler UnOp where
+    xpickle = xpPrim
+
+instance XmlPickler Op where
+    xpickle = xpWrap (toEnum, fromEnum) xpPrim
+
+instance XmlPickler Expr where
+    xpickle = xpAlt tag ps
+	where
+	tag (IntConst _    ) = 0
+	tag (BoolConst _   ) = 1
+	tag (Var _         ) = 2
+	tag (UnExpr _ _    ) = 3
+	tag (BinExpr _ _ _ ) = 4
+	ps = [ xpWrap ( IntConst
+		      , \ (IntConst i ) -> i
+                      ) $
+               ( xpElem "int"   $
+		 xpAttr "value" $
+		 xpickle
+               )
+
+	     , xpWrap ( BoolConst
+		      , \ (BoolConst b) -> b
+                      ) $
+               ( xpElem "bool"  $
+		 xpAttr "value" $
+		 xpWrap (toEnum, fromEnum) xpickle
+               )
+
+	     , xpWrap ( Var
+		      , \ (Var n)       -> n
+                      ) $
+               ( xpElem "var"   $
+		 xpAttr "name"  $
+		 xpText
+               )
+
+	     , xpWrap ( uncurry UnExpr
+		      , \ (UnExpr op e) -> (op, e)
+                      ) $
+               ( xpElem "unex" $
+		 xpPair (xpAttr "op" xpickle)
+                         xpickle
+               )
+
+	     , xpWrap ( uncurry3 $ BinExpr
+		      , \ (BinExpr op e1 e2) -> (op, e1, e2)
+                      ) $
+               ( xpElem "binex" $
+		 xpTriple (xpAttr "op" xpickle)
+                           xpickle
+                           xpickle
+               )
+	     ]
+
+instance XmlPickler Stmt where
+    xpickle = xpAlt tag ps
+	where
+	tag ( Assign _ _ ) = 0
+	tag ( Stmts _ )    = 1
+	tag ( If _ _ _ )   = 2
+	tag ( While _ _ )  = 3
+	ps = [ xpWrap ( uncurry Assign
+		      , \ (Assign n v) -> (n, v)
+                      ) $
+               ( xpElem "assign" $
+		 xpPair (xpAttr "name" xpText)
+                         xpickle
+               )
+	     , xpWrap ( Stmts
+		      , \ (Stmts sl) -> sl
+                      ) $
+               ( xpElem "block" $
+		 xpList xpickle
+               )
+	     , xpWrap ( uncurry3 If
+		      , \ (If c t e) -> (c, t, e)
+                      ) $
+               ( xpElem "if" $
+		 xpTriple xpickle
+                          xpickle
+                          xpickle
+               )
+	     , xpWrap ( uncurry While
+		      , \ (While c b) -> (c, b)
+                      ) $
+               ( xpElem "while" $
+		 xpPair xpickle
+                        xpickle
+               )
+	     ]
+
+-- ------------------------------------------------------------
+--
+-- example programs
+
+progs	:: [Program]
+progs	= [p0, p1, p2]
+
+p0, p1, p2 :: Program
+
+p0 = Stmts []		-- the empty program
+
+p1 = Stmts		
+     [ Assign i ( UnExpr UMinus ( IntConst (-22) ) )
+     , Assign j ( IntConst 20 )
+     , While
+       ( BinExpr Neq ( Var i ) ( IntConst 0 ) )
+       ( Stmts
+	 [ Assign i ( BinExpr Sub ( Var i ) ( IntConst 1 ) )
+	 , Assign j ( BinExpr Add ( Var j ) ( IntConst 1 ) )
+	 , If ( IntConst 0 ) (Stmts []) Nothing
+	 ]
+       )
+     ]
+    where
+    i = "i"
+    j = "j"
+
+p2 = Stmts		
+     [ Assign x (IntConst 6)
+     , Assign y (IntConst 7)
+     , Assign p (IntConst 0)
+     , While
+       ( BinExpr Neq (Var x) (IntConst 0) )
+       ( If ( BinExpr Neq ( BinExpr Mod (Var x) (IntConst 2) ) (IntConst 0) )
+	    ( Stmts
+	      [ Assign x ( BinExpr Sub (Var x) (IntConst 1) )
+	      , Assign p ( BinExpr Add (Var p) (Var y) )
+	      ]
+	    )
+	    ( Just ( Stmts
+		     [ Assign x ( BinExpr Div (Var x) (IntConst 2) )
+		     , Assign y ( BinExpr Mul (Var y) (IntConst 2) )
+		     ]
+		   )
+	    )
+       )
+     ]
+    where
+    x = "x"
+    y = "y"
+    p = "p"
+
+-- ------------------------------------------------------------
+
+test0 = putStrLn . head . runLA
+        ( xshow (arr (pickleDoc xpProgram)
+                 >>> getChildren
+                )
+        )
+
+test0' f = runLA
+        ( xshow (arr (pickleDoc xpProgram)
+                 >>> getChildren
+                )
+          >>>
+          root [] [xread]
+          >>>
+          f
+        )
+
+test1' f = runLA
+        ( xshow (arr (pickleDoc xpProgram)
+                 >>> getChildren
+                )
+          >>>
+          root [] [xread]
+          >>>
+          f
+          >>>
+          arr (unpickleDoc' xpProgram)
+        )
+
+test1 = test0' (processTopDown (setQName (mkName "real") `X.when` hasName "int"))
+test2 = test1' this
+test3 = test1' (processTopDown (setQName (mkName "real") `X.when` hasName "int"))
+test4 = test1' (processTopDown (setQName (mkName "xxx")  `X.when` hasName "program"))
+test5 = test1' (processTopDown (setQName (mkName "xxx")  `X.when` hasName "assign"))
+test6 = test1' (processTopDownWithAttrl  (txt "xxx"      `X.when` hasText (== "UMinus")))
+
+-- ------------------------------------------------------------
+
+-- end embeded test cases -}

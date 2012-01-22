@@ -10,7 +10,7 @@ GHC		= ghc $(GHCFLAGS) $(PKGFLAGS)
 DIST		= $(HXT_HOME)/dist/examples/arrows
 DIST_DIR	= $(DIST)/pickle
 
-PROG		= ./pickleTest
+PROG		= ./pickleTest ./pickleTestWithNamespaces
 
 all		: $(PROG)
 
@@ -19,6 +19,11 @@ force		:
 
 test		:
 		./pickleTest
+		@sleep 1
+		@echo "the program p2 as XML document"
+		@sleep 3
+		cat pickle.xml
+		./pickleTestWithNamespaces
 		@sleep 1
 		@echo "the program p2 as XML document"
 		@sleep 3
@@ -37,4 +42,7 @@ distclean	:
 .PHONY		: all test dist clean distclean force
 
 pickleTest	: PickleTest.hs
+		$(GHC) --make -o $@ $<
+
+pickleTestWithNamespaces	: PickleTestWithNamespaces.hs
 		$(GHC) --make -o $@ $<
