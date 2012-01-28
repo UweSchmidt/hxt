@@ -1,22 +1,9 @@
-Mechanismus zur Erkennung noch nicht erfasster Schema-Bestandteile?
--> xpAttribute' welches gefundenes Element aus Liste von Attributen löscht
--> Attribute anderer Namensräume erfassen
-
 Eigener data-Typ statt Paar in Typdefinitionen?
-xpListType / xpUnionType : Typen für jedes Unterelement?
 newtype, konstruktor, xpWrap
 
-Restriction und CCRestriction : zusammenfassen?
-eher nach Kontext trennen
+Bei NS handling: default NS falls keine Angabe xs: ?
 
-Mixed-Attribut bei ComplexType oder anderen Elementen?
-beim picklen nur merken
-
-Attribute xmlns:xs / targetNamespace von xs:schema einlesen?
-Namespace-Handling: xpElem "schema", Namespace separat testen?
-
-Name-Attribut bei xs:element wo einlesen? -> nur in Element picklen
-Name immer da?
+---------------------------------------------------------------------------
 
 Wrapper für Annotations (Funktor):
 data Annotation a = Ann { c   :: a
