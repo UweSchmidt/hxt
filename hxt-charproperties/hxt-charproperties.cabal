@@ -1,5 +1,5 @@
 Name:                hxt-charproperties
-Version:             9.1.0
+Version:             9.1.1
 Synopsis:            Character properties and classes for XML and Unicode
 Description:         Character proprties defined by XML and Unicode standards.
                      These modules contain predicates for Unicode blocks and char proprties

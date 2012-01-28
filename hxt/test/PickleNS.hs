@@ -4,7 +4,7 @@ import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowList
 import Control.Arrow.ArrowTree
 
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 import Text.XML.HXT.Arrow.Edit
 import Text.XML.HXT.Arrow.ParserInterface
 import Text.XML.HXT.Arrow.Pickle.Xml

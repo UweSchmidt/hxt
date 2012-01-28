@@ -10,7 +10,7 @@
    Stability  : experimental
    Portability: portable
 
-   HXmlParser - Validating XML Parser of the Haskell XML Toolbox with XSLT support
+   HXmlParser - Validating XML Parser of the Haskell XML Toolbox
 
    XML well-formed checker and validator.
 
@@ -20,6 +20,7 @@
    commandline parameter evaluation and
    and return code is the most complicated part
    of this example application
+
 -}
 
 -- ------------------------------------------------------------
@@ -27,8 +28,13 @@
 module Main
 where
 
-import Text.XML.HXT.Core
-import Text.XML.HXT.XSLT               ( xsltApplyStylesheetFromURI )
+import Text.XML.HXT.Core                -- import all stuff for parsing, validating, and transforming XML
+import Text.XML.HXT.Cache               -- import cache stuff
+import Text.XML.HXT.TagSoup             -- import TagSoup parser
+import Text.XML.HXT.Curl                -- import curl HTTP handler
+import Text.XML.HXT.HTTP                -- import native HTTP handler
+import Text.XML.HXT.Expat               -- import expat parser
+import Text.XML.HXT.Arrow.XmlState.TypeDefs
 
 import System.IO                        -- import the IO and commandline option stuff
 import System.Environment
@@ -64,14 +70,13 @@ exitProg False  = exitWith ExitSuccess
 
 parser  :: SysConfigList -> String -> IOSArrow b Int
 parser config src
-    = configSysVars config                              -- set all global config options, the output file and all
-      >>>                                               -- other user options are stored as key-value pairs in the system state
-                                                        -- and can be referenced with "getSysAttr"
-      readDocument [] src                               -- no more special read options needed
+    = configSysVars config				-- set all global config options
+      >>>
+      readDocument [] src
       >>>
       ( ( traceMsg 1 "start processing document"
           >>>
-          ( processDocument $< getSysAttr "xslt" )      -- ask for the xslt schema to be applied
+          processDocument $< getSysAttr "action"
           >>>
           traceMsg 1 "document processing finished"
         )
@@ -83,17 +88,35 @@ parser config src
       >>>
       traceTree
       >>>
-      ( writeDocument [] $< getSysAttr "output-file" )  -- ask for the output file stored in the system configuration
+      ( ( writeDocument [] $< getSysAttr "output-file" )
+        `whenNot`
+        ( getSysAttr "no-output" >>> isA (== "1") )
+      )
       >>>
       getErrStatus
 
--- simple example of a processing arrow
+-- simple example of a processing arrow, selected by a command line option
 
 processDocument :: String -> IOSArrow XmlTree XmlTree
-processDocument xsltUri
-    = traceMsg 1 ("applying XSLT stylesheet " ++ show xsltUri)
+processDocument "only-text"
+    = traceMsg 1 "selecting plain text"
       >>>
-      xsltApplyStylesheetFromURI xsltUri
+      processChildren (deep isText)
+
+processDocument "indent"
+    = traceMsg 1 "indent document"
+      >>>
+      indentDoc
+
+processDocument "show-tree"
+    = traceMsg 1 "show-tree document"
+      >>>
+      writeDocument [withShowTree yes] ""
+
+processDocument _action
+    = traceMsg 1 "default action: do nothing"
+      >>>
+      this
 
 -- ------------------------------------------------------------
 --
@@ -102,16 +125,30 @@ processDocument xsltUri
 
 progName        :: String
 progName        = "HXmlParser"
-    
+
 options         :: [OptDescr SysConfig]
 options
     = generalOptions
       ++
       inputOptions
       ++
+      curlOptions
+      ++
+      httpOptions
+      ++
+      tagSoupOptions
+      ++
+      [ Option ""       ["use-expat"]   (NoArg $ withExpat True) "enable parsing with expat" ]
+      ++
+      [ Option ""       ["use-cache"]   (NoArg $ withCache "/tmp" 10 False) "use caching"
+      , Option ""       ["cache-age"]   (ReqArg (setS theDocumentAge . read) "AGE") "validity in seconds"
+      , Option ""       ["cache-dir"]   (ReqArg (setS theCacheDir) "DIR") "the cache directory"
+      ]
+      ++
       outputOptions
       ++
-      [ Option "" ["xslt"] (ReqArg (withSysAttr "xslt") "STYLESHEET") "STYLESHEET is the uri of the XSLT stylesheet to be applied"
+      [ Option "q"      ["no-output"]   (NoArg $ withSysAttr "no-output"    "1") "no output of resulting document"
+      , Option "x"      ["action"]      (ReqArg (withSysAttr "action") "ACTION") "actions are: only-text, indent, no-op"
       ]
       ++
       showOptions
@@ -127,18 +164,19 @@ usage errl
           hPutStrLn stderr (concat errl ++ "\n" ++ use)
           exitProg True
     where
-    header = "HXT XSLT Transformer\n\n" ++
+    header = "HXmlParser - Validating XML Parser of the Haskell XML Toolbox with Arrow Interface\n" ++
+             "XML well-formed checker, DTD validator, Relax NG validator.\n\n" ++
              "Usage: " ++ progName ++ " [OPTION...] [URI or FILE]"
     use    = usageInfo header options
 
 cmdlineOpts     :: [String] -> IO (SysConfigList, String)
 cmdlineOpts argv
     = case (getOpt Permute options argv) of
-      (ol,n,[])
+      (scfg,n,[])
           -> do
              sa <- src n
-             help (getConfigAttr a_help ol) sa
-             return (ol, sa)
+             help (getConfigAttr a_help scfg) sa
+             return (scfg, sa)
       (_,_,errs)
           -> usage errs
     where
@@ -146,8 +184,8 @@ cmdlineOpts argv
     src [uri]   = return uri
     src _       = usage ["only one input uri or file allowed\n"]
 
-    help "1" _     = usage []
-    help _  []     = usage ["no input uri or file given\n"]
-    help _  _      = return ()
+    help "1" _  = usage []
+    help _ []   = usage ["no input uri or file given\n"]
+    help _ _    = return ()
 
 -- ------------------------------------------------------------

@@ -89,7 +89,6 @@ Executable hxt-test
     CPP-Options: -Dxslt
 
   Build-depends: base             >= 4   && < 5,
-                 haskell98        >= 1   && < 2,
                  directory        >= 1   && < 2,
                  HUnit            >= 1.2 && < 2,
                  hxt              >= 9.1 && < 10

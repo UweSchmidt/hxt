@@ -49,6 +49,7 @@ module Text.XML.HXT.Arrow.Pickle
       -- from Text.XML.HXT.Arrow.Pickle.Xml
     , pickleDoc
     , unpickleDoc
+    , unpickleDoc'
     , showPickled
 
     , PU(..)
@@ -77,18 +78,25 @@ module Text.XML.HXT.Arrow.Pickle
     , xp24Tuple
 
     , xpAddFixedAttr
+    , xpAddNSDecl
     , xpAlt
     , xpAttr
-    , xpTextAttr
     , xpAttrFixed
     , xpAttrImplied
+    , xpAttrNS
+    , xpCheckEmpty
+    , xpCheckEmptyAttributes
+    , xpCheckEmptyContents
+    , xpTextAttr
     , xpChoice
-    , xpCondSeq
     , xpDefault
     , xpElem
+    , xpElemNS
     , xpElemWithAttrValue
     , xpickle
+    , xpInt
     , xpLift
+    , xpLiftEither
     , xpLiftMaybe
     , xpList
     , xpList1
@@ -96,7 +104,6 @@ module Text.XML.HXT.Arrow.Pickle
     , xpOption
     , xpPair
     , xpPrim
-    , xpInt
     , xpSeq
     , xpText
     , xpText0
@@ -107,6 +114,7 @@ module Text.XML.HXT.Arrow.Pickle
     , xpTriple
     , xpUnit
     , xpWrap
+    , xpWrapEither
     , xpWrapMaybe
     , xpXmlText
     , xpZero
@@ -117,8 +125,6 @@ module Text.XML.HXT.Arrow.Pickle
     , DataTypeDescr
     )
 where
-
-import           Data.Maybe
 
 import           Control.Arrow.ListArrows
 
@@ -233,13 +239,7 @@ checkPickler xp         = ( ( ( ( xpickleVal xp
                                   >>>
                                   readFromString [withValidate True]
                                   >>>
-                                  ( xunpickleVal xp
-                                    `orElse`
-                                    ( issueErr "unpickling the document failed"
-                                      >>>
-                                      none
-                                    )
-                                  )
+                                  xunpickleVal xp
                                 )
                                 &&&
                                 this
@@ -257,6 +257,7 @@ xpickleVal xp           = arr (pickleDoc xp)
 
 -- | The arrow version of the unpickler function
 
+{- old version, runs outside IO
 xunpickleVal            :: ArrowXml a => PU b -> a XmlTree b
 xunpickleVal xp         = ( processChildren (none `whenNot` isElem)     -- remove all stuff surrounding the root element
                             `when`
@@ -264,6 +265,23 @@ xunpickleVal xp         = ( processChildren (none `whenNot` isElem)     -- remov
                           )
                           >>>
                           arrL (maybeToList . unpickleDoc xp)
+-- -}
+
+xunpickleVal           :: PU b -> IOStateArrow s XmlTree b
+xunpickleVal xp        = ( processChildren (none `whenNot` isElem)     -- remove all stuff surrounding the root element
+                            `when`
+                            isRoot
+                          )
+                          >>>
+                          arr (unpickleDoc' xp)
+                          >>>
+                          ( ( (issueFatal $< arr ("document unpickling failed\n" ++))
+                              >>>
+                              none
+                            )
+                            |||
+                            this
+                          )
 
 -- | Compute the associated DTD of a pickler
 
