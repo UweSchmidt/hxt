@@ -1,4 +1,5 @@
 import Text.XML.HXT.Core
+import Text.XML.HXT.Curl
 
 import Data.Map (Map, elems, toList, empty, insert)
 
@@ -252,36 +253,53 @@ xpInclude :: PU Include
 xpInclude
   = xpAlt tag ps
     where
-    tag (Incl _)   = 0
-    tag (Imp _)    = 1
-    tag (Redef _)  = 2
+    tag (Incl _)  = 0
+    tag (Imp _)   = 1
+    tag (Redef _) = 2
     ps = [ xpElem' "include"  $ xpWrap (Incl,  unIncl)  $ xpAttr' "schemaLocation" xpText
          , xpElem' "import"   $ xpWrap (Imp,   unImp)   $ xpPair (xpAttr' "schemaLocation" xpText) (xpAttr' "namespace" xpText)
          , xpElem' "redefine" $ xpWrap (Redef, unRedef) $ xpPair (xpAttr' "schemaLocation" xpText) xpTrees
          ]
 
-loadXmlSchema :: IO XmlSchema
-loadXmlSchema
+loadXmlSchema :: String -> IO XmlSchema
+loadXmlSchema uri
   = do
-    s <- runX ( 
+    s' <- runX ( 
                 xunpickleDocument xpXmlSchema'
                                   [ withValidate yes        -- validate source
                                   , withTrace 1             -- trace processing steps
                                   , withRemoveWS yes        -- remove redundant whitespace
                                   , withPreserveComment no  -- keep comments
                                   , withCheckNamespaces yes -- check namespaces
-                                  ] "example.xsd"
-              )
-    return $ toSchema $ head s
+                                  , withCurl []             -- use libCurl for http access
+                                  ] uri
+               )
+    s <- return $ toSchema $ head s' -- TODO: remove includes from list? get includes inside resolveIncls
+    resolveIncls s $ sIncludes s
 
-storeXmlSchema :: XmlSchema -> IO ()
-storeXmlSchema s
+resolveIncls :: XmlSchema -> Includes -> IO XmlSchema
+resolveIncls s []     = return s
+resolveIncls s (x:xs) 
+  = do
+    incl <- resolveIncl x
+    resolveIncls (mergeSchemata s incl) xs
+
+resolveIncl :: Include -> IO XmlSchema
+resolveIncl (Incl loc)       = loadXmlSchema loc
+resolveIncl (Imp (loc, _))   = loadXmlSchema loc
+resolveIncl (Redef (loc, _)) = loadXmlSchema loc -- TODO: apply redefinitions
+
+mergeSchemata :: XmlSchema -> XmlSchema -> XmlSchema
+mergeSchemata a _ = a -- TODO: implement merge rules
+
+storeXmlSchema :: XmlSchema -> String -> IO ()
+storeXmlSchema s t
   = do
     _ <- runX ( constA (fromSchema s)
                 >>>
                 xpickleDocument   xpXmlSchema'
                                   [ withIndent yes          -- indent generated xml
-                                  ] "new-example.xsd"
+                                  ] t
               )
     return ()
 
@@ -289,13 +307,14 @@ main :: IO ()
 main
   = do
     putStrLn "\n--------------------------------------------- Pickling ---------------------------------------------\n"
-    xmlschema <- loadXmlSchema
+    -- xmlschema <- loadXmlSchema "http://dl.dropbox.com/u/22021340/example.xsd"
+    xmlschema <- loadXmlSchema "example.xsd"
     putStrLn "\n------------------------------------------- Simple Types -------------------------------------------"
     putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sSimpleTypes xmlschema
     putStrLn "------------------------------------------- Complex Types ------------------------------------------"
     putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sComplexTypes xmlschema
     putStrLn "--------------------------------------------- Elements ---------------------------------------------"
     putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sElements xmlschema
-    storeXmlSchema xmlschema
+    storeXmlSchema xmlschema "new-example.xsd"
     return ()
 

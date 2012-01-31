@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xs:targetNamespace="http://www.example.com/example">
 
   <!--
@@ -17,26 +17,6 @@
                       xs:attributeGroup) | xs:element | xs:attribute |
                       xs:notation), xs:annotation*)*)
    </xs:schema>
-  -->
-
-  <!-- base types -->
-
-  <!--
-   Vordefinierte Typen (unvollständig):
-
-   xs:string
-   xs:decimal
-   xs:integer
-   xs:float
-   xs:boolean
-   xs:date
-   xs:time
-
-   QName: Qualified Name, global eindeutiger Bezeichner, einzelne NCNames werden mittels Punkt (.) zu einem QName zusammengesetzt.
-   anyURI: Uniform Resource Identifier (URI)
-   language: Sprachbezeichnung, z. B. de-DE, en-US, fr
-   ID: Identifikationsattribut innerhalb von XML-Elementen
-   IDREF: Referenz auf einen ID-Wert
   -->
 
   <!-- simple types (restrictions) -->
@@ -422,7 +402,7 @@
 
   <!-- includes / imports / redefines -->
 
-  <xs:include xs:schemaLocation="http://www.example.com/schemata/harddisk.xsd"/>
+  <xs:include xs:schemaLocation="incl.xsd"/>
   <!--
    targetNamespace des harddisk.xsd muss mit dem des inkludierenden Schemas übereinstimmen.
 
@@ -444,7 +424,8 @@
 
   -->
 
-  <xs:import xs:namespace="http://dyomedea.com/ns/people" xs:schemaLocation="simple-2-ns-ppl.xsd"/>
+  <xs:import xs:namespace="http://dyomedea.com/ns/people" xs:schemaLocation="incl.xsd"/>
+  <!-- xs:schemaLocation="simple-2-ns-ppl.xsd" -->
   <!--
    TODO:
    <xs:import
@@ -469,7 +450,7 @@
 
   -->
 
-  <xs:redefine xs:schemaLocation="http://www.example.com/schemata/harddisk.xsd">
+  <xs:redefine xs:schemaLocation="incl.xsd">
     <xs:complexType xs:name="Hersteller">
       <xs:complexContent>
         <xs:restriction xs:base="pcTeile:Hersteller">
