@@ -107,7 +107,7 @@ xpElem' :: String -> PU a -> PU a
 xpElem' = xpElemNS nsUri nsPrefix
 
 xpAttr' :: String -> PU a -> PU a
-xpAttr' = xpAttrNS nsUri nsPrefix
+xpAttr' = xpAttr -- xpAttrNS nsUri nsPrefix
 
 -- Conversion between Schema and Schema'
 

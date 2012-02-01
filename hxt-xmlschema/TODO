@@ -1,9 +1,30 @@
 Eigener data-Typ statt Paar in Typdefinitionen?
 newtype, konstruktor, xpWrap
 
-Bei NS handling: default NS falls keine Angabe xs: ?
+xpFilterAttr Input: Filter-Arrow, Attribute mit NS != xs rauswerfen
+xpElem' pa = xpElem ns prefix (xpFilterAttr defaultns pa)
 
----------------------------------------------------------------------------
+Real World Haskell Monaden-Kapitel
+transf :: (Monad IO m) => XmlSchema -> m XmlSchema
+t1 >>= t2 >>= t3
+t1 = IO, Writer, Err, Reader
+newtype SM a = SM {unSM : IO a}
+Monad Transformer
+
+anonyme Typen transf. mit Writer Monade?
+simple Types ebenfalls
+
+Validieren mit Reader, der Schema als Konfiguration enthält
+Fehlermeldungen mit Writer: XPath Ausdruck merken und ausgeben
+
+Postprozess: mit XPath durch Dokument gehen und Kommentare erzeugen
+Fehlermeldung als Kommentarknoten in zu prüfendes Dokument einhängen mit Tag
+
+HUnit + Testfälle einbauen
+
+--------------------------------------------------------------------------
+
+Annotationen wegwerfen beim picklen
 
 Wrapper für Annotations (Funktor):
 data Annotation a = Ann { c   :: a
@@ -19,3 +40,9 @@ instance Funktor [] where
 fmap = map
 
 map :: (a -> b) -> [a] -> [b]
+
+-------------------------------------------------------------------------
+
+Arbeit englisch
+Haskell 2 LateX Konverter: h2l, hs2l
+Andres Löh, Ralf Hinze
