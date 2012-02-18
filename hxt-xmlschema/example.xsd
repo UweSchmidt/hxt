@@ -182,6 +182,10 @@
                     (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
      </xs:restriction>
 
+     treatment to perform on whitespace: #x20 (space), #x9 (tab), #xA (linefeed), and #xD (carriage return)
+     preserve (whitespace characters are kept unchanged),
+     replace (all instances of whitespace are replaced with a space),
+     collapse (leading and trailing whitespace is removed, the rest is treated like replace)
      <xs:whiteSpace
            fixed          = xs:boolean : "false"
            id             = xs:ID
@@ -308,6 +312,7 @@
   <xs:complexType name="set">
     <xs:all>
       <!--
+       "unordered group of elements"
        xs:all: Mittels des xs:all-Tags lässt sich eine Gruppe von Kindelementen definieren,
        von denen jedes maximal einmal auftreten darf (min- und maxOccurs der Kindelemente dürfen nur die Werte 0 oder 1 annehmen).
        Die Reihenfolge der Elemente ist beliebig.
@@ -505,29 +510,20 @@
                     )*
    </xs:redefine>
 
-   xs:redefine is similar to xs:include with one exception: the definition of simple and complex types and attribute and element groups can be changed.
-   Changes performed on these components must lead to     components that are valid restrictions or extensions of the original ones.
+   xs:redefine is similar to xs:include with one exception:
+   the definition of simple and complex types and attribute and element groups can be changed.
+   Changes performed on these components must lead to components that are valid restrictions or extensions of the original ones.
+
+   the new types must be defined as derivations by restriction or extension of their previous definition,
+   which is considered to be the base type.
+
+   Element and attribute groups are redefined by giving a new definition,
+   and may refer to themselves to indicate that the content of their original definition must be included.
+   In this case, this self-reference is not considered a recursive definition, but an extension of the original group.
+
   -->
 
   <!-- MISSING ELEMENTS:
-
-<xs:annotation
-           id          = xs:ID
-           Content: ( xs:appinfo
-                    | xs:documentation
-                    )*
-</xs:annotation>
-
-<xs:appinfo
-           source          = xs:anyURI
-           Content: *
-</xs:appinfo>
-
-<xs:documentation
-           source            = xs:anyURI
-           xml:lang          = xml:lang
-           Content: *
-</xs:documentation>
 
 globale definition (kann über ref-Attribut referenziert werden):
 <xs:attribute
@@ -537,7 +533,7 @@ globale definition (kann über ref-Attribut referenziert werden):
            name           = xs:NCName
            type           = xs:QName
            Content: xs:annotation?,
-                    xs:simpleType?
+                    xs:simpleType? nur wenn nicht type-Attribut definiert
 </xs:attribute>
 
 lokale definition:
@@ -547,11 +543,11 @@ lokale definition:
            form           = ( "qualified" | "unqualified" )
            id             = xs:ID
            name           = xs:NCName
-           ref            = xs:QName
-           type           = xs:QName
+           ref            = xs:QName 
+           type           = xs:QName nur wenn nicht ref-Attribut definiert
            use            = ( "prohibited" | "optional" | "required" ) : "optional"
            Content: (xs:annotation?),
-                    (xs:simpleType?)
+                    (xs:simpleType?) nur wenn nicht ref-Attribut definiert und nur wenn nicht type-Attribut definiert
 </xs:attribute>
 
 globale definition:
@@ -562,7 +558,7 @@ globale definition:
                     (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
 </xs:attributeGroup>
 
-lokale definition:
+referenz (lokal):
 <xs:attributeGroup
            id           = xs:ID
            ref          = xs:QName
@@ -699,5 +695,31 @@ It is not a component by itself (simple contents are not named) but rather decla
            Content: xs:annotation?
    </xs:selector>
   -->
+
+<!--
+
+IRRELEVANTE ELEMENTE (rausfiltern):
+
+<xs:annotation
+           id          = xs:ID
+           Content: ( xs:appinfo
+                    | xs:documentation
+                    )*
+</xs:annotation>
+
+(nur innerhalb von annotation)
+<xs:appinfo
+           source          = xs:anyURI
+           Content: *
+</xs:appinfo>
+
+(nur innerhalb von annotation)
+<xs:documentation
+           source            = xs:anyURI
+           xml:lang          = xml:lang
+           Content: *
+</xs:documentation>
+
+-->
 
 </xs:schema>

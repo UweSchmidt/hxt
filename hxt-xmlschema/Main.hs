@@ -281,10 +281,14 @@ resolveIncls s (x:xs)
     incl <- resolveIncl x
     resolveIncls (mergeSchemata s incl) xs
 
+-- TODO: It is no error, if the referenced schema cannot be loaded
+-- TODO: Not resolving the same include multiple times (allowed in XML Schema)
 resolveIncl :: Include -> IO XmlSchema
-resolveIncl (Incl loc)       = loadXmlSchema loc
-resolveIncl (Imp (loc, _))   = loadXmlSchema loc
-resolveIncl (Redef (loc, _)) = loadXmlSchema loc -- TODO: apply redefinitions
+resolveIncl (Incl loc)       = loadXmlSchema loc -- Inclusion of a schema for the same target namespace (or which has no namespace -> conversion to including document's targetNamespace if it has one)
+resolveIncl (Imp (loc, _))   = loadXmlSchema loc -- Nothing to do: Import of a schema for another target namespace (or which has no namespace -> conversion to including document's targetNamespace if it has one)
+resolveIncl (Redef (loc, _)) = loadXmlSchema loc -- Same as include but TODO: apply redefinitions
+-- It's not an error to have two elements in the same symbol space, provided they have the same type.
+-- However, if they have a different type then it is an error, i.e., name collision.
 
 mergeSchemata :: XmlSchema -> XmlSchema -> XmlSchema
 mergeSchemata a _ = a -- TODO: implement merge rules
