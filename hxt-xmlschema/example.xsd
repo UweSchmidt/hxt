@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xs:targetNamespace="http://www.example.com/example">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.example.com/example">
   <!-- xmlns="...." default ns wirkt nur auf Elemente -->
   <!--
    TODO:
@@ -12,10 +12,12 @@
            targetNamespace      = xs:anyURI
            version              = xs:token
            xml:lang             = xml:lang
-           Content: ((xs:include | xs:import | xs:redefine | xs:annotation)*, (,
-                      ( | (xs:simpleType | xs:complexType | xs:group |
-                      xs:attributeGroup) | xs:element | xs:attribute |
-                      xs:notation), xs:annotation*)*)
+           Content: ( xs:annotation 
+                    | xs:include | xs:import | xs:redefine 
+                    | xs:simpleType | xs:complexType | xs:element
+                    | xs:attribute | xs:notation
+                    | xs:group | xs:attributeGroup
+                    )*
    </xs:schema>
   -->
 
@@ -27,15 +29,15 @@
            final         = ( "#all" | ( "list" | "union" | "restriction" ) ), nur wenn globale Definition
            id            = xs:ID
            name          = xs:NCName, nur wenn globale Definition
-           Content: (xs:annotation?, (xs:restriction | xs:list | xs:union))
+           Content: xs:annotation?,
+                    (xs:restriction | xs:list | xs:union)
    </xs:simpleType>
   -->
 
-
-  <xs:simpleType xs:name="monatInt">
-    <xs:restriction xs:base="xs:integer">
-      <xs:minInclusive xs:value="1"/>
-      <xs:maxInclusive xs:value="12"/>
+  <xs:simpleType name="monatInt">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="1"/>
+      <xs:maxInclusive value="12"/>
       <!--
        TODO:
 
@@ -43,161 +45,175 @@
            fixed          = xs:boolean : "false"
            id             = xs:ID
            value          = anySimpleType
-           Content: (xs:annotation?)
+           Content: xs:annotation?
        </xs:minInclusive>
 
        <xs:minExclusive
            fixed          = xs:boolean : "false"
            id             = xs:ID
            value          = anySimpleType
-           Content: (xs:annotation?)
+           Content: xs:annotation?
        </xs:minExclusive>
 
        <xs:maxExclusive
            fixed          = xs:boolean : "false"
            id             = xs:ID
            value          = anySimpleType
-           Content: (xs:annotation?)
+           Content: xs:annotation?
        </xs:maxExclusive>
 
        <xs:maxInclusive
            fixed          = xs:boolean : "false"
            id             = xs:ID
            value          = anySimpleType
-           Content: (xs:annotation?)
+           Content: xs:annotation?
        </xs:maxInclusive>
       -->
     </xs:restriction>
   </xs:simpleType>
 
-  <xs:simpleType xs:name="celsiusKörperTemp">
-    <xs:restriction xs:base="xs:decimal">
+  <xs:simpleType name="celsiusKörperTemp">
+    <xs:restriction base="xs:decimal">
       <!--
        TODO:
        <xs:totalDigits
            fixed          = xs:boolean : "false"
            id             = xs:ID
            value          = xs:positiveInteger
-           Content: (xs:annotation?)
+           Content: xs:annotation?
        </xs:totalDigits>
       -->
-      <xs:totalDigits xs:value="3"/>
+      <xs:totalDigits value="3"/>
       <!--
        TODO:
        <xs:fractionDigits
            fixed          = xs:boolean : "false"
            id             = xs:ID
            value          = xs:nonNegativeInteger
-           Content: (xs:annotation?)
+           Content: xs:annotation?
        </xs:fractionDigits>
       -->
-      <xs:fractionDigits xs:value="1"/>
+      <xs:fractionDigits value="1"/>
     </xs:restriction>
   </xs:simpleType>
 
-  <xs:simpleType xs:name="monatsname">
-    <xs:restriction xs:base="xs:string">
+  <xs:simpleType name="monatsname">
+    <xs:restriction base="xs:string">
       <!--
        TODO:
        <xs:enumeration
            id             = xs:ID
            value          = anySimpleType
-           Content: (xs:annotation?)
+           Content: xs:annotation?
        </xs:enumeration>
       -->
-      <xs:enumeration xs:value="Jan"/>
-      <xs:enumeration xs:value="Feb"/>
-      <xs:enumeration xs:value="Mär"/>
-      <xs:enumeration xs:value="Apr"/>
-      <xs:enumeration xs:value="Mai"/>
-      <xs:enumeration xs:value="Jun"/>
-      <xs:enumeration xs:value="Jul"/>
-      <xs:enumeration xs:value="Aug"/>
-      <xs:enumeration xs:value="Sep"/>
-      <xs:enumeration xs:value="Okt"/>
-      <xs:enumeration xs:value="Nov"/>
-      <xs:enumeration xs:value="Dez"/>
+      <xs:enumeration value="Jan"/>
+      <xs:enumeration value="Feb"/>
+      <xs:enumeration value="Mär"/>
+      <xs:enumeration value="Apr"/>
+      <xs:enumeration value="Mai"/>
+      <xs:enumeration value="Jun"/>
+      <xs:enumeration value="Jul"/>
+      <xs:enumeration value="Aug"/>
+      <xs:enumeration value="Sep"/>
+      <xs:enumeration value="Okt"/>
+      <xs:enumeration value="Nov"/>
+      <xs:enumeration value="Dez"/>
     </xs:restriction>
   </xs:simpleType>
 
-  <xs:simpleType xs:name="plz">
-    <xs:restriction xs:base="xs:string">
-      <xs:pattern xs:value="(D )?[0-9]{5}"/>
+  <xs:simpleType name="plz">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="(D )?[0-9]{5}"/>
       <!--
        <xs:pattern
            id             = xs:ID
            value          = anySimpleType
-           Content: (xs:annotation?)
+           Content: xs:annotation?
        </xs:pattern>
       -->
     </xs:restriction>
   </xs:simpleType>
 
-  <xs:simpleType xs:name="password">
+  <xs:simpleType name="password">
     <!--
      TODO:
+
+     In simpleType (local oder global):
      <xs:restriction
-           base          = xs:QName
+           base          = xs:QName only allowed if no nested simpleType
            id            = xs:ID
-           Content: ((xs:annotation?), (xs:simpleType?, (xs:minExclusive |
-                      xs:minInclusive | xs:maxExclusive | xs:maxInclusive |
-                      xs:totalDigits | xs:fractionDigits | xs:length |
-                      xs:minLength | xs:maxLength | xs:enumeration |
-                      xs:whiteSpace | xs:pattern)*))
+           Content: xs:annotation?,
+                    xs:simpleType?,
+                    ( xs:minExclusive | xs:minInclusive | xs:maxExclusive | xs:maxInclusive
+                    | xs:totalDigits | xs:fractionDigits
+                    | xs:length | xs:minLength | xs:maxLength
+                    | xs:enumeration
+                    | xs:pattern
+                    | xs:whiteSpace
+                    )*
      </xs:restriction>
 
-     In xs:simpleContent:
+     In xs:simpleContent (inside ComplexType Def):
+     "allows the addition of new constraints to both the attributes and the text node"
+     text node: like in simpleType restrictions
+     attributes: list of modified attribute definitions or references (must be derivations of original attribute definitions / types)
      <xs:restriction
-           base          = xs:QName
+           base          = xs:QName only allowed if no nested simpleType
            id            = xs:ID
-           Content: (xs:annotation?, (xs:simpleType?, (xs:minExclusive |
-                      xs:minInclusive | xs:maxExclusive | xs:maxInclusive |
-                      xs:totalDigits | xs:fractionDigits | xs:length |
-                      xs:minLength | xs:maxLength | xs:enumeration | xs:whiteSpace |
-                      xs:pattern)*)?, ((xs:attribute | xs:attributeGroup)*,
-                      xs:anyAttribute?))
+           Content: xs:annotation?,
+                    xs:simpleType?,
+                    ( xs:minExclusive | xs:minInclusive | xs:maxExclusive | xs:maxInclusive
+                    | xs:totalDigits | xs:fractionDigits
+                    | xs:length | xs:minLength | xs:maxLength
+                    | xs:enumeration
+                    | xs:pattern
+                    | xs:whiteSpace
+                    )*,
+                    (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
      </xs:restriction>
 
-     In xs:complexContent:
+     In xs:complexContent (inside ComplexType Def):
      <xs:restriction
            base          = xs:QName
            id            = xs:ID
-           Content: (xs:annotation?, (xs:group | xs:all | xs:choice | xs:sequence)?,
-                      ((xs:attribute | xs:attributeGroup)*, xs:anyAttribute?))
+           Content: xs:annotation?,
+                    (xs:group | xs:all | xs:choice | xs:sequence)?,
+                    (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
      </xs:restriction>
 
      <xs:whiteSpace
            fixed          = xs:boolean : "false"
            id             = xs:ID
            value          = ( "preserve" | "replace" | "collapse" )
-           Content: (xs:annotation?)
+           Content: xs:annotation?
      </xs:whiteSpace>
 
     -->
-    <xs:restriction xs:base="xs:string">
-      <xs:minLength xs:value="5"/>
-      <xs:maxLength xs:value="30"/>
+    <xs:restriction base="xs:string">
+      <xs:minLength value="5"/>
+      <xs:maxLength value="30"/>
       <!--
        TODO:
        <xs:length
            fixed          = xs:boolean : "false"
            id             = xs:ID
            value          = xs:nonNegativeInteger
-           Content: (xs:annotation?)
+           Content: xs:annotation?
        </xs:length>
 
        <xs:minLength
            fixed          = xs:boolean : "false"
            id             = xs:ID
            value          = xs:nonNegativeInteger
-           Content: (xs:annotation?)
+           Content: xs:annotation?
        </xs:minLength>
 
        <xs:maxLength
            fixed          = xs:boolean : "false"
            id             = xs:ID
            value          = xs:nonNegativeInteger
-           Content: (xs:annotation?)
+           Content: xs:annotation?
        </xs:maxLength>
       -->
     </xs:restriction>
@@ -205,31 +221,33 @@
 
   <!-- simple types (list / union) -->
 
-  <xs:simpleType xs:name="monate">
-    <xs:list xs:itemType="monatInt"/>
+  <xs:simpleType name="monate">
+    <xs:list itemType="monatInt"/>
     <!--
      TODO:
      <xs:list
            id               = xs:ID
-           itemType         = xs:QName
-           Content: ((xs:annotation?), (xs:simpleType?))
+           itemType         = xs:QName only allowed if no nested simpleType
+           Content: xs:annotation?,
+                    xs:simpleType?
      </xs:list> 
     -->
   </xs:simpleType>
 
-  <xs:simpleType xs:name="monat">
+  <xs:simpleType name="monat">
     <!--
      TODO:
      <xs:union
            id          = xs:ID
-           memberTypes = list of xs:QName
-           Content: ((xs:annotation?), (xs:simpleType*))
+           memberTypes = list of xs:QName can be mixed with nested simpleTypes, delimiter: space
+           Content: xs:annotation?,
+                    xs:simpleType*
      </xs:union>
     -->
-    <xs:union xs:memberTypes="monatsname monatInt"/>
+    <xs:union memberTypes="monatsname monatInt"/>
   </xs:simpleType>
 
-  <!-- complex types (sequence, choice, all) -->
+  <!-- complex types (sequence, choice, all TODO: group) -->
 
   <!--
    TODO:
@@ -240,35 +258,40 @@
            id             = xs:ID
            mixed          = xs:boolean : "false"
            name           = xs:NCName, nur wenn globale Definition
-           Content: (xs:annotation?, (xs:simpleContent | xs:complexContent | (, (xs:group | xs:all | xs:choice | xs:sequence)?, ((xs:attribute | xs:attributeGroup)*, xs:anyAttribute? ?))))
+           Content: xs:annotation?,
+                    ( xs:simpleContent
+                    | xs:complexContent
+                    | (xs:group | xs:all | xs:choice | xs:sequence)?, (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
+                    )
    </xs:complexType>
   -->
 
-  <xs:complexType xs:name="pc-Typ">
+  <xs:complexType name="pc-Typ">
     <!--
      TODO:
-      <xs:sequence
+     <xs:sequence
            id                 = xs:ID
            maxOccurs          = ( xs:nonNegativeInteger | "unbounded" ) : "1", außer wenn Unterelement von xs:group.
            minOccurs          = xs:nonNegativeInteger : "1", außer wenn Unterelement von xs:group.
-           Content: (xs:annotation?, (xs:element | xs:group | xs:choice | xs:sequence | xs:any) )*)
+           Content: xs:annotation?,
+                    (xs:element | xs:group | xs:choice | xs:sequence | xs:any)*
      </xs:sequence>
     -->
 
     <xs:sequence>
-      <xs:element xs:name="name" xs:type="xs:string"/>
-      <xs:element xs:name="hersteller" xs:type="xs:string"/>
-      <xs:element xs:name="prozessor" xs:type="xs:string"/>
-      <xs:element xs:name="mhz" xs:type="xs:integer" xs:minOccurs="0"/>
-      <xs:element xs:name="kommentar" xs:type="xs:string" xs:minOccurs="0" xs:maxOccurs="unbounded"/>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="hersteller" type="xs:string"/>
+      <xs:element name="prozessor" type="xs:string"/>
+      <xs:element name="mhz" type="xs:integer" minOccurs="0"/>
+      <xs:element name="kommentar" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
-    <xs:attribute xs:name="id" xs:type="xs:integer"/>
+    <xs:attribute name="id" type="xs:integer"/>
   </xs:complexType>
 
-  <xs:complexType xs:name="computer">
+  <xs:complexType name="computer">
     <xs:choice>
-      <xs:element xs:name="desktop" xs:type="pc-Typ"/>
-      <xs:element xs:name="laptop" xs:type="pc-Typ"/>
+      <xs:element name="desktop" type="pc-Typ"/>
+      <xs:element name="laptop" type="pc-Typ"/>
     </xs:choice>
     <!--
      TODO:
@@ -276,12 +299,13 @@
            id                 = xs:ID
            maxOccurs          = ( xs:nonNegativeInteger | "unbounded" ) : "1", außer wenn Unterelement von xs:group.
            minOccurs          = xs:nonNegativeInteger : "1", außer wenn Unterelement von xs:group.
-           Content: (xs:annotation?, (xs:element | xs:group | xs:choice | xs:sequence | xs:any) )*)
+           Content: xs:annotation?,
+                    (xs:element | xs:group | xs:choice | xs:sequence | xs:any)*
      </xs:choice>
     -->
   </xs:complexType>
 
-  <xs:complexType xs:name="set">
+  <xs:complexType name="set">
     <xs:all>
       <!--
        xs:all: Mittels des xs:all-Tags lässt sich eine Gruppe von Kindelementen definieren,
@@ -292,59 +316,66 @@
            id                 = xs:ID
            maxOccurs          = "1" : "1", außer wenn Unterelement von xs:group.
            minOccurs          = ( "0" | "1" ) : "1", außer wenn Unterelement von xs:group.
-           Content: (xs:annotation?, xs:element*)
+           Content: xs:annotation?,
+                    xs:element*
        </xs:all>
       -->
-      <xs:element xs:name="first" xs:type="string32" xs:minOccurs="0"/>
-      <xs:element xs:name="middle" xs:type="string32" xs:minOccurs="0"/>
-      <xs:element xs:name="last" xs:type="string32"/>
+      <xs:element name="first" type="xs:string32" minOccurs="0"/>
+      <xs:element name="middle" type="xs:string32" minOccurs="0"/>
+      <xs:element name="last" type="xs:string32"/>
     </xs:all>
   </xs:complexType>
 
   <!-- complex types (extension / restriction) -->
 
-  <xs:complexType xs:name="myPC-Typ">
+  <xs:complexType name="myPC-Typ">
     <xs:complexContent>
       <!--
        TODO:
        <xs:complexContent
            id             = xs:ID
            mixed          = xs:boolean
-           Content: ((xs:annotation?), (xs:restriction | xs:extension))
+           Content: xs:annotation?,
+                    (xs:restriction | xs:extension)
        </xs:complexContent>
 
-       Innerhalb von xs:simpleContent
+       Extension:
+
+       Innerhalb von xs:simpleContent: new attributes for the simple base type
        <xs:extension
            base          = xs:QName
            id            = xs:ID
-           Content: (xs:annotation?, ((xs:attribute | xs:attributeGroup)*, xs:anyAttribute?))
+           Content: xs:annotation?,
+                    (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
        </xs:extension>
 
-       Innerhalb von xs:complexContent
+       Innerhalb von xs:complexContent: new attributes and child elements for the complex base type
        <xs:extension
            base          = xs:QName
            id            = xs:ID
-           Content: ((xs:annotation?), (, (xs:group | xs:all | xs:choice | xs:sequence)?, ((xs:attribute | xs:attributeGroup)*, xs:anyAttribute?)))
+           Content: xs:annotation?,
+                    (xs:group | xs:all | xs:choice | xs:sequence)?,
+                    (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
        </xs:extension>
 
       -->
-      <xs:extension xs:base="pc-Typ">
+      <xs:extension base="pc-Typ">
         <xs:sequence>
-          <xs:element xs:name="ram" xs:type="xs:integer"/>
+          <xs:element name="ram" type="xs:integer"/>
         </xs:sequence>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
 
-  <xs:complexType xs:name="myPC-Typ2">
+  <xs:complexType name="myPC-Typ2">
     <xs:complexContent>
-      <xs:restriction xs:base="pc-Typ">
+      <xs:restriction base="pc-Typ">
         <xs:sequence>
-          <xs:element xs:name="name" xs:type="xs:string"/>
-          <xs:element xs:name="hersteller" xs:type="xs:string"/>
-          <xs:element xs:name="prozessor" xs:type="xs:string"/>
-          <xs:element xs:name="mhz" xs:type="xs:integer" xs:minOccurs="0"/>
-          <xs:element xs:name="kommentar" xs:type="xs:string" xs:minOccurs="0" xs:maxOccurs="1"/>
+          <xs:element name="name" type="xs:string"/>
+          <xs:element name="hersteller" type="xs:string"/>
+          <xs:element name="prozessor" type="xs:string"/>
+          <xs:element name="mhz" type="xs:integer" minOccurs="0"/>
+          <xs:element name="kommentar" type="xs:string" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
       </xs:restriction>
     </xs:complexContent>
@@ -366,43 +397,45 @@
            default           = xs:string
            final             = ( "#all" | list of ( "extension" | "restriction" ) ), nur wenn globale definition
            fixed             = xs:string
-           form          = ( "qualified" | "unqualified" ), nicht wenn globale definition
+           form              = ( "qualified" | "unqualified" ), nicht wenn globale definition
            id                = xs:ID
-           maxOccurs     = ( "0" | "1" ) : "1", nicht wenn globale definition
-           minOccurs     = ( "0" | "1" ) : "1", nicht wenn globale definition
+           maxOccurs         = ( "0" | "1" ) : "1", nicht wenn globale definition
+           minOccurs         = ( "0" | "1" ) : "1", nicht wenn globale definition
            name              = xs:NCName
            nillable          = xs:boolean : "false"
-           ref           = xs:QName, nicht wenn globale definition
+           ref               = xs:QName, nicht wenn globale definition
            substitutionGroup = xs:QName, nur wenn globale definition
-           type              = xs:QName
-           Content: (xs:annotation?, (xs:simpleType | xs:complexType)?, (xs:unique | xs:key | xs:keyref)*)
+           type              = xs:QName, nur, wenn keine nested definition
+           Content: xs:annotation?,
+                    (xs:simpleType | xs:complexType)?,
+                    (xs:unique | xs:key | xs:keyref)*
    </xs:element>
   -->
 
   <!-- type references -->
 
-  <xs:element xs:name="head">
+  <xs:element name="head">
     <xs:complexType>
       <xs:sequence>
-        <xs:element xs:name="title" xs:type="xs:string"/>
+        <xs:element name="title" type="xs:string"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
 
   <!-- element references -->
 
-  <xs:element xs:name="html">
+  <xs:element name="html">
     <xs:complexType>
       <xs:sequence>
-        <xs:element xs:ref="head"/>
-        <xs:element xs:name="body" xs:type="xs:string"/>
+        <xs:element ref="head"/>
+        <xs:element name="body" type="xs:string"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
 
   <!-- includes / imports / redefines -->
 
-  <xs:include xs:schemaLocation="incl.xsd"/>
+  <xs:include schemaLocation="incl.xsd"/>
   <!--
    targetNamespace des harddisk.xsd muss mit dem des inkludierenden Schemas übereinstimmen.
 
@@ -410,7 +443,7 @@
    <xs:include
            id             = xs:ID
            schemaLocation = xs:anyURI
-           Content: (xs:annotation?)
+           Content: xs:annotation?
    </xs:include>
 
    xs:include performs a straight inclusion of a schema within another schema that describes the same target namespace.
@@ -424,7 +457,7 @@
 
   -->
 
-  <xs:import xs:namespace="http://dyomedea.com/ns/people" xs:schemaLocation="incl.xsd"/>
+  <xs:import namespace="http://dyomedea.com/ns/people" schemaLocation="incl.xsd"/>
   <!-- xs:schemaLocation="simple-2-ns-ppl.xsd" -->
   <!--
    TODO:
@@ -432,7 +465,7 @@
            id               = xs:ID
            namespace        = xs:anyURI
            schemaLocation   = xs:anyURI
-           Content: (xs:annotation?)
+           Content: xs:annotation?
    </xs:import>
 
    All the global definitions (elements, attributes, element and attribute groups, simple and complex types) and unique and key constraints
@@ -450,12 +483,12 @@
 
   -->
 
-  <xs:redefine xs:schemaLocation="incl.xsd">
-    <xs:complexType xs:name="Hersteller">
+  <xs:redefine schemaLocation="incl.xsd">
+    <xs:complexType name="Hersteller">
       <xs:complexContent>
-        <xs:restriction xs:base="pcTeile:Hersteller">
+        <xs:restriction base="pcTeile:Hersteller">
           <xs:sequence>
-            <xs:element xs:name="hersteller" xs:type="string" xs:minOccurs="10" xs:maxOccurs="10"/>
+            <xs:element name="hersteller" type="xs:string" minOccurs="10" maxOccurs="10"/>
           </xs:sequence>
         </xs:restriction>
       </xs:complexContent>
@@ -467,7 +500,9 @@
    <xs:redefine
            id             = xs:ID
            schemaLocation = xs:anyURI
-           Content: (xs:annotation | (xs:simpleType | xs:complexType | xs:group | xs:attributeGroup))*
+           Content: ( xs:annotation
+                    | xs:simpleType | xs:complexType | xs:group | xs:attributeGroup
+                    )*
    </xs:redefine>
 
    xs:redefine is similar to xs:include with one exception: the definition of simple and complex types and attribute and element groups can be changed.
@@ -478,18 +513,20 @@
 
 <xs:annotation
            id          = xs:ID
-           Content: (xs:appinfo | xs:documentation)*
+           Content: ( xs:appinfo
+                    | xs:documentation
+                    )*
 </xs:annotation>
 
 <xs:appinfo
            source          = xs:anyURI
-           Content: ({any})*
+           Content: *
 </xs:appinfo>
 
 <xs:documentation
            source            = xs:anyURI
            xml:lang          = xml:lang
-           Content: ({any})*
+           Content: *
 </xs:documentation>
 
 globale definition (kann über ref-Attribut referenziert werden):
@@ -499,7 +536,8 @@ globale definition (kann über ref-Attribut referenziert werden):
            id             = xs:ID
            name           = xs:NCName
            type           = xs:QName
-           Content: (xs:annotation?, xs:simpleType?)
+           Content: xs:annotation?,
+                    xs:simpleType?
 </xs:attribute>
 
 lokale definition:
@@ -512,27 +550,30 @@ lokale definition:
            ref            = xs:QName
            type           = xs:QName
            use            = ( "prohibited" | "optional" | "required" ) : "optional"
-           Content: ((xs:annotation?), (xs:simpleType?))
+           Content: (xs:annotation?),
+                    (xs:simpleType?)
 </xs:attribute>
 
 globale definition:
 <xs:attributeGroup
            id            = xs:ID
            name          = xs:NCName
-           Content: (xs:annotation?, ((xs:attribute | xs:attributeGroup)*, xs:anyAttribute?))
+           Content: xs:annotation?,
+                    (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
 </xs:attributeGroup>
 
 lokale definition:
 <xs:attributeGroup
            id           = xs:ID
            ref          = xs:QName
-           Content: (xs:annotation?)
+           Content: xs:annotation?
 </xs:attributeGroup>
 
 globale Definition:
 <xs:group
            name               = xs:NCName
-           Content: (xs:annotation?, (xs:all | xs:choice | xs:sequence))
+           Content: xs:annotation?,
+                    (xs:all | xs:choice | xs:sequence)
 </xs:group>
 
 lokale Definition:
@@ -541,12 +582,13 @@ lokale Definition:
            maxOccurs   = ( xs:nonNegativeInteger | "unbounded" ) : "1"
            minOccurs   = xs:nonNegativeInteger : "1"
            ref         = xs:QName
-           Content: (xs:annotation?)
+           Content: xs:annotation?
 </xs:group>
 
 <xs:simpleContent
            id          = xs:ID
-           Content: ((xs:annotation?), (xs:restriction | xs:extension))
+           Content: xs:annotation?,
+                    (xs:restriction | xs:extension)
 </xs:simpleContent>
 
 This element allows the definition of a simple content model by derivation of a simple type or of another simple content complex type.
@@ -568,14 +610,14 @@ It is not a component by itself (simple contents are not named) but rather decla
            minOccurs          = xs:nonNegativeInteger : "1"
            namespace          = ( ( "##any" | "##other" ) | list of ( xs:anyURI | ( "##targetNamespace" | "##local" ) ) ) : "##any"
            processContents    = ( "skip" | "lax" | "strict" ) : "strict"
-           Content: (xs:annotation?)
+           Content: xs:annotation?
 </xs:any>
 
 <xs:anyAttribute
            id                 = xs:ID
            namespace          = ( ( "##any" | "##other" ) | list of ( xs:anyURI | ( "##targetNamespace" | "##local" ) ) ) : "##any"
            processContents    = ( "skip" | "lax" | "strict" ) : "strict"
-           Content: (xs:annotation?)
+           Content: xs:annotation?
 </xs:anyAttribute>
 
 <xs:notation
@@ -583,7 +625,7 @@ It is not a component by itself (simple contents are not named) but rather decla
            name          = xs:NCName
            public        = xs:token
            system        = xs:anyURI
-           Content: (xs:annotation?)
+           Content: xs:annotation?
 </xs:notation>
 
 <xs:notation name="pdf" public="application/pdf"
@@ -603,12 +645,12 @@ It is not a component by itself (simple contents are not named) but rather decla
 
   <!-- cabinet of curiosities -->
 
-  <xs:element xs:name="kommentar" xs:type="xs:anyType"/>
+  <xs:element name="kommentar" type="xs:anyType"/>
 
-  <xs:element xs:name="tagname">
-    <xs:complexType xs:mixed="true">  <!-- text and tags can occur in mixed order -->
+  <xs:element name="tagname">
+    <xs:complexType mixed="true">  <!-- text and tags can occur in mixed order -->
       <xs:sequence>
-        <xs:element xs:name="child" xs:type="xs:integer" xs:minOccurs="0" xs:maxOccurs="unbounded"/>
+        <xs:element name="child" type="xs:integer" minOccurs="0" maxOccurs="unbounded"/>
         <!-- Weitere Elemente … -->
       </xs:sequence>
     </xs:complexType>
@@ -626,32 +668,35 @@ It is not a component by itself (simple contents are not named) but rather decla
    <xs:unique
            id            = xs:ID
            name          = xs:NCName
-           Content: ((xs:annotation?), (xs:selector, xs:field+))
+           Content: xs:annotation?,
+                    xs:selector, xs:field+
    </xs:unique>
 
    <xs:field
            id             = xs:ID
            xpath          = xs:token
-           Content: (xs:annotation?)
+           Content: xs:annotation?
    </xs:field>
 
    <xs:key
            id            = xs:ID
            name          = xs:NCName
-           Content: ((xs:annotation?), (xs:selector, xs:field+))
+           Content: xs:annotation?,
+                    xs:selector, xs:field+
    </xs:key>
 
    <xs:keyref
            id            = xs:ID
            name          = xs:NCName
            refer         = xs:QName
-           Content: ((xs:annotation?), (xs:selector, xs:field+))
+           Content: xs:annotation?,
+                    xs:selector, xs:field+
    </xs:keyref>
 
    <xs:selector
            id             = xs:ID
            xpath          = xs:token
-           Content: (xs:annotation?)
+           Content: xs:annotation?
    </xs:selector>
   -->
 

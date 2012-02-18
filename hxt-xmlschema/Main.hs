@@ -106,9 +106,6 @@ nsUri    = "http://www.w3.org/2001/XMLSchema"
 xpElem' :: String -> PU a -> PU a
 xpElem' = xpElemNS nsUri nsPrefix
 
-xpAttr' :: String -> PU a -> PU a
-xpAttr' = xpAttr -- xpAttrNS nsUri nsPrefix
-
 -- Conversion between Schema and Schema'
 
 toSchema :: XmlSchema' -> XmlSchema
@@ -136,7 +133,7 @@ xpXmlSchema' :: PU XmlSchema'
 xpXmlSchema'
   = xpElem' "schema" $ xpAddNSDecl nsPrefix nsUri $ 
     xpWrap (\ (a, b) -> XmlSchema' a b , \ t -> (targetNS t, parts t)) $
-    xpPair (xpOption $ xpAttr' "targetNamespace" xpText) $
+    xpPair (xpOption $ xpAttr "targetNamespace" xpText) $
     xpList $ xpSchemaPart
 
 xpSchemaPart :: PU XmlSchemaPart
@@ -147,8 +144,8 @@ xpSchemaPart
     tag (Ct _) = 1
     tag (El _) = 2
     tag (In _) = 3
-    ps = [ xpWrap (St, unSt) $ xpElem' "simpleType"  $ xpPair (xpAttr' "name" xpText) xpSimpleType
-         , xpWrap (Ct, unCt) $ xpElem' "complexType" $ xpPair (xpAttr' "name" xpText) xpComplexType
+    ps = [ xpWrap (St, unSt) $ xpElem' "simpleType"  $ xpPair (xpAttr "name" xpText) xpSimpleType
+         , xpWrap (Ct, unCt) $ xpElem' "complexType" $ xpPair (xpAttr "name" xpText) xpComplexType
          , xpWrap (El, unEl) $ xpElem' "element"     $ xpElement
          , xpWrap (In, unIn) $ xpInclude
          ]
@@ -161,12 +158,12 @@ xpSimpleType
     tag (Lst _)   = 1
     tag (Un _)    = 2
     ps = [ xpWrap (Restr, unRestr) $ xpElem' "restriction" $ xpRestriction
-         , xpWrap (Lst,   unLst)   $ xpElem' "list"        $ xpAttr' "itemType" xpText
-         , xpWrap (Un,    unUn)    $ xpElem' "union"       $ xpAttr' "memberTypes" xpText
+         , xpWrap (Lst,   unLst)   $ xpElem' "list"        $ xpAttr "itemType" xpText
+         , xpWrap (Un,    unUn)    $ xpElem' "union"       $ xpAttr "memberTypes" xpText
          ]
 xpRestriction :: PU Restriction
 xpRestriction
-  = xpPair (xpAttr' "base" xpText) $ xpList $ xpRestrAttr
+  = xpPair (xpAttr "base" xpText) $ xpList $ xpRestrAttr
 xpRestrAttr :: PU RestrAttr
 xpRestrAttr
   = xpAlt tag ps
@@ -182,23 +179,23 @@ xpRestrAttr
     tag (MinLength _)      = 8
     tag (MaxLength _)      = 9
     tag (Length _)         = 10
-    ps = [ xpWrap (MinIncl,        unMinIncl)        $ xpElem' "minInclusive"   $ xpAttr' "value" xpText
-         , xpWrap (MaxIncl,        unMaxIncl)        $ xpElem' "maxInclusive"   $ xpAttr' "value" xpText
-         , xpWrap (MinExcl,        unMinExcl)        $ xpElem' "minExclusive"   $ xpAttr' "value" xpText
-         , xpWrap (MaxExcl,        unMaxExcl)        $ xpElem' "maxExclusive"   $ xpAttr' "value" xpText
-         , xpWrap (TotalDigits,    unTotalDigits)    $ xpElem' "totalDigits"    $ xpAttr' "value" xpText
-         , xpWrap (FractionDigits, unFractionDigits) $ xpElem' "fractionDigits" $ xpAttr' "value" xpText
-         , xpWrap (Enumeration,    unEnumeration)    $ xpElem' "enumeration"    $ xpAttr' "value" xpText
-         , xpWrap (Pattern,        unPattern)        $ xpElem' "pattern"        $ xpAttr' "value" xpText
-         , xpWrap (MinLength,      unMinLength)      $ xpElem' "minLength"      $ xpAttr' "value" xpText
-         , xpWrap (MaxLength,      unMaxLength)      $ xpElem' "maxLength"      $ xpAttr' "value" xpText
-         , xpWrap (Length,         unLength)         $ xpElem' "length"         $ xpAttr' "value" xpText
+    ps = [ xpWrap (MinIncl,        unMinIncl)        $ xpElem' "minInclusive"   $ xpAttr "value" xpText
+         , xpWrap (MaxIncl,        unMaxIncl)        $ xpElem' "maxInclusive"   $ xpAttr "value" xpText
+         , xpWrap (MinExcl,        unMinExcl)        $ xpElem' "minExclusive"   $ xpAttr "value" xpText
+         , xpWrap (MaxExcl,        unMaxExcl)        $ xpElem' "maxExclusive"   $ xpAttr "value" xpText
+         , xpWrap (TotalDigits,    unTotalDigits)    $ xpElem' "totalDigits"    $ xpAttr "value" xpText
+         , xpWrap (FractionDigits, unFractionDigits) $ xpElem' "fractionDigits" $ xpAttr "value" xpText
+         , xpWrap (Enumeration,    unEnumeration)    $ xpElem' "enumeration"    $ xpAttr "value" xpText
+         , xpWrap (Pattern,        unPattern)        $ xpElem' "pattern"        $ xpAttr "value" xpText
+         , xpWrap (MinLength,      unMinLength)      $ xpElem' "minLength"      $ xpAttr "value" xpText
+         , xpWrap (MaxLength,      unMaxLength)      $ xpElem' "maxLength"      $ xpAttr "value" xpText
+         , xpWrap (Length,         unLength)         $ xpElem' "length"         $ xpAttr "value" xpText
          ]
 
 xpComplexType :: PU ComplexType
 xpComplexType
   = xpWrap (\ (a, b) -> ComplexType a b , \ t -> (mixed t, ctelems t)) $
-    xpPair (xpOption $ xpAttr' "mixed" xpText) $
+    xpPair (xpOption $ xpAttr "mixed" xpText) $
     xpList $ 
     xpAlt tag ps
     where
@@ -210,7 +207,7 @@ xpComplexType
     ps = [ xpWrap (Sq,    unSq)    $ xpElem' "sequence"       $ xpSequence
          , xpWrap (Ch,    unCh)    $ xpElem' "choice"         $ xpList $ xpElem' "element" $ xpElement
          , xpWrap (Al,    unAl)    $ xpElem' "all"            $ xpList $ xpElem' "element" $ xpElement
-         , xpWrap (Attr,  unAttr)  $ xpElem' "attribute"      $ xpPair (xpAttr' "name" xpText) (xpAttr' "type" xpText)
+         , xpWrap (Attr,  unAttr)  $ xpElem' "attribute"      $ xpPair (xpAttr "name" xpText) (xpAttr "type" xpText)
          , xpWrap (CCont, unCCont) $ xpElem' "complexContent" $ xpComplexContent
          ]
 xpSequence :: PU Sequence
@@ -222,8 +219,8 @@ xpComplexContent
     where
     tag (CCExt _)   = 0
     tag (CCRestr _) = 1
-    ps = [ xpWrap (CCExt,   unCCExt)   $ xpElem' "extension"   $ xpPair (xpAttr' "base" xpText) $ xpElem' "sequence" $ xpSequence
-         , xpWrap (CCRestr, unCCRestr) $ xpElem' "restriction" $ xpPair (xpAttr' "base" xpText) $ xpElem' "sequence" $ xpSequence
+    ps = [ xpWrap (CCExt,   unCCExt)   $ xpElem' "extension"   $ xpPair (xpAttr "base" xpText) $ xpElem' "sequence" $ xpSequence
+         , xpWrap (CCRestr, unCCRestr) $ xpElem' "restriction" $ xpPair (xpAttr "base" xpText) $ xpElem' "sequence" $ xpSequence
          ]
 
 xpElement :: PU Element
@@ -232,20 +229,20 @@ xpElement
     where
     tag (ElRef _) = 0
     tag (ElDef _) = 1
-    ps = [ xpWrap (ElRef, unElRef) $ xpAttr' "ref" xpText
+    ps = [ xpWrap (ElRef, unElRef) $ xpAttr "ref" xpText
          , xpWrap (ElDef, unElDef) $ xpElementDef
          ]
 xpElementDef :: PU ElementDef
 xpElementDef
   = xpWrap (\ (a, b, c, d) -> ElementDef a b c d, \ t -> (name t, elTypeDef t, minOcc t, maxOcc t)) $
-    xp4Tuple (xpAttr' "name" xpText) (xpElTypeDef) (xpOption $ xpAttr' "minOccurs" xpText) (xpOption $ xpAttr' "maxOccurs" xpText)
+    xp4Tuple (xpAttr "name" xpText) (xpElTypeDef) (xpOption $ xpAttr "minOccurs" xpText) (xpOption $ xpAttr "maxOccurs" xpText)
 xpElTypeDef :: PU ElTypeDef
 xpElTypeDef
   = xpAlt tag ps
     where
     tag (TRef _)  = 0
     tag (CTDef _) = 1
-    ps = [ xpWrap (TRef,  unTRef)  $ xpAttr' "type" xpText
+    ps = [ xpWrap (TRef,  unTRef)  $ xpAttr "type" xpText
          , xpWrap (CTDef, unCTDef) $ xpElem' "complexType" $ xpComplexType
          ]
 
@@ -256,9 +253,9 @@ xpInclude
     tag (Incl _)  = 0
     tag (Imp _)   = 1
     tag (Redef _) = 2
-    ps = [ xpElem' "include"  $ xpWrap (Incl,  unIncl)  $ xpAttr' "schemaLocation" xpText
-         , xpElem' "import"   $ xpWrap (Imp,   unImp)   $ xpPair (xpAttr' "schemaLocation" xpText) (xpAttr' "namespace" xpText)
-         , xpElem' "redefine" $ xpWrap (Redef, unRedef) $ xpPair (xpAttr' "schemaLocation" xpText) xpTrees
+    ps = [ xpElem' "include"  $ xpWrap (Incl,  unIncl)  $ xpAttr "schemaLocation" xpText
+         , xpElem' "import"   $ xpWrap (Imp,   unImp)   $ xpPair (xpAttr "schemaLocation" xpText) (xpAttr "namespace" xpText)
+         , xpElem' "redefine" $ xpWrap (Redef, unRedef) $ xpPair (xpAttr "schemaLocation" xpText) xpTrees
          ]
 
 loadXmlSchema :: String -> IO XmlSchema
@@ -307,7 +304,6 @@ main :: IO ()
 main
   = do
     putStrLn "\n--------------------------------------------- Pickling ---------------------------------------------\n"
-    -- xmlschema <- loadXmlSchema "http://dl.dropbox.com/u/22021340/example.xsd"
     xmlschema <- loadXmlSchema "example.xsd"
     putStrLn "\n------------------------------------------- Simple Types -------------------------------------------"
     putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sSimpleTypes xmlschema

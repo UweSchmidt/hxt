@@ -24,7 +24,7 @@ HUnit + Testfälle einbauen
 
 --------------------------------------------------------------------------
 
-Annotationen wegwerfen beim picklen
+Annotationen wegwerfen beim picklen -> xpFilterCont ?
 
 Wrapper für Annotations (Funktor):
 data Annotation a = Ann { c   :: a

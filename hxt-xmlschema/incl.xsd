@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xs:targetNamespace="http://www.example.com/example">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.example.com/example">
 
-  <xs:simpleType xs:name="monatInt">
-    <xs:restriction xs:base="xs:integer">
-      <xs:minInclusive xs:value="1"/>
-      <xs:maxInclusive xs:value="12"/>
+  <xs:simpleType name="monatInt">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="1"/>
+      <xs:maxInclusive value="12"/>
     </xs:restriction>
   </xs:simpleType>
 
