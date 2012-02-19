@@ -1,0 +1,43 @@
+Relevante Elemente:
+
+------------------------------------------------------------------------------------------
+
+  xs:schema
+
+  Relevante Attribute:
+
+    xmlns (default namespace), xmlns:xs, ...
+    targetNamespace      = xs:anyURI
+
+  Irrelevante Attribute:
+
+    attributeFormDefault = ( "qualified" | "unqualified" ) : "unqualified"
+    blockDefault         = ( "#all" | list of ( "extension" | "restriction" | "substitution" ) ) : ""
+    elementFormDefault   = ( "qualified" | "unqualified" ) : "unqualified"
+    finalDefault         = ( "#all" | list of ( "extension" | "restriction" ) ) : ""
+    version              = xs:token
+    xml:lang             = xml:lang
+
+  Inhaltsmodell:
+
+    ( xs:include | xs:import | xs:redefine 
+    | xs:simpleType | xs:complexType | xs:element
+    | xs:notation | xs:attribute | xs:group | xs:attributeGroup
+    )*
+
+------------------------------------------------------------------------------------------
+
+==========================================================================================
+
+Generell irrelevante Elemente:
+
+  xs:annotation
+  xs:appinfo (nur innerhalb von xs:annotation)
+  xs:documentation (nur innerhalb von xs:annotation)
+
+==========================================================================================
+
+Generell irrelevante Attribute:
+
+  id                   = xs:ID
+
