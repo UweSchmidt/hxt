@@ -50,7 +50,7 @@ where
 
 import           Control.Arrow.ArrowList
 import           Control.Arrow.ListArrows
-import           Control.Monad
+import           Control.Monad                    ( )
 import           Control.Monad.Error
 import           Control.Monad.State
 
