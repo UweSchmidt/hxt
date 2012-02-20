@@ -301,9 +301,15 @@ relevant elements:
 
   relevant attributes:
 
-    default   = xs:string
+    if inside xs:all:
     maxOccurs = ( "0" | "1" ) : "1",
     minOccurs = ( "0" | "1" ) : "1",
+
+    otherwise:
+    maxOccurs = ( xs:nonNegativeInteger | "unbounded" ) : "1"
+    minOccurs = xs:nonNegativeInteger : "1"
+
+    default   = xs:string
     name      = xs:NCName
     ref       = xs:QName, -- only if no type attribute and no nested simpleType or complexType
     type      = xs:QName, -- only if no ref attribute and no nested simpleType or complexType

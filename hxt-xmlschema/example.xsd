@@ -76,7 +76,7 @@
     <xs:union memberTypes="monatsname monatInt"/>
   </xs:simpleType>
 
-  <!-- complex types simple content (extension / restriction) -->
+  <!-- complex types with simple content (extension / restriction) -->
 
   <xs:complexType name="title1">
     <xs:simpleContent>
@@ -95,7 +95,7 @@
     </xs:simpleContent>
   </xs:complexType>
 
-  <!-- complex types complex content (extension / restriction) -->
+  <!-- complex types with complex content (extension / restriction) -->
 
   <xs:complexType name="myPC-Typ">
     <xs:complexContent>
@@ -154,11 +154,11 @@
     <xs:attribute name="id" type="xs:integer"/>
   </xs:complexType>
 
-  <!-- element definitions (with type reference) -->
+  <!-- element definition (with type reference) -->
 
   <xs:element name="title" type="xs:string"/>
 
-  <!-- element definitions (with anonymous type declarations) -->
+  <!-- element definition (with anonymous type declarations) -->
 
   <xs:element name="html">
     <xs:complexType>
