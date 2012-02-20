@@ -87,7 +87,7 @@ relevant elements:
   content model:
 
     xs:simpleType?, -- only if no base attribute
-    ( xs:minExclusive | xs:minInclusive | xs:maxExclusive | xs:maxInclusive
+    ( xs:minInclusive | xs:maxInclusive | xs:minExclusive | xs:maxExclusive
     | xs:totalDigits | xs:fractionDigits | xs:length | xs:minLength | xs:maxLength
     | xs:enumeration | xs:pattern
     | xs:whiteSpace
@@ -103,7 +103,7 @@ relevant elements:
 
 ------------------------------------------------------------------------------------------
 
-  xs:minInclusive, xs:minExclusive, xs:maxExclusive, xs:maxInclusive
+  xs:minInclusive, xs:maxInclusive, xs:minExclusive, xs:maxExclusive
 
   relevant attributes:
 
@@ -227,7 +227,7 @@ relevant elements:
   content model:
 
     xs:simpleType?, -- only if no base attribute
-    ( xs:minExclusive | xs:minInclusive | xs:maxExclusive | xs:maxInclusive
+    ( xs:minInclusive | xs:maxInclusive | xs:minExclusive | xs:maxExclusive
     | xs:totalDigits | xs:fractionDigits | xs:length | xs:minLength | xs:maxLength
     | xs:enumeration | xs:pattern
     | xs:whiteSpace

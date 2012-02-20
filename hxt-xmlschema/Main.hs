@@ -43,20 +43,23 @@ data Include         = Incl  {unIncl  :: Location}
                      deriving (Show, Eq)
 type Location        = String
 type Redefinitions   = [Redefinition]
-data Redefinition    = StRestr   {unStRestr   :: Restriction}
-                     | CtSCExt   {unCtSCExt   :: TODO:}
-                     | CtSCRestr {unCtSCRestr :: TODO:}
-                     | CtCCExt   {unCtCCExt   :: TODO:}
-                     | CtCCRestr {unCtCCRestr :: TODO:}
-                     | Grp       {unGrp       :: TODO:}
-                     | AttrGrp   {unAttrGrp   :: TODO:}
+data Redefinition    = StRestr   {unStRestr   :: STRestriction} -- base must be a known simpleType
+                     | CtSCExt   {unCtSCExt   :: TODO:}         -- base must be a known complexType
+                     | CtSCRestr {unCtSCRestr :: TODO:}         -- base must be a known complexType
+                     | CtCCExt   {unCtCCExt   :: TODO:}         -- base must be a known complexType
+                     | CtCCRestr {unCtCCRestr :: TODO:}         -- base must be a known complexType
+                     | Grp       {unGrp       :: TODO:}         -- name must be a known group
+                     | AttrGrp   {unAttrGrp   :: TODO:}         -- name must be a known attributeGroup
 
-data SimpleType      = Restr {unRestr :: Restriction}
-                     | Lst   {unLst   :: List}
-                     | Un    {unUn    :: Union}
+-- global and local
+data SimpleType      = Restr {unRestr :: STRestriction}
+                     | Lst   {unLst   :: STList}
+                     | Un    {unUn    :: STUnion}
                      deriving (Show, Eq)
-type Restriction     = (Base, RestrAttrs)
-type Base            = String
+type STRestriction   = (SimpleTypeRef, RestrAttrs)
+data SimpleTypeRef   = BaseAttr   {unBaseAttr   :: String}
+                     | AnonymDecl {unAnonymDecl :: SimpleType}
+                     deriving (Show, Eq)
 type RestrAttrs      = [RestrAttr]
 data RestrAttr       = MinIncl        {unMinIncl        :: Value}
                      | MaxIncl        {unMaxIncl        :: Value}
@@ -64,22 +67,28 @@ data RestrAttr       = MinIncl        {unMinIncl        :: Value}
                      | MaxExcl        {unMaxExcl        :: Value}
                      | TotalDigits    {unTotalDigits    :: Value}
                      | FractionDigits {unFractionDigits :: Value}
-                     | Enumeration    {unEnumeration    :: Value}
-                     | Pattern        {unPattern        :: Value}
+                     | Length         {unLength         :: Value}
                      | MinLength      {unMinLength      :: Value}
                      | MaxLength      {unMaxLength      :: Value}
-                     | Length         {unLength         :: Value}
+                     | Enumeration    {unEnumeration    :: Value}
+                     | Pattern        {unPattern        :: Value}
+                     | WhiteSpace     {unWhiteSpace     :: Value}
                      deriving (Show, Eq)
 type Value           = String
--- type RestrFunc       = String -> Maybe String -- Nothing: true, Just x: error with message x
-type List            = ItemType
-type ItemType        = String
-type Union           = MemberTypes
-type MemberTypes     = String
+data STList          = ItemTypeAttr {unItemTypeAttr :: String}
+                     | AnonymDecl   {unAnonymDecl   :: SimpleTyp}
+                     deriving (Show, Eq)
+data STUnion         = STUnion
+                     { memberTypes :: Maybe String
+                     , anonymDecls :: [SimpleType]
+                     }
+                     deriving (Show, Eq)
 
+-- global and local
+-- TODO: 
 data ComplexType     = ComplexType
                      { mixed   :: Maybe String
-                     , ctelems :: [CTElems]
+                     , ctElems :: [CTElems]
                      }
                      deriving (Show, Eq)
 data CTElems         = Sq    {unSq    :: Sequence}
@@ -206,9 +215,9 @@ xpInclude
     tag (Incl _)  = 0
     tag (Imp _)   = 1
     tag (Redef _) = 2
-    ps = [ xpElem' "include"  $ xpWrap (Incl,  unIncl)  $ xpAttr "schemaLocation" xpText
-         , xpElem' "import"   $ xpWrap (Imp,   unImp)   $ xpPair (xpAttr "schemaLocation" xpText) (xpAttr "namespace" xpText)
-         , xpElem' "redefine" $ xpWrap (Redef, unRedef) $ xpPair (xpAttr "schemaLocation" xpText) (xpList xpRedefinition)
+    ps = [ xpWrap (Incl,  unIncl)  $ xpElem' "include"  $ xpAttr "schemaLocation" xpText
+         , xpWrap (Imp,   unImp)   $ xpElem' "import"   $ xpPair (xpAttr "schemaLocation" xpText) (xpAttr "namespace" xpText)
+         , xpWrap (Redef, unRedef) $ xpElem' "redefine" $ xpPair (xpAttr "schemaLocation" xpText) (xpList xpRedefinition)
          ]
 xpRedefinition :: PU Redefinition
 xpRedefinition
@@ -221,13 +230,13 @@ xpRedefinition
     tag (CtCCRestr _) = 4
     tag (Grp _)       = 5
     tag (AttrGrp _)   = 6
-    ps = [ xpElem' "simpleType"     $ xpElem' "restriction"    $ xpWrap (StRestr,  unStRestr) $ xpRestriction
-         , xpElem' "complexType"    $ xpElem' "simpleContent"  $ xpElem' "extension" $ TODO:
-         , xpElem' "complexType"    $ xpElem' "simpleContent"  $ xpElem' "restriction" $ TODO:
-         , xpElem' "complexType"    $ xpElem' "complexContent" $ xpElem' "extension" $ TODO:
-         , xpElem' "complexType"    $ xpElem' "complexContent" $ xpElem' "restriction" $ TODO:
-         , xpElem' "group"          $ TODO:
-         , xpElem' "attributeGroup" $ TODO:
+    ps = [ xpWrap (StRestr,   unStRestr)   $ xpElem' "simpleType"     $ xpElem' "restriction"    $ xpSTRestriction
+         , xpWrap (CtSCExt,   unCtSCExt)   $ xpElem' "complexType"    $ xpElem' "simpleContent"  $ xpElem' "extension" $ TODO:
+         , xpWrap (CtSCRestr, unCtSCRestr) $ xpElem' "complexType"    $ xpElem' "simpleContent"  $ xpElem' "restriction" $ TODO:
+         , xpWrap (CtCCExt,   unCtCCExt)   $ xpElem' "complexType"    $ xpElem' "complexContent" $ xpElem' "extension" $ TODO:
+         , xpWrap (CtCCRestr, unCtCCRestr) $ xpElem' "complexType"    $ xpElem' "complexContent" $ xpElem' "restriction" $ TODO:
+         , xpWrap (Grp,       unGrp)       $ xpElem' "group"          $ xpGroup
+         , xpWrap (AttrGrp,   unAttrGrp)   $ xpElem' "attributeGroup" $ xpAttributeGroup
          ]
 
 xpSimpleType :: PU SimpleType
@@ -237,13 +246,22 @@ xpSimpleType
     tag (Restr _) = 0
     tag (Lst _)   = 1
     tag (Un _)    = 2
-    ps = [ xpWrap (Restr, unRestr) $ xpElem' "restriction" $ xpRestriction
-         , xpWrap (Lst,   unLst)   $ xpElem' "list"        $ xpAttr "itemType" xpText
-         , xpWrap (Un,    unUn)    $ xpElem' "union"       $ xpAttr "memberTypes" xpText
+    ps = [ xpWrap (Restr, unRestr) $ xpElem' "restriction" $ xpSTRestriction
+         , xpWrap (Lst,   unLst)   $ xpElem' "list"        $ xpSTList
+         , xpWrap (Un,    unUn)    $ xpElem' "union"       $ xpSTUnion
          ]
-xpRestriction :: PU Restriction
-xpRestriction
-  = xpPair (xpAttr "base" xpText) $ xpList $ xpRestrAttr
+xpSTRestriction :: PU STRestriction
+xpSTRestriction
+  = xpPair xpSimpleTypeRef $ xpList $ xpRestrAttr
+xpSimpleTypeRef :: PU SimpleTypeRef
+xpSimpleTypeRef
+  = xpAlt tag ps
+    where
+    tag (BaseAttr _)   = 0
+    tag (AnonymDecl _) = 1
+    ps = [ xpWrap (BaseAttr,   unBaseAttr)   $ xpAttr "base" xpText
+         , xpWrap (AnonymDecl, unAnonymDecl) $ xpElem' "simpleType" $ xpSimpleType -- TODO: only works if first child
+         ]
 xpRestrAttr :: PU RestrAttr
 xpRestrAttr
   = xpAlt tag ps
@@ -254,27 +272,43 @@ xpRestrAttr
     tag (MaxExcl _)        = 3
     tag (TotalDigits _)    = 4
     tag (FractionDigits _) = 5
-    tag (Enumeration _)    = 6
-    tag (Pattern _)        = 7
-    tag (MinLength _)      = 8
-    tag (MaxLength _)      = 9
-    tag (Length _)         = 10
+    tag (Length _)         = 6
+    tag (MinLength _)      = 7
+    tag (MaxLength _)      = 8
+    tag (Enumeration _)    = 9
+    tag (Pattern _)        = 10
+    tag (WhiteSpace _)     = 11
     ps = [ xpWrap (MinIncl,        unMinIncl)        $ xpElem' "minInclusive"   $ xpAttr "value" xpText
          , xpWrap (MaxIncl,        unMaxIncl)        $ xpElem' "maxInclusive"   $ xpAttr "value" xpText
          , xpWrap (MinExcl,        unMinExcl)        $ xpElem' "minExclusive"   $ xpAttr "value" xpText
          , xpWrap (MaxExcl,        unMaxExcl)        $ xpElem' "maxExclusive"   $ xpAttr "value" xpText
          , xpWrap (TotalDigits,    unTotalDigits)    $ xpElem' "totalDigits"    $ xpAttr "value" xpText
          , xpWrap (FractionDigits, unFractionDigits) $ xpElem' "fractionDigits" $ xpAttr "value" xpText
-         , xpWrap (Enumeration,    unEnumeration)    $ xpElem' "enumeration"    $ xpAttr "value" xpText
-         , xpWrap (Pattern,        unPattern)        $ xpElem' "pattern"        $ xpAttr "value" xpText
+         , xpWrap (Length,         unLength)         $ xpElem' "length"         $ xpAttr "value" xpText
          , xpWrap (MinLength,      unMinLength)      $ xpElem' "minLength"      $ xpAttr "value" xpText
          , xpWrap (MaxLength,      unMaxLength)      $ xpElem' "maxLength"      $ xpAttr "value" xpText
-         , xpWrap (Length,         unLength)         $ xpElem' "length"         $ xpAttr "value" xpText
+         , xpWrap (Enumeration,    unEnumeration)    $ xpElem' "enumeration"    $ xpAttr "value" xpText
+         , xpWrap (Pattern,        unPattern)        $ xpElem' "pattern"        $ xpAttr "value" xpText
+         , xpWrap (WhiteSpace,     unWhiteSpace)     $ xpElem' "whiteSpace"     $ xpAttr "value" xpText
          ]
+xpSTList :: PU STList
+xpSTList
+  = xpAlt tag ps
+    where
+    tag (ItemTypeAttr _) = 0
+    tag (AnonymDecl _)   = 1
+    ps = [ xpWrap (ItemTypeAttr, unItemTypeAttr) $ xpAttr "itemType" xpText
+         , xpWrap (AnonymDecl,   unAnonymDecl)   $ xpElem' "simpleType" $ xpSimpleType
+         ]
+xpSTUnion :: PU STUnion
+xpSTUnion
+  = xpWrap (\ (a, b) -> STUnion a b , \ t -> (memberTypes t, anonymDecls t)) $
+    xpPair (xpOption $ xpAttr "memberTypes" xpText) $
+    xpList $ xpElem' "simpleType" $ xpSimpleType
 
 xpComplexType :: PU ComplexType
 xpComplexType
-  = xpWrap (\ (a, b) -> ComplexType a b , \ t -> (mixed t, ctelems t)) $
+  = xpWrap (\ (a, b) -> ComplexType a b , \ t -> (mixed t, ctElems t)) $
     xpPair (xpOption $ xpAttr "mixed" xpText) $
     xpList $ 
     xpAlt tag ps
