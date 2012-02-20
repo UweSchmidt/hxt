@@ -21,23 +21,166 @@ Relevante Elemente:
   Inhaltsmodell:
 
     ( xs:include | xs:import | xs:redefine 
-    | xs:simpleType | xs:complexType | xs:element
-    | xs:notation | xs:attribute | xs:group | xs:attributeGroup
+    | xs:simpleType
+    | xs:complexType
+    | xs:element | xs:group
+    | xs:attribute | xs:attributeGroup
+    | xs:notation
     )*
 
 ------------------------------------------------------------------------------------------
+
+  xs:include
+
+  Relevante Attribute:
+
+    schemaLocation = xs:anyURI
+
+------------------------------------------------------------------------------------------
+
+  xs:import
+
+  Relevante Attribute:
+
+    schemaLocation   = xs:anyURI
+    namespace        = xs:anyURI
+
+------------------------------------------------------------------------------------------
+
+  xs:redefine
+
+  Relevante Attribute:
+
+    schemaLocation = xs:anyURI
+
+  Inhaltsmodell:
+
+    ( xs:simpleType     (only restriction allowed, base must be a known simpleType)
+    | xs:complexType    (only extension/restriction in simpleContent/complexContent allowed, base must be a known complexType)
+    | xs:group          (redefinition which must include original definition, name must be a known group)
+    | xs:attributeGroup (redefinition which must include original definition, name must be a known attributeGroup)
+    )*
+
+------------------------------------------------------------------------------------------
+
+  xs:simpleType
+
+  Relevante Attribute:
+
+    name          = xs:NCName, nur wenn globale Definition
+
+  Irrelevante Attribute:
+
+    final         = ( "#all" | ( "list" | "union" | "restriction" ) ), nur wenn globale Definition
+
+  Inhaltsmodell:
+
+    xs:restriction | xs:list | xs:union
+
+------------------------------------------------------------------------------------------
+
+  xs:restriction (innerhalb von simpleType)
+
+  Relevante Attribute:
+
+    base          = xs:QName only allowed if no nested simpleType
+
+  Inhaltsmodell:
+
+    xs:simpleType?,
+    ( xs:minExclusive | xs:minInclusive | xs:maxExclusive | xs:maxInclusive
+    | xs:totalDigits | xs:fractionDigits | xs:length | xs:minLength | xs:maxLength
+    | xs:enumeration | xs:pattern
+    | xs:whiteSpace
+    )*
+
+------------------------------------------------------------------------------------------
+
+  xs:minInclusive, xs:minExclusive, xs:maxExclusive, xs:maxInclusive
+
+  Relevante Attribute:
+
+    value          = anySimpleType
+
+  Irrelevante Attribute:
+
+    fixed          = xs:boolean : "false"
+
+------------------------------------------------------------------------------------------
+
+  xs:totalDigits, xs:fractionDigits, xs:length, xs:minLength, xs:maxLength
+
+  Relevante Attribute:
+
+    value          = xs:nonNegativeInteger
+
+  Irrelevante Attribute:
+
+    fixed          = xs:boolean : "false"
+
+------------------------------------------------------------------------------------------
+
+  xs:enumeration, xs:pattern
+
+  Relevante Attribute:
+
+    value          = anySimpleType
+
+------------------------------------------------------------------------------------------
+
+  xs:whiteSpace
+
+  Relevante Attribute:
+
+    value          = ( "preserve" | "replace" | "collapse" )
+    
+    preserve (whitespace characters are kept unchanged),
+    replace (all instances of whitespace are replaced with a space),
+    collapse (leading and trailing whitespace is removed, the rest is treated like replace)
+
+  Irrelevante Attribute:
+
+    fixed          = xs:boolean : "false"
+
+------------------------------------------------------------------------------------------
+
+  xs:list
+
+  Relevante Attribute:
+
+    itemType         = xs:QName only allowed if no nested simpleType
+
+  Inhaltsmodell:
+
+    xs:simpleType?
+
+------------------------------------------------------------------------------------------
+
+  xs:union
+
+  Relevante Attribute:
+
+    memberTypes = list of xs:QName can be mixed with nested simpleTypes, delimiter: space
+
+  Inhaltsmodell:
+
+    xs:simpleType*
 
 ==========================================================================================
 
 Generell irrelevante Elemente:
 
+  Elemente aus anderen Namensräumen
   xs:annotation
-  xs:appinfo (nur innerhalb von xs:annotation)
-  xs:documentation (nur innerhalb von xs:annotation)
+  xs:appinfo (da nur innerhalb von xs:annotation)
+  xs:documentation (da nur innerhalb von xs:annotation)
 
 ==========================================================================================
 
 Generell irrelevante Attribute:
 
+  Attribute aus anderen Namensräumen
   id                   = xs:ID
+  final
+  fixed
 

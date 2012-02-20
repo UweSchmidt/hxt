@@ -4,7 +4,7 @@ import Text.XML.HXT.Curl
 import Data.Map (Map, elems, toList, empty, insert)
 
 data XmlSchema      = XmlSchema
-                    { sTargetNS     :: Maybe String
+                    { sTargetNS     :: Maybe Namespace
                     , sSimpleTypes  :: SimpleTypes
                     , sComplexTypes :: ComplexTypes
                     , sElements     :: Elements
@@ -12,6 +12,7 @@ data XmlSchema      = XmlSchema
                     }
                     deriving (Show, Eq)
 
+type Namespace      = String
 type SimpleTypes    = Map Name SimpleType
 type ComplexTypes   = Map Name ComplexType
 type Elements       = Map Name Element
@@ -19,7 +20,7 @@ type Includes       = [Include]
 type Name           = String
 
 data XmlSchema'     = XmlSchema'
-                    { targetNS :: Maybe String
+                    { targetNS :: Maybe Namespace
                     , parts    :: [XmlSchemaPart]
                     }
 data XmlSchemaPart  = St {unSt :: (Name, SimpleType)}
@@ -62,6 +63,7 @@ data CTElems        = Sq    {unSq    :: Sequence}
                     | Ch    {unCh    :: Choice}
                     | Al    {unAl    :: All}
                     | Attr  {unAttr  :: Attribute}
+                    | SCont {unSCont :: SimpleContent}
                     | CCont {unCCont :: ComplexContent}
                     deriving (Show, Eq)
 type Sequence       = [Element]
@@ -69,6 +71,11 @@ type Choice         = [Element]
 type All            = [Element]
 type Attribute      = (Name, Type)
 type Type           = String
+data SimpleContent  = SCExt   {unSCExt   :: SCExtension}
+                    | SCRestr {unSCRestr :: SCRestriction}
+                    deriving (Show, Eq)
+type SCExtension    = 
+type SCRestriction  = 
 data ComplexContent = CCExt   {unCCExt   :: CCExtension}
                     | CCRestr {unCCRestr :: CCRestriction}
                     deriving (Show, Eq)
@@ -90,10 +97,14 @@ data ElTypeDef      = TRef  {unTRef  :: Name}
                     | CTDef {unCTDef :: ComplexType}
                     deriving (Show, Eq)
 
-data Include        = Incl  {unIncl  :: String}
-                    | Imp   {unImp   :: (String, String)}
-                    | Redef {unRedef :: (String, XmlTrees)}
+data Include        = Incl  {unIncl  :: Location}
+                    | Imp   {unImp   :: (Location, Namespace)}
+                    | Redef {unRedef :: (Location, Redefinitions)}
                     deriving (Show, Eq)
+type Location       = String
+type Redefinitions  = [Redefinition]
+data Redefinition   = StRestr {unStRestr :: Restriction}
+                    | 
 
 -- Namespace handling
 
@@ -203,16 +214,27 @@ xpComplexType
     tag (Ch _)    = 1
     tag (Al _)    = 2
     tag (Attr _)  = 3
-    tag (CCont _) = 4
+    tag (SCont _) = 4
+    tag (CCont _) = 5
     ps = [ xpWrap (Sq,    unSq)    $ xpElem' "sequence"       $ xpSequence
          , xpWrap (Ch,    unCh)    $ xpElem' "choice"         $ xpList $ xpElem' "element" $ xpElement
          , xpWrap (Al,    unAl)    $ xpElem' "all"            $ xpList $ xpElem' "element" $ xpElement
          , xpWrap (Attr,  unAttr)  $ xpElem' "attribute"      $ xpPair (xpAttr "name" xpText) (xpAttr "type" xpText)
+         , xpWrap (SCont, unSCont) $ xpElem' "simpleContent"  $ xpSimpleContent
          , xpWrap (CCont, unCCont) $ xpElem' "complexContent" $ xpComplexContent
          ]
 xpSequence :: PU Sequence
 xpSequence
   = xpList $ xpElem' "element" $ xpElement
+xpSimpleContent :: PU SimpleContent
+xpSimpleContent
+  = xpAlt tag ps
+    where
+    tag (SCExt _)   = 0
+    tag (SCRestr _) = 1
+    ps = [ xpWrap (SCExt,   unSCExt)   $ xpElem' "extension"   $ xpPair (xpAttr "base" xpText) $ TODO:
+         , xpWrap (SCRestr, unSCRestr) $ xpElem' "restriction" $ xpPair (xpAttr "base" xpText) $ TODO:
+         ]
 xpComplexContent :: PU ComplexContent
 xpComplexContent
   = xpAlt tag ps
@@ -255,7 +277,26 @@ xpInclude
     tag (Redef _) = 2
     ps = [ xpElem' "include"  $ xpWrap (Incl,  unIncl)  $ xpAttr "schemaLocation" xpText
          , xpElem' "import"   $ xpWrap (Imp,   unImp)   $ xpPair (xpAttr "schemaLocation" xpText) (xpAttr "namespace" xpText)
-         , xpElem' "redefine" $ xpWrap (Redef, unRedef) $ xpPair (xpAttr "schemaLocation" xpText) xpTrees
+         , xpElem' "redefine" $ xpWrap (Redef, unRedef) $ xpPair (xpAttr "schemaLocation" xpText) (xpList xpRedefinition)
+         ]
+xpRedefinition :: PU Redefinition
+xpRedefinition
+  = xpAlt tag ps
+    where
+    tag (StRestr _)   = 0
+    tag (CtSCExt _)   = 1
+    tag (CtSCRestr _) = 2
+    tag (CtCCExt _)   = 3
+    tag (CtCCRestr _) = 4
+    tag (Grp _)       = 5
+    tag (AttrGrp _)   = 6
+    ps = [ xpElem' "simpleType"  $ xpElem' "restriction"    $ xpWrap (StRestr,  unStRestr) $ xpRestriction
+         , xpElem' "complexType" $ xpElem' "simpleContent"  $ xpElem' "extension" $ TODO:
+         , xpElem' "complexType" $ xpElem' "simpleContent"  $ xpElem' "restriction" $ TODO:
+         , xpElem' "complexType" $ xpElem' "complexContent" $ xpElem' "extension" $ TODO:
+         , xpElem' "complexType" $ xpElem' "complexContent" $ xpElem' "restriction" $ TODO:
+         , xpElem' "group" $ TODO:
+         , xpElem' "attributeGroup" $ TODO:
          ]
 
 loadXmlSchema :: String -> IO XmlSchema

@@ -1,76 +1,49 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.example.com/example">
 
-  <!-- simple types (restrictions) -->
+  <!-- includes / imports / redefines -->
 
-  <!--
-   TODO:
-   <xs:simpleType
-           final         = ( "#all" | ( "list" | "union" | "restriction" ) ), nur wenn globale Definition
-           name          = xs:NCName, nur wenn globale Definition
-           Content: (xs:restriction | xs:list | xs:union)
-   </xs:simpleType>
-  -->
+  <xs:include schemaLocation="incl.xsd"/>
+
+  <xs:import schemaLocation="incl.xsd" namespace="http://dyomedea.com/ns/people"/>
+ 
+  <xs:redefine schemaLocation="incl.xsd">
+    <xs:complexType name="Hersteller">
+      <xs:complexContent>
+        <xs:restriction base="pcTeile:Hersteller">
+          <xs:sequence>
+            <xs:element name="hersteller" type="xs:string" minOccurs="10" maxOccurs="10"/>
+          </xs:sequence>
+        </xs:restriction>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:redefine>
+
+  <!-- simple types (restrictions) -->
 
   <xs:simpleType name="monatInt">
     <xs:restriction base="xs:integer">
       <xs:minInclusive value="1"/>
       <xs:maxInclusive value="12"/>
-      <!--
-       TODO:
-
-       <xs:minInclusive
-           fixed          = xs:boolean : "false"
-           value          = anySimpleType
-       </xs:minInclusive>
-
-       <xs:minExclusive
-           fixed          = xs:boolean : "false"
-           value          = anySimpleType
-       </xs:minExclusive>
-
-       <xs:maxExclusive
-           fixed          = xs:boolean : "false"
-           value          = anySimpleType
-       </xs:maxExclusive>
-
-       <xs:maxInclusive
-           fixed          = xs:boolean : "false"
-           value          = anySimpleType
-       </xs:maxInclusive>
-      -->
     </xs:restriction>
   </xs:simpleType>
 
   <xs:simpleType name="celsiusKörperTemp">
     <xs:restriction base="xs:decimal">
-      <!--
-       TODO:
-       <xs:totalDigits
-           fixed          = xs:boolean : "false"
-           value          = xs:positiveInteger
-       </xs:totalDigits>
-      -->
       <xs:totalDigits value="3"/>
-      <!--
-       TODO:
-       <xs:fractionDigits
-           fixed          = xs:boolean : "false"
-           value          = xs:nonNegativeInteger
-       </xs:fractionDigits>
-      -->
       <xs:fractionDigits value="1"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="password">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="5"/>
+      <xs:maxLength value="30"/>
     </xs:restriction>
   </xs:simpleType>
 
   <xs:simpleType name="monatsname">
     <xs:restriction base="xs:string">
-      <!--
-       TODO:
-       <xs:enumeration
-           value          = anySimpleType
-       </xs:enumeration>
-      -->
       <xs:enumeration value="Jan"/>
       <xs:enumeration value="Feb"/>
       <xs:enumeration value="Mär"/>
@@ -89,85 +62,7 @@
   <xs:simpleType name="plz">
     <xs:restriction base="xs:string">
       <xs:pattern value="(D )?[0-9]{5}"/>
-      <!--
-       <xs:pattern
-           value          = anySimpleType
-       </xs:pattern>
-      -->
-    </xs:restriction>
-  </xs:simpleType>
-
-  <xs:simpleType name="password">
-    <!--
-     TODO:
-
-     In simpleType (local oder global):
-     <xs:restriction
-           base          = xs:QName only allowed if no nested simpleType
-           Content: xs:simpleType?,
-                    ( xs:minExclusive | xs:minInclusive | xs:maxExclusive | xs:maxInclusive
-                    | xs:totalDigits | xs:fractionDigits
-                    | xs:length | xs:minLength | xs:maxLength
-                    | xs:enumeration
-                    | xs:pattern
-                    | xs:whiteSpace
-                    )*
-     </xs:restriction>
-
-     In xs:simpleContent (inside ComplexType Def):
-     "allows the addition of new constraints to both the attributes and the text node"
-     text node: like in simpleType restrictions
-     attributes: list of modified attribute definitions or references (must be derivations of original attribute definitions / types)
-     <xs:restriction
-           base          = xs:QName only allowed if no nested simpleType
-           Content: xs:simpleType?,
-                    ( xs:minExclusive | xs:minInclusive | xs:maxExclusive | xs:maxInclusive
-                    | xs:totalDigits | xs:fractionDigits
-                    | xs:length | xs:minLength | xs:maxLength
-                    | xs:enumeration
-                    | xs:pattern
-                    | xs:whiteSpace
-                    )*,
-                    (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
-     </xs:restriction>
-
-     In xs:complexContent (inside ComplexType Def):
-     <xs:restriction
-           base          = xs:QName
-           Content: (xs:group | xs:all | xs:choice | xs:sequence)?,
-                    (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
-     </xs:restriction>
-
-     treatment to perform on whitespace: #x20 (space), #x9 (tab), #xA (linefeed), and #xD (carriage return)
-     preserve (whitespace characters are kept unchanged),
-     replace (all instances of whitespace are replaced with a space),
-     collapse (leading and trailing whitespace is removed, the rest is treated like replace)
-     <xs:whiteSpace
-           fixed          = xs:boolean : "false"
-           value          = ( "preserve" | "replace" | "collapse" )
-     </xs:whiteSpace>
-
-    -->
-    <xs:restriction base="xs:string">
-      <xs:minLength value="5"/>
-      <xs:maxLength value="30"/>
-      <!--
-       TODO:
-       <xs:length
-           fixed          = xs:boolean : "false"
-           value          = xs:nonNegativeInteger
-       </xs:length>
-
-       <xs:minLength
-           fixed          = xs:boolean : "false"
-           value          = xs:nonNegativeInteger
-       </xs:minLength>
-
-       <xs:maxLength
-           fixed          = xs:boolean : "false"
-           value          = xs:nonNegativeInteger
-       </xs:maxLength>
-      -->
+      <xs:whiteSpace value="collapse"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -175,42 +70,109 @@
 
   <xs:simpleType name="monate">
     <xs:list itemType="monatInt"/>
-    <!--
-     TODO:
-     <xs:list
-           itemType         = xs:QName only allowed if no nested simpleType
-           Content: xs:simpleType?
-     </xs:list> 
-    -->
   </xs:simpleType>
 
   <xs:simpleType name="monat">
-    <!--
-     TODO:
-     <xs:union
-           memberTypes = list of xs:QName can be mixed with nested simpleTypes, delimiter: space
-           Content: xs:simpleType*
-     </xs:union>
-    -->
     <xs:union memberTypes="monatsname monatInt"/>
   </xs:simpleType>
 
-  <!-- complex types (sequence, choice, all TODO: group) -->
-
   <!--
-   TODO:
-   <xs:complexType
-           abstract       = xs:boolean : "false", nur wenn globale Definition
-           block          = ( "#all" | list of ( "extension" | "restriction" ) ), nur wenn globale Definition
-           final          = ( "#all" | list of ( "extension" | "restriction" ) ), nur wenn globale Definition
-           mixed          = xs:boolean : "false"
-           name           = xs:NCName, nur wenn globale Definition
-           Content: ( xs:simpleContent
-                    | xs:complexContent
-                    | (xs:group | xs:all | xs:choice | xs:sequence)?, (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
-                    )
-   </xs:complexType>
+
+  <xs:complexType
+    abstract       = xs:boolean : "false", nur wenn globale Definition
+    block          = ( "#all" | list of ( "extension" | "restriction" ) ), nur wenn globale Definition
+    final          = ( "#all" | list of ( "extension" | "restriction" ) ), nur wenn globale Definition
+    mixed          = xs:boolean : "false"
+    name           = xs:NCName, nur wenn globale Definition
+    Content: ( xs:simpleContent
+             | xs:complexContent
+             | (xs:group | xs:all | xs:choice | xs:sequence)?, (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
+             )
+  </xs:complexType>
+
+  ---  
+
+  <xs:simpleContent
+    Content: (xs:extension | xs:restriction)
+  </xs:simpleContent>
+
+  <xs:extension
+    base          = xs:QName
+    Content: (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
+  </xs:extension>
+
+  Bsp:
+  <xs:complexType name="title">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute ref="lang"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:restriction
+    base          = xs:QName only allowed if no nested simpleType
+    Content: xs:simpleType?,
+             ( xs:minExclusive | xs:minInclusive | xs:maxExclusive | xs:maxInclusive
+             | xs:totalDigits | xs:fractionDigits | xs:length | xs:minLength | xs:maxLength
+             | xs:enumeration | xs:pattern
+             | xs:whiteSpace
+             )*,
+             (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
+  </xs:restriction>
+
+  ---
+
+  <xs:complexContent
+    mixed          = xs:boolean
+    Content: (xs:extension | xs:restriction)
+  </xs:complexContent>
+
+  <xs:extension
+    base          = xs:QName
+    Content: (xs:group | xs:all | xs:choice | xs:sequence)?,
+             (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
+  </xs:extension>
+
+  <xs:restriction
+    base          = xs:QName
+    Content: (xs:group | xs:all | xs:choice | xs:sequence)?,
+             (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
+  </xs:restriction>
+
+  ---
+
+  lokale Definition:
+  <xs:group
+    maxOccurs   = ( xs:nonNegativeInteger | "unbounded" ) : "1"
+    minOccurs   = xs:nonNegativeInteger : "1"
+    ref         = xs:QName
+  </xs:group>
+
+  ... all, choice, sequence
+
+  ---
+
+  lokale definition oder referenz:
+  <xs:attribute
+    default        = xs:string
+    fixed          = xs:string
+    form           = ( "qualified" | "unqualified" )
+    name           = xs:NCName
+    ref            = xs:QName 
+    type           = xs:QName nur wenn nicht ref-Attribut definiert
+    use            = ( "prohibited" | "optional" | "required" ) : "optional"
+    Content: xs:simpleType? nur wenn nicht ref-Attribut definiert und nur wenn nicht type-Attribut definiert
+  </xs:attribute>
+
+  referenz (lokal):
+  <xs:attributeGroup
+    ref          = xs:QName
+  </xs:attributeGroup>
+
   -->
+
+  <!-- complex types (sequence, choice, all TODO: group) -->
 
   <xs:complexType name="pc-Typ">
     <!--
@@ -271,29 +233,6 @@
 
   <xs:complexType name="myPC-Typ">
     <xs:complexContent>
-      <!--
-       TODO:
-       <xs:complexContent
-           mixed          = xs:boolean
-           Content: (xs:restriction | xs:extension)
-       </xs:complexContent>
-
-       Extension:
-
-       Innerhalb von xs:simpleContent: new attributes for the simple base type
-       <xs:extension
-           base          = xs:QName
-           Content: (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
-       </xs:extension>
-
-       Innerhalb von xs:complexContent: new attributes and child elements for the complex base type
-       <xs:extension
-           base          = xs:QName
-           Content: (xs:group | xs:all | xs:choice | xs:sequence)?,
-                    (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
-       </xs:extension>
-
-      -->
       <xs:extension base="pc-Typ">
         <xs:sequence>
           <xs:element name="ram" type="xs:integer"/>
@@ -315,12 +254,6 @@
       </xs:restriction>
     </xs:complexContent>
   </xs:complexType>
-
-  <!--
-   Bei der Definition eines Typs ist es möglich festzulegen, ob und auf welche Art von diesem Typ weitere XML-Elementtypen abgeleitet werden dürfen.
-   So kann man zum Beispiel festlegen, dass von einem Typ pc-Typ weitere Typen nur durch das Setzen weiterer Einschränkungen abgeleitet werden dürfen
-   und nicht durch das Hinzufügen neuer Kindelemente.
-  -->
 
   <!-- element definitions (with anonymous type declarations) -->
 
@@ -366,87 +299,9 @@
     </xs:complexType>
   </xs:element>
 
-  <!-- includes / imports / redefines -->
-
-  <xs:include schemaLocation="incl.xsd"/>
-  <!--
-   targetNamespace des harddisk.xsd muss mit dem des inkludierenden Schemas übereinstimmen.
-
-   TODO:
-   <xs:include
-           schemaLocation = xs:anyURI
-   </xs:include>
-
-   xs:include performs a straight inclusion of a schema within another schema that describes the same target namespace.
-   It is possible, though, to include a schema that doesn't specify a target namespace.
-   The included schema will be treated as adopting the target namespace of its includer in a schema with a target namespace.
-
-   The effect of a schema inclusion is a merge between the two schemas that are consolidated into a global schema. The schema that is included doesn't need to be a complete schema by itself. 
-
-   It is not possible to use xs:include to include a schema describing another namespace. (xs:import should be used in this case.)
-   It is not possible to change the definitions of the included schemas. (xs:redefine should be used in this case.) 
-
-  -->
-
-  <xs:import namespace="http://dyomedea.com/ns/people" schemaLocation="incl.xsd"/>
-  <!-- xs:schemaLocation="simple-2-ns-ppl.xsd" -->
-  <!--
-   TODO:
-   <xs:import
-           namespace        = xs:anyURI
-           schemaLocation   = xs:anyURI
-   </xs:import>
-
-   All the global definitions (elements, attributes, element and attribute groups, simple and complex types) and unique and key constraints
-   of the imported schemas can be referenced using a namespace prefix defined for the corresponding namespace URI.
-
-   <xs:schema targetNamespace="http://dyomedea.com/ns/library" xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    xmlns:ppl="http://dyomedea.com/ns/people">
-    <xs:import namespace="http://dyomedea.com/ns/people" schemaLocation="simple-2-ns-ppl.xsd"/>
-                                 ...
-            <xs:element ref="ppl:person" maxOccurs="unbounded"/>
-                                 ...
-   </xs:schema>
-
-   xs:import must not be used to import component definitions from the target namespace (only xs:include / xs:redefine)
-
-  -->
-
-  <xs:redefine schemaLocation="incl.xsd">
-    <xs:complexType name="Hersteller">
-      <xs:complexContent>
-        <xs:restriction base="pcTeile:Hersteller">
-          <xs:sequence>
-            <xs:element name="hersteller" type="xs:string" minOccurs="10" maxOccurs="10"/>
-          </xs:sequence>
-        </xs:restriction>
-      </xs:complexContent>
-    </xs:complexType>
-  </xs:redefine>
-
-  <!--
-   TODO:
-   <xs:redefine
-           schemaLocation = xs:anyURI
-           Content: (xs:simpleType | xs:complexType | xs:group | xs:attributeGroup)*
-   </xs:redefine>
-
-   xs:redefine is similar to xs:include with one exception:
-   the definition of simple and complex types and attribute and element groups can be changed.
-   Changes performed on these components must lead to components that are valid restrictions or extensions of the original ones.
-
-   the new types must be defined as derivations by restriction or extension of their previous definition,
-   which is considered to be the base type.
-
-   Element and attribute groups are redefined by giving a new definition,
-   and may refer to themselves to indicate that the content of their original definition must be included.
-   In this case, this self-reference is not considered a recursive definition, but an extension of the original group.
-
-  -->
-
   <!-- MISSING ELEMENTS:
 
-globale definition (kann über ref-Attribut referenziert werden):
+globale definition (top level):
 <xs:attribute
            default        = xs:string
            fixed          = xs:string
@@ -455,58 +310,17 @@ globale definition (kann über ref-Attribut referenziert werden):
            Content: xs:simpleType? nur wenn nicht type-Attribut definiert
 </xs:attribute>
 
-lokale definition:
-<xs:attribute
-           default        = xs:string
-           fixed          = xs:string
-           form           = ( "qualified" | "unqualified" )
-           name           = xs:NCName
-           ref            = xs:QName 
-           type           = xs:QName nur wenn nicht ref-Attribut definiert
-           use            = ( "prohibited" | "optional" | "required" ) : "optional"
-           Content: xs:simpleType? nur wenn nicht ref-Attribut definiert und nur wenn nicht type-Attribut definiert
-</xs:attribute>
-
-globale definition:
+globale definition (top level und in redefine):
 <xs:attributeGroup
            name          = xs:NCName
            Content: (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
 </xs:attributeGroup>
 
-referenz (lokal):
-<xs:attributeGroup
-           ref          = xs:QName
-</xs:attributeGroup>
-
-globale Definition:
+globale Definition (top level und in redefine):
 <xs:group
            name               = xs:NCName
            Content: (xs:all | xs:choice | xs:sequence)
 </xs:group>
-
-lokale Definition:
-<xs:group
-           maxOccurs   = ( xs:nonNegativeInteger | "unbounded" ) : "1"
-           minOccurs   = xs:nonNegativeInteger : "1"
-           ref         = xs:QName
-</xs:group>
-
-<xs:simpleContent
-           Content: (xs:restriction | xs:extension)
-</xs:simpleContent>
-
-This element allows the definition of a simple content model by derivation of a simple type or of another simple content complex type.
-It is not a component by itself (simple contents are not named) but rather declaration of the intention to define a simple content model by derivation. 
-
-<xs:element name="title">
-  <xs:complexType>
-    <xs:simpleContent>
-      <xs:extension base="xs:string">
-        <xs:attribute ref="lang"/>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-</xs:element>
 
 <xs:any
            maxOccurs          = ( xs:nonNegativeInteger | "unbounded" ) : "1"
