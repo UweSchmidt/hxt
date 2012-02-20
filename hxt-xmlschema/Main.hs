@@ -3,108 +3,126 @@ import Text.XML.HXT.Curl
 
 import Data.Map (Map, elems, toList, empty, insert)
 
-data XmlSchema      = XmlSchema
-                    { sTargetNS     :: Maybe Namespace
-                    , sSimpleTypes  :: SimpleTypes
-                    , sComplexTypes :: ComplexTypes
-                    , sElements     :: Elements
-                    , sIncludes     :: Includes
-                    }
-                    deriving (Show, Eq)
+data XmlSchema       = XmlSchema
+                     { sTargetNS        :: Maybe Namespace
+                     , sIncludes        :: Includes 
+                     , sSimpleTypes     :: SimpleTypes
+                     , sComplexTypes    :: ComplexTypes
+                     , sElements        :: Elements
+                     , sGroups          :: Groups
+                     , sAttributes      :: Attributes
+                     , sAttributeGroups :: AttributeGroups
+                     }
+                     deriving (Show, Eq)
 
-type Namespace      = String
-type SimpleTypes    = Map Name SimpleType
-type ComplexTypes   = Map Name ComplexType
-type Elements       = Map Name Element
-type Includes       = [Include]
-type Name           = String
+type Namespace       = String
+type Includes        = [Include]
+type SimpleTypes     = Map Name SimpleType
+type ComplexTypes    = Map Name ComplexType
+type Elements        = Map Name Element
+type Groups          = Map Name Group
+type Attributes      = Map Name Attribute
+type AttributeGroups = Map Name AttributeGroups
+type Name            = String
 
-data XmlSchema'     = XmlSchema'
-                    { targetNS :: Maybe Namespace
-                    , parts    :: [XmlSchemaPart]
-                    }
-data XmlSchemaPart  = St {unSt :: (Name, SimpleType)}
-                    | Ct {unCt :: (Name, ComplexType)}
-                    | El {unEl :: Element}
-                    | In {unIn :: Include}
+data XmlSchema'      = XmlSchema'
+                     { targetNS :: Maybe Namespace
+                     , parts    :: [XmlSchemaPart]
+                     }
+data XmlSchemaPart   = In {unIn :: Include}
+                     | St {unSt :: (Name, SimpleType)}
+                     | Ct {unCt :: (Name, ComplexType)}
+                     | El {unEl :: Element}
+                     | Gr {unGr :: (Name, Group)}
+                     | At {unAt :: Attribute}
+                     | Ag {unAg :: (Name, AttributeGroup)}
 
-data SimpleType     = Restr {unRestr :: Restriction}
-                    | Lst   {unLst   :: List}
-                    | Un    {unUn    :: Union}
-                    deriving (Show, Eq)
-type Restriction    = (Base, RestrAttrs)
-type Base           = String
-type RestrAttrs     = [RestrAttr]
-data RestrAttr      = MinIncl        {unMinIncl        :: Value}
-                    | MaxIncl        {unMaxIncl        :: Value}
-                    | MinExcl        {unMinExcl        :: Value}
-                    | MaxExcl        {unMaxExcl        :: Value}
-                    | TotalDigits    {unTotalDigits    :: Value}
-                    | FractionDigits {unFractionDigits :: Value}
-                    | Enumeration    {unEnumeration    :: Value}
-                    | Pattern        {unPattern        :: Value}
-                    | MinLength      {unMinLength      :: Value}
-                    | MaxLength      {unMaxLength      :: Value}
-                    | Length         {unLength         :: Value}
-                    deriving (Show, Eq)
-type Value          = String
--- type RestrFunc      = String -> Maybe String -- Nothing: true, Just x: error with message x
-type List           = ItemType
-type ItemType       = String
-type Union          = MemberTypes
-type MemberTypes    = String
+data Include         = Incl  {unIncl  :: Location}
+                     | Imp   {unImp   :: (Location, Namespace)}
+                     | Redef {unRedef :: (Location, Redefinitions)}
+                     deriving (Show, Eq)
+type Location        = String
+type Redefinitions   = [Redefinition]
+data Redefinition    = StRestr   {unStRestr   :: Restriction}
+                     | CtSCExt   {unCtSCExt   :: TODO:}
+                     | CtSCRestr {unCtSCRestr :: TODO:}
+                     | CtCCExt   {unCtCCExt   :: TODO:}
+                     | CtCCRestr {unCtCCRestr :: TODO:}
+                     | Grp       {unGrp       :: TODO:}
+                     | AttrGrp   {unAttrGrp   :: TODO:}
 
-data ComplexType    = ComplexType
-                    { mixed   :: Maybe String
-                    , ctelems :: [CTElems]
-                    }
-                    deriving (Show, Eq)
-data CTElems        = Sq    {unSq    :: Sequence}
-                    | Ch    {unCh    :: Choice}
-                    | Al    {unAl    :: All}
-                    | Attr  {unAttr  :: Attribute}
-                    | SCont {unSCont :: SimpleContent}
-                    | CCont {unCCont :: ComplexContent}
-                    deriving (Show, Eq)
-type Sequence       = [Element]
-type Choice         = [Element]
-type All            = [Element]
-type Attribute      = (Name, Type)
-type Type           = String
-data SimpleContent  = SCExt   {unSCExt   :: SCExtension}
-                    | SCRestr {unSCRestr :: SCRestriction}
-                    deriving (Show, Eq)
-type SCExtension    = 
-type SCRestriction  = 
-data ComplexContent = CCExt   {unCCExt   :: CCExtension}
-                    | CCRestr {unCCRestr :: CCRestriction}
-                    deriving (Show, Eq)
-type CCExtension    = (Base, Sequence)
-type CCRestriction  = (Base, Sequence)
+data SimpleType      = Restr {unRestr :: Restriction}
+                     | Lst   {unLst   :: List}
+                     | Un    {unUn    :: Union}
+                     deriving (Show, Eq)
+type Restriction     = (Base, RestrAttrs)
+type Base            = String
+type RestrAttrs      = [RestrAttr]
+data RestrAttr       = MinIncl        {unMinIncl        :: Value}
+                     | MaxIncl        {unMaxIncl        :: Value}
+                     | MinExcl        {unMinExcl        :: Value}
+                     | MaxExcl        {unMaxExcl        :: Value}
+                     | TotalDigits    {unTotalDigits    :: Value}
+                     | FractionDigits {unFractionDigits :: Value}
+                     | Enumeration    {unEnumeration    :: Value}
+                     | Pattern        {unPattern        :: Value}
+                     | MinLength      {unMinLength      :: Value}
+                     | MaxLength      {unMaxLength      :: Value}
+                     | Length         {unLength         :: Value}
+                     deriving (Show, Eq)
+type Value           = String
+-- type RestrFunc       = String -> Maybe String -- Nothing: true, Just x: error with message x
+type List            = ItemType
+type ItemType        = String
+type Union           = MemberTypes
+type MemberTypes     = String
 
-data Element        = ElRef {unElRef :: ElementRef}
-                    | ElDef {unElDef :: ElementDef}
-                    deriving (Show, Eq)
-type ElementRef     = String
-data ElementDef     = ElementDef
-                    { name      :: Name
-                    , elTypeDef :: ElTypeDef
-                    , minOcc    :: Maybe String
-                    , maxOcc    :: Maybe String
-                    }
-                    deriving (Show, Eq)
-data ElTypeDef      = TRef  {unTRef  :: Name}
-                    | CTDef {unCTDef :: ComplexType}
-                    deriving (Show, Eq)
+data ComplexType     = ComplexType
+                     { mixed   :: Maybe String
+                     , ctelems :: [CTElems]
+                     }
+                     deriving (Show, Eq)
+data CTElems         = Sq    {unSq    :: Sequence}
+                     | Ch    {unCh    :: Choice}
+                     | Al    {unAl    :: All}
+                     | Attr  {unAttr  :: Attribute}
+                     | SCont {unSCont :: SimpleContent}
+                     | CCont {unCCont :: ComplexContent}
+                     deriving (Show, Eq)
+type Sequence        = [Element]
+type Choice          = [Element]
+type All             = [Element]
+type Attribute       = (Name, Type)
+type Type            = String
+data SimpleContent   = SCExt   {unSCExt   :: SCExtension}
+                     | SCRestr {unSCRestr :: SCRestriction}
+                     deriving (Show, Eq)
+type SCExtension     = 
+type SCRestriction   = 
+data ComplexContent  = CCExt   {unCCExt   :: CCExtension}
+                     | CCRestr {unCCRestr :: CCRestriction}
+                     deriving (Show, Eq)
+type CCExtension     = (Base, Sequence)
+type CCRestriction   = (Base, Sequence)
 
-data Include        = Incl  {unIncl  :: Location}
-                    | Imp   {unImp   :: (Location, Namespace)}
-                    | Redef {unRedef :: (Location, Redefinitions)}
-                    deriving (Show, Eq)
-type Location       = String
-type Redefinitions  = [Redefinition]
-data Redefinition   = StRestr {unStRestr :: Restriction}
-                    | 
+data Element         = ElRef {unElRef :: ElementRef}
+                     | ElDef {unElDef :: ElementDef}
+                     deriving (Show, Eq)
+type ElementRef      = String
+data ElementDef      = ElementDef
+                     { name      :: Name
+                     , elTypeDef :: ElTypeDef
+                     , minOcc    :: Maybe String
+                     , maxOcc    :: Maybe String
+                     }
+                     deriving (Show, Eq)
+data ElTypeDef       = TRef  {unTRef  :: Name}
+                     | CTDef {unCTDef :: ComplexType}
+                     deriving (Show, Eq)
+
+data Group           = TODO:
+data Attribute       = TODO: @see type Attribute
+data AttributeGroup  = 
 
 -- Namespace handling
 
@@ -121,22 +139,36 @@ xpElem' = xpElemNS nsUri nsPrefix
 
 toSchema :: XmlSchema' -> XmlSchema
 toSchema s
-  = toSchemaRec s empty empty empty []
+  = toSchemaRec s [] empty empty empty empty empty empty
     where
-    toSchemaRec (XmlSchema' tns [])                sts cts els ins = XmlSchema tns sts cts els ins
-    toSchemaRec (XmlSchema' tns ((St (k, st)):xs)) sts cts els ins = toSchemaRec (XmlSchema' tns xs) (insert k st sts) cts els ins
-    toSchemaRec (XmlSchema' tns ((Ct (k, ct)):xs)) sts cts els ins = toSchemaRec (XmlSchema' tns xs) sts (insert k ct cts) els ins
-    toSchemaRec (XmlSchema' tns ((El el)     :xs)) sts cts els ins = toSchemaRec (XmlSchema' tns xs) sts cts (insert (name (unElDef el)) el els) ins
-    toSchemaRec (XmlSchema' tns ((In incl)   :xs)) sts cts els ins = toSchemaRec (XmlSchema' tns xs) sts cts els (ins ++ [incl]) -- keep ordering
+    toSchemaRec (XmlSchema' tns [])                ins sts cts els grs ats ags
+      = XmlSchema tns ins sts cts els grs ats ags
+    toSchemaRec (XmlSchema' tns ((In incl)   :xs)) ins sts cts els grs ats ags
+      = toSchemaRec (XmlSchema' tns xs) (ins ++ [incl]) sts cts els grs ats ags
+    toSchemaRec (XmlSchema' tns ((St (k, st)):xs)) ins sts cts els grs ats ags
+      = toSchemaRec (XmlSchema' tns xs) ins (insert k st sts) cts els grs ats ags
+    toSchemaRec (XmlSchema' tns ((Ct (k, ct)):xs)) ins sts cts els grs ats ags
+      = toSchemaRec (XmlSchema' tns xs) ins sts (insert k ct cts) els grs ats ags
+    toSchemaRec (XmlSchema' tns ((El el)     :xs)) ins sts cts els grs ats ags
+      = toSchemaRec (XmlSchema' tns xs) ins sts cts (insert (name (unElDef el)) el els) grs ats ags
+    toSchemaRec (XmlSchema' tns ((Gr (k, gr)):xs)) ins sts cts els grs ats ags
+      = toSchemaRec (XmlSchema' tns xs) ins sts cts els (insert k gr grs) ats ags
+    toSchemaRec (XmlSchema' tns ((At at)     :xs)) ins sts cts els grs ats ags
+      = toSchemaRec (XmlSchema' tns xs) ins sts cts els grs (insert (name (unAttrDef at)) at ats) ags
+    toSchemaRec (XmlSchema' tns ((Ag (k, ag)):xs)) ins sts cts els grs ats ags
+      = toSchemaRec (XmlSchema' tns xs) ins sts cts els grs ats (insert k ag ags)
 
 fromSchema :: XmlSchema -> XmlSchema'
 fromSchema s
-  = XmlSchema' (sTargetNS s) $ concat [sts, cts, els, ins]
-    where 
+  = XmlSchema' (sTargetNS s) $ concat [ins, sts, cts, els, grs, ats, ags]
+    where
+    ins = map In $ sIncludes s
     sts = map St $ toList $ sSimpleTypes s
     cts = map Ct $ toList $ sComplexTypes s
     els = map El $ elems  $ sElements s
-    ins = map In $ sIncludes s
+    grs = map Gr $ toList $ sGroups s 
+    ats = map At $ elems  $ sAttributes s
+    ags = map Ag $ toList $ sAttributeGroups s
 
 -- Pickler definitions
 
@@ -151,14 +183,51 @@ xpSchemaPart :: PU XmlSchemaPart
 xpSchemaPart
   = xpAlt tag ps
     where
-    tag (St _) = 0
-    tag (Ct _) = 1
-    tag (El _) = 2
-    tag (In _) = 3
-    ps = [ xpWrap (St, unSt) $ xpElem' "simpleType"  $ xpPair (xpAttr "name" xpText) xpSimpleType
-         , xpWrap (Ct, unCt) $ xpElem' "complexType" $ xpPair (xpAttr "name" xpText) xpComplexType
-         , xpWrap (El, unEl) $ xpElem' "element"     $ xpElement
-         , xpWrap (In, unIn) $ xpInclude
+    tag (In _) = 0
+    tag (St _) = 1
+    tag (Ct _) = 2
+    tag (El _) = 3
+    tag (Gr _) = 4
+    tag (At _) = 5
+    tag (Ag _) = 6
+    ps = [ xpWrap (In, unIn) $ xpInclude
+         , xpWrap (St, unSt) $ xpElem' "simpleType"     $ xpPair (xpAttr "name" xpText) xpSimpleType
+         , xpWrap (Ct, unCt) $ xpElem' "complexType"    $ xpPair (xpAttr "name" xpText) xpComplexType
+         , xpWrap (El, unEl) $ xpElem' "element"        $ xpElement
+         , xpWrap (Gr, unGr) $ xpElem' "group"          $ xpPair (xpAttr "name" xpText) xpGroup
+         , xpWrap (At, unAt) $ xpElem' "attribute"      $ xpAttribute
+         , xpWrap (Ag, unAg) $ xpElem' "attributeGroup" $ xpPair (xpAttr "name" xpText) xpAttributeGroup
+         ]
+
+xpInclude :: PU Include
+xpInclude
+  = xpAlt tag ps
+    where
+    tag (Incl _)  = 0
+    tag (Imp _)   = 1
+    tag (Redef _) = 2
+    ps = [ xpElem' "include"  $ xpWrap (Incl,  unIncl)  $ xpAttr "schemaLocation" xpText
+         , xpElem' "import"   $ xpWrap (Imp,   unImp)   $ xpPair (xpAttr "schemaLocation" xpText) (xpAttr "namespace" xpText)
+         , xpElem' "redefine" $ xpWrap (Redef, unRedef) $ xpPair (xpAttr "schemaLocation" xpText) (xpList xpRedefinition)
+         ]
+xpRedefinition :: PU Redefinition
+xpRedefinition
+  = xpAlt tag ps
+    where
+    tag (StRestr _)   = 0
+    tag (CtSCExt _)   = 1
+    tag (CtSCRestr _) = 2
+    tag (CtCCExt _)   = 3
+    tag (CtCCRestr _) = 4
+    tag (Grp _)       = 5
+    tag (AttrGrp _)   = 6
+    ps = [ xpElem' "simpleType"     $ xpElem' "restriction"    $ xpWrap (StRestr,  unStRestr) $ xpRestriction
+         , xpElem' "complexType"    $ xpElem' "simpleContent"  $ xpElem' "extension" $ TODO:
+         , xpElem' "complexType"    $ xpElem' "simpleContent"  $ xpElem' "restriction" $ TODO:
+         , xpElem' "complexType"    $ xpElem' "complexContent" $ xpElem' "extension" $ TODO:
+         , xpElem' "complexType"    $ xpElem' "complexContent" $ xpElem' "restriction" $ TODO:
+         , xpElem' "group"          $ TODO:
+         , xpElem' "attributeGroup" $ TODO:
          ]
 
 xpSimpleType :: PU SimpleType
@@ -266,37 +335,6 @@ xpElTypeDef
     tag (CTDef _) = 1
     ps = [ xpWrap (TRef,  unTRef)  $ xpAttr "type" xpText
          , xpWrap (CTDef, unCTDef) $ xpElem' "complexType" $ xpComplexType
-         ]
-
-xpInclude :: PU Include
-xpInclude
-  = xpAlt tag ps
-    where
-    tag (Incl _)  = 0
-    tag (Imp _)   = 1
-    tag (Redef _) = 2
-    ps = [ xpElem' "include"  $ xpWrap (Incl,  unIncl)  $ xpAttr "schemaLocation" xpText
-         , xpElem' "import"   $ xpWrap (Imp,   unImp)   $ xpPair (xpAttr "schemaLocation" xpText) (xpAttr "namespace" xpText)
-         , xpElem' "redefine" $ xpWrap (Redef, unRedef) $ xpPair (xpAttr "schemaLocation" xpText) (xpList xpRedefinition)
-         ]
-xpRedefinition :: PU Redefinition
-xpRedefinition
-  = xpAlt tag ps
-    where
-    tag (StRestr _)   = 0
-    tag (CtSCExt _)   = 1
-    tag (CtSCRestr _) = 2
-    tag (CtCCExt _)   = 3
-    tag (CtCCRestr _) = 4
-    tag (Grp _)       = 5
-    tag (AttrGrp _)   = 6
-    ps = [ xpElem' "simpleType"  $ xpElem' "restriction"    $ xpWrap (StRestr,  unStRestr) $ xpRestriction
-         , xpElem' "complexType" $ xpElem' "simpleContent"  $ xpElem' "extension" $ TODO:
-         , xpElem' "complexType" $ xpElem' "simpleContent"  $ xpElem' "restriction" $ TODO:
-         , xpElem' "complexType" $ xpElem' "complexContent" $ xpElem' "extension" $ TODO:
-         , xpElem' "complexType" $ xpElem' "complexContent" $ xpElem' "restriction" $ TODO:
-         , xpElem' "group" $ TODO:
-         , xpElem' "attributeGroup" $ TODO:
          ]
 
 loadXmlSchema :: String -> IO XmlSchema
