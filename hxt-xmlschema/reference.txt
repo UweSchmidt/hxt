@@ -1,15 +1,15 @@
-Relevante Elemente:
+relevant elements:
 
 ------------------------------------------------------------------------------------------
 
   xs:schema
 
-  Relevante Attribute:
+  relevant attributes:
 
     xmlns (default namespace), xmlns:xs, ...
     targetNamespace      = xs:anyURI
 
-  Irrelevante Attribute:
+  irrelevant attributes:
 
     attributeFormDefault = ( "qualified" | "unqualified" ) : "unqualified"
     blockDefault         = ( "#all" | list of ( "extension" | "restriction" | "substitution" ) ) : ""
@@ -18,21 +18,20 @@ Relevante Elemente:
     version              = xs:token
     xml:lang             = xml:lang
 
-  Inhaltsmodell:
+  content model:
 
     ( xs:include | xs:import | xs:redefine 
     | xs:simpleType
     | xs:complexType
     | xs:element | xs:group
     | xs:attribute | xs:attributeGroup
-    | xs:notation
     )*
 
 ------------------------------------------------------------------------------------------
 
   xs:include
 
-  Relevante Attribute:
+  relevant attributes:
 
     schemaLocation = xs:anyURI
 
@@ -40,54 +39,54 @@ Relevante Elemente:
 
   xs:import
 
-  Relevante Attribute:
+  relevant attributes:
 
-    schemaLocation   = xs:anyURI
-    namespace        = xs:anyURI
+    schemaLocation = xs:anyURI
+    namespace      = xs:anyURI
 
 ------------------------------------------------------------------------------------------
 
   xs:redefine
 
-  Relevante Attribute:
+  relevant attributes:
 
     schemaLocation = xs:anyURI
 
-  Inhaltsmodell:
+  content model:
 
-    ( xs:simpleType     (only restriction allowed, base must be a known simpleType)
-    | xs:complexType    (only extension/restriction in simpleContent/complexContent allowed, base must be a known complexType)
-    | xs:group          (redefinition which must include original definition, name must be a known group)
-    | xs:attributeGroup (redefinition which must include original definition, name must be a known attributeGroup)
+    ( xs:simpleType     -- only restriction allowed, base must be a known simpleType
+    | xs:complexType    -- only extension/restriction in simpleContent/complexContent allowed, base must be a known complexType
+    | xs:group          -- redefinition which must include original definition, name must be a known group
+    | xs:attributeGroup -- redefinition which must include original definition, name must be a known attributeGroup
     )*
 
 ------------------------------------------------------------------------------------------
 
-  xs:simpleType
+  xs:simpleType (global definition)
 
-  Relevante Attribute:
+  relevant attributes:
 
-    name          = xs:NCName, nur wenn globale Definition
+    name  = xs:NCName
 
-  Irrelevante Attribute:
+  irrelevant attributes:
 
-    final         = ( "#all" | ( "list" | "union" | "restriction" ) ), nur wenn globale Definition
+    final = ( "#all" | ( "list" | "union" | "restriction" ) )
 
-  Inhaltsmodell:
+  content model:
 
     xs:restriction | xs:list | xs:union
 
 ------------------------------------------------------------------------------------------
 
-  xs:restriction (innerhalb von simpleType)
+  xs:restriction (inside of simpleType)
 
-  Relevante Attribute:
+  relevant attributes:
 
-    base          = xs:QName only allowed if no nested simpleType
+    base = xs:QName -- only if no nested simpleType
 
-  Inhaltsmodell:
+  content model:
 
-    xs:simpleType?,
+    xs:simpleType?, -- only if no base attribute
     ( xs:minExclusive | xs:minInclusive | xs:maxExclusive | xs:maxInclusive
     | xs:totalDigits | xs:fractionDigits | xs:length | xs:minLength | xs:maxLength
     | xs:enumeration | xs:pattern
@@ -96,91 +95,433 @@ Relevante Elemente:
 
 ------------------------------------------------------------------------------------------
 
+  xs:simpleType (local anonymous definition)
+
+  content model:
+
+    xs:restriction | xs:list | xs:union
+
+------------------------------------------------------------------------------------------
+
   xs:minInclusive, xs:minExclusive, xs:maxExclusive, xs:maxInclusive
 
-  Relevante Attribute:
+  relevant attributes:
 
-    value          = anySimpleType
+    value = anySimpleType
 
-  Irrelevante Attribute:
+  irrelevant attributes:
 
-    fixed          = xs:boolean : "false"
+    fixed = xs:boolean : "false"
 
 ------------------------------------------------------------------------------------------
 
   xs:totalDigits, xs:fractionDigits, xs:length, xs:minLength, xs:maxLength
 
-  Relevante Attribute:
+  relevant attributes:
 
-    value          = xs:nonNegativeInteger
+    value = xs:nonNegativeInteger
 
-  Irrelevante Attribute:
+  irrelevant attributes:
 
-    fixed          = xs:boolean : "false"
+    fixed = xs:boolean : "false"
 
 ------------------------------------------------------------------------------------------
 
   xs:enumeration, xs:pattern
 
-  Relevante Attribute:
+  relevant attributes:
 
-    value          = anySimpleType
+    value = anySimpleType
 
 ------------------------------------------------------------------------------------------
 
   xs:whiteSpace
 
-  Relevante Attribute:
+  relevant attributes:
 
-    value          = ( "preserve" | "replace" | "collapse" )
+    value = ( "preserve" | "replace" | "collapse" )
     
-    preserve (whitespace characters are kept unchanged),
-    replace (all instances of whitespace are replaced with a space),
-    collapse (leading and trailing whitespace is removed, the rest is treated like replace)
+    preserve: whitespace characters are kept unchanged
+    replace:  all instances of whitespace are replaced with a space
+    collapse: leading and trailing whitespace is removed, the rest is treated like replace
 
-  Irrelevante Attribute:
+  irrelevant attributes:
 
-    fixed          = xs:boolean : "false"
+    fixed = xs:boolean : "false"
 
 ------------------------------------------------------------------------------------------
 
   xs:list
 
-  Relevante Attribute:
+  relevant attributes:
 
-    itemType         = xs:QName only allowed if no nested simpleType
+    itemType = xs:QName -- only if no nested simpleType
 
-  Inhaltsmodell:
+  content model:
 
-    xs:simpleType?
+    xs:simpleType? -- only if no itemType attribute
 
 ------------------------------------------------------------------------------------------
 
   xs:union
 
-  Relevante Attribute:
+  relevant attributes:
 
-    memberTypes = list of xs:QName can be mixed with nested simpleTypes, delimiter: space
+    memberTypes = list of xs:QName -- can be mixed with nested simpleTypes, delimiter: space
 
-  Inhaltsmodell:
+  content model:
 
-    xs:simpleType*
+    xs:simpleType* -- can be mixed with memberTypes attribute
 
 ==========================================================================================
 
-Generell irrelevante Elemente:
+  xs:complexType (global definition)
 
-  Elemente aus anderen Namensräumen
+  relevant attributes:
+
+    name     = xs:NCName
+    mixed    = xs:boolean : "false"
+
+  irrelevant attributes:
+
+    abstract = xs:boolean : "false"
+    block    = ( "#all" | list of ( "extension" | "restriction" ) )
+    final    = ( "#all" | list of ( "extension" | "restriction" ) )
+
+  content model:
+
+    ( xs:simpleContent
+    | xs:complexContent
+    | (xs:group | xs:all | xs:choice | xs:sequence)?,
+      (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?  -- if empty: empty element like <br/>
+    )
+
+------------------------------------------------------------------------------------------
+
+  xs:simpleContent
+
+  content model:
+
+    xs:extension | xs:restriction
+
+------------------------------------------------------------------------------------------
+
+  xs:extension (inside of simpleContent)
+
+  relevant attributes:
+
+    base = xs:QName
+
+  content model:
+
+    (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
+
+------------------------------------------------------------------------------------------
+
+  xs:restriction (inside of simpleContent)
+
+  relevant attributes:
+
+    base = xs:QName -- only if no nested simpleType
+
+  content model:
+
+    xs:simpleType?, -- only if no base attribute
+    ( xs:minExclusive | xs:minInclusive | xs:maxExclusive | xs:maxInclusive
+    | xs:totalDigits | xs:fractionDigits | xs:length | xs:minLength | xs:maxLength
+    | xs:enumeration | xs:pattern
+    | xs:whiteSpace
+    )*,
+    (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
+
+------------------------------------------------------------------------------------------
+
+  xs:complexContent
+
+  relevant attributes:
+
+    mixed = xs:boolean
+
+  content model:
+
+    xs:extension | xs:restriction
+
+------------------------------------------------------------------------------------------
+
+  xs:extension, xs:restriction (inside of complexContent)
+
+  relevant attributes:
+
+    base = xs:QName
+
+  content model:
+
+    (xs:group | xs:all | xs:choice | xs:sequence)?,
+    (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
+
+------------------------------------------------------------------------------------------
+
+  xs:group (reference)
+
+  relevant attributes:
+
+    maxOccurs = ( xs:nonNegativeInteger | "unbounded" ) : "1"
+    minOccurs = xs:nonNegativeInteger : "1"
+    ref       = xs:QName
+
+------------------------------------------------------------------------------------------
+
+  xs:all (not inside of group)
+
+  relevant attributes:
+
+    maxOccurs = "1" : "1"
+    minOccurs = ( "0" | "1" ) : "1"
+
+  content model:
+
+    xs:element*
+
+------------------------------------------------------------------------------------------
+
+  xs:choice, xs:sequence (not inside of group)
+
+  relevant attributes:
+
+    maxOccurs = ( xs:nonNegativeInteger | "unbounded" ) : "1"
+    minOccurs = xs:nonNegativeInteger : "1"
+
+  content model:
+
+    (xs:element | xs:group | xs:choice | xs:sequence | xs:any)*
+
+------------------------------------------------------------------------------------------
+
+  xs:element (local definition)
+
+  relevant attributes:
+
+    default   = xs:string
+    maxOccurs = ( "0" | "1" ) : "1",
+    minOccurs = ( "0" | "1" ) : "1",
+    name      = xs:NCName
+    ref       = xs:QName, -- only if no type attribute and no nested simpleType or complexType
+    type      = xs:QName, -- only if no ref attribute and no nested simpleType or complexType
+
+  irrelevant attributes:
+
+    block     = ( "#all" | list of ( "extension" | "restriction" | "substitution" ) )
+    fixed     = xs:string
+    form      = ( "qualified" | "unqualified" ),
+    nillable  = xs:boolean : "false"
+
+  content model:
+
+    (xs:simpleType | xs:complexType)?, -- only if no ref or type attribute
+    (xs:unique | xs:key | xs:keyref)*
+
+------------------------------------------------------------------------------------------
+
+  xs:complexType (local anonymous definition)
+
+  relevant attributes:
+
+    mixed = xs:boolean : "false"
+
+  content model:
+
+    ( xs:simpleContent
+    | xs:complexContent
+    | (xs:group | xs:all | xs:choice | xs:sequence)?,
+      (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?  -- if empty: empty element like <br/>
+    )
+
+------------------------------------------------------------------------------------------
+
+  xs:any
+
+  relevant attributes:
+
+    maxOccurs       = ( xs:nonNegativeInteger | "unbounded" ) : "1"
+    minOccurs       = xs:nonNegativeInteger : "1"
+    namespace       = ( ( "##any" | "##other" ) | list of ( xs:anyURI | ( "##targetNamespace" | "##local" ) ) ) : "##any"
+    processContents = ( "skip" | "lax" | "strict" ) : "strict"
+
+    skip:   skip any further validation
+    strict: elements must be found in the schema for this namespace or have a valid datatype associated
+    lax:    if schema document was found act like strict, otherwise act like skip
+
+------------------------------------------------------------------------------------------
+
+  xs:attribute (local definition or reference)
+
+  relevant attributes:
+
+    default = xs:string
+    name    = xs:NCName
+    ref     = xs:QName -- only if no type attribute and no nested simpleType
+    type    = xs:QName -- only if no ref attribute and no nested simpleType
+    use     = ( "prohibited" | "optional" | "required" ) : "optional"
+
+  irrelevant attributes:
+
+    fixed   = xs:string
+    form    = ( "qualified" | "unqualified" )    
+
+  content model:
+
+    xs:simpleType? -- only if no ref or type attribute
+
+------------------------------------------------------------------------------------------
+
+  xs:attributeGroup (reference)
+
+  relevant attributes:
+
+    ref = xs:QName
+
+------------------------------------------------------------------------------------------
+
+  xs:anyAttribute
+
+  relevant attributes:
+
+    namespace       = ( ( "##any" | "##other" ) | list of ( xs:anyURI | ( "##targetNamespace" | "##local" ) ) ) : "##any"
+    processContents = ( "skip" | "lax" | "strict" ) : "strict"
+
+    skip:   skip any further validation
+    strict: elements must be found in the schema for this namespace or have a valid datatype associated
+    lax:    if schema document was found act like strict, otherwise act like skip
+
+==========================================================================================
+
+  xs:element (global definition)
+
+  relevant attributes:
+
+    default           = xs:string
+    name              = xs:NCName
+    type              = xs:QName, -- only if no nested simpleType or complexType
+
+  irrelevant attributes:
+
+    abstract          = xs:boolean : "false",
+    block             = ( "#all" | list of ( "extension" | "restriction" | "substitution" ) )
+    final             = ( "#all" | list of ( "extension" | "restriction" ) ),
+    fixed             = xs:string
+    nillable          = xs:boolean : "false"
+    substitutionGroup = xs:QName,
+
+  content model:
+
+    (xs:simpleType | xs:complexType)?, -- only if no type attribute
+    (xs:unique | xs:key | xs:keyref)*
+
+------------------------------------------------------------------------------------------
+
+  xs:unique, xs:key
+
+  relevant attributes:
+
+    name = xs:NCName
+
+  content model:
+
+    xs:selector, xs:field+
+
+------------------------------------------------------------------------------------------
+
+  xs:keyref
+
+  relevant attributes:
+
+    name  = xs:NCName
+    refer = xs:QName
+
+  content model:
+
+    xs:selector, xs:field+
+
+------------------------------------------------------------------------------------------
+
+  xs:selector, xs:field
+
+  relevant attributes:
+
+    xpath = xs:token
+
+==========================================================================================
+
+  xs:group (global definition und inside of redefine)
+
+  relevant attributes:
+
+    name = xs:NCName
+
+  content model:
+
+    xs:all | xs:choice | xs:sequence
+
+------------------------------------------------------------------------------------------
+
+  xs:all (inside of group)
+
+  content model:
+
+    xs:element*
+
+------------------------------------------------------------------------------------------
+
+  xs:choice, xs:sequence (inside of group)
+
+  content model:
+
+    (xs:element | xs:group | xs:choice | xs:sequence | xs:any)*
+
+==========================================================================================
+
+  xs:attribute (global definition)
+
+  relevant attributes:
+
+    default = xs:string
+    name    = xs:NCName
+    type    = xs:QName -- only if no nested simpleType
+
+  irrelevant attributes:
+
+    fixed   = xs:string
+
+  content model:
+
+    xs:simpleType? -- only if no type attribute
+
+==========================================================================================
+
+  xs:attributeGroup (global definition and inside of redefine)
+
+  relevant attributes:
+
+    name = xs:NCName
+
+  content model:
+
+    (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
+
+==========================================================================================
+
+irrelevant elements:
+
+  elements from different namespaces
   xs:annotation
-  xs:appinfo (da nur innerhalb von xs:annotation)
-  xs:documentation (da nur innerhalb von xs:annotation)
+  xs:appinfo (only occurs inside of xs:annotation)
+  xs:documentation (only occurs inside of xs:annotation)
+  xs:notation
 
 ==========================================================================================
 
-Generell irrelevante Attribute:
+irrelevant attributes:
 
-  Attribute aus anderen Namensräumen
-  id                   = xs:ID
-  final
-  fixed
+  attributes from different namespaces
+  id
 

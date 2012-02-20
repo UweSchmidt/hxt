@@ -76,33 +76,9 @@
     <xs:union memberTypes="monatsname monatInt"/>
   </xs:simpleType>
 
-  <!--
+  <!-- complex types simple content (extension / restriction) -->
 
-  <xs:complexType
-    abstract       = xs:boolean : "false", nur wenn globale Definition
-    block          = ( "#all" | list of ( "extension" | "restriction" ) ), nur wenn globale Definition
-    final          = ( "#all" | list of ( "extension" | "restriction" ) ), nur wenn globale Definition
-    mixed          = xs:boolean : "false"
-    name           = xs:NCName, nur wenn globale Definition
-    Content: ( xs:simpleContent
-             | xs:complexContent
-             | (xs:group | xs:all | xs:choice | xs:sequence)?, (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
-             )
-  </xs:complexType>
-
-  ---  
-
-  <xs:simpleContent
-    Content: (xs:extension | xs:restriction)
-  </xs:simpleContent>
-
-  <xs:extension
-    base          = xs:QName
-    Content: (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
-  </xs:extension>
-
-  Bsp:
-  <xs:complexType name="title">
+  <xs:complexType name="title1">
     <xs:simpleContent>
       <xs:extension base="xs:string">
         <xs:attribute ref="lang"/>
@@ -110,126 +86,16 @@
     </xs:simpleContent>
   </xs:complexType>
 
-  <xs:restriction
-    base          = xs:QName only allowed if no nested simpleType
-    Content: xs:simpleType?,
-             ( xs:minExclusive | xs:minInclusive | xs:maxExclusive | xs:maxInclusive
-             | xs:totalDigits | xs:fractionDigits | xs:length | xs:minLength | xs:maxLength
-             | xs:enumeration | xs:pattern
-             | xs:whiteSpace
-             )*,
-             (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
-  </xs:restriction>
-
-  ---
-
-  <xs:complexContent
-    mixed          = xs:boolean
-    Content: (xs:extension | xs:restriction)
-  </xs:complexContent>
-
-  <xs:extension
-    base          = xs:QName
-    Content: (xs:group | xs:all | xs:choice | xs:sequence)?,
-             (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
-  </xs:extension>
-
-  <xs:restriction
-    base          = xs:QName
-    Content: (xs:group | xs:all | xs:choice | xs:sequence)?,
-             (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
-  </xs:restriction>
-
-  ---
-
-  lokale Definition:
-  <xs:group
-    maxOccurs   = ( xs:nonNegativeInteger | "unbounded" ) : "1"
-    minOccurs   = xs:nonNegativeInteger : "1"
-    ref         = xs:QName
-  </xs:group>
-
-  ... all, choice, sequence
-
-  ---
-
-  lokale definition oder referenz:
-  <xs:attribute
-    default        = xs:string
-    fixed          = xs:string
-    form           = ( "qualified" | "unqualified" )
-    name           = xs:NCName
-    ref            = xs:QName 
-    type           = xs:QName nur wenn nicht ref-Attribut definiert
-    use            = ( "prohibited" | "optional" | "required" ) : "optional"
-    Content: xs:simpleType? nur wenn nicht ref-Attribut definiert und nur wenn nicht type-Attribut definiert
-  </xs:attribute>
-
-  referenz (lokal):
-  <xs:attributeGroup
-    ref          = xs:QName
-  </xs:attributeGroup>
-
-  -->
-
-  <!-- complex types (sequence, choice, all TODO: group) -->
-
-  <xs:complexType name="pc-Typ">
-    <!--
-     TODO:
-     <xs:sequence
-           maxOccurs          = ( xs:nonNegativeInteger | "unbounded" ) : "1", außer wenn Unterelement von xs:group.
-           minOccurs          = xs:nonNegativeInteger : "1", außer wenn Unterelement von xs:group.
-           Content: (xs:element | xs:group | xs:choice | xs:sequence | xs:any)*
-     </xs:sequence>
-    -->
-
-    <xs:sequence>
-      <xs:element name="name" type="xs:string"/>
-      <xs:element name="hersteller" type="xs:string"/>
-      <xs:element name="prozessor" type="xs:string"/>
-      <xs:element name="mhz" type="xs:integer" minOccurs="0"/>
-      <xs:element name="kommentar" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
-    </xs:sequence>
-    <xs:attribute name="id" type="xs:integer"/>
+  <xs:complexType name="title2">
+    <xs:simpleContent>
+      <xs:restriction base="xs:string">
+        <xs:maxLength value="255"/>
+        <xs:attribute ref="lang"/>
+      </xs:restriction>
+    </xs:simpleContent>
   </xs:complexType>
 
-  <xs:complexType name="computer">
-    <xs:choice>
-      <xs:element name="desktop" type="pc-Typ"/>
-      <xs:element name="laptop" type="pc-Typ"/>
-    </xs:choice>
-    <!--
-     TODO:
-     <xs:choice
-           maxOccurs          = ( xs:nonNegativeInteger | "unbounded" ) : "1", außer wenn Unterelement von xs:group.
-           minOccurs          = xs:nonNegativeInteger : "1", außer wenn Unterelement von xs:group.
-           Content: (xs:element | xs:group | xs:choice | xs:sequence | xs:any)*
-     </xs:choice>
-    -->
-  </xs:complexType>
-
-  <xs:complexType name="set">
-    <xs:all>
-      <!--
-       "unordered group of elements"
-       xs:all: Mittels des xs:all-Tags lässt sich eine Gruppe von Kindelementen definieren,
-       von denen jedes maximal einmal auftreten darf (min- und maxOccurs der Kindelemente dürfen nur die Werte 0 oder 1 annehmen).
-       Die Reihenfolge der Elemente ist beliebig.
-       TODO:
-       <xs:all
-           maxOccurs          = "1" : "1", außer wenn Unterelement von xs:group.
-           minOccurs          = ( "0" | "1" ) : "1", außer wenn Unterelement von xs:group.
-           Content: xs:element*
-       </xs:all>
-      -->
-      <xs:element name="first" type="xs:string32" minOccurs="0"/>
-      <xs:element name="middle" type="xs:string32" minOccurs="0"/>
-      <xs:element name="last" type="xs:string32"/>
-    </xs:all>
-  </xs:complexType>
-
-  <!-- complex types (extension / restriction) -->
+  <!-- complex types complex content (extension / restriction) -->
 
   <xs:complexType name="myPC-Typ">
     <xs:complexContent>
@@ -255,40 +121,44 @@
     </xs:complexContent>
   </xs:complexType>
 
+  <!-- complex types (group, all, choice, sequence) -->
+
+  <xs:complexType name="author">
+    <xs:attribute name="age" type="xs:integer"/>
+    <xs:group ref="name"/>
+  </xs:complexType>
+
+  <xs:complexType name="set">
+    <xs:all>
+      <xs:element name="first" type="xs:string" minOccurs="0"/>
+      <xs:element name="middle" type="xs:string" minOccurs="0"/>
+      <xs:element name="last" type="xs:string"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="computer">
+    <xs:choice>
+      <xs:element name="desktop" type="pc-Typ"/>
+      <xs:element name="laptop" type="pc-Typ"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="pc-Typ">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="hersteller" type="xs:string"/>
+      <xs:element name="prozessor" type="xs:string"/>
+      <xs:element name="mhz" type="xs:integer" minOccurs="0"/>
+      <xs:element name="kommentar" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:integer"/>
+  </xs:complexType>
+
+  <!-- element definitions (with type reference) -->
+
+  <xs:element name="title" type="xs:string"/>
+
   <!-- element definitions (with anonymous type declarations) -->
-
-  <!--
-   TODO:
-   <xs:element
-           abstract          = xs:boolean : "false", nur wenn globale definition
-           block             = ( "#all" | list of ( "extension" | "restriction" | "substitution" ) )
-           default           = xs:string
-           final             = ( "#all" | list of ( "extension" | "restriction" ) ), nur wenn globale definition
-           fixed             = xs:string
-           form              = ( "qualified" | "unqualified" ), nicht wenn globale definition
-           maxOccurs         = ( "0" | "1" ) : "1", nicht wenn globale definition
-           minOccurs         = ( "0" | "1" ) : "1", nicht wenn globale definition
-           name              = xs:NCName
-           nillable          = xs:boolean : "false"
-           ref               = xs:QName, nicht wenn globale definition
-           substitutionGroup = xs:QName, nur wenn globale definition
-           type              = xs:QName, nur, wenn keine nested definition
-           Content: (xs:simpleType | xs:complexType)?,
-                    (xs:unique | xs:key | xs:keyref)*
-   </xs:element>
-  -->
-
-  <!-- type references -->
-
-  <xs:element name="head">
-    <xs:complexType>
-      <xs:sequence>
-        <xs:element name="title" type="xs:string"/>
-      </xs:sequence>
-    </xs:complexType>
-  </xs:element>
-
-  <!-- element references -->
 
   <xs:element name="html">
     <xs:complexType>
@@ -299,107 +169,35 @@
     </xs:complexType>
   </xs:element>
 
-  <!-- MISSING ELEMENTS:
+  <!-- group definition -->
 
-globale definition (top level):
-<xs:attribute
-           default        = xs:string
-           fixed          = xs:string
-           name           = xs:NCName
-           type           = xs:QName
-           Content: xs:simpleType? nur wenn nicht type-Attribut definiert
-</xs:attribute>
-
-globale definition (top level und in redefine):
-<xs:attributeGroup
-           name          = xs:NCName
-           Content: (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?
-</xs:attributeGroup>
-
-globale Definition (top level und in redefine):
-<xs:group
-           name               = xs:NCName
-           Content: (xs:all | xs:choice | xs:sequence)
-</xs:group>
-
-<xs:any
-           maxOccurs          = ( xs:nonNegativeInteger | "unbounded" ) : "1"
-           minOccurs          = xs:nonNegativeInteger : "1"
-           namespace          = ( ( "##any" | "##other" ) | list of ( xs:anyURI | ( "##targetNamespace" | "##local" ) ) ) : "##any"
-           processContents    = ( "skip" | "lax" | "strict" ) : "strict"
-</xs:any>
-
-<xs:anyAttribute
-           namespace          = ( ( "##any" | "##other" ) | list of ( xs:anyURI | ( "##targetNamespace" | "##local" ) ) ) : "##any"
-           processContents    = ( "skip" | "lax" | "strict" ) : "strict"
-</xs:anyAttribute>
-
-<xs:notation
-           name          = xs:NCName
-           public        = xs:token
-           system        = xs:anyURI
-</xs:notation>
-
-<xs:notation name="pdf" public="application/pdf"
-  system="file:///usr/bin/acroread"/>
-
-<xs:simpleType name="graphicalFormat">
-  <xs:restriction base="xs:NOTATION">
-    <xs:enumeration value="jpeg"/>
-    <xs:enumeration value="gif"/>
-    <xs:enumeration value="png"/>
-    <xs:enumeration value="svg"/>
-    <xs:enumeration value="pdf"/>
-  </xs:restriction>
-</xs:simpleType>
-
-  -->
-
-  <!-- cabinet of curiosities -->
-
-  <xs:element name="kommentar" type="xs:anyType"/>
-
-  <xs:element name="tagname">
-    <xs:complexType mixed="true">  <!-- text and tags can occur in mixed order -->
+  <xs:group name="name">
+    <xs:choice>
+      <xs:element ref="name"/>
       <xs:sequence>
-        <xs:element name="child" type="xs:integer" minOccurs="0" maxOccurs="unbounded"/>
-        <!-- Weitere Elemente … -->
+        <xs:element ref="first-name"/>
+        <xs:element ref="middle-name" minOccurs="0"/>
+        <xs:element ref="last-name"/>
       </xs:sequence>
-    </xs:complexType>
-  </xs:element>
+    </xs:choice>
+  </xs:group>
 
-  <!--
-   Von leeren XML-Elementen spricht man, wenn das jeweilige Element aus nur einem einzelnen XML-Tag besteht und keine weiteren XML-Elemente oder Text umschließt
-   (z. B. der XHTML-Zeilenumbruch: <br />). XML Schema bedient sich an dieser   Stelle eines kleinen Tricks: Es wird mittels xs:complexType ein neuer Typ definiert,
-   ohne ein Kindelement anzugeben. Da xs:complexType nach Vorgabe nur komplexe XML-Kindelemente als Inhalt zulässt, bleibt das jeweilige Element in diesem Fall leer.
-  -->
+  <!-- attribute definition -->
 
-  <!--
-   Schlüssel: xs:key, xs:unique, xs:keyref ...
+  <xs:attribute name="lang">
+    <xs:simpleType>
+      <xs:restriction base="xs:language">
+        <xs:enumeration value="en"/>
+        <xs:enumeration value="es"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:attribute>
 
-   <xs:unique
-           name          = xs:NCName
-           Content: xs:selector, xs:field+
-   </xs:unique>
+  <!-- attributeGroup definition -->
 
-   <xs:field
-           xpath          = xs:token
-   </xs:field>
-
-   <xs:key
-           name          = xs:NCName
-           Content: xs:selector, xs:field+
-   </xs:key>
-
-   <xs:keyref
-           name          = xs:NCName
-           refer         = xs:QName
-           Content: xs:selector, xs:field+
-   </xs:keyref>
-
-   <xs:selector
-           xpath          = xs:token
-   </xs:selector>
-  -->
+  <xs:attributeGroup name="bookAttributes">
+    <xs:attribute name="id" type="xs:ID"/>
+    <xs:attribute name="available" type="xs:boolean"/>
+  </xs:attributeGroup>
 
 </xs:schema>
