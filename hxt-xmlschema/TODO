@@ -11,6 +11,8 @@ t1 = IO, Writer, Err, Reader
 newtype SM a = SM {unSM : IO a}
 Monad Transformer
 
+minmaxOcc mit default values auffüllen
+
 anonyme Typen transf. mit Writer Monade?
 simple Types ebenfalls
 

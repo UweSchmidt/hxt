@@ -310,7 +310,7 @@ relevant elements:
     minOccurs = xs:nonNegativeInteger : "1"
 
     default   = xs:string
-    name      = xs:NCName
+    name      = xs:NCName -- only if no ref attribute
     ref       = xs:QName, -- only if no type attribute and no nested simpleType or complexType
     type      = xs:QName, -- only if no ref attribute and no nested simpleType or complexType
 
@@ -363,10 +363,10 @@ relevant elements:
 
   relevant attributes:
 
+    name    = xs:NCName -- only if no ref attribute
+    ref     = xs:QName  -- only if no type attribute and no nested simpleType
+    type    = xs:QName  -- only if no ref attribute and no nested simpleType
     default = xs:string
-    name    = xs:NCName
-    ref     = xs:QName -- only if no type attribute and no nested simpleType
-    type    = xs:QName -- only if no ref attribute and no nested simpleType
     use     = ( "prohibited" | "optional" | "required" ) : "optional"
 
   irrelevant attributes:
@@ -405,9 +405,9 @@ relevant elements:
 
   relevant attributes:
 
-    default           = xs:string
     name              = xs:NCName
     type              = xs:QName, -- only if no nested simpleType or complexType
+    default           = xs:string
 
   irrelevant attributes:
 

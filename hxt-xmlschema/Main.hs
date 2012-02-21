@@ -28,6 +28,7 @@ type Name            = String
 data XmlSchema'      = XmlSchema'
                      { targetNS :: Maybe Namespace
                      , parts    :: [XmlSchemaPart]
+                     -- TODO: namespaces
                      }
 data XmlSchemaPart   = In {unIn :: Include}
                      | St {unSt :: (Name, SimpleType)}
@@ -43,21 +44,17 @@ data Include         = Incl  {unIncl  :: Location}
                      deriving (Show, Eq)
 type Location        = String
 type Redefinitions   = [Redefinition]
-data Redefinition    = StRestr   {unStRestr   :: STRestriction} -- base must be a known simpleType
-                     | CtSCExt   {unCtSCExt   :: TODO:}         -- base must be a known complexType
-                     | CtSCRestr {unCtSCRestr :: TODO:}         -- base must be a known complexType
-                     | CtCCExt   {unCtCCExt   :: TODO:}         -- base must be a known complexType
-                     | CtCCRestr {unCtCCRestr :: TODO:}         -- base must be a known complexType
-                     | Grp       {unGrp       :: TODO:}         -- name must be a known group
-                     | AttrGrp   {unAttrGrp   :: TODO:}         -- name must be a known attributeGroup
+data Redefinition    = St      {unSt      :: SimpleType}  -- base must be a known simpleType
+                     | Ct      {unCt      :: ComplexType} -- base must be a known complexType
+                     | Grp     {unGrp     :: TODO:}       -- name must be a known group
+                     | AttrGrp {unAttrGrp :: TODO:}       -- name must be a known attributeGroup
 
--- global and local
 data SimpleType      = Restr {unRestr :: STRestriction}
                      | Lst   {unLst   :: STList}
                      | Un    {unUn    :: STUnion}
                      deriving (Show, Eq)
 type STRestriction   = (SimpleTypeRef, RestrAttrs)
-data SimpleTypeRef   = BaseAttr   {unBaseAttr   :: String}
+data SimpleTypeRef   = BaseAttr   {unBaseAttr   :: Name}
                      | AnonymDecl {unAnonymDecl :: SimpleType}
                      deriving (Show, Eq)
 type RestrAttrs      = [RestrAttr]
@@ -75,64 +72,113 @@ data RestrAttr       = MinIncl        {unMinIncl        :: Value}
                      | WhiteSpace     {unWhiteSpace     :: Value}
                      deriving (Show, Eq)
 type Value           = String
-data STList          = ItemTypeAttr {unItemTypeAttr :: String}
+data STList          = ItemTypeAttr {unItemTypeAttr :: Name}
                      | AnonymDecl   {unAnonymDecl   :: SimpleTyp}
                      deriving (Show, Eq)
 data STUnion         = STUnion
-                     { memberTypes :: Maybe String
+                     { memberTypes :: Maybe String -- space separated list
                      , anonymDecls :: [SimpleType]
                      }
                      deriving (Show, Eq)
 
--- global and local
--- TODO: 
 data ComplexType     = ComplexType
-                     { mixed   :: Maybe String
-                     , ctElems :: [CTElems]
+                     { mixed :: Maybe String
+                     , ctDef :: CTDef
                      }
                      deriving (Show, Eq)
-data CTElems         = Sq    {unSq    :: Sequence}
-                     | Ch    {unCh    :: Choice}
-                     | Al    {unAl    :: All}
-                     | Attr  {unAttr  :: Attribute}
-                     | SCont {unSCont :: SimpleContent}
+data CTDef           = SCont {unSCont :: SimpleContent}
                      | CCont {unCCont :: ComplexContent}
+                     | NewCT {unNewCT :: CTModel}
                      deriving (Show, Eq)
-type Sequence        = [Element]
-type Choice          = [Element]
-type All             = [Element]
-type Attribute       = (Name, Type)
-type Type            = String
+
 data SimpleContent   = SCExt   {unSCExt   :: SCExtension}
                      | SCRestr {unSCRestr :: SCRestriction}
                      deriving (Show, Eq)
-type SCExtension     = 
-type SCRestriction   = 
-data ComplexContent  = CCExt   {unCCExt   :: CCExtension}
-                     | CCRestr {unCCRestr :: CCRestriction}
-                     deriving (Show, Eq)
-type CCExtension     = (Base, Sequence)
-type CCRestriction   = (Base, Sequence)
+type SCExtension     = (Name, AttrList)
+type SCRestriction   = (STRestriction, AttrList)
 
-data Element         = ElRef {unElRef :: ElementRef}
-                     | ElDef {unElDef :: ElementDef}
-                     deriving (Show, Eq)
-type ElementRef      = String
-data ElementDef      = ElementDef
-                     { name      :: Name
-                     , elTypeDef :: ElTypeDef
-                     , minOcc    :: Maybe String
-                     , maxOcc    :: Maybe String
+data ComplexContent  = ComplexContent
+                     { mixed :: Maybe String
+                     , ccDef :: CCDef
                      }
                      deriving (Show, Eq)
-data ElTypeDef       = TRef  {unTRef  :: Name}
-                     | CTDef {unCTDef :: ComplexType}
+data CCDef           = CCExt   {unCCExt   :: CCExtension}
+                     | CCRestr {unCCRestr :: CCRestriction}
+                     deriving (Show, Eq)
+type CCExtension     = (Name, CTModel)
+type CCRestriction   = (Name, CTModel)
+
+data CTModel         = (Maybe CTCompositor, AttrList)
+data CTCompositor    = GrR   {unGrR :: (MinMaxOcc, Group)}
+                     | Al    {unAl  :: (MinMaxOcc, All)}
+                     | Ch    {unCh  :: (MinMaxOcc, Choice)}
+                     | Sq    {unSq  :: (MinMaxOcc, Sequence)}
+                     deriving (Show, Eq)
+data MinMaxOcc       = MinMaxOcc
+                     { minOcc :: Maybe String
+                     , maxOcc :: Maybe String
+                     }
+                     deriving (Show, Eq)
+type All             = [Element]
+type Choice          = [ChSeqContent]
+type Sequence        = [ChSeqContent]
+data ChSeqContent    = El  {unEl  :: (MinMaxOcc, Element)}
+                     | GrR {unGrR :: (MinMaxOcc, Group)}
+                     | Ch  {unCh  :: (MinMaxOcc, Choice)}
+                     | Sq  {unSq  :: (MinMaxOcc, Sequence)}
+                     | An  {unAn  :: (MinMaxOcc, Any)}
+                     deriving (Show, Eq)
+data Any             = Any
+                     { namespace       :: Maybe Namespace
+                     , processContents :: Maybe String
+                     }
+                     deriving (Show, Eq)
+type AttrList        = [AttrListElem]
+data AttrListElem    = Attr    {unAttr    :: Attribute}
+                     | AGRef   {unAGRef   :: AttributeGroup}
+                     | AnyAttr {unAnyAttr :: AnyAttribute}
+type AnyAttribute    = Any
+
+data Element         = ElRef {unElRef :: Name}
+                     | ElDef {unElDef :: ElementDef}
+                     deriving (Show, Eq)
+data ElementDef      = ElementDef
+                     { name        :: Name
+                     , elemTypeDef :: ElemTypeDef
+                     , defaultVal  :: Maybe String
+                     -- TODO: filter irrelevant children: xs:unique, xs:key xs:keyref
+                     }
+                     deriving (Show, Eq)
+data ElemTypeDef     = TypeAttr     {unTypeAttr     :: Name}
+                     | AnonymStDecl {unAnonymStDecl :: SimpleType}
+                     | AnonymCtDecl {unAnonymCtDecl :: ComplexType}
                      deriving (Show, Eq)
 
-data Group           = TODO:
-data Attribute       = TODO: @see type Attribute
-data AttributeGroup  = 
+data Group           = GrpRef {unGroupRef :: Name}
+                     | GrpDef {unGroupDef :: (Name, GroupContDef)} -- TODO: pair or data
+                     deriving (Show, Eq)
+data GroupContDef    = Al {unAl :: All}
+                     | Ch {unCh :: Choice}
+                     | Sq {unSq :: Sequence}
+                     deriving (Show, Eq)
 
+data Attribute       = AttrRef {unAttrRef :: Name}
+                     | AttrDef {unAttrDef :: AttributeDef}
+                     deriving (Show, Eq)
+data AttributeDef    = AttributeDef
+                     { name        :: Name
+                     , attrTypeDef :: AttrTypeDef
+                     , defaultVal  :: Maybe String
+                     , use         :: Maybe String -- pendant to minMaxOcc
+                     }
+                     deriving (Show, Eq)
+data AttrTypeDef     = TypeAttr   {unTypeAttr   :: Name}
+                     | AnonymDecl {unAnonymDecl :: SimpleType}
+                     deriving (Show, Eq)
+
+data AttributeGroup  = AttrGrpRef {unAttrGrpRef :: Name}
+                     | AttrGrpDef {unAttrGrpDef :: (Name, AttrList)} -- TODO: pair or data
+                     deriving (Show, Eq)
 -- Namespace handling
 
 nsPrefix :: String
@@ -223,20 +269,14 @@ xpRedefinition :: PU Redefinition
 xpRedefinition
   = xpAlt tag ps
     where
-    tag (StRestr _)   = 0
-    tag (CtSCExt _)   = 1
-    tag (CtSCRestr _) = 2
-    tag (CtCCExt _)   = 3
-    tag (CtCCRestr _) = 4
-    tag (Grp _)       = 5
-    tag (AttrGrp _)   = 6
-    ps = [ xpWrap (StRestr,   unStRestr)   $ xpElem' "simpleType"     $ xpElem' "restriction"    $ xpSTRestriction
-         , xpWrap (CtSCExt,   unCtSCExt)   $ xpElem' "complexType"    $ xpElem' "simpleContent"  $ xpElem' "extension" $ TODO:
-         , xpWrap (CtSCRestr, unCtSCRestr) $ xpElem' "complexType"    $ xpElem' "simpleContent"  $ xpElem' "restriction" $ TODO:
-         , xpWrap (CtCCExt,   unCtCCExt)   $ xpElem' "complexType"    $ xpElem' "complexContent" $ xpElem' "extension" $ TODO:
-         , xpWrap (CtCCRestr, unCtCCRestr) $ xpElem' "complexType"    $ xpElem' "complexContent" $ xpElem' "restriction" $ TODO:
-         , xpWrap (Grp,       unGrp)       $ xpElem' "group"          $ xpGroup
-         , xpWrap (AttrGrp,   unAttrGrp)   $ xpElem' "attributeGroup" $ xpAttributeGroup
+    tag (St _)      = 0
+    tag (Ct _)      = 1
+    tag (Grp _)     = 2
+    tag (AttrGrp _) = 3
+    ps = [ xpWrap (St,      unSt)      $ xpElem' "simpleType"     $ xpSimpleType
+         , xpWrap (Ct,      unCt)      $ xpElem' "complexType"    $ xpComplexType
+         , xpWrap (Grp,     unGrp)     $ xpElem' "group"          $ xpGroup          -- TODO:
+         , xpWrap (AttrGrp, unAttrGrp) $ xpElem' "attributeGroup" $ xpAttributeGroup -- TODO:
          ]
 
 xpSimpleType :: PU SimpleType
