@@ -124,8 +124,8 @@
   <!-- complex types (group, all, choice, sequence) -->
 
   <xs:complexType name="author">
-    <xs:attribute name="age" type="xs:integer"/>
     <xs:group ref="name"/>
+    <xs:attribute name="age" type="xs:integer"/>
   </xs:complexType>
 
   <xs:complexType name="set">
