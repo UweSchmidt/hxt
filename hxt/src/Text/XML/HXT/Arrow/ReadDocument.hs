@@ -118,7 +118,7 @@ reads and validates a document \"test.xml\", no namespace propagation, only cano
 >              , withInputEncoding   isoLatin1
 >              , withParseByMimeType yes
 >              , withCurl []
->              ] \"http:\/\/localhost\/test.php\"
+>              ] "http://localhost/test.php"
 
 reads document \"test.php\", parses it as HTML or XML depending on the mimetype given from the server, but without validation, default encoding 'isoLatin1'.
 HTTP access is done via libCurl.
@@ -227,14 +227,28 @@ readDocument'' src
       >>>
       traceTree
     where
+    hasEmptyBody                    :: LA XmlTree XmlTree
+    hasEmptyBody                    = hasAttrValue transferStatus (/= "200")        -- test on empty response body for not o.k. responses
+                                      `guards`                                      -- e.g. 3xx status values
+                                      ( neg getChildren
+                                        <+>
+                                        ( getChildren >>> isWhiteSpace )
+                                      )
+
     getMimeType
         = getAttrValue transferMimeType >>^ stringToLower
 
-    processDoc mimeType (parseByMimeType, (parseHtml, (acceptedMimeTypes, validateWithRelax)))
+    processDoc mimeType options
         = traceMsg 1 (unwords [ "readDocument:", show src
                               , "(mime type:", show mimeType, ") will be processed"])
           >>>
-          ( if isAcceptedMimeType acceptedMimeTypes mimeType
+          ( applyMimeTypeHandler mimeType       -- try user defined document handlers
+            `orElse`
+            processDoc' mimeType options
+          )
+
+    processDoc' mimeType (parseByMimeType, (parseHtml, (acceptedMimeTypes, validateWithRelax)))
+        = ( if isAcceptedMimeType acceptedMimeTypes mimeType
             then ( ifA (fromLA hasEmptyBody)
                    ( replaceChildren none )               -- empty response, e.g. in if-modified-since request
                    ( ( parse $< getSysVar (theValidate              .&&&.
@@ -274,18 +288,10 @@ readDocument'' src
             else ( traceMsg 1 (unwords [ "readDocument:", show src
                                        , "mime type:", show mimeType, "not accepted"])
                    >>>
-                   replaceChildren none
-                 )                                                                      -- remove contents of not accepted mimetype
+                   replaceChildren none         -- remove contents of not accepted mimetype
+                 )
           )
         where
-        hasEmptyBody                    :: LA XmlTree XmlTree
-        hasEmptyBody                    = hasAttrValue transferStatus (/= "200")        -- test on empty response body for not o.k. responses
-                                          `guards`                                      -- e.g. 3xx status values
-                                          ( neg getChildren
-                                            <+>
-                                            ( getChildren >>> isWhiteSpace )
-                                          )
-
         isAcceptedMimeType              :: [String] -> String -> Bool
         isAcceptedMimeType mts mt
             | null mts
