@@ -89,8 +89,8 @@ data ComplexType       = ComplexType
                        }
                        deriving (Show, Eq)
 data CTDef             = SCont {unSCont :: SimpleContent}
-                       | CCont {unCCont :: ComplexContent}
-                       | NewCT {unNewCT :: CTModel}
+                       | CCont {unCCont :: ComplexContent} -- TODO: Prüffunktionen logisch verknüpfen für Ableitungen
+                       | NewCT {unNewCT :: CTModel}    -- dynamic Programming, Werte aus Map abfragen während sie konstr. wird
                        deriving (Show, Eq)
 
 data SimpleContent     = SCExt   {unSCExt   :: SCExtension}
@@ -157,7 +157,7 @@ data ElemTypeDef       = ETDTypeAttr     {unETDTypeAttr     :: Name}
                        deriving (Show, Eq)
 
 data Group             = GrpRef {unGrpRef :: Name}
-                       | GrpDef {unGrpDef :: GroupContDef}
+                       | GrpDef {unGrpDef :: Maybe GroupContDef}
                        deriving (Show, Eq)
 data GroupContDef      = Al {unAl :: All}
                        | Ch {unCh :: Choice}
@@ -184,14 +184,26 @@ data AttributeGroup    = AttrGrpRef {unAttrGrpRef :: Name}
 
 -- Namespace handling
 
-nsPrefix :: String
-nsPrefix = "xs"
-
 nsUri :: String
 nsUri    = "http://www.w3.org/2001/XMLSchema"
 
-xpElem' :: String -> PU a -> PU a
-xpElem' = xpElemNS nsUri nsPrefix -- TODO: filtering of attributes and elements
+nsPrefix :: String
+nsPrefix = "xs"
+
+xpSchemaElem :: String -> PU a -> PU a
+xpSchemaElem name pickle
+    = xpElemNS nsUri nsPrefix name $
+      -- keep elems from xs namespace and name != annotation
+      xpFilterCont (isXmlSchemaElem           >>> neg (hasQName anName)) $
+      -- keep attrs without namespace and name != id
+      xpFilterAttr (isAttrWithoutNamespaceUri >>> neg (hasQName idName)) $
+      -- apply pickler
+      pickle
+      where
+      isXmlSchemaElem           = hasNameWith ((== nsUri) . namespaceUri)
+      anName                    = mkQName nsUri nsPrefix "annotation"
+      isAttrWithoutNamespaceUri = hasNameWith (null       . namespaceUri)
+      idName                    = mkQName ""    ""       "id"
 
 -- Conversion between Schema and Schema'
 
@@ -232,7 +244,8 @@ fromSchema s
 
 xpXmlSchema' :: PU XmlSchema'
 xpXmlSchema'
-  = xpElem' "schema" $ xpAddNSDecl nsPrefix nsUri $ 
+  = xpSchemaElem "schema" $
+    -- TODO: xpAddNSDecl nsPrefix nsUri $ -- check for xs namespace
     xpWrap (\ (a, b) -> XmlSchema' a b , \ t -> (targetNS t, parts t)) $
     xpPair (xpOption $ xpAttr "targetNamespace" xpText) $
     -- TODO: read all namespaces
@@ -250,12 +263,12 @@ xpSchemaPart
     tag (At _) = 5
     tag (Ag _) = 6
     ps = [ xpWrap (In, unIn) $ xpInclude
-         , xpWrap (St, unSt) $ xpElem' "simpleType"     $ xpPair (xpAttr "name" xpText) xpSimpleType
-         , xpWrap (Ct, unCt) $ xpElem' "complexType"    $ xpPair (xpAttr "name" xpText) xpComplexType
-         , xpWrap (El, unEl) $ xpElem' "element"        $ xpElement
-         , xpWrap (Gr, unGr) $ xpElem' "group"          $ xpPair (xpAttr "name" xpText) xpGroup
-         , xpWrap (At, unAt) $ xpElem' "attribute"      $ xpAttribute
-         , xpWrap (Ag, unAg) $ xpElem' "attributeGroup" $ xpPair (xpAttr "name" xpText) xpAttributeGroup
+         , xpWrap (St, unSt) $ xpSchemaElem "simpleType"     $ xpPair (xpAttr "name" xpText) xpSimpleType
+         , xpWrap (Ct, unCt) $ xpSchemaElem "complexType"    $ xpPair (xpAttr "name" xpText) xpComplexType
+         , xpWrap (El, unEl) $ xpSchemaElem "element"        $ xpElement
+         , xpWrap (Gr, unGr) $ xpSchemaElem "group"          $ xpPair (xpAttr "name" xpText) xpGroup
+         , xpWrap (At, unAt) $ xpSchemaElem "attribute"      $ xpAttribute
+         , xpWrap (Ag, unAg) $ xpSchemaElem "attributeGroup" $ xpPair (xpAttr "name" xpText) xpAttributeGroup
          ]
 
 xpInclude :: PU Include
@@ -265,9 +278,9 @@ xpInclude
     tag (Incl _)  = 0
     tag (Imp _)   = 1
     tag (Redef _) = 2
-    ps = [ xpWrap (Incl,  unIncl)  $ xpElem' "include"  $ xpAttr "schemaLocation" xpText
-         , xpWrap (Imp,   unImp)   $ xpElem' "import"   $ xpPair (xpAttr "schemaLocation" xpText) (xpAttr "namespace" xpText)
-         , xpWrap (Redef, unRedef) $ xpElem' "redefine" $ xpPair (xpAttr "schemaLocation" xpText) (xpList xpRedefinition)
+    ps = [ xpWrap (Incl,  unIncl)  $ xpSchemaElem "include"  $ xpAttr "schemaLocation" xpText
+         , xpWrap (Imp,   unImp)   $ xpSchemaElem "import"   $ xpPair (xpAttr "schemaLocation" xpText) (xpAttr "namespace" xpText)
+         , xpWrap (Redef, unRedef) $ xpSchemaElem "redefine" $ xpPair (xpAttr "schemaLocation" xpText) (xpList xpRedefinition)
          ]
 
 xpRedefinition :: PU Redefinition
@@ -278,10 +291,10 @@ xpRedefinition
     tag (RedefCt _) = 1
     tag (RedefGr _) = 2
     tag (RedefAg _) = 3
-    ps = [ xpWrap (RedefSt, unRedefSt) $ xpElem' "simpleType"     $ xpPair (xpAttr "name" xpText) xpSimpleType
-         , xpWrap (RedefCt, unRedefCt) $ xpElem' "complexType"    $ xpPair (xpAttr "name" xpText) xpComplexType
-         , xpWrap (RedefGr, unRedefGr) $ xpElem' "group"          $ xpPair (xpAttr "name" xpText) xpGroup
-         , xpWrap (RedefAg, unRedefAg) $ xpElem' "attributeGroup" $ xpPair (xpAttr "name" xpText) xpAttributeGroup
+    ps = [ xpWrap (RedefSt, unRedefSt) $ xpSchemaElem "simpleType"     $ xpPair (xpAttr "name" xpText) xpSimpleType
+         , xpWrap (RedefCt, unRedefCt) $ xpSchemaElem "complexType"    $ xpPair (xpAttr "name" xpText) xpComplexType
+         , xpWrap (RedefGr, unRedefGr) $ xpSchemaElem "group"          $ xpPair (xpAttr "name" xpText) xpGroup
+         , xpWrap (RedefAg, unRedefAg) $ xpSchemaElem "attributeGroup" $ xpPair (xpAttr "name" xpText) xpAttributeGroup
          ]
 
 xpSimpleType :: PU SimpleType
@@ -291,9 +304,9 @@ xpSimpleType
     tag (Restr _) = 0
     tag (Lst _)   = 1
     tag (Un _)    = 2
-    ps = [ xpWrap (Restr, unRestr) $ xpElem' "restriction" $ xpSTRestriction
-         , xpWrap (Lst,   unLst)   $ xpElem' "list"        $ xpSTList
-         , xpWrap (Un,    unUn)    $ xpElem' "union"       $ xpSTUnion
+    ps = [ xpWrap (Restr, unRestr) $ xpSchemaElem "restriction" $ xpSTRestriction
+         , xpWrap (Lst,   unLst)   $ xpSchemaElem "list"        $ xpSTList
+         , xpWrap (Un,    unUn)    $ xpSchemaElem "union"       $ xpSTUnion
          ]
 
 xpSTRestriction :: PU STRestriction
@@ -306,8 +319,8 @@ xpSimpleTypeRef
     where
     tag (BaseAttr _)        = 0
     tag (STRAnonymStDecl _) = 1
-    ps = [ xpWrap (BaseAttr,        unBaseAttr)        $ xpAttr "base" xpText
-         , xpWrap (STRAnonymStDecl, unSTRAnonymStDecl) $ xpElem' "simpleType" $ xpSimpleType -- TODO: only works if first child?
+    ps = [ xpWrap (BaseAttr,        unBaseAttr)        $ xpAttr "base" xpText -- TODO: pickler der Fehlermeldung erzeugt, falls simpleType als Kind gefunden
+         , xpWrap (STRAnonymStDecl, unSTRAnonymStDecl) $ xpSchemaElem "simpleType" $ xpSimpleType -- TODO: only works if first child?
          ]
 
 xpRestrAttr :: PU RestrAttr
@@ -326,18 +339,18 @@ xpRestrAttr
     tag (Enumeration _)    = 9
     tag (Pattern _)        = 10
     tag (WhiteSpace _)     = 11
-    ps = [ xpWrap (MinIncl,        unMinIncl)        $ xpElem' "minInclusive"   $ xpAttr "value" xpText
-         , xpWrap (MaxIncl,        unMaxIncl)        $ xpElem' "maxInclusive"   $ xpAttr "value" xpText
-         , xpWrap (MinExcl,        unMinExcl)        $ xpElem' "minExclusive"   $ xpAttr "value" xpText
-         , xpWrap (MaxExcl,        unMaxExcl)        $ xpElem' "maxExclusive"   $ xpAttr "value" xpText
-         , xpWrap (TotalDigits,    unTotalDigits)    $ xpElem' "totalDigits"    $ xpAttr "value" xpText
-         , xpWrap (FractionDigits, unFractionDigits) $ xpElem' "fractionDigits" $ xpAttr "value" xpText
-         , xpWrap (Length,         unLength)         $ xpElem' "length"         $ xpAttr "value" xpText
-         , xpWrap (MinLength,      unMinLength)      $ xpElem' "minLength"      $ xpAttr "value" xpText
-         , xpWrap (MaxLength,      unMaxLength)      $ xpElem' "maxLength"      $ xpAttr "value" xpText
-         , xpWrap (Enumeration,    unEnumeration)    $ xpElem' "enumeration"    $ xpAttr "value" xpText
-         , xpWrap (Pattern,        unPattern)        $ xpElem' "pattern"        $ xpAttr "value" xpText
-         , xpWrap (WhiteSpace,     unWhiteSpace)     $ xpElem' "whiteSpace"     $ xpAttr "value" xpText
+    ps = [ xpWrap (MinIncl,        unMinIncl)        $ xpSchemaElem "minInclusive"   $ xpAttr "value" xpText
+         , xpWrap (MaxIncl,        unMaxIncl)        $ xpSchemaElem "maxInclusive"   $ xpAttr "value" xpText
+         , xpWrap (MinExcl,        unMinExcl)        $ xpSchemaElem "minExclusive"   $ xpAttr "value" xpText
+         , xpWrap (MaxExcl,        unMaxExcl)        $ xpSchemaElem "maxExclusive"   $ xpAttr "value" xpText
+         , xpWrap (TotalDigits,    unTotalDigits)    $ xpSchemaElem "totalDigits"    $ xpAttr "value" xpText
+         , xpWrap (FractionDigits, unFractionDigits) $ xpSchemaElem "fractionDigits" $ xpAttr "value" xpText
+         , xpWrap (Length,         unLength)         $ xpSchemaElem "length"         $ xpAttr "value" xpText
+         , xpWrap (MinLength,      unMinLength)      $ xpSchemaElem "minLength"      $ xpAttr "value" xpText
+         , xpWrap (MaxLength,      unMaxLength)      $ xpSchemaElem "maxLength"      $ xpAttr "value" xpText
+         , xpWrap (Enumeration,    unEnumeration)    $ xpSchemaElem "enumeration"    $ xpAttr "value" xpText
+         , xpWrap (Pattern,        unPattern)        $ xpSchemaElem "pattern"        $ xpAttr "value" xpText
+         , xpWrap (WhiteSpace,     unWhiteSpace)     $ xpSchemaElem "whiteSpace"     $ xpAttr "value" xpText
          ]
 
 xpSTList :: PU STList
@@ -347,14 +360,14 @@ xpSTList
     tag (ItemTypeAttr _)    = 0
     tag (STLAnonymStDecl _) = 1
     ps = [ xpWrap (ItemTypeAttr,    unItemTypeAttr)    $ xpAttr "itemType" xpText
-         , xpWrap (STLAnonymStDecl, unSTLAnonymStDecl) $ xpElem' "simpleType" $ xpSimpleType
+         , xpWrap (STLAnonymStDecl, unSTLAnonymStDecl) $ xpSchemaElem "simpleType" $ xpSimpleType
          ]
 
 xpSTUnion :: PU STUnion
 xpSTUnion
   = xpWrap (\ (a, b) -> STUnion a b , \ t -> (memberTypes t, anonymDecls t)) $
     xpPair (xpOption $ xpAttr "memberTypes" xpText) $
-    xpList $ xpElem' "simpleType" $ xpSimpleType
+    xpList $ xpSchemaElem "simpleType" $ xpSimpleType
 
 xpComplexType :: PU ComplexType
 xpComplexType
@@ -368,8 +381,8 @@ xpCTDef
     tag (SCont _) = 0
     tag (CCont _) = 1
     tag (NewCT _) = 2
-    ps = [ xpWrap (SCont, unSCont) $ xpElem' "simpleContent"  $ xpSimpleContent
-         , xpWrap (CCont, unCCont) $ xpElem' "complexContent" $ xpComplexContent
+    ps = [ xpWrap (SCont, unSCont) $ xpSchemaElem "simpleContent"  $ xpSimpleContent
+         , xpWrap (CCont, unCCont) $ xpSchemaElem "complexContent" $ xpComplexContent
          , xpWrap (NewCT, unNewCT) $ xpCTModel
          ]
 
@@ -379,8 +392,8 @@ xpSimpleContent
     where
     tag (SCExt _)   = 0
     tag (SCRestr _) = 1
-    ps = [ xpWrap (SCExt,   unSCExt)   $ xpElem' "extension"   $ xpPair (xpAttr "base" xpText) xpAttrList
-         , xpWrap (SCRestr, unSCRestr) $ xpElem' "restriction" $ xpPair xpSTRestriction xpAttrList 
+    ps = [ xpWrap (SCExt,   unSCExt)   $ xpSchemaElem "extension"   $ xpPair (xpAttr "base" xpText) xpAttrList
+         , xpWrap (SCRestr, unSCRestr) $ xpSchemaElem "restriction" $ xpPair xpSTRestriction xpAttrList 
          ]
 
 xpComplexContent :: PU ComplexContent
@@ -394,8 +407,8 @@ xpCCDef
     where
     tag (CCExt _)   = 0
     tag (CCRestr _) = 1
-    ps = [ xpWrap (CCExt,   unCCExt)   $ xpElem' "extension"   $ xpPair (xpAttr "base" xpText) $ xpCTModel
-         , xpWrap (CCRestr, unCCRestr) $ xpElem' "restriction" $ xpPair (xpAttr "base" xpText) $ xpCTModel
+    ps = [ xpWrap (CCExt,   unCCExt)   $ xpSchemaElem "extension"   $ xpPair (xpAttr "base" xpText) $ xpCTModel
+         , xpWrap (CCRestr, unCCRestr) $ xpSchemaElem "restriction" $ xpPair (xpAttr "base" xpText) $ xpCTModel
          ]
 
 xpCTModel :: PU CTModel
@@ -410,10 +423,10 @@ xpCTCompositor
     tag (CompAl _) = 1
     tag (CompCh _) = 2
     tag (CompSq _) = 3
-    ps = [ xpWrap (CompGr, unCompGr) $ xpElem' "group"    $ xpPair xpMinMaxOcc xpGroup
-         , xpWrap (CompAl, unCompAl) $ xpElem' "all"      $ xpPair xpMinMaxOcc xpAll
-         , xpWrap (CompCh, unCompCh) $ xpElem' "choice"   $ xpPair xpMinMaxOcc xpSchemaChoice
-         , xpWrap (CompSq, unCompSq) $ xpElem' "sequence" $ xpPair xpMinMaxOcc xpSequence
+    ps = [ xpWrap (CompGr, unCompGr) $ xpSchemaElem "group"    $ xpPair xpMinMaxOcc xpGroup
+         , xpWrap (CompAl, unCompAl) $ xpSchemaElem "all"      $ xpPair xpMinMaxOcc xpAll
+         , xpWrap (CompCh, unCompCh) $ xpSchemaElem "choice"   $ xpPair xpMinMaxOcc xpSchemaChoice
+         , xpWrap (CompSq, unCompSq) $ xpSchemaElem "sequence" $ xpPair xpMinMaxOcc xpSequence
          ]
 
 xpMinMaxOcc :: PU MinMaxOcc
@@ -423,7 +436,7 @@ xpMinMaxOcc
 
 xpAll :: PU All
 xpAll
-  = xpList $ xpElem' "element" $ xpPair xpMinMaxOcc xpElement
+  = xpList $ xpSchemaElem "element" $ xpPair xpMinMaxOcc xpElement
 
 xpSchemaChoice :: PU Choice
 xpSchemaChoice
@@ -442,11 +455,11 @@ xpChSeqContent
     tag (ChSeqCh _) = 2
     tag (ChSeqSq _) = 3
     tag (ChSeqAn _) = 4
-    ps = [ xpWrap (ChSeqEl, unChSeqEl) $ xpElem' "element"  $ xpPair xpMinMaxOcc xpElement
-         , xpWrap (ChSeqGr, unChSeqGr) $ xpElem' "group"    $ xpPair xpMinMaxOcc xpGroup
-         , xpWrap (ChSeqCh, unChSeqCh) $ xpElem' "choice"   $ xpPair xpMinMaxOcc xpSchemaChoice
-         , xpWrap (ChSeqSq, unChSeqSq) $ xpElem' "sequence" $ xpPair xpMinMaxOcc xpSequence
-         , xpWrap (ChSeqAn, unChSeqAn) $ xpElem' "any"      $ xpPair xpMinMaxOcc xpAny
+    ps = [ xpWrap (ChSeqEl, unChSeqEl) $ xpSchemaElem "element"  $ xpPair xpMinMaxOcc xpElement
+         , xpWrap (ChSeqGr, unChSeqGr) $ xpSchemaElem "group"    $ xpPair xpMinMaxOcc xpGroup
+         , xpWrap (ChSeqCh, unChSeqCh) $ xpSchemaElem "choice"   $ xpPair xpMinMaxOcc xpSchemaChoice
+         , xpWrap (ChSeqSq, unChSeqSq) $ xpSchemaElem "sequence" $ xpPair xpMinMaxOcc xpSequence
+         , xpWrap (ChSeqAn, unChSeqAn) $ xpSchemaElem "any"      $ xpPair xpMinMaxOcc xpAny
          ]
 
 xpAny :: PU Any
@@ -462,9 +475,9 @@ xpAttrList
     tag (Attr _)    = 0
     tag (AttrGrp _) = 1
     tag (AnyAttr _) = 2
-    ps = [ xpWrap (Attr,    unAttr)    $ xpElem' "attribute"      $ xpAttribute
-         , xpWrap (AttrGrp, unAttrGrp) $ xpElem' "attributeGroup" $ xpAttributeGroup
-         , xpWrap (AnyAttr, unAnyAttr) $ xpElem' "anyAttribute"   $ xpAny
+    ps = [ xpWrap (Attr,    unAttr)    $ xpSchemaElem "attribute"      $ xpAttribute
+         , xpWrap (AttrGrp, unAttrGrp) $ xpSchemaElem "attributeGroup" $ xpAttributeGroup
+         , xpWrap (AnyAttr, unAnyAttr) $ xpSchemaElem "anyAttribute"   $ xpAny
          ]
 
 xpElement :: PU Element
@@ -473,7 +486,7 @@ xpElement
     where
     tag (ElRef _) = 0
     tag (ElDef _) = 1
-    ps = [ xpWrap (ElRef, unElRef) $ xpAttr "ref" xpText
+    ps = [ xpWrap (ElRef, unElRef) $ xpAttr "ref" xpText -- TODO: name, type etc. wegwerfen -> weiter arbeiten
          , xpWrap (ElDef, unElDef) $ xpElementDef
          ]
 
@@ -491,8 +504,8 @@ xpElemTypeDef
     tag (ETDAnonymStDecl _) = 1
     tag (ETDAnonymCtDecl _) = 2
     ps = [ xpWrap (ETDTypeAttr,     unETDTypeAttr)     $ xpAttr "type" xpText
-         , xpWrap (ETDAnonymStDecl, unETDAnonymStDecl) $ xpElem' "simpleType"  $ xpSimpleType
-         , xpWrap (ETDAnonymCtDecl, unETDAnonymCtDecl) $ xpElem' "complexType" $ xpComplexType
+         , xpWrap (ETDAnonymStDecl, unETDAnonymStDecl) $ xpSchemaElem "simpleType"  $ xpSimpleType
+         , xpWrap (ETDAnonymCtDecl, unETDAnonymCtDecl) $ xpSchemaElem "complexType" $ xpComplexType
          ]
 
 xpGroup :: PU Group
@@ -502,7 +515,7 @@ xpGroup
     tag (GrpRef _) = 0
     tag (GrpDef _) = 1
     ps = [ xpWrap (GrpRef, unGrpRef) $ xpAttr "ref" xpText
-         , xpWrap (GrpDef, unGrpDef) $ xpGroupContDef
+         , xpWrap (GrpDef, unGrpDef) $ xpOption $ xpGroupContDef
          ]
 
 xpGroupContDef :: PU GroupContDef
@@ -512,9 +525,9 @@ xpGroupContDef
     tag (Al _) = 0
     tag (Ch _) = 1
     tag (Sq _) = 2
-    ps = [ xpWrap (Al, unAl) $ xpElem' "all"      $ xpAll
-         , xpWrap (Ch, unCh) $ xpElem' "choice"   $ xpSchemaChoice
-         , xpWrap (Sq, unSq) $ xpElem' "sequence" $ xpSequence
+    ps = [ xpWrap (Al, unAl) $ xpSchemaElem "all"      $ xpAll
+         , xpWrap (Ch, unCh) $ xpSchemaElem "choice"   $ xpSchemaChoice
+         , xpWrap (Sq, unSq) $ xpSchemaElem "sequence" $ xpSequence
          ]
 
 xpAttribute :: PU Attribute
@@ -539,7 +552,7 @@ xpAttrTypeDef
     tag (ATDTypeAttr _)   = 0
     tag (ATDAnonymDecl _) = 1
     ps = [ xpWrap (ATDTypeAttr,   unATDTypeAttr)   $ xpAttr "type" xpText
-         , xpWrap (ATDAnonymDecl, unATDAnonymDecl) $ xpElem' "simpleType" $ xpSimpleType
+         , xpWrap (ATDAnonymDecl, unATDAnonymDecl) $ xpSchemaElem "simpleType" $ xpSimpleType
          ]
 
 xpAttributeGroup :: PU AttributeGroup

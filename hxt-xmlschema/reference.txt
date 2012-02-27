@@ -16,12 +16,12 @@ relevant elements:
     elementFormDefault   = ( "qualified" | "unqualified" ) : "unqualified"
     finalDefault         = ( "#all" | list of ( "extension" | "restriction" ) ) : ""
     version              = xs:token
-    xml:lang             = xml:lang
+    xml:lang             = xs:language
 
   content model:
 
-    ( xs:include | xs:import | xs:redefine 
-    | xs:simpleType
+    ( xs:include | xs:import | xs:redefine )*,
+    ( xs:simpleType
     | xs:complexType
     | xs:element | xs:group
     | xs:attribute | xs:attributeGroup
@@ -192,8 +192,10 @@ relevant elements:
 
     ( xs:simpleContent
     | xs:complexContent
-    | (xs:group | xs:all | xs:choice | xs:sequence)?,
-      (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?  -- if empty: empty element like <br/>
+    | (
+       (xs:group | xs:all | xs:choice | xs:sequence)?,
+       (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?  -- if empty: empty element like <br/>
+      )
     )
 
 ------------------------------------------------------------------------------------------
@@ -338,8 +340,10 @@ relevant elements:
 
     ( xs:simpleContent
     | xs:complexContent
-    | (xs:group | xs:all | xs:choice | xs:sequence)?,
-      (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?  -- if empty: empty element like <br/>
+    | (
+       (xs:group | xs:all | xs:choice | xs:sequence)?,
+       (xs:attribute | xs:attributeGroup)*, xs:anyAttribute?  -- if empty: empty element like <br/>
+      )
     )
 
 ------------------------------------------------------------------------------------------
@@ -466,7 +470,7 @@ relevant elements:
 
   content model:
 
-    xs:all | xs:choice | xs:sequence
+    (xs:all | xs:choice | xs:sequence)?
 
 ------------------------------------------------------------------------------------------
 

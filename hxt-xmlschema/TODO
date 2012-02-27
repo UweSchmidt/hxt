@@ -24,6 +24,8 @@ Fehlermeldung als Kommentarknoten in zu prüfendes Dokument einhängen mit Tag
 
 HUnit + Testfälle einbauen
 
+Elemente in Ref umwandeln
+
 --------------------------------------------------------------------------
 
 Annotationen wegwerfen beim picklen -> xpFilterCont ?
