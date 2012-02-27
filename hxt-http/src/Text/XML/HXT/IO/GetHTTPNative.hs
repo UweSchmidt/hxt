@@ -21,6 +21,7 @@ module Text.XML.HXT.IO.GetHTTPNative
 where
 
 import Control.Arrow
+import Control.Exception                        ( try )
 
 import Text.XML.HXT.DOM.XmlKeywords
 import Text.XML.HXT.DOM.TypeDefs                ( Attributes )
@@ -46,7 +47,6 @@ import System.IO                                ( hPutStrLn
 						, stderr
 						)
 import System.IO.Error                          ( ioeGetErrorString
-						, try
 						)
 
 import Network.Browser                          ( Proxy(..)

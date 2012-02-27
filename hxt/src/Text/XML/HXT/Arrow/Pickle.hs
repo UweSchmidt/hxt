@@ -93,6 +93,8 @@ module Text.XML.HXT.Arrow.Pickle
     , xpElem
     , xpElemNS
     , xpElemWithAttrValue
+    , xpFilterAttr
+    , xpFilterCont
     , xpickle
     , xpInt
     , xpLift
@@ -105,6 +107,7 @@ module Text.XML.HXT.Arrow.Pickle
     , xpPair
     , xpPrim
     , xpSeq
+    , xpSeq'
     , xpText
     , xpText0
     , xpTextDT

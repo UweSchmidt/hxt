@@ -1,10 +1,12 @@
 -- arch-tag: Haskell XML Toolbox main description file
 Name:           hxt-http
-Version:        9.1.3
+Version:        9.1.4
 Synopsis:       Interface to native Haskell HTTP package HTTP
 Description:    Interface to native Haskell HTTP package HTTP.
                 This package can be used as alternative for the hxt-curl package
-                for accessing documents via HTTP
+                for accessing documents via HTTP.
+                .
+                Changes to 9.1.3: New warnings from ghc-7.4 removed
 License:        MIT
 License-file:   LICENSE
 Author:         Uwe Schmidt

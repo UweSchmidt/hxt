@@ -22,15 +22,14 @@ module Text.XML.HXT.IO.GetFILE
 
 where
 
-import qualified Data.ByteString.Lazy           as B
+import           Control.Exception      ( try )
+
+import qualified Data.ByteString.Lazy   as B
 
 import           Network.URI            ( unEscapeString
                                         )
-
 import           System.IO.Error        ( ioeGetErrorString
-                                        , try
                                         )
-
 import           System.Directory       ( doesFileExist
                                         , getPermissions
                                         , readable
