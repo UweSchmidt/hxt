@@ -22,12 +22,8 @@ import Control.Arrow                            -- arrow classes
 import Control.Arrow.ArrowList
 import Control.Arrow.ArrowIO
 
-import Data.Maybe                               ( fromMaybe )
-import qualified Data.Map                       as M
-
 import Text.XML.HXT.DOM.Interface
 
-import Text.XML.HXT.Arrow.XmlState.TraceHandling
 import Text.XML.HXT.Arrow.XmlState.TypeDefs
 
 -- ------------------------------------------------------------
@@ -60,18 +56,5 @@ getMimeTypeTable                = getMime $< getSysVar (theMimeTypes .&&&. theMi
     getMime (_,  mtf)           = perform (setMimeTypeTable $< arrIO0 ( readMimeTypeTable mtf))
                                   >>>
                                   getMimeTypeTable
-
--- ------------------------------------------------------------
-
-applyMimeTypeHandler            :: String -> IOStateArrow s XmlTree XmlTree
-applyMimeTypeHandler mt         = withoutUserState (applyMTH $< getSysVar theMimeTypeHandlers)
-    where
-      applyMTH mtTable          = fromMaybe none $
-                                  fmap (\ f -> traceMimeStart >>> f >>> traceMimeEnd) $
-                                  M.lookup mt mtTable
-      traceMimeStart            = traceMsg 1 $
-                                  "readDocument: calling user defined document parser"
-      traceMimeEnd              = traceMsg 1 $
-                                  "readDocument: user defined document parser finished"
 
 -- ------------------------------------------------------------

@@ -103,7 +103,6 @@ module Text.XML.HXT.Arrow.XmlState
       getMimeTypeTable
     , setMimeTypeTable
     , setMimeTypeTableFromFile
-    , applyMimeTypeHandler
 
     , -- System Configuration and options
       yes
