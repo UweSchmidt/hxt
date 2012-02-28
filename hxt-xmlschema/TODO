@@ -1,8 +1,33 @@
+
+Reguläre Ausdrücke (extended):
+
+"[A-Za-z]{1,8}(-[A-Za-z]{1,8})*"
+"([A-Fa-f0-9]{2})*"
+"(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))"
+"(\\+|-)?[0-9]+"
+
+.*a.*{&}.*b.* all words containing at least one a and one b
+[a-z]+{\}bush all names but not bush
+.*a.*{^}.*b.* all words containing at least one a or one b but not both an a and a b
+aaa{:}bbb all 6 char long words containing 3 a's and 3 b's
+
+/[*](\A{\}(\A[*]/\A))[*]/
+in words: The contents of a C (multi line) comment is every word, that does not contain a subsequence of */ 
+
+[a-z][a-z0-9]*{\}(if|then|else|while|do)
+excludes the 5 keywords from the set of identifiers. 
+
+.*a.*{&}.*b.*{&}.*c.*{&}.{3}
+is an expressions for all permutations of a, b and c. 
+
+The above expression for permutations can be formulated even simpler by using the interleave operator.
+a{:}b{:}c
+Given 2 words w1 and w2 matching the regular expressions r1 respectively r2, all words w constructed by merging w1 and w2 match the regular expression r1{:}r2
+
+------------------------------------------------------------------------
+
 Eigener data-Typ statt Paar in Typdefinitionen?
 newtype, konstruktor, xpWrap
-
-xpFilterAttr Input: Filter-Arrow, Attribute mit NS != xs rauswerfen
-xpElem' pa = xpElem ns prefix (xpFilterAttr defaultns pa)
 
 Real World Haskell Monaden-Kapitel
 transf :: (Monad IO m) => XmlSchema -> m XmlSchema
@@ -28,7 +53,22 @@ Elemente in Ref umwandeln
 
 --------------------------------------------------------------------------
 
-Annotationen wegwerfen beim picklen -> xpFilterCont ?
+Validierung von SimpleTypes (Text-Knoten und Attributwerte)
+Tabelle von Validierungsfunktionen:
+Map Name (String -> Bool)
+n1 abgebildet auf f1
+n2 abgebildet auf \ x -> f1 x && f2 x
+
+Idee dynamic programming (Map aufbauen und währenddessen darin nachschauen)
+buildMap t
+  = let m = process t empty
+    let process t' = .... insert
+                     lookup n m
+
+ComplexTypes: Inhaltsmodell und Attributliste mit RegEx-Ableitung prüfen
+Rekursionsabbruch: Basistyp (Liste von Basistypen benötigt)
+
+--------------------------------------------------------------------------
 
 Wrapper für Annotations (Funktor):
 data Annotation a = Ann { c   :: a
