@@ -51,6 +51,7 @@ import Data.Function.Selector           ( Selector(..)
                                         , idS
                                         , (.&&&.)
                                         )
+import qualified Data.Map               as M
 
 import Text.XML.HXT.DOM.Interface
 
@@ -192,6 +193,7 @@ data XIOInputConfig     = XIOIcgf { xioStrictInput              :: ! Bool
                                   }
 
 data XIOParseConfig     = XIOPcfg { xioMimeTypes                ::   MimeTypeTable
+                                  , xioMimeTypeHandlers         ::   MimeTypeHandlers
                                   , xioMimeTypeFile             ::   String
                                   , xioAcceptedMimeTypes        ::   [String]
                                   , xioFileMimeType             ::   String
@@ -245,11 +247,13 @@ data XIOCacheConfig     = XIOCch  { xioBinaryCompression        ::   Compression
                                   , xioStrictDeserialize        :: ! Bool
                                   }
 
+type MimeTypeHandlers   = M.Map String (IOSArrow XmlTree XmlTree)
+
 type CompressionFct     = ByteString -> ByteString
 type DeCompressionFct   = ByteString -> ByteString
 
-type SysConfig                  = XIOSysState -> XIOSysState
-type SysConfigList              = [SysConfig]
+type SysConfig          = XIOSysState -> XIOSysState
+type SysConfigList      = [SysConfig]
 
 -- ----------------------------------------
 
@@ -566,6 +570,13 @@ theMimeTypes                    = theParseConfig
                                     , setS = \ x s -> s { xioMimeTypes = x }
                                     }
 
+theMimeTypeHandlers             :: Selector XIOSysState MimeTypeHandlers
+theMimeTypeHandlers             = theParseConfig
+                                  >>>
+                                  S { getS = xioMimeTypeHandlers
+                                    , setS = \ x s -> s { xioMimeTypeHandlers = x }
+                                    }
+
 theMimeTypeFile                 :: Selector XIOSysState String
 theMimeTypeFile                 = theParseConfig
                                   >>>
@@ -857,9 +868,9 @@ getSysAttrInt def n     = getSysAttr n
 
 toInt                   :: Int -> String -> Int
 toInt def s
-        | not (null s)
-          &&
-          all isDigit s = read s
-        | otherwise     = def
+    | not (null s)
+      &&
+      all isDigit s     = read s
+    | otherwise         = def
 
 -- ------------------------------------------------------------

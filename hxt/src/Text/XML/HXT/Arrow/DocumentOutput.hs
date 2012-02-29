@@ -30,6 +30,7 @@ import Control.Arrow.ArrowIf
 import Control.Arrow.ArrowTree
 import Control.Arrow.ArrowIO
 import Control.Arrow.ListArrow
+import Control.Arrow.ArrowExc
 
 import qualified
        Data.ByteString.Lazy                     as BS
@@ -62,7 +63,6 @@ import System.IO                                ( Handle
                                                 , hClose
                                                 , stdout
                                                 )
-import System.IO.Error                          ( try )
 
 -- ------------------------------------------------------------
 --
@@ -79,16 +79,15 @@ putXmlDocument textMode dst
           = ( if textMode
               then ( xshow getChildren
                      >>>
-                     arrIO (\ s -> try ( hPutDocument (\h -> hPutStrLn h s)))
+                     tryA (arrIO (\ s -> hPutDocument (\h -> hPutStrLn h s)))
                    )
               else ( xshowBlob getChildren
                      >>>
-                     arrIO (\ s -> try ( hPutDocument (\h -> do
-                                                             BS.hPutStr h s
-                                                             BS.hPutStr h (stringToBlob "\n")
+                     tryA (arrIO (\ s -> hPutDocument (\h -> do BS.hPutStr h s
+                                                                BS.hPutStr h (stringToBlob "\n")
                                                       )
-                                       )
-                           )
+                                 )
+                          )
                    )
             )
             >>>

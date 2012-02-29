@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
-{-# OPTIONS -XMultiParamTypeClasses -XTypeSynonymInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 -- ------------------------------------------------------------
 
@@ -50,7 +51,7 @@ where
 
 import           Control.Arrow.ArrowList
 import           Control.Arrow.ListArrows
-import           Control.Monad
+import           Control.Monad                    ( )
 import           Control.Monad.Error
 import           Control.Monad.State
 
@@ -69,7 +70,7 @@ import           Text.XML.HXT.Arrow.ReadDocument  (xread)
 import           Text.XML.HXT.Arrow.WriteDocument (writeDocumentToString)
 import           Text.XML.HXT.Arrow.XmlState
 
-{- just for embedded test cases
+{- just for embedded test cases, prefix with -- to activate
 import           Text.XML.HXT.Arrow.XmlArrow
 import qualified Control.Arrow.ListArrows         as X
 -- -}
@@ -1262,6 +1263,7 @@ instance XmlPickler Stmt where
                       , \ (Assign n v) -> (n, v)
                       ) $
                ( xpElem "assign" $
+                 xpFilterCont (neg $ hasName "comment" <+> isText) $  -- test case test7: remove uninteresting stuff
                  xpPair (xpAttr "name" xpText)
                          xpickle
                )
@@ -1376,6 +1378,8 @@ test3 = test1' (processTopDown (setQName (mkName "real") `X.when` hasName "int")
 test4 = test1' (processTopDown (setQName (mkName "xxx")  `X.when` hasName "program"))
 test5 = test1' (processTopDown (setQName (mkName "xxx")  `X.when` hasName "assign"))
 test6 = test1' (processTopDownWithAttrl  (txt "xxx"      `X.when` hasText (== "UMinus")))
+test7 = test1' (processTopDown (insertComment            `X.when` hasName "assign"))
+    where insertComment = replaceChildren (getChildren <+> eelem "comment" <+> txt "zzz")
 
 -- ------------------------------------------------------------
 

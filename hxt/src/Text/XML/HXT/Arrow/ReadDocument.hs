@@ -27,6 +27,10 @@ where
 
 import Control.Arrow.ListArrows
 
+import Data.Maybe                               ( fromMaybe )
+import qualified Data.Map                       as M
+
+
 import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlArrow
@@ -118,7 +122,7 @@ reads and validates a document \"test.xml\", no namespace propagation, only cano
 >              , withInputEncoding   isoLatin1
 >              , withParseByMimeType yes
 >              , withCurl []
->              ] \"http:\/\/localhost\/test.php\"
+>              ] "http://localhost/test.php"
 
 reads document \"test.php\", parses it as HTML or XML depending on the mimetype given from the server, but without validation, default encoding 'isoLatin1'.
 HTTP access is done via libCurl.
@@ -200,10 +204,12 @@ readDocument' config src
       >>>
       readD $< getSysVar theWithCache
     where
-    readD True  = constA undefined              -- just for generalizing the signature to: IOStateArrow s b       XmlTree
-                  >>>                           -- instead of                              IOStateArrow s XmlTree XmlTree
-                  (withoutUserState $< (getSysVar theCacheRead >>^ ($ src)))
-    readD False = readDocument'' src
+    readD True
+        = constA undefined              -- just for generalizing the signature to: IOStateArrow s b       XmlTree
+          >>>                           -- instead of                              IOStateArrow s XmlTree XmlTree
+          (withoutUserState $< (getSysVar theCacheRead >>^ ($ src)))
+    readD False
+        = readDocument'' src
 
 readDocument''   :: String -> IOStateArrow s b XmlTree
 readDocument'' src
@@ -227,16 +233,52 @@ readDocument'' src
       >>>
       traceTree
     where
+    processNoneEmptyDoc p
+        = ifA (fromLA hasEmptyBody)
+              (replaceChildren none)
+              p
+        where
+          hasEmptyBody
+              = hasAttrValue transferStatus (/= "200")        -- test on empty response body for not o.k. responses
+                `guards`                                      -- e.g. 3xx status values
+                ( neg getChildren
+                  <+>
+                  ( getChildren >>> isWhiteSpace )
+                )
+
     getMimeType
         = getAttrValue transferMimeType >>^ stringToLower
 
-    processDoc mimeType (parseByMimeType, (parseHtml, (acceptedMimeTypes, validateWithRelax)))
+    applyMimeTypeHandler mt
+        = withoutUserState (applyMTH $< getSysVar theMimeTypeHandlers)
+        where
+          applyMTH mtTable
+              = fromMaybe none $
+                fmap (\ f -> processNoneEmptyDoc
+                             (traceMimeStart >>> f >>> traceMimeEnd)
+                     ) $
+                M.lookup mt mtTable
+          traceMimeStart
+              = traceMsg 2 $
+                "readDocument: calling user defined document parser"
+          traceMimeEnd
+              = traceMsg 2 $
+                "readDocument: user defined document parser finished"
+
+    processDoc mimeType options
         = traceMsg 1 (unwords [ "readDocument:", show src
-                              , "(mime type:", show mimeType, ") will be processed"])
+                              , "(mime type:", show mimeType, ") will be processed"
+                              ]
+                     )
           >>>
-          ( if isAcceptedMimeType acceptedMimeTypes mimeType
-            then ( ifA (fromLA hasEmptyBody)
-                   ( replaceChildren none )               -- empty response, e.g. in if-modified-since request
+          ( applyMimeTypeHandler mimeType       -- try user defined document handlers
+            `orElse`
+            processDoc' mimeType options
+          )
+
+    processDoc' mimeType (parseByMimeType, (parseHtml, (acceptedMimeTypes, validateWithRelax)))
+        = ( if isAcceptedMimeType acceptedMimeTypes mimeType
+            then ( processNoneEmptyDoc
                    ( ( parse $< getSysVar (theValidate              .&&&.
                                            theSubstDTDEntities      .&&&.
                                            theSubstHTMLEntities     .&&&.
@@ -274,18 +316,10 @@ readDocument'' src
             else ( traceMsg 1 (unwords [ "readDocument:", show src
                                        , "mime type:", show mimeType, "not accepted"])
                    >>>
-                   replaceChildren none
-                 )                                                                      -- remove contents of not accepted mimetype
+                   replaceChildren none         -- remove contents of not accepted mimetype
+                 )
           )
         where
-        hasEmptyBody                    :: LA XmlTree XmlTree
-        hasEmptyBody                    = hasAttrValue transferStatus (/= "200")        -- test on empty response body for not o.k. responses
-                                          `guards`                                      -- e.g. 3xx status values
-                                          ( neg getChildren
-                                            <+>
-                                            ( getChildren >>> isWhiteSpace )
-                                          )
-
         isAcceptedMimeType              :: [String] -> String -> Bool
         isAcceptedMimeType mts mt
             | null mts
@@ -373,8 +407,9 @@ readDocument'' src
 -- |
 -- the arrow version of 'readDocument', the arrow input is the source URI
 
-readFromDocument        :: SysConfigList -> IOStateArrow s String XmlTree
-readFromDocument config = applyA ( arr $ readDocument config )
+readFromDocument :: SysConfigList -> IOStateArrow s String XmlTree
+readFromDocument config
+    = applyA ( arr $ readDocument config )
 
 -- ------------------------------------------------------------
 
@@ -386,18 +421,20 @@ readFromDocument config = applyA ( arr $ readDocument config )
 --
 -- Default encoding: No encoding is done, the String argument is taken as Unicode string
 
-readString              :: SysConfigList -> String -> IOStateArrow s b XmlTree
+readString :: SysConfigList -> String -> IOStateArrow s b XmlTree
 readString config content
-                        = readDocument (withInputEncoding unicodeString : config)
-                          (stringProtocol ++ content)
+    = readDocument
+      (withInputEncoding unicodeString : config)
+      (stringProtocol ++ content)
 
 -- ------------------------------------------------------------
 
 -- |
 -- the arrow version of 'readString', the arrow input is the source URI
 
-readFromString          :: SysConfigList -> IOStateArrow s String XmlTree
-readFromString config   = applyA ( arr $ readString config )
+readFromString :: SysConfigList -> IOStateArrow s String XmlTree
+readFromString config
+    = applyA ( arr $ readString config )
 
 -- ------------------------------------------------------------
 
@@ -410,16 +447,17 @@ readFromString config   = applyA ( arr $ readString config )
 -- This is a simpler version of 'readFromString' without any options,
 -- but it does not run in the IO monad.
 
-hread                   :: ArrowXml a => a String XmlTree
-hread                   = fromLA $
-                          parseHtmlContent                      -- substHtmlEntityRefs is done in parser
-                          >>>                                   -- as well as subst HTML char refs
-                          editNTreeA [isError :-> none]         -- ignores all errors
+hread :: ArrowXml a => a String XmlTree
+hread
+    = fromLA $
+      parseHtmlContent                      -- substHtmlEntityRefs is done in parser
+      >>>                                   -- as well as subst HTML char refs
+      editNTreeA [isError :-> none]         -- ignores all errors
 
 {- no longer neccesary, text nodes are merged in parser
-                          >>>
-                          canonicalizeContents
--}
+      >>>
+      canonicalizeContents
+-- -}
 
 -- ------------------------------------------------------------
 
@@ -427,15 +465,17 @@ hread                   = fromLA $
 -- parse a string as XML content, substitute all predefined XML entity refs and canonicalize tree
 -- This xread arrow delegates all work to the xread parser function in module XmlParsec
 
-xread                   :: ArrowXml a => a String XmlTree
-xread                   = parseXmlContent
+xread :: ArrowXml a => a String XmlTree
+xread
+    = parseXmlContent
+
 {- -- the old version, where the parser does not subst char refs and cdata
 xread                   = root [] [parseXmlContent]       -- substXmlEntityRefs is done in parser
                           >>>
                           canonicalizeContents
                           >>>
                           getChildren
--}
+-- -}
 
 -- ------------------------------------------------------------
 

@@ -20,6 +20,8 @@ where
 
 import Control.Arrow
 
+import Data.Map                         ( insert )
+
 import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlState.ErrorHandling
@@ -39,8 +41,18 @@ withTrace                       = setS theTraceLevel
 withSysAttr                     :: String -> String -> SysConfig
 withSysAttr n v                 = chgS theAttrList (addEntry n v)
 
+-- | Specify the set of accepted mime types.
+--
+-- All contents of documents for which the mime type is not found in this list
+-- are discarded.
+
 withAcceptedMimeTypes           :: [String] -> SysConfig
 withAcceptedMimeTypes           = setS theAcceptedMimeTypes
+
+-- | Specify a content handler for documents of a given mime type
+
+withMimeTypeHandler             :: String -> IOSArrow XmlTree XmlTree -> SysConfig
+withMimeTypeHandler mt pa       = chgS theMimeTypeHandlers $ insert mt pa
 
 -- | @withMimeTypeFile filename@ : input option,
 -- set the mime type table for @file:@ documents by given file.
@@ -208,7 +220,8 @@ withOutputXML                   = setS theOutputFmt XMLoutput
 withOutputHTML                  :: SysConfig
 withOutputHTML                  = setS theOutputFmt HTMLoutput
 
--- | Write XML: quote only special XML chars, don't substitute chars by HTML entities, and don\'t generate empty elements for HTML elements,
+-- | Write XML: quote only special XML chars, don't substitute chars by HTML entities,
+-- and don\'t generate empty elements for HTML elements,
 -- which may contain any contents, e.g. @<script src=...></script>@ instead of @<script src=... />@
 
 withOutputXHTML                 :: SysConfig

@@ -21,6 +21,7 @@ import Control.Arrow                            -- arrow classes
 import Control.Arrow.ArrowList
 import Control.Arrow.IOStateListArrow
 
+import Data.Map                                 ( empty )
 import Text.XML.HXT.DOM.Interface
 
 import Text.XML.HXT.Arrow.XmlArrow
@@ -111,6 +112,7 @@ initialInputConfig              = XIOIcgf
 initialParseConfig              :: XIOParseConfig
 initialParseConfig              = XIOPcfg
                                   { xioMimeTypes                = defaultMimeTypeTable
+                                  , xioMimeTypeHandlers         = empty
                                   , xioMimeTypeFile             = ""
                                   , xioAcceptedMimeTypes        = []
                                   , xioFileMimeType             = ""
