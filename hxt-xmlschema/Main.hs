@@ -1,7 +1,12 @@
 import Text.XML.HXT.Core
 import Text.XML.HXT.Curl
 
-import Data.Map (Map, elems, toList, empty, insert, union)
+import Data.Map (Map, lookup, keys, elems, fromList, toList, empty, insert, union)
+import Prelude hiding (lookup)
+
+import Control.Monad.Identity
+import Control.Monad.Reader
+import Control.Monad.Writer hiding (Any, All)
 
 -- Type definitions
 
@@ -147,8 +152,8 @@ data Element           = ElRef {unElRef :: Name}
                        deriving (Show, Eq)
 data ElementDef        = ElementDef
                        { elemName        :: Name
-                       , elemTypeDef :: ElemTypeDef
-                       , elemDefaultVal  :: Maybe String
+                       , elemTypeDef     :: ElemTypeDef
+                       , elemDefaultVal  :: Maybe String -- TODO: sense?
                        }
                        deriving (Show, Eq)
 data ElemTypeDef       = ETDTypeAttr     {unETDTypeAttr     :: Name}
@@ -190,20 +195,71 @@ nsUri    = "http://www.w3.org/2001/XMLSchema"
 nsPrefix :: String
 nsPrefix = "xs"
 
+xpElem' :: String -> PU a -> PU a
+xpElem' name
+    = xpElemNS nsUri nsPrefix name
+
 xpSchemaElem :: String -> PU a -> PU a
-xpSchemaElem name pickle
-    = xpElemNS nsUri nsPrefix name $
-      -- keep elems from xs namespace and name != annotation
-      xpFilterCont (isXmlSchemaElem           >>> neg (hasQName anName)) $
-      -- keep attrs without namespace and name != id
-      xpFilterAttr (isAttrWithoutNamespaceUri >>> neg (hasQName idName)) $
-      -- apply pickler
-      pickle
+xpSchemaElem name
+    = xpElem' name . xpFilterSchema
+
+xpFilterSchema :: PU a -> PU a
+xpFilterSchema
+    = -- keep elems from xs namespace that are not blacklisted
+      xpFilterCont (isXmlSchemaElem           >>> neg (   hasQName annotationName
+                                                      <+> hasQName notationName
+                                                      <+> hasQName uniqueName
+                                                      <+> hasQName keyName
+                                                      <+> hasQName keyrefName
+                                                      )) .
+      -- keep attrs without namespace that are not blacklisted
+      xpFilterAttr (isAttrWithoutNamespaceUri >>> neg (   hasQName idName
+                                                      <+> hasQName attributeFormDefaultName
+                                                      <+> hasQName blockDefaultName
+                                                      <+> hasQName elementFormDefaultName
+                                                      <+> hasQName finalDefaultName
+                                                      <+> hasQName versionName
+                                                      <+> hasQName langName
+                                                      <+> hasQName finalName
+                                                      <+> hasQName fixedName
+                                                      <+> hasQName abstractName
+                                                      <+> hasQName blockName
+                                                      <+> hasQName formName
+                                                      <+> hasQName nillableName
+                                                      <+> hasQName substitutionGroupName
+                                                      ))
       where
+      -- element blacklist
       isXmlSchemaElem           = hasNameWith ((== nsUri) . namespaceUri)
-      anName                    = mkQName nsUri nsPrefix "annotation"
+      annotationName            = mkQName nsUri nsPrefix "annotation"
+      notationName              = mkQName nsUri nsPrefix "notation"
+      -- irrelevant content for element
+      uniqueName                = mkQName nsUri nsPrefix "unique"
+      keyName                   = mkQName nsUri nsPrefix "key"
+      keyrefName                = mkQName nsUri nsPrefix "keyref"
+      -- attribute blacklist
       isAttrWithoutNamespaceUri = hasNameWith (null       . namespaceUri)
       idName                    = mkQName ""    ""       "id"
+      -- irrelevant attributes for schema
+      attributeFormDefaultName  = mkQName ""    ""       "attributeFormDefault"
+      blockDefaultName          = mkQName ""    ""       "blockDefault"
+      elementFormDefaultName    = mkQName ""    ""       "elementFormDefault"
+      finalDefaultName          = mkQName ""    ""       "finalDefault"
+      versionName               = mkQName ""    ""       "version"
+      langName                  = mkQName ""    ""       "lang"
+      -- irrelevant attributes for simpleType, complexType and element
+      finalName                 = mkQName ""    ""       "final"
+      -- irrelevant attributes for simpleType restrictions, complexType, element and attribute
+      fixedName                 = mkQName ""    ""       "fixed"
+      -- irrelevant attributes for complexType and element
+      abstractName              = mkQName ""    ""       "abstract"
+      blockName                 = mkQName ""    ""       "block"
+      -- irrelevant attributes for element and attribute
+      formName                  = mkQName ""    ""       "form"
+      -- irrelevant attributes for element
+      nillableName              = mkQName ""    ""       "nillable"
+      substitutionGroupName     = mkQName ""    ""       "substitutionGroup"
+
 
 -- Conversion between Schema and Schema'
 
@@ -245,10 +301,10 @@ fromSchema s
 xpXmlSchema' :: PU XmlSchema'
 xpXmlSchema'
   = xpSchemaElem "schema" $
-    -- TODO: xpAddNSDecl nsPrefix nsUri $ -- check for xs namespace
+    xpAddNSDecl nsPrefix nsUri $
+    xpFilterSchema $
     xpWrap (\ (a, b) -> XmlSchema' a b , \ t -> (targetNS t, parts t)) $
     xpPair (xpOption $ xpAttr "targetNamespace" xpText) $
-    -- TODO: read all namespaces
     xpList $ xpSchemaPart
 
 xpSchemaPart :: PU XmlSchemaPart
@@ -494,7 +550,6 @@ xpElementDef :: PU ElementDef
 xpElementDef
   = xpWrap (\ (a, b, c) -> ElementDef a b c, \ t -> (elemName t, elemTypeDef t, elemDefaultVal t)) $
     xpTriple (xpAttr "name" xpText) xpElemTypeDef (xpOption $ xpAttr "default" xpText)
-    -- TODO: filter irrelevant children: xs:unique, xs:key xs:keyref
 
 xpElemTypeDef :: PU ElemTypeDef
 xpElemTypeDef
@@ -645,25 +700,69 @@ storeXmlSchema s t
               )
     return ()
 
+-- Environment aufbauen:
+
+createSValEnv :: Schema -> SValEnv
+createSValEnv s
+ =
+
+-- Testfunktionen anwenden:
+
+-- testXmlTree :: XmlTree -> SVal Bool
+-- testXmlTree
+--   = do
+--     env <- ask
+
+-- Monad Transformer Test
+
+type Env = Map String String
+
+-- Schema Validation type
+type SVal a = ReaderT Env (WriterT [String] Identity) a
+
+runSVal :: Env -> SVal a -> (a, [String])
+runSVal env val = runIdentity (runWriterT (runReaderT val env))
+
+testSVal :: String -> SVal Bool
+testSVal s
+  = do
+    env <- ask
+    case lookup s env of
+      Nothing  -> do
+                  tell ["not in map: " ++ s]
+                  return False
+      Just val -> do
+                  tell [val]
+                  return True
+
 -- Test setup
 
 main :: IO ()
 main
   = do
-    putStrLn "\n--------------------------------------------- Pickling ---------------------------------------------\n"
-    xmlschema <- loadXmlSchema "example.xsd"
-    putStrLn "\n------------------------------------------- Simple Types -------------------------------------------"
-    putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sSimpleTypes xmlschema
-    putStrLn "------------------------------------------- Complex Types ------------------------------------------"
-    putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sComplexTypes xmlschema
-    putStrLn "--------------------------------------------- Elements ---------------------------------------------"
-    putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sElements xmlschema
-    putStrLn "---------------------------------------------- Groups ----------------------------------------------"
-    putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sGroups xmlschema
-    putStrLn "-------------------------------------------- Attributes --------------------------------------------"
-    putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sAttributes xmlschema
-    putStrLn "------------------------------------------ AttributeGroups -----------------------------------------"
-    putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sAttributeGroups xmlschema
-    storeXmlSchema xmlschema "new-example.xsd"
+    s <- getLine
+    let res = runSVal (fromList [("foo","bar"), ("hallo","welt")]) (testSVal s)
+    putStrLn $ if (fst res) then "Klappt!" else "Fehler!"
+    mapM_ putStrLn $ snd res
+    -- putStrLn "\n--------------------------------------------- Pickling ---------------------------------------------\n"
+    -- xmlschema <- loadXmlSchema "example.xsd"
+    -- putStrLn "\n-------------------------------------------- RE Testing --------------------------------------------\n"
+    -- putStrLn $ show $ schemaREs xmlschema
+    -- putStrLn $ fst $ elementREs $ xmlschema $ Just $ lookup "quark" $ sElements xmlschema
+    -- putStrLn $ fst $ elementREs $ xmlschema $ Just $ lookup "title" $ sElements xmlschema
+    -- putStrLn $ fst $ elementREs $ xmlschema $ Just $ lookup "html"  $ sElements xmlschema
+    -- putStrLn "\n------------------------------------------- Simple Types -------------------------------------------"
+    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sSimpleTypes xmlschema
+    -- putStrLn "------------------------------------------- Complex Types ------------------------------------------"
+    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sComplexTypes xmlschema
+    -- putStrLn "--------------------------------------------- Elements ---------------------------------------------"
+    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sElements xmlschema
+    -- putStrLn "---------------------------------------------- Groups ----------------------------------------------"
+    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sGroups xmlschema
+    -- putStrLn "-------------------------------------------- Attributes --------------------------------------------"
+    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sAttributes xmlschema
+    -- putStrLn "------------------------------------------ AttributeGroups -----------------------------------------"
+    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sAttributeGroups xmlschema
+    -- storeXmlSchema xmlschema "new-example.xsd"
     return ()
 

@@ -410,21 +410,21 @@ relevant elements:
   relevant attributes:
 
     name              = xs:NCName
-    type              = xs:QName, -- only if no nested simpleType or complexType
+    type              = xs:QName -- only if no nested simpleType or complexType
     default           = xs:string
 
   irrelevant attributes:
 
-    abstract          = xs:boolean : "false",
+    abstract          = xs:boolean : "false"
     block             = ( "#all" | list of ( "extension" | "restriction" | "substitution" ) )
-    final             = ( "#all" | list of ( "extension" | "restriction" ) ),
+    final             = ( "#all" | list of ( "extension" | "restriction" ) )
     fixed             = xs:string
     nillable          = xs:boolean : "false"
-    substitutionGroup = xs:QName,
+    substitutionGroup = xs:QName
 
   content model:
 
-    (xs:simpleType | xs:complexType)?, -- only if no type attribute
+    (xs:simpleType | xs:complexType)? -- only if no type attribute
     (xs:unique | xs:key | xs:keyref)*
 
 ------------------------------------------------------------------------------------------
