@@ -702,9 +702,9 @@ storeXmlSchema s t
 
 -- Environment aufbauen:
 
-createSValEnv :: Schema -> SValEnv
-createSValEnv s
- =
+-- createSValEnv :: Schema -> SValEnv
+-- createSValEnv s
+--  =
 
 -- Testfunktionen anwenden:
 
@@ -735,15 +735,70 @@ testSVal s
                   tell [val]
                   return True
 
+-- Test Xml Processing with HXT
+
+readDoc :: String -> IO XmlTree
+readDoc uri
+  = do
+    s <- runX ( readDocument [ withValidate yes        -- validate source
+                             , withTrace 1             -- trace processing steps
+                             , withRemoveWS yes        -- remove redundant whitespace TODO: ??
+                             , withPreserveComment no  -- keep comments               TODO: ??
+                             -- , withCheckNamespaces yes -- check namespaces
+                             , withCurl []             -- use libCurl for http access
+                             ] uri
+                >>>
+                getChildren
+              )
+    return $ head s
+
+selectFromTree :: XmlTree -> IOSArrow XmlTree a -> IO [a]
+selectFromTree t arrow
+  = do
+    res <- runX ( constA t
+                  >>>
+                  arrow
+              )
+    return res
+
+getNodeName :: XmlTree -> IO String
+getNodeName t
+  = do
+    l <- selectFromTree t (isElem >>> getLocalPart)
+    return $ if (null l)
+             then ""
+             else head l
+
+getNodeAttrs :: XmlTree -> IO [(String, String)]
+getNodeAttrs t
+  = selectFromTree t (getAttrl >>> getName &&& (getChildren >>> getText))
+
+getNodeChildren :: XmlTree -> IO XmlTrees
+getNodeChildren t
+  = selectFromTree t (getChildren >>> (isElem <+> isText))
+
 -- Test setup
 
 main :: IO ()
 main
   = do
-    s <- getLine
-    let res = runSVal (fromList [("foo","bar"), ("hallo","welt")]) (testSVal s)
+    t <- readDoc "example.xsd"
+
+    n <- getNodeName t
+    putStrLn $ n
+
+    l <- getNodeAttrs t
+    mapM_ (\ (a, b) -> putStrLn $ a ++ " = " ++ b) l
+
+    c <- getNodeChildren t
+    c' <- mapM getNodeName c
+
+    mapM_ putStrLn c'
+
+    let res = runSVal (fromList [("foo","bar"), ("hallo","welt")]) (testSVal "foo")
     putStrLn $ if (fst res) then "Klappt!" else "Fehler!"
     mapM_ putStrLn $ snd res
+
     -- putStrLn "\n--------------------------------------------- Pickling ---------------------------------------------\n"
     -- xmlschema <- loadXmlSchema "example.xsd"
     -- putStrLn "\n-------------------------------------------- RE Testing --------------------------------------------\n"
