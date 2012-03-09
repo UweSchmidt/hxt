@@ -700,40 +700,150 @@ storeXmlSchema s t
               )
     return ()
 
+-- Typen für Validierung
+
+data Env = Env
+           { xpath :: String
+           , elemTFs :: Map String (AttrMap, ContentRE)
+             -- TODO: more
+           }
+
+type AttrMap = Map String (Bool, STTF)
+type STTF = String -> SVal Bool
+
+type ContentRE = String -- TODO: real type
+
 -- Environment aufbauen:
 
 -- createSValEnv :: Schema -> SValEnv
 -- createSValEnv s
 --  =
 
+initEnv :: Env
+initEnv
+  = Env "" $ fromList [("simpleType", (fromList [("name", (False, \ x -> return True))
+                                                ,("wurst", (True, \ x -> return False))
+                                                ], ""))
+                      ,("schema",     (fromList [("targetNamespace", (True, \ x -> return True))
+                                                ,("wurst", (False, \ x -> return False))
+                                                ], ""))
+                      ]
+
 -- Testfunktionen anwenden:
 
--- testXmlTree :: XmlTree -> SVal Bool
--- testXmlTree
---   = do
---     env <- ask
+getReqAttrNames :: AttrMap -> [String]
+getReqAttrNames m = map (\ (n, (req, tf)) -> n) $ filter (\ (n, (req, tf)) -> req) (toList m)
 
--- Monad Transformer Test
-
-type Env = Map String String
-
--- Schema Validation type
-type SVal a = ReaderT Env (WriterT [String] Identity) a
-
-runSVal :: Env -> SVal a -> (a, [String])
-runSVal env val = runIdentity (runWriterT (runReaderT val env))
-
-testSVal :: String -> SVal Bool
-testSVal s
+hasReqAttrs :: [String] -> [String] -> SVal Bool
+hasReqAttrs [] attrs
+  = return True
+hasReqAttrs (x:xs) attrs
   = do
     env <- ask
-    case lookup s env of
-      Nothing  -> do
-                  tell ["not in map: " ++ s]
-                  return False
-      Just val -> do
-                  tell [val]
-                  return True
+    if x `notElem` attrs
+      then do
+           tell [(xpath env, "required attribute @" ++ x ++ " missing.")]
+           res <- hasReqAttrs xs attrs
+           return (res && False)
+      else hasReqAttrs xs attrs
+
+checkAllowedAttrs :: AttrMap -> [(String, String)] -> SVal Bool
+checkAllowedAttrs m []
+  = return True
+checkAllowedAttrs m ((n, val):xs)
+  = do
+    env <- ask
+    case lookup n m of
+      Nothing      -> do
+                      tell [(xpath env, "attribute @" ++ n ++ " not allowed.")]
+                      res <- checkAllowedAttrs m xs
+                      return (res && False)
+      Just (_, tf) -> tf val
+
+testAttrs :: AttrMap -> XmlTree -> SVal Bool
+testAttrs m e
+  = do
+    attrl <- lift $ lift $ getNodeAttrs e
+    allowedAttrsRes <- checkAllowedAttrs m attrl
+    reqAttrsRes <- hasReqAttrs (getReqAttrNames m) (map fst attrl)
+    return (allowedAttrsRes && reqAttrsRes)
+
+testContentModel :: ContentRE -> XmlTrees -> SVal Bool
+testContentModel _ _
+  = return True -- TODO: implement RE test
+
+testElem :: XmlTree -> SVal Bool
+testElem e
+  = do
+    env <- ask
+    n <- lift $ lift $ getNodeName e
+    case lookup n (elemTFs env) of
+      -- TODO: remove Nothing-part since this test already should apply when testing RE
+      Nothing -> do            
+                 tell [(xpath env, "<" ++ n ++ "> not allowed.")]
+                 return False
+      Just (attrMap, contentRE) -> do
+                 attrRes <- testAttrs attrMap e
+                 content <- lift $ lift $ getNodeChildren e
+                 contRes <- testContentModel contentRE content
+                 -- TODO: check content model (filter content list)
+
+                 -- for text nodes check simpleType
+
+                 -- for elements which are allowed AND ARE NOT TEXT NODES test recursively
+                 -- TODO: Count element names like: /dok/kap[1]/s with names (more speaking)
+                 trs <- mapM 
+                        ( \ (pos, el) ->
+                          local (const (Env ((xpath env) ++ "/*[" ++ (show pos) ++ "]") (elemTFs env))) (testElem el)
+                        )
+                        (zip [1..] content)
+                 res <- return $ foldr (&&) True trs
+                 return res
+
+-- Test setup
+
+main :: IO ()
+main
+  = do
+    -- argv <- getArgs
+    -- (schemaurl, docurl) <- return (argv!!0, argv!!1)
+
+    t <- readDoc "example.xsd"
+
+    res <- runSVal initEnv (testElem t)
+    putStrLn $ if (fst res) then "\nok." else "\nerrors were found:\n"
+    mapM_ (\ (a, b) -> putStrLn $ a ++ "\n" ++ b ++ "\n") $ snd res
+
+    -- putStrLn "\n--------------------------------------------- Pickling ---------------------------------------------\n"
+    -- xmlschema <- loadXmlSchema "example.xsd"
+    -- putStrLn "\n-------------------------------------------- RE Testing --------------------------------------------\n"
+    -- putStrLn $ show $ schemaREs xmlschema
+    -- putStrLn $ fst $ elementREs $ xmlschema $ Just $ lookup "quark" $ sElements xmlschema
+    -- putStrLn $ fst $ elementREs $ xmlschema $ Just $ lookup "title" $ sElements xmlschema
+    -- putStrLn $ fst $ elementREs $ xmlschema $ Just $ lookup "html"  $ sElements xmlschema
+    -- putStrLn "\n------------------------------------------- Simple Types -------------------------------------------"
+    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sSimpleTypes xmlschema
+    -- putStrLn "------------------------------------------- Complex Types ------------------------------------------"
+    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sComplexTypes xmlschema
+    -- putStrLn "--------------------------------------------- Elements ---------------------------------------------"
+    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sElements xmlschema
+    -- putStrLn "---------------------------------------------- Groups ----------------------------------------------"
+    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sGroups xmlschema
+    -- putStrLn "-------------------------------------------- Attributes --------------------------------------------"
+    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sAttributes xmlschema
+    -- putStrLn "------------------------------------------ AttributeGroups -----------------------------------------"
+    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sAttributeGroups xmlschema
+    -- storeXmlSchema xmlschema "new-example.xsd"
+    return ()
+
+-- Schema Validation type
+
+type SValLog = [(String, String)]
+
+type SVal a = ReaderT Env (WriterT SValLog IO) a
+
+runSVal :: Env -> SVal a -> IO (a, SValLog)
+runSVal env val = runWriterT $ runReaderT val env
 
 -- Test Xml Processing with HXT
 
@@ -758,66 +868,22 @@ selectFromTree t arrow
     res <- runX ( constA t
                   >>>
                   arrow
-              )
+                )
     return res
 
 getNodeName :: XmlTree -> IO String
 getNodeName t
   = do
-    l <- selectFromTree t (isElem >>> getLocalPart)
+    l <- selectFromTree t getLocalPart
     return $ if (null l)
              then ""
-             else head l
+             else head l -- TODO: ??
 
-getNodeAttrs :: XmlTree -> IO [(String, String)]
-getNodeAttrs t
+getNodeAttrs :: XmlTree -> IO [(String, String)] -- XmlTrees without getText
+getNodeAttrs t                     
   = selectFromTree t (getAttrl >>> getName &&& (getChildren >>> getText))
 
 getNodeChildren :: XmlTree -> IO XmlTrees
 getNodeChildren t
   = selectFromTree t (getChildren >>> (isElem <+> isText))
-
--- Test setup
-
-main :: IO ()
-main
-  = do
-    t <- readDoc "example.xsd"
-
-    n <- getNodeName t
-    putStrLn $ n
-
-    l <- getNodeAttrs t
-    mapM_ (\ (a, b) -> putStrLn $ a ++ " = " ++ b) l
-
-    c <- getNodeChildren t
-    c' <- mapM getNodeName c
-
-    mapM_ putStrLn c'
-
-    let res = runSVal (fromList [("foo","bar"), ("hallo","welt")]) (testSVal "foo")
-    putStrLn $ if (fst res) then "Klappt!" else "Fehler!"
-    mapM_ putStrLn $ snd res
-
-    -- putStrLn "\n--------------------------------------------- Pickling ---------------------------------------------\n"
-    -- xmlschema <- loadXmlSchema "example.xsd"
-    -- putStrLn "\n-------------------------------------------- RE Testing --------------------------------------------\n"
-    -- putStrLn $ show $ schemaREs xmlschema
-    -- putStrLn $ fst $ elementREs $ xmlschema $ Just $ lookup "quark" $ sElements xmlschema
-    -- putStrLn $ fst $ elementREs $ xmlschema $ Just $ lookup "title" $ sElements xmlschema
-    -- putStrLn $ fst $ elementREs $ xmlschema $ Just $ lookup "html"  $ sElements xmlschema
-    -- putStrLn "\n------------------------------------------- Simple Types -------------------------------------------"
-    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sSimpleTypes xmlschema
-    -- putStrLn "------------------------------------------- Complex Types ------------------------------------------"
-    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sComplexTypes xmlschema
-    -- putStrLn "--------------------------------------------- Elements ---------------------------------------------"
-    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sElements xmlschema
-    -- putStrLn "---------------------------------------------- Groups ----------------------------------------------"
-    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sGroups xmlschema
-    -- putStrLn "-------------------------------------------- Attributes --------------------------------------------"
-    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sAttributes xmlschema
-    -- putStrLn "------------------------------------------ AttributeGroups -----------------------------------------"
-    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sAttributeGroups xmlschema
-    -- storeXmlSchema xmlschema "new-example.xsd"
-    return ()
 
