@@ -26,8 +26,22 @@ XDTD DTDElem Attributes		DTD element with assoc list for dtd element features
 XAttr QName			attribute with qualified name, the attribute value is stored in children
 XError Int String		error message with level and text 
 
+---
 
+newtype PEEnv           = PEEnv (M.Map String XmlTree)
 
+emptyPeEnv      :: PEEnv
+emptyPeEnv      = PEEnv M.empty
+
+lookupPeEnv     :: String -> PEEnv -> Maybe XmlTree
+lookupPeEnv k (PEEnv env)
+    = M.lookup k env
+
+addPeEntry      :: String -> XmlTree -> PEEnv -> PEEnv
+addPeEntry k a (PEEnv env)
+    = PEEnv $ M.insert k a env
+
+---
 
 permutationList2RE :: [String] -> String
 permutationList2RE []

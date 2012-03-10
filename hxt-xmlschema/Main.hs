@@ -713,6 +713,8 @@ type STTF = String -> SVal Bool
 
 type ContentRE = String -- TODO: real type
 
+-- import Text.XML.HXT.Arrow.XmlRegex ()           -- import this explicitly
+
 -- Environment aufbauen:
 
 -- createSValEnv :: Schema -> SValEnv
