@@ -1,8 +1,13 @@
-import Text.XML.HXT.Core
+import Text.XML.HXT.Core hiding (getElemName, isElem, getAttrName, getAttrValue, getText)
 import Text.XML.HXT.Curl
+import Text.XML.HXT.Arrow.XmlRegex
 
-import Data.Map (Map, lookup, keys, elems, fromList, toList, empty, insert, union)
+import Data.Tree.NTree.TypeDefs
+
+import Data.Map (Map, lookup, elems, fromList, toList, empty, insert, union)
 import Prelude hiding (lookup)
+
+import Data.List (partition)
 
 import Control.Monad.Identity
 import Control.Monad.Reader
@@ -231,34 +236,34 @@ xpFilterSchema
       where
       -- element blacklist
       isXmlSchemaElem           = hasNameWith ((== nsUri) . namespaceUri)
-      annotationName            = mkQName nsUri nsPrefix "annotation"
-      notationName              = mkQName nsUri nsPrefix "notation"
+      annotationName            = mkQName nsPrefix "annotation"           nsUri
+      notationName              = mkQName nsPrefix "notation"             nsUri
       -- irrelevant content for element
-      uniqueName                = mkQName nsUri nsPrefix "unique"
-      keyName                   = mkQName nsUri nsPrefix "key"
-      keyrefName                = mkQName nsUri nsPrefix "keyref"
+      uniqueName                = mkQName nsPrefix "unique"               nsUri
+      keyName                   = mkQName nsPrefix "key"                  nsUri
+      keyrefName                = mkQName nsPrefix "keyref"               nsUri
       -- attribute blacklist
       isAttrWithoutNamespaceUri = hasNameWith (null       . namespaceUri)
-      idName                    = mkQName ""    ""       "id"
+      idName                    = mkQName ""       "id"                   ""
       -- irrelevant attributes for schema
-      attributeFormDefaultName  = mkQName ""    ""       "attributeFormDefault"
-      blockDefaultName          = mkQName ""    ""       "blockDefault"
-      elementFormDefaultName    = mkQName ""    ""       "elementFormDefault"
-      finalDefaultName          = mkQName ""    ""       "finalDefault"
-      versionName               = mkQName ""    ""       "version"
-      langName                  = mkQName ""    ""       "lang"
+      attributeFormDefaultName  = mkQName ""       "attributeFormDefault" ""
+      blockDefaultName          = mkQName ""       "blockDefault"         ""
+      elementFormDefaultName    = mkQName ""       "elementFormDefault"   ""
+      finalDefaultName          = mkQName ""       "finalDefault"         ""
+      versionName               = mkQName ""       "version"              ""
+      langName                  = mkQName ""       "lang"                 ""
       -- irrelevant attributes for simpleType, complexType and element
-      finalName                 = mkQName ""    ""       "final"
+      finalName                 = mkQName ""       "final"                ""
       -- irrelevant attributes for simpleType restrictions, complexType, element and attribute
-      fixedName                 = mkQName ""    ""       "fixed"
+      fixedName                 = mkQName ""       "fixed"                ""
       -- irrelevant attributes for complexType and element
-      abstractName              = mkQName ""    ""       "abstract"
-      blockName                 = mkQName ""    ""       "block"
+      abstractName              = mkQName ""       "abstract"             ""
+      blockName                 = mkQName ""       "block"                ""
       -- irrelevant attributes for element and attribute
-      formName                  = mkQName ""    ""       "form"
+      formName                  = mkQName ""       "form"                 ""
       -- irrelevant attributes for element
-      nillableName              = mkQName ""    ""       "nillable"
-      substitutionGroupName     = mkQName ""    ""       "substitutionGroup"
+      nillableName              = mkQName ""       "nillable"             ""
+      substitutionGroupName     = mkQName ""       "substitutionGroup"    ""
 
 
 -- Conversion between Schema and Schema'
@@ -702,18 +707,16 @@ storeXmlSchema s t
 
 -- Typen für Validierung
 
-data Env = Env
-           { xpath :: String
-           , elemTFs :: Map String (AttrMap, ContentRE)
+data SValEnv = SValEnv
+             { xpath :: String
+             , elemTFs :: Map String (AttrMap, XmlRegex, STTF)
              -- TODO: more
-           }
+             }
 
 type AttrMap = Map String (Bool, STTF)
 type STTF = String -> SVal Bool
 
-type ContentRE = String -- TODO: real type
-
--- import Text.XML.HXT.Arrow.XmlRegex ()           -- import this explicitly
+type CountingTable = Map String Int
 
 -- Environment aufbauen:
 
@@ -721,86 +724,112 @@ type ContentRE = String -- TODO: real type
 -- createSValEnv s
 --  =
 
-initEnv :: Env
+mkElemRE :: String -> XmlRegex
+mkElemRE s = mkPrim $ (== s) . getElemName
+
+initEnv :: SValEnv
 initEnv
-  = Env "" $ fromList [("simpleType", (fromList [("name", (False, \ x -> return True))
-                                                ,("wurst", (True, \ x -> return False))
-                                                ], ""))
-                      ,("schema",     (fromList [("targetNamespace", (True, \ x -> return True))
-                                                ,("wurst", (False, \ x -> return False))
-                                                ], ""))
-                      ]
+  = SValEnv "" $ fromList [("simpleType", ( fromList [("name",  (False, \ _ -> return True))
+                                                     ,("wurst", (True,  \ _ -> return False))
+                                                     ]
+                                          , mkZero "kaesesalat"
+                                          , \ _ -> return True)
+                                          )
+                          ,("schema",     ( fromList [("targetNamespace", (True,  \ _ -> return True))
+                                                     ,("wurst",           (False, \ _ -> return False))
+                                                     ]
+                                          , mkZero "fleischsalat"
+                                          , \ _ -> return True)
+                                          )
+                          ]
 
 -- Testfunktionen anwenden:
 
 getReqAttrNames :: AttrMap -> [String]
-getReqAttrNames m = map (\ (n, (req, tf)) -> n) $ filter (\ (n, (req, tf)) -> req) (toList m)
+getReqAttrNames m = map (\ (n, _) -> n) $ filter (\ (_, (req, _)) -> req) (toList m)
 
 hasReqAttrs :: [String] -> [String] -> SVal Bool
-hasReqAttrs [] attrs
+hasReqAttrs [] _
   = return True
 hasReqAttrs (x:xs) attrs
   = do
     env <- ask
     if x `notElem` attrs
       then do
-           tell [(xpath env, "required attribute @" ++ x ++ " missing.")]
+           tell [((xpath env) ++ "/@" ++ x, "required attribute is missing.")]
            res <- hasReqAttrs xs attrs
            return (res && False)
       else hasReqAttrs xs attrs
 
 checkAllowedAttrs :: AttrMap -> [(String, String)] -> SVal Bool
-checkAllowedAttrs m []
+checkAllowedAttrs _ []
   = return True
 checkAllowedAttrs m ((n, val):xs)
   = do
     env <- ask
     case lookup n m of
       Nothing      -> do
-                      tell [(xpath env, "attribute @" ++ n ++ " not allowed.")]
+                      tell [((xpath env) ++ "/@" ++ n, "attribute not allowed here.")]
                       res <- checkAllowedAttrs m xs
                       return (res && False)
-      Just (_, tf) -> tf val
+      Just (_, tf) -> local (const (appendXPath ("/@" ++ n) env)) (tf val) --TODO: error msg in tf
 
 testAttrs :: AttrMap -> XmlTree -> SVal Bool
 testAttrs m e
   = do
-    attrl <- lift $ lift $ getNodeAttrs e
+    let attrl = getElemAttrs e
     allowedAttrsRes <- checkAllowedAttrs m attrl
     reqAttrsRes <- hasReqAttrs (getReqAttrNames m) (map fst attrl)
     return (allowedAttrsRes && reqAttrsRes)
 
-testContentModel :: ContentRE -> XmlTrees -> SVal Bool
-testContentModel _ _
-  = return True -- TODO: implement RE test
+testContentModel :: XmlRegex -> XmlTrees -> SVal Bool
+testContentModel re t
+  = do
+    env <- ask
+    case matchXmlRegex re t of
+      Nothing  -> return True
+      Just msg -> do
+                  tell [(xpath env ++ "/*", "content does not match content model.\n" ++ msg)]
+                  return False
+
+appendXPath :: String -> SValEnv -> SValEnv
+appendXPath s env
+  = SValEnv ((xpath env) ++ s) $ elemTFs env
+
+testElemChildren :: CountingTable -> XmlTrees -> SVal Bool
+testElemChildren _ []
+  = return True
+testElemChildren t (x:xs)
+  = do
+    env <- ask
+    let n = getElemName x
+    let count = case lookup n t of
+                  Nothing -> 1
+                  Just v  -> v+1
+    res <- local (const (appendXPath ("/" ++ n ++ "[" ++ (show count) ++ "]") env)) (testElem x) -- new env for recursion
+    rest <- testElemChildren (insert n count t) xs
+    return (res && rest)
+
+extractElems :: XmlTrees -> (XmlTrees, XmlTrees)
+extractElems = partition isElem
 
 testElem :: XmlTree -> SVal Bool
 testElem e
   = do
     env <- ask
-    n <- lift $ lift $ getNodeName e
+    let n = getElemName e
     case lookup n (elemTFs env) of
-      -- TODO: remove Nothing-part since this test already should apply when testing RE
       Nothing -> do            
-                 tell [(xpath env, "<" ++ n ++ "> not allowed.")]
+                 tell [(xpath env, "element not allowed here.")]
                  return False
-      Just (attrMap, contentRE) -> do
+      Just (attrMap, contentRE, tf) -> do
                  attrRes <- testAttrs attrMap e
-                 content <- lift $ lift $ getNodeChildren e
-                 contRes <- testContentModel contentRE content
-                 -- TODO: check content model (filter content list)
-
-                 -- for text nodes check simpleType
-
-                 -- for elements which are allowed AND ARE NOT TEXT NODES test recursively
-                 -- TODO: Count element names like: /dok/kap[1]/s with names (more speaking)
-                 trs <- mapM 
-                        ( \ (pos, el) ->
-                          local (const (Env ((xpath env) ++ "/*[" ++ (show pos) ++ "]") (elemTFs env))) (testElem el)
-                        )
-                        (zip [1..] content)
-                 res <- return $ foldr (&&) True trs
-                 return res
+                 let content = getElemChildren e -- Text and Tag nodes
+                 contModelRes <- testContentModel contentRE content
+                 let (tags, text) = extractElems content
+                 textRes <- tf $ getCombinedText text
+                 tagsRes <- testElemChildren empty tags
+                 return (attrRes && contModelRes && textRes && tagsRes)
 
 -- Test setup
 
@@ -811,10 +840,11 @@ main
     -- (schemaurl, docurl) <- return (argv!!0, argv!!1)
 
     t <- readDoc "example.xsd"
-
-    res <- runSVal initEnv (testElem t)
+    let res = runSVal initEnv (testElem t)
     putStrLn $ if (fst res) then "\nok." else "\nerrors were found:\n"
     mapM_ (\ (a, b) -> putStrLn $ a ++ "\n" ++ b ++ "\n") $ snd res
+
+    -- res <- return $ runSVal initEnv $ testRE (mkElemRE "kaese") [ NTree (XTag (mkQName "" "kaese" "") []) [] ]
 
     -- putStrLn "\n--------------------------------------------- Pickling ---------------------------------------------\n"
     -- xmlschema <- loadXmlSchema "example.xsd"
@@ -842,10 +872,10 @@ main
 
 type SValLog = [(String, String)]
 
-type SVal a = ReaderT Env (WriterT SValLog IO) a
+type SVal a = ReaderT SValEnv (WriterT SValLog Identity) a
 
-runSVal :: Env -> SVal a -> IO (a, SValLog)
-runSVal env val = runWriterT $ runReaderT val env
+runSVal :: SValEnv -> SVal a -> (a, SValLog)
+runSVal env val = runIdentity $ runWriterT $ runReaderT val env
 
 -- Test Xml Processing with HXT
 
@@ -864,28 +894,38 @@ readDoc uri
               )
     return $ head s
 
-selectFromTree :: XmlTree -> IOSArrow XmlTree a -> IO [a]
-selectFromTree t arrow
-  = do
-    res <- runX ( constA t
-                  >>>
-                  arrow
-                )
-    return res
+getElemName :: XmlTree -> String
+getElemName (NTree (XTag n _) _) = localPart n
+getElemName _                    = ""
 
-getNodeName :: XmlTree -> IO String
-getNodeName t
-  = do
-    l <- selectFromTree t getLocalPart
-    return $ if (null l)
-             then ""
-             else head l -- TODO: ??
+getElemAttrs :: XmlTree -> [(String, String)]
+getElemAttrs (NTree (XTag _ attrs) _) = map (\ x -> (getAttrName x, getAttrValue x)) attrs
+getElemAttrs _                        = []
 
-getNodeAttrs :: XmlTree -> IO [(String, String)] -- XmlTrees without getText
-getNodeAttrs t                     
-  = selectFromTree t (getAttrl >>> getName &&& (getChildren >>> getText))
+getElemChildren :: XmlTree -> XmlTrees
+getElemChildren (NTree (XTag _ _) c) = filter isRelevant c
+getElemChildren _                    = []
 
-getNodeChildren :: XmlTree -> IO XmlTrees
-getNodeChildren t
-  = selectFromTree t (getChildren >>> (isElem <+> isText))
+isElem :: XmlTree -> Bool
+isElem (NTree (XTag _ _) _) = True
+isElem _                    = False
 
+isRelevant :: XmlTree -> Bool
+isRelevant (NTree (XTag _ _) _) = True
+isRelevant (NTree (XText _) _)  = True
+isRelevant _                    = False -- TODO: Handle character entity references
+
+getAttrName :: XmlTree -> String
+getAttrName (NTree (XAttr n) _) = localPart n
+getAttrName _                   = ""
+
+getAttrValue :: XmlTree -> String
+getAttrValue (NTree (XAttr _) c) = getCombinedText c
+getAttrValue _                   = ""
+
+getCombinedText :: XmlTrees -> String
+getCombinedText t = concat $ map getText t
+
+getText :: XmlTree -> String
+getText (NTree (XText t) _) = t -- TODO: Handle character entity references
+getText _                   = ""
