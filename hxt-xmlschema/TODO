@@ -1,15 +1,5 @@
 
-Text.XML.HXT.XPath.XPathEval
-getXPath :: String -> XmlTree -> XmlTrees
-
-Text.XML.HXT.DOM.XmlTreeFunctions
-nameOf :: XmlTree -> String
-localPartOf :: XmlTree -> String
-namespaceOf :: XmlTree -> String
-
-Text.XML.HXT.DOM.TypeDefs
-
-type XmlTree = NTree XNode
+type XmlTree = NTree XNode XmlTrees
 
 data XNode:
 XText String			ordinary text (leaf)
@@ -26,118 +16,10 @@ XDTD DTDElem Attributes		DTD element with assoc list for dtd element features
 XAttr QName			attribute with qualified name, the attribute value is stored in children
 XError Int String		error message with level and text 
 
-QName	 
-
-qName :: String
-qURI :: Maybe String
-qPrefix :: Maybe String
-
----
-
-permutationList2RE :: [String] -> String
-permutationList2RE []
-  = ""
-permutationList2RE l
-  = concat [ "(", head l, concat $ map (\ el -> '|':el) (tail l), ")*" ]
-
--- TODO: Zugehörigkeit zu Permutationsliste testen
--- required / optional
-
--- TODO: Testfunktion erzeugen
-
--- HXT.DOM.XmlNode Prädikate: isText isElem ...
--- Zugriffsfunktionen: elementname, attributliste, ...
-
--- Attributliste: NICHT löschen etc.
-
-schemaREs :: XmlSchema -> ([String], String)
-schemaREs s
-  = (keys $ sAttributes s, permutationList2RE $ keys $ sElements s)
-
-elementREs :: XmlSchema -> Maybe Element -> (String, String)
-elementREs _ (Nothing)
-  = ("", "")
-elementREs s (Just (ElRef ref))
-  = elementREs s $ lookup ref $ sElements s
-elementREs s (Just (ElDef def))
-  = processElemTypeDef $ elemTypeDef def
-    where
-    processElemTypeDef (ETDTypeAttr name)   = if stLookup name == Nothing -- TODO: nur einmal in Map schauen / name param?
-                                              then complexTypeREs s $ ctLookup name
-                                              else simpleTypeREs s $ stLookup name
-    processElemTypeDef (ETDAnonymStDecl st) = simpleTypeREs s $ Just st
-    processElemTypeDef (ETDAnonymCtDecl ct) = complexTypeREs s $ Just ct
-    stLookup n = lookup n $ sSimpleTypes s
-    ctLookup n = lookup n $ sComplexTypes s
-
-simpleTypeREs :: XmlSchema -> Maybe SimpleType -> (String, String)
-simpleTypeREs _ (Nothing)
-  = ("", "")
-simpleTypeREs _ (Just _)
-  = ("TODO", "TODO")
-
-complexTypeREs :: XmlSchema -> Maybe ComplexType -> (String, String)
-complexTypeREs _ (Nothing)
-  = ("", "")
-complexTypeREs _ (Just _)
-  = ("TODO", "TODO")
-
 ------------------------------------------------------------------------
-
-Eigener data-Typ statt Paar in Typdefinitionen?
-newtype, konstruktor, xpWrap
-
-minmaxOcc mit default values auffüllen
-
-anonyme Typen transf. mit Writer Monade?
-simple Types ebenfalls
-
-Validieren mit Reader, der Schema als Konfiguration enthält
-Fehlermeldungen mit Writer: XPath Ausdruck merken und ausgeben
-
-Postprozess: mit XPath durch Dokument gehen und Kommentare erzeugen
-Fehlermeldung als Kommentarknoten in zu prüfendes Dokument einhängen mit Tag
 
 HUnit + Testfälle einbauen
 
-Elemente in Ref umwandeln
-
---------------------------------------------------------------------------
-
-Validierung von SimpleTypes (Text-Knoten und Attributwerte)
-Tabelle von Validierungsfunktionen:
-Map Name (String -> Bool)
-n1 abgebildet auf f1
-n2 abgebildet auf \ x -> f1 x && f2 x
-
-Idee dynamic programming (Map aufbauen und währenddessen darin nachschauen)
-buildMap t
-  = let m = process t empty
-    let process t' = .... insert
-                     lookup n m
-
-ComplexTypes: Inhaltsmodell und Attributliste mit RegEx-Ableitung prüfen
-Rekursionsabbruch: Basistyp (Liste von Basistypen benötigt)
-
---------------------------------------------------------------------------
-
-Wrapper für Annotations (Funktor):
-data Annotation a = Ann { c   :: a
-                          ann :: Maybe XmlTree
-                        }
-
-type AnnotatedValue = Annotation Value
-
-class Funktor f where
-fmap :: (a -> b) -> f a -> f b
-
-instance Funktor [] where
-fmap = map
-
-map :: (a -> b) -> [a] -> [b]
-
--------------------------------------------------------------------------
-
-Arbeit englisch
 Haskell 2 LateX Konverter: h2l, hs2l
 Andres Löh, Ralf Hinze
+

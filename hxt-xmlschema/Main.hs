@@ -3,8 +3,9 @@ import Text.XML.HXT.Curl
 import Text.XML.HXT.Arrow.XmlRegex
 
 import Data.Tree.NTree.TypeDefs
-
-import Data.Map (Map, lookup, elems, fromList, toList, empty, insert, union)
+import Data.Map (Map, lookup, fromList, toList, empty, insert, union) -- elems
+-- import qualified Data.Map as M
+-- M.lookup
 import Prelude hiding (lookup)
 
 import Data.List (partition)
@@ -14,6 +15,8 @@ import Control.Monad.Reader
 import Control.Monad.Writer hiding (Any, All)
 
 -- Type definitions
+
+-- TODO: newtype, konstruktor, xpWrap
 
 data XmlSchema         = XmlSchema
                        { sTargetNS        :: Maybe Namespace
@@ -210,60 +213,45 @@ xpSchemaElem name
 
 xpFilterSchema :: PU a -> PU a
 xpFilterSchema
-    = -- keep elems from xs namespace that are not blacklisted
-      xpFilterCont (isXmlSchemaElem           >>> neg (   hasQName annotationName
-                                                      <+> hasQName notationName
-                                                      <+> hasQName uniqueName
-                                                      <+> hasQName keyName
-                                                      <+> hasQName keyrefName
-                                                      )) .
-      -- keep attrs without namespace that are not blacklisted
-      xpFilterAttr (isAttrWithoutNamespaceUri >>> neg (   hasQName idName
-                                                      <+> hasQName attributeFormDefaultName
-                                                      <+> hasQName blockDefaultName
-                                                      <+> hasQName elementFormDefaultName
-                                                      <+> hasQName finalDefaultName
-                                                      <+> hasQName versionName
-                                                      <+> hasQName langName
-                                                      <+> hasQName finalName
-                                                      <+> hasQName fixedName
-                                                      <+> hasQName abstractName
-                                                      <+> hasQName blockName
-                                                      <+> hasQName formName
-                                                      <+> hasQName nillableName
-                                                      <+> hasQName substitutionGroupName
-                                                      ))
+    = -- keep elems from xs namespace which are not blacklisted
+      xpFilterCont (isXmlSchemaElem           >>> neg elementBlacklist) .
+      -- keep attrs without namespace which are not blacklisted
+      xpFilterAttr (isAttrWithoutNamespaceUri >>> neg attributeBlacklist)
       where
       -- element blacklist
       isXmlSchemaElem           = hasNameWith ((== nsUri) . namespaceUri)
-      annotationName            = mkQName nsPrefix "annotation"           nsUri
-      notationName              = mkQName nsPrefix "notation"             nsUri
-      -- irrelevant content for element
-      uniqueName                = mkQName nsPrefix "unique"               nsUri
-      keyName                   = mkQName nsPrefix "key"                  nsUri
-      keyrefName                = mkQName nsPrefix "keyref"               nsUri
+      elementBlacklist          = foldr (<+>) none $ map hasQName $
+                                  [ mkQName nsPrefix "annotation"           nsUri
+                                  , mkQName nsPrefix "notation"             nsUri
+                                  -- irrelevant content for element
+                                  , mkQName nsPrefix "unique"               nsUri
+                                  , mkQName nsPrefix "key"                  nsUri
+                                  , mkQName nsPrefix "keyref"               nsUri
+                                  ]
       -- attribute blacklist
       isAttrWithoutNamespaceUri = hasNameWith (null       . namespaceUri)
-      idName                    = mkQName ""       "id"                   ""
-      -- irrelevant attributes for schema
-      attributeFormDefaultName  = mkQName ""       "attributeFormDefault" ""
-      blockDefaultName          = mkQName ""       "blockDefault"         ""
-      elementFormDefaultName    = mkQName ""       "elementFormDefault"   ""
-      finalDefaultName          = mkQName ""       "finalDefault"         ""
-      versionName               = mkQName ""       "version"              ""
-      langName                  = mkQName ""       "lang"                 ""
-      -- irrelevant attributes for simpleType, complexType and element
-      finalName                 = mkQName ""       "final"                ""
-      -- irrelevant attributes for simpleType restrictions, complexType, element and attribute
-      fixedName                 = mkQName ""       "fixed"                ""
-      -- irrelevant attributes for complexType and element
-      abstractName              = mkQName ""       "abstract"             ""
-      blockName                 = mkQName ""       "block"                ""
-      -- irrelevant attributes for element and attribute
-      formName                  = mkQName ""       "form"                 ""
-      -- irrelevant attributes for element
-      nillableName              = mkQName ""       "nillable"             ""
-      substitutionGroupName     = mkQName ""       "substitutionGroup"    ""
+      attributeBlacklist        = foldr (<+>) none $ map hasQName $
+                                  [ mkQName ""       "id"                   ""
+                                  -- irrelevant attributes for schema
+                                  , mkQName ""       "attributeFormDefault" ""
+                                  , mkQName ""       "blockDefault"         ""
+                                  , mkQName ""       "elementFormDefault"   ""
+                                  , mkQName ""       "finalDefault"         ""
+                                  , mkQName ""       "version"              ""
+                                  , mkQName ""       "lang"                 ""
+                                  -- irrelevant attributes for simpleType, complexType and element
+                                  , mkQName ""       "final"                ""
+                                  -- irrelevant attributes for simpleType restrictions, complexType, element and attribute
+                                  , mkQName ""       "fixed"                ""
+                                  -- irrelevant attributes for complexType and element
+                                  , mkQName ""       "abstract"             ""
+                                  , mkQName ""       "block"                ""
+                                  -- irrelevant attributes for element and attribute
+                                  , mkQName ""       "form"                 ""
+                                  -- irrelevant attributes for element
+                                  , mkQName ""       "nillable"             ""
+                                  , mkQName ""       "substitutionGroup"    ""
+                                  ]
 
 
 -- Conversion between Schema and Schema'
@@ -289,24 +277,24 @@ toSchema s
     toSchemaRec (XmlSchema' tns ((Ag (k, ag)):xs)) ins sts cts els grs ats ags
       = toSchemaRec (XmlSchema' tns xs) ins sts cts els grs ats (insert k ag ags)
 
-fromSchema :: XmlSchema -> XmlSchema'
-fromSchema s
-  = XmlSchema' (sTargetNS s) $ concat [ins, sts, cts, els, grs, ats, ags]
-    where
-    ins = map In $ sIncludes s
-    sts = map St $ toList $ sSimpleTypes s
-    cts = map Ct $ toList $ sComplexTypes s
-    els = map El $ elems  $ sElements s
-    grs = map Gr $ toList $ sGroups s 
-    ats = map At $ elems  $ sAttributes s
-    ags = map Ag $ toList $ sAttributeGroups s
+-- fromSchema :: XmlSchema -> XmlSchema'
+-- fromSchema s
+--   = XmlSchema' (sTargetNS s) $ concat [ins, sts, cts, els, grs, ats, ags]
+--     where
+--     ins = map In $ sIncludes s
+--     sts = map St $ toList $ sSimpleTypes s
+--     cts = map Ct $ toList $ sComplexTypes s
+--     els = map El $ elems  $ sElements s
+--     grs = map Gr $ toList $ sGroups s 
+--     ats = map At $ elems  $ sAttributes s
+--     ags = map Ag $ toList $ sAttributeGroups s
 
 -- Pickler definitions
 
 xpXmlSchema' :: PU XmlSchema'
 xpXmlSchema'
   = xpSchemaElem "schema" $
-    xpAddNSDecl nsPrefix nsUri $
+    -- xpAddNSDecl nsPrefix nsUri $
     xpFilterSchema $
     xpWrap (\ (a, b) -> XmlSchema' a b , \ t -> (targetNS t, parts t)) $
     xpPair (xpOption $ xpAttr "targetNamespace" xpText) $
@@ -694,16 +682,16 @@ mergeSchemata (XmlSchema tns _ sts cts els grs ats ags) (XmlSchema _ _ sts' cts'
 
 -- Save schema to given target file
 
-storeXmlSchema :: XmlSchema -> String -> IO ()
-storeXmlSchema s t
-  = do
-    _ <- runX ( constA (fromSchema s)
-                >>>
-                xpickleDocument   xpXmlSchema'
-                                  [ withIndent yes          -- indent generated xml
-                                  ] t
-              )
-    return ()
+-- storeXmlSchema :: XmlSchema -> String -> IO ()
+-- storeXmlSchema s t
+--   = do
+--     _ <- runX ( constA (fromSchema s)
+--                 >>>
+--                 xpickleDocument   xpXmlSchema'
+--                                   [ withIndent yes          -- indent generated xml
+--                                   ] t
+--               )
+--     return ()
 
 -- Typen für Validierung
 
@@ -720,15 +708,65 @@ type CountingTable = Map String Int
 
 -- Environment aufbauen:
 
--- createSValEnv :: Schema -> SValEnv
+-- createSValEnv :: XmlSchema -> SValEnv
 -- createSValEnv s
 --  =
+
+
+
+-- schemaREs :: XmlSchema -> ([String], String)
+-- schemaREs s
+--   = (keys $ sAttributes s, permutationList2RE $ keys $ sElements s)
+
+-- elementREs :: XmlSchema -> Maybe Element -> (String, String)
+-- elementREs _ (Nothing)
+--   = ("", "")
+-- elementREs s (Just (ElRef ref))
+--   = elementREs s $ lookup ref $ sElements s
+-- elementREs s (Just (ElDef def))
+--   = processElemTypeDef $ elemTypeDef def
+--     where
+--     processElemTypeDef (ETDTypeAttr name)   = if stLookup name == Nothing -- TODO: nur einmal in Map schauen / name param?
+--                                               then complexTypeREs s $ ctLookup name
+--                                               else simpleTypeREs s $ stLookup name
+--     processElemTypeDef (ETDAnonymStDecl st) = simpleTypeREs s $ Just st
+--     processElemTypeDef (ETDAnonymCtDecl ct) = complexTypeREs s $ Just ct
+--     stLookup n = lookup n $ sSimpleTypes s
+--     ctLookup n = lookup n $ sComplexTypes s
+
+-- simpleTypeREs :: XmlSchema -> Maybe SimpleType -> (String, String)
+-- simpleTypeREs _ (Nothing)
+--   = ("", "")
+-- simpleTypeREs _ (Just _)
+--   = ("TODO", "TODO")
+
+-- complexTypeREs :: XmlSchema -> Maybe ComplexType -> (String, String)
+-- complexTypeREs _ (Nothing)
+  -- = ("", "")
+-- complexTypeREs _ (Just _)
+--   = ("TODO", "TODO")
+
+-- minmaxOcc mit default values auffüllen
+-- Elemente in Ref umwandeln
+
+-- TODO: SimpleType Testfunktion erzeugen
+-- n1 abgebildet auf f1
+-- n2 abgebildet auf \ x -> f1 x && f2 x
+-- Rekursionsabbruch: Basistyp (Liste von Basistypen benötigt)
+
+-- Idee dynamic programming (Map aufbauen und währenddessen darin nachschauen)
+-- buildMap t
+--   = let m = process t empty
+--     let process t' = .... insert
+--                      lookup n m
 
 mkElemRE :: String -> XmlRegex
 mkElemRE s = mkPrim $ (== s) . getElemName
 
-initEnv :: SValEnv
-initEnv
+-- TODO: evtl. RE-Element für Text-Knoten mit Testfunktion
+
+initEnv :: XmlSchema -> SValEnv
+initEnv _
   = SValEnv "" $ fromList [("simpleType", ( fromList [("name",  (False, \ _ -> return True))
                                                      ,("wurst", (True,  \ _ -> return False))
                                                      ]
@@ -806,7 +844,7 @@ testElemChildren t (x:xs)
     let count = case lookup n t of
                   Nothing -> 1
                   Just v  -> v+1
-    res <- local (const (appendXPath ("/" ++ n ++ "[" ++ (show count) ++ "]") env)) (testElem x) -- new env for recursion
+    res <- local (const (appendXPath ("/" ++ n ++ "[" ++ (show count) ++ "]") env)) (testElem x) -- TODO: new env for recursion
     rest <- testElemChildren (insert n count t) xs
     return (res && rest)
 
@@ -839,33 +877,22 @@ main
     -- argv <- getArgs
     -- (schemaurl, docurl) <- return (argv!!0, argv!!1)
 
-    t <- readDoc "example.xsd"
-    let res = runSVal initEnv (testElem t)
-    putStrLn $ if (fst res) then "\nok." else "\nerrors were found:\n"
+    putStrLn "\n------------------------------------------- Read Schema --------------------------------------------\n"
+    xmlschema <- loadXmlSchema "example.xsd"
+    putStrLn "\n------------------------------------------ Read Document -------------------------------------------\n"
+    doc <- readDoc "example.xsd"
+    putStrLn "\n------------------------------------------- Validation ---------------------------------------------\n"
+    let res = runSVal (initEnv xmlschema) (testElem doc)
+    if (fst res)
+      then putStrLn $ "ok."
+      else putStrLn $ "errors were found:\n"
     mapM_ (\ (a, b) -> putStrLn $ a ++ "\n" ++ b ++ "\n") $ snd res
 
-    -- res <- return $ runSVal initEnv $ testRE (mkElemRE "kaese") [ NTree (XTag (mkQName "" "kaese" "") []) [] ]
+    -- Text.XML.HXT.XPath.XPathEval
+    -- getXPath :: String -> XmlTree -> XmlTrees
 
-    -- putStrLn "\n--------------------------------------------- Pickling ---------------------------------------------\n"
-    -- xmlschema <- loadXmlSchema "example.xsd"
-    -- putStrLn "\n-------------------------------------------- RE Testing --------------------------------------------\n"
-    -- putStrLn $ show $ schemaREs xmlschema
-    -- putStrLn $ fst $ elementREs $ xmlschema $ Just $ lookup "quark" $ sElements xmlschema
-    -- putStrLn $ fst $ elementREs $ xmlschema $ Just $ lookup "title" $ sElements xmlschema
-    -- putStrLn $ fst $ elementREs $ xmlschema $ Just $ lookup "html"  $ sElements xmlschema
-    -- putStrLn "\n------------------------------------------- Simple Types -------------------------------------------"
-    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sSimpleTypes xmlschema
-    -- putStrLn "------------------------------------------- Complex Types ------------------------------------------"
-    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sComplexTypes xmlschema
-    -- putStrLn "--------------------------------------------- Elements ---------------------------------------------"
-    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sElements xmlschema
-    -- putStrLn "---------------------------------------------- Groups ----------------------------------------------"
-    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sGroups xmlschema
-    -- putStrLn "-------------------------------------------- Attributes --------------------------------------------"
-    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sAttributes xmlschema
-    -- putStrLn "------------------------------------------ AttributeGroups -----------------------------------------"
-    -- putStrLn $ concat $ map (\ (k, s) -> "\n" ++ k ++ ":\n" ++ (show s) ++ "\n") $ toList $ sAttributeGroups xmlschema
-    -- storeXmlSchema xmlschema "new-example.xsd"
+    -- Postprozess: mit XPath durch Dokument gehen und Fehlermeldung als Kommentarknoten in zu prüfendes Dokument einhängen
+
     return ()
 
 -- Schema Validation type
@@ -884,8 +911,8 @@ readDoc uri
   = do
     s <- runX ( readDocument [ withValidate yes        -- validate source
                              , withTrace 1             -- trace processing steps
-                             , withRemoveWS yes        -- remove redundant whitespace TODO: ??
-                             , withPreserveComment no  -- keep comments               TODO: ??
+                             , withRemoveWS yes        -- remove redundant whitespace -- TODO: ??
+                             , withPreserveComment no  -- keep comments               -- TODO: ??
                              -- , withCheckNamespaces yes -- check namespaces
                              , withCurl []             -- use libCurl for http access
                              ] uri
@@ -910,10 +937,10 @@ isElem :: XmlTree -> Bool
 isElem (NTree (XTag _ _) _) = True
 isElem _                    = False
 
-isRelevant :: XmlTree -> Bool
+isRelevant :: XmlTree -> Bool -- TODO: Handle character entity references
 isRelevant (NTree (XTag _ _) _) = True
 isRelevant (NTree (XText _) _)  = True
-isRelevant _                    = False -- TODO: Handle character entity references
+isRelevant _                    = False
 
 getAttrName :: XmlTree -> String
 getAttrName (NTree (XAttr n) _) = localPart n
@@ -926,6 +953,7 @@ getAttrValue _                   = ""
 getCombinedText :: XmlTrees -> String
 getCombinedText t = concat $ map getText t
 
-getText :: XmlTree -> String
-getText (NTree (XText t) _) = t -- TODO: Handle character entity references
+getText :: XmlTree -> String -- TODO: Handle character entity references
+getText (NTree (XText t) _) = t
 getText _                   = ""
+
