@@ -3,6 +3,7 @@ import Text.XML.HXT.Curl
 import Text.XML.HXT.Arrow.XmlRegex
 
 import Data.Tree.NTree.TypeDefs
+
 import Data.Map (Map, lookup, fromList, toList, empty, insert, union) -- elems
 -- import qualified Data.Map as M
 -- M.lookup
@@ -16,7 +17,7 @@ import Control.Monad.Writer hiding (Any, All)
 
 -- Type definitions
 
--- TODO: newtype, konstruktor, xpWrap
+-- TODO: newtype, constructor, xpWrap for pairs / triples
 
 data XmlSchema         = XmlSchema
                        { sTargetNS        :: Maybe Namespace
@@ -102,8 +103,8 @@ data ComplexType       = ComplexType
                        }
                        deriving (Show, Eq)
 data CTDef             = SCont {unSCont :: SimpleContent}
-                       | CCont {unCCont :: ComplexContent} -- TODO: Prüffunktionen logisch verknüpfen für Ableitungen
-                       | NewCT {unNewCT :: CTModel}    -- dynamic Programming, Werte aus Map abfragen während sie konstr. wird
+                       | CCont {unCCont :: ComplexContent}
+                       | NewCT {unNewCT :: CTModel}
                        deriving (Show, Eq)
 
 data SimpleContent     = SCExt   {unSCExt   :: SCExtension}
@@ -368,8 +369,8 @@ xpSimpleTypeRef
     where
     tag (BaseAttr _)        = 0
     tag (STRAnonymStDecl _) = 1
-    ps = [ xpWrap (BaseAttr,        unBaseAttr)        $ xpAttr "base" xpText -- TODO: pickler der Fehlermeldung erzeugt, falls simpleType als Kind gefunden
-         , xpWrap (STRAnonymStDecl, unSTRAnonymStDecl) $ xpSchemaElem "simpleType" $ xpSimpleType -- TODO: only works if first child?
+    ps = [ xpWrap (BaseAttr,        unBaseAttr)        $ xpAttr "base" xpText -- TODO: error msg and cleanup if simpleType
+         , xpWrap (STRAnonymStDecl, unSTRAnonymStDecl) $ xpSchemaElem "simpleType" $ xpSimpleType -- TODO:what if not 1st child?
          ]
 
 xpRestrAttr :: PU RestrAttr
@@ -535,7 +536,7 @@ xpElement
     where
     tag (ElRef _) = 0
     tag (ElDef _) = 1
-    ps = [ xpWrap (ElRef, unElRef) $ xpAttr "ref" xpText -- TODO: name, type etc. wegwerfen -> weiter arbeiten
+    ps = [ xpWrap (ElRef, unElRef) $ xpAttr "ref" xpText -- TODO: error msg and cleanup if more attributes (name, type ...)
          , xpWrap (ElDef, unElDef) $ xpElementDef
          ]
 
@@ -629,11 +630,7 @@ loadXmlSchema uri
                                   ] uri
                )
     s <- return $ toSchema $ head s' 
-    resolveIncls s (sIncludes s) -- TODO: remove includes from list?
-    -- TODO: further normalisation:
-    --       default values of minOcc..
-    --       apply namespaces (full qualified names)
-    --       resolve anonymous types
+    resolveIncls s (sIncludes s)
 
 resolveIncls :: XmlSchema -> Includes -> IO XmlSchema
 resolveIncls s []     = return s
@@ -693,26 +690,45 @@ mergeSchemata (XmlSchema tns _ sts cts els grs ats ags) (XmlSchema _ _ sts' cts'
 --               )
 --     return ()
 
--- Typen für Validierung
+-- Types for Validation
 
 data SValEnv = SValEnv
              { xpath :: String
-             , elemTFs :: Map String (AttrMap, XmlRegex, STTF)
-             -- TODO: more
+             , elemDesc :: ElemDesc
              }
 
+data ElemDesc = ElemDesc
+              { attrMap      :: AttrMap
+              , contentModel :: XmlRegex
+              , subElemDesc  :: SubElemDesc
+              , sttf         :: STTF
+              }
+
 type AttrMap = Map String (Bool, STTF)
+type SubElemDesc = Map String ElemDesc
 type STTF = String -> SVal Bool
 
 type CountingTable = Map String Int
 
--- Environment aufbauen:
+-- Create Validation Environment
 
 -- createSValEnv :: XmlSchema -> SValEnv
 -- createSValEnv s
 --  =
 
+-- stToSTTF :: SimpleType -> STTF
+-- stToSTTF
+--   = -- TODO:
 
+-- ctToElemDesc :: ComplexType -> ElemDesc
+--   = -- TODO:
+
+-- Elem with ST: (ElemDesc empty mkUnit empty sttf)
+
+-- TODO: further normalisation:
+--       default values of minOcc..
+--       resolve anonymous types
+--       apply namespaces (full qualified names) ?
 
 -- schemaREs :: XmlSchema -> ([String], String)
 -- schemaREs s
@@ -726,7 +742,7 @@ type CountingTable = Map String Int
 -- elementREs s (Just (ElDef def))
 --   = processElemTypeDef $ elemTypeDef def
 --     where
---     processElemTypeDef (ETDTypeAttr name)   = if stLookup name == Nothing -- TODO: nur einmal in Map schauen / name param?
+--     processElemTypeDef (ETDTypeAttr name)   = if stLookup name == Nothing -- TODO: only lookup once / name param?
 --                                               then complexTypeREs s $ ctLookup name
 --                                               else simpleTypeREs s $ stLookup name
 --     processElemTypeDef (ETDAnonymStDecl st) = simpleTypeREs s $ Just st
@@ -746,42 +762,39 @@ type CountingTable = Map String Int
 -- complexTypeREs _ (Just _)
 --   = ("TODO", "TODO")
 
--- minmaxOcc mit default values auffüllen
--- Elemente in Ref umwandeln
+-- minmaxOcc default values
+-- transform element references
 
--- TODO: SimpleType Testfunktion erzeugen
--- n1 abgebildet auf f1
--- n2 abgebildet auf \ x -> f1 x && f2 x
--- Rekursionsabbruch: Basistyp (Liste von Basistypen benötigt)
+-- TODO: create SimpleType TF
+-- n1 goes to f1
+-- n2 goes to \ x -> f1 x && f2 x
+-- end of recursion: known basic ST (list of basic STs required)
 
--- Idee dynamic programming (Map aufbauen und währenddessen darin nachschauen)
+-- Idea dynamic programming (lookup in map while creating it)
 -- buildMap t
 --   = let m = process t empty
 --     let process t' = .... insert
 --                      lookup n m
 
+-- TODO: RE for Text nodes with tf ?
+
 mkElemRE :: String -> XmlRegex
 mkElemRE s = mkPrim $ (== s) . getElemName
 
--- TODO: evtl. RE-Element für Text-Knoten mit Testfunktion
-
 initEnv :: XmlSchema -> SValEnv
 initEnv _
-  = SValEnv "" $ fromList [("simpleType", ( fromList [("name",  (False, \ _ -> return True))
-                                                     ,("wurst", (True,  \ _ -> return False))
-                                                     ]
-                                          , mkZero "kaesesalat"
-                                          , \ _ -> return True)
-                                          )
-                          ,("schema",     ( fromList [("targetNamespace", (True,  \ _ -> return True))
-                                                     ,("wurst",           (False, \ _ -> return False))
-                                                     ]
-                                          , mkZero "fleischsalat"
-                                          , \ _ -> return True)
-                                          )
-                          ]
+  = SValEnv "" $ ElemDesc ( fromList [("targetNamespace",  (False, \ _ -> return True))
+                                     ,("wurst",            (True,  \ _ -> return False))
+                                     ]
+                          )
+                          ( mkZero "kaesesalat")
+                          ( fromList [("simpleType",  ElemDesc empty mkUnit empty (\ _ -> return True))
+                                     ,("complexType", ElemDesc empty mkUnit empty (\ _ -> return True))
+                                     ]
+                          )
+                          ( \ _ -> return True)
 
--- Testfunktionen anwenden:
+-- Validation
 
 getReqAttrNames :: AttrMap -> [String]
 getReqAttrNames m = map (\ (n, _) -> n) $ filter (\ (_, (req, _)) -> req) (toList m)
@@ -799,40 +812,46 @@ hasReqAttrs (x:xs) attrs
            return (res && False)
       else hasReqAttrs xs attrs
 
-checkAllowedAttrs :: AttrMap -> [(String, String)] -> SVal Bool
-checkAllowedAttrs _ []
+checkAllowedAttrs :: [(String, String)] -> SVal Bool
+checkAllowedAttrs []
   = return True
-checkAllowedAttrs m ((n, val):xs)
+checkAllowedAttrs ((n, val):xs)
   = do
     env <- ask
+    let m = attrMap $ elemDesc env
     case lookup n m of
       Nothing      -> do
                       tell [((xpath env) ++ "/@" ++ n, "attribute not allowed here.")]
-                      res <- checkAllowedAttrs m xs
+                      res <- checkAllowedAttrs xs
                       return (res && False)
       Just (_, tf) -> local (const (appendXPath ("/@" ++ n) env)) (tf val) --TODO: error msg in tf
 
-testAttrs :: AttrMap -> XmlTree -> SVal Bool
-testAttrs m e
-  = do
-    let attrl = getElemAttrs e
-    allowedAttrsRes <- checkAllowedAttrs m attrl
-    reqAttrsRes <- hasReqAttrs (getReqAttrNames m) (map fst attrl)
-    return (allowedAttrsRes && reqAttrsRes)
-
-testContentModel :: XmlRegex -> XmlTrees -> SVal Bool
-testContentModel re t
+testAttrs :: XmlTree -> SVal Bool
+testAttrs e
   = do
     env <- ask
-    case matchXmlRegex re t of
-      Nothing  -> return True
-      Just msg -> do
-                  tell [(xpath env ++ "/*", "content does not match content model.\n" ++ msg)]
-                  return False
+    let attrl = getElemAttrs e
+    allowedAttrsRes <- checkAllowedAttrs attrl
+    reqAttrsRes <- hasReqAttrs (getReqAttrNames (attrMap $ elemDesc env)) (map fst attrl)
+    return (allowedAttrsRes && reqAttrsRes)
+
+testContentModel :: XmlTrees -> SVal Bool
+testContentModel t
+  = do
+    env <- ask
+    case matchXmlRegex (contentModel $ elemDesc env) t of
+      Nothing -> return True
+      Just _  -> do
+                 tell [(xpath env ++ "/*", "elements do not match content model.")] -- TODO: regex message
+                 return False
 
 appendXPath :: String -> SValEnv -> SValEnv
 appendXPath s env
-  = SValEnv ((xpath env) ++ s) $ elemTFs env
+  = SValEnv ((xpath env) ++ s) $ elemDesc env
+
+newDesc :: ElemDesc -> SValEnv -> SValEnv
+newDesc d env
+  = SValEnv (xpath env) d
 
 testElemChildren :: CountingTable -> XmlTrees -> SVal Bool
 testElemChildren _ []
@@ -841,11 +860,17 @@ testElemChildren t (x:xs)
   = do
     env <- ask
     let n = getElemName x
-    let count = case lookup n t of
-                  Nothing -> 1
-                  Just v  -> v+1
-    res <- local (const (appendXPath ("/" ++ n ++ "[" ++ (show count) ++ "]") env)) (testElem x) -- TODO: new env for recursion
-    rest <- testElemChildren (insert n count t) xs
+    let c = case lookup n t of
+              Nothing -> 1
+              Just v  -> v+1
+    let elemXPath = "/" ++ n ++ "[" ++ (show c) ++ "]"
+    let m = subElemDesc $ elemDesc env
+    res <- case lookup n m of
+             Nothing -> do
+                        tell [((xpath env) ++ elemXPath, "element not allowed here.")]
+                        return False
+             Just d  -> local (const (appendXPath elemXPath (newDesc d env))) (testElem x)
+    rest <- testElemChildren (insert n c t) xs
     return (res && rest)
 
 extractElems :: XmlTrees -> (XmlTrees, XmlTrees)
@@ -855,21 +880,15 @@ testElem :: XmlTree -> SVal Bool
 testElem e
   = do
     env <- ask
-    let n = getElemName e
-    case lookup n (elemTFs env) of
-      Nothing -> do            
-                 tell [(xpath env, "element not allowed here.")]
-                 return False
-      Just (attrMap, contentRE, tf) -> do
-                 attrRes <- testAttrs attrMap e
-                 let content = getElemChildren e -- Text and Tag nodes
-                 contModelRes <- testContentModel contentRE content
-                 let (tags, text) = extractElems content
-                 textRes <- tf $ getCombinedText text
-                 tagsRes <- testElemChildren empty tags
-                 return (attrRes && contModelRes && textRes && tagsRes)
+    attrRes <- testAttrs e
+    let content = getElemChildren e -- Text and Tag nodes
+    contModelRes <- testContentModel content
+    let (tags, text) = extractElems content
+    textRes <- (sttf $ elemDesc env) $ getCombinedText text
+    tagsRes <- testElemChildren empty tags
+    return (attrRes && contModelRes && textRes && tagsRes)
 
--- Test setup
+-- Main
 
 main :: IO ()
 main
@@ -890,8 +909,7 @@ main
 
     -- Text.XML.HXT.XPath.XPathEval
     -- getXPath :: String -> XmlTree -> XmlTrees
-
-    -- Postprozess: mit XPath durch Dokument gehen und Fehlermeldung als Kommentarknoten in zu prüfendes Dokument einhängen
+    -- Postprocess: take XPath and add error msg as comment in document
 
     return ()
 
@@ -904,15 +922,15 @@ type SVal a = ReaderT SValEnv (WriterT SValLog Identity) a
 runSVal :: SValEnv -> SVal a -> (a, SValLog)
 runSVal env val = runIdentity $ runWriterT $ runReaderT val env
 
--- Test Xml Processing with HXT
+-- XML Processing with HXT
 
 readDoc :: String -> IO XmlTree
 readDoc uri
   = do
     s <- runX ( readDocument [ withValidate yes        -- validate source
                              , withTrace 1             -- trace processing steps
-                             , withRemoveWS yes        -- remove redundant whitespace -- TODO: ??
-                             , withPreserveComment no  -- keep comments               -- TODO: ??
+                             , withRemoveWS yes        -- remove redundant whitespace -- TODO: necessary?
+                             , withPreserveComment no  -- keep comments               -- TODO: necessary?
                              -- , withCheckNamespaces yes -- check namespaces
                              , withCurl []             -- use libCurl for http access
                              ] uri

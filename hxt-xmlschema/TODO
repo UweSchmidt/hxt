@@ -18,8 +18,8 @@ XError Int String		error message with level and text
 
 ------------------------------------------------------------------------
 
-HUnit + Testfälle einbauen
+HUnit + Testcases
 
-Haskell 2 LateX Konverter: h2l, hs2l
+Haskell 2 LateX Converter: h2l, hs2l
 Andres Löh, Ralf Hinze
 
