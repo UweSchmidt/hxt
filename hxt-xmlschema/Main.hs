@@ -992,16 +992,17 @@ sequenceToElemDesc _
 -- =========================================
 
 mkMinMaxRE :: MinMaxOcc -> String -> String -> XmlRegex -> XmlRegex
-mkMinMaxRe occ minDefault maxDefault re
-  = let min = case minOcc occ of
+mkMinMaxRE occ minDefault maxDefault re
+  = if maxOcc' == "unbounded"
+      then mkRep (read minOcc') re -- TODO: read with non-integer value?
+      else mkRng (read minOcc') (read maxOcc') re -- TODO: read with non-integer value?
+    where
+    minOcc' = case minOcc occ of
                 Nothing -> minDefault
                 Just i  -> i
-    let max = case maxOcc occ of
+    maxOcc' = case maxOcc occ of
                 Nothing -> maxDefault
                 Just i  -> i
-    if max == "unbounded"
-      then mkRep (read min) re
-      else mkRng (read min) (read max) re
 
 compToElemDesc :: CTCompositor -> XSC ElemDesc
 compToElemDesc c
@@ -1019,7 +1020,7 @@ compToElemDesc c
                    CompSq (occ, sq) -> do
                                        ed <- sequenceToElemDesc sq
                                        return (occ, ed)
-    return mkElemDesc (attrMap ed) (mkMinMaxRE occ "1" "1" (contentModel ed)) (subElemDesc ed) (sttf ed)
+    return $ mkElemDesc (attrMap ed) (mkMinMaxRE occ "1" "1" (contentModel ed)) (subElemDesc ed) (sttf ed)
 
 ctModelToElemDesc :: CTModel -> XSC ElemDesc
 ctModelToElemDesc (comp, attrs)

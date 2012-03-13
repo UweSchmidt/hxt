@@ -124,7 +124,7 @@
   <!-- complex types (group, all, choice, sequence) -->
 
   <xs:complexType name="author">
-    <xs:group ref="name"/>
+    <xs:group ref="name" minOccurs="1"/>
     <xs:attribute name="age" type="xs:integer"/>
   </xs:complexType>
 
@@ -154,9 +154,9 @@
     <xs:attribute name="id" type="xs:integer"/>
   </xs:complexType>
 
-  <!-- element definition (with type reference) -->
+  <!-- element definition (with type reference) title1 -->
 
-  <xs:element name="title" type="title1"/>
+  <xs:element name="title" type="author"/>
 
   <!-- element definition (with anonymous type declarations) -->
 
