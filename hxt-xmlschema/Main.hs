@@ -4,7 +4,7 @@ import Text.XML.HXT.Arrow.XmlRegex
 
 import Data.Tree.NTree.TypeDefs
 
-import Data.Map (Map, lookup, fromList, toList, elems, empty, insert, union)
+import Data.Map (Map, lookup, fromList, toList, keys, elems, empty, insert, union)
 -- import qualified Data.Map as M
 -- M.lookup
 import Prelude hiding (lookup)
@@ -266,25 +266,15 @@ runXSC schema xsc = runIdentity $ runReaderT xsc schema
 
 -- Create Element Description for Validation
 
-mkNoTextSTTF :: XSC STTF
-mkNoTextSTTF
-  = return $ \ s -> do
-                    env <- ask
-                    if not $ null (unwords $ words s)
-                      then do
-                           tell [(xpath env, "no text allowed here.")]
-                           return False
-                      else return True
-
-createRootDesc :: XSC ElemDesc
+createRootDesc :: XSC ElemDesc -- TODO: Verify root element interpretation
 createRootDesc
   = do
     s <- ask
     am <- mapM createAttrMapEntry $ elems $ sAttributes s
-    cm <- return mkUnit
-    se <- return empty
-    tf <- mkNoTextSTTF
-    return $ ElemDesc (fromList am) cm se tf
+    cm <- mkStar $ mkAlts $ map mkElemRE $ keys $ sElements s
+    se <- mapM (\ (n, el) -> (n, createElemDesc el)) $ toList $ sElements s
+    tf <- mkNoTextSTTF 
+    return $ ElemDesc (fromList am) cm (fromList se) tf
 
 createAttrMapEntry :: Attribute -> XSC (Name, AttrMapVal)
 createAttrMapEntry (AttrRef n)
@@ -316,6 +306,16 @@ lookupSTTF n
       Nothing -> case lookup n (sSimpleTypes s) of
                    Nothing -> mkErrorSTTF "type validation error: illegal type reference in schema file"
                    Just t  -> stToSTTF t -- TODO: cache sttf? prevent infinite recursion?
+
+mkNoTextSTTF :: XSC STTF
+mkNoTextSTTF
+  = return $ \ s -> do
+                    env <- ask
+                    if not $ null (unwords $ words s)
+                      then do
+                           tell [(xpath env, "no text allowed here.")]
+                           return False
+                      else return True
 
 mkErrorSTTF :: String -> XSC STTF
 mkErrorSTTF s
@@ -375,12 +375,17 @@ stToSTTF (Un ts)               = do
                                                         return False
                                                    else return True
 
--- ctToElemDesc :: ComplexType -> ElemDesc
+-- ctToElemDesc :: ComplexType -> XSC ElemDesc
 --   = -- TODO:
 
--- createElemDesc :: XmlSchema -> ElemDesc
--- createElemDesc s
---   = 
+-- Empty ComplexType ...
+
+createElemDesc :: Element -> XSC ElemDesc
+createElemDesc
+  = do
+    s <- ask
+    
+    
 
 -- Elem with SimpleType: (ElemDesc empty mkUnit empty sttf)
 
