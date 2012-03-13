@@ -18,6 +18,8 @@ XError Int String		error message with level and text
 
 ------------------------------------------------------------------------
 
+Name / String
+
 HUnit + Testcases
 
 Haskell 2 LateX Converter: h2l, hs2l

@@ -1,0 +1,239 @@
+xs:anyURI
+
+xs:base64Binary
+
+xs:boolean
+
+xs:byte
+<xs:simpleType name="byte" id="byte">
+  <xs:restriction base="xs:short">
+    <xs:minInclusive value="-128"/>
+    <xs:maxInclusive value="127"/>
+  </xs:restriction>
+</xs:simpleType>
+
+xs:date
+
+xs:dateTime
+
+xs:decimal
+
+xs:double
+
+xs:duration
+
+xs:ENTITY
+<xs:simpleType name="ENTITY" id="ENTITY">
+  <xs:restriction base="xs:NCName"/>
+</xs:simpleType>
+
+xs:ENTITIES
+<xs:simpleType name="ENTITIES" id="ENTITIES">
+  <xs:restriction>
+    <xs:simpleType>
+      <xs:list>
+        <xs:simpleType>
+          <xs:restriction base="xs:ENTITY"/>
+        </xs:simpleType>
+      </xs:list>
+    </xs:simpleType>
+    <xs:minLength value="1"/>
+  </xs:restriction>
+</xs:simpleType>
+
+xs:float
+
+xs:gDay
+
+xs:gMonth
+
+xs:gMonthDay
+
+xs:gYear
+
+xs:gYearMonth
+
+xs:hexBinary
+
+xs:ID
+<xs:simpleType name="ID" id="ID">
+  <xs:restriction base="xs:NCName"/>
+</xs:simpleType>
+
+xs:IDREF
+<xs:simpleType name="IDREF" id="IDREF">
+  <xs:restriction base="xs:NCName"/>
+</xs:simpleType>
+
+xs:IDREFS
+<xs:simpleType name="IDREFS" id="IDREFS">
+  <xs:restriction>
+    <xs:simpleType>
+      <xs:list>
+        <xs:simpleType>
+          <xs:restriction base="xs:IDREF"/>
+        </xs:simpleType>
+      </xs:list>
+    </xs:simpleType>
+    <xs:minLength value="1"/>
+  </xs:restriction>
+</xs:simpleType>
+
+xs:int
+<xs:simpleType name="int" id="int">
+  <xs:restriction base="xs:long">
+    <xs:minInclusive value="-2147483648"/>
+    <xs:maxInclusive value="2147483647"/>
+  </xs:restriction>
+</xs:simpleType>
+
+xs:integer
+<xs:simpleType name="integer" id="integer">
+  <xs:restriction base="xs:decimal">
+    <xs:fractionDigits value="0" fixed="true"/>
+  </xs:restriction>
+</xs:simpleType>
+
+xs:language
+<xs:simpleType name="language" id="language">
+  <xs:restriction base="xs:token">
+     <xs:pattern
+      value="([a-zA-Z]{2}|[iI]-[a-zA-Z]+|[xX]-[a-zA-Z]{1,8})(-[a-zA-Z]{1,8})*"
+      />
+  </xs:restriction>
+</xs:simpleType>
+
+xs:long
+<xs:simpleType name="long" id="long">
+  <xs:restriction base="xs:integer">
+    <xs:minInclusive value="-9223372036854775808"/>
+    <xs:maxInclusive value="9223372036854775807"/>
+  </xs:restriction>
+</xs:simpleType>
+
+xs:Name
+<xs:simpleType name="Name" id="Name">
+  <xs:restriction base="xs:token">
+    <xs:pattern value="\i\c*"/>
+  </xs:restriction>
+</xs:simpleType>
+
+xs:NCName
+<xs:simpleType name="NCName" id="NCName">
+  <xs:restriction base="xs:Name">
+    <xs:pattern value="[\i-[:]][\c-[:]]*"/>
+  </xs:restriction>
+</xs:simpleType>
+
+xs:negativeInteger
+<xs:simpleType name="negativeInteger" id="negativeInteger">
+  <xs:restriction base="xs:nonPositiveInteger">
+    <xs:maxInclusive value="-1"/>
+  </xs:restriction>
+</xs:simpleType>
+
+xs:NMTOKEN
+<xs:simpleType name="NMTOKEN" id="NMTOKEN">
+  <xs:restriction base="xs:token">
+    <xs:pattern value="\c+"/>
+  </xs:restriction>
+</xs:simpleType>
+
+xs:NMTOKENS
+<xs:simpleType name="NMTOKENS" id="NMTOKENS">
+  <xs:restriction>
+    <xs:simpleType>
+      <xs:list>
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN"/>
+        </xs:simpleType>
+      </xs:list>
+    </xs:simpleType>
+    <xs:minLength value="1"/>
+  </xs:restriction>
+</xs:simpleType>
+
+xs:nonNegativeInteger
+<xs:simpleType name="nonNegativeInteger" id="nonNegativeInteger">
+  <xs:restriction base="xs:integer">
+    <xs:minInclusive value="0"/>
+  </xs:restriction>
+</xs:simpleType>
+
+xs:nonPositiveInteger
+<xs:simpleType name="nonPositiveInteger" id="nonPositiveInteger">
+  <xs:restriction base="xs:integer">
+    <xs:maxInclusive value="0"/>
+  </xs:restriction>
+</xs:simpleType>
+
+xs:normalizedString
+<xs:simpleType name="normalizedString" id="normalizedString">
+  <xs:restriction base="xs:string">
+    <xs:whiteSpace value="replace"/>
+  </xs:restriction>
+</xs:simpleType>
+
+xs:NOTATION
+
+xs:positiveInteger
+<xs:simpleType name="positiveInteger" id="positiveInteger">
+  <xs:restriction base="xs:nonNegativeInteger">
+    <xs:minInclusive value="1"/>
+  </xs:restriction>
+</xs:simpleType>
+
+xs:QName
+
+xs:short
+<xs:simpleType name="short" id="short">
+  <xs:restriction base="xs:int">
+    <xs:minInclusive value="-32768"/>
+    <xs:maxInclusive value="32767"/>
+  </xs:restriction>
+</xs:simpleType>
+
+xs:string
+<xs:simpleType name="string" id="string">
+  <xs:restriction base="xs:anySimpleType">
+    <xs:whiteSpace value="preserve"/>
+  </xs:restriction>
+</xs:simpleType>
+
+xs:time
+
+xs:token
+<xs:simpleType name="token" id="token">
+  <xs:restriction base="xs:normalizedString">
+    <xs:whiteSpace value="collapse"/>
+  </xs:restriction>
+</xs:simpleType>
+
+xs:unsignedByte
+<xs:simpleType name="unsignedByte" id="unsignedBtype">
+  <xs:restriction base="xs:unsignedShort">
+    <xs:maxInclusive value="255"/>
+  </xs:restriction>
+</xs:simpleType>
+
+xs:unsignedInt
+<xs:simpleType name="unsignedInt" id="unsignedInt">
+  <xs:restriction base="xs:unsignedLong">
+    <xs:maxInclusive value="4294967295"/>
+  </xs:restriction>
+</xs:simpleType>
+
+xs:unsignedLong
+<xs:simpleType name="unsignedLong" id="unsignedLong">
+  <xs:restriction base="xs:nonNegativeInteger">
+    <xs:maxInclusive value="18446744073709551615"/>
+  </xs:restriction>
+</xs:simpleType>
+
+xs:unsignedShort
+<xs:simpleType name="unsignedShort" id="unsignedShort">
+  <xs:restriction base="xs:unsignedInt">
+    <xs:maxInclusive value="65535"/>
+  </xs:restriction>
+</xs:simpleType>
+
