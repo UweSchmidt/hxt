@@ -193,6 +193,8 @@
     </xs:simpleType>
   </xs:attribute>
 
+  <xs:attribute name="monat" type="monat"/>
+
   <!-- attributeGroup definition -->
 
   <xs:attributeGroup name="bookAttributes">

@@ -266,6 +266,16 @@ runXSC schema xsc = runIdentity $ runReaderT xsc schema
 
 -- Create Element Description for Validation
 
+mkNoTextSTTF :: XSC STTF
+mkNoTextSTTF
+  = return $ \ s -> do
+                    env <- ask
+                    if not $ null (unwords $ words s)
+                      then do
+                           tell [(xpath env, "no text allowed here.")]
+                           return False
+                      else return True
+
 createRootDesc :: XSC ElemDesc
 createRootDesc
   = do
@@ -273,7 +283,8 @@ createRootDesc
     am <- mapM createAttrMapEntry $ elems $ sAttributes s
     cm <- return mkUnit
     se <- return empty
-    return $ ElemDesc (fromList am) cm se (\ _ -> return True)
+    tf <- mkNoTextSTTF
+    return $ ElemDesc (fromList am) cm se tf
 
 createAttrMapEntry :: Attribute -> XSC (Name, AttrMapVal)
 createAttrMapEntry (AttrRef n)
@@ -337,24 +348,32 @@ stToSTTF (Restr (tref, rlist)) = do
                                  return $ \ x -> do
                                                  baseCheck <- baseTF x
                                                  restrCheck <- restrTF x
-                                                 return (baseCheck && restrCheck) -- TODO: msgs?
+                                                 return (baseCheck && restrCheck)
 stToSTTF (Lst tref)            = do
                                  baseTF  <- case tref of
                                               ItemTypeAttr n    -> lookupSTTF n
                                               STLAnonymStDecl t -> stToSTTF t
                                  return $ \ x -> do
-                                                 checks <- mapM baseTF $ words x
-                                                 return $ foldr (&&) True checks -- TODO: msgs?
+                                                 env <- ask
+                                                 let (checks, _) = runSVal env $ mapM baseTF $ words x
+                                                 if not (foldr (&&) True checks)
+                                                   then do
+                                                        tell [(xpath env, "value does not match list type")]
+                                                        return False
+                                                   else return True
 stToSTTF (Un ts)               = do
                                  trefTFs <- case memberTypes ts of
                                               Nothing    -> return []
                                               Just trefs -> mapM lookupSTTF $ words trefs
                                  tdefTFs <- mapM stToSTTF $ anonymDecls ts
                                  return $ \ x -> do
-                                                 checks <- mapM (\ f -> f x) (trefTFs ++ tdefTFs)
-                                                 return $ foldr (||) False checks -- TODO: msgs?
-
-
+                                                 env <- ask
+                                                 let (checks, _) = runSVal env $ mapM (\ f -> f x) (trefTFs ++ tdefTFs)
+                                                 if not (foldr (||) False checks)
+                                                   then do
+                                                        tell [(xpath env, "value does not match union type")]
+                                                        return False
+                                                   else return True
 
 -- ctToElemDesc :: ComplexType -> ElemDesc
 --   = -- TODO:
@@ -966,7 +985,7 @@ testElem e
     let content = getElemChildren e -- Text and Tag nodes
     contModelRes <- testContentModel content
     let (tags, text) = extractElems content
-    textRes <- (sttf $ elemDesc env) $ getCombinedText text
+    textRes <- local (const (appendXPath "/child::text()" env)) $ (sttf $ elemDesc env) $ getCombinedText text
     tagsRes <- testElemChildren empty tags
     return (attrRes && contModelRes && textRes && tagsRes)
 
