@@ -927,8 +927,6 @@ createAttrMapEntry (AttrDef (AttributeDef n tdef _ use)) -- TODO: sense of (attr
             ATDAnonymDecl t -> stToSTTF t    
     return (n, (req, tf))
 
--- =========================================
-
 -- Create Element Description for Validation
 
 attrGrpToAttrList :: AttributeGroup -> XSC AttrList
@@ -973,12 +971,33 @@ mkElemDesc :: AttrMap -> XmlRegex -> SubElemDesc -> STTF -> ElemDesc
 mkElemDesc am cm se tf
   = ElemDesc Nothing am cm se tf
 
+-- =========================================
+
+compToElemDesc :: CTCompositor -> XSC ElemDesc
+compToElemDesc _ 
+  = return $ mkErrorElemDesc "not implemented yet."
+
+-- default values of minmaxOcc..
+
+ctModelToElemDesc :: CTModel -> XSC ElemDesc
+ctModelToElemDesc (comp, attrs)
+  = do
+    am <- attrListToAttrMap attrs
+    case comp of
+      Nothing -> do
+                 tf <- mkNoTextSTTF
+                 return $ mkElemDesc am mkUnit empty tf -- TODO: RE for empty elem
+      Just c  -> do
+                 ed <- compToElemDesc c
+                 return $ mkElemDesc (union am (attrMap ed)) (contentModel ed) (subElemDesc ed) (sttf ed)
+
 ctToElemDesc :: ComplexType -> XSC ElemDesc
 ctToElemDesc ct
-  = case ctDef ct of
+  = do
+    s <- ask
+    case ctDef ct of -- TODO: ctMixed ct (Maybe String)
       SCont (SCExt   (n,             attrs)) ->
         do
-        s <- ask
         am <- attrListToAttrMap attrs
         case lookup n $ sComplexTypes s of
           Nothing  -> do
@@ -989,7 +1008,6 @@ ctToElemDesc ct
                       return $ mkSimpleElemDesc (union am $ attrMap ed) (sttf ed)
       SCont (SCRestr (rstr@(tref, rlist), attrs)) ->
         do
-        s <- ask
         am <- attrListToAttrMap attrs
         case tref of
           BaseAttr n        -> case lookup n $ sComplexTypes s of
@@ -1004,14 +1022,31 @@ ctToElemDesc ct
           STRAnonymStDecl _ -> do
                                tf <- rstrToSTTF rstr
                                return $ mkSimpleElemDesc am tf
-
-      CCont cc      -> return $ mkErrorElemDesc "not implemented yet." -- TODO: ctMixed ct (Maybe String)
-      NewCT ctmodel -> return $ mkErrorElemDesc "not implemented yet." -- TODO: ctMixed ct (Maybe String)
-
--- let msg = Just "element validation error: illegal type reference in schema file"
-
--- TODO: RE for empty ComplexType ?
--- default values of minmaxOcc..
+      CCont cc      -> do
+                       case ccDef cc of -- TODO: ccMixed cc (Maybe String) 
+                         CCExt   (n, m) -> case lookup n $ sComplexTypes s of
+                                             Nothing  -> return $ mkErrorElemDesc
+                                                         "element validation error: illegal type reference in schema file"
+                                             Just ct' -> do
+                                                         base <- ctToElemDesc ct'
+                                                         ed <- ctModelToElemDesc m
+                                                         -- TODO: validate extension rules
+                                                         return $ mkElemDesc (union (attrMap ed) (attrMap base))
+                                                                             (mkAlt (contentModel ed) (contentModel base))
+                                                                             (union (subElemDesc ed) (subElemDesc base))
+                                                                             (checkBothSTTF (sttf base) (sttf ed))
+                         CCRestr (n, m) -> case lookup n $ sComplexTypes s of
+                                             Nothing  -> return $ mkErrorElemDesc
+                                                         "element validation error: illegal type reference in schema file"
+                                             Just ct' -> do
+                                                         base <- ctToElemDesc ct'
+                                                         ed <- ctModelToElemDesc m
+                                                         -- TODO: validate restriction rules
+                                                         return $ mkElemDesc (attrMap ed)
+                                                                             (contentModel ed)
+                                                                             (subElemDesc ed)
+                                                                             (checkBothSTTF (sttf base) (sttf ed))
+      NewCT m       -> ctModelToElemDesc m
 
 -- =========================================
 
