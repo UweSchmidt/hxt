@@ -19,6 +19,8 @@ XError Int String		error message with level and text
 ------------------------------------------------------------------------
 
 Name / String
+uppercase / lowercase for attr names elem names ...
+apply namespaces (full qualified names) ?
 
 HUnit + Testcases
 

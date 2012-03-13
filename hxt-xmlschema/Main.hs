@@ -1,4 +1,4 @@
-import Text.XML.HXT.Core hiding (getElemName, isElem, getAttrName, getAttrValue, getText)
+import Text.XML.HXT.Core hiding (getElemName, isElem, isText, getAttrName, getAttrValue, getText)
 import Text.XML.HXT.Curl
 import Text.XML.HXT.Arrow.XmlRegex
 
@@ -246,7 +246,8 @@ knownW3CTypes = fromList
 -- Types for Validation
 
 data ElemDesc = ElemDesc
-              { attrMap      :: AttrMap
+              { errmsg       :: Maybe String 
+              , attrMap      :: AttrMap
               , contentModel :: XmlRegex
               , subElemDesc  :: SubElemDesc
               , sttf         :: STTF
@@ -270,11 +271,13 @@ createRootDesc :: XSC ElemDesc -- TODO: Verify root element interpretation
 createRootDesc
   = do
     s <- ask
-    am <- mapM createAttrMapEntry $ elems $ sAttributes s
-    cm <- mkStar $ mkAlts $ map mkElemRE $ keys $ sElements s
-    se <- mapM (\ (n, el) -> (n, createElemDesc el)) $ toList $ sElements s
+    am' <- mapM createAttrMapEntry $ elems $ sAttributes s
+    let am = fromList am'
+    let cm = mkStar $ mkAlts $ map mkElemRE $ keys $ sElements s
+    se' <- mapM createElemDesc $ elems $ sElements s
+    let se = fromList $ zip (keys $ sElements s) se'
     tf <- mkNoTextSTTF 
-    return $ ElemDesc (fromList am) cm (fromList se) tf
+    return $ ElemDesc Nothing am cm se tf
 
 createAttrMapEntry :: Attribute -> XSC (Name, AttrMapVal)
 createAttrMapEntry (AttrRef n)
@@ -375,27 +378,42 @@ stToSTTF (Un ts)               = do
                                                         return False
                                                    else return True
 
--- ctToElemDesc :: ComplexType -> XSC ElemDesc
---   = -- TODO:
+ctToElemDesc :: ComplexType -> XSC ElemDesc
+ctToElemDesc ct
+  = return $ ElemDesc Nothing empty mkTextRE empty (\ _ -> return True)
 
--- Empty ComplexType ...
+
+
+
+
+-- TODO: RE for empty ComplexType ?
+-- default values of minmaxOcc..
 
 createElemDesc :: Element -> XSC ElemDesc
-createElemDesc
+createElemDesc (ElRef n)
   = do
     s <- ask
-    
-    
-
--- Elem with SimpleType: (ElemDesc empty mkUnit empty sttf)
-
--- default values of minmaxOcc..
--- apply namespaces (full qualified names) ?
-
--- TODO: RE for Text nodes: mkUnit
-
-mkElemRE :: String -> XmlRegex
-mkElemRE s = mkPrim $ (== s) . getElemName
+    case lookup n (sElements s) of
+           Just e  -> createElemDesc e
+           Nothing -> do
+                      let msg = Just "element validation error: illegal element reference in schema file"
+                      return $ ElemDesc msg empty mkUnit empty (\ _ -> return True)
+createElemDesc (ElDef (ElementDef _ tdef _)) -- TODO: sense of (elemDefaultVal  :: Maybe String) ?
+  = do
+    s <- ask
+    t <- case tdef of
+           ETDTypeAttr r      -> case lookup r (sComplexTypes s) of
+                                   Nothing  -> do
+                                               tf <- lookupSTTF r
+                                               return $ Left tf
+                                   Just ctr -> return $ Right $ ctr
+           ETDAnonymStDecl st -> do
+                                 tf <- stToSTTF st
+                                 return $ Left tf
+           ETDAnonymCtDecl ct -> return $ Right ct
+    case t of
+      Left tf -> return $ ElemDesc Nothing empty mkTextRE empty tf 
+      Right ct -> ctToElemDesc ct
 
 ---------------------------------------------------------
 
@@ -825,7 +843,7 @@ loadXmlSchema uri
     s' <- runX ( 
                 xunpickleDocument xpXmlSchema'
                                   [ withValidate yes        -- validate source
-                                  , withTrace 1             -- trace processing steps
+                                  -- , withTrace 1             -- trace processing steps
                                   , withRemoveWS yes        -- remove redundant whitespace
                                   , withPreserveComment no  -- keep comments
                                   , withCheckNamespaces yes -- check namespaces
@@ -979,6 +997,12 @@ testElemChildren t (x:xs)
     rest <- testElemChildren (insert n c t) xs
     return (res && rest)
 
+testElemText :: XmlTrees -> SVal Bool
+testElemText t
+  = do
+    env <- ask
+    local (const (appendXPath "/child::text()" env)) $ (sttf $ elemDesc env) $ getCombinedText t
+
 extractElems :: XmlTrees -> (XmlTrees, XmlTrees)
 extractElems = partition isElem
 
@@ -986,13 +1010,18 @@ testElem :: XmlTree -> SVal Bool
 testElem e
   = do
     env <- ask
-    attrRes <- testAttrs e
-    let content = getElemChildren e -- Text and Tag nodes
-    contModelRes <- testContentModel content
-    let (tags, text) = extractElems content
-    textRes <- local (const (appendXPath "/child::text()" env)) $ (sttf $ elemDesc env) $ getCombinedText text
-    tagsRes <- testElemChildren empty tags
-    return (attrRes && contModelRes && textRes && tagsRes)
+    case (errmsg $ elemDesc env) of
+      Just msg -> do
+                  tell [(xpath env, msg)]
+                  return False
+      Nothing  -> do
+                  attrRes <- testAttrs e
+                  let content = getElemChildren e -- Text and Tag nodes
+                  contModelRes <- testContentModel content
+                  let (tags, text) = extractElems content
+                  textRes <- testElemText text
+                  tagsRes <- testElemChildren empty tags
+                  return (attrRes && contModelRes && textRes && tagsRes)
 
 -- Main
 
@@ -1002,15 +1031,12 @@ main
     -- argv <- getArgs
     -- (schemaurl, docurl) <- return (argv!!0, argv!!1)
 
-    putStrLn "\n------------------------------------------- Read Schema --------------------------------------------\n"
     xmlschema <- loadXmlSchema "example.xsd"
-    putStrLn "\n------------------------------------------ Read Document -------------------------------------------\n"
     doc <- readDoc "example.xml"
-    putStrLn "\n------------------------------------------- Validation ---------------------------------------------\n"
     let res = runSVal (SValEnv "" (runXSC xmlschema createRootDesc)) (testElem doc)
     if (fst res)
-      then putStrLn $ "ok.\n"
-      else putStrLn $ "errors were found:\n"
+      then putStrLn $ "\nok.\n"
+      else putStrLn $ "\nerrors were found:\n"
     mapM_ (\ (a, b) -> putStrLn $ a ++ "\n" ++ b ++ "\n") $ snd res
 
     -- Text.XML.HXT.XPath.XPathEval
@@ -1039,7 +1065,7 @@ readDoc :: String -> IO XmlTree
 readDoc uri
   = do
     s <- runX ( readDocument [ withValidate yes        -- validate source
-                             , withTrace 1             -- trace processing steps
+                             -- , withTrace 1             -- trace processing steps
                              , withRemoveWS yes        -- remove redundant whitespace -- TODO: necessary?
                              , withPreserveComment no  -- keep comments               -- TODO: necessary?
                              -- , withCheckNamespaces yes -- check namespaces
@@ -1066,6 +1092,10 @@ isElem :: XmlTree -> Bool
 isElem (NTree (XTag _ _) _) = True
 isElem _                    = False
 
+isText :: XmlTree -> Bool -- TODO: Handle character entity references
+isText (NTree (XText _) _) = True
+isText _                   = False
+
 isRelevant :: XmlTree -> Bool -- TODO: Handle character entity references
 isRelevant (NTree (XTag _ _) _) = True
 isRelevant (NTree (XText _) _)  = True
@@ -1085,4 +1115,10 @@ getCombinedText t = concat $ map getText t
 getText :: XmlTree -> String -- TODO: Handle character entity references
 getText (NTree (XText t) _) = t
 getText _                   = ""
+
+mkTextRE :: XmlRegex
+mkTextRE = mkPrim $ isText
+
+mkElemRE :: String -> XmlRegex
+mkElemRE s = mkPrim $ (== s) . getElemName
 
