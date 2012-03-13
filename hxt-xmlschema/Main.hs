@@ -194,229 +194,6 @@ data AttributeGroup    = AttrGrpRef {unAttrGrpRef :: Name}
                        | AttrGrpDef {unAttrGrpDef :: AttrList}
                        deriving (Show, Eq)
 
-knownW3CTypes :: Map String STTF
-knownW3CTypes = fromList
-  [ ("xs:string",             \ _ -> return True)
-  , ("xs:normalizedString",   \ _ -> return True)
-  , ("xs:token",              \ _ -> return True)
-  , ("xs:language",           \ _ -> return True)
-  , ("xs:NMTOKEN",            \ _ -> return True)
-  , ("xs:NMTOKENS",           \ _ -> return True)
-  , ("xs:Name",               \ _ -> return True)
-  , ("xs:NCName",             \ _ -> return True)
-  , ("xs:ID",                 \ _ -> return True)
-  , ("xs:IDREF",              \ _ -> return True)
-  , ("xs:IDREFS",             \ _ -> return True)
-  , ("xs:ENTITY",             \ _ -> return True)
-  , ("xs:ENTITIES",           \ _ -> return True)
-  , ("xs:anyURI",             \ _ -> return True)
-  , ("xs:QName",              \ _ -> return True)
-  , ("xs:NOTATION",           \ _ -> return True)
-  , ("xs:hexBinary",          \ _ -> return True)
-  , ("xs:base64Binary",       \ _ -> return True)
-  , ("xs:decimal",            \ _ -> return True)
-  , ("xs:integer",            \ _ -> return True)
-  , ("xs:nonPositiveInteger", \ _ -> return True)
-  , ("xs:negativeInteger",    \ _ -> return True)
-  , ("xs:nonNegativeInteger", \ _ -> return True)
-  , ("xs:positiveInteger",    \ _ -> return True)
-  , ("xs:long",               \ _ -> return True)
-  , ("xs:int",                \ _ -> return True)
-  , ("xs:short",              \ _ -> return True)
-  , ("xs:byte",               \ _ -> return True)
-  , ("xs:unsignedLong",       \ _ -> return True)
-  , ("xs:unsignedInt",        \ _ -> return True)
-  , ("xs:unsignedShort",      \ _ -> return True)
-  , ("xs:unsignedByte",       \ _ -> return True)
-  -- TODO: not implemented yet in DataTypeLibW3C
-  , ("xs:boolean",            \ _ -> return True)
-  , ("xs:float",              \ _ -> return True)
-  , ("xs:double",             \ _ -> return True)
-  , ("xs:time",               \ _ -> return True)
-  , ("xs:duration",           \ _ -> return True)
-  , ("xs:date",               \ _ -> return True)
-  , ("xs:dateTime",           \ _ -> return True)
-  , ("xs:gDay",               \ _ -> return True)
-  , ("xs:gMonth",             \ _ -> return True)
-  , ("xs:gMonthDay",          \ _ -> return True)
-  , ("xs:gYear",              \ _ -> return True)
-  , ("xs:gYearMonth",         \ _ -> return True)
-  ]
-
--- Types for Validation
-
-data ElemDesc = ElemDesc
-              { errmsg       :: Maybe String 
-              , attrMap      :: AttrMap
-              , contentModel :: XmlRegex
-              , subElemDesc  :: SubElemDesc
-              , sttf         :: STTF
-              }
-
-type AttrMap = Map String AttrMapVal
-type AttrMapVal = (Bool, STTF)
-type SubElemDesc = Map String ElemDesc
-type STTF = String -> SVal Bool
-
-type CountingTable = Map String Int
-
-type XSC a = ReaderT XmlSchema Identity a
-
-runXSC :: XmlSchema -> XSC a -> a
-runXSC schema xsc = runIdentity $ runReaderT xsc schema
-
--- Create Element Description for Validation
-
-createRootDesc :: XSC ElemDesc -- TODO: Verify root element interpretation
-createRootDesc
-  = do
-    s <- ask
-    am' <- mapM createAttrMapEntry $ elems $ sAttributes s
-    let am = fromList am'
-    let cm = mkStar $ mkAlts $ map mkElemRE $ keys $ sElements s
-    se' <- mapM createElemDesc $ elems $ sElements s
-    let se = fromList $ zip (keys $ sElements s) se'
-    tf <- mkNoTextSTTF 
-    return $ ElemDesc Nothing am cm se tf
-
-createAttrMapEntry :: Attribute -> XSC (Name, AttrMapVal)
-createAttrMapEntry (AttrRef n)
-  = do
-    s <- ask
-    case lookup n (sAttributes s) of
-           Just a  -> createAttrMapEntry a
-           Nothing -> do
-                      errorSTTF <- mkErrorSTTF "attribute validation error: illegal attribute reference in schema file"
-                      return (n, (False, errorSTTF))
-createAttrMapEntry (AttrDef (AttributeDef n tdef _ use)) -- TODO: sense of (attrDefaultVal :: Maybe String) ?
-  = do
-    let req = case use of
-                Nothing -> False -- default "optional"
-                Just s  -> case s of
-                             "required" -> True
-                             _          -> False
-    tf <- case tdef of
-            ATDTypeAttr r   -> lookupSTTF r
-            ATDAnonymDecl t -> stToSTTF t    
-    return (n, (req, tf))
-
-lookupSTTF :: Name -> XSC STTF
-lookupSTTF n
-  = do
-    s <- ask
-    case lookup n knownW3CTypes of
-      Just tf -> return tf
-      Nothing -> case lookup n (sSimpleTypes s) of
-                   Nothing -> mkErrorSTTF "type validation error: illegal type reference in schema file"
-                   Just t  -> stToSTTF t -- TODO: cache sttf? prevent infinite recursion?
-
-mkNoTextSTTF :: XSC STTF
-mkNoTextSTTF
-  = return $ \ s -> do
-                    env <- ask
-                    if not $ null (unwords $ words s)
-                      then do
-                           tell [(xpath env, "no text allowed here.")]
-                           return False
-                      else return True
-
-mkErrorSTTF :: String -> XSC STTF
-mkErrorSTTF s
-  = return $ \ _ -> do
-                    env <- ask
-                    tell [(xpath env, s)]
-                    return False
-
-rlistToSTTF :: RestrAttrs -> XSC STTF
-rlistToSTTF _ = return $ \ _ -> return True -- TODO: implement restriction checks
--- MinIncl
--- MaxIncl
--- MinExcl
--- MaxExcl
--- TotalDigits
--- FractionDigits
--- Length
--- MinLength
--- MaxLength
--- Enumeration
--- Pattern
--- WhiteSpace
-
-stToSTTF :: SimpleType -> XSC STTF
-stToSTTF (Restr (tref, rlist)) = do
-                                 baseTF  <- case tref of
-                                              BaseAttr n        -> lookupSTTF n
-                                              STRAnonymStDecl t -> stToSTTF t
-                                 restrTF <- rlistToSTTF rlist
-                                 return $ \ x -> do
-                                                 baseCheck <- baseTF x
-                                                 restrCheck <- restrTF x
-                                                 return (baseCheck && restrCheck)
-stToSTTF (Lst tref)            = do
-                                 baseTF  <- case tref of
-                                              ItemTypeAttr n    -> lookupSTTF n
-                                              STLAnonymStDecl t -> stToSTTF t
-                                 return $ \ x -> do
-                                                 env <- ask
-                                                 let (checks, _) = runSVal env $ mapM baseTF $ words x
-                                                 if not (foldr (&&) True checks)
-                                                   then do
-                                                        tell [(xpath env, "value does not match list type")]
-                                                        return False
-                                                   else return True
-stToSTTF (Un ts)               = do
-                                 trefTFs <- case memberTypes ts of
-                                              Nothing    -> return []
-                                              Just trefs -> mapM lookupSTTF $ words trefs
-                                 tdefTFs <- mapM stToSTTF $ anonymDecls ts
-                                 return $ \ x -> do
-                                                 env <- ask
-                                                 let (checks, _) = runSVal env $ mapM (\ f -> f x) (trefTFs ++ tdefTFs)
-                                                 if not (foldr (||) False checks)
-                                                   then do
-                                                        tell [(xpath env, "value does not match union type")]
-                                                        return False
-                                                   else return True
-
-ctToElemDesc :: ComplexType -> XSC ElemDesc
-ctToElemDesc ct
-  = return $ ElemDesc Nothing empty mkTextRE empty (\ _ -> return True)
-
-
-
-
-
--- TODO: RE for empty ComplexType ?
--- default values of minmaxOcc..
-
-createElemDesc :: Element -> XSC ElemDesc
-createElemDesc (ElRef n)
-  = do
-    s <- ask
-    case lookup n (sElements s) of
-           Just e  -> createElemDesc e
-           Nothing -> do
-                      let msg = Just "element validation error: illegal element reference in schema file"
-                      return $ ElemDesc msg empty mkUnit empty (\ _ -> return True)
-createElemDesc (ElDef (ElementDef _ tdef _)) -- TODO: sense of (elemDefaultVal  :: Maybe String) ?
-  = do
-    s <- ask
-    t <- case tdef of
-           ETDTypeAttr r      -> case lookup r (sComplexTypes s) of
-                                   Nothing  -> do
-                                               tf <- lookupSTTF r
-                                               return $ Left tf
-                                   Just ctr -> return $ Right $ ctr
-           ETDAnonymStDecl st -> do
-                                 tf <- stToSTTF st
-                                 return $ Left tf
-           ETDAnonymCtDecl ct -> return $ Right ct
-    case t of
-      Left tf -> return $ ElemDesc Nothing empty mkTextRE empty tf 
-      Right ct -> ctToElemDesc ct
-
----------------------------------------------------------
-
 -- Namespace handling
 
 nsUri :: String
@@ -835,6 +612,37 @@ xpAttributeGroup
          , xpWrap (AttrGrpDef, unAttrGrpDef) $ xpAttrList
          ]
 
+-- Processing of includes
+
+resolveIncls :: XmlSchema -> Includes -> IO XmlSchema
+resolveIncls s []     = return s
+resolveIncls s (x:xs) = do
+                        incl <- resolveIncl x
+                        resolveIncls (mergeSchemata s incl) xs
+
+resolveIncl :: Include -> IO XmlSchema
+resolveIncl (Incl loc)            = loadXmlSchema loc
+resolveIncl (Imp (loc, _))        = loadXmlSchema loc
+resolveIncl (Redef (loc, redefs)) = do
+                                    s <- loadXmlSchema loc
+                                    return $ applyRedefs s redefs
+
+applyRedefs :: XmlSchema -> Redefinitions -> XmlSchema
+applyRedefs s []
+  = s
+applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefSt (k, st)):xs)
+  = applyRedefs (XmlSchema tns ins (insert k st sts) cts els grs ats ags) xs -- TODO: Apply redefinition to existing ST
+applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefCt (k, ct)):xs)
+  = applyRedefs (XmlSchema tns ins sts (insert k ct cts) els grs ats ags) xs -- TODO: Apply redefinition to existing CT
+applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefGr (k, gr)):xs)
+  = applyRedefs (XmlSchema tns ins sts cts els (insert k gr grs) ats ags) xs
+applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefAg (k, ag)):xs)
+  = applyRedefs (XmlSchema tns ins sts cts els grs ats (insert k ag ags)) xs
+
+mergeSchemata :: XmlSchema -> XmlSchema -> XmlSchema
+mergeSchemata (XmlSchema tns _ sts cts els grs ats ags) (XmlSchema _ _ sts' cts' els' grs' ats' ags')
+  = XmlSchema tns [] (union sts sts') (union cts cts') (union els els') (union grs grs') (union ats ats') (union ags ags')
+
 -- Load schema from given url
 
 loadXmlSchema :: String -> IO XmlSchema
@@ -853,51 +661,6 @@ loadXmlSchema uri
     s <- return $ toSchema $ head s' 
     resolveIncls s (sIncludes s)
 
-resolveIncls :: XmlSchema -> Includes -> IO XmlSchema
-resolveIncls s []     = return s
-resolveIncls s (x:xs) = do
-                        incl <- resolveIncl x
-                        resolveIncls (mergeSchemata s incl) xs
-
--- TODO: It is no error, if the referenced schema cannot be loaded
--- TODO: Do not resolve the same include multiple times (allowed in XML Schema)
-
--- Include:
--- Inclusion of a schema for the same target namespace
--- (or which has no namespace -> conversion to including document's targetNamespace if it has one)
-
--- Import:
--- Nothing to do: Import of a schema for another target namespace 
--- (or which has no namespace -> conversion to including document's targetNamespace if it has one)
-
--- Redefine:
--- Same as include but apply redefinitions on referenced schema before merging
-
-resolveIncl :: Include -> IO XmlSchema
-resolveIncl (Incl loc)            = loadXmlSchema loc
-resolveIncl (Imp (loc, _))        = loadXmlSchema loc
-resolveIncl (Redef (loc, redefs)) = do
-                                    s <- loadXmlSchema loc
-                                    return $ applyRedefs s redefs
-
--- Assuming no name collisions in a valid xml schema file
-
-applyRedefs :: XmlSchema -> Redefinitions -> XmlSchema
-applyRedefs s []
-  = s
-applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefSt (k, st)):xs)
-  = applyRedefs (XmlSchema tns ins (insert k st sts) cts els grs ats ags) xs -- TODO: Apply redefinition to existing ST
-applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefCt (k, ct)):xs)
-  = applyRedefs (XmlSchema tns ins sts (insert k ct cts) els grs ats ags) xs -- TODO: Apply redefinition to existing CT
-applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefGr (k, gr)):xs)
-  = applyRedefs (XmlSchema tns ins sts cts els (insert k gr grs) ats ags) xs
-applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefAg (k, ag)):xs)
-  = applyRedefs (XmlSchema tns ins sts cts els grs ats (insert k ag ags)) xs
-
-mergeSchemata :: XmlSchema -> XmlSchema -> XmlSchema
-mergeSchemata (XmlSchema tns _ sts cts els grs ats ags) (XmlSchema _ _ sts' cts' els' grs' ats' ags')
-  = XmlSchema tns [] (union sts sts') (union cts cts') (union els els') (union grs grs') (union ats ats') (union ags ags')
-
 -- Save schema to given target file
 
 -- storeXmlSchema :: XmlSchema -> String -> IO ()
@@ -910,6 +673,322 @@ mergeSchemata (XmlSchema tns _ sts cts els grs ats ags) (XmlSchema _ _ sts' cts'
 --                                   ] t
 --               )
 --     return ()
+
+--------------------------------------------------------------------------------------
+
+-- XML Processing with HXT
+
+getElemName :: XmlTree -> String
+getElemName (NTree (XTag n _) _) = localPart n
+getElemName _                    = ""
+
+mkElemRE :: String -> XmlRegex
+mkElemRE s = mkPrim $ (== s) . getElemName
+
+getElemAttrs :: XmlTree -> [(String, String)]
+getElemAttrs (NTree (XTag _ attrs) _) = map (\ x -> (getAttrName x, getAttrValue x)) attrs
+getElemAttrs _                        = []
+
+getElemChildren :: XmlTree -> XmlTrees
+getElemChildren (NTree (XTag _ _) c) = filter isRelevant c
+getElemChildren _                    = []
+
+isElem :: XmlTree -> Bool
+isElem (NTree (XTag _ _) _) = True
+isElem _                    = False
+
+mkTextRE :: XmlRegex
+mkTextRE = mkPrim $ isText
+
+isText :: XmlTree -> Bool -- TODO: Handle character entity references
+isText (NTree (XText _) _) = True
+isText _                   = False
+
+isRelevant :: XmlTree -> Bool -- TODO: Handle character entity references
+isRelevant (NTree (XTag _ _) _) = True
+isRelevant (NTree (XText _) _)  = True
+isRelevant _                    = False
+
+getAttrName :: XmlTree -> String
+getAttrName (NTree (XAttr n) _) = localPart n
+getAttrName _                   = ""
+
+getAttrValue :: XmlTree -> String
+getAttrValue (NTree (XAttr _) c) = getCombinedText c
+getAttrValue _                   = ""
+
+getCombinedText :: XmlTrees -> String
+getCombinedText t = concat $ map getText t
+
+getText :: XmlTree -> String -- TODO: Handle character entity references
+getText (NTree (XText t) _) = t
+getText _                   = ""
+
+-- Read xml document
+
+readDoc :: String -> IO XmlTree
+readDoc uri
+  = do
+    s <- runX ( readDocument [ withValidate yes        -- validate source
+                             -- , withTrace 1             -- trace processing steps
+                             , withRemoveWS yes        -- remove redundant whitespace -- TODO: necessary?
+                             , withPreserveComment no  -- keep comments               -- TODO: necessary?
+                             -- , withCheckNamespaces yes -- check namespaces
+                             , withCurl []             -- use libCurl for http access
+                             ] uri
+                >>>
+                getChildren
+              )
+    return $ head s
+
+--------------------------------------------------------------------------------------
+
+-- Types for XmlSchema transformation
+
+type XSC a = ReaderT XmlSchema Identity a
+
+runXSC :: XmlSchema -> XSC a -> a
+runXSC schema xsc = runIdentity $ runReaderT xsc schema
+
+data ElemDesc = ElemDesc
+              { errmsg       :: Maybe String 
+              , attrMap      :: AttrMap
+              , contentModel :: XmlRegex
+              , subElemDesc  :: SubElemDesc
+              , sttf         :: STTF
+              }
+
+type AttrMap = Map String AttrMapVal
+type AttrMapVal = (Bool, STTF)
+type SubElemDesc = Map String ElemDesc
+type STTF = String -> SVal Bool
+
+-- Create SimpleType test functions
+
+knownW3CTypes :: Map String STTF
+knownW3CTypes = fromList
+  [ ("xs:string",             \ _ -> return True)
+  , ("xs:normalizedString",   \ _ -> return True)
+  , ("xs:token",              \ _ -> return True)
+  , ("xs:language",           \ _ -> return True)
+  , ("xs:NMTOKEN",            \ _ -> return True)
+  , ("xs:NMTOKENS",           \ _ -> return True)
+  , ("xs:Name",               \ _ -> return True)
+  , ("xs:NCName",             \ _ -> return True)
+  , ("xs:ID",                 \ _ -> return True)
+  , ("xs:IDREF",              \ _ -> return True)
+  , ("xs:IDREFS",             \ _ -> return True)
+  , ("xs:ENTITY",             \ _ -> return True)
+  , ("xs:ENTITIES",           \ _ -> return True)
+  , ("xs:anyURI",             \ _ -> return True)
+  , ("xs:QName",              \ _ -> return True)
+  , ("xs:NOTATION",           \ _ -> return True)
+  , ("xs:hexBinary",          \ _ -> return True)
+  , ("xs:base64Binary",       \ _ -> return True)
+  , ("xs:decimal",            \ _ -> return True)
+  , ("xs:integer",            \ _ -> return True)
+  , ("xs:nonPositiveInteger", \ _ -> return True)
+  , ("xs:negativeInteger",    \ _ -> return True)
+  , ("xs:nonNegativeInteger", \ _ -> return True)
+  , ("xs:positiveInteger",    \ _ -> return True)
+  , ("xs:long",               \ _ -> return True)
+  , ("xs:int",                \ _ -> return True)
+  , ("xs:short",              \ _ -> return True)
+  , ("xs:byte",               \ _ -> return True)
+  , ("xs:unsignedLong",       \ _ -> return True)
+  , ("xs:unsignedInt",        \ _ -> return True)
+  , ("xs:unsignedShort",      \ _ -> return True)
+  , ("xs:unsignedByte",       \ _ -> return True)
+  -- TODO: not implemented yet in DataTypeLibW3C
+  , ("xs:boolean",            \ _ -> return True)
+  , ("xs:float",              \ _ -> return True)
+  , ("xs:double",             \ _ -> return True)
+  , ("xs:time",               \ _ -> return True)
+  , ("xs:duration",           \ _ -> return True)
+  , ("xs:date",               \ _ -> return True)
+  , ("xs:dateTime",           \ _ -> return True)
+  , ("xs:gDay",               \ _ -> return True)
+  , ("xs:gMonth",             \ _ -> return True)
+  , ("xs:gMonthDay",          \ _ -> return True)
+  , ("xs:gYear",              \ _ -> return True)
+  , ("xs:gYearMonth",         \ _ -> return True)
+  ]
+
+mkNoTextSTTF :: XSC STTF
+mkNoTextSTTF
+  = return $ \ s -> do
+                    env <- ask
+                    if not $ null (unwords $ words s)
+                      then do
+                           tell [(xpath env, "no text allowed here.")]
+                           return False
+                      else return True
+
+mkErrorSTTF :: String -> XSC STTF
+mkErrorSTTF s
+  = return $ \ _ -> do
+                    env <- ask
+                    tell [(xpath env, s)]
+                    return False
+
+lookupSTTF :: Name -> XSC STTF
+lookupSTTF n
+  = do
+    s <- ask
+    case lookup n knownW3CTypes of
+      Just tf -> return tf
+      Nothing -> case lookup n (sSimpleTypes s) of
+                   Nothing -> mkErrorSTTF "type validation error: illegal type reference in schema file"
+                   Just t  -> stToSTTF t -- TODO: cache sttf? prevent infinite recursion?
+
+rlistToSTTF :: RestrAttrs -> XSC STTF
+rlistToSTTF _ = return $ \ _ -> return True -- TODO: implement restriction checks
+-- MinIncl
+-- MaxIncl
+-- MinExcl
+-- MaxExcl
+-- TotalDigits
+-- FractionDigits
+-- Length
+-- MinLength
+-- MaxLength
+-- Enumeration
+-- Pattern
+-- WhiteSpace
+
+stToSTTF :: SimpleType -> XSC STTF
+stToSTTF (Restr (tref, rlist)) = do
+                                 baseTF  <- case tref of
+                                              BaseAttr n        -> lookupSTTF n
+                                              STRAnonymStDecl t -> stToSTTF t
+                                 restrTF <- rlistToSTTF rlist
+                                 return $ \ x -> do
+                                                 baseCheck <- baseTF x
+                                                 restrCheck <- restrTF x
+                                                 return (baseCheck && restrCheck)
+stToSTTF (Lst tref)            = do
+                                 baseTF  <- case tref of
+                                              ItemTypeAttr n    -> lookupSTTF n
+                                              STLAnonymStDecl t -> stToSTTF t
+                                 return $ \ x -> do
+                                                 env <- ask
+                                                 let (checks, _) = runSVal env $ mapM baseTF $ words x
+                                                 if not (foldr (&&) True checks)
+                                                   then do
+                                                        tell [(xpath env, "value does not match list type")]
+                                                        return False
+                                                   else return True
+stToSTTF (Un ts)               = do
+                                 trefTFs <- case memberTypes ts of
+                                              Nothing    -> return []
+                                              Just trefs -> mapM lookupSTTF $ words trefs
+                                 tdefTFs <- mapM stToSTTF $ anonymDecls ts
+                                 return $ \ x -> do
+                                                 env <- ask
+                                                 let (checks, _) = runSVal env $ mapM (\ f -> f x) (trefTFs ++ tdefTFs)
+                                                 if not (foldr (||) False checks)
+                                                   then do
+                                                        tell [(xpath env, "value does not match union type")]
+                                                        return False
+                                                   else return True
+
+-- Create AttrMap entries
+
+createAttrMapEntry :: Attribute -> XSC (Name, AttrMapVal)
+createAttrMapEntry (AttrRef n)
+  = do
+    s <- ask
+    case lookup n (sAttributes s) of
+           Just a  -> createAttrMapEntry a
+           Nothing -> do
+                      errorSTTF <- mkErrorSTTF "attribute validation error: illegal attribute reference in schema file"
+                      return (n, (False, errorSTTF))
+createAttrMapEntry (AttrDef (AttributeDef n tdef _ use)) -- TODO: sense of (attrDefaultVal :: Maybe String) ?
+  = do
+    let req = case use of
+                Nothing -> False -- default "optional"
+                Just s  -> case s of
+                             "required" -> True
+                             _          -> False
+    tf <- case tdef of
+            ATDTypeAttr r   -> lookupSTTF r
+            ATDAnonymDecl t -> stToSTTF t    
+    return (n, (req, tf))
+
+-- =========================================
+
+
+
+-- Create Element Description for Validation
+
+ctToElemDesc :: ComplexType -> XSC ElemDesc
+ctToElemDesc ct
+  = return $ ElemDesc Nothing empty mkTextRE empty (\ _ -> return True)
+
+
+
+
+
+-- TODO: RE for empty ComplexType ?
+-- default values of minmaxOcc..
+
+-- =========================================
+
+createElemDesc :: Element -> XSC ElemDesc
+createElemDesc (ElRef n)
+  = do
+    s <- ask
+    case lookup n (sElements s) of
+           Just e  -> createElemDesc e
+           Nothing -> do
+                      let msg = Just "element validation error: illegal element reference in schema file"
+                      return $ ElemDesc msg empty mkUnit empty (\ _ -> return True)
+createElemDesc (ElDef (ElementDef _ tdef _)) -- TODO: sense of (elemDefaultVal  :: Maybe String) ?
+  = do
+    s <- ask
+    t <- case tdef of
+           ETDTypeAttr r      -> case lookup r (sComplexTypes s) of
+                                   Nothing  -> do
+                                               tf <- lookupSTTF r
+                                               return $ Left tf
+                                   Just ctr -> return $ Right $ ctr
+           ETDAnonymStDecl st -> do
+                                 tf <- stToSTTF st
+                                 return $ Left tf
+           ETDAnonymCtDecl ct -> return $ Right ct
+    case t of
+      Left tf -> return $ ElemDesc Nothing empty mkTextRE empty tf 
+      Right ct -> ctToElemDesc ct
+
+createRootDesc :: XSC ElemDesc -- TODO: Verify root element interpretation
+createRootDesc
+  = do
+    s <- ask
+    am' <- mapM createAttrMapEntry $ elems $ sAttributes s
+    let am = fromList am'
+    let cm = mkStar $ mkAlts $ map mkElemRE $ keys $ sElements s
+    se' <- mapM createElemDesc $ elems $ sElements s
+    let se = fromList $ zip (keys $ sElements s) se'
+    tf <- mkNoTextSTTF 
+    return $ ElemDesc Nothing am cm se tf
+
+--------------------------------------------------------------------------------------
+
+-- Types for validation
+
+data SValEnv = SValEnv
+             { xpath :: String
+             , elemDesc :: ElemDesc
+             }
+
+type SValLog = [(String, String)]
+
+type SVal a = ReaderT SValEnv (WriterT SValLog Identity) a
+
+runSVal :: SValEnv -> SVal a -> (a, SValLog)
+runSVal env val = runIdentity $ runWriterT $ runReaderT val env
+
+type CountingTable = Map String Int
 
 -- Validation
 
@@ -1023,7 +1102,9 @@ testElem e
                   tagsRes <- testElemChildren empty tags
                   return (attrRes && contModelRes && textRes && tagsRes)
 
--- Main
+--------------------------------------------------------------------------------------
+
+-- Test setup:
 
 main :: IO ()
 main
@@ -1044,81 +1125,4 @@ main
     -- Postprocess: take XPath and add error msg as comment in document
 
     return ()
-
--- Schema Validation type
-
-type SValLog = [(String, String)]
-
-type SVal a = ReaderT SValEnv (WriterT SValLog Identity) a
-
-runSVal :: SValEnv -> SVal a -> (a, SValLog)
-runSVal env val = runIdentity $ runWriterT $ runReaderT val env
-
-data SValEnv = SValEnv
-             { xpath :: String
-             , elemDesc :: ElemDesc
-             }
-
--- XML Processing with HXT
-
-readDoc :: String -> IO XmlTree
-readDoc uri
-  = do
-    s <- runX ( readDocument [ withValidate yes        -- validate source
-                             -- , withTrace 1             -- trace processing steps
-                             , withRemoveWS yes        -- remove redundant whitespace -- TODO: necessary?
-                             , withPreserveComment no  -- keep comments               -- TODO: necessary?
-                             -- , withCheckNamespaces yes -- check namespaces
-                             , withCurl []             -- use libCurl for http access
-                             ] uri
-                >>>
-                getChildren
-              )
-    return $ head s
-
-getElemName :: XmlTree -> String
-getElemName (NTree (XTag n _) _) = localPart n
-getElemName _                    = ""
-
-getElemAttrs :: XmlTree -> [(String, String)]
-getElemAttrs (NTree (XTag _ attrs) _) = map (\ x -> (getAttrName x, getAttrValue x)) attrs
-getElemAttrs _                        = []
-
-getElemChildren :: XmlTree -> XmlTrees
-getElemChildren (NTree (XTag _ _) c) = filter isRelevant c
-getElemChildren _                    = []
-
-isElem :: XmlTree -> Bool
-isElem (NTree (XTag _ _) _) = True
-isElem _                    = False
-
-isText :: XmlTree -> Bool -- TODO: Handle character entity references
-isText (NTree (XText _) _) = True
-isText _                   = False
-
-isRelevant :: XmlTree -> Bool -- TODO: Handle character entity references
-isRelevant (NTree (XTag _ _) _) = True
-isRelevant (NTree (XText _) _)  = True
-isRelevant _                    = False
-
-getAttrName :: XmlTree -> String
-getAttrName (NTree (XAttr n) _) = localPart n
-getAttrName _                   = ""
-
-getAttrValue :: XmlTree -> String
-getAttrValue (NTree (XAttr _) c) = getCombinedText c
-getAttrValue _                   = ""
-
-getCombinedText :: XmlTrees -> String
-getCombinedText t = concat $ map getText t
-
-getText :: XmlTree -> String -- TODO: Handle character entity references
-getText (NTree (XText t) _) = t
-getText _                   = ""
-
-mkTextRE :: XmlRegex
-mkTextRE = mkPrim $ isText
-
-mkElemRE :: String -> XmlRegex
-mkElemRE s = mkPrim $ (== s) . getElemName
 
