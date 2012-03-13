@@ -154,9 +154,9 @@
     <xs:attribute name="id" type="xs:integer"/>
   </xs:complexType>
 
-  <!-- element definition (with type reference) title1 -->
+  <!-- element definition (with type reference) -->
 
-  <xs:element name="title" type="author"/>
+  <xs:element name="title" type="title1"/>
 
   <!-- element definition (with anonymous type declarations) -->
 
