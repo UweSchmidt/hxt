@@ -973,11 +973,53 @@ mkElemDesc am cm se tf
 
 -- =========================================
 
-compToElemDesc :: CTCompositor -> XSC ElemDesc
-compToElemDesc _ 
+groupToElemDesc :: Group -> XSC ElemDesc
+groupToElemDesc _
   = return $ mkErrorElemDesc "not implemented yet."
 
--- default values of minmaxOcc..
+allToElemDesc :: All -> XSC ElemDesc
+allToElemDesc _
+  = return $ mkErrorElemDesc "not implemented yet."
+
+choiceToElemDesc :: Choice -> XSC ElemDesc
+choiceToElemDesc _
+  = return $ mkErrorElemDesc "not implemented yet."
+
+sequenceToElemDesc :: Sequence -> XSC ElemDesc
+sequenceToElemDesc _
+  = return $ mkErrorElemDesc "not implemented yet."
+
+-- =========================================
+
+mkMinMaxRE :: MinMaxOcc -> String -> String -> XmlRegex -> XmlRegex
+mkMinMaxRe occ minDefault maxDefault re
+  = let min = case minOcc occ of
+                Nothing -> minDefault
+                Just i  -> i
+    let max = case maxOcc occ of
+                Nothing -> maxDefault
+                Just i  -> i
+    if max == "unbounded"
+      then mkRep (read min) re
+      else mkRng (read min) (read max) re
+
+compToElemDesc :: CTCompositor -> XSC ElemDesc
+compToElemDesc c
+  = do
+    (occ, ed) <- case c of
+                   CompGr (occ, gr) -> do
+                                       ed <- groupToElemDesc gr
+                                       return (occ, ed)
+                   CompAl (occ, al) -> do
+                                       ed <- allToElemDesc al
+                                       return (occ, ed)
+                   CompCh (occ, ch) -> do
+                                       ed <- choiceToElemDesc ch
+                                       return (occ, ed)
+                   CompSq (occ, sq) -> do
+                                       ed <- sequenceToElemDesc sq
+                                       return (occ, ed)
+    return mkElemDesc (attrMap ed) (mkMinMaxRE occ "1" "1" (contentModel ed)) (subElemDesc ed) (sttf ed)
 
 ctModelToElemDesc :: CTModel -> XSC ElemDesc
 ctModelToElemDesc (comp, attrs)
@@ -1030,7 +1072,7 @@ ctToElemDesc ct
                                              Just ct' -> do
                                                          base <- ctToElemDesc ct'
                                                          ed <- ctModelToElemDesc m
-                                                         -- TODO: validate extension rules
+                                                         -- TODO: validate extension merge rules
                                                          return $ mkElemDesc (union (attrMap ed) (attrMap base))
                                                                              (mkAlt (contentModel ed) (contentModel base))
                                                                              (union (subElemDesc ed) (subElemDesc base))
@@ -1041,14 +1083,12 @@ ctToElemDesc ct
                                              Just ct' -> do
                                                          base <- ctToElemDesc ct'
                                                          ed <- ctModelToElemDesc m
-                                                         -- TODO: validate restriction rules
+                                                         -- TODO: validate restriction merge rules
                                                          return $ mkElemDesc (attrMap ed)
                                                                              (contentModel ed)
                                                                              (subElemDesc ed)
                                                                              (checkBothSTTF (sttf base) (sttf ed))
       NewCT m       -> ctModelToElemDesc m
-
--- =========================================
 
 createElemDesc :: Element -> XSC ElemDesc
 createElemDesc (ElRef n)
