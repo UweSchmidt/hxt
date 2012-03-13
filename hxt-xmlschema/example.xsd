@@ -81,7 +81,7 @@
   <xs:complexType name="title1">
     <xs:simpleContent>
       <xs:extension base="xs:string">
-        <xs:attribute ref="lang"/>
+        <xs:attribute name="font" type="xs:string" use="required"/>
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
@@ -156,7 +156,7 @@
 
   <!-- element definition (with type reference) -->
 
-  <xs:element name="title" type="xs:string"/>
+  <xs:element name="title" type="title1"/>
 
   <!-- element definition (with anonymous type declarations) -->
 

@@ -767,52 +767,59 @@ type STTF = String -> SVal Bool
 
 knownW3CTypes :: Map String STTF
 knownW3CTypes = fromList
-  [ ("xs:string",             \ _ -> return True)
-  , ("xs:normalizedString",   \ _ -> return True)
-  , ("xs:token",              \ _ -> return True)
-  , ("xs:language",           \ _ -> return True)
-  , ("xs:NMTOKEN",            \ _ -> return True)
-  , ("xs:NMTOKENS",           \ _ -> return True)
-  , ("xs:Name",               \ _ -> return True)
-  , ("xs:NCName",             \ _ -> return True)
-  , ("xs:ID",                 \ _ -> return True)
-  , ("xs:IDREF",              \ _ -> return True)
-  , ("xs:IDREFS",             \ _ -> return True)
-  , ("xs:ENTITY",             \ _ -> return True)
-  , ("xs:ENTITIES",           \ _ -> return True)
-  , ("xs:anyURI",             \ _ -> return True)
-  , ("xs:QName",              \ _ -> return True)
-  , ("xs:NOTATION",           \ _ -> return True)
-  , ("xs:hexBinary",          \ _ -> return True)
-  , ("xs:base64Binary",       \ _ -> return True)
-  , ("xs:decimal",            \ _ -> return True)
-  , ("xs:integer",            \ _ -> return True)
-  , ("xs:nonPositiveInteger", \ _ -> return True)
-  , ("xs:negativeInteger",    \ _ -> return True)
-  , ("xs:nonNegativeInteger", \ _ -> return True)
-  , ("xs:positiveInteger",    \ _ -> return True)
-  , ("xs:long",               \ _ -> return True)
-  , ("xs:int",                \ _ -> return True)
-  , ("xs:short",              \ _ -> return True)
-  , ("xs:byte",               \ _ -> return True)
-  , ("xs:unsignedLong",       \ _ -> return True)
-  , ("xs:unsignedInt",        \ _ -> return True)
-  , ("xs:unsignedShort",      \ _ -> return True)
-  , ("xs:unsignedByte",       \ _ -> return True)
+  [ ("xs:string",             mkPassThroughSTTF)
+  , ("xs:normalizedString",   mkPassThroughSTTF)
+  , ("xs:token",              mkPassThroughSTTF)
+  , ("xs:language",           mkPassThroughSTTF)
+  , ("xs:NMTOKEN",            mkPassThroughSTTF)
+  , ("xs:NMTOKENS",           mkPassThroughSTTF)
+  , ("xs:Name",               mkPassThroughSTTF)
+  , ("xs:NCName",             mkPassThroughSTTF)
+  , ("xs:ID",                 mkPassThroughSTTF)
+  , ("xs:IDREF",              mkPassThroughSTTF)
+  , ("xs:IDREFS",             mkPassThroughSTTF)
+  , ("xs:ENTITY",             mkPassThroughSTTF)
+  , ("xs:ENTITIES",           mkPassThroughSTTF)
+  , ("xs:anyURI",             mkPassThroughSTTF)
+  , ("xs:QName",              mkPassThroughSTTF)
+  , ("xs:NOTATION",           mkPassThroughSTTF)
+  , ("xs:hexBinary",          mkPassThroughSTTF)
+  , ("xs:base64Binary",       mkPassThroughSTTF)
+  , ("xs:decimal",            mkPassThroughSTTF)
+  , ("xs:integer",            mkPassThroughSTTF)
+  , ("xs:nonPositiveInteger", mkPassThroughSTTF)
+  , ("xs:negativeInteger",    mkPassThroughSTTF)
+  , ("xs:nonNegativeInteger", mkPassThroughSTTF)
+  , ("xs:positiveInteger",    mkPassThroughSTTF)
+  , ("xs:long",               mkPassThroughSTTF)
+  , ("xs:int",                mkPassThroughSTTF)
+  , ("xs:short",              mkPassThroughSTTF)
+  , ("xs:byte",               mkPassThroughSTTF)
+  , ("xs:unsignedLong",       mkPassThroughSTTF)
+  , ("xs:unsignedInt",        mkPassThroughSTTF)
+  , ("xs:unsignedShort",      mkPassThroughSTTF)
+  , ("xs:unsignedByte",       mkPassThroughSTTF)
   -- TODO: not implemented yet in DataTypeLibW3C
-  , ("xs:boolean",            \ _ -> return True)
-  , ("xs:float",              \ _ -> return True)
-  , ("xs:double",             \ _ -> return True)
-  , ("xs:time",               \ _ -> return True)
-  , ("xs:duration",           \ _ -> return True)
-  , ("xs:date",               \ _ -> return True)
-  , ("xs:dateTime",           \ _ -> return True)
-  , ("xs:gDay",               \ _ -> return True)
-  , ("xs:gMonth",             \ _ -> return True)
-  , ("xs:gMonthDay",          \ _ -> return True)
-  , ("xs:gYear",              \ _ -> return True)
-  , ("xs:gYearMonth",         \ _ -> return True)
+  , ("xs:boolean",            mkPassThroughSTTF)
+  , ("xs:float",              mkPassThroughSTTF)
+  , ("xs:double",             mkPassThroughSTTF)
+  , ("xs:time",               mkPassThroughSTTF)
+  , ("xs:duration",           mkPassThroughSTTF)
+  , ("xs:date",               mkPassThroughSTTF)
+  , ("xs:dateTime",           mkPassThroughSTTF)
+  , ("xs:gDay",               mkPassThroughSTTF)
+  , ("xs:gMonth",             mkPassThroughSTTF)
+  , ("xs:gMonthDay",          mkPassThroughSTTF)
+  , ("xs:gYear",              mkPassThroughSTTF)
+  , ("xs:gYearMonth",         mkPassThroughSTTF)
   ]
+
+checkBothSTTF :: STTF -> STTF -> STTF
+checkBothSTTF tf1 tf2
+  = \ x -> do
+           tf1res <- tf1 x
+           tf2res <- tf2 x
+           return (tf1res && tf2res)
 
 mkNoTextSTTF :: XSC STTF
 mkNoTextSTTF
@@ -823,6 +830,10 @@ mkNoTextSTTF
                            tell [(xpath env, "no text allowed here.")]
                            return False
                       else return True
+
+mkPassThroughSTTF :: STTF
+mkPassThroughSTTF
+  = \ _ -> return True
 
 mkErrorSTTF :: String -> XSC STTF
 mkErrorSTTF s
@@ -842,7 +853,7 @@ lookupSTTF n
                    Just t  -> stToSTTF t -- TODO: cache sttf? prevent infinite recursion?
 
 rlistToSTTF :: RestrAttrs -> XSC STTF
-rlistToSTTF _ = return $ \ _ -> return True -- TODO: implement restriction checks
+rlistToSTTF _ = return $ mkPassThroughSTTF -- TODO: implement restriction checks
 -- MinIncl
 -- MaxIncl
 -- MinExcl
@@ -856,16 +867,17 @@ rlistToSTTF _ = return $ \ _ -> return True -- TODO: implement restriction check
 -- Pattern
 -- WhiteSpace
 
+rstrToSTTF :: STRestriction -> XSC STTF
+rstrToSTTF (tref, rlist)
+  = do
+    baseTF  <- case tref of
+                 BaseAttr n        -> lookupSTTF n
+                 STRAnonymStDecl t -> stToSTTF t
+    restrTF <- rlistToSTTF rlist
+    return $ checkBothSTTF baseTF restrTF
+
 stToSTTF :: SimpleType -> XSC STTF
-stToSTTF (Restr (tref, rlist)) = do
-                                 baseTF  <- case tref of
-                                              BaseAttr n        -> lookupSTTF n
-                                              STRAnonymStDecl t -> stToSTTF t
-                                 restrTF <- rlistToSTTF rlist
-                                 return $ \ x -> do
-                                                 baseCheck <- baseTF x
-                                                 restrCheck <- restrTF x
-                                                 return (baseCheck && restrCheck)
+stToSTTF (Restr rstr)          = rstrToSTTF rstr
 stToSTTF (Lst tref)            = do
                                  baseTF  <- case tref of
                                               ItemTypeAttr n    -> lookupSTTF n
@@ -917,17 +929,86 @@ createAttrMapEntry (AttrDef (AttributeDef n tdef _ use)) -- TODO: sense of (attr
 
 -- =========================================
 
-
-
 -- Create Element Description for Validation
+
+attrGrpToAttrList :: AttributeGroup -> XSC AttrList
+attrGrpToAttrList g
+  = do
+    s <- ask
+    case g of
+      AttrGrpRef n -> case lookup n $ sAttributeGroups s of
+                        Nothing -> return [] -- TODO: improve error handling?
+                        Just g' -> attrGrpToAttrList g'
+      AttrGrpDef l -> return l
+
+attrListToAttrMap :: AttrList -> XSC AttrMap
+attrListToAttrMap l
+  = do
+    attrMap' <- attrListToAttrMap' l
+    return $ fromList attrMap' -- TODO: improve error handling (same attr names)?
+
+attrListToAttrMap' :: AttrList -> XSC [(Name, AttrMapVal)]
+attrListToAttrMap' l
+  = do
+    entries <- mapM (\ x -> case x of
+                              Attr    a -> do
+                                           entry <- createAttrMapEntry a
+                                           return [entry]
+                              AttrGrp g -> do
+                                           l' <- attrGrpToAttrList g
+                                           attrListToAttrMap' l'
+                              AnyAttr _ -> return [] -- TODO: AnyAttribute :: Any
+                    ) l
+    return $ concat entries
+
+mkErrorElemDesc :: String -> ElemDesc
+mkErrorElemDesc s
+  = ElemDesc (Just s) empty mkUnit empty mkPassThroughSTTF
+
+mkSimpleElemDesc :: AttrMap -> STTF -> ElemDesc
+mkSimpleElemDesc am tf
+  = ElemDesc Nothing am mkTextRE empty tf
+
+mkElemDesc :: AttrMap -> XmlRegex -> SubElemDesc -> STTF -> ElemDesc
+mkElemDesc am cm se tf
+  = ElemDesc Nothing am cm se tf
 
 ctToElemDesc :: ComplexType -> XSC ElemDesc
 ctToElemDesc ct
-  = return $ ElemDesc Nothing empty mkTextRE empty (\ _ -> return True)
+  = case ctDef ct of
+      SCont (SCExt   (n,             attrs)) ->
+        do
+        s <- ask
+        am <- attrListToAttrMap attrs
+        case lookup n $ sComplexTypes s of
+          Nothing  -> do
+                      tf <- lookupSTTF n
+                      return $ mkSimpleElemDesc am tf
+          Just ct' -> do
+                      ed <- ctToElemDesc ct'
+                      return $ mkSimpleElemDesc (union am $ attrMap ed) (sttf ed)
+      SCont (SCRestr (rstr@(tref, rlist), attrs)) ->
+        do
+        s <- ask
+        am <- attrListToAttrMap attrs
+        case tref of
+          BaseAttr n        -> case lookup n $ sComplexTypes s of
+                                 Nothing  -> do
+                                             tf <- rstrToSTTF rstr
+                                             return $ mkSimpleElemDesc am tf
+                                 Just ct' -> do
+                                             ed <- ctToElemDesc ct'
+                                             restrTF <- rlistToSTTF rlist
+                                             let tf = checkBothSTTF (sttf ed) restrTF
+                                             return $ mkSimpleElemDesc (union am $ attrMap ed) tf
+          STRAnonymStDecl _ -> do
+                               tf <- rstrToSTTF rstr
+                               return $ mkSimpleElemDesc am tf
 
+      CCont cc      -> return $ mkErrorElemDesc "not implemented yet." -- TODO: ctMixed ct (Maybe String)
+      NewCT ctmodel -> return $ mkErrorElemDesc "not implemented yet." -- TODO: ctMixed ct (Maybe String)
 
-
-
+-- let msg = Just "element validation error: illegal type reference in schema file"
 
 -- TODO: RE for empty ComplexType ?
 -- default values of minmaxOcc..
@@ -940,9 +1021,7 @@ createElemDesc (ElRef n)
     s <- ask
     case lookup n (sElements s) of
            Just e  -> createElemDesc e
-           Nothing -> do
-                      let msg = Just "element validation error: illegal element reference in schema file"
-                      return $ ElemDesc msg empty mkUnit empty (\ _ -> return True)
+           Nothing -> return $ mkErrorElemDesc "element validation error: illegal element reference in schema file"
 createElemDesc (ElDef (ElementDef _ tdef _)) -- TODO: sense of (elemDefaultVal  :: Maybe String) ?
   = do
     s <- ask
@@ -951,13 +1030,13 @@ createElemDesc (ElDef (ElementDef _ tdef _)) -- TODO: sense of (elemDefaultVal  
                                    Nothing  -> do
                                                tf <- lookupSTTF r
                                                return $ Left tf
-                                   Just ctr -> return $ Right $ ctr
+                                   Just ctr -> return $ Right ctr
            ETDAnonymStDecl st -> do
                                  tf <- stToSTTF st
                                  return $ Left tf
            ETDAnonymCtDecl ct -> return $ Right ct
     case t of
-      Left tf -> return $ ElemDesc Nothing empty mkTextRE empty tf 
+      Left tf -> return $ mkSimpleElemDesc empty tf 
       Right ct -> ctToElemDesc ct
 
 createRootDesc :: XSC ElemDesc -- TODO: Verify root element interpretation
@@ -970,7 +1049,7 @@ createRootDesc
     se' <- mapM createElemDesc $ elems $ sElements s
     let se = fromList $ zip (keys $ sElements s) se'
     tf <- mkNoTextSTTF 
-    return $ ElemDesc Nothing am cm se tf
+    return $ mkElemDesc am cm se tf
 
 --------------------------------------------------------------------------------------
 

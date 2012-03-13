@@ -22,6 +22,8 @@ Name / String
 uppercase / lowercase for attr names elem names ...
 apply namespaces (full qualified names) ?
 
+attrUse for AttrRef allowed?
+
 ------------------------------------------------------------------------
 
 It is no error, if the referenced schema cannot be loaded
