@@ -971,37 +971,108 @@ mkElemDesc :: AttrMap -> XmlRegex -> SubElemDesc -> STTF -> ElemDesc
 mkElemDesc am cm se tf
   = ElemDesc Nothing am cm se tf
 
--- =========================================
-
 groupToElemDesc :: Group -> XSC ElemDesc
-groupToElemDesc _
-  = return $ mkErrorElemDesc "not implemented yet."
+groupToElemDesc (GrpRef r)
+  = do
+    s <- ask
+    case lookup r $ sGroups s of
+      Nothing -> return $ mkErrorElemDesc "element validation error: illegal group reference in schema file"
+      Just g  -> groupToElemDesc g
+groupToElemDesc (GrpDef d)
+  = case d of
+      Nothing      -> do
+                      tf <- mkNoTextSTTF
+                      return $ mkElemDesc empty mkUnit empty tf -- TODO: RE for empty elem
+      Just (Al al) -> allToElemDesc al
+      Just (Ch ch) -> choiceToElemDesc ch
+      Just (Sq sq) -> sequenceToElemDesc sq
+
+elementToName :: Element -> String
+elementToName e
+  = case e of
+      ElRef r -> r
+      ElDef d -> elemName d
 
 allToElemDesc :: All -> XSC ElemDesc
-allToElemDesc _
-  = return $ mkErrorElemDesc "not implemented yet."
+allToElemDesc l
+  = do
+    eds <- mapM (\ (occ, el) -> do
+                                ed <- createElemDesc el
+                                return $ ( elementToName el
+                                         , mkElemDesc (attrMap ed)
+                                                      (mkMinMaxRE occ (contentModel ed))
+                                                      (subElemDesc ed)
+                                                      (sttf ed)
+                                         )
+                ) l
+    tf <- mkNoTextSTTF
+    let re = mkUnit -- TODO: RE: unordered group of elements whose number of occurences may be zero or one 
+    return $ mkElemDesc empty re (fromList eds) tf
 
-choiceToElemDesc :: Choice -> XSC ElemDesc
-choiceToElemDesc _
-  = return $ mkErrorElemDesc "not implemented yet."
-
-sequenceToElemDesc :: Sequence -> XSC ElemDesc
-sequenceToElemDesc _
-  = return $ mkErrorElemDesc "not implemented yet."
+chSeqContToElemDesc :: ChSeqContent -> XSC ElemDesc
+chSeqContToElemDesc c
+  = do
+    (occ, ed) <- case c of
+                   ChSeqEl (occ, el) -> do
+                                        ed <- createElemDesc el
+                                        return (occ, ed)
+                   ChSeqGr (occ, gr) -> do
+                                        ed <- groupToElemDesc gr
+                                        return (occ, ed)
+                   ChSeqCh (occ, ch) -> do
+                                        ed <- choiceToElemDesc ch
+                                        return (occ, ed)
+                   ChSeqSq (occ, sq) -> do
+                                        ed <- sequenceToElemDesc sq
+                                        return (occ, ed)
+                   ChSeqAn (occ, _)  -> do
+                                        ed <- return $ mkErrorElemDesc "not implemented yet." -- TODO: impl any :: Any
+                                        return (occ, ed)
+    return $ mkElemDesc (attrMap ed) (mkMinMaxRE occ (contentModel ed)) (subElemDesc ed) (sttf ed)
 
 -- =========================================
 
-mkMinMaxRE :: MinMaxOcc -> String -> String -> XmlRegex -> XmlRegex
-mkMinMaxRE occ minDefault maxDefault re
+-- TODO: refactor subElem detection
+
+choiceToElemDesc :: Choice -> XSC ElemDesc
+choiceToElemDesc l
+  = do
+    let names = map ( \ x -> case x of
+                               ChSeqEl (_, el) -> elementToName el
+                               _               -> ""
+                    ) l
+    eds <- mapM chSeqContToElemDesc l -- TODO: combine attrMaps etc.
+    let se = fromList $ filter (\ (s, _) -> not $ null s) $ zip names eds
+    tf <- mkNoTextSTTF
+    let re = mkUnit -- TODO: RE: choice of elems
+    return $ mkElemDesc empty re se tf
+
+sequenceToElemDesc :: Sequence -> XSC ElemDesc
+sequenceToElemDesc l
+  = do
+    let names = map ( \ x -> case x of
+                               ChSeqEl (_, el) -> elementToName el
+                               _               -> ""
+                    ) l
+    eds <- mapM chSeqContToElemDesc l -- TODO: combine attrMaps etc.
+    let se = fromList $ filter (\ (s, _) -> not $ null s) $ zip names eds
+    tf <- mkNoTextSTTF
+    let re = mkUnit -- TODO: RE: sequence of elems
+    return $ mkElemDesc empty re se tf
+
+-- =========================================
+
+mkMinMaxRE :: MinMaxOcc -> XmlRegex -> XmlRegex
+mkMinMaxRE occ re
   = if maxOcc' == "unbounded"
       then mkRep (read minOcc') re -- TODO: read with non-integer value?
       else mkRng (read minOcc') (read maxOcc') re -- TODO: read with non-integer value?
     where
     minOcc' = case minOcc occ of
-                Nothing -> minDefault
+                Nothing -> "1"
                 Just i  -> i
     maxOcc' = case maxOcc occ of
-                Nothing -> maxDefault
+                Nothing -> "1"
                 Just i  -> i
 
 compToElemDesc :: CTCompositor -> XSC ElemDesc
@@ -1020,7 +1091,7 @@ compToElemDesc c
                    CompSq (occ, sq) -> do
                                        ed <- sequenceToElemDesc sq
                                        return (occ, ed)
-    return $ mkElemDesc (attrMap ed) (mkMinMaxRE occ "1" "1" (contentModel ed)) (subElemDesc ed) (sttf ed)
+    return $ mkElemDesc (attrMap ed) (mkMinMaxRE occ (contentModel ed)) (subElemDesc ed) (sttf ed)
 
 ctModelToElemDesc :: CTModel -> XSC ElemDesc
 ctModelToElemDesc (comp, attrs)
@@ -1034,7 +1105,7 @@ ctModelToElemDesc (comp, attrs)
                  ed <- compToElemDesc c
                  return $ mkElemDesc (union am (attrMap ed)) (contentModel ed) (subElemDesc ed) (sttf ed)
 
-ctToElemDesc :: ComplexType -> XSC ElemDesc
+ctToElemDesc :: ComplexType -> XSC ElemDesc -- TODO: refactor to 3 functions
 ctToElemDesc ct
   = do
     s <- ask
