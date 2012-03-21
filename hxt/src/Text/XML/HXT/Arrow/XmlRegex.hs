@@ -11,7 +11,7 @@
 
    Regular Expression Matcher working on lists of XmlTrees
 
-   It's intendet to import this module with an explicit
+   It's intended to import this module with an explicit
    import declaration for not spoiling the namespace
    with these somewhat special arrows
 
@@ -34,6 +34,8 @@ module Text.XML.HXT.Arrow.XmlRegex
     , mkRep
     , mkRng
     , mkOpt
+    , mkPerm
+    , mkPerms
     , nullable
     , delta
     , matchXmlRegex
@@ -94,7 +96,8 @@ data XmlRegex   = Zero String
                 | Alt XmlRegex XmlRegex
                 | Seq XmlRegex XmlRegex
                 | Rep Int XmlRegex              -- 1 or more repetitions
-                | Rng Int Int XmlRegex  -- n..m repetitions
+                | Rng Int Int XmlRegex          -- n..m repetitions
+                | Perm XmlRegex XmlRegex
 
 -- ------------------------------------------------------------
 
@@ -116,6 +119,8 @@ instance Inv XmlRegex where
     inv (Rep i e)       = i > 0 && inv e
     inv (Rng i j e)     = (i < j || (i == j && i > 1)) &&
                           inv e
+    inv (Perm e1 e2)    = inv e1 &&
+                          inv e2
 -}
 -- ------------------------------------------------------------
 --
@@ -195,6 +200,16 @@ mkRng lb ub e                   = Rng lb ub e
 mkOpt   :: XmlRegex -> XmlRegex
 mkOpt   = mkRng 0 1
 
+mkPerm                           :: XmlRegex -> XmlRegex -> XmlRegex
+mkPerm e1@(Zero _) _             = e1
+mkPerm _           e2@(Zero _)   = e2
+mkPerm Unit        e2            = e2
+mkPerm e1          Unit          = e1
+mkPerm e1          e2            = Perm e1 e2
+
+mkPerms                          :: [XmlRegex] -> XmlRegex
+mkPerms                          = foldr mkPerm mkUnit
+
 -- ------------------------------------------------------------
 
 instance Show XmlRegex where
@@ -209,6 +224,7 @@ instance Show XmlRegex where
     show (Rep i e)      = "(" ++ show e ++ "){" ++ show i ++ ",}"
     show (Rng 0 1 e)    = "(" ++ show e ++ ")?"
     show (Rng i j e)    = "(" ++ show e ++ "){" ++ show i ++ "," ++ show j ++ "}"
+    show (Perm e1 e2)   = "(" ++ show e1 ++ show e2 ++ "|" ++ show e2 ++ show e1 ++ ")"
 
 -- ------------------------------------------------------------
 
@@ -225,25 +241,32 @@ nullable (Seq e1 e2)    = nullable e1 &&
 nullable (Rep _i e)     = nullable e
 nullable (Rng i _ e)    = i == 0 ||
                           nullable e
+nullable (Perm e1 e2)   = nullable e1 &&
+                          nullable e2
 
 -- ------------------------------------------------------------
 
 delta   :: XmlRegex -> XmlTree -> XmlRegex
-delta e@(Zero _)  _     = e
-delta Unit        c     = mkZero $
+delta e@(Zero _)   _    = e
+delta Unit         c    = mkZero $
                           "unexpected char " ++ show c
-delta (Sym p)     c
+delta (Sym p)      c
     | p c               = mkUnit
     | otherwise         = mkZero $
                           "unexpected tree " ++ show c
-delta Dot         _     = mkUnit
-delta e@(Star e1) c     = mkSeq (delta e1 c) e
-delta (Alt e1 e2) c     = mkAlt (delta e1 c) (delta e2 c)
-delta (Seq e1 e2) c
+delta Dot          _    = mkUnit
+delta e@(Star e1)  c    = mkSeq (delta e1 c) e
+delta (Alt e1 e2)  c    = mkAlt (delta e1 c) (delta e2 c)
+delta (Seq e1 e2)  c
     | nullable e1       = mkAlt (mkSeq (delta e1 c) e2) (delta e2 c)
     | otherwise         = mkSeq (delta e1 c) e2
-delta (Rep i e)   c     = mkSeq (delta e c) (mkRep (i-1) e)
-delta (Rng i j e) c     = mkSeq (delta e c) (mkRng ((i-1) `max` 0) (j-1) e)
+delta (Rep i e)    c    = mkSeq (delta e c) (mkRep (i-1) e)
+delta (Rng i j e)  c    = mkSeq (delta e c) (mkRng ((i-1) `max` 0) (j-1) e)
+delta (Perm e1 e2) c    = case e1' of
+                            (Zero _) -> mkPerm e1 (delta e2 c)
+                            _        -> mkPerm e1' e2
+                          where
+                          e1' = delta e1 c
 
 -- ------------------------------------------------------------
 

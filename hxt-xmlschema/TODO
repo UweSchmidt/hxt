@@ -1,26 +1,15 @@
 
-type XmlTree = NTree XNode XmlTrees
-
-data XNode:
-XText String			ordinary text (leaf)
-XBlob Blob			text represented more space efficient as bytestring (leaf)
-XCharRef Int			character reference (leaf)
-XEntityRef String		entity reference (leaf)
-XCmt String			comment (leaf)
-XCdata String			CDATA section (leaf)
-XPi QName XmlTrees		Processing Instr with qualified name (leaf) with list of attributes.
-				If tag name is xml, attributs are "version", "encoding", "standalone",
-				else attribute list is empty, content is a text child node
-XTag QName XmlTrees		tag with qualified name and list of attributes (inner node or leaf)
-XDTD DTDElem Attributes		DTD element with assoc list for dtd element features
-XAttr QName			attribute with qualified name, the attribute value is stored in children
-XError Int String		error message with level and text 
-
-------------------------------------------------------------------------
-
 Name / String
 uppercase / lowercase for attr names elem names ...
 apply namespaces (full qualified names) ?
+
+datatypeEqual nsuri nsprefix typname cx2 zuPruefenderWert cx1
+datatypeAllows nsuri nsprefix params zuPruefenderWert cx
+
+datatypeEqualW3C
+datatypeAllowsW3C
+
+type ParamList = [(LocalName, String)]
 
 attrUse for AttrRef allowed?
 
@@ -43,4 +32,6 @@ HUnit + Testcases
 
 Haskell 2 LateX Converter: h2l, hs2l
 Andres Löh, Ralf Hinze
+
+Experience with standard documents, quality / precision, problems
 

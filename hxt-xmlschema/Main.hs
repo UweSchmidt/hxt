@@ -1,12 +1,18 @@
 import Text.XML.HXT.Core hiding (getElemName, isElem, isText, getAttrName, getAttrValue, getText)
+-- TODO: ...Core ()
 import Text.XML.HXT.Curl
 import Text.XML.HXT.Arrow.XmlRegex
 
 import Data.Tree.NTree.TypeDefs
 
+import qualified Text.XML.HXT.DOM.XmlNode as XN
+
 import Data.Map (Map, lookup, fromList, toList, keys, elems, empty, insert, union)
 -- import qualified Data.Map as M
 -- M.lookup
+
+import Data.Maybe (fromMaybe)
+
 import Prelude hiding (lookup)
 
 import Data.List (partition)
@@ -561,7 +567,7 @@ xpGroup
     where
     tag (GrpRef _) = 0
     tag (GrpDef _) = 1
-    ps = [ xpWrap (GrpRef, unGrpRef) $ xpAttr "ref" xpText
+    ps = [ xpWrap (GrpRef, unGrpRef) $ xpAttr "ref" xpText -- xpQName pickler? String -> QName
          , xpWrap (GrpDef, unGrpDef) $ xpOption $ xpGroupContDef
          ]
 
@@ -649,7 +655,7 @@ loadXmlSchema :: String -> IO XmlSchema
 loadXmlSchema uri
   = do
     s' <- runX ( 
-                xunpickleDocument xpXmlSchema'
+                xunpickleDocument xpXmlSchema' -- TODO: readDocument, an jeden Knoten Namensräume hängen, unpickle
                                   [ withValidate yes        -- validate source
                                   -- , withTrace 1             -- trace processing steps
                                   , withRemoveWS yes        -- remove redundant whitespace
@@ -678,51 +684,47 @@ loadXmlSchema uri
 
 -- XML Processing with HXT
 
-getElemName :: XmlTree -> String
-getElemName (NTree (XTag n _) _) = localPart n
-getElemName _                    = ""
+getElemName :: XmlTree -> Name -- TODO: QName
+getElemName t = localPart $ fromMaybe (mkName "") $ XN.getElemName t
 
 mkElemRE :: String -> XmlRegex
 mkElemRE s = mkPrim $ (== s) . getElemName
 
-getElemAttrs :: XmlTree -> [(String, String)]
-getElemAttrs (NTree (XTag _ attrs) _) = map (\ x -> (getAttrName x, getAttrValue x)) attrs
-getElemAttrs _                        = []
+getElemAttrs :: XmlTree -> [(Name, String)] -- TODO: QName
+getElemAttrs t = map (\ x -> (getAttrName x, getAttrValue x)) $ fromMaybe [] $ XN.getAttrl t
+
+getChildren' :: XmlTree -> XmlTrees
+getChildren' (NTree _ c) = c
 
 getElemChildren :: XmlTree -> XmlTrees
-getElemChildren (NTree (XTag _ _) c) = filter isRelevant c
-getElemChildren _                    = []
+getElemChildren t = filter isRelevant $ getChildren' t
 
 isElem :: XmlTree -> Bool
-isElem (NTree (XTag _ _) _) = True
-isElem _                    = False
+isElem = XN.isElem
 
 mkTextRE :: XmlRegex
 mkTextRE = mkPrim $ isText
 
-isText :: XmlTree -> Bool -- TODO: Handle character entity references
-isText (NTree (XText _) _) = True
-isText _                   = False
+isText :: XmlTree -> Bool
+isText = XN.isElem
 
-isRelevant :: XmlTree -> Bool -- TODO: Handle character entity references
-isRelevant (NTree (XTag _ _) _) = True
-isRelevant (NTree (XText _) _)  = True
-isRelevant _                    = False
+isRelevant :: XmlTree -> Bool
+isRelevant t = (isElem t) || (isText t)
 
-getAttrName :: XmlTree -> String
-getAttrName (NTree (XAttr n) _) = localPart n
-getAttrName _                   = ""
+getAttrName :: XmlTree -> Name -- TODO: QName
+getAttrName t = localPart $ fromMaybe (mkName "") $  XN.getAttrName t
 
-getAttrValue :: XmlTree -> String
-getAttrValue (NTree (XAttr _) c) = getCombinedText c
-getAttrValue _                   = ""
+getAttrValue :: XmlTree -> String -- TODO: List of strings instead to validate each one?
+getAttrValue t = getCombinedText $ getChildren' t
 
 getCombinedText :: XmlTrees -> String
-getCombinedText t = concat $ map getText t
+getCombinedText t = concat $ getTexts t
 
-getText :: XmlTree -> String -- TODO: Handle character entity references
-getText (NTree (XText t) _) = t
-getText _                   = ""
+getTexts :: XmlTrees -> [String]
+getTexts = map getText
+
+getText :: XmlTree -> String
+getText t = fromMaybe "" $ XN.getText t
 
 -- Read xml document
 
@@ -799,7 +801,7 @@ knownW3CTypes = fromList
   , ("xs:unsignedInt",        mkPassThroughSTTF)
   , ("xs:unsignedShort",      mkPassThroughSTTF)
   , ("xs:unsignedByte",       mkPassThroughSTTF)
-  -- TODO: not implemented yet in DataTypeLibW3C
+  -- TODO: not implemented yet in DataTypeLibW3C (true, aber Warning)
   , ("xs:boolean",            mkPassThroughSTTF)
   , ("xs:float",              mkPassThroughSTTF)
   , ("xs:double",             mkPassThroughSTTF)
@@ -860,12 +862,12 @@ rlistToSTTF _ = return $ mkPassThroughSTTF -- TODO: implement restriction checks
 -- MaxExcl
 -- TotalDigits
 -- FractionDigits
--- Length
--- MinLength
--- MaxLength
--- Enumeration
+-- Length (siehe LibUtils)
+-- MinLength (siehe LibUtils)
+-- MaxLength (siehe LibUtils)
+-- Enumeration -- not implemented yet
 -- Pattern
--- WhiteSpace
+-- WhiteSpace -- values anpassen auf whitespace-festlegung (vor / nach pattern?)
 
 rstrToSTTF :: STRestriction -> XSC STTF
 rstrToSTTF (tref, rlist)
@@ -955,7 +957,7 @@ attrListToAttrMap' l
                               AttrGrp g -> do
                                            l' <- attrGrpToAttrList g
                                            attrListToAttrMap' l'
-                              AnyAttr _ -> return [] -- TODO: AnyAttribute :: Any
+                              AnyAttr _ -> return [] -- TODO: AnyAttribute :: Any -- Datenstruktur erweitern AttrMap, NamespaceMap
                     ) l
     return $ concat entries
 
@@ -982,12 +984,12 @@ groupToElemDesc (GrpDef d)
   = case d of
       Nothing      -> do
                       tf <- mkNoTextSTTF
-                      return $ mkElemDesc empty mkUnit empty tf -- TODO: RE for empty elem
+                      return $ mkElemDesc empty mkUnit empty tf -- TODO: RE for empty elem (mkUnit)
       Just (Al al) -> allToElemDesc al
       Just (Ch ch) -> choiceToElemDesc ch
       Just (Sq sq) -> sequenceToElemDesc sq
 
-elementToName :: Element -> String
+elementToName :: Element -> Name -- TODO: QName
 elementToName e
   = case e of
       ElRef r -> r
@@ -1006,8 +1008,8 @@ allToElemDesc l
                                          )
                 ) l
     tf <- mkNoTextSTTF
-    let re = mkUnit -- TODO: RE: unordered group of elements whose number of occurences may be zero or one 
-    return $ mkElemDesc empty re (fromList eds) tf
+    let re = mkPerms $ map (\ (_, ed) -> contentModel ed) eds
+    return $ mkElemDesc empty re (fromList eds) tf -- TODO: AttrMap etc.?
 
 chSeqContToElemDesc :: ChSeqContent -> XSC ElemDesc
 chSeqContToElemDesc c
@@ -1040,11 +1042,12 @@ choiceToElemDesc l
     let names = map ( \ x -> case x of
                                ChSeqEl (_, el) -> elementToName el
                                _               -> ""
-                    ) l
-    eds <- mapM chSeqContToElemDesc l -- TODO: combine attrMaps etc.
-    let se = fromList $ filter (\ (s, _) -> not $ null s) $ zip names eds
+                    ) l -- TODO: sense?
+    eds' <- mapM chSeqContToElemDesc l -- TODO: combine attrMaps etc.
+    let eds = zip names eds'
+    let se = fromList $ filter (\ (s, _) -> not $ null s) $ eds
     tf <- mkNoTextSTTF
-    let re = mkUnit -- TODO: RE: choice of elems
+    let re = mkAlts $ map (\ (_, ed) -> contentModel ed) eds
     return $ mkElemDesc empty re se tf
 
 sequenceToElemDesc :: Sequence -> XSC ElemDesc
@@ -1053,20 +1056,32 @@ sequenceToElemDesc l
     let names = map ( \ x -> case x of
                                ChSeqEl (_, el) -> elementToName el
                                _               -> ""
-                    ) l
-    eds <- mapM chSeqContToElemDesc l -- TODO: combine attrMaps etc.
-    let se = fromList $ filter (\ (s, _) -> not $ null s) $ zip names eds
+                    ) l -- TODO: sense?
+    eds' <- mapM chSeqContToElemDesc l -- TODO: combine attrMaps etc.
+    let eds = zip names eds'
+    let se = fromList $ filter (\ (s, _) -> not $ null s) $ eds
     tf <- mkNoTextSTTF
-    let re = mkUnit -- TODO: RE: sequence of elems
+    let re = mkSeqs $ map (\ (_, ed) -> contentModel ed) eds
     return $ mkElemDesc empty re se tf
 
 -- =========================================
 
+readMaybeInt :: String -> Maybe Int
+readMaybeInt str
+  = val $ reads str
+  where
+  val [(x, "")] = Just x
+  val _         = Nothing
+
 mkMinMaxRE :: MinMaxOcc -> XmlRegex -> XmlRegex
 mkMinMaxRE occ re
-  = if maxOcc' == "unbounded"
-      then mkRep (read minOcc') re -- TODO: read with non-integer value?
-      else mkRng (read minOcc') (read maxOcc') re -- TODO: read with non-integer value?
+  = case readMaybeInt minOcc' of
+      Nothing       -> mkZero $ "element validation error: illegal minOccurs in schema file"
+      Just minOcc'' -> if maxOcc' == "unbounded"
+                         then mkRep minOcc'' re
+                         else case readMaybeInt maxOcc' of
+                                Nothing       -> mkZero $ "element validation error: illegal maxOccurs in schema file"
+                                Just maxOcc'' -> mkRng minOcc'' maxOcc'' re
     where
     minOcc' = case minOcc occ of
                 Nothing -> "1"
@@ -1100,7 +1115,7 @@ ctModelToElemDesc (comp, attrs)
     case comp of
       Nothing -> do
                  tf <- mkNoTextSTTF
-                 return $ mkElemDesc am mkUnit empty tf -- TODO: RE for empty elem
+                 return $ mkElemDesc am mkUnit empty tf -- TODO: RE for empty elem mkUnit (epsilon)
       Just c  -> do
                  ed <- compToElemDesc c
                  return $ mkElemDesc (union am (attrMap ed)) (contentModel ed) (subElemDesc ed) (sttf ed)
@@ -1187,7 +1202,7 @@ createElemDesc (ElDef (ElementDef _ tdef _)) -- TODO: sense of (elemDefaultVal  
       Right ct -> ctToElemDesc ct
 
 createRootDesc :: XSC ElemDesc -- TODO: Verify root element interpretation
-createRootDesc
+createRootDesc                 -- jedes Element kann root sein, globale attribute nur für referenzen
   = do
     s <- ask
     am' <- mapM createAttrMapEntry $ elems $ sAttributes s
@@ -1203,11 +1218,11 @@ createRootDesc
 -- Types for validation
 
 data SValEnv = SValEnv
-             { xpath :: String
+             { xpath :: XPath
              , elemDesc :: ElemDesc
              }
-
-type SValLog = [(String, String)]
+type XPath = String
+type SValLog = [(XPath, String)]
 
 type SVal a = ReaderT SValEnv (WriterT SValLog Identity) a
 
@@ -1270,8 +1285,9 @@ testContentModel t
     env <- ask
     case matchXmlRegex (contentModel $ elemDesc env) t of
       Nothing -> return True
-      Just _  -> do
-                 tell [(xpath env ++ "/*", "elements do not match content model.")] -- TODO: regex message
+      Just msg-> do
+                 tell [(xpath env ++ "/*", "elements do not match content model.\n" ++ msg)] -- TODO: show funktion für regex
+                              -- Sym (XmlTree -> Maybe String), elemName expected ...
                  return False
 
 appendXPath :: String -> SValEnv -> SValEnv
@@ -1306,7 +1322,7 @@ testElemText :: XmlTrees -> SVal Bool
 testElemText t
   = do
     env <- ask
-    local (const (appendXPath "/child::text()" env)) $ (sttf $ elemDesc env) $ getCombinedText t
+    local (const (appendXPath "/child::text()" env)) $ (sttf $ elemDesc env) $ getCombinedText t -- getTexts instead?
 
 extractElems :: XmlTrees -> (XmlTrees, XmlTrees)
 extractElems = partition isElem
@@ -1346,9 +1362,12 @@ main
       else putStrLn $ "\nerrors were found:\n"
     mapM_ (\ (a, b) -> putStrLn $ a ++ "\n" ++ b ++ "\n") $ snd res
 
+    -- TODO: find node for XPath and print it
+
     -- Text.XML.HXT.XPath.XPathEval
     -- getXPath :: String -> XmlTree -> XmlTrees
-    -- Postprocess: take XPath and add error msg as comment in document
+    -- Postprocess: take XPath and add error msg as processing instr. in document
+    -- <?hxt-validate error="...." ?>
 
     return ()
 
