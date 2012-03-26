@@ -311,7 +311,6 @@ relevant elements:
     maxOccurs = ( xs:nonNegativeInteger | "unbounded" ) : "1"
     minOccurs = xs:nonNegativeInteger : "1"
 
-    default   = xs:string
     name      = xs:NCName -- only if no ref attribute
     ref       = xs:QName, -- only if no type attribute and no nested simpleType or complexType
     type      = xs:QName, -- only if no ref attribute and no nested simpleType or complexType
@@ -319,6 +318,7 @@ relevant elements:
   irrelevant attributes:
 
     block     = ( "#all" | list of ( "extension" | "restriction" | "substitution" ) )
+    default   = xs:string
     fixed     = xs:string
     form      = ( "qualified" | "unqualified" ),
     nillable  = xs:boolean : "false"
@@ -370,11 +370,11 @@ relevant elements:
     name    = xs:NCName -- only if no ref attribute
     ref     = xs:QName  -- only if no type attribute and no nested simpleType
     type    = xs:QName  -- only if no ref attribute and no nested simpleType
-    default = xs:string
     use     = ( "prohibited" | "optional" | "required" ) : "optional"
 
   irrelevant attributes:
 
+    default = xs:string
     fixed   = xs:string
     form    = ( "qualified" | "unqualified" )    
 
@@ -411,12 +411,12 @@ relevant elements:
 
     name              = xs:NCName
     type              = xs:QName -- only if no nested simpleType or complexType
-    default           = xs:string
 
   irrelevant attributes:
 
     abstract          = xs:boolean : "false"
     block             = ( "#all" | list of ( "extension" | "restriction" | "substitution" ) )
+    default           = xs:string
     final             = ( "#all" | list of ( "extension" | "restriction" ) )
     fixed             = xs:string
     nillable          = xs:boolean : "false"
@@ -494,12 +494,12 @@ relevant elements:
 
   relevant attributes:
 
-    default = xs:string
     name    = xs:NCName
     type    = xs:QName -- only if no nested simpleType
 
   irrelevant attributes:
 
+    default = xs:string
     fixed   = xs:string
 
   content model:

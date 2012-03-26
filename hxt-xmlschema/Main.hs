@@ -1,4 +1,6 @@
-import Text.XML.HXT.Core hiding (getElemName, isElem, isText, getAttrName, getAttrValue, getText)
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
+import Text.XML.HXT.Core hiding (getChildren, getElemName, isElem, isText, getAttrName, getAttrValue, getText)
 -- TODO: ...Core ()
 import Text.XML.HXT.Curl
 import Text.XML.HXT.Arrow.XmlRegex
@@ -21,6 +23,9 @@ import Control.Monad.Identity
 import Control.Monad.Reader
 import Control.Monad.Writer hiding (Any, All)
 
+instance Ord QName where -- TODO: orphan instance
+  compare x y = compare (qualifiedName x) (qualifiedName y)
+
 -- Type definitions
 
 data XmlSchema         = XmlSchema
@@ -37,25 +42,24 @@ data XmlSchema         = XmlSchema
 
 type Namespace         = String
 type Includes          = [Include]
-type SimpleTypeMap     = Map Name SimpleType
-type ComplexTypeMap    = Map Name ComplexType
-type ElementMap        = Map Name Element
-type GroupMap          = Map Name Group
-type AttributeMap      = Map Name Attribute
-type AttributeGroupMap = Map Name AttributeGroup
-type Name              = String
+type SimpleTypeMap     = Map QName SimpleType
+type ComplexTypeMap    = Map QName ComplexType
+type ElementMap        = Map QName Element
+type GroupMap          = Map QName Group
+type AttributeMap      = Map QName Attribute
+type AttributeGroupMap = Map QName AttributeGroup
 
 data XmlSchema'        = XmlSchema'
                        { targetNS :: Maybe Namespace
                        , parts    :: [XmlSchemaPart]
                        }
 data XmlSchemaPart     = In {unIn :: Include}
-                       | St {unSt :: (Name, SimpleType)}
-                       | Ct {unCt :: (Name, ComplexType)}
+                       | St {unSt :: (QName, SimpleType)}
+                       | Ct {unCt :: (QName, ComplexType)}
                        | El {unEl :: Element}
-                       | Gr {unGr :: (Name, Group)}
+                       | Gr {unGr :: (QName, Group)}
                        | At {unAt :: Attribute}
-                       | Ag {unAg :: (Name, AttributeGroup)}
+                       | Ag {unAg :: (QName, AttributeGroup)}
 
 data Include           = Incl  {unIncl  :: Location}
                        | Imp   {unImp   :: (Location, Namespace)}
@@ -63,10 +67,10 @@ data Include           = Incl  {unIncl  :: Location}
                        deriving (Show, Eq)
 type Location          = String
 type Redefinitions     = [Redefinition]
-data Redefinition      = RedefSt {unRedefSt :: (Name, SimpleType)}
-                       | RedefCt {unRedefCt :: (Name, ComplexType)}
-                       | RedefGr {unRedefGr :: (Name, Group)}
-                       | RedefAg {unRedefAg :: (Name, AttributeGroup)}
+data Redefinition      = RedefSt {unRedefSt :: (QName, SimpleType)}
+                       | RedefCt {unRedefCt :: (QName, ComplexType)}
+                       | RedefGr {unRedefGr :: (QName, Group)}
+                       | RedefAg {unRedefAg :: (QName, AttributeGroup)}
                        deriving (Show, Eq)
 
 data SimpleType        = Restr {unRestr :: STRestriction}
@@ -74,7 +78,7 @@ data SimpleType        = Restr {unRestr :: STRestriction}
                        | Un    {unUn    :: STUnion}
                        deriving (Show, Eq)
 type STRestriction     = (SimpleTypeRef, RestrAttrs)
-data SimpleTypeRef     = BaseAttr        {unBaseAttr        :: Name}
+data SimpleTypeRef     = BaseAttr        {unBaseAttr        :: QName}
                        | STRAnonymStDecl {unSTRAnonymStDecl :: SimpleType}
                        deriving (Show, Eq)
 type RestrAttrs        = [RestrAttr]
@@ -92,14 +96,15 @@ data RestrAttr         = MinIncl        {unMinIncl        :: Value}
                        | WhiteSpace     {unWhiteSpace     :: Value}
                        deriving (Show, Eq)
 type Value             = String
-data STList            = ItemTypeAttr    {unItemTypeAttr    :: Name}
+data STList            = ItemTypeAttr    {unItemTypeAttr    :: QName}
                        | STLAnonymStDecl {unSTLAnonymStDecl :: SimpleType}
                        deriving (Show, Eq)
 data STUnion           = STUnion
-                       { memberTypes :: Maybe String
+                       { memberTypes :: Maybe QNames
                        , anonymDecls :: [SimpleType]
                        }
                        deriving (Show, Eq)
+type QNames            = [QName]
 
 data ComplexType       = ComplexType
                        { ctMixed :: Maybe String
@@ -114,7 +119,7 @@ data CTDef             = SCont {unSCont :: SimpleContent}
 data SimpleContent     = SCExt   {unSCExt   :: SCExtension}
                        | SCRestr {unSCRestr :: SCRestriction}
                        deriving (Show, Eq)
-type SCExtension       = (Name, AttrList)
+type SCExtension       = (QName, AttrList)
 type SCRestriction     = (STRestriction, AttrList)
 
 data ComplexContent    = ComplexContent
@@ -125,8 +130,8 @@ data ComplexContent    = ComplexContent
 data CCDef             = CCExt   {unCCExt   :: CCExtension}
                        | CCRestr {unCCRestr :: CCRestriction}
                        deriving (Show, Eq)
-type CCExtension       = (Name, CTModel)
-type CCRestriction     = (Name, CTModel)
+type CCExtension       = (QName, CTModel)
+type CCRestriction     = (QName, CTModel)
 
 type CTModel           = (Maybe CTCompositor, AttrList)
 data CTCompositor      = CompGr {unCompGr :: (MinMaxOcc, Group)}
@@ -160,21 +165,20 @@ data AttrListElem      = Attr    {unAttr    :: Attribute}
                        deriving (Show, Eq)
 type AnyAttribute      = Any
 
-data Element           = ElRef {unElRef :: Name}
+data Element           = ElRef {unElRef :: QName}
                        | ElDef {unElDef :: ElementDef}
                        deriving (Show, Eq)
 data ElementDef        = ElementDef
-                       { elemName        :: Name
+                       { elemName        :: QName
                        , elemTypeDef     :: ElemTypeDef
-                       , elemDefaultVal  :: Maybe String -- TODO: sense?
                        }
                        deriving (Show, Eq)
-data ElemTypeDef       = ETDTypeAttr     {unETDTypeAttr     :: Name}
+data ElemTypeDef       = ETDTypeAttr     {unETDTypeAttr     :: QName}
                        | ETDAnonymStDecl {unETDAnonymStDecl :: SimpleType}
                        | ETDAnonymCtDecl {unETDAnonymCtDecl :: ComplexType}
                        deriving (Show, Eq)
 
-data Group             = GrpRef {unGrpRef :: Name}
+data Group             = GrpRef {unGrpRef :: QName}
                        | GrpDef {unGrpDef :: Maybe GroupContDef}
                        deriving (Show, Eq)
 data GroupContDef      = Al {unAl :: All}
@@ -182,21 +186,20 @@ data GroupContDef      = Al {unAl :: All}
                        | Sq {unSq :: Sequence}
                        deriving (Show, Eq)
 
-data Attribute         = AttrRef {unAttrRef :: Name}
+data Attribute         = AttrRef {unAttrRef :: QName}
                        | AttrDef {unAttrDef :: AttributeDef}
                        deriving (Show, Eq)
 data AttributeDef      = AttributeDef
-                       { attrName       :: Name
+                       { attrName       :: QName
                        , attrTypeDef    :: AttrTypeDef
-                       , attrDefaultVal :: Maybe String -- sense?
                        , attrUse        :: Maybe String
                        }
                        deriving (Show, Eq)
-data AttrTypeDef       = ATDTypeAttr   {unATDTypeAttr   :: Name}
+data AttrTypeDef       = ATDTypeAttr   {unATDTypeAttr   :: QName}
                        | ATDAnonymDecl {unATDAnonymDecl :: SimpleType}
                        deriving (Show, Eq)
 
-data AttributeGroup    = AttrGrpRef {unAttrGrpRef :: Name}
+data AttributeGroup    = AttrGrpRef {unAttrGrpRef :: QName}
                        | AttrGrpDef {unAttrGrpDef :: AttrList}
                        deriving (Show, Eq)
 
@@ -252,6 +255,7 @@ xpFilterSchema
                                   , mkQName ""       "abstract"             ""
                                   , mkQName ""       "block"                ""
                                   -- irrelevant attributes for element and attribute
+                                  , mkQName ""       "default"              ""
                                   , mkQName ""       "form"                 ""
                                   -- irrelevant attributes for element
                                   , mkQName ""       "nillable"             ""
@@ -268,7 +272,7 @@ toSchema s
     toSchemaRec (XmlSchema' tns [])                ins sts cts els grs ats ags
       = XmlSchema tns ins sts cts els grs ats ags
     toSchemaRec (XmlSchema' tns ((In incl)   :xs)) ins sts cts els grs ats ags
-      = toSchemaRec (XmlSchema' tns xs) (ins ++ [incl]) sts cts els grs ats ags
+      = toSchemaRec (XmlSchema' tns xs) (ins ++ [incl]) sts cts els grs ats ags -- keep ordering of includes
     toSchemaRec (XmlSchema' tns ((St (k, st)):xs)) ins sts cts els grs ats ags
       = toSchemaRec (XmlSchema' tns xs) ins (insert k st sts) cts els grs ats ags
     toSchemaRec (XmlSchema' tns ((Ct (k, ct)):xs)) ins sts cts els grs ats ags
@@ -296,6 +300,16 @@ toSchema s
 
 -- Pickler definitions
 
+xpQName :: PU QName
+xpQName
+  = xpWrap (mkName, qualifiedName) xpText -- TODO: (\ x -> mkQName nsPrefix x nsUri, qualifiedName) ?
+
+xpQNames :: PU QNames
+xpQNames
+  = xpWrap ( \ x -> map mkName $ words x
+           , \ x -> (qualifiedName $ head x) ++ (concat $ map (\ y -> " " ++ qualifiedName y) (tail x))
+           ) xpText
+
 xpXmlSchema' :: PU XmlSchema'
 xpXmlSchema'
   = xpSchemaElem "schema" $
@@ -317,12 +331,12 @@ xpSchemaPart
     tag (At _) = 5
     tag (Ag _) = 6
     ps = [ xpWrap (In, unIn) $ xpInclude
-         , xpWrap (St, unSt) $ xpSchemaElem "simpleType"     $ xpPair (xpAttr "name" xpText) xpSimpleType
-         , xpWrap (Ct, unCt) $ xpSchemaElem "complexType"    $ xpPair (xpAttr "name" xpText) xpComplexType
+         , xpWrap (St, unSt) $ xpSchemaElem "simpleType"     $ xpPair (xpAttr "name" xpQName) xpSimpleType
+         , xpWrap (Ct, unCt) $ xpSchemaElem "complexType"    $ xpPair (xpAttr "name" xpQName) xpComplexType
          , xpWrap (El, unEl) $ xpSchemaElem "element"        $ xpElement
-         , xpWrap (Gr, unGr) $ xpSchemaElem "group"          $ xpPair (xpAttr "name" xpText) xpGroup
+         , xpWrap (Gr, unGr) $ xpSchemaElem "group"          $ xpPair (xpAttr "name" xpQName) xpGroup
          , xpWrap (At, unAt) $ xpSchemaElem "attribute"      $ xpAttribute
-         , xpWrap (Ag, unAg) $ xpSchemaElem "attributeGroup" $ xpPair (xpAttr "name" xpText) xpAttributeGroup
+         , xpWrap (Ag, unAg) $ xpSchemaElem "attributeGroup" $ xpPair (xpAttr "name" xpQName) xpAttributeGroup
          ]
 
 xpInclude :: PU Include
@@ -345,10 +359,10 @@ xpRedefinition
     tag (RedefCt _) = 1
     tag (RedefGr _) = 2
     tag (RedefAg _) = 3
-    ps = [ xpWrap (RedefSt, unRedefSt) $ xpSchemaElem "simpleType"     $ xpPair (xpAttr "name" xpText) xpSimpleType
-         , xpWrap (RedefCt, unRedefCt) $ xpSchemaElem "complexType"    $ xpPair (xpAttr "name" xpText) xpComplexType
-         , xpWrap (RedefGr, unRedefGr) $ xpSchemaElem "group"          $ xpPair (xpAttr "name" xpText) xpGroup
-         , xpWrap (RedefAg, unRedefAg) $ xpSchemaElem "attributeGroup" $ xpPair (xpAttr "name" xpText) xpAttributeGroup
+    ps = [ xpWrap (RedefSt, unRedefSt) $ xpSchemaElem "simpleType"     $ xpPair (xpAttr "name" xpQName) xpSimpleType
+         , xpWrap (RedefCt, unRedefCt) $ xpSchemaElem "complexType"    $ xpPair (xpAttr "name" xpQName) xpComplexType
+         , xpWrap (RedefGr, unRedefGr) $ xpSchemaElem "group"          $ xpPair (xpAttr "name" xpQName) xpGroup
+         , xpWrap (RedefAg, unRedefAg) $ xpSchemaElem "attributeGroup" $ xpPair (xpAttr "name" xpQName) xpAttributeGroup
          ]
 
 xpSimpleType :: PU SimpleType
@@ -373,7 +387,7 @@ xpSimpleTypeRef
     where
     tag (BaseAttr _)        = 0
     tag (STRAnonymStDecl _) = 1
-    ps = [ xpWrap (BaseAttr,        unBaseAttr)        $ xpAttr "base" xpText -- TODO: error msg and cleanup if simpleType
+    ps = [ xpWrap (BaseAttr,        unBaseAttr)        $ xpAttr "base" xpQName -- TODO: error msg and cleanup if simpleType
          , xpWrap (STRAnonymStDecl, unSTRAnonymStDecl) $ xpSchemaElem "simpleType" $ xpSimpleType -- TODO:what if not 1st child?
          ]
 
@@ -413,14 +427,14 @@ xpSTList
     where
     tag (ItemTypeAttr _)    = 0
     tag (STLAnonymStDecl _) = 1
-    ps = [ xpWrap (ItemTypeAttr,    unItemTypeAttr)    $ xpAttr "itemType" xpText
+    ps = [ xpWrap (ItemTypeAttr,    unItemTypeAttr)    $ xpAttr "itemType" xpQName
          , xpWrap (STLAnonymStDecl, unSTLAnonymStDecl) $ xpSchemaElem "simpleType" $ xpSimpleType
          ]
 
 xpSTUnion :: PU STUnion
 xpSTUnion
   = xpWrap (\ (a, b) -> STUnion a b , \ t -> (memberTypes t, anonymDecls t)) $
-    xpPair (xpOption $ xpAttr "memberTypes" xpText) $
+    xpPair (xpOption $ xpAttr "memberTypes" xpQNames) $
     xpList $ xpSchemaElem "simpleType" $ xpSimpleType
 
 xpComplexType :: PU ComplexType
@@ -446,7 +460,7 @@ xpSimpleContent
     where
     tag (SCExt _)   = 0
     tag (SCRestr _) = 1
-    ps = [ xpWrap (SCExt,   unSCExt)   $ xpSchemaElem "extension"   $ xpPair (xpAttr "base" xpText) xpAttrList
+    ps = [ xpWrap (SCExt,   unSCExt)   $ xpSchemaElem "extension"   $ xpPair (xpAttr "base" xpQName) xpAttrList
          , xpWrap (SCRestr, unSCRestr) $ xpSchemaElem "restriction" $ xpPair xpSTRestriction xpAttrList 
          ]
 
@@ -461,8 +475,8 @@ xpCCDef
     where
     tag (CCExt _)   = 0
     tag (CCRestr _) = 1
-    ps = [ xpWrap (CCExt,   unCCExt)   $ xpSchemaElem "extension"   $ xpPair (xpAttr "base" xpText) $ xpCTModel
-         , xpWrap (CCRestr, unCCRestr) $ xpSchemaElem "restriction" $ xpPair (xpAttr "base" xpText) $ xpCTModel
+    ps = [ xpWrap (CCExt,   unCCExt)   $ xpSchemaElem "extension"   $ xpPair (xpAttr "base" xpQName) $ xpCTModel
+         , xpWrap (CCRestr, unCCRestr) $ xpSchemaElem "restriction" $ xpPair (xpAttr "base" xpQName) $ xpCTModel
          ]
 
 xpCTModel :: PU CTModel
@@ -540,14 +554,14 @@ xpElement
     where
     tag (ElRef _) = 0
     tag (ElDef _) = 1
-    ps = [ xpWrap (ElRef, unElRef) $ xpAttr "ref" xpText -- TODO: error msg and cleanup if more attributes (name, type ...)
+    ps = [ xpWrap (ElRef, unElRef) $ xpAttr "ref" xpQName -- TODO: error msg and cleanup if more attributes (name, type ...)
          , xpWrap (ElDef, unElDef) $ xpElementDef
          ]
 
 xpElementDef :: PU ElementDef
 xpElementDef
-  = xpWrap (\ (a, b, c) -> ElementDef a b c, \ t -> (elemName t, elemTypeDef t, elemDefaultVal t)) $
-    xpTriple (xpAttr "name" xpText) xpElemTypeDef (xpOption $ xpAttr "default" xpText)
+  = xpWrap (\ (a, b) -> ElementDef a b, \ t -> (elemName t, elemTypeDef t)) $
+    xpPair (xpAttr "name" xpQName) xpElemTypeDef
 
 xpElemTypeDef :: PU ElemTypeDef
 xpElemTypeDef
@@ -556,7 +570,7 @@ xpElemTypeDef
     tag (ETDTypeAttr _)     = 0
     tag (ETDAnonymStDecl _) = 1
     tag (ETDAnonymCtDecl _) = 2
-    ps = [ xpWrap (ETDTypeAttr,     unETDTypeAttr)     $ xpAttr "type" xpText
+    ps = [ xpWrap (ETDTypeAttr,     unETDTypeAttr)     $ xpAttr "type" xpQName
          , xpWrap (ETDAnonymStDecl, unETDAnonymStDecl) $ xpSchemaElem "simpleType"  $ xpSimpleType
          , xpWrap (ETDAnonymCtDecl, unETDAnonymCtDecl) $ xpSchemaElem "complexType" $ xpComplexType
          ]
@@ -567,7 +581,7 @@ xpGroup
     where
     tag (GrpRef _) = 0
     tag (GrpDef _) = 1
-    ps = [ xpWrap (GrpRef, unGrpRef) $ xpAttr "ref" xpText -- xpQName pickler? String -> QName
+    ps = [ xpWrap (GrpRef, unGrpRef) $ xpAttr "ref" xpQName
          , xpWrap (GrpDef, unGrpDef) $ xpOption $ xpGroupContDef
          ]
 
@@ -589,14 +603,14 @@ xpAttribute
     where
     tag (AttrRef _) = 0
     tag (AttrDef _) = 1
-    ps = [ xpWrap (AttrRef, unAttrRef) $ xpAttr "ref" xpText
+    ps = [ xpWrap (AttrRef, unAttrRef) $ xpAttr "ref" xpQName
          , xpWrap (AttrDef, unAttrDef) $ xpAttributeDef
          ]
 
 xpAttributeDef :: PU AttributeDef
 xpAttributeDef
-  = xpWrap (\ (a, b, c, d) -> AttributeDef a b c d, \ t -> (attrName t, attrTypeDef t, attrDefaultVal t, attrUse t)) $
-    xp4Tuple (xpAttr "name" xpText) xpAttrTypeDef (xpOption $ xpAttr "default" xpText) (xpOption $ xpAttr "use" xpText)
+  = xpWrap (\ (a, b, c) -> AttributeDef a b c, \ t -> (attrName t, attrTypeDef t, attrUse t)) $
+    xpTriple (xpAttr "name" xpQName) xpAttrTypeDef (xpOption $ xpAttr "use" xpText)
 
 xpAttrTypeDef :: PU AttrTypeDef
 xpAttrTypeDef
@@ -604,7 +618,7 @@ xpAttrTypeDef
     where
     tag (ATDTypeAttr _)   = 0
     tag (ATDAnonymDecl _) = 1
-    ps = [ xpWrap (ATDTypeAttr,   unATDTypeAttr)   $ xpAttr "type" xpText
+    ps = [ xpWrap (ATDTypeAttr,   unATDTypeAttr)   $ xpAttr "type" xpQName
          , xpWrap (ATDAnonymDecl, unATDAnonymDecl) $ xpSchemaElem "simpleType" $ xpSimpleType
          ]
 
@@ -614,7 +628,7 @@ xpAttributeGroup
     where
     tag (AttrGrpRef _) = 0
     tag (AttrGrpDef _) = 1
-    ps = [ xpWrap (AttrGrpRef, unAttrGrpRef) $ xpAttr "ref" xpText
+    ps = [ xpWrap (AttrGrpRef, unAttrGrpRef) $ xpAttr "ref" xpQName
          , xpWrap (AttrGrpDef, unAttrGrpDef) $ xpAttrList
          ]
 
@@ -684,20 +698,20 @@ loadXmlSchema uri
 
 -- XML Processing with HXT
 
-getElemName :: XmlTree -> Name -- TODO: QName
-getElemName t = localPart $ fromMaybe (mkName "") $ XN.getElemName t
+getElemName :: XmlTree -> QName
+getElemName t = fromMaybe (mkName "") $ XN.getElemName t
 
-mkElemRE :: String -> XmlRegex
+mkElemRE :: QName -> XmlRegex
 mkElemRE s = mkPrim $ (== s) . getElemName
 
-getElemAttrs :: XmlTree -> [(Name, String)] -- TODO: QName
+getElemAttrs :: XmlTree -> [(QName, String)]
 getElemAttrs t = map (\ x -> (getAttrName x, getAttrValue x)) $ fromMaybe [] $ XN.getAttrl t
 
-getChildren' :: XmlTree -> XmlTrees
-getChildren' (NTree _ c) = c
+getChildren :: XmlTree -> XmlTrees
+getChildren (NTree _ c) = c
 
 getElemChildren :: XmlTree -> XmlTrees
-getElemChildren t = filter isRelevant $ getChildren' t
+getElemChildren t = filter isRelevant $ getChildren t
 
 isElem :: XmlTree -> Bool
 isElem = XN.isElem
@@ -706,16 +720,16 @@ mkTextRE :: XmlRegex
 mkTextRE = mkPrim $ isText
 
 isText :: XmlTree -> Bool
-isText = XN.isElem
+isText = XN.isText
 
 isRelevant :: XmlTree -> Bool
 isRelevant t = (isElem t) || (isText t)
 
-getAttrName :: XmlTree -> Name -- TODO: QName
-getAttrName t = localPart $ fromMaybe (mkName "") $  XN.getAttrName t
+getAttrName :: XmlTree -> QName
+getAttrName t = fromMaybe (mkName "") $  XN.getAttrName t
 
 getAttrValue :: XmlTree -> String -- TODO: List of strings instead to validate each one?
-getAttrValue t = getCombinedText $ getChildren' t
+getAttrValue t = getCombinedText $ getChildren t
 
 getCombinedText :: XmlTrees -> String
 getCombinedText t = concat $ getTexts t
@@ -733,13 +747,13 @@ readDoc uri
   = do
     s <- runX ( readDocument [ withValidate yes        -- validate source
                              -- , withTrace 1             -- trace processing steps
-                             , withRemoveWS yes        -- remove redundant whitespace -- TODO: necessary?
-                             , withPreserveComment no  -- keep comments               -- TODO: necessary?
+                             -- , withRemoveWS yes        -- remove redundant whitespace -- TODO: necessary?
+                             , withPreserveComment no  -- remove comments
                              -- , withCheckNamespaces yes -- check namespaces
                              , withCurl []             -- use libCurl for http access
                              ] uri
                 >>>
-                getChildren
+                setAttrl none
               )
     return $ head s
 
@@ -760,60 +774,60 @@ data ElemDesc = ElemDesc
               , sttf         :: STTF
               }
 
-type AttrMap = Map String AttrMapVal
+type AttrMap = Map QName AttrMapVal
 type AttrMapVal = (Bool, STTF)
-type SubElemDesc = Map String ElemDesc
+type SubElemDesc = Map QName ElemDesc
 type STTF = String -> SVal Bool
 
 -- Create SimpleType test functions
 
-knownW3CTypes :: Map String STTF
+knownW3CTypes :: Map QName STTF
 knownW3CTypes = fromList
-  [ ("xs:string",             mkPassThroughSTTF)
-  , ("xs:normalizedString",   mkPassThroughSTTF)
-  , ("xs:token",              mkPassThroughSTTF)
-  , ("xs:language",           mkPassThroughSTTF)
-  , ("xs:NMTOKEN",            mkPassThroughSTTF)
-  , ("xs:NMTOKENS",           mkPassThroughSTTF)
-  , ("xs:Name",               mkPassThroughSTTF)
-  , ("xs:NCName",             mkPassThroughSTTF)
-  , ("xs:ID",                 mkPassThroughSTTF)
-  , ("xs:IDREF",              mkPassThroughSTTF)
-  , ("xs:IDREFS",             mkPassThroughSTTF)
-  , ("xs:ENTITY",             mkPassThroughSTTF)
-  , ("xs:ENTITIES",           mkPassThroughSTTF)
-  , ("xs:anyURI",             mkPassThroughSTTF)
-  , ("xs:QName",              mkPassThroughSTTF)
-  , ("xs:NOTATION",           mkPassThroughSTTF)
-  , ("xs:hexBinary",          mkPassThroughSTTF)
-  , ("xs:base64Binary",       mkPassThroughSTTF)
-  , ("xs:decimal",            mkPassThroughSTTF)
-  , ("xs:integer",            mkPassThroughSTTF)
-  , ("xs:nonPositiveInteger", mkPassThroughSTTF)
-  , ("xs:negativeInteger",    mkPassThroughSTTF)
-  , ("xs:nonNegativeInteger", mkPassThroughSTTF)
-  , ("xs:positiveInteger",    mkPassThroughSTTF)
-  , ("xs:long",               mkPassThroughSTTF)
-  , ("xs:int",                mkPassThroughSTTF)
-  , ("xs:short",              mkPassThroughSTTF)
-  , ("xs:byte",               mkPassThroughSTTF)
-  , ("xs:unsignedLong",       mkPassThroughSTTF)
-  , ("xs:unsignedInt",        mkPassThroughSTTF)
-  , ("xs:unsignedShort",      mkPassThroughSTTF)
-  , ("xs:unsignedByte",       mkPassThroughSTTF)
+  [ (mkName "xs:string",             mkPassThroughSTTF)
+  , (mkName "xs:normalizedString",   mkPassThroughSTTF)
+  , (mkName "xs:token",              mkPassThroughSTTF)
+  , (mkName "xs:language",           mkPassThroughSTTF)
+  , (mkName "xs:NMTOKEN",            mkPassThroughSTTF)
+  , (mkName "xs:NMTOKENS",           mkPassThroughSTTF)
+  , (mkName "xs:Name",               mkPassThroughSTTF)
+  , (mkName "xs:NCName",             mkPassThroughSTTF)
+  , (mkName "xs:ID",                 mkPassThroughSTTF)
+  , (mkName "xs:IDREF",              mkPassThroughSTTF)
+  , (mkName "xs:IDREFS",             mkPassThroughSTTF)
+  , (mkName "xs:ENTITY",             mkPassThroughSTTF)
+  , (mkName "xs:ENTITIES",           mkPassThroughSTTF)
+  , (mkName "xs:anyURI",             mkPassThroughSTTF)
+  , (mkName "xs:QName",              mkPassThroughSTTF)
+  , (mkName "xs:NOTATION",           mkPassThroughSTTF)
+  , (mkName "xs:hexBinary",          mkPassThroughSTTF)
+  , (mkName "xs:base64Binary",       mkPassThroughSTTF)
+  , (mkName "xs:decimal",            mkPassThroughSTTF)
+  , (mkName "xs:integer",            mkPassThroughSTTF)
+  , (mkName "xs:nonPositiveInteger", mkPassThroughSTTF)
+  , (mkName "xs:negativeInteger",    mkPassThroughSTTF)
+  , (mkName "xs:nonNegativeInteger", mkPassThroughSTTF)
+  , (mkName "xs:positiveInteger",    mkPassThroughSTTF)
+  , (mkName "xs:long",               mkPassThroughSTTF)
+  , (mkName "xs:int",                mkPassThroughSTTF)
+  , (mkName "xs:short",              mkPassThroughSTTF)
+  , (mkName "xs:byte",               mkPassThroughSTTF)
+  , (mkName "xs:unsignedLong",       mkPassThroughSTTF)
+  , (mkName "xs:unsignedInt",        mkPassThroughSTTF)
+  , (mkName "xs:unsignedShort",      mkPassThroughSTTF)
+  , (mkName "xs:unsignedByte",       mkPassThroughSTTF)
   -- TODO: not implemented yet in DataTypeLibW3C (true, aber Warning)
-  , ("xs:boolean",            mkPassThroughSTTF)
-  , ("xs:float",              mkPassThroughSTTF)
-  , ("xs:double",             mkPassThroughSTTF)
-  , ("xs:time",               mkPassThroughSTTF)
-  , ("xs:duration",           mkPassThroughSTTF)
-  , ("xs:date",               mkPassThroughSTTF)
-  , ("xs:dateTime",           mkPassThroughSTTF)
-  , ("xs:gDay",               mkPassThroughSTTF)
-  , ("xs:gMonth",             mkPassThroughSTTF)
-  , ("xs:gMonthDay",          mkPassThroughSTTF)
-  , ("xs:gYear",              mkPassThroughSTTF)
-  , ("xs:gYearMonth",         mkPassThroughSTTF)
+  , (mkName "xs:boolean",            mkPassThroughSTTF)
+  , (mkName "xs:float",              mkPassThroughSTTF)
+  , (mkName "xs:double",             mkPassThroughSTTF)
+  , (mkName "xs:time",               mkPassThroughSTTF)
+  , (mkName "xs:duration",           mkPassThroughSTTF)
+  , (mkName "xs:date",               mkPassThroughSTTF)
+  , (mkName "xs:dateTime",           mkPassThroughSTTF)
+  , (mkName "xs:gDay",               mkPassThroughSTTF)
+  , (mkName "xs:gMonth",             mkPassThroughSTTF)
+  , (mkName "xs:gMonthDay",          mkPassThroughSTTF)
+  , (mkName "xs:gYear",              mkPassThroughSTTF)
+  , (mkName "xs:gYearMonth",         mkPassThroughSTTF)
   ]
 
 checkBothSTTF :: STTF -> STTF -> STTF
@@ -844,7 +858,7 @@ mkErrorSTTF s
                     tell [(xpath env, s)]
                     return False
 
-lookupSTTF :: Name -> XSC STTF
+lookupSTTF :: QName -> XSC STTF
 lookupSTTF n
   = do
     s <- ask
@@ -895,7 +909,7 @@ stToSTTF (Lst tref)            = do
 stToSTTF (Un ts)               = do
                                  trefTFs <- case memberTypes ts of
                                               Nothing    -> return []
-                                              Just trefs -> mapM lookupSTTF $ words trefs
+                                              Just trefs -> mapM lookupSTTF trefs
                                  tdefTFs <- mapM stToSTTF $ anonymDecls ts
                                  return $ \ x -> do
                                                  env <- ask
@@ -908,7 +922,7 @@ stToSTTF (Un ts)               = do
 
 -- Create AttrMap entries
 
-createAttrMapEntry :: Attribute -> XSC (Name, AttrMapVal)
+createAttrMapEntry :: Attribute -> XSC (QName	, AttrMapVal)
 createAttrMapEntry (AttrRef n)
   = do
     s <- ask
@@ -917,7 +931,7 @@ createAttrMapEntry (AttrRef n)
            Nothing -> do
                       errorSTTF <- mkErrorSTTF "attribute validation error: illegal attribute reference in schema file"
                       return (n, (False, errorSTTF))
-createAttrMapEntry (AttrDef (AttributeDef n tdef _ use)) -- TODO: sense of (attrDefaultVal :: Maybe String) ?
+createAttrMapEntry (AttrDef (AttributeDef n tdef use))
   = do
     let req = case use of
                 Nothing -> False -- default "optional"
@@ -947,7 +961,7 @@ attrListToAttrMap l
     attrMap' <- attrListToAttrMap' l
     return $ fromList attrMap' -- TODO: improve error handling (same attr names)?
 
-attrListToAttrMap' :: AttrList -> XSC [(Name, AttrMapVal)]
+attrListToAttrMap' :: AttrList -> XSC [(QName, AttrMapVal)]
 attrListToAttrMap' l
   = do
     entries <- mapM (\ x -> case x of
@@ -989,7 +1003,7 @@ groupToElemDesc (GrpDef d)
       Just (Ch ch) -> choiceToElemDesc ch
       Just (Sq sq) -> sequenceToElemDesc sq
 
-elementToName :: Element -> Name -- TODO: QName
+elementToName :: Element -> QName
 elementToName e
   = case e of
       ElRef r -> r
@@ -1041,11 +1055,11 @@ choiceToElemDesc l
   = do
     let names = map ( \ x -> case x of
                                ChSeqEl (_, el) -> elementToName el
-                               _               -> ""
+                               _               -> mkName ""
                     ) l -- TODO: sense?
     eds' <- mapM chSeqContToElemDesc l -- TODO: combine attrMaps etc.
     let eds = zip names eds'
-    let se = fromList $ filter (\ (s, _) -> not $ null s) $ eds
+    let se = fromList $ filter (\ (s, _) -> not $ null $ qualifiedName s) $ eds
     tf <- mkNoTextSTTF
     let re = mkAlts $ map (\ (_, ed) -> contentModel ed) eds
     return $ mkElemDesc empty re se tf
@@ -1055,11 +1069,11 @@ sequenceToElemDesc l
   = do
     let names = map ( \ x -> case x of
                                ChSeqEl (_, el) -> elementToName el
-                               _               -> ""
+                               _               -> mkName ""
                     ) l -- TODO: sense?
     eds' <- mapM chSeqContToElemDesc l -- TODO: combine attrMaps etc.
     let eds = zip names eds'
-    let se = fromList $ filter (\ (s, _) -> not $ null s) $ eds
+    let se = fromList $ filter (\ (s, _) -> not $ null $ qualifiedName s) $ eds
     tf <- mkNoTextSTTF
     let re = mkSeqs $ map (\ (_, ed) -> contentModel ed) eds
     return $ mkElemDesc empty re se tf
@@ -1184,7 +1198,7 @@ createElemDesc (ElRef n)
     case lookup n (sElements s) of
            Just e  -> createElemDesc e
            Nothing -> return $ mkErrorElemDesc "element validation error: illegal element reference in schema file"
-createElemDesc (ElDef (ElementDef _ tdef _)) -- TODO: sense of (elemDefaultVal  :: Maybe String) ?
+createElemDesc (ElDef (ElementDef _ tdef))
   = do
     s <- ask
     t <- case tdef of
@@ -1201,17 +1215,16 @@ createElemDesc (ElDef (ElementDef _ tdef _)) -- TODO: sense of (elemDefaultVal  
       Left tf -> return $ mkSimpleElemDesc empty tf 
       Right ct -> ctToElemDesc ct
 
-createRootDesc :: XSC ElemDesc -- TODO: Verify root element interpretation
-createRootDesc                 -- jedes Element kann root sein, globale attribute nur für referenzen
+-- Every globally defined element can be the root element
+createRootDesc :: XSC ElemDesc
+createRootDesc
   = do
     s <- ask
-    am' <- mapM createAttrMapEntry $ elems $ sAttributes s
-    let am = fromList am'
-    let cm = mkStar $ mkAlts $ map mkElemRE $ keys $ sElements s
+    let cm = mkAlts $ map mkElemRE $ keys $ sElements s
     se' <- mapM createElemDesc $ elems $ sElements s
     let se = fromList $ zip (keys $ sElements s) se'
     tf <- mkNoTextSTTF 
-    return $ mkElemDesc am cm se tf
+    return $ mkElemDesc empty cm se tf
 
 --------------------------------------------------------------------------------------
 
@@ -1229,14 +1242,14 @@ type SVal a = ReaderT SValEnv (WriterT SValLog Identity) a
 runSVal :: SValEnv -> SVal a -> (a, SValLog)
 runSVal env val = runIdentity $ runWriterT $ runReaderT val env
 
-type CountingTable = Map String Int
+type CountingTable = Map QName Int
 
 -- Validation
 
-getReqAttrNames :: AttrMap -> [String]
+getReqAttrNames :: AttrMap -> [QName]
 getReqAttrNames m = map (\ (n, _) -> n) $ filter (\ (_, (req, _)) -> req) (toList m)
 
-hasReqAttrs :: [String] -> [String] -> SVal Bool
+hasReqAttrs :: [QName] -> [QName] -> SVal Bool
 hasReqAttrs [] _
   = return True
 hasReqAttrs (x:xs) attrs
@@ -1244,12 +1257,12 @@ hasReqAttrs (x:xs) attrs
     env <- ask
     if x `notElem` attrs
       then do
-           tell [((xpath env) ++ "/@" ++ x, "required attribute is missing.")]
+           tell [((xpath env) ++ "/@" ++ (qualifiedName x), "required attribute is missing.")]
            res <- hasReqAttrs xs attrs
            return (res && False)
       else hasReqAttrs xs attrs
 
-checkAllowedAttrs :: [(String, String)] -> SVal Bool
+checkAllowedAttrs :: [(QName, String)] -> SVal Bool
 checkAllowedAttrs []
   = return True
 checkAllowedAttrs ((n, val):xs)
@@ -1258,13 +1271,13 @@ checkAllowedAttrs ((n, val):xs)
     let m = attrMap $ elemDesc env
     res <- case lookup n m of
              Nothing      -> do
-                             tell [((xpath env) ++ "/@" ++ n, "attribute not allowed here.")]
+                             tell [((xpath env) ++ "/@" ++ (qualifiedName n), "attribute not allowed here.")]
                              return False
              Just (_, tf) -> do
-                             tfRes <- local (const (appendXPath ("/@" ++ n) env)) (tf val)
+                             tfRes <- local (const (appendXPath ("/@" ++ (qualifiedName n)) env)) (tf val)
                              if not tfRes
                                then do
-                                    tell [((xpath env) ++ "/@" ++ n, "value does not match type.")]
+                                    tell [((xpath env) ++ "/@" ++ (qualifiedName n), "value does not match type.")]
                                     return tfRes                                    
                                else return tfRes
     rest <- checkAllowedAttrs xs
@@ -1286,8 +1299,7 @@ testContentModel t
     case matchXmlRegex (contentModel $ elemDesc env) t of
       Nothing -> return True
       Just msg-> do
-                 tell [(xpath env ++ "/*", "elements do not match content model.\n" ++ msg)] -- TODO: show funktion für regex
-                              -- Sym (XmlTree -> Maybe String), elemName expected ...
+                 tell [(xpath env ++ "/*", "content does not match content model.\n" ++ msg ++ "\n" ++ (show t))]
                  return False
 
 appendXPath :: String -> SValEnv -> SValEnv
@@ -1308,7 +1320,7 @@ testElemChildren t (x:xs)
     let c = case lookup n t of
               Nothing -> 1
               Just v  -> v+1
-    let elemXPath = "/" ++ n ++ "[" ++ (show c) ++ "]"
+    let elemXPath = "/" ++ (qualifiedName n) ++ "[" ++ (show c) ++ "]"
     let m = subElemDesc $ elemDesc env
     res <- case lookup n m of
              Nothing -> do
@@ -1337,7 +1349,7 @@ testElem e
                   return False
       Nothing  -> do
                   attrRes <- testAttrs e
-                  let content = getElemChildren e -- Text and Tag nodes
+                  let content = getElemChildren e
                   contModelRes <- testContentModel content
                   let (tags, text) = extractElems content
                   textRes <- testElemText text
