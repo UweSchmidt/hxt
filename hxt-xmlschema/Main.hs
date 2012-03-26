@@ -22,6 +22,7 @@ import Data.List (partition)
 import Control.Monad.Identity
 import Control.Monad.Reader
 import Control.Monad.Writer hiding (Any, All)
+import Control.Applicative ( (<$>) )
 
 instance Ord QName where -- TODO: orphan instance
   compare x y = compare (qualifiedName x) (qualifiedName y)
@@ -304,10 +305,11 @@ xpQName :: PU QName
 xpQName
   = xpWrap (mkName, qualifiedName) xpText -- TODO: (\ x -> mkQName nsPrefix x nsUri, qualifiedName) ?
 
+-- space-separated list of QNames
 xpQNames :: PU QNames
 xpQNames
   = xpWrap ( \ x -> map mkName $ words x
-           , \ x -> (qualifiedName $ head x) ++ (concat $ map (\ y -> " " ++ qualifiedName y) (tail x))
+           , \ x -> (qualifiedName $ head x) ++ (concat $ map (\ y -> ' ':(qualifiedName y)) (tail x))
            ) xpText
 
 xpXmlSchema' :: PU XmlSchema'
