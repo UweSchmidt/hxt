@@ -249,7 +249,7 @@ nullable (Perm e1 e2)   = nullable e1 &&
 delta   :: XmlRegex -> XmlTree -> XmlRegex
 delta e@(Zero _)   _    = e
 delta Unit         c    = mkZero $
-                          "unexpected char " ++ show c
+                          "unexpected tree " ++ show c
 delta (Sym p)      c
     | p c               = mkUnit
     | otherwise         = mkZero $
