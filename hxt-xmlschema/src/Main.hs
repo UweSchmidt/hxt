@@ -24,7 +24,7 @@ import Control.Monad.Reader
 import Control.Monad.Writer hiding (Any, All)
 import Control.Applicative ( (<$>) )
 
--- import Text.XML.HXT.XMLSchema.DataTypeLibW3C (datatypeEqualW3C, datatypeAllowsW3C)
+import Text.XML.HXT.XMLSchema.DataTypeLibW3C (datatypeEqualW3C, datatypeAllowsW3C)
 
 instance Ord QName where -- TODO: orphan instance
   compare x y = compare (qualifiedName x) (qualifiedName y)
@@ -783,7 +783,7 @@ box x = [x]
 knownW3CTypes :: Map QName STTF
 knownW3CTypes
   = fromList
-    [ (mkName "xs:string",             mkPassThroughSTTF)
+    [ (mkName "xs:string",             mkErrorSTTF "no string check implemented.")
     , (mkName "xs:normalizedString",   mkPassThroughSTTF)
     , (mkName "xs:token",              mkPassThroughSTTF)
     , (mkName "xs:language",           mkPassThroughSTTF)
@@ -1180,6 +1180,7 @@ createRootDesc
     s <- ask
     let cm = mkAlts $ map mkElemRE $ keys $ sElements s
     se <- fromList <$> zip (keys (sElements s)) <$> (mapM createElemDesc $ elems $ sElements s)
+    -- TODO: add possible namespace-setting attribute to every possible root element's attribute map
     return $ mkElemDesc empty cm se mkNoTextSTTF
 
 --------------------------------------------------------------------------------------
@@ -1230,13 +1231,15 @@ checkAllowedAttrs ((n, val):xs)
              Nothing      -> do
                              tell [((xpath env) ++ "/@" ++ (qualifiedName n), "attribute not allowed here.")]
                              return False
-             Just (_, tf) -> do
-                             tfRes <- local (const (appendXPath ("/@" ++ (qualifiedName n)) env)) (tf val)
-                             if not tfRes
-                               then do
-                                    tell [((xpath env) ++ "/@" ++ (qualifiedName n), "value does not match type.")]
-                                    return tfRes                                    
-                               else return tfRes
+             Just (_, tf) -> local (const (appendXPath ("/@" ++ (qualifiedName n)) env)) (tf val)
+                             -- TODO: can be removed?
+                             -- do
+                             -- tfRes <- local (const (appendXPath ("/@" ++ (qualifiedName n)) env)) (tf val)
+                             -- if not tfRes
+                             --   then do
+                             --        tell [((xpath env) ++ "/@" ++ (qualifiedName n), "value does not match type.")]
+                             --        return tfRes                                    
+                             --   else return tfRes
     rest <- checkAllowedAttrs xs
     return (res && rest)
 
@@ -1343,7 +1346,7 @@ main
     -- argv <- getArgs
     -- (schemaurl, docurl) <- return (argv!!0, argv!!1)
 
-    res <- validateWithSchema "example.xsd" "example2.xml"
+    res <- validateWithSchema "example.xsd" "example.xml"
     printSValResult res
 
     return ()

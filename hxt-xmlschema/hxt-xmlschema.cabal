@@ -14,13 +14,14 @@ Copyright:      Copyright (c) 2005-2011 Uwe Schmidt
 Build-type:     Simple
 Cabal-version:  >=1.6
 
---extra-source-files:
--- examples/example.xml
+-- extra-source-files:
+--   examples/example.xml
 
 -- library
 --   exposed-modules:
 --     Text.XML.HXT.XMLSchema.DataTypeLibW3C
-
+--     Text.XML.HXT.XMLSchema.DataTypeLibW3CUtils
+-- 
 --   hs-source-dirs: src
 
 executable xmls
