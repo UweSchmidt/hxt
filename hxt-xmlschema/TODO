@@ -1,7 +1,5 @@
 
-Name / String
 uppercase / lowercase for attr names elem names ...
-apply namespaces (full qualified names) ?
 
 datatypeEqual nsuri nsprefix typname cx2 zuPruefenderWert cx1
 datatypeAllows nsuri nsprefix params zuPruefenderWert cx
@@ -12,10 +10,10 @@ datatypeAllowsW3C
 type ParamList = [(LocalName, String)]
 
 attrUse for AttrRef allowed?
+pickling: print warning if attributes are used which are not expected: e.g. name + ref together
 
 ------------------------------------------------------------------------
 
-It is no error, if the referenced schema cannot be loaded
 Do not resolve the same include multiple times (allowed in XML Schema)
 Include:
 Inclusion of a schema for the same target namespace
@@ -34,4 +32,31 @@ Haskell 2 LateX Converter: h2l, hs2l
 Andres Löh, Ralf Hinze
 
 Experience with standard documents, quality / precision, problems
+
+------------------------------------------------------------------------
+
+-- Save schema to given target file
+
+-- fromSchema :: XmlSchema -> XmlSchema'
+-- fromSchema s
+--   = XmlSchema' (sTargetNS s) $ concat [ins, sts, cts, els, grs, ats, ags]
+--     where
+--     ins = map In $ sIncludes s
+--     sts = map St $ toList $ sSimpleTypes s
+--     cts = map Ct $ toList $ sComplexTypes s
+--     els = map El $ elems  $ sElements s
+--     grs = map Gr $ toList $ sGroups s 
+--     ats = map At $ elems  $ sAttributes s
+--     ags = map Ag $ toList $ sAttributeGroups s
+
+-- storeXmlSchema :: XmlSchema -> String -> IO ()
+-- storeXmlSchema s t
+--   = do
+--     _ <- runX ( constA (fromSchema s)
+--                 >>>
+--                 xpickleDocument   xpXmlSchema'
+--                                   [ withIndent yes          -- indent generated xml
+--                                   ] t
+--               )
+--     return ()
 
