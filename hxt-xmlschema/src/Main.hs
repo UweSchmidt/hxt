@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-import Text.XML.HXT.Core hiding (getChildren, getElemName, isElem, isText, getAttrName, getAttrValue, getText)
+import Text.XML.HXT.Core hiding (getChildren, getElemName, isElem, isText, getAttrName, getText)
 -- TODO: ...Core ()
 
 import Text.XML.HXT.Curl
@@ -23,6 +23,8 @@ import Control.Monad.Identity
 import Control.Monad.Reader
 import Control.Monad.Writer hiding (Any, All)
 import Control.Applicative ( (<$>) )
+
+-- import Text.XML.HXT.XMLSchema.DataTypeLibW3C (datatypeEqualW3C, datatypeAllowsW3C)
 
 instance Ord QName where -- TODO: orphan instance
   compare x y = compare (qualifiedName x) (qualifiedName y)
@@ -698,7 +700,7 @@ mkElemRE :: QName -> XmlRegex
 mkElemRE s = mkPrim $ (== s) . getElemName
 
 getElemAttrs :: XmlTree -> [(QName, String)]
-getElemAttrs t = map (\ x -> (getAttrName x, getAttrValue x)) $ fromMaybe [] $ XN.getAttrl t
+getElemAttrs t = map (\ x -> (getAttrName x, getAttrValue' x)) $ fromMaybe [] $ XN.getAttrl t
 
 getChildren :: XmlTree -> XmlTrees
 getChildren (NTree _ c) = c
@@ -721,8 +723,8 @@ isRelevant t = (isElem t) || (isText t)
 getAttrName :: XmlTree -> QName
 getAttrName t = fromMaybe (mkName "") $  XN.getAttrName t
 
-getAttrValue :: XmlTree -> String -- TODO: List of strings instead to validate each one?
-getAttrValue t = getCombinedText $ getChildren t
+getAttrValue' :: XmlTree -> String -- TODO: List of strings instead to validate each one?
+getAttrValue' t = getCombinedText $ getChildren t
 
 getCombinedText :: XmlTrees -> String
 getCombinedText t = concat $ getTexts t
@@ -745,11 +747,11 @@ readDoc uri
                              , withCurl []             -- use libCurl for http access
                              ] uri
                 >>>
-                setAttrl none
+                ((getAttrValue "status") &&& (setAttrl none))
               )
-    if null s
-      then return Nothing
-      else return $ Just (head s)
+    if (fst $ head s) == ""
+      then return $ Just (snd $ head s)
+      else return Nothing
 
 --------------------------------------------------------------------------------------
 
@@ -835,26 +837,26 @@ checkBothSTTF tf1 tf2
            tf2res <- tf2 x
            return (tf1res && tf2res)
 
-mkNoTextSTTF :: XSC STTF
+mkNoTextSTTF :: STTF
 mkNoTextSTTF
-  = return $ \ s -> do
-                    env <- ask
-                    if not $ null $ unwords $ words s
-                      then do
-                           tell [(xpath env, "no text allowed here.")]
-                           return False
-                      else return True
+  = \ s -> do
+           env <- ask
+           if not $ null $ unwords $ words s
+             then do
+                  tell [(xpath env, "no text allowed here.")]
+                  return False
+             else return True
 
 mkPassThroughSTTF :: STTF
 mkPassThroughSTTF
   = \ _ -> return True
 
-mkErrorSTTF :: String -> XSC STTF
+mkErrorSTTF :: String -> STTF
 mkErrorSTTF s
-  = return $ \ _ -> do
-                    env <- ask
-                    tell [(xpath env, s)]
-                    return False
+  = \ _ -> do
+           env <- ask
+           tell [(xpath env, s)]
+           return False
 
 lookupSTTF :: QName -> XSC STTF
 lookupSTTF n
@@ -863,12 +865,12 @@ lookupSTTF n
     case lookup n knownW3CTypes of
       Just tf -> return tf
       Nothing -> case lookup n (sSimpleTypes s) of
-                   Nothing -> mkErrorSTTF "type validation error: illegal type reference in schema file"
+                   Nothing -> return $ mkErrorSTTF "type validation error: illegal type reference in schema file"
                    Just t  -> stToSTTF t
 
-rlistToSTTF :: RestrAttrs -> XSC STTF
+rlistToSTTF :: RestrAttrs -> STTF
 rlistToSTTF _
-  = return $ mkPassThroughSTTF -- TODO: implement restriction checks
+  = mkPassThroughSTTF -- TODO: implement restriction checks
 -- MinIncl
 -- MaxIncl
 -- MinExcl
@@ -888,7 +890,7 @@ rstrToSTTF (tref, rlist)
     baseTF  <- case tref of
                  BaseAttr n        -> lookupSTTF n
                  STRAnonymStDecl t -> stToSTTF t
-    checkBothSTTF baseTF <$> rlistToSTTF rlist
+    return $ checkBothSTTF baseTF $ rlistToSTTF rlist
 
 stToSTTF :: SimpleType -> XSC STTF
 stToSTTF (Restr rstr)
@@ -928,7 +930,7 @@ createAttrMapEntry (AttrRef n)
     case lookup n (sAttributes s) of
            Just a  -> createAttrMapEntry a
            Nothing -> do
-                      errorSTTF <- mkErrorSTTF "attribute validation error: illegal attribute reference in schema file"
+                      let errorSTTF = mkErrorSTTF "attribute validation error: illegal attribute reference in schema file"
                       return (n, (False, errorSTTF))
 createAttrMapEntry (AttrDef (AttributeDef n tdef use))
   = do
@@ -987,7 +989,7 @@ groupToElemDesc (GrpRef r)
       Just g  -> groupToElemDesc g
 groupToElemDesc (GrpDef d)
   = case d of
-      Nothing      -> mkElemDesc empty mkUnit empty <$> mkNoTextSTTF -- TODO: RE for empty elem (mkUnit)
+      Nothing      -> return $ mkElemDesc empty mkUnit empty mkNoTextSTTF -- TODO: RE for empty elem (mkUnit)
       Just (Al al) -> allToElemDesc al
       Just (Ch ch) -> choiceToElemDesc ch
       Just (Sq sq) -> sequenceToElemDesc sq
@@ -1011,7 +1013,7 @@ allToElemDesc l
                                          )
                 ) l
     let re = mkPerms $ map (\ (_, ed) -> contentModel ed) eds
-    mkElemDesc empty re (fromList eds) <$> mkNoTextSTTF -- TODO: merge AttrMap etc.?
+    return $ mkElemDesc empty re (fromList eds) mkNoTextSTTF -- TODO: merge AttrMap etc.?
 
 mkPair :: a -> b -> (a, b)
 mkPair x y = (x, y)
@@ -1041,7 +1043,7 @@ choiceToElemDesc l
     eds <- zip names <$> mapM chSeqContToElemDesc l -- TODO: combine attrMaps etc.
     let se = fromList $ filter (\ (s, _) -> not $ null $ qualifiedName s) $ eds
     let re = mkAlts $ map (\ (_, ed) -> contentModel ed) eds
-    mkElemDesc empty re se <$> mkNoTextSTTF
+    return $ mkElemDesc empty re se mkNoTextSTTF
 
 sequenceToElemDesc :: Sequence -> XSC ElemDesc
 sequenceToElemDesc l
@@ -1053,7 +1055,7 @@ sequenceToElemDesc l
     eds <- zip names <$> mapM chSeqContToElemDesc l -- TODO: combine attrMaps etc.
     let se = fromList $ filter (\ (s, _) -> not $ null $ qualifiedName s) $ eds
     let re = mkSeqs $ map (\ (_, ed) -> contentModel ed) eds
-    mkElemDesc empty re se <$> mkNoTextSTTF
+    return $ mkElemDesc empty re se mkNoTextSTTF
 
 -- =========================================
 
@@ -1096,7 +1098,7 @@ ctModelToElemDesc (comp, attrs)
   = do
     am <- attrListToAttrMap attrs
     case comp of
-      Nothing -> mkElemDesc am mkUnit empty <$> mkNoTextSTTF -- TODO: RE for empty elem mkUnit (epsilon)
+      Nothing -> return $ mkElemDesc am mkUnit empty mkNoTextSTTF -- TODO: RE for empty elem mkUnit (epsilon)
       Just c  -> do
                  ed <- compToElemDesc c
                  return $ mkElemDesc (union am (attrMap ed)) (contentModel ed) (subElemDesc ed) (sttf ed)
@@ -1122,7 +1124,7 @@ ctToElemDesc ct
                                  Nothing  -> mkSimpleElemDesc am <$> rstrToSTTF rstr
                                  Just ct' -> do
                                              ed <- ctToElemDesc ct'
-                                             tf <- checkBothSTTF (sttf ed) <$> rlistToSTTF rlist -- TODO: <$>
+                                             let tf = checkBothSTTF (sttf ed) $ rlistToSTTF rlist
                                              return $ mkSimpleElemDesc (union am $ attrMap ed) tf
           STRAnonymStDecl _ -> mkSimpleElemDesc am <$> rstrToSTTF rstr
       CCont cc      -> do
@@ -1178,7 +1180,7 @@ createRootDesc
     s <- ask
     let cm = mkAlts $ map mkElemRE $ keys $ sElements s
     se <- fromList <$> zip (keys (sElements s)) <$> (mapM createElemDesc $ elems $ sElements s)
-    mkElemDesc empty cm se <$> mkNoTextSTTF
+    return $ mkElemDesc empty cm se mkNoTextSTTF
 
 --------------------------------------------------------------------------------------
 
@@ -1192,6 +1194,8 @@ data SValEnv       = SValEnv
                    }
 type XPath         = String
 type SValLog       = [(XPath, String)]
+
+type SValResult    = (Bool, SValLog)
 
 type SVal a        = ReaderT SValEnv (WriterT SValLog Identity) a
 
@@ -1222,8 +1226,7 @@ checkAllowedAttrs []
 checkAllowedAttrs ((n, val):xs)
   = do
     env <- ask
-    let m = attrMap $ elemDesc env
-    res <- case lookup n m of
+    res <- case lookup n $ attrMap $ elemDesc env of
              Nothing      -> do
                              tell [((xpath env) ++ "/@" ++ (qualifiedName n), "attribute not allowed here.")]
                              return False
@@ -1275,8 +1278,7 @@ testElemChildren t (x:xs)
               Nothing -> 1
               Just v  -> v+1
     let elemXPath = "/" ++ (qualifiedName n) ++ "[" ++ (show c) ++ "]"
-    let m = subElemDesc $ elemDesc env
-    res <- case lookup n m of
+    res <- case lookup n $ subElemDesc $ elemDesc env of
              Nothing -> do
                         tell [((xpath env) ++ elemXPath, "element not allowed here.")]
                         return False
@@ -1310,6 +1312,27 @@ testElem e
                   tagsRes <- testElemChildren empty tags
                   return (attrRes && contModelRes && textRes && tagsRes)
 
+printSValResult :: SValResult -> IO ()
+printSValResult (status, l)
+  = do
+    if status
+      then putStrLn "\nok.\n"
+      else putStrLn "\nerrors occurred:\n"
+    mapM_ (\ (a, b) -> putStrLn $ a ++ "\n" ++ b ++ "\n") l
+    return ()
+
+validateWithSchema :: String -> String -> IO SValResult
+validateWithSchema descUri instUri
+  = do
+    desc <- loadXmlSchema descUri
+    case desc of
+      Nothing -> return (False, [("/", "Could not process description file.")])
+      Just d  -> do
+                 inst <- readDoc instUri
+                 case inst of
+                   Nothing -> return (False, [("/", "Could not process instance file.")])
+                   Just i  -> return $ runSVal (SValEnv "" (runXSC d createRootDesc)) (testElem i)
+
 --------------------------------------------------------------------------------------
 
 -- Test setup:
@@ -1320,26 +1343,8 @@ main
     -- argv <- getArgs
     -- (schemaurl, docurl) <- return (argv!!0, argv!!1)
 
-    desc <- loadXmlSchema "example.xsd"
-    case desc of
-      Nothing -> putStrLn "\nCould not process description file.\n"
-      Just d  -> do
-                 inst <- readDoc "example.xml"
-                 case inst of
-                   Nothing -> putStrLn "\n Could not process instance file.\n"
-                   Just i  -> do
-                              let res = runSVal (SValEnv "" (runXSC d createRootDesc)) (testElem i)
-                              if (fst res)
-                                then putStrLn "\nok.\n"
-                                else putStrLn "\nerrors were found:\n"
-                              mapM_ (\ (a, b) -> putStrLn $ a ++ "\n" ++ b ++ "\n") $ snd res
-
-    -- TODO: find node for XPath and print it
-
-    -- Text.XML.HXT.XPath.XPathEval
-    -- getXPath :: String -> XmlTree -> XmlTrees
-    -- Postprocess: take XPath and add error msg as processing instr. in document
-    -- <?hxt-validate error="...." ?>
+    res <- validateWithSchema "example.xsd" "example2.xml"
+    printSValResult res
 
     return ()
 

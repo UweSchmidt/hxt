@@ -35,6 +35,15 @@ Experience with standard documents, quality / precision, problems
 
 ------------------------------------------------------------------------
 
+TODO: find node for XPath and print it
+
+Text.XML.HXT.XPath.XPathEval
+getXPath :: String -> XmlTree -> XmlTrees
+Postprocess: take XPath and add error msg as processing instr. in document
+<?hxt-validate error="...." ?>
+
+------------------------------------------------------------------------
+
 -- Save schema to given target file
 
 -- fromSchema :: XmlSchema -> XmlSchema'
