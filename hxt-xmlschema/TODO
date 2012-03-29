@@ -1,16 +1,47 @@
 
+§2.5.1.2: when a datatype is ·derived· from a ·list· datatype, the following ·constraining facet·s can be used:
+
+    ·length·
+    ·maxLength·
+    ·minLength·
+    ·enumeration·
+    ·pattern·
+    ·whiteSpace·
+
+For each of ·length·, ·maxLength· and ·minLength·, the unit of length is measured in number of list items. The value of ·whiteSpace· is fixed to the value collapse.
+
+For ·list· datatypes the ·lexical space· is composed of space-separated literals of its ·itemType·. Hence, any ·pattern· specified when a new datatype is ·derived· from a ·list· datatype is matched against each literal of the ·list· datatype and not against the literals of the datatype that serves as its ·itemType·.
+Example
+
+<xs:simpleType name='myList'>
+	<xs:list itemType='xs:integer'/>
+</xs:simpleType>
+<xs:simpleType name='myRestrictedList'>
+	<xs:restriction base='myList'>
+		<xs:pattern value='123 (\d+\s)*456'/>
+	</xs:restriction>
+</xs:simpleType>
+<someElement xsi:type='myRestrictedList'>123 456</someElement>
+<someElement xsi:type='myRestrictedList'>123 987 456</someElement>
+<someElement xsi:type='myRestrictedList'>123 987 567 456</someElement>
+
+==========================================================================
+
+§2.5.1.3: when a datatype is ·derived· from a ·union· datatype, the only following ·constraining facet·s can be used:
+
+    ·pattern·
+    ·enumeration·
+
+------------------------------------------------------------------------
+
 uppercase / lowercase for attr names elem names ...
-
-datatypeEqual nsuri nsprefix typname cx2 zuPruefenderWert cx1
-datatypeAllows nsuri nsprefix params zuPruefenderWert cx
-
-datatypeEqualW3C
-datatypeAllowsW3C
-
-type ParamList = [(LocalName, String)]
 
 attrUse for AttrRef allowed?
 pickling: print warning if attributes are used which are not expected: e.g. name + ref together
+
+Validate namespaces:
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://example.org/person">
+<tns:family xmlns:tns="http://example.org/person">
 
 ------------------------------------------------------------------------
 

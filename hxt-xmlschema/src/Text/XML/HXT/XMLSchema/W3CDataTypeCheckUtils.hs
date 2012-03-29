@@ -1,138 +1,65 @@
--- |
--- exports helper functions for the W3C datatype library
+-- Composed of Text.XML.HXT.RelaxNG.DataTypeLibUtils, Text.XML.HXT.RelaxNG.DataTypes and Text.XML.HXT.RelaxNG.Utils
 
-module Text.XML.HXT.XMLSchema.DataTypeLibW3CUtils
+module Text.XML.HXT.XMLSchema.W3CDataTypeCheckUtils
   (
-    DatatypeLibrary
-  , DatatypeCheck
-  , mkDTC
 
-  , DatatypeAllows
+    DatatypeName
   , ParamList
 
-  , DatatypeEqual
-
-  , AllowedDatatypes
-  , DatatypeName
-  , AllowedParams
-
-  , errorMsgEqual
   , errorMsgDataTypeNotAllowed
-  , errorMsgDataTypeNotAllowed0
---  , errorMsgDataTypeNotAllowed2
   , errorMsgDataLibQName
   , errorMsgParam
 
   , module Control.Arrow
-  , module Text.XML.HXT.DOM.Util
---  , module Text.XML.HXT.RelaxNG.Utils
---  , module Text.XML.HXT.RelaxNG.DataTypes
---  , FunctionTable
-
-  , stringValidFT       -- generalized checkString
-  , fctTableString      -- minLength, maxLength, length
-  , fctTableList        -- minLength, maxLength, length
 
   , stringValid         -- checkString
---  , numberValid         -- checkNumeric
-
---  , numParamValid
+  , listValid
 
   , isNumber
   , isNmtoken
   , isName
 
   , CheckA              -- Check datatype
-  , CheckString         -- CheckA String String
---  , CheckInteger        -- CheckA Integer Integer
 
   , performCheck        -- run a CheckA
   , ok                  -- always true
   , failure             -- create an error meesage
   , assert              -- create a primitive check from a predicate
---  , assertMaybe         -- create a primitive check from a maybe
   , checkWith           -- convert value before checking
   )
 
 where
 
-import Data.Maybe
+import Data.Maybe                         ( fromMaybe )
 
-import Text.XML.HXT.XMLSchema.DataTypeLibW3CNames
+import Text.ParserCombinators.Parsec      ( option
+                                          , string
+                                          , many1
+                                          , digit
+                                          , runParser
+                                          , eof)
 
-import Text.ParserCombinators.Parsec
+import Text.XML.HXT.Parser.XmlCharParser  ( SimpleXParser
+                                          , withNormNewline
+                                          )
 
-import Text.XML.HXT.Parser.XmlCharParser
-    ( SimpleXParser
-    , withNormNewline
-    )
-
-import Text.XML.HXT.Parser.XmlTokenParser
-    ( skipS0
-    , nmtoken
-    , name
-    )
+import Text.XML.HXT.Parser.XmlTokenParser ( skipS0
+                                          , nmtoken
+                                          , name
+                                          )
 
 import Prelude hiding (id, (.))
 import Control.Category
 import Control.Arrow
 
-import Text.XML.HXT.DOM.Util
+import Text.XML.HXT.XMLSchema.DataTypeLibW3CNames
 
--- | Each datatype library is identified by a URI.
-
-type DatatypeLibrary   = (Uri, DatatypeCheck)
-type Uri = String
-
--- | The Constructor exports the list of supported datatypes for a library.
--- It also exports the specialized datatype library functions to validate
--- a XML instance value with respect to a datatype.
-
-data DatatypeCheck
-  = DTC DatatypeAllows DatatypeEqual AllowedDatatypes
-        -- { dtAllowsFct    :: DatatypeAllows   -- ^ function to test whether a value matches a data-pattern
-        -- , dtEqualFct     :: DatatypeEqual    -- ^ function to test whether a value matches a value-pattern
-        -- , dtAllowedTypes :: AllowedDatatypes -- ^ list of all supported params for a datatype
-        -- }
-
-mkDTC :: DatatypeAllows -> DatatypeEqual -> AllowedDatatypes -> DatatypeCheck
-mkDTC da de ad = DTC da de ad
-
--- | Type of all datatype libraries functions that tests whether
--- a XML instance value matches a data-pattern.
---
--- Returns Just \"errorMessage\" in case of an error else Nothing.
-
-type DatatypeAllows = DatatypeName -> ParamList -> String -> Context -> Maybe String
-
--- | Type of all datatype libraries functions that tests whether
--- a XML instance value matches a value-pattern.
---
--- Returns Just \"errorMessage\" in case of an error else Nothing.
-
-type DatatypeEqual  = DatatypeName -> String -> Context -> String -> Context -> Maybe String
-
--- | List of all supported datatypes and there allowed params
-
-type AllowedDatatypes  = [(DatatypeName, AllowedParams)]
 type DatatypeName      = String
-
--- | List of all supported params for a datatype
-
-type AllowedParams     = [ParamName]
-type ParamName         = String
 
 -- | List of parameters; each parameter is a pair consisting of a local name and a value.
 
 type ParamList = [(LocalName, String)]
 type LocalName = String
-
--- | A Context represents the context of an XML element.
--- It consists of a base URI and a mapping from prefixes to namespace URIs.
-
-type Context = (Uri, [(Prefix, Uri)])
-type Prefix = String
-
 
 -- =================== UTILS ====================
 
@@ -245,6 +172,9 @@ fctTableList
       , (xsd_minLength, (listParamValid (>=)))
       ]
 
+listValid       :: DatatypeName -> ParamList -> CheckString
+listValid d     = stringValidFT fctTableList d 0 (-1)
+
 -- | tests whether a list value matches a length constraint
 
 listParamValid :: (Integer -> Integer -> Bool) -> String -> String -> Bool
@@ -305,29 +235,16 @@ checkWith f c   = C $
 failure         :: (a -> String) -> CheckA a b
 failure msg     = C (Left . msg)
 
-errorMsgDataTypeNotAllowed :: String -> String -> [(String, String)] -> String -> String
-errorMsgDataTypeNotAllowed l t p v
+errorMsgDataTypeNotAllowed :: String -> [(String, String)] -> String -> String
+errorMsgDataTypeNotAllowed t p v
     = ( "Datatype " ++ show t ++ " with parameter(s) " ++
         formatStringListPairs p ++ " and value = " ++ show v ++
-        " not allowed for DatatypeLibrary " ++ show l
+        " is no basic W3C type."
       )
 
-errorMsgDataTypeNotAllowed0 :: String -> String -> String
-errorMsgDataTypeNotAllowed0 l t
-    = ( "Datatype " ++ show t ++
-        " not allowed for DatatypeLibrary " ++ show l
-      )
-
-errorMsgEqual :: DatatypeName -> String -> String -> String
-errorMsgEqual d s1 s2
-    = ( "Datatype" ++ show d ++
-        " with value = " ++ show s1 ++
-        " expected, but value = " ++ show s2 ++ " found"
-      )
-
-errorMsgDataLibQName :: String -> String -> String -> String
-errorMsgDataLibQName l n v
-    = show v ++ " is not a valid " ++ n ++ " for DatatypeLibrary " ++ l
+errorMsgDataLibQName :: String -> String -> String
+errorMsgDataLibQName n v
+    = show v ++ " is no valid " ++ n
 
 formatStringListPairs :: [(String,String)] -> String
 formatStringListPairs

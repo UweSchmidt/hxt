@@ -24,7 +24,7 @@ import Control.Monad.Reader
 import Control.Monad.Writer hiding (Any, All)
 import Control.Applicative ( (<$>) )
 
-import Text.XML.HXT.XMLSchema.DataTypeLibW3C (datatypeEqualW3C, datatypeAllowsW3C)
+import Text.XML.HXT.XMLSchema.W3CDataTypeCheck
 
 instance Ord QName where -- TODO: orphan instance
   compare x y = compare (qualifiedName x) (qualifiedName y)
@@ -383,7 +383,6 @@ xpSimpleTypeRef
     tag (STRAnonymStDecl _) = 1
     ps = [ xpWrap (BaseAttr,        unBaseAttr)        $ xpAttr "base" xpQName
          , xpWrap (STRAnonymStDecl, unSTRAnonymStDecl) $ xpSchemaElem "simpleType" $ xpSimpleType
-         -- TODO: only works if first child?
          ]
 
 xpRestrAttr :: PU RestrAttr
@@ -476,7 +475,7 @@ xpCCDef
 
 xpCTModel :: PU CTModel
 xpCTModel
-  = xpPair (xpOption xpCTCompositor) xpAttrList -- TODO: only works if first child?
+  = xpPair (xpOption xpCTCompositor) xpAttrList
 
 xpCTCompositor :: PU CTCompositor
 xpCTCompositor
@@ -783,51 +782,51 @@ box x = [x]
 knownW3CTypes :: Map QName STTF
 knownW3CTypes
   = fromList
-    [ (mkName "xs:string",             mkErrorSTTF "no string check implemented.")
-    , (mkName "xs:normalizedString",   mkPassThroughSTTF)
-    , (mkName "xs:token",              mkPassThroughSTTF)
-    , (mkName "xs:language",           mkPassThroughSTTF)
-    , (mkName "xs:NMTOKEN",            mkPassThroughSTTF)
-    , (mkName "xs:NMTOKENS",           mkPassThroughSTTF)
-    , (mkName "xs:Name",               mkPassThroughSTTF)
-    , (mkName "xs:NCName",             mkPassThroughSTTF)
-    , (mkName "xs:ID",                 mkPassThroughSTTF)
-    , (mkName "xs:IDREF",              mkPassThroughSTTF)
-    , (mkName "xs:IDREFS",             mkPassThroughSTTF)
-    , (mkName "xs:ENTITY",             mkPassThroughSTTF)
-    , (mkName "xs:ENTITIES",           mkPassThroughSTTF)
-    , (mkName "xs:anyURI",             mkPassThroughSTTF)
-    , (mkName "xs:QName",              mkPassThroughSTTF)
-    , (mkName "xs:NOTATION",           mkPassThroughSTTF)
-    , (mkName "xs:hexBinary",          mkPassThroughSTTF)
-    , (mkName "xs:base64Binary",       mkPassThroughSTTF)
-    , (mkName "xs:decimal",            mkPassThroughSTTF)
-    , (mkName "xs:integer",            mkPassThroughSTTF)
-    , (mkName "xs:nonPositiveInteger", mkPassThroughSTTF)
-    , (mkName "xs:negativeInteger",    mkPassThroughSTTF)
-    , (mkName "xs:nonNegativeInteger", mkPassThroughSTTF)
-    , (mkName "xs:positiveInteger",    mkPassThroughSTTF)
-    , (mkName "xs:long",               mkPassThroughSTTF)
-    , (mkName "xs:int",                mkPassThroughSTTF)
-    , (mkName "xs:short",              mkPassThroughSTTF)
-    , (mkName "xs:byte",               mkPassThroughSTTF)
-    , (mkName "xs:unsignedLong",       mkPassThroughSTTF)
-    , (mkName "xs:unsignedInt",        mkPassThroughSTTF)
-    , (mkName "xs:unsignedShort",      mkPassThroughSTTF)
-    , (mkName "xs:unsignedByte",       mkPassThroughSTTF)
-    -- TODO: not implemented yet in DataTypeLibW3C (result = true with warning text)
-    , (mkName "xs:boolean",            mkPassThroughSTTF)
-    , (mkName "xs:float",              mkPassThroughSTTF)
-    , (mkName "xs:double",             mkPassThroughSTTF)
-    , (mkName "xs:time",               mkPassThroughSTTF)
-    , (mkName "xs:duration",           mkPassThroughSTTF)
-    , (mkName "xs:date",               mkPassThroughSTTF)
-    , (mkName "xs:dateTime",           mkPassThroughSTTF)
-    , (mkName "xs:gDay",               mkPassThroughSTTF)
-    , (mkName "xs:gMonth",             mkPassThroughSTTF)
-    , (mkName "xs:gMonthDay",          mkPassThroughSTTF)
-    , (mkName "xs:gYear",              mkPassThroughSTTF)
-    , (mkName "xs:gYearMonth",         mkPassThroughSTTF)
+    [ (mkName "xs:string",             mkW3CCheckSTTF xsd_string)
+    , (mkName "xs:normalizedString",   mkW3CCheckSTTF xsd_normalizedString)
+    , (mkName "xs:token",              mkW3CCheckSTTF xsd_token)
+    , (mkName "xs:language",           mkW3CCheckSTTF xsd_language)
+    , (mkName "xs:NMTOKEN",            mkW3CCheckSTTF xsd_NMTOKEN)
+    , (mkName "xs:NMTOKENS",           mkW3CCheckSTTF xsd_NMTOKENS)
+    , (mkName "xs:Name",               mkW3CCheckSTTF xsd_Name)
+    , (mkName "xs:NCName",             mkW3CCheckSTTF xsd_NCName)
+    , (mkName "xs:ID",                 mkW3CCheckSTTF xsd_ID)
+    , (mkName "xs:IDREF",              mkW3CCheckSTTF xsd_IDREF)
+    , (mkName "xs:IDREFS",             mkW3CCheckSTTF xsd_IDREFS)
+    , (mkName "xs:ENTITY",             mkW3CCheckSTTF xsd_ENTITY)
+    , (mkName "xs:ENTITIES",           mkW3CCheckSTTF xsd_ENTITIES)
+    , (mkName "xs:anyURI",             mkW3CCheckSTTF xsd_anyURI)
+    , (mkName "xs:QName",              mkW3CCheckSTTF xsd_QName)
+    , (mkName "xs:NOTATION",           mkW3CCheckSTTF xsd_NOTATION)
+    , (mkName "xs:hexBinary",          mkW3CCheckSTTF xsd_hexBinary)
+    , (mkName "xs:base64Binary",       mkW3CCheckSTTF xsd_base64Binary)
+    , (mkName "xs:decimal",            mkW3CCheckSTTF xsd_decimal)
+    , (mkName "xs:integer",            mkW3CCheckSTTF xsd_integer)
+    , (mkName "xs:nonPositiveInteger", mkW3CCheckSTTF xsd_nonPositiveInteger)
+    , (mkName "xs:negativeInteger",    mkW3CCheckSTTF xsd_negativeInteger)
+    , (mkName "xs:nonNegativeInteger", mkW3CCheckSTTF xsd_nonNegativeInteger)
+    , (mkName "xs:positiveInteger",    mkW3CCheckSTTF xsd_positiveInteger)
+    , (mkName "xs:long",               mkW3CCheckSTTF xsd_long)
+    , (mkName "xs:int",                mkW3CCheckSTTF xsd_int)
+    , (mkName "xs:short",              mkW3CCheckSTTF xsd_short)
+    , (mkName "xs:byte",               mkW3CCheckSTTF xsd_byte)
+    , (mkName "xs:unsignedLong",       mkW3CCheckSTTF xsd_unsignedLong)
+    , (mkName "xs:unsignedInt",        mkW3CCheckSTTF xsd_unsignedInt)
+    , (mkName "xs:unsignedShort",      mkW3CCheckSTTF xsd_unsignedShort)
+    , (mkName "xs:unsignedByte",       mkW3CCheckSTTF xsd_unsignedByte)
+    -- TODO: not implemented yet in DataTypeLibW3C / W3CDataTypeCheck
+    , (mkName "xs:boolean",            mkWarnSTTF "no check for boolean implemented.")
+    , (mkName "xs:float",              mkWarnSTTF "no check for float implemented.")
+    , (mkName "xs:double",             mkWarnSTTF "no check for double implemented.")
+    , (mkName "xs:time",               mkWarnSTTF "no check for time implemented.")
+    , (mkName "xs:duration",           mkWarnSTTF "no check for duration implemented.")
+    , (mkName "xs:date",               mkWarnSTTF "no check for date implemented.")
+    , (mkName "xs:dateTime",           mkWarnSTTF "no check for dateTime implemented.")
+    , (mkName "xs:gDay",               mkWarnSTTF "no check for gDay implemented.")
+    , (mkName "xs:gMonth",             mkWarnSTTF "no check for gMonth implemented.")
+    , (mkName "xs:gMonthDay",          mkWarnSTTF "no check for gMonthDay implemented.")
+    , (mkName "xs:gYear",              mkWarnSTTF "no check for gYear implemented.")
+    , (mkName "xs:gYearMonth",         mkWarnSTTF "no check for gYearMonth implemented.")
     ]
 
 checkBothSTTF :: STTF -> STTF -> STTF
@@ -851,6 +850,13 @@ mkPassThroughSTTF :: STTF
 mkPassThroughSTTF
   = \ _ -> return True
 
+mkWarnSTTF :: String -> STTF
+mkWarnSTTF s
+  = \ _ -> do
+           env <- ask
+           tell [(xpath env, s)]
+           return True
+
 mkErrorSTTF :: String -> STTF
 mkErrorSTTF s
   = \ _ -> do
@@ -858,7 +864,17 @@ mkErrorSTTF s
            tell [(xpath env, s)]
            return False
 
-lookupSTTF :: QName -> XSC STTF
+mkW3CCheckSTTF :: DatatypeName -> STTF
+mkW3CCheckSTTF d
+  = do
+    \ s -> case datatypeAllowsW3C d [] s of
+             Nothing  -> return True
+             Just msg -> do
+                         env <- ask
+                         tell [(xpath env, msg)]
+                         return False
+
+lookupSTTF :: QName -> XSC STTF -- TODO: pass list of restrictions
 lookupSTTF n
   = do
     s <- ask
@@ -884,7 +900,7 @@ rlistToSTTF _
 -- Pattern
 -- WhiteSpace -- values anpassen auf whitespace-festlegung (vor / nach pattern?)
 
-rstrToSTTF :: STRestriction -> XSC STTF
+rstrToSTTF :: STRestriction -> XSC STTF -- TODO: pass restriction list to lookupSTTF
 rstrToSTTF (tref, rlist)
   = do
     baseTF  <- case tref of
@@ -894,7 +910,7 @@ rstrToSTTF (tref, rlist)
 
 stToSTTF :: SimpleType -> XSC STTF
 stToSTTF (Restr rstr)
-  = rstrToSTTF rstr
+  = rstrToSTTF rstr -- TODO: pass restriction list to basic type check
 stToSTTF (Lst tref)
   = do
     baseTF  <- case tref of
@@ -1124,6 +1140,16 @@ ctToElemDesc ct
                                  Nothing  -> mkSimpleElemDesc am <$> rstrToSTTF rstr
                                  Just ct' -> do
                                              ed <- ctToElemDesc ct'
+          -- TODO: dabei Attributliste zusammenstellen
+          -- rekursiver Aufruf:
+          -- Liste von Restriktionen merken: rlist
+          -- Absteigen in referenzierten ComplexType von dem man weiß, dass es ein SimpleContent-ComplexType ist:
+             -- Falls eine Extension:
+                -- Falls basis ein ComplexType: rekursiver Aufruf mit rlist
+                -- Falls basis kein ComplexType: rstrToSTTF (BaseAttr basis, rlist)
+             -- Falls eine Restriction: rlists mergen! (evtl. erst beim Aufstieg)
+                -- Falls basis ein ComplexType: rekursiver Aufruf mit mergedRlist
+                -- Falls basis kein ComplexType: rstrToSTTF (BaseAttr basis, mergedRlist)
                                              let tf = checkBothSTTF (sttf ed) $ rlistToSTTF rlist
                                              return $ mkSimpleElemDesc (union am $ attrMap ed) tf
           STRAnonymStDecl _ -> mkSimpleElemDesc am <$> rstrToSTTF rstr
