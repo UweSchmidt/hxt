@@ -94,8 +94,8 @@ data RestrAttr         = MinIncl        {unMinIncl        :: Value}
                        | Length         {unLength         :: Value}
                        | MinLength      {unMinLength      :: Value}
                        | MaxLength      {unMaxLength      :: Value}
-                       | Enumeration    {unEnumeration    :: Value}
                        | Pattern        {unPattern        :: Value}
+                       | Enumeration    {unEnumeration    :: Value}
                        | WhiteSpace     {unWhiteSpace     :: Value}
                        deriving (Show, Eq)
 type Value             = String
@@ -398,8 +398,8 @@ xpRestrAttr
     tag (Length _)         = 6
     tag (MinLength _)      = 7
     tag (MaxLength _)      = 8
-    tag (Enumeration _)    = 9
-    tag (Pattern _)        = 10
+    tag (Pattern _)        = 9
+    tag (Enumeration _)    = 10
     tag (WhiteSpace _)     = 11
     ps = [ xpWrap (MinIncl,        unMinIncl)        $ xpSchemaElem "minInclusive"   $ xpAttr "value" xpText
          , xpWrap (MaxIncl,        unMaxIncl)        $ xpSchemaElem "maxInclusive"   $ xpAttr "value" xpText
@@ -410,8 +410,8 @@ xpRestrAttr
          , xpWrap (Length,         unLength)         $ xpSchemaElem "length"         $ xpAttr "value" xpText
          , xpWrap (MinLength,      unMinLength)      $ xpSchemaElem "minLength"      $ xpAttr "value" xpText
          , xpWrap (MaxLength,      unMaxLength)      $ xpSchemaElem "maxLength"      $ xpAttr "value" xpText
-         , xpWrap (Enumeration,    unEnumeration)    $ xpSchemaElem "enumeration"    $ xpAttr "value" xpText
          , xpWrap (Pattern,        unPattern)        $ xpSchemaElem "pattern"        $ xpAttr "value" xpText
+         , xpWrap (Enumeration,    unEnumeration)    $ xpSchemaElem "enumeration"    $ xpAttr "value" xpText
          , xpWrap (WhiteSpace,     unWhiteSpace)     $ xpSchemaElem "whiteSpace"     $ xpAttr "value" xpText
          ]
 
@@ -741,6 +741,7 @@ readDoc uri
   = do
     s <- runX ( readDocument [ withValidate yes        -- validate source
                              , withTrace 0             -- trace processing steps?
+                             , withRemoveWS yes        -- remove redundant whitespace
                              , withPreserveComment no  -- remove comments
                              , withCheckNamespaces yes -- check namespaces
                              , withCurl []             -- use libCurl for http access
@@ -814,14 +815,28 @@ mkErrorSTTF s
            tell [(xpath env, s)]
            return False
 
-mkW3CCheckSTTF :: DatatypeName -> ParamList -> STTF
-mkW3CCheckSTTF d p
-  = \ v -> case datatypeAllowsW3C d p v of
-             Nothing  -> return True
-             Just msg -> do
-                         env <- ask
-                         tell [(xpath env, msg)]
-                         return False
+mkW3CCheckSTTF :: QName -> ParamList -> STTF
+mkW3CCheckSTTF n p
+  = if n `elem` [ mkName "xs:boolean" -- TODO: extend W3CDataTypeCheck and only leave else-part
+                , mkName "xs:float"
+                , mkName "xs:double"
+                , mkName "xs:time"
+                , mkName "xs:duration"
+                , mkName "xs:date"
+                , mkName "xs:dateTime"
+                , mkName "xs:gDay"
+                , mkName "xs:gMonth"
+                , mkName "xs:gMonthDay"
+                , mkName "xs:gYear"
+                , mkName "xs:gYearMonth"
+                ]
+    then mkWarnSTTF $ "no check implemented for W3C type " ++ (localPart n) ++ "."
+    else \ v -> case datatypeAllowsW3C (localPart n) p v of
+                  Nothing  -> return True
+                  Just msg -> do
+                              env <- ask
+                              tell [(xpath env, msg)]
+                              return False
 
 lookupSTTF :: QName -> XSC STTF
 lookupSTTF n
@@ -829,47 +844,52 @@ lookupSTTF n
     s <- ask
     case lookup n (sSimpleTypes s) of
       Just t  -> stToSTTF t
-      Nothing -> if n `elem` [ mkName "xs:boolean" -- TODO: extend W3CDataTypeCheck
-                             , mkName "xs:float"
-                             , mkName "xs:double"
-                             , mkName "xs:time"
-                             , mkName "xs:duration"
-                             , mkName "xs:date"
-                             , mkName "xs:dateTime"
-                             , mkName "xs:gDay"
-                             , mkName "xs:gMonth"
-                             , mkName "xs:gMonthDay"
-                             , mkName "xs:gYear"
-                             , mkName "xs:gYearMonth"
-                             ]
-                 then return $ mkWarnSTTF $ "no check implemented for W3C type " ++ (localPart n) ++ "."
-                 else return $ mkW3CCheckSTTF (localPart n) []
+      Nothing -> return $ mkW3CCheckSTTF n []
 
--- MinIncl
--- MaxIncl
--- MinExcl
--- MaxExcl
--- TotalDigits
--- FractionDigits
--- Length
--- MinLength
--- MaxLength
--- Pattern
+mergeRestrAttrs :: RestrAttrs -> RestrAttrs -> RestrAttrs
+mergeRestrAttrs rlist rlist'
+  = rlist ++ rlist' -- TODO: works if higher level restrictions can never soften lower level restrictions
 
--- Enumeration -- not implemented yet
--- WhiteSpace  -- values anpassen auf whitespace-festlegung (vor / nach pattern?)
+restrAttrsToParamList :: RestrAttrs -> ParamList
+restrAttrsToParamList rlist
+  = concat $ map (\ x -> case x of
+                           MinIncl v        -> box (xsd_minInclusive,   v)
+                           MaxIncl v        -> box (xsd_maxInclusive,   v)
+                           MinExcl v        -> box (xsd_minExclusive,   v)
+                           MaxExcl v        -> box (xsd_maxExclusive,   v)
+                           TotalDigits v    -> box (xsd_totalDigits,    v)
+                           FractionDigits v -> box (xsd_fractionDigits, v)
+                           Length v         -> box (xsd_length,         v)
+                           MinLength v      -> box (xsd_minLength,      v)
+                           MaxLength v      -> box (xsd_maxLength,      v)
+                           Pattern v        -> box (xsd_pattern,        v)
+                           -- Enumeration v    -> box (xsd_enumeration,    v) -- TODO: extend W3CDataTypeCheck and remove concat and box
+                           -- WhiteSpace v     -> box (xsd_whiteSpace,     v) -- TODO: extend W3CDataTypeCheck and remove concat and box
+                           _                -> []
+
+                 ) rlist
 
 rstrToSTTF :: STRestriction -> XSC STTF
 rstrToSTTF (tref, rlist)
   = do
-    baseTF  <- case tref of
-                 BaseAttr n        -> lookupSTTF n
-                 STRAnonymStDecl t -> stToSTTF t
-    return baseTF -- $ checkBothSTTF baseTF $ rlistToSTTF rlist
+    s <- ask
+    let t' = case tref of
+               BaseAttr n        -> case lookup n (sSimpleTypes s) of
+                                      Just t  -> Left t
+                                      Nothing -> Right $ mkW3CCheckSTTF n $ restrAttrsToParamList rlist      
+               STRAnonymStDecl t -> Left t
+    case t' of
+      Left t   -> case t of
+                    (Restr (tref', rlist')) -> rstrToSTTF (tref', mergeRestrAttrs rlist rlist')
+                    (Lst _)                 -> checkBothSTTF (mkWarnSTTF "no restriction checks for lists implemented.") <$> stToSTTF t
+                                               -- allowed: length, minLength, maxLength, pattern, enumeration, whiteSpace
+                    (Un _)                  -> checkBothSTTF (mkWarnSTTF "no restriction checks for unions implemented.") <$> stToSTTF t
+                                               -- allowed: pattern, enumeration
+      Right tf -> return tf
 
 stToSTTF :: SimpleType -> XSC STTF
 stToSTTF (Restr rstr)
-  = rstrToSTTF rstr -- TODO: pass restriction list to basic type check
+  = rstrToSTTF rstr
 stToSTTF (Lst tref)
   = do
     baseTF  <- case tref of
@@ -1007,25 +1027,37 @@ chSeqContToElemDesc c
 choiceToElemDesc :: Choice -> XSC ElemDesc -- TODO: refactor subElem detection?
 choiceToElemDesc l
   = do
-    let names = map ( \ x -> case x of
-                               ChSeqEl (_, el) -> elementToName el
-                               _               -> mkName ""
-                    ) l -- TODO: sense?
-    eds <- zip names <$> mapM chSeqContToElemDesc l -- TODO: combine attrMaps etc.
-    let se = fromList $ filter (\ (s, _) -> not $ null $ qualifiedName s) $ eds
-    let re = mkAlts $ map (\ (_, ed) -> contentModel ed) eds
+    eds <- ( zip $ map (\ x -> case x of
+                                 ChSeqEl (_, el) -> Just $ elementToName el
+                                 _               -> Nothing
+                       ) l
+           ) <$> mapM chSeqContToElemDesc l
+    let re = mkAlts $ map (\ (nameTag, ed) -> case nameTag of
+                                                Just n  -> mkElemRE n
+                                                Nothing -> contentModel ed
+                          ) eds
+    let se = foldr union empty $ map (\ (nameTag, ed) -> case nameTag of
+                                                           Just n  -> fromList [(n, ed)]
+                                                           Nothing -> subElemDesc ed
+                                     ) eds
     return $ mkElemDesc empty re se mkNoTextSTTF
 
 sequenceToElemDesc :: Sequence -> XSC ElemDesc -- TODO: refactor subElem detection?
 sequenceToElemDesc l
   = do
-    let names = map ( \ x -> case x of
-                               ChSeqEl (_, el) -> elementToName el
-                               _               -> mkName ""
-                    ) l -- TODO: sense?
-    eds <- zip names <$> mapM chSeqContToElemDesc l -- TODO: combine attrMaps etc.
-    let se = fromList $ filter (\ (s, _) -> not $ null $ qualifiedName s) $ eds
-    let re = mkSeqs $ map (\ (_, ed) -> contentModel ed) eds
+    eds <- ( zip $ map (\ x -> case x of
+                                 ChSeqEl (_, el) -> Just $ elementToName el
+                                 _               -> Nothing
+                       ) l
+           ) <$> mapM chSeqContToElemDesc l
+    let re = mkSeqs $ map (\ (nameTag, ed) -> case nameTag of
+                                                Just n  -> mkElemRE n
+                                                Nothing -> contentModel ed
+                          ) eds
+    let se = foldr union empty $ map (\ (nameTag, ed) -> case nameTag of
+                                                           Just n  -> fromList [(n, ed)]
+                                                           Nothing -> subElemDesc ed
+                                     ) eds
     return $ mkElemDesc empty re se mkNoTextSTTF
 
 readMaybeInt :: String -> Maybe Int
@@ -1086,7 +1118,7 @@ simpleContentToElemDesc (SCRestr ((tref, rlist'), attrs)) am rlist
   = do
     s <- ask
     am' <- union am <$> attrListToAttrMap attrs
-    let mergedRlist = rlist ++ rlist' -- TODO: works if higher level restrictions can never soften lower level restrictions
+    let mergedRlist = mergeRestrAttrs rlist rlist'
     case tref of
       BaseAttr n -> case lookup n $ sComplexTypes s of
                       Nothing -> mkSimpleElemDesc am' <$> rstrToSTTF (BaseAttr n, mergedRlist)

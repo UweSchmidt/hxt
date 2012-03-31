@@ -61,13 +61,9 @@ type DatatypeName      = String
 type ParamList = [(LocalName, String)]
 type LocalName = String
 
--- =================== UTILS ====================
-
 -- | Function table type
 
 type FunctionTable      = [(String, String -> String -> Bool)]
-
--- ====== Check strings ======
 
 -- | Function table for string tests,
 -- XML document value is first operand, schema value second
@@ -159,8 +155,6 @@ errorMsgParam pn pv v
         ++ pn ++ " = " ++ pv
         ++ "\" does not hold for value = \"" ++ v ++ "\""
       )
-
--- ======== Check lists ========
 
 -- | Function table for list tests,
 -- XML document value is first operand, schema value second
@@ -257,3 +251,4 @@ formatStringList _sf _sp []
 formatStringList sf spacer l
     = reverse $ drop (length spacer) $ reverse $
       foldr (\e -> ((if e /= "" then sf e ++ spacer else "") ++)) "" l
+

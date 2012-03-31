@@ -28,6 +28,13 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="sommerMonatInt">
+    <xs:restriction base="monatInt">
+      <xs:minInclusive value="6"/>
+      <xs:maxInclusive value="8"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:simpleType name="celsiusKörperTemp">
     <xs:restriction base="xs:decimal">
       <xs:totalDigits value="3"/>
@@ -78,10 +85,10 @@
 
   <!-- complex types with simple content (extension / restriction) -->
 
-  <xs:complexType name="title1">
+  <xs:complexType name="termin1">
     <xs:simpleContent>
       <xs:extension base="xs:string">
-        <xs:attribute name="font" type="xs:string" use="required"/>
+        <xs:attribute name="monat" type="sommerMonatInt" use="required"/>
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
@@ -156,16 +163,18 @@
 
   <!-- element definition (with type reference) -->
 
-  <xs:element name="title" type="title1"/>
+  <xs:element name="termin" type="termin1"/>
+
+  <xs:element name="ort" type="plz"/>
 
   <!-- element definition (with anonymous type declarations) -->
 
   <xs:element name="html">
     <xs:complexType>
-      <xs:sequence>
-        <xs:element ref="head"/>
+      <xs:choice>
+        <xs:element name="head" type="xs:string" minOccurs="0"/>
         <xs:element name="body" type="xs:string"/>
-      </xs:sequence>
+      </xs:choice>
     </xs:complexType>
   </xs:element>
 

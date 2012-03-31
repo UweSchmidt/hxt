@@ -2,8 +2,6 @@
 
 module Text.XML.HXT.XMLSchema.W3CDataTypeCheck
   ( module Text.XML.HXT.XMLSchema.DataTypeLibW3CNames
-  -- , datatypeEqualW3C
-  , DatatypeName
   , ParamList
   , datatypeAllowsW3C
   )
@@ -359,44 +357,3 @@ datatypeAllowsW3C d params value
     assertW3C p = assert p errW3C
     errW3C      = errorMsgDataLibQName d
 
--- ----------------------------------------
-
--- | Tests whether a XML instance value matches a value-pattern.
-
-{-
-datatypeEqualW3C :: DatatypeEqual
-datatypeEqualW3C d s1 _ s2 _
-    = performCheck check (s1, s2)
-    where
-    check       :: CheckA (String, String) (String, String)
-    check       = maybe notFound found . lookup d $ norm
-
-    notFound    = failure $ const (errorMsgDataTypeNotAllowed0 w3cNS d)
-
-    found nf    = arr (\ (x1, x2) -> (nf x1, nf x2))                    -- normalize both values
-                  >>>
-                  assert (uncurry (==)) (uncurry $ errorMsgEqual d)     -- and check on (==)
-
-    norm = [ (xsd_string,               id                      )
-           , (xsd_normalizedString,     normalizeBlanks         )
-           , (xsd_token,                normalizeWhitespace     )
-           , (xsd_language,             normalizeWhitespace     )
-           , (xsd_NMTOKEN,              normalizeWhitespace     )
-           , (xsd_NMTOKENS,             normalizeWhitespace     )
-           , (xsd_Name,                 normalizeWhitespace     )
-           , (xsd_NCName,               normalizeWhitespace     )
-           , (xsd_ID,                   normalizeWhitespace     )
-           , (xsd_IDREF,                normalizeWhitespace     )
-           , (xsd_IDREFS,               normalizeWhitespace     )
-           , (xsd_ENTITY,               normalizeWhitespace     )
-           , (xsd_ENTITIES,             normalizeWhitespace     )
-           , (xsd_anyURI,               escapeURI . normalizeWhitespace )
-           , (xsd_QName,                normalizeWhitespace     )
-           , (xsd_NOTATION,             normalizeWhitespace     )
-           , (xsd_hexBinary,            id                      )
-           , (xsd_base64Binary,         normBase64              )
-           , (xsd_decimal,              show . readDecimal . normalizeWhitespace        )
-           ]
--}
-
--- ----------------------------------------
