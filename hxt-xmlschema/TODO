@@ -43,6 +43,8 @@ Validate namespaces:
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://example.org/person">
 <tns:family xmlns:tns="http://example.org/person">
 
+prevent infinite recursion on type references
+
 ------------------------------------------------------------------------
 
 Do not resolve the same include multiple times (allowed in XML Schema)

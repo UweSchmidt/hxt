@@ -1045,11 +1045,7 @@ chSeqContToElemDesc c
                    ChSeqAn (occ, _)  -> return $ mkPair occ $ mkErrorElemDesc "not implemented yet." -- TODO: impl any :: Any
     return $ mkElemDesc (attrMap ed) (mkMinMaxRE occ (contentModel ed)) (subElemDesc ed) (sttf ed)
 
--- =========================================
-
--- TODO: refactor subElem detection
-
-choiceToElemDesc :: Choice -> XSC ElemDesc
+choiceToElemDesc :: Choice -> XSC ElemDesc -- TODO: refactor subElem detection?
 choiceToElemDesc l
   = do
     let names = map ( \ x -> case x of
@@ -1061,7 +1057,7 @@ choiceToElemDesc l
     let re = mkAlts $ map (\ (_, ed) -> contentModel ed) eds
     return $ mkElemDesc empty re se mkNoTextSTTF
 
-sequenceToElemDesc :: Sequence -> XSC ElemDesc
+sequenceToElemDesc :: Sequence -> XSC ElemDesc -- TODO: refactor subElem detection?
 sequenceToElemDesc l
   = do
     let names = map ( \ x -> case x of
@@ -1072,8 +1068,6 @@ sequenceToElemDesc l
     let se = fromList $ filter (\ (s, _) -> not $ null $ qualifiedName s) $ eds
     let re = mkSeqs $ map (\ (_, ed) -> contentModel ed) eds
     return $ mkElemDesc empty re se mkNoTextSTTF
-
--- =========================================
 
 readMaybeInt :: String -> Maybe Int
 readMaybeInt str
@@ -1119,42 +1113,37 @@ ctModelToElemDesc (comp, attrs)
                  ed <- compToElemDesc c
                  return $ mkElemDesc (union am (attrMap ed)) (contentModel ed) (subElemDesc ed) (sttf ed)
 
-ctToElemDesc :: ComplexType -> XSC ElemDesc -- TODO: refactor to 3 functions
+simpleContentToElemDesc :: SimpleContent -> AttrMap -> RestrAttrs -> XSC ElemDesc
+simpleContentToElemDesc (SCExt (n, attrs)) am rlist
+  = do
+    s <- ask
+    am' <- union am  <$> attrListToAttrMap attrs
+    case lookup n $ sComplexTypes s of
+      Nothing -> mkSimpleElemDesc am' <$> rstrToSTTF (BaseAttr n, rlist)
+      Just ct -> case ctDef ct of
+                   SCont sc -> simpleContentToElemDesc sc am' rlist
+                   _        -> return $ mkErrorElemDesc "element validation error: illegal type reference in schema file"
+simpleContentToElemDesc (SCRestr ((tref, rlist'), attrs)) am rlist
+  = do
+    s <- ask
+    am' <- union am <$> attrListToAttrMap attrs
+    let mergedRlist = rlist ++ rlist' -- TODO: works if higher level restrictions can never soften lower level restrictions
+    case tref of
+      BaseAttr n -> case lookup n $ sComplexTypes s of
+                      Nothing -> mkSimpleElemDesc am' <$> rstrToSTTF (BaseAttr n, mergedRlist)
+                      Just ct -> case ctDef ct of
+                                   SCont sc -> simpleContentToElemDesc sc am' mergedRlist
+                                   _        -> return $ mkErrorElemDesc "element validation error: illegal type reference in schema file"
+      STRAnonymStDecl _ -> mkSimpleElemDesc am' <$> rstrToSTTF (tref, mergedRlist)
+
+ctToElemDesc :: ComplexType -> XSC ElemDesc
 ctToElemDesc ct
   = do
     s <- ask
-    case ctDef ct of -- TODO: ctMixed ct (Maybe String)
-      SCont (SCExt   (n,             attrs)) ->
-        do
-        am <- attrListToAttrMap attrs
-        case lookup n $ sComplexTypes s of
-          Nothing  -> mkSimpleElemDesc am <$> lookupSTTF n
-          Just ct' -> do
-                      ed <- ctToElemDesc ct'
-                      return $ mkSimpleElemDesc (union am $ attrMap ed) (sttf ed)
-      SCont (SCRestr (rstr@(tref, rlist), attrs)) ->
-        do
-        am <- attrListToAttrMap attrs
-        case tref of
-          BaseAttr n        -> case lookup n $ sComplexTypes s of
-                                 Nothing  -> mkSimpleElemDesc am <$> rstrToSTTF rstr
-                                 Just ct' -> do
-                                             ed <- ctToElemDesc ct'
-          -- TODO: dabei Attributliste zusammenstellen
-          -- rekursiver Aufruf:
-          -- Liste von Restriktionen merken: rlist
-          -- Absteigen in referenzierten ComplexType von dem man weiß, dass es ein SimpleContent-ComplexType ist:
-             -- Falls eine Extension:
-                -- Falls basis ein ComplexType: rekursiver Aufruf mit rlist
-                -- Falls basis kein ComplexType: rstrToSTTF (BaseAttr basis, rlist)
-             -- Falls eine Restriction: rlists mergen! (evtl. erst beim Aufstieg)
-                -- Falls basis ein ComplexType: rekursiver Aufruf mit mergedRlist
-                -- Falls basis kein ComplexType: rstrToSTTF (BaseAttr basis, mergedRlist)
-                                             let tf = checkBothSTTF (sttf ed) $ rlistToSTTF rlist
-                                             return $ mkSimpleElemDesc (union am $ attrMap ed) tf
-          STRAnonymStDecl _ -> mkSimpleElemDesc am <$> rstrToSTTF rstr
+    case ctDef ct of
+      SCont sc      -> simpleContentToElemDesc sc empty []
       CCont cc      -> do
-                       case ccDef cc of -- TODO: ccMixed cc (Maybe String) 
+                       case ccDef cc of -- TODO: ccMixed cc (Maybe String): falls Nothing schauen ob ctMixed ct definiert
                          CCExt   (n, m) -> case lookup n $ sComplexTypes s of
                                              Nothing  -> return $ mkErrorElemDesc
                                                          "element validation error: illegal type reference in schema file"
@@ -1177,7 +1166,7 @@ ctToElemDesc ct
                                                                              (contentModel ed)
                                                                              (subElemDesc ed)
                                                                              (checkBothSTTF (sttf base) (sttf ed))
-      NewCT m       -> ctModelToElemDesc m
+      NewCT m       -> ctModelToElemDesc m -- TODO: ctMixed ct (Maybe String)
 
 createElemDesc :: Element -> XSC ElemDesc
 createElemDesc (ElRef n)
