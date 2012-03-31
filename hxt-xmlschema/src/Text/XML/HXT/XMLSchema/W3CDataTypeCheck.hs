@@ -4,6 +4,7 @@ module Text.XML.HXT.XMLSchema.W3CDataTypeCheck
   ( module Text.XML.HXT.XMLSchema.DataTypeLibW3CNames
   -- , datatypeEqualW3C
   , DatatypeName
+  , ParamList
   , datatypeAllowsW3C
   )
 where

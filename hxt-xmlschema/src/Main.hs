@@ -779,61 +779,11 @@ box x = [x]
 
 -- Create SimpleType test functions
 
-knownW3CTypes :: Map QName STTF
-knownW3CTypes
-  = fromList
-    [ (mkName "xs:string",             mkW3CCheckSTTF xsd_string)
-    , (mkName "xs:normalizedString",   mkW3CCheckSTTF xsd_normalizedString)
-    , (mkName "xs:token",              mkW3CCheckSTTF xsd_token)
-    , (mkName "xs:language",           mkW3CCheckSTTF xsd_language)
-    , (mkName "xs:NMTOKEN",            mkW3CCheckSTTF xsd_NMTOKEN)
-    , (mkName "xs:NMTOKENS",           mkW3CCheckSTTF xsd_NMTOKENS)
-    , (mkName "xs:Name",               mkW3CCheckSTTF xsd_Name)
-    , (mkName "xs:NCName",             mkW3CCheckSTTF xsd_NCName)
-    , (mkName "xs:ID",                 mkW3CCheckSTTF xsd_ID)
-    , (mkName "xs:IDREF",              mkW3CCheckSTTF xsd_IDREF)
-    , (mkName "xs:IDREFS",             mkW3CCheckSTTF xsd_IDREFS)
-    , (mkName "xs:ENTITY",             mkW3CCheckSTTF xsd_ENTITY)
-    , (mkName "xs:ENTITIES",           mkW3CCheckSTTF xsd_ENTITIES)
-    , (mkName "xs:anyURI",             mkW3CCheckSTTF xsd_anyURI)
-    , (mkName "xs:QName",              mkW3CCheckSTTF xsd_QName)
-    , (mkName "xs:NOTATION",           mkW3CCheckSTTF xsd_NOTATION)
-    , (mkName "xs:hexBinary",          mkW3CCheckSTTF xsd_hexBinary)
-    , (mkName "xs:base64Binary",       mkW3CCheckSTTF xsd_base64Binary)
-    , (mkName "xs:decimal",            mkW3CCheckSTTF xsd_decimal)
-    , (mkName "xs:integer",            mkW3CCheckSTTF xsd_integer)
-    , (mkName "xs:nonPositiveInteger", mkW3CCheckSTTF xsd_nonPositiveInteger)
-    , (mkName "xs:negativeInteger",    mkW3CCheckSTTF xsd_negativeInteger)
-    , (mkName "xs:nonNegativeInteger", mkW3CCheckSTTF xsd_nonNegativeInteger)
-    , (mkName "xs:positiveInteger",    mkW3CCheckSTTF xsd_positiveInteger)
-    , (mkName "xs:long",               mkW3CCheckSTTF xsd_long)
-    , (mkName "xs:int",                mkW3CCheckSTTF xsd_int)
-    , (mkName "xs:short",              mkW3CCheckSTTF xsd_short)
-    , (mkName "xs:byte",               mkW3CCheckSTTF xsd_byte)
-    , (mkName "xs:unsignedLong",       mkW3CCheckSTTF xsd_unsignedLong)
-    , (mkName "xs:unsignedInt",        mkW3CCheckSTTF xsd_unsignedInt)
-    , (mkName "xs:unsignedShort",      mkW3CCheckSTTF xsd_unsignedShort)
-    , (mkName "xs:unsignedByte",       mkW3CCheckSTTF xsd_unsignedByte)
-    -- TODO: not implemented yet in DataTypeLibW3C / W3CDataTypeCheck
-    , (mkName "xs:boolean",            mkWarnSTTF "no check for boolean implemented.")
-    , (mkName "xs:float",              mkWarnSTTF "no check for float implemented.")
-    , (mkName "xs:double",             mkWarnSTTF "no check for double implemented.")
-    , (mkName "xs:time",               mkWarnSTTF "no check for time implemented.")
-    , (mkName "xs:duration",           mkWarnSTTF "no check for duration implemented.")
-    , (mkName "xs:date",               mkWarnSTTF "no check for date implemented.")
-    , (mkName "xs:dateTime",           mkWarnSTTF "no check for dateTime implemented.")
-    , (mkName "xs:gDay",               mkWarnSTTF "no check for gDay implemented.")
-    , (mkName "xs:gMonth",             mkWarnSTTF "no check for gMonth implemented.")
-    , (mkName "xs:gMonthDay",          mkWarnSTTF "no check for gMonthDay implemented.")
-    , (mkName "xs:gYear",              mkWarnSTTF "no check for gYear implemented.")
-    , (mkName "xs:gYearMonth",         mkWarnSTTF "no check for gYearMonth implemented.")
-    ]
-
 checkBothSTTF :: STTF -> STTF -> STTF
 checkBothSTTF tf1 tf2
-  = \ x -> do
-           tf1res <- tf1 x
-           tf2res <- tf2 x
+  = \ v -> do
+           tf1res <- tf1 v
+           tf2res <- tf2 v
            return (tf1res && tf2res)
 
 mkNoTextSTTF :: STTF
@@ -864,49 +814,59 @@ mkErrorSTTF s
            tell [(xpath env, s)]
            return False
 
-mkW3CCheckSTTF :: DatatypeName -> STTF
-mkW3CCheckSTTF d
+mkW3CCheckSTTF :: DatatypeName -> ParamList -> STTF
+mkW3CCheckSTTF d p
   = do
-    \ s -> case datatypeAllowsW3C d [] s of
+    \ v -> case datatypeAllowsW3C d p v of
              Nothing  -> return True
              Just msg -> do
                          env <- ask
                          tell [(xpath env, msg)]
                          return False
 
-lookupSTTF :: QName -> XSC STTF -- TODO: pass list of restrictions
+lookupSTTF :: QName -> XSC STTF
 lookupSTTF n
   = do
     s <- ask
-    case lookup n knownW3CTypes of
-      Just tf -> return tf
-      Nothing -> case lookup n (sSimpleTypes s) of
-                   Nothing -> return $ mkErrorSTTF "type validation error: illegal type reference in schema file"
-                   Just t  -> stToSTTF t
+    case lookup n (sSimpleTypes s) of
+      Just t  -> stToSTTF t
+      Nothing -> if n `elem` [ mkName "xs:boolean" -- TODO: extend W3CDataTypeCheck
+                             , mkName "xs:float"
+                             , mkName "xs:double"
+                             , mkName "xs:time"
+                             , mkName "xs:duration"
+                             , mkName "xs:date"
+                             , mkName "xs:dateTime"
+                             , mkName "xs:gDay"
+                             , mkName "xs:gMonth"
+                             , mkName "xs:gMonthDay"
+                             , mkName "xs:gYear"
+                             , mkName "xs:gYearMonth"
+                             ]
+                 then return $ mkWarnSTTF $ "no check implemented for W3C type " ++ (localPart n) ++ "."
+                 else return $ mkW3CCheckSTTF (localPart n) []
 
-rlistToSTTF :: RestrAttrs -> STTF
-rlistToSTTF _
-  = mkPassThroughSTTF -- TODO: implement restriction checks
 -- MinIncl
 -- MaxIncl
 -- MinExcl
 -- MaxExcl
 -- TotalDigits
 -- FractionDigits
--- Length (siehe LibUtils)
--- MinLength (siehe LibUtils)
--- MaxLength (siehe LibUtils)
--- Enumeration -- not implemented yet
+-- Length
+-- MinLength
+-- MaxLength
 -- Pattern
--- WhiteSpace -- values anpassen auf whitespace-festlegung (vor / nach pattern?)
 
-rstrToSTTF :: STRestriction -> XSC STTF -- TODO: pass restriction list to lookupSTTF
+-- Enumeration -- not implemented yet
+-- WhiteSpace  -- values anpassen auf whitespace-festlegung (vor / nach pattern?)
+
+rstrToSTTF :: STRestriction -> XSC STTF
 rstrToSTTF (tref, rlist)
   = do
     baseTF  <- case tref of
                  BaseAttr n        -> lookupSTTF n
                  STRAnonymStDecl t -> stToSTTF t
-    return $ checkBothSTTF baseTF $ rlistToSTTF rlist
+    return baseTF -- $ checkBothSTTF baseTF $ rlistToSTTF rlist
 
 stToSTTF :: SimpleType -> XSC STTF
 stToSTTF (Restr rstr)
