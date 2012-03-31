@@ -816,8 +816,7 @@ mkErrorSTTF s
 
 mkW3CCheckSTTF :: DatatypeName -> ParamList -> STTF
 mkW3CCheckSTTF d p
-  = do
-    \ v -> case datatypeAllowsW3C d p v of
+  = \ v -> case datatypeAllowsW3C d p v of
              Nothing  -> return True
              Just msg -> do
                          env <- ask
