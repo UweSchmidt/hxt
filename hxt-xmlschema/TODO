@@ -28,6 +28,12 @@ Validate namespaces:
 
 prevent infinite recursion on type references
 
+-- let proc = fromMaybe "strict" $ processContents an
+-- case proc of
+--   "skip"   -> -- no need to validate
+--   "lax"    -> -- validate elements against their schemas if loadable, error if invalid
+--   "strict" -> -- validate elements against their schemas, error if invalid or schema not loadable
+
 ------------------------------------------------------------------------
 
 Do not resolve the same include multiple times (allowed in XML Schema)
