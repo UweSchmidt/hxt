@@ -171,10 +171,10 @@
 
   <xs:element name="html">
     <xs:complexType>
-      <xs:choice>
+      <xs:sequence>
         <xs:element name="head" type="xs:string" minOccurs="0"/>
         <xs:element name="body" type="xs:string"/>
-      </xs:choice>
+      </xs:sequence>
     </xs:complexType>
   </xs:element>
 

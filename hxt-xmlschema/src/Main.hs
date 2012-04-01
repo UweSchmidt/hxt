@@ -638,7 +638,7 @@ resolveIncls s (x:xs)
       Nothing   -> resolveIncls s xs
       Just incl -> resolveIncls (mergeSchemata s incl) xs
 
-resolveIncl :: Include -> IO (Maybe XmlSchema) -- TODO: apply namespaces?
+resolveIncl :: Include -> IO (Maybe XmlSchema) -- TODO: apply namespaces
 resolveIncl (Incl loc)
   = loadXmlSchema loc
 resolveIncl (Imp (loc, _))       
@@ -695,8 +695,12 @@ loadXmlSchema uri
 getElemName :: XmlTree -> QName
 getElemName t = fromMaybe (mkName "") $ XN.getElemName t
 
-mkElemRE :: QName -> XmlRegex
-mkElemRE s = mkPrim $ (== s) . getElemName
+mkElemNameRE :: QName -> XmlRegex
+mkElemNameRE s = mkPrim $ (== s) . getElemName
+
+mkElemNamespaceRE :: (String -> Bool) -> XmlRegex
+mkElemNamespaceRE p
+  = mkPrim $ p . namespaceUri . getElemName
 
 getElemAttrs :: XmlTree -> [(QName, String)]
 getElemAttrs t = map (\ x -> (getAttrName x, getAttrValue' x)) $ fromMaybe [] $ XN.getAttrl t
@@ -706,6 +710,9 @@ getChildren (NTree _ c) = c
 
 getElemChildren :: XmlTree -> XmlTrees
 getElemChildren t = filter isRelevant $ getChildren t
+
+extractElems :: XmlTrees -> (XmlTrees, XmlTrees)
+extractElems = partition isElem
 
 isElem :: XmlTree -> Bool
 isElem = XN.isElem
@@ -881,9 +888,9 @@ rstrToSTTF (tref, rlist)
     case t' of
       Left t   -> case t of
                     (Restr (tref', rlist')) -> rstrToSTTF (tref', mergeRestrAttrs rlist rlist')
-                    (Lst _)                 -> checkBothSTTF (mkWarnSTTF "no restriction checks for lists implemented.") <$> stToSTTF t
+                    (Lst _)                 -> checkBothSTTF (mkWarnSTTF "no restriction checks implemented for lists.") <$> stToSTTF t
                                                -- allowed: length, minLength, maxLength, pattern, enumeration, whiteSpace
-                    (Un _)                  -> checkBothSTTF (mkWarnSTTF "no restriction checks for unions implemented.") <$> stToSTTF t
+                    (Un _)                  -> checkBothSTTF (mkWarnSTTF "no restriction checks implemented for unions.") <$> stToSTTF t
                                                -- allowed: pattern, enumeration
       Right tf -> return tf
 
@@ -1010,6 +1017,29 @@ allToElemDesc l
     let re = mkPerms $ map (\ (_, ed) -> contentModel ed) eds
     return $ mkElemDesc empty re (fromList eds) mkNoTextSTTF -- TODO: merge AttrMap etc.?
 
+anyToElemDesc :: Any -> XSC ElemDesc
+anyToElemDesc an
+  = do
+    s <- ask
+    let ns = fromMaybe "##any" $ namespace an
+    let re = case ns of
+               "##any"   -> mkElemNamespaceRE (const True)
+               "##other" -> case sTargetNS s of
+                              Nothing  ->  mkElemNamespaceRE (/= "")
+                              Just tns ->  mkElemNamespaceRE (/= tns)
+               _         -> mkElemNamespaceRE (`elem` (map (\ x -> case x of
+                                                                     "##targetNamespace" -> fromMaybe "" $ sTargetNS s
+                                                                     "##local"           -> ""
+                                                                     _                   -> x
+                                                            ) $ words ns)
+                                              )
+    -- let proc = fromMaybe "strict" $ processContents an
+    -- case proc of
+    --   "skip"   -> -- no need to validate
+    --   "lax"    -> -- validate elements against their schemas if loadable, error if invalid
+    --   "strict" -> -- validate elements against their schemas, error if invalid or schema not loadable
+    return $ mkElemDesc empty re empty mkNoTextSTTF -- TODO: constructor without AttrMap and STTF
+
 mkPair :: a -> b -> (a, b)
 mkPair x y = (x, y)
 
@@ -1021,44 +1051,28 @@ chSeqContToElemDesc c
                    ChSeqGr (occ, gr) -> mkPair occ <$> groupToElemDesc gr
                    ChSeqCh (occ, ch) -> mkPair occ <$> choiceToElemDesc ch
                    ChSeqSq (occ, sq) -> mkPair occ <$> sequenceToElemDesc sq
-                   ChSeqAn (occ, _)  -> return $ mkPair occ $ mkErrorElemDesc "not implemented yet." -- TODO: impl any :: Any
-    return $ mkElemDesc (attrMap ed) (mkMinMaxRE occ (contentModel ed)) (subElemDesc ed) (sttf ed)
+                   ChSeqAn (occ, an) -> mkPair occ <$> anyToElemDesc an
+    case c of
+      ChSeqEl (_, el) -> do
+                         let n = elementToName el
+                         return $ mkElemDesc empty (mkMinMaxRE occ $ mkElemNameRE n) (fromList [(n, ed)]) mkNoTextSTTF -- TODO: constructor without AttrMap and STTF
+      _               -> return $ mkElemDesc empty (mkMinMaxRE occ (contentModel ed)) (subElemDesc ed) mkNoTextSTTF -- TODO: constructor without AttrMap and STTF
 
-choiceToElemDesc :: Choice -> XSC ElemDesc -- TODO: refactor subElem detection?
+chSeqContListToElemDesc :: [ChSeqContent] -> ([XmlRegex] -> XmlRegex) -> XSC ElemDesc
+chSeqContListToElemDesc l mkRE
+  = do
+    eds <- mapM chSeqContToElemDesc l
+    let re = mkRE $ map contentModel eds
+    let se = foldr union empty $ map subElemDesc eds
+    return $ mkElemDesc empty re se mkNoTextSTTF -- TODO: constructor without AttrMap and STTF
+
+choiceToElemDesc :: Choice -> XSC ElemDesc
 choiceToElemDesc l
-  = do
-    eds <- ( zip $ map (\ x -> case x of
-                                 ChSeqEl (_, el) -> Just $ elementToName el
-                                 _               -> Nothing
-                       ) l
-           ) <$> mapM chSeqContToElemDesc l
-    let re = mkAlts $ map (\ (nameTag, ed) -> case nameTag of
-                                                Just n  -> mkElemRE n
-                                                Nothing -> contentModel ed
-                          ) eds
-    let se = foldr union empty $ map (\ (nameTag, ed) -> case nameTag of
-                                                           Just n  -> fromList [(n, ed)]
-                                                           Nothing -> subElemDesc ed
-                                     ) eds
-    return $ mkElemDesc empty re se mkNoTextSTTF
+  = chSeqContListToElemDesc l mkAlts
 
-sequenceToElemDesc :: Sequence -> XSC ElemDesc -- TODO: refactor subElem detection?
+sequenceToElemDesc :: Sequence -> XSC ElemDesc
 sequenceToElemDesc l
-  = do
-    eds <- ( zip $ map (\ x -> case x of
-                                 ChSeqEl (_, el) -> Just $ elementToName el
-                                 _               -> Nothing
-                       ) l
-           ) <$> mapM chSeqContToElemDesc l
-    let re = mkSeqs $ map (\ (nameTag, ed) -> case nameTag of
-                                                Just n  -> mkElemRE n
-                                                Nothing -> contentModel ed
-                          ) eds
-    let se = foldr union empty $ map (\ (nameTag, ed) -> case nameTag of
-                                                           Just n  -> fromList [(n, ed)]
-                                                           Nothing -> subElemDesc ed
-                                     ) eds
-    return $ mkElemDesc empty re se mkNoTextSTTF
+  = chSeqContListToElemDesc l mkSeqs
 
 readMaybeInt :: String -> Maybe Int
 readMaybeInt str
@@ -1184,7 +1198,7 @@ createRootDesc :: XSC ElemDesc
 createRootDesc
   = do
     s <- ask
-    let cm = mkAlts $ map mkElemRE $ keys $ sElements s
+    let cm = mkAlts $ map mkElemNameRE $ keys $ sElements s
     se <- fromList <$> zip (keys (sElements s)) <$> (mapM createElemDesc $ elems $ sElements s)
     -- TODO: add possible namespace-setting attribute to every possible root element's attribute map
     return $ mkElemDesc empty cm se mkNoTextSTTF
@@ -1289,8 +1303,8 @@ testElemChildren t (x:xs)
     let elemXPath = "/" ++ (qualifiedName n) ++ "[" ++ (show c) ++ "]"
     res <- case lookup n $ subElemDesc $ elemDesc env of
              Nothing -> do
-                        tell [((xpath env) ++ elemXPath, "element not allowed here.")]
-                        return False
+                        tell [((xpath env) ++ elemXPath, "no further check implemented for element wildcards.")]
+                        return True
              Just d  -> local (const (appendXPath elemXPath (newDesc d env))) (testElem x)
     rest <- testElemChildren (insert n c t) xs
     return (res && rest)
@@ -1300,9 +1314,6 @@ testElemText t
   = do
     env <- ask
     local (const (appendXPath "/child::text()" env)) $ (sttf $ elemDesc env) $ getCombinedText t -- getTexts instead?
-
-extractElems :: XmlTrees -> (XmlTrees, XmlTrees)
-extractElems = partition isElem
 
 testElem :: XmlTree -> SVal Bool
 testElem e
@@ -1316,10 +1327,14 @@ testElem e
                   attrRes <- testAttrs e
                   let content = getElemChildren e
                   contModelRes <- testContentModel content
-                  let (tags, text) = extractElems content
-                  textRes <- testElemText text
-                  tagsRes <- testElemChildren empty tags
-                  return (attrRes && contModelRes && textRes && tagsRes)
+                  contRes <- if contModelRes
+                               then do
+                                    let (tags, text) = extractElems content
+                                    textRes <- testElemText text
+                                    tagsRes <- testElemChildren empty tags
+                                    return (textRes && tagsRes)
+                               else return False
+                  return (attrRes && contRes)
 
 printSValResult :: SValResult -> IO ()
 printSValResult (status, l)
