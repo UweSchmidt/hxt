@@ -1124,7 +1124,7 @@ compToElemDesc c
                    CompAl (occ, al) -> mkPair occ <$> allToElemDesc al
                    CompCh (occ, ch) -> mkPair occ <$> choiceToElemDesc ch
                    CompSq (occ, sq) -> mkPair occ <$> sequenceToElemDesc sq
-    return $ mkElemDesc (attrDesc ed) (mkMinMaxRE occ (contentModel ed)) (subElemDesc ed) (sttf ed)
+    return $ mkElemDesc (attrDesc ed) (mkMinMaxRE occ $ contentModel ed) (subElemDesc ed) (sttf ed)
 
 mergeAttrDescs :: AttrDesc -> AttrDesc -> AttrDesc
 mergeAttrDescs ad ad'
@@ -1135,7 +1135,7 @@ ctModelToElemDesc (comp, attrs)
   = do
     ad <- attrListToAttrDesc attrs
     case comp of
-      Nothing -> return $ mkElemDesc ad mkUnit empty mkNoTextSTTF -- TODO: RE for empty elem mkUnit (epsilon)
+      Nothing -> return $ mkElemDesc ad mkUnit empty mkNoTextSTTF
       Just c  -> do
                  ed <- compToElemDesc c
                  return $ mkElemDesc (mergeAttrDescs ad $ attrDesc ed) (contentModel ed) (subElemDesc ed) (sttf ed)
@@ -1183,23 +1183,22 @@ ctToElemDesc ct
                                              Just ct' -> do
                                                          base <- ctToElemDesc ct'
                                                          ed <- ctModelToElemDesc m
-                                                         -- TODO: validate extension merge rules
                                                          return $ mkElemDesc (mergeAttrDescs (attrDesc ed) $ attrDesc base)
                                                                              (mkMixedRE mixed $
-                                                                              mkAlt (contentModel ed) $ contentModel base)
+                                                                              mkSeq (contentModel ed) $ contentModel base)
                                                                              (union (subElemDesc ed) $ subElemDesc base)
-                                                                             (checkBothSTTF (sttf base) $ sttf ed)
+                                                                             (sttf base)
+
                          CCRestr (n, m) -> case lookup n $ sComplexTypes s of
                                              Nothing  -> return $ mkErrorElemDesc
                                                          "element validation error: illegal type reference in schema file"
                                              Just ct' -> do
                                                          base <- ctToElemDesc ct'
                                                          ed <- ctModelToElemDesc m
-                                                         -- TODO: validate restriction merge rules
-                                                         return $ mkElemDesc (attrDesc ed)
+                                                         return $ mkElemDesc (mergeAttrDescs (attrDesc ed) $ attrDesc base)
                                                                              (mkMixedRE mixed $ contentModel ed)
                                                                              (subElemDesc ed)
-                                                                             (checkBothSTTF (sttf base) $ sttf ed)
+                                                                             (sttf ed)
       NewCT m       -> do
                        ed <- ctModelToElemDesc m
                        let mixed = case ctMixed ct of
@@ -1370,7 +1369,13 @@ testElem e
 
 testRoot :: XmlTree -> SVal Bool
 testRoot r
-  = testElem r -- TODO: process xmlns-attributes
+  = do
+    env <- ask
+    c <- (getChildren r) !! 1
+    l <- fromMaybe [] $ XN.getAttrList c
+    (nsAttrs, rest) <- partition (\ x -> (startswith "xmlns:") . getAttrName) l
+    tell [(xpath env, show nsAttrs)]
+    testElem r -- TODO: process xmlns-attributes
 
 printSValResult :: SValResult -> IO ()
 printSValResult (status, l)
