@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-import Text.XML.HXT.Core hiding (getChildren, getElemName, isElem, isText, getAttrName, getText)
+import Text.XML.HXT.Core hiding (getElemName, isElem, isText, getAttrName, getText)
 -- TODO: ...Core ()
 
 import Text.XML.HXT.Curl
@@ -699,17 +699,19 @@ mkElemNameRE :: QName -> XmlRegex
 mkElemNameRE s = mkPrim $ (== s) . getElemName
 
 mkElemNamespaceRE :: (QName -> Bool) -> XmlRegex
-mkElemNamespaceRE p
-  = mkPrim $ p . getElemName
+mkElemNamespaceRE p = mkPrim $ p . getElemName
+
+getAttrList :: XmlTree -> [XmlTree]
+getAttrList t = fromMaybe [] $ XN.getAttrl t
 
 getElemAttrs :: XmlTree -> [(QName, String)]
-getElemAttrs t = map (\ x -> (getAttrName x, getAttrValue' x)) $ fromMaybe [] $ XN.getAttrl t
+getElemAttrs t = map (\ x -> (getAttrName x, getAttrValue' x)) $ getAttrList t
 
-getChildren :: XmlTree -> XmlTrees
-getChildren (NTree _ c) = c
+getChildren' :: XmlTree -> XmlTrees
+getChildren' (NTree _ c) = c
 
 getElemChildren :: XmlTree -> XmlTrees
-getElemChildren t = filter isRelevant $ getChildren t
+getElemChildren t = filter isRelevant $ getChildren' t
 
 extractElems :: XmlTrees -> (XmlTrees, XmlTrees)
 extractElems = partition isElem
@@ -735,8 +737,8 @@ isRelevant t = (isElem t) || (isText t)
 getAttrName :: XmlTree -> QName
 getAttrName t = fromMaybe (mkName "") $  XN.getAttrName t
 
-getAttrValue' :: XmlTree -> String -- TODO: List of strings instead to validate each one?
-getAttrValue' t = getCombinedText $ getChildren t
+getAttrValue' :: XmlTree -> String
+getAttrValue' t = getCombinedText $ getChildren' t
 
 getCombinedText :: XmlTrees -> String
 getCombinedText t = concat $ getTexts t
@@ -760,7 +762,7 @@ readDoc uri
                              , withCurl []             -- use libCurl for http access
                              ] uri
                 >>>
-                ((getAttrValue "status") &&& (setAttrl none))
+                ((getAttrValue "status") &&& getChildren)
               )
     if (fst $ head s) == ""
       then return $ Just (snd $ head s)
@@ -1241,6 +1243,8 @@ createRootDesc
 
 -- Types for validation
 
+type PrefixMap     = Map String String
+
 type CountingTable = Map QName Int
 
 data SValEnv       = SValEnv
@@ -1367,15 +1371,19 @@ testElem e
                                else return False
                   return (attrRes && contRes)
 
+extractPrefixMap :: XmlTree -> (XmlTree, PrefixMap)
+extractPrefixMap el
+  = (el', prefixMap)
+    where
+    el' = XN.setElemAttrl rest el
+    prefixMap = fromList $ map (\ x -> (localPart $ getAttrName x, getAttrValue' x)) nsAttrs
+    (nsAttrs, rest) = partition (\ x -> "xmlns" == (namePrefix $ getAttrName x)) $ getAttrList el
+
 testRoot :: XmlTree -> SVal Bool
 testRoot r
   = do
-    env <- ask
-    c <- (getChildren r) !! 1
-    l <- fromMaybe [] $ XN.getAttrList c
-    (nsAttrs, rest) <- partition (\ x -> (startswith "xmlns:") . getAttrName) l
-    tell [(xpath env, show nsAttrs)]
-    testElem r -- TODO: process xmlns-attributes
+    let (el, _) = extractPrefixMap r -- TODO: apply namespaces
+    testElem $ XN.mkRoot [] $ box el
 
 printSValResult :: SValResult -> IO ()
 printSValResult (status, l)
