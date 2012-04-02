@@ -1,7 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 import Text.XML.HXT.Core hiding (getElemName, isElem, isText, getAttrName, getText)
--- TODO: ...Core ()
 
 import Text.XML.HXT.Curl
 import Text.XML.HXT.Arrow.XmlRegex
@@ -11,7 +10,6 @@ import Data.Tree.NTree.TypeDefs
 import qualified Text.XML.HXT.DOM.XmlNode as XN
 
 import Data.Map (Map, lookup, fromList, toList, keys, elems, empty, insert, union)
--- TODO import qualified Data.Map as M ... M.lookup
 
 import Data.Maybe (fromMaybe)
 
@@ -234,7 +232,7 @@ xpFilterSchema
       elementBlacklist          = foldr (<+>) none $ map hasQName $
                                   [ mkQName nsPrefix "annotation"           nsUri
                                   , mkQName nsPrefix "notation"             nsUri
-                                  -- irrelevant content for element
+                                  -- skipped content for element
                                   , mkQName nsPrefix "unique"               nsUri
                                   , mkQName nsPrefix "key"                  nsUri
                                   , mkQName nsPrefix "keyref"               nsUri
@@ -243,24 +241,24 @@ xpFilterSchema
       isAttrWithoutNamespaceUri = hasNameWith (null       . namespaceUri)
       attributeBlacklist        = foldr (<+>) none $ map hasQName $
                                   [ mkQName ""       "id"                   ""
-                                  -- irrelevant attributes for schema
+                                  -- skipped attributes for schema
                                   , mkQName ""       "attributeFormDefault" ""
                                   , mkQName ""       "blockDefault"         ""
                                   , mkQName ""       "elementFormDefault"   ""
                                   , mkQName ""       "finalDefault"         ""
                                   , mkQName ""       "version"              ""
                                   , mkQName ""       "lang"                 ""
-                                  -- irrelevant attributes for simpleType, complexType and element
+                                  -- skipped attributes for simpleType, complexType and element
                                   , mkQName ""       "final"                ""
-                                  -- irrelevant attributes for simpleType restrictions, complexType, element and attribute
+                                  -- skipped attributes for simpleType restrictions, complexType, element and attribute
                                   , mkQName ""       "fixed"                ""
-                                  -- irrelevant attributes for complexType and element
+                                  -- skipped attributes for complexType and element
                                   , mkQName ""       "abstract"             ""
                                   , mkQName ""       "block"                ""
-                                  -- irrelevant attributes for element and attribute
+                                  -- skipped attributes for element and attribute
                                   , mkQName ""       "default"              ""
                                   , mkQName ""       "form"                 ""
-                                  -- irrelevant attributes for element
+                                  -- skipped attributes for element
                                   , mkQName ""       "nillable"             ""
                                   , mkQName ""       "substitutionGroup"    ""
                                   ]
@@ -274,7 +272,7 @@ toSchema s
     toSchemaRec (XmlSchema' tns [])                ins sts cts els grs ats ags
       = XmlSchema tns ins sts cts els grs ats ags
     toSchemaRec (XmlSchema' tns ((In incl)   :xs)) ins sts cts els grs ats ags
-      = toSchemaRec (XmlSchema' tns xs) (ins ++ [incl]) sts cts els grs ats ags -- keep ordering of includes
+      = toSchemaRec (XmlSchema' tns xs) (ins ++ [incl]) sts cts els grs ats ags
     toSchemaRec (XmlSchema' tns ((St (k, st)):xs)) ins sts cts els grs ats ags
       = toSchemaRec (XmlSchema' tns xs) ins (insert k st sts) cts els grs ats ags
     toSchemaRec (XmlSchema' tns ((Ct (k, ct)):xs)) ins sts cts els grs ats ags
@@ -292,12 +290,8 @@ toSchema s
 
 xpQName :: PU QName
 xpQName
-  = xpWrap (mkName, qualifiedName) xpText -- TODO: (\ x -> mkQName nsPrefix x nsUri, qualifiedName) ?
-                                          --       namespace-normalisation:
-                                          --       if xs: is used by different ns: rename all xs: elements
-                                          --       if alias for xs is used (e.g. ys etc.): rename to xs:
+  = xpWrap (mkName, qualifiedName) xpText -- TODO: namespaces / target namespace
 
--- space-separated list of QNames
 xpQNames :: PU QNames
 xpQNames
   = xpWrap ( \ x -> map mkName $ words x
@@ -307,7 +301,7 @@ xpQNames
 xpXmlSchema' :: PU XmlSchema'
 xpXmlSchema'
   = xpSchemaElem "schema" $
-    -- xpAddNSDecl nsPrefix nsUri $
+    -- TODO: xpAddNSDecl nsPrefix nsUri $
     xpFilterSchema $
     xpWrap (\ (a, b) -> XmlSchema' a b , \ t -> (targetNS t, parts t)) $
     xpPair (xpOption $ xpAttr "targetNamespace" xpText) $
@@ -653,14 +647,31 @@ resolveIncl (Redef (loc, redefs))
 applyRedefs :: XmlSchema -> Redefinitions -> XmlSchema
 applyRedefs s []
   = s
-applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefSt (k, st)):xs)
-  = applyRedefs (XmlSchema tns ins (insert k st sts) cts els grs ats ags) xs -- TODO: Apply redefinition to existing ST
-applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefCt (k, ct)):xs)
-  = applyRedefs (XmlSchema tns ins sts (insert k ct cts) els grs ats ags) xs -- TODO: Apply redefinition to existing CT
-applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefGr (k, gr)):xs)
-  = applyRedefs (XmlSchema tns ins sts cts els (insert k gr grs) ats ags) xs
-applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefAg (k, ag)):xs)
-  = applyRedefs (XmlSchema tns ins sts cts els grs ats (insert k ag ags)) xs
+applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefSt (k, st')):xs)
+  = applyRedefs (XmlSchema tns ins sts'' cts els grs ats ags) xs
+    where
+    k'    = setLocalPart' (newXName ((localPart k) ++ "_redef")) k
+    sts'  = case lookup k sts of
+              Just st -> insert k' st sts
+              Nothing -> sts
+    sts'' = case st' of
+              (Restr (BaseAttr _, rlist)) -> insert k (Restr (BaseAttr k', rlist)) sts'
+              _                           -> sts
+applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefCt (k, ct')):xs)
+  = applyRedefs (XmlSchema tns ins sts cts'' els grs ats ags) xs
+    where
+    k'    = setLocalPart' (newXName ((localPart k) ++ "_redef")) k
+    cts'  = case lookup k cts of 
+              Just ct -> insert k' ct cts
+              Nothing -> cts
+    cts'' = case ct' of
+              (ComplexType ctm (CCont (ComplexContent ccm (CCExt   (_, m))))) -> insert k (ComplexType ctm (CCont (ComplexContent ccm (CCExt   (k', m))))) cts'
+              (ComplexType ctm (CCont (ComplexContent ccm (CCRestr (_, m))))) -> insert k (ComplexType ctm (CCont (ComplexContent ccm (CCRestr (k', m))))) cts'
+              _                                                               -> cts
+applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefGr (k, gr')):xs)
+  = applyRedefs (XmlSchema tns ins sts cts els (insert k gr' grs) ats ags) xs
+applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefAg (k, ag')):xs)
+  = applyRedefs (XmlSchema tns ins sts cts els grs ats (insert k ag' ags)) xs
 
 mergeSchemata :: XmlSchema -> XmlSchema -> XmlSchema
 mergeSchemata (XmlSchema tns _ sts cts els grs ats ags) (XmlSchema _ _ sts' cts' els' grs' ats' ags')
@@ -834,7 +845,7 @@ mkErrorSTTF s
 
 mkW3CCheckSTTF :: QName -> ParamList -> STTF
 mkW3CCheckSTTF n p
-  = if n `elem` [ mkName "xs:boolean" -- TODO: extend W3CDataTypeCheck and only leave else-part
+  = if n `elem` [ mkName "xs:boolean" -- TODO: extend W3CDataTypeCheck
                 , mkName "xs:float"
                 , mkName "xs:double"
                 , mkName "xs:time"
@@ -865,7 +876,7 @@ lookupSTTF n
 
 mergeRestrAttrs :: RestrAttrs -> RestrAttrs -> RestrAttrs
 mergeRestrAttrs rlist rlist'
-  = rlist ++ rlist' -- TODO: works if higher level restrictions can never soften lower level restrictions
+  = rlist ++ rlist'
 
 restrAttrsToParamList :: RestrAttrs -> ParamList
 restrAttrsToParamList rlist
@@ -880,8 +891,8 @@ restrAttrsToParamList rlist
                            MinLength v      -> box (xsd_minLength,      v)
                            MaxLength v      -> box (xsd_maxLength,      v)
                            Pattern v        -> box (xsd_pattern,        v)
-                           -- Enumeration v    -> box (xsd_enumeration,    v) -- TODO: extend W3CDataTypeCheck and remove concat and box
-                           -- WhiteSpace v     -> box (xsd_whiteSpace,     v) -- TODO: extend W3CDataTypeCheck and remove concat and box
+                           -- Enumeration v    -> box (xsd_enumeration,    v) -- TODO: extend W3CDataTypeCheck
+                           -- WhiteSpace v     -> box (xsd_whiteSpace,     v) -- TODO: extend W3CDataTypeCheck
                            _                -> []
 
                  ) rlist
@@ -899,9 +910,9 @@ rstrToSTTF (tref, rlist)
       Left t   -> case t of
                     (Restr (tref', rlist')) -> rstrToSTTF (tref', mergeRestrAttrs rlist rlist')
                     (Lst _)                 -> checkBothSTTF (mkWarnSTTF "no restriction checks implemented for lists.") <$> stToSTTF t
-                                               -- allowed: length, minLength, maxLength, pattern, enumeration, whiteSpace
+                                               -- TODO: allowed: length, minLength, maxLength, pattern, enumeration, whiteSpace
                     (Un _)                  -> checkBothSTTF (mkWarnSTTF "no restriction checks implemented for unions.") <$> stToSTTF t
-                                               -- allowed: pattern, enumeration
+                                               -- TODO: allowed: pattern, enumeration
       Right tf -> return tf
 
 stToSTTF :: SimpleType -> XSC STTF
@@ -916,7 +927,7 @@ stToSTTF (Lst tref)
                     env <- ask
                     if not $ foldr (&&) True $ fst $ runSVal env $ mapM baseTF $ words x
                       then do
-                           tell [(xpath env, "value does not match list type")]
+                           tell [(xpath env, "value does not match list type.")]
                            return False
                       else return True
 stToSTTF (Un ts)
@@ -929,11 +940,11 @@ stToSTTF (Un ts)
                     env <- ask
                     if not $ foldr (||) False $ fst $ runSVal env $ mapM (\ f -> f x) (trefTFs ++ tdefTFs)
                       then do
-                           tell [(xpath env, "value does not match union type")]
+                           tell [(xpath env, "value does not match union type.")]
                            return False
                       else return True
 
--- Create AttrMap entries
+-- Create attribute descriptions
 
 createAttrMapEntry :: Attribute -> XSC (QName, AttrMapVal)
 createAttrMapEntry (AttrRef n)
@@ -955,8 +966,6 @@ createAttrMapEntry (AttrDef (AttributeDef n tdef use))
             ATDTypeAttr r   -> lookupSTTF r
             ATDAnonymDecl t -> stToSTTF t    
     return (n, (req, tf))
-
--- Create Element Description for Validation
 
 attrGrpToAttrList :: AttributeGroup -> XSC AttrList
 attrGrpToAttrList g
@@ -989,6 +998,8 @@ attrListToAttrWildcards l
                               _         -> return []
                     ) l
 
+-- Create element descriptions
+
 mkErrorElemDesc :: String -> ElemDesc
 mkErrorElemDesc s
   = ElemDesc (Just s) (empty, []) mkUnit empty mkPassThroughSTTF
@@ -996,6 +1007,10 @@ mkErrorElemDesc s
 mkSimpleElemDesc :: AttrDesc -> STTF -> ElemDesc
 mkSimpleElemDesc ad tf
   = ElemDesc Nothing ad mkTextRE empty tf
+
+mkComposeElemDesc :: XmlRegex -> SubElemDesc -> ElemDesc
+mkComposeElemDesc cm se
+  = ElemDesc Nothing (empty, []) cm se mkNoTextSTTF
 
 mkElemDesc :: AttrDesc -> XmlRegex -> SubElemDesc -> STTF -> ElemDesc
 mkElemDesc ad cm se tf
@@ -1010,7 +1025,7 @@ groupToElemDesc (GrpRef r)
       Just g  -> groupToElemDesc g
 groupToElemDesc (GrpDef d)
   = case d of
-      Nothing      -> return $ mkElemDesc (empty, []) mkUnit empty mkNoTextSTTF -- TODO: RE for empty elem (mkUnit)
+      Nothing      -> return $ mkComposeElemDesc mkUnit empty
       Just (Al al) -> allToElemDesc al
       Just (Ch ch) -> choiceToElemDesc ch
       Just (Sq sq) -> sequenceToElemDesc sq
@@ -1021,20 +1036,22 @@ elementToName e
       ElRef r -> r
       ElDef d -> elemName d
 
+combineElemDescs :: ([XmlRegex] -> XmlRegex) -> [ElemDesc] -> XSC ElemDesc
+combineElemDescs mkRE eds
+  = do
+    let re = mkRE $ map contentModel eds
+    let se = foldr union empty $ map subElemDesc eds
+    return $ mkComposeElemDesc re se
+
 allToElemDesc :: All -> XSC ElemDesc
 allToElemDesc l
   = do
-    eds <- mapM (\ (occ, el) -> do
+    eds <- mapM (\ (occ, el) -> do 
                                 ed <- createElemDesc el
-                                return $ ( elementToName el
-                                         , mkElemDesc (attrDesc ed)
-                                                      (mkMinMaxRE occ (contentModel ed))
-                                                      (subElemDesc ed)
-                                                      (sttf ed)
-                                         )
+                                let n = elementToName el
+                                return $ mkComposeElemDesc (mkMinMaxRE occ $ mkElemNameRE n) (fromList [(n, ed)])
                 ) l
-    let re = mkPerms $ map (\ (_, ed) -> contentModel ed) eds
-    return $ mkElemDesc (empty, []) re (fromList eds) mkNoTextSTTF -- TODO: merge AttrDesc etc.?
+    combineElemDescs mkPerms eds
 
 anyToPredicate :: Any -> XSC (QName -> Bool)
 anyToPredicate an
@@ -1058,7 +1075,7 @@ anyToElemDesc :: Any -> XSC ElemDesc
 anyToElemDesc an
   = do
     re <- mkElemNamespaceRE <$> anyToPredicate an
-    return $ mkElemDesc (empty, []) re empty mkNoTextSTTF -- TODO: constructor without AttrMap and STTF
+    return $ mkComposeElemDesc re empty
 
 mkPair :: a -> b -> (a, b)
 mkPair x y = (x, y)
@@ -1075,24 +1092,16 @@ chSeqContToElemDesc c
     case c of
       ChSeqEl (_, el) -> do
                          let n = elementToName el
-                         return $ mkElemDesc (empty, []) (mkMinMaxRE occ $ mkElemNameRE n) (fromList [(n, ed)]) mkNoTextSTTF -- TODO: constructor without AttrMap and STTF
-      _               -> return $ mkElemDesc (empty, []) (mkMinMaxRE occ (contentModel ed)) (subElemDesc ed) mkNoTextSTTF -- TODO: constructor without AttrMap and STTF
-
-chSeqContListToElemDesc :: [ChSeqContent] -> ([XmlRegex] -> XmlRegex) -> XSC ElemDesc
-chSeqContListToElemDesc l mkRE
-  = do
-    eds <- mapM chSeqContToElemDesc l
-    let re = mkRE $ map contentModel eds
-    let se = foldr union empty $ map subElemDesc eds
-    return $ mkElemDesc (empty, []) re se mkNoTextSTTF -- TODO: constructor without AttrMap and STTF
+                         return $ mkComposeElemDesc (mkMinMaxRE occ $ mkElemNameRE n) (fromList [(n, ed)])
+      _               -> return $ mkComposeElemDesc (mkMinMaxRE occ $ contentModel ed) (subElemDesc ed)
 
 choiceToElemDesc :: Choice -> XSC ElemDesc
 choiceToElemDesc l
-  = chSeqContListToElemDesc l mkAlts
+  = mapM chSeqContToElemDesc l >>= combineElemDescs mkAlts
 
 sequenceToElemDesc :: Sequence -> XSC ElemDesc
 sequenceToElemDesc l
-  = chSeqContListToElemDesc l mkSeqs
+  = mapM chSeqContToElemDesc l >>= combineElemDescs mkSeqs
 
 readMaybeInt :: String -> Maybe Int
 readMaybeInt str
@@ -1237,7 +1246,7 @@ createRootDesc
     s <- ask
     let cm = mkAlts $ map mkElemNameRE $ keys $ sElements s
     se <- fromList <$> zip (keys (sElements s)) <$> (mapM createElemDesc $ elems $ sElements s)
-    return $ mkElemDesc (empty, []) cm se mkNoTextSTTF
+    return $ mkComposeElemDesc cm se
 
 --------------------------------------------------------------------------------------
 
@@ -1289,7 +1298,7 @@ checkAllowedAttrs ((n, val):xs)
     res <- case lookup n $ fst ad of
              Nothing      -> if foldr (||) False $ map (\ f -> f n) $ snd ad 
                                then do
-                                    tell [((xpath env) ++ "/@" ++ (qualifiedName n), "no further check implemented for attribute wildcards.")]
+                                    tell [((xpath env) ++ "/@" ++ (qualifiedName n), "no further check implemented for attribute wildcards.")] -- TODO: check attribute wildcards
                                     return True
                                else do
                                     tell [((xpath env) ++ "/@" ++ (qualifiedName n), "attribute not allowed here.")]
@@ -1338,7 +1347,7 @@ testElemChildren t (x:xs)
     let elemXPath = "/" ++ (qualifiedName n) ++ "[" ++ (show c) ++ "]"
     res <- case lookup n $ subElemDesc $ elemDesc env of
              Nothing -> do
-                        tell [((xpath env) ++ elemXPath, "no further check implemented for element wildcards.")]
+                        tell [((xpath env) ++ elemXPath, "no further check implemented for element wildcards.")] -- TODO: check element wildcards
                         return True
              Just d  -> local (const (appendXPath elemXPath (newDesc d env))) (testElem x)
     rest <- testElemChildren (insert n c t) xs
