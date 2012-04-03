@@ -1,0 +1,103 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <!-- complex types with simple content (restriction / extension) -->
+
+  <xs:complexType name="password">
+    <xs:simpleContent>
+      <xs:restriction base="xs:string">
+        <xs:minLength value="5"/> 
+        <xs:maxLength value="10"/>
+        <xs:attribute name="safety" type="xs:string" use="optional"/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="login">
+    <xs:simpleContent>
+      <xs:extension base="password">
+        <xs:attribute name="username" type="xs:string" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <!-- complex types (group, all, choice, sequence) -->
+
+  <xs:group name="name">
+    <xs:sequence>
+      <xs:element name="firstName" type="xs:string"/>
+      <xs:element name="lastName" type="xs:string"/>
+    </xs:sequence>
+  </xs:group>
+
+  <xs:complexType name="customer">
+    <xs:group ref="name"/>
+    <xs:attribute name="age" type="xs:integer"/>
+  </xs:complexType>
+
+  <xs:complexType name="shoppingList">
+    <xs:all>
+      <xs:element name="bread" type="xs:integer" minOccurs="0"/>
+      <xs:element name="butter" type="xs:integer" minOccurs="0"/>
+      <xs:element name="milk" type="xs:integer" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="computer">
+    <xs:choice>
+      <xs:element name="desktop" type="computerDataWithoutComments"/>
+      <xs:element name="laptop" type="computerDataWithoutComments"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="computerData">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="cpu" type="xs:string" minOccurs="0"/>
+      <xs:element name="ram" type="xs:string" minOccurs="0"/>
+      <xs:element name="comment" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- complex types with complex content (extension / restriction) -->
+
+  <xs:complexType name="computerDataWithGPU">
+    <xs:complexContent>
+      <xs:extension base="computerData">
+        <xs:sequence>
+          <xs:element name="gpu" type="xs:string"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="computerDataWithoutComments">
+    <xs:complexContent>
+      <xs:restriction base="computerData">
+        <xs:sequence>
+          <xs:element name="name" type="xs:string"/>
+          <xs:element name="cpu" type="xs:string" minOccurs="0"/>
+          <xs:element name="ram" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+      </xs:restriction>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <!-- root -->
+
+  <xs:element name="root">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="password" type="password"/>
+        <xs:element name="login" type="login"/>
+        <xs:element name="customer" type="customer"/>
+        <xs:element name="shoppingList" type="shoppingList"/>
+        <xs:element name="computer" type="computer"/>
+        <xs:element name="computerData" type="computerData"/>
+        <xs:element name="computerDataWithGPU" type="computerDataWithGPU"/>
+        <xs:element name="computerDataWithoutComments" type="computerDataWithoutComments"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>

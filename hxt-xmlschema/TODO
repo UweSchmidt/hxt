@@ -53,12 +53,15 @@ Same as include but apply redefinitions on referenced schema before merging
 
 ------------------------------------------------------------------------
 
-HUnit + Testcases
-
 Haskell 2 LateX Converter: h2l, hs2l
 Andres Löh, Ralf Hinze
 
 Experience with standard documents, quality / precision, problems
+
+Code coverage:
+add -fhpc in .cabal at section ghc-prof-options
+compile and run program
+create markup htmls via: cd src && hpc markup Main
 
 ------------------------------------------------------------------------
 

@@ -1200,7 +1200,7 @@ ctToElemDesc ct
                                                          ed <- ctModelToElemDesc m
                                                          return $ mkElemDesc (mergeAttrDescs (attrDesc ed) $ attrDesc base)
                                                                              (mkMixedRE mixed $
-                                                                              mkSeq (contentModel ed) $ contentModel base)
+                                                                              mkSeq (contentModel base) $ contentModel ed)
                                                                              (union (subElemDesc ed) $ subElemDesc base)
                                                                              (sttf base)
 
@@ -1443,21 +1443,21 @@ main
                    ++ "> Test an instance file against a schema file.\n"
            return ()
 
-mkSValTest :: String -> String -> SValResult -> Test
-mkSValTest label fileName expectedRes
+mkSValTest :: String -> String -> String-> SValResult -> Test
+mkSValTest label descName instName expectedRes
   = label ~:
     do
-    res <- validateWithSchema ("./tests/" ++ fileName ++ ".xsd") ("./tests/" ++ fileName ++ ".xml")
+    res <- validateWithSchema ("./tests/" ++ descName ++ ".xsd") ("./tests/" ++ instName ++ ".xml")
     res @?= expectedRes
 
 simpleTypesElemsOk :: Test
 simpleTypesElemsOk
-  = mkSValTest "SimpleTypes inside elems ok" "simpleTypesElemsOk" $
+  = mkSValTest "SimpleTypes inside elems ok" "simpleTypesElems" "simpleTypesElemsOk" $
     (True, [])
 
 simpleTypesElemsErrors :: Test
 simpleTypesElemsErrors
-  = mkSValTest "SimpleTypes inside elems with errors" "simpleTypesElemsErrors" $
+  = mkSValTest "SimpleTypes inside elems with errors" "simpleTypesElems" "simpleTypesElemsErrors" $
     (False, [ ( "/root[1]/summerMonth[1]/child::text()"
               , "Parameter restriction: \"minExclusive = 5\" does not hold for value = \"3\"")
             , ( "/root[1]/temperature[1]/child::text()"
@@ -1476,12 +1476,12 @@ simpleTypesElemsErrors
 
 simpleTypesAttrsOk :: Test
 simpleTypesAttrsOk
-  = mkSValTest "SimpleTypes inside attrs ok" "simpleTypesAttrsOk" $
+  = mkSValTest "SimpleTypes inside attrs ok" "simpleTypesAttrs" "simpleTypesAttrsOk" $
     (True, [])
 
 simpleTypesAttrsErrors :: Test
 simpleTypesAttrsErrors
-  = mkSValTest "SimpleTypes inside attrs with errors" "simpleTypesAttrsErrors" $
+  = mkSValTest "SimpleTypes inside attrs with errors" "simpleTypesAttrs" "simpleTypesAttrsErrors" $
     (False, [ ( "/root[1]/@summerMonth"
               , "Parameter restriction: \"maxExclusive = 9\" does not hold for value = \"10\"")
             , ( "/root[1]/@temperature"
@@ -1496,12 +1496,46 @@ simpleTypesAttrsErrors
               , "value does not match union type.")
             ])
 
+complexTypesOk :: Test
+complexTypesOk
+  = mkSValTest "ComplexTypes ok" "complexTypes" "complexTypesOk" $
+    (True, [])
+
+complexTypesErrors :: Test
+complexTypesErrors
+  = mkSValTest "ComplexTypes with errors" "complexTypes" "complexTypesErrors" $
+    (False, [ ( "/root[1]/password[1]/child::text()"
+              , "Parameter restriction: \"maxLength = 10\" does not hold for value = \"wrong password\"")
+            , ( "/root[1]/login[1]/@username"
+              , "required attribute is missing.")
+            , ( "/root[1]/login[1]/child::text()"
+              , "Parameter restriction: \"minLength = 5\" does not hold for value = \"foo\"")
+            , ( "/root[1]/customer[1]/@age"
+              , "\"wrong\" is no valid integer")
+            , ( "/root[1]/customer[1]/*"
+              , "content does not match content model.\ninput does not match {single tree pred}{single tree pred}")
+            , ( "/root[1]/shoppingList[1]/*"
+              , "content does not match content model.\nunexpected tree NTree (XTag \"butter\" []) [NTree (XText \"1\") []]")
+            , ( "/root[1]/computer[1]/*"
+              , "content does not match content model.\nunexpected tree NTree (XTag \"tablet\" []) []")
+            , ( "/root[1]/computerData[1]/*"
+              , "content does not match content model.\nunexpected tree NTree (XTag \"ram\" []) [NTree (XText \"64GB\") []]")
+            , ( "/root[1]/computerDataWithGPU[1]/*"
+              , "content does not match content model.\ninput does not match " ++ 
+                "{single tree pred}({single tree pred})?({single tree pred})?({single tree pred})*{single tree pred}")
+            , ( "/root[1]/computerDataWithoutComments[1]/*"
+              , "content does not match content model.\nunexpected tree " ++ 
+                "NTree (XTag \"comment\" []) [NTree (XText \"good display!\") []]")
+            ])
+
 testSuite :: Test
 testSuite
   = TestList [ simpleTypesElemsOk
              , simpleTypesElemsErrors
              , simpleTypesAttrsOk
              , simpleTypesAttrsErrors
+             , complexTypesOk
+             , complexTypesErrors
              ]
 
 runTestSuite :: IO ()
