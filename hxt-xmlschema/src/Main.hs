@@ -1528,6 +1528,13 @@ complexTypesErrors
                 "NTree (XTag \"comment\" []) [NTree (XText \"good display!\") []]")
             ])
 
+redefine :: Test
+redefine
+  = mkSValTest "Redefine" "redefine" "redefine" $
+    (False, [ ( "/root[1]/validCustomer[2]/child::text()"
+              , "Parameter restriction: \"maxInclusive = 18\" does not hold for value = \"21\"")
+            ])
+
 testSuite :: Test
 testSuite
   = TestList [ simpleTypesElemsOk
@@ -1536,6 +1543,7 @@ testSuite
              , simpleTypesAttrsErrors
              , complexTypesOk
              , complexTypesErrors
+             , redefine
              ]
 
 runTestSuite :: IO ()

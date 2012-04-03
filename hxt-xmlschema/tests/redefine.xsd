@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <!-- redefine -->
+ 
+  <xs:redefine schemaLocation="tests/incl.xsd">
+    <xs:simpleType name="validAge">
+      <xs:restriction base="validAge">
+        <xs:maxInclusive value="18"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:redefine>
+
+  <!-- attributeGroup definition -->
+
+  <xs:attributeGroup name="name">
+    <xs:attribute name="firstName" type="xs:string"/>
+    <xs:attribute name="lastName" type="xs:string"/>
+  </xs:attributeGroup>
+
+  <xs:element name="validCustomer">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="validAge">
+          <xs:attributeGroup ref="name"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- root -->
+
+  <xs:element name="root">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="validCustomer" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>
