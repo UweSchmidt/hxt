@@ -53,7 +53,7 @@ module Text.XML.HXT.Arrow.Pickle
     , showPickled
 
     , PU(..)
-    , XmlPickler
+    , XmlPickler(..)
 
     , xp4Tuple
     , xp5Tuple
@@ -95,7 +95,6 @@ module Text.XML.HXT.Arrow.Pickle
     , xpElemWithAttrValue
     , xpFilterAttr
     , xpFilterCont
-    , xpickle
     , xpInt
     , xpLift
     , xpLiftEither
