@@ -26,6 +26,8 @@ import Text.XML.HXT.XMLSchema.W3CDataTypeCheck
 
 import Test.HUnit
 
+import System (getArgs)
+
 instance Ord QName where -- TODO: orphan instance
   compare x y = compare (qualifiedName x) (qualifiedName y)
 
@@ -1424,15 +1426,22 @@ validateWithSchema descUri instUri
 main :: IO ()
 main
   = do
-    -- argv <- getArgs
-    -- (schemaurl, docurl) <- return (argv!!0, argv!!1)
-
-    -- res <- validateWithSchema "example.xsd" "example.xml"
-    -- printSValResult res
-
-    runTestSuite
-
-    return ()
+    argv <- getArgs
+    case length argv of
+      1 -> if argv !! 0 == "-runTestSuite"
+             then runTestSuite
+             else return ()
+      2 -> do
+           res <- validateWithSchema (argv !! 0) (argv !! 1)
+           printSValResult res
+           return ()
+      _ -> do
+           putStrLn $ "\nUsage:\n\n"
+                   ++ "validateWithSchema -runTestSuite\n"
+                   ++ "> Run the hxt-xmlschema test suite (for development purposes).\n\n"
+                   ++ "validateWithSchema <schemaFileURI> <instanceFileURI>\n"
+                   ++ "> Test an instance file against a schema file.\n"
+           return ()
 
 mkSValTest :: String -> String -> SValResult -> Test
 mkSValTest label fileName expectedRes
@@ -1441,15 +1450,58 @@ mkSValTest label fileName expectedRes
     res <- validateWithSchema ("./tests/" ++ fileName ++ ".xsd") ("./tests/" ++ fileName ++ ".xml")
     res @?= expectedRes
 
-test1 :: Test
-test1  
-  = mkSValTest "a random description" "example" $
+simpleTypesElemsOk :: Test
+simpleTypesElemsOk
+  = mkSValTest "SimpleTypes inside elems ok" "simpleTypesElemsOk" $
     (True, [])
-    
+
+simpleTypesElemsErrors :: Test
+simpleTypesElemsErrors
+  = mkSValTest "SimpleTypes inside elems with errors" "simpleTypesElemsErrors" $
+    (False, [ ( "/root[1]/summerMonth[1]/child::text()"
+              , "Parameter restriction: \"minExclusive = 5\" does not hold for value = \"3\"")
+            , ( "/root[1]/temperature[1]/child::text()"
+              , "Parameter restriction: \"totalDigits = 3\" does not hold for value = \"42\"")
+            , ( "/root[1]/password[1]/child::text()"
+              , "Parameter restriction: \"maxLength = 10\" does not hold for value = \"a wrong password\"")
+            , ( "/root[1]/monthByName[1]/child::text()"
+              , "Parameter restriction: \"length = 3\" does not hold for value = \"wrong\"")
+            , ( "/root[1]/plz[1]/child::text()"
+              , "Parameter restriction: \"pattern = (D )?[0-9]{5}\" does not hold for value = \"42\"")
+            , ( "/root[1]/monthList[1]/child::text()"
+              , "value does not match list type.")
+            , ( "/root[1]/month[1]/child::text()"
+              , "value does not match union type.")
+            ])
+
+simpleTypesAttrsOk :: Test
+simpleTypesAttrsOk
+  = mkSValTest "SimpleTypes inside attrs ok" "simpleTypesAttrsOk" $
+    (True, [])
+
+simpleTypesAttrsErrors :: Test
+simpleTypesAttrsErrors
+  = mkSValTest "SimpleTypes inside attrs with errors" "simpleTypesAttrsErrors" $
+    (False, [ ( "/root[1]/@summerMonth"
+              , "Parameter restriction: \"maxExclusive = 9\" does not hold for value = \"10\"")
+            , ( "/root[1]/@temperature"
+              , "Parameter restriction: \"fractionDigits = 1\" does not hold for value = \"421\"")
+            , ( "/root[1]/@password"
+              , "Parameter restriction: \"minLength = 5\" does not hold for value = \"safe\"")
+            , ( "/root[1]/@plz"
+              , "Parameter restriction: \"pattern = (D )?[0-9]{5}\" does not hold for value = \"42\"")
+            , ( "/root[1]/@monthList"
+              , "value does not match list type.")
+            , ( "/root[1]/@month"
+              , "value does not match union type.")
+            ])
+
 testSuite :: Test
 testSuite
-  = TestList [ test1
-             -- ,
+  = TestList [ simpleTypesElemsOk
+             , simpleTypesElemsErrors
+             , simpleTypesAttrsOk
+             , simpleTypesAttrsErrors
              ]
 
 runTestSuite :: IO ()

@@ -19,6 +19,9 @@ The value of ·whiteSpace· is fixed to the value collapse.
 
 relative paths for import / include / redefine uris, relative to including document
 
+xsi:type
+substitutionGroups
+
 uppercase / lowercase for attr names elem names ...
 
 attrUse for AttrRef allowed?

@@ -1,4 +1,4 @@
--- Subset of Text.XML.HXT.RelaxNG.XMLSchema.DataTypeLibW3C
+-- Composed of Text.XML.HXT.RelaxNG.XMLSchema.DataTypeLibW3C
 
 module Text.XML.HXT.XMLSchema.W3CDataTypeCheck
   ( module Text.XML.HXT.XMLSchema.DataTypeLibW3CNames
