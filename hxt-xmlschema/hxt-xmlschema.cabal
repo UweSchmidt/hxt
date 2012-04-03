@@ -43,4 +43,5 @@ executable xmls
                  hxt-curl            >= 9.1.1 && < 10,
                  hxt-charproperties  >= 9     && < 10,
                  hxt-regex-xmlschema >= 9     && < 10,
-                 mtl                 >= 2     && < 3
+                 mtl                 >= 2     && < 3,
+                 HUnit               >= 1.2   && < 2

@@ -3,11 +3,11 @@
 
   <!-- includes / imports / redefines -->
 
-  <xs:include schemaLocation="incl.xsd"/>
+  <xs:include schemaLocation="tests/incl.xsd"/>
 
-  <xs:import schemaLocation="incl.xsd" namespace="http://dyomedea.com/ns/people"/>
+  <xs:import schemaLocation="tests/incl.xsd" namespace="http://dyomedea.com/ns/people"/>
  
-  <xs:redefine schemaLocation="incl.xsd">
+  <xs:redefine schemaLocation="tests/incl.xsd">
     <xs:complexType name="Hersteller">
       <xs:complexContent>
         <xs:restriction base="pcTeile:Hersteller">

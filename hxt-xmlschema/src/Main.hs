@@ -24,6 +24,8 @@ import Control.Applicative ( (<$>) )
 
 import Text.XML.HXT.XMLSchema.W3CDataTypeCheck
 
+import Test.HUnit
+
 instance Ord QName where -- TODO: orphan instance
   compare x y = compare (qualifiedName x) (qualifiedName y)
 
@@ -1425,8 +1427,34 @@ main
     -- argv <- getArgs
     -- (schemaurl, docurl) <- return (argv!!0, argv!!1)
 
-    res <- validateWithSchema "example.xsd" "example.xml"
-    printSValResult res
+    -- res <- validateWithSchema "example.xsd" "example.xml"
+    -- printSValResult res
 
+    runTestSuite
+
+    return ()
+
+mkSValTest :: String -> String -> SValResult -> Test
+mkSValTest label fileName expectedRes
+  = label ~:
+    do
+    res <- validateWithSchema ("./tests/" ++ fileName ++ ".xsd") ("./tests/" ++ fileName ++ ".xml")
+    res @?= expectedRes
+
+test1 :: Test
+test1  
+  = mkSValTest "a random description" "example" $
+    (True, [])
+    
+testSuite :: Test
+testSuite
+  = TestList [ test1
+             -- ,
+             ]
+
+runTestSuite :: IO ()
+runTestSuite
+  = do
+    _ <- runTestTT testSuite
     return ()
 
