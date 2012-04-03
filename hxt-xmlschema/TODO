@@ -66,36 +66,8 @@ create markup htmls via: cd src && hpc markup Main
 ------------------------------------------------------------------------
 
 TODO: find node for XPath and print it
-
 Text.XML.HXT.XPath.XPathEval
 getXPath :: String -> XmlTree -> XmlTrees
 Postprocess: take XPath and add error msg as processing instr. in document
 <?hxt-validate error="...." ?>
-
-------------------------------------------------------------------------
-
--- Save schema to given target file
-
--- fromSchema :: XmlSchema -> XmlSchema'
--- fromSchema s
---   = XmlSchema' (sTargetNS s) $ concat [ins, sts, cts, els, grs, ats, ags]
---     where
---     ins = map In $ sIncludes s
---     sts = map St $ toList $ sSimpleTypes s
---     cts = map Ct $ toList $ sComplexTypes s
---     els = map El $ elems  $ sElements s
---     grs = map Gr $ toList $ sGroups s 
---     ats = map At $ elems  $ sAttributes s
---     ags = map Ag $ toList $ sAttributeGroups s
-
--- storeXmlSchema :: XmlSchema -> String -> IO ()
--- storeXmlSchema s t
---   = do
---     _ <- runX ( constA (fromSchema s)
---                 >>>
---                 xpickleDocument   xpXmlSchema'
---                                   [ withIndent yes          -- indent generated xml
---                                   ] t
---               )
---     return ()
 
