@@ -21,6 +21,7 @@ import System ( getArgs )
 
 -- ----------------------------------------
 
+-- | Prints usage text
 printUsage :: IO ()
 printUsage
   = do
@@ -33,6 +34,7 @@ printUsage
 
 -- ----------------------------------------
 
+-- | Starts the hxt-xmlschema validator
 main :: IO ()
 main
   = do
