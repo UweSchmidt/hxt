@@ -16,7 +16,15 @@ module Text.XML.HXT.XMLSchema.TestSuite
 
 where
 
-import Test.HUnit
+import Text.XML.HXT.XMLSchema.Validation ( validateWithSchema
+                                         , SValResult
+                                         )
+
+import Test.HUnit                        ( Test (TestList)
+                                         , (~:)
+                                         , (@?=)
+                                         , runTestTT
+                                         )
 
 -- ----------------------------------------
 
@@ -120,6 +128,8 @@ redefine
               , "Parameter restriction: \"maxInclusive = 18\" does not hold for value = \"21\".")
             ])
 
+-- ----------------------------------------
+
 -- | The hxt-xmlschema test suite
 testSuite :: Test
 testSuite
@@ -131,6 +141,8 @@ testSuite
              , complexTypesErrors
              , redefine
              ]
+
+-- ----------------------------------------
 
 -- | Run the hxt-xmlschema test suite
 runTestSuite :: IO ()

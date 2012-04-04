@@ -1,7 +1,5 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-
 {- |
-   Module     : Text.XML.HXT.XMLSchema.SchemaLoader
+   Module     : Text.XML.HXT.XMLSchema.Loader
    Copyright  : Copyright (C) 2005-2012 Uwe Schmidt
    License    : MIT
 
@@ -12,7 +10,7 @@
 
 -}
 
-module Text.XML.HXT.XMLSchema.SchemaLoader
+module Text.XML.HXT.XMLSchema.Loader
 
   ( loadDescription
   , loadInstance
@@ -67,23 +65,19 @@ import Text.XML.HXT.Core   ( PU
                            , (&&&)
                            , getAttrValue
                            , getChildren
-
                            )
 
 import Text.XML.HXT.Curl   ( withCurl )
 
-import Data.Map            ( lookup
-                           , empty
+import Control.Applicative ( (<$>) )
+
+import Data.Map            ( empty
+                           , lookup
                            , insert
                            , union
                            )
 
-import Control.Applicative ( (<$>) )
-
 import Prelude hiding (lookup)
-
-instance Ord QName where -- TODO: orphan instance
-  compare x y = compare (qualifiedName x) (qualifiedName y)
 
 -- ----------------------------------------
 

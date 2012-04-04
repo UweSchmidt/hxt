@@ -22,8 +22,9 @@ import Text.XML.HXT.Core ( QName
                          , XmlTrees
                          )
 
-import Data.List         ( partition )
 import Data.Maybe        ( fromMaybe )
+
+import Data.List         ( partition )
 
 import Data.Tree.NTree.TypeDefs
 

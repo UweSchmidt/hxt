@@ -57,10 +57,19 @@ import Text.ParserCombinators.Parsec      ( option
 
 import Data.Maybe                         ( fromMaybe )
 
-import Prelude hiding (id, (.))
+import Control.Arrow                      ( Arrow
+                                          , arr
+                                          , (>>>)
+                                          , first
+                                          , second
+                                          )
 
-import Control.Category
-import Control.Arrow
+import Control.Category                   ( Category
+                                          , id
+                                          , (.)
+                                          )
+
+import Prelude hiding (id, (.))
 
 -- ----------------------------------------
 
@@ -69,6 +78,8 @@ type DatatypeName = String
 
 -- | List of parameters: each parameter is a pair consisting of a local name and a value.
 type ParamList = [(LocalName, String)]
+
+-- | Local name
 type LocalName = String
 
 -- | Function table type
