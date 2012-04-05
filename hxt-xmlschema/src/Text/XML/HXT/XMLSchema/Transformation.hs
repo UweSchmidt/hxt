@@ -576,6 +576,7 @@ createElemDesc (ElDef (ElementDef _ tdef))
 
 -- ----------------------------------------
 
+-- | Creates the element description for the root element
 createRootDesc' :: ST ElemDesc
 createRootDesc'
   = do
@@ -584,6 +585,7 @@ createRootDesc'
     se <- fromList <$> zip (keys (sElements s)) <$> (mapM createElemDesc $ elems $ sElements s)
     return $ mkComposeElemDesc cm se
 
+-- | Starts the transformation for a given schema representation
 createRootDesc :: XmlSchema -> ElemDesc
 createRootDesc schema
   = runST schema createRootDesc'

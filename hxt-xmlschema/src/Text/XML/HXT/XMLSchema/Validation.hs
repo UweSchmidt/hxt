@@ -147,9 +147,7 @@ testElemChildren t (x:xs)
   = do
     env <- ask
     let n = getElemName x
-    let c = case lookup n t of
-              Nothing -> 1
-              Just v  -> v+1
+    let c = maybe 1 (+1) $ lookup n t
     let elemXPath = "/" ++ (qualifiedName n) ++ "[" ++ (show c) ++ "]"
     res <- case lookup n $ subElemDesc $ elemDesc env of
              Nothing -> do
@@ -157,7 +155,7 @@ testElemChildren t (x:xs)
                                "no check implemented for element wildcard's content.")]
                                -- TODO: check element wildcard's content?
                         return True
-             Just d  -> local (const (appendXPath elemXPath (newDesc d env))) (testElem x)
+             Just d  -> local (const (appendXPath elemXPath $ newDesc d env)) $ testElem x
     rest <- testElemChildren (insert n c t) xs
     return $ res && rest
 
@@ -197,7 +195,7 @@ extractPrefixMap el
     where
     el' = setAttrList rest el
     prefixMap = fromList $ map (\ x -> (localPart $ getAttrName x, getAttrValue x)) nsAttrs
-    (nsAttrs, rest) = partition (\ x -> "xmlns" == (namePrefix $ getAttrName x)) $ getAttrList el
+    (nsAttrs, rest) = partition ((== "xmlns") . namePrefix . getAttrName) $ getAttrList el
 
 -- | Entry point for the instance document's validation
 testRoot :: XmlTree -> SVal Bool
@@ -219,9 +217,9 @@ validateWithSchema defUri instUri
                  inst <- loadInstance instUri
                  case inst of
                    Nothing -> return (False, [("/", "Could not process instance file.")])
-                   Just i  -> return $ runSVal (SValEnv "" $ createRootDesc d) (testRoot i)
+                   Just i  -> return $ runSVal (SValEnv "" $ createRootDesc d) $ testRoot i
 
--- | Writes validation results to stdout
+-- | Prints validation results to stdout
 printSValResult :: SValResult -> IO ()
 printSValResult (status, l)
   = do
