@@ -204,7 +204,7 @@ stToSTTF (Lst tref)
                  STLAnonymStDecl t -> stToSTTF t
     return $ \ x -> do
                     env <- ask
-                    if not $ foldr (&&) True $ fst $ runSVal env $ mapM baseTF $ words x
+                    if not $ and $ fst $ runSVal env $ mapM baseTF $ words x
                       then do
                            tell [(xpath env, "value does not match list type.")]
                            return False
@@ -217,7 +217,7 @@ stToSTTF (Un ts)
     tdefTFs <- mapM stToSTTF $ anonymDecls ts
     return $ \ x -> do
                     env <- ask
-                    if not $ foldr (||) False $ fst $ runSVal env $ mapM (\ f -> f x) (trefTFs ++ tdefTFs)
+                    if not $ or $ fst $ runSVal env $ mapM (\ f -> f x) (trefTFs ++ tdefTFs)
                       then do
                            tell [(xpath env, "value does not match union type.")]
                            return False
@@ -330,7 +330,7 @@ mkErrorElemDesc :: String -> ElemDesc
 mkErrorElemDesc s
   = ElemDesc (Just s) (empty, []) mkUnit empty mkNoTextSTTF
 
--- | 
+-- | Creates the element description for a given group
 groupToElemDesc :: Group -> ST ElemDesc
 groupToElemDesc (GrpRef r)
   = do
@@ -345,12 +345,14 @@ groupToElemDesc (GrpDef d)
       Just (Ch ch) -> choiceToElemDesc ch
       Just (Sq sq) -> sequenceToElemDesc sq
 
+-- | Extracts an element's name
 elementToName :: Element -> QName
 elementToName e
   = case e of
       ElRef r -> r
       ElDef d -> elemName d
 
+-- | Helper function to combine a list of element descriptions using a regex constructor
 combineElemDescs :: ([XmlRegex] -> XmlRegex) -> [ElemDesc] -> ST ElemDesc
 combineElemDescs mkRE eds
   = do
@@ -358,6 +360,7 @@ combineElemDescs mkRE eds
     let se = foldr union empty $ map subElemDesc eds
     return $ mkComposeElemDesc re se
 
+-- | Creates the element description for a given all
 allToElemDesc :: All -> ST ElemDesc
 allToElemDesc l
   = do
@@ -368,6 +371,7 @@ allToElemDesc l
                 ) l
     combineElemDescs mkPerms eds
 
+-- | Transforms a wildcard into a namespace checking predicate
 anyToPredicate :: Any -> ST (QName -> Bool)
 anyToPredicate an
   = do
@@ -386,15 +390,18 @@ anyToPredicate an
                            )
     return $ p . namespaceUri
 
+-- | Creates the element description for a given element wildcard
 anyToElemDesc :: Any -> ST ElemDesc
 anyToElemDesc an
   = do
     re <- mkElemNamespaceRE <$> anyToPredicate an
     return $ mkComposeElemDesc re empty
 
+-- | Helper function to create a pair from two values
 mkPair :: a -> b -> (a, b)
 mkPair x y = (x, y)
 
+-- | Create the element description for a choice or sequence content item
 chSeqContToElemDesc :: ChSeqContent -> ST ElemDesc
 chSeqContToElemDesc c
   = do

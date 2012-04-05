@@ -69,7 +69,7 @@ type PrefixMap     = Map String String
 
 -- | Computes a list of required attributes
 getReqAttrNames :: AttrMap -> [QName]
-getReqAttrNames m = map (\ (n, _) -> n) $ filter (\ (_, (req, _)) -> req) (toList m)
+getReqAttrNames m = map fst $ filter (fst . snd) $ toList m
 
 -- | Checks list inclusion with a list of required attributes for a list of attributes
 hasReqAttrs :: [QName] -> [QName] -> SVal Bool
@@ -81,8 +81,8 @@ hasReqAttrs (x:xs) attrs
     if x `notElem` attrs
       then do
            tell [((xpath env) ++ "/@" ++ (qualifiedName x), "required attribute is missing.")]
-           res <- hasReqAttrs xs attrs
-           return (res && False)
+           _ <- hasReqAttrs xs attrs
+           return False
       else hasReqAttrs xs attrs
 
 -- | Checks whether a list of attributes is allowed for an element and checks each attribute's value
@@ -92,9 +92,9 @@ checkAllowedAttrs []
 checkAllowedAttrs ((n, val):xs)
   = do
     env <- ask
-    let ad = attrDesc $ elemDesc env
-    res <- case lookup n $ fst ad of
-             Nothing      -> if foldr (||) False $ map (\ f -> f n) $ snd ad
+    let (am, wp) = attrDesc $ elemDesc env
+    res <- case lookup n am of
+             Nothing      -> if or $ map (\ f -> f n) wp
                                then do
                                     tell [((xpath env) ++ "/@" ++ (qualifiedName n),
                                            "no check implemented for attribute wildcard's content.")]
@@ -103,9 +103,9 @@ checkAllowedAttrs ((n, val):xs)
                                else do
                                     tell [((xpath env) ++ "/@" ++ (qualifiedName n), "attribute not allowed here.")]
                                     return False
-             Just (_, tf) -> local (const (appendXPath ("/@" ++ (qualifiedName n)) env)) (tf val)
+             Just (_, tf) -> local (const $ appendXPath ("/@" ++ (qualifiedName n)) env) $ tf val
     rest <- checkAllowedAttrs xs
-    return (res && rest)
+    return $ res && rest
 
 -- | Performs the combined attribute list check for a given element
 testAttrs :: XmlTree -> SVal Bool
@@ -114,8 +114,8 @@ testAttrs e
     env <- ask
     let attrl = getElemAttrs e
     allowedAttrsRes <- checkAllowedAttrs attrl
-    reqAttrsRes <- hasReqAttrs (getReqAttrNames (fst $ attrDesc $ elemDesc env)) (map fst attrl)
-    return (allowedAttrsRes && reqAttrsRes)
+    reqAttrsRes <- hasReqAttrs (getReqAttrNames $ fst $ attrDesc $ elemDesc env) $ map fst attrl
+    return $ allowedAttrsRes && reqAttrsRes
 
 -- | Checks the content model of a given element using regular expression derivation
 testContentModel :: XmlTrees -> SVal Bool
@@ -159,7 +159,7 @@ testElemChildren t (x:xs)
                         return True
              Just d  -> local (const (appendXPath elemXPath (newDesc d env))) (testElem x)
     rest <- testElemChildren (insert n c t) xs
-    return (res && rest)
+    return $ res && rest
 
 -- | Checks the element's text content
 testElemText :: XmlTrees -> SVal Bool
@@ -186,9 +186,9 @@ testElem e
                                     let (tags, text) = extractElems content
                                     textRes <- testElemText text
                                     tagsRes <- testElemChildren empty tags
-                                    return (textRes && tagsRes)
+                                    return $ textRes && tagsRes
                                else return False
-                  return (attrRes && contRes)
+                  return $ attrRes && contRes
 
 -- | Extracts a namespace prefix table from a given element's attribute list
 extractPrefixMap :: XmlTree -> (XmlTree, PrefixMap)

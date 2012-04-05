@@ -121,7 +121,7 @@ xpFilterSchema
     xpFilterAttr (isAttrWithoutNamespaceUri >>> neg attributeBlacklist)
     where
     -- element blacklist
-    isXmlSchemaElem           = hasNameWith ((== nsUri) . namespaceUri)
+    isXmlSchemaElem           = hasNameWith $ (== nsUri) . namespaceUri
     elementBlacklist          = foldr (<+>) none $ map hasQName $
                                 [ mkQName nsPrefix "annotation"           nsUri
                                 , mkQName nsPrefix "notation"             nsUri
@@ -131,7 +131,7 @@ xpFilterSchema
                                 , mkQName nsPrefix "keyref"               nsUri
                                 ]
     -- attribute blacklist
-    isAttrWithoutNamespaceUri = hasNameWith (null       . namespaceUri)
+    isAttrWithoutNamespaceUri = hasNameWith $ null       . namespaceUri
     attributeBlacklist        = foldr (<+>) none $ map hasQName $
                                 [ mkQName ""       "id"                   ""
                                 -- skipped attributes for schema
