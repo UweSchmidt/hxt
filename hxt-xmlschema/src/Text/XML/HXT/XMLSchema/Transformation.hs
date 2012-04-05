@@ -414,17 +414,20 @@ chSeqContToElemDesc c
     case c of
       ChSeqEl (_, el) -> do
                          let n = elementToName el
-                         return $ mkComposeElemDesc (mkMinMaxRE occ $ mkElemNameRE n) (fromList [(n, ed)])
-      _               -> return $ mkComposeElemDesc (mkMinMaxRE occ $ contentModel ed) (subElemDesc ed)
+                         return $ mkComposeElemDesc (mkMinMaxRE occ $ mkElemNameRE n)  $ fromList [(n, ed)]
+      _               -> return $ mkComposeElemDesc (mkMinMaxRE occ $ contentModel ed) $ subElemDesc ed
 
+-- | Creates the element description for a given choice
 choiceToElemDesc :: Choice -> ST ElemDesc
 choiceToElemDesc l
   = mapM chSeqContToElemDesc l >>= combineElemDescs mkAlts
 
+-- | Creates the element description for a given sequence
 sequenceToElemDesc :: Sequence -> ST ElemDesc
 sequenceToElemDesc l
   = mapM chSeqContToElemDesc l >>= combineElemDescs mkSeqs
 
+-- | Attempts to read an integer value from a string
 readMaybeInt :: String -> Maybe Int
 readMaybeInt str
   = val $ reads str
@@ -432,6 +435,7 @@ readMaybeInt str
     val [(x, "")] = Just x
     val _         = Nothing
 
+-- | Creates a regex wrapper for restrictions on the number of occurrences
 mkMinMaxRE :: MinMaxOcc -> XmlRegex -> XmlRegex
 mkMinMaxRE occ re
   = case readMaybeInt minOcc' of
@@ -449,6 +453,7 @@ mkMinMaxRE occ re
                 Nothing -> "1"
                 Just i  -> i
 
+-- | Creates the element description for a given ComplexType compositor
 compToElemDesc :: CTCompositor -> ST ElemDesc
 compToElemDesc c
   = do
@@ -457,12 +462,14 @@ compToElemDesc c
                    CompAl (occ, al) -> mkPair occ <$> allToElemDesc al
                    CompCh (occ, ch) -> mkPair occ <$> choiceToElemDesc ch
                    CompSq (occ, sq) -> mkPair occ <$> sequenceToElemDesc sq
-    return $ mkElemDesc (attrDesc ed) (mkMinMaxRE occ $ contentModel ed) (subElemDesc ed) (sttf ed)
+    return $ mkElemDesc (attrDesc ed) (mkMinMaxRE occ $ contentModel ed) (subElemDesc ed) $ sttf ed
 
+-- | Combines two given attribute descriptions
 mergeAttrDescs :: AttrDesc -> AttrDesc -> AttrDesc
 mergeAttrDescs ad ad'
   = (union (fst ad) $ fst ad', snd ad ++ snd ad')
 
+-- | Creates the element description for a given ComplexType model
 ctModelToElemDesc :: CTModel -> ST ElemDesc
 ctModelToElemDesc (comp, attrs)
   = do
@@ -471,8 +478,10 @@ ctModelToElemDesc (comp, attrs)
       Nothing -> return $ mkElemDesc ad mkUnit empty mkNoTextSTTF
       Just c  -> do
                  ed <- compToElemDesc c
-                 return $ mkElemDesc (mergeAttrDescs ad $ attrDesc ed) (contentModel ed) (subElemDesc ed) (sttf ed)
+                 return $ mkElemDesc (mergeAttrDescs ad $ attrDesc ed) (contentModel ed) (subElemDesc ed) $ sttf ed
 
+-- | Creates the element description for a given simple content
+--   Accumulates the restrictions to create the combined element description
 simpleContentToElemDesc :: SimpleContent -> AttrDesc -> RestrAttrs -> ST ElemDesc
 simpleContentToElemDesc (SCExt (n, attrs)) ad rlist
   = do
@@ -497,42 +506,43 @@ simpleContentToElemDesc (SCRestr ((tref, rlist'), attrs)) ad rlist
                                                         "element validation error: illegal type reference in schema file"
       STRAnonymStDecl _ -> mkSimpleElemDesc ad' <$> rstrToSTTF (tref, mergedRlist)
 
+-- | Creates the element description for a given ComplexType
 ctToElemDesc :: ComplexType -> ST ElemDesc
 ctToElemDesc ct
   = do
     s <- ask
     case ctDef ct of
       SCont sc      -> simpleContentToElemDesc sc (empty, []) []
-      CCont cc      -> do
-                       let mixed = case ccMixed cc of
-                                     Just "true"  -> True
-                                     Just "false" -> False
-                                     _            -> case ctMixed ct of
-                                                       Just "true" -> True
-                                                       _           -> False
-                       case ccDef cc of
-                         CCExt   (n, m) -> case lookup n $ sComplexTypes s of
-                                             Nothing  -> return $ mkErrorElemDesc
-                                                         "element validation error: illegal type reference in schema file"
-                                             Just ct' -> do
-                                                         base <- ctToElemDesc ct'
-                                                         ed <- ctModelToElemDesc m
-                                                         return $ mkElemDesc (mergeAttrDescs (attrDesc ed) $ attrDesc base)
-                                                                             (mkMixedRE mixed $
-                                                                              mkSeq (contentModel base) $ contentModel ed)
-                                                                             (union (subElemDesc ed) $ subElemDesc base)
-                                                                             (sttf base)
-
-                         CCRestr (n, m) -> case lookup n $ sComplexTypes s of
-                                             Nothing  -> return $ mkErrorElemDesc
-                                                         "element validation error: illegal type reference in schema file"
-                                             Just ct' -> do
-                                                         base <- ctToElemDesc ct'
-                                                         ed <- ctModelToElemDesc m
-                                                         return $ mkElemDesc (mergeAttrDescs (attrDesc ed) $ attrDesc base)
-                                                                             (mkMixedRE mixed $ contentModel ed)
-                                                                             (subElemDesc ed)
-                                                                             (sttf ed)
+      CCont cc      ->
+        do
+        let mixed = case ccMixed cc of
+                      Just "true"  -> True
+                      Just "false" -> False
+                      _            -> case ctMixed ct of
+                                        Just "true" -> True
+                                        _           -> False
+        case ccDef cc of
+          CCExt   (n, m) -> case lookup n $ sComplexTypes s of
+                              Nothing  -> return $ mkErrorElemDesc
+                                                   "element validation error: illegal type reference in schema file"
+                              Just ct' -> do
+                                          base <- ctToElemDesc ct'
+                                          ed <- ctModelToElemDesc m
+                                          return $ mkElemDesc (mergeAttrDescs (attrDesc ed) $ attrDesc base)
+                                                              (mkMixedRE mixed $
+                                                               mkSeq (contentModel base) $ contentModel ed)
+                                                              (union (subElemDesc ed) $ subElemDesc base)
+                                                              (sttf base)
+          CCRestr (n, m) -> case lookup n $ sComplexTypes s of
+                              Nothing  -> return $ mkErrorElemDesc
+                                                   "element validation error: illegal type reference in schema file"
+                              Just ct' -> do
+                                          base <- ctToElemDesc ct'
+                                          ed <- ctModelToElemDesc m
+                                          return $ mkElemDesc (mergeAttrDescs (attrDesc ed) $ attrDesc base)
+                                                              (mkMixedRE mixed $ contentModel ed)
+                                                              (subElemDesc ed)
+                                                              (sttf ed)
       NewCT m       -> do
                        ed <- ctModelToElemDesc m
                        let mixed = case ctMixed ct of
@@ -543,6 +553,7 @@ ctToElemDesc ct
                                            (subElemDesc ed)
                                            (sttf ed)
 
+-- | Creates the element description for a given element
 createElemDesc :: Element -> ST ElemDesc
 createElemDesc (ElRef n)
   = do
