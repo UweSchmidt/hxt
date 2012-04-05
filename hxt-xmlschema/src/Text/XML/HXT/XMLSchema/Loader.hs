@@ -438,11 +438,11 @@ xpGroup
     tag (GrpRef _) = 0
     tag (GrpDef _) = 1
     ps = [ xpWrap (GrpRef, unGrpRef) $ xpAttr "ref" xpQName
-         , xpWrap (GrpDef, unGrpDef) $ xpOption $ xpGroupContDef
+         , xpWrap (GrpDef, unGrpDef) $ xpOption $ xpGroupDef
          ]
 
-xpGroupContDef :: PU GroupContDef
-xpGroupContDef
+xpGroupDef :: PU GroupDef
+xpGroupDef
   = xpAlt tag ps
     where
     tag (Al _) = 0

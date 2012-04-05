@@ -35,14 +35,16 @@ import Data.Map                    ( Map )
 
 -- ----------------------------------------
 
--- | ...
+-- | The environment used during validation
 data SValEnv       = SValEnv
                    { xpath    :: XPath
                    , elemDesc :: ElemDesc
                    }
 
+-- | Simple XPath representation
 type XPath         = String
 
+-- | Description for an element under test
 data ElemDesc      = ElemDesc
                    { errmsg       :: Maybe String
                    , attrDesc     :: AttrDesc
@@ -50,18 +52,35 @@ data ElemDesc      = ElemDesc
                    , subElemDesc  :: SubElemDesc
                    , sttf         :: STTF
                    }
+
+-- | Description for allowed attributes of an element
 type AttrDesc      = (AttrMap, AttrWildcards)
+
+-- | Table for regular attributes
 type AttrMap       = Map QName AttrMapVal
+
+-- | Entry for AttrMap: required-flag and test function
 type AttrMapVal    = (Bool, STTF)
+
+-- | List of test functions for attribute wildcards
 type AttrWildcards = [(QName -> Bool)]
+
+-- | Table of possible subelems and their descriptions
 type SubElemDesc   = Map QName ElemDesc
+
+-- | SimpleType test function to validate basic values
 type STTF          = String -> SVal Bool
 
+-- | Validation result contains the validation status and log
 type SValResult    = (Bool, SValLog)
+
+-- | Validation log is a list of XPaths and messages
 type SValLog       = [(XPath, String)]
 
+-- | Schema validation monad
 type SVal a        = ReaderT SValEnv (WriterT SValLog Identity) a
 
+-- | Runs a computation in the schema validation monad
 runSVal :: SValEnv -> SVal a -> (a, SValLog)
 runSVal env val = runIdentity $ runWriterT $ runReaderT val env
 
