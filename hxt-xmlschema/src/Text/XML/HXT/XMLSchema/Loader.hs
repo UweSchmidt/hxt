@@ -8,6 +8,8 @@
    Portability: portable
    Version    : $Id$
 
+   Contains functions to load schema description and instance documents
+   and provide an internal representation.
 -}
 
 module Text.XML.HXT.XMLSchema.Loader

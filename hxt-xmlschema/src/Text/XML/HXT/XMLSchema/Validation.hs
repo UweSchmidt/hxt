@@ -8,6 +8,7 @@
    Portability: portable
    Version    : $Id$
 
+   Contains functions to perform validation following a given schema description.
 -}
 
 module Text.XML.HXT.XMLSchema.Validation
@@ -180,7 +181,7 @@ extractPrefixMap el
   = (el', prefixMap)
     where
     el' = setAttrList rest el
-    prefixMap = fromList $ map (\ x -> (localPart $ getAttrName x, getAttrValue' x)) nsAttrs
+    prefixMap = fromList $ map (\ x -> (localPart $ getAttrName x, getAttrValue x)) nsAttrs
     (nsAttrs, rest) = partition (\ x -> "xmlns" == (namePrefix $ getAttrName x)) $ getAttrList el
 
 testRoot :: XmlTree -> SVal Bool

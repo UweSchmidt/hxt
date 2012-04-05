@@ -8,6 +8,7 @@
    Portability: portable
    Version    : $Id$
 
+   Contains a HUnit testsuite for the hxt-xmlschema validator.
 -}
 
 module Text.XML.HXT.XMLSchema.TestSuite
@@ -130,7 +131,7 @@ redefine
 
 -- ----------------------------------------
 
--- | The hxt-xmlschema test suite
+-- | The hxt-xmlschema testsuite
 testSuite :: Test
 testSuite
   = TestList [ simpleTypesElemsOk
@@ -144,7 +145,7 @@ testSuite
 
 -- ----------------------------------------
 
--- | Run the hxt-xmlschema test suite
+-- | Run the hxt-xmlschema testsuite
 runTestSuite :: IO ()
 runTestSuite
   = do

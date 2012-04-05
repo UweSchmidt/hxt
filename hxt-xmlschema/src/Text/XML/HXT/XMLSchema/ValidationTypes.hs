@@ -8,6 +8,7 @@
    Portability: portable
    Version    : $Id$
 
+   Contains the basic datatypes which are used during validation.
 -}
 
 module Text.XML.HXT.XMLSchema.ValidationTypes

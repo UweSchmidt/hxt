@@ -8,6 +8,7 @@
    Portability: portable
    Version    : $Id$
 
+   Contains functions to check basic W3C datatypes and params.
 -}
 
 module Text.XML.HXT.XMLSchema.W3CDataTypeCheck

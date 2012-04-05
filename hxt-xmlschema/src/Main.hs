@@ -8,6 +8,7 @@
    Portability: portable
    Version    : $Id$
 
+   The main module for the validateWithSchema executable.
 -}
 
 module Main

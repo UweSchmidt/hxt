@@ -8,6 +8,8 @@
    Portability: portable
    Version    : $Id$
 
+   Contains functions to transform the internal schema representation
+   into structures which will be used during validation.
 -}
 
 module Text.XML.HXT.XMLSchema.Transformation
