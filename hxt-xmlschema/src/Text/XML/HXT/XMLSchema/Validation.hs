@@ -91,7 +91,7 @@ checkAllowedAttrs ((n, val):xs)
     env <- ask
     let ad = attrDesc $ elemDesc env
     res <- case lookup n $ fst ad of
-             Nothing      -> if foldr (||) False $ map (\ f -> f n) $ snd ad 
+             Nothing      -> if foldr (||) False $ map (\ f -> f n) $ snd ad
                                then do
                                     tell [((xpath env) ++ "/@" ++ (qualifiedName n), "no further check implemented for attribute wildcards.")] -- TODO: check attribute wildcards
                                     return True

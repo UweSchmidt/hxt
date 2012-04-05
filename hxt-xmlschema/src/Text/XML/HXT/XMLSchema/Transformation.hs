@@ -173,7 +173,7 @@ rstrToSTTF (tref, rlist)
     let t' = case tref of
                BaseAttr n        -> case lookup n (sSimpleTypes s) of
                                       Just t  -> Left t
-                                      Nothing -> Right $ mkW3CCheckSTTF n $ restrAttrsToParamList rlist      
+                                      Nothing -> Right $ mkW3CCheckSTTF n $ restrAttrsToParamList rlist
                STRAnonymStDecl t -> Left t
     case t' of
       Left t   -> case t of
@@ -235,7 +235,7 @@ createAttrMapEntry (AttrDef (AttributeDef n tdef use))
                              _          -> False
     tf <- case tdef of
             ATDTypeAttr r   -> lookupSTTF r
-            ATDAnonymDecl t -> stToSTTF t    
+            ATDAnonymDecl t -> stToSTTF t
     return (n, (req, tf))
 
 attrGrpToAttrList :: AttributeGroup -> XSC AttrList

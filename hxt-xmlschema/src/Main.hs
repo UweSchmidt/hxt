@@ -14,10 +14,13 @@ module Main
 
 where
 
-import Text.XML.HXT.XMLSchema.Validation
-import Text.XML.HXT.XMLSchema.TestSuite
+import Text.XML.HXT.XMLSchema.Validation ( validateWithSchema
+                                         , printSValResult
+                                         )
 
-import System ( getArgs )
+import Text.XML.HXT.XMLSchema.TestSuite  ( runTestSuite )
+
+import System                            ( getArgs )
 
 -- ----------------------------------------
 

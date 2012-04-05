@@ -43,7 +43,7 @@ data SValEnv       = SValEnv
 type XPath         = String
 
 data ElemDesc      = ElemDesc
-                   { errmsg       :: Maybe String 
+                   { errmsg       :: Maybe String
                    , attrDesc     :: AttrDesc
                    , contentModel :: XmlRegex
                    , subElemDesc  :: SubElemDesc

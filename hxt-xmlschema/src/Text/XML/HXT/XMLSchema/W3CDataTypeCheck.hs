@@ -396,5 +396,5 @@ datatypeAllowsW3C d params value
              , (xsd_unsignedByte,       validInteger xsd_unsignedByte)
              ]
     assertW3C p = assert p errW3C
-    errW3C      = errorMsgDataLibQName d
+    errW3C      = errorMsgDataDoesNotMatch d
 

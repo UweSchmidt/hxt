@@ -32,7 +32,7 @@ module Text.XML.HXT.XMLSchema.W3CDataTypeCheckUtils
   , listValid
 
   , errorMsgDataTypeNotAllowed
-  , errorMsgDataLibQName
+  , errorMsgDataDoesNotMatch
   , errorMsgParam
   )
 
@@ -215,7 +215,7 @@ stringValidFT ft datatype lowerBound upperBound params
       = "Length of " ++ v
         ++ " (" ++ (show $ length v) ++ " chars) out of range: "
         ++ show lowerBound ++ " .. " ++ show upperBound
-        ++ " for datatype " ++ datatype
+        ++ " for datatype " ++ datatype ++ "."
     paramStringValid :: (LocalName, String) -> CheckString
     paramStringValid (pn, pv)
       = assert paramOK (errorMsgParam pn pv)
@@ -272,8 +272,8 @@ formatStringList sf spacer l
     foldr (\e -> ((if e /= "" then sf e ++ spacer else "") ++)) "" l
 
 -- | Error message for not matching datatype
-errorMsgDataLibQName :: String -> String -> String
-errorMsgDataLibQName n v
+errorMsgDataDoesNotMatch :: String -> String -> String
+errorMsgDataDoesNotMatch n v
   = show v ++ " is no valid " ++ n ++ "."
 
 -- | Error message for not matching params

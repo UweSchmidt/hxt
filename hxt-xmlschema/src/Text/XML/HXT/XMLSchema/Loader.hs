@@ -553,7 +553,7 @@ applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefCt (k, ct')):xs)
   = applyRedefs (XmlSchema tns ins sts cts'' els grs ats ags) xs
     where
     k'    = setLocalPart' (newXName ((localPart k) ++ "_redef")) k
-    cts'  = case lookup k cts of 
+    cts'  = case lookup k cts of
               Just ct -> insert k' ct cts
               Nothing -> cts
     cts'' = case ct' of
@@ -577,7 +577,7 @@ mergeSchemata (XmlSchema tns _ sts cts els grs ats ags) (XmlSchema _ _ sts' cts'
 loadDescription :: String -> IO (Maybe XmlSchema)
 loadDescription uri
   = do
-    s' <- runX ( 
+    s' <- runX (
                 -- TODO: readDocument, add namespaces to each node, finally unpickle
                 xunpickleDocument xpXmlSchema'
                                   [ withValidate yes        -- validate source
@@ -591,7 +591,7 @@ loadDescription uri
     if null s'
       then return Nothing
       else do
-           let s = toSchema $ head s' 
+           let s = toSchema $ head s'
            Just <$> resolveIncls s (sIncludes s)
 
 -- ----------------------------------------
