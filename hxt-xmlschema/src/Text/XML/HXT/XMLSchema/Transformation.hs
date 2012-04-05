@@ -78,7 +78,7 @@ runST schema st = runIdentity $ runReaderT st schema
 
 -- ----------------------------------------
 
--- | Create a SimpleType test function which creates a warning and always succeeds
+-- | Creates a SimpleType test function which creates a warning and always succeeds
 mkWarnSTTF :: String -> STTF
 mkWarnSTTF s
   = \ _ -> do
@@ -86,7 +86,7 @@ mkWarnSTTF s
            tell [(xpath env, s)]
            return True
 
--- | Create a SimpleType test function which creates an error and always fails
+-- | Creates a SimpleType test function which creates an error and always fails
 mkErrorSTTF :: String -> STTF
 mkErrorSTTF s
   = \ _ -> do
@@ -105,7 +105,7 @@ mkNoTextSTTF
                   return False
              else return True
 
--- | Create a SimpleType test function for basic W3C datatypes
+-- | Creates a SimpleType test function for basic W3C datatypes
 mkW3CCheckSTTF :: QName -> ParamList -> STTF
 mkW3CCheckSTTF n p
   = if n `elem` [ mkName "xs:boolean" -- TODO: extend W3CDataTypeCheck
@@ -129,7 +129,7 @@ mkW3CCheckSTTF n p
                               tell [(xpath env, msg)]
                               return False
 
--- | Create the SimpleType test function for a given type reference by name
+-- | Creates the SimpleType test function for a given type reference by name
 lookupSTTF :: QName -> ST STTF
 lookupSTTF n
   = do
@@ -157,13 +157,14 @@ restrAttrsToParamList rlist
                            MinLength v      -> [(xsd_minLength,      v)]
                            MaxLength v      -> [(xsd_maxLength,      v)]
                            Pattern v        -> [(xsd_pattern,        v)]
-                           -- Enumeration v    -> [(xsd_enumeration,    v)] -- TODO: extend W3CDataTypeCheck
-                           -- WhiteSpace v     -> [(xsd_whiteSpace,     v)] -- TODO: extend W3CDataTypeCheck
+                           -- TODO: extend W3CDataTypeCheck
+                           -- Enumeration v    -> [(xsd_enumeration,    v)]
+                           -- WhiteSpace v     -> [(xsd_whiteSpace,     v)]
                            _                -> []
 
                  ) rlist
 
--- | Creates a SimpleType test function which applies two given STTFs
+-- | Creates a SimpleType test function which applies two given SimpleType test functions
 checkBothSTTF :: STTF -> STTF -> STTF
 checkBothSTTF tf1 tf2
   = \ v -> do
@@ -171,6 +172,7 @@ checkBothSTTF tf1 tf2
            tf2res <- tf2 v
            return (tf1res && tf2res)
 
+-- | Accumulates SimpleType restrictions to create a combined SimpleType test function
 rstrToSTTF :: STRestriction -> ST STTF
 rstrToSTTF (tref, rlist)
   = do
@@ -191,6 +193,7 @@ rstrToSTTF (tref, rlist)
                                                -- TODO: pattern, enumeration
       Right tf -> return tf
 
+-- | Creates a SimpleType test function for a given SimpleType
 stToSTTF :: SimpleType -> ST STTF
 stToSTTF (Restr rstr)
   = rstrToSTTF rstr
@@ -222,8 +225,7 @@ stToSTTF (Un ts)
 
 -- ----------------------------------------
 
--- Create attribute descriptions
-
+-- | Creates an AttrMap entry for a given attribute
 createAttrMapEntry :: Attribute -> ST (QName, AttrMapVal)
 createAttrMapEntry (AttrRef n)
   = do
@@ -231,7 +233,8 @@ createAttrMapEntry (AttrRef n)
     case lookup n (sAttributes s) of
            Just a  -> createAttrMapEntry a
            Nothing -> do
-                      let errorSTTF = mkErrorSTTF "attribute validation error: illegal attribute reference in schema file"
+                      let errorSTTF = mkErrorSTTF $
+                                      "attribute validation error: illegal attribute reference in schema file"
                       return (n, (False, errorSTTF))
 createAttrMapEntry (AttrDef (AttributeDef n tdef use))
   = do
@@ -245,6 +248,7 @@ createAttrMapEntry (AttrDef (AttributeDef n tdef use))
             ATDAnonymDecl t -> stToSTTF t
     return (n, (req, tf))
 
+-- | Transforms an attribute group into an attribute list
 attrGrpToAttrList :: AttributeGroup -> ST AttrList
 attrGrpToAttrList g
   = do
@@ -255,15 +259,11 @@ attrGrpToAttrList g
                         Just g' -> attrGrpToAttrList g'
       AttrGrpDef l -> return l
 
-attrListToAttrDesc :: AttrList -> ST AttrDesc
-attrListToAttrDesc l
-  = do
-    attrMap <- fromList <$> attrListToAttrMap l
-    mkPair attrMap <$> attrListToAttrWildcards l
-
+-- | Helper function to wrap values into a one-element list
 box :: a -> [a]
 box x = [x]
 
+-- | Extracts an attribute map from an attribute list
 attrListToAttrMap :: AttrList -> ST [(QName, AttrMapVal)]
 attrListToAttrMap l
   = concat <$> mapM (\ x -> case x of
@@ -272,6 +272,7 @@ attrListToAttrMap l
                               _         -> return []
                     ) l
 
+-- | Extracts attribute wildcards from an attribute list
 attrListToAttrWildcards :: AttrList -> ST AttrWildcards
 attrListToAttrWildcards l
   = concat <$> mapM (\ x -> case x of
@@ -279,19 +280,28 @@ attrListToAttrWildcards l
                               _         -> return []
                     ) l
 
+-- | Transforms an attribute list into an attribute description
+attrListToAttrDesc :: AttrList -> ST AttrDesc
+attrListToAttrDesc l
+  = do
+    attrMap <- fromList <$> attrListToAttrMap l
+    mkPair attrMap <$> attrListToAttrWildcards l
+
 -- ----------------------------------------
 
--- Regex constructors
-
+-- | Creates a regex which matches on an element with a given name
 mkElemNameRE :: QName -> XmlRegex
 mkElemNameRE s = mkPrim $ (== s) . getElemName
 
+-- | Creates a regex which matches on an element with a given namespace predicate
 mkElemNamespaceRE :: (QName -> Bool) -> XmlRegex
 mkElemNamespaceRE p = mkPrim $ p . getElemName
 
+-- | Creates a regex which matches on text nodes
 mkTextRE :: XmlRegex
 mkTextRE = mkPrim $ isText
 
+-- | Creates a regex which applies the mixed-behaviour
 mkMixedRE :: Bool -> XmlRegex -> XmlRegex
 mkMixedRE mixed re
   = if mixed
@@ -300,24 +310,27 @@ mkMixedRE mixed re
 
 -- ----------------------------------------
 
--- Create element descriptions
-
-mkErrorElemDesc :: String -> ElemDesc
-mkErrorElemDesc s
-  = ElemDesc (Just s) (empty, []) mkUnit empty mkNoTextSTTF
-
+-- | Creates an element description for elements without subelems
 mkSimpleElemDesc :: AttrDesc -> STTF -> ElemDesc
 mkSimpleElemDesc ad tf
   = ElemDesc Nothing ad mkTextRE empty tf
 
+-- | Creates an element description for elements without attributes or textual content
 mkComposeElemDesc :: XmlRegex -> SubElemDesc -> ElemDesc
 mkComposeElemDesc cm se
   = ElemDesc Nothing (empty, []) cm se mkNoTextSTTF
 
+-- | Creates a general element description
 mkElemDesc :: AttrDesc -> XmlRegex -> SubElemDesc -> STTF -> ElemDesc
 mkElemDesc ad cm se tf
   = ElemDesc Nothing ad cm se tf
 
+-- | Creates an element description which passes an error message
+mkErrorElemDesc :: String -> ElemDesc
+mkErrorElemDesc s
+  = ElemDesc (Just s) (empty, []) mkUnit empty mkNoTextSTTF
+
+-- | 
 groupToElemDesc :: Group -> ST ElemDesc
 groupToElemDesc (GrpRef r)
   = do
@@ -473,7 +486,8 @@ simpleContentToElemDesc (SCRestr ((tref, rlist'), attrs)) ad rlist
                       Nothing -> mkSimpleElemDesc ad' <$> rstrToSTTF (BaseAttr n, mergedRlist)
                       Just ct -> case ctDef ct of
                                    SCont sc -> simpleContentToElemDesc sc ad' mergedRlist
-                                   _        -> return $ mkErrorElemDesc "element validation error: illegal type reference in schema file"
+                                   _        -> return $ mkErrorElemDesc $
+                                                        "element validation error: illegal type reference in schema file"
       STRAnonymStDecl _ -> mkSimpleElemDesc ad' <$> rstrToSTTF (tref, mergedRlist)
 
 ctToElemDesc :: ComplexType -> ST ElemDesc
