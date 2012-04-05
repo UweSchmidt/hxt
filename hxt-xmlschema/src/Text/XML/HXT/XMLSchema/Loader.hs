@@ -8,13 +8,13 @@
    Portability: portable
    Version    : $Id$
 
-   Contains functions to load schema description and instance documents
+   Contains functions to load schema definition and instance documents
    and provide an internal representation.
 -}
 
 module Text.XML.HXT.XMLSchema.Loader
 
-  ( loadDescription
+  ( loadDefinition
   , loadInstance
   )
 
@@ -528,12 +528,12 @@ resolveIncls s (x:xs)
 
 resolveIncl :: Include -> IO (Maybe XmlSchema) -- TODO: apply namespaces
 resolveIncl (Incl loc)
-  = loadDescription loc
+  = loadDefinition loc
 resolveIncl (Imp (loc, _))       
-  = loadDescription loc
+  = loadDefinition loc
 resolveIncl (Redef (loc, redefs))
   = do
-    s' <- loadDescription loc
+    s' <- loadDefinition loc
     case s' of
       Nothing -> return Nothing
       Just s  -> return $ Just $ applyRedefs s redefs
@@ -576,8 +576,8 @@ mergeSchemata (XmlSchema tns _ sts cts els grs ats ags) (XmlSchema _ _ sts' cts'
 -- ----------------------------------------
 
 -- Load schema from given url
-loadDescription :: String -> IO (Maybe XmlSchema)
-loadDescription uri
+loadDefinition :: String -> IO (Maybe XmlSchema)
+loadDefinition uri
   = do
     s' <- runX (
                 -- TODO: readDocument, add namespaces to each node, finally unpickle

@@ -8,7 +8,7 @@
    Portability: portable
    Version    : $Id$
 
-   Contains functions to perform validation following a given schema description.
+   Contains functions to perform validation following a given schema definition.
 -}
 
 module Text.XML.HXT.XMLSchema.Validation
@@ -25,7 +25,7 @@ import Text.XML.HXT.XMLSchema.ValidationTypes
 
 import Text.XML.HXT.XMLSchema.Transformation ( createRootDesc )
 
-import Text.XML.HXT.XMLSchema.Loader         ( loadDescription
+import Text.XML.HXT.XMLSchema.Loader         ( loadDefinition
                                              , loadInstance
                                              )
 
@@ -59,18 +59,19 @@ import Prelude hiding (lookup)
 
 -- ----------------------------------------
 
--- | ...
-type PrefixMap     = Map String String
-
+-- | A table for counting element occurrences
 type CountingTable = Map QName Int
+
+-- | A table for namespace prefixes and URIs
+type PrefixMap     = Map String String
 
 -- ----------------------------------------
 
--- Validation
-
+-- | Computes a list of required attributes
 getReqAttrNames :: AttrMap -> [QName]
 getReqAttrNames m = map (\ (n, _) -> n) $ filter (\ (_, (req, _)) -> req) (toList m)
 
+-- | Checks list inclusion with a list of required attributes for a list of attributes
 hasReqAttrs :: [QName] -> [QName] -> SVal Bool
 hasReqAttrs [] _
   = return True
@@ -84,6 +85,7 @@ hasReqAttrs (x:xs) attrs
            return (res && False)
       else hasReqAttrs xs attrs
 
+-- | Checks whether a list of attributes is allowed for an element and checks each attribute's value
 checkAllowedAttrs :: [(QName, String)] -> SVal Bool
 checkAllowedAttrs []
   = return True
@@ -94,7 +96,9 @@ checkAllowedAttrs ((n, val):xs)
     res <- case lookup n $ fst ad of
              Nothing      -> if foldr (||) False $ map (\ f -> f n) $ snd ad
                                then do
-                                    tell [((xpath env) ++ "/@" ++ (qualifiedName n), "no further check implemented for attribute wildcards.")] -- TODO: check attribute wildcards
+                                    tell [((xpath env) ++ "/@" ++ (qualifiedName n),
+                                           "no check implemented for attribute wildcard's content.")]
+                                           -- TODO: check attribute wildcard's content?
                                     return True
                                else do
                                     tell [((xpath env) ++ "/@" ++ (qualifiedName n), "attribute not allowed here.")]
@@ -103,6 +107,7 @@ checkAllowedAttrs ((n, val):xs)
     rest <- checkAllowedAttrs xs
     return (res && rest)
 
+-- | Performs the combined attribute list check for a given element
 testAttrs :: XmlTree -> SVal Bool
 testAttrs e
   = do
@@ -112,6 +117,7 @@ testAttrs e
     reqAttrsRes <- hasReqAttrs (getReqAttrNames (fst $ attrDesc $ elemDesc env)) (map fst attrl)
     return (allowedAttrsRes && reqAttrsRes)
 
+-- | Checks the content model of a given element using regular expression derivation
 testContentModel :: XmlTrees -> SVal Bool
 testContentModel t
   = do
@@ -122,14 +128,18 @@ testContentModel t
                  tell [(xpath env ++ "/*", "content does not match content model.\n" ++ msg)]
                  return False
 
+-- | Extends the validation environment's XPath
 appendXPath :: String -> SValEnv -> SValEnv
 appendXPath s env
   = SValEnv ((xpath env) ++ s) $ elemDesc env
 
+-- | Exchanges the validation environment's element description
 newDesc :: ElemDesc -> SValEnv -> SValEnv
 newDesc d env
   = SValEnv (xpath env) d
 
+-- | Recursively invokes checks on all subelems of a given element
+--   Also constructs an absolute XPath for each subelem for accurate error reporting
 testElemChildren :: CountingTable -> XmlTrees -> SVal Bool
 testElemChildren _ []
   = return True
@@ -143,18 +153,22 @@ testElemChildren t (x:xs)
     let elemXPath = "/" ++ (qualifiedName n) ++ "[" ++ (show c) ++ "]"
     res <- case lookup n $ subElemDesc $ elemDesc env of
              Nothing -> do
-                        tell [((xpath env) ++ elemXPath, "no further check implemented for element wildcards.")] -- TODO: check element wildcards
+                        tell [((xpath env) ++ elemXPath,
+                               "no check implemented for element wildcard's content.")]
+                               -- TODO: check element wildcard's content?
                         return True
              Just d  -> local (const (appendXPath elemXPath (newDesc d env))) (testElem x)
     rest <- testElemChildren (insert n c t) xs
     return (res && rest)
 
+-- | Checks the element's text content
 testElemText :: XmlTrees -> SVal Bool
 testElemText t
   = do
     env <- ask
     local (const (appendXPath "/child::text()" env)) $ (sttf $ elemDesc env) $ getCombinedText t
 
+-- | Performs the combined checks for a given element
 testElem :: XmlTree -> SVal Bool
 testElem e
   = do
@@ -176,6 +190,7 @@ testElem e
                                else return False
                   return (attrRes && contRes)
 
+-- | Extracts a namespace prefix table from a given element's attribute list
 extractPrefixMap :: XmlTree -> (XmlTree, PrefixMap)
 extractPrefixMap el
   = (el', prefixMap)
@@ -184,6 +199,7 @@ extractPrefixMap el
     prefixMap = fromList $ map (\ x -> (localPart $ getAttrName x, getAttrValue x)) nsAttrs
     (nsAttrs, rest) = partition (\ x -> "xmlns" == (namePrefix $ getAttrName x)) $ getAttrList el
 
+-- | Entry point for the instance document's validation
 testRoot :: XmlTree -> SVal Bool
 testRoot r
   = do
@@ -192,18 +208,20 @@ testRoot r
 
 -- ----------------------------------------
 
+-- | Loads the schema definition and instance documents and invokes validation
 validateWithSchema :: String -> String -> IO SValResult
-validateWithSchema descUri instUri
+validateWithSchema defUri instUri
   = do
-    desc <- loadDescription descUri
-    case desc of
-      Nothing -> return (False, [("/", "Could not process description file.")])
+    def <- loadDefinition defUri
+    case def of
+      Nothing -> return (False, [("/", "Could not process definition file.")])
       Just d  -> do
                  inst <- loadInstance instUri
                  case inst of
                    Nothing -> return (False, [("/", "Could not process instance file.")])
                    Just i  -> return $ runSVal (SValEnv "" $ createRootDesc d) (testRoot i)
 
+-- | Writes validation results to stdout
 printSValResult :: SValResult -> IO ()
 printSValResult (status, l)
   = do

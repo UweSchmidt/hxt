@@ -69,23 +69,32 @@ import Prelude hiding ( lookup )
 
 -- ----------------------------------------
 
--- | ...
-type XSC a        = ReaderT XmlSchema Identity a
+-- | Schema transformation monad
+type ST a = ReaderT XmlSchema Identity a
 
-runXSC :: XmlSchema -> XSC a -> a
-runXSC schema xsc = runIdentity $ runReaderT xsc schema
+-- | Runs a computation in the schema transformation monad
+runST :: XmlSchema -> ST a -> a
+runST schema st = runIdentity $ runReaderT st schema
 
 -- ----------------------------------------
 
--- Create SimpleType test functions
+-- | Create a SimpleType test function which creates a warning and always succeeds
+mkWarnSTTF :: String -> STTF
+mkWarnSTTF s
+  = \ _ -> do
+           env <- ask
+           tell [(xpath env, s)]
+           return True
 
-checkBothSTTF :: STTF -> STTF -> STTF
-checkBothSTTF tf1 tf2
-  = \ v -> do
-           tf1res <- tf1 v
-           tf2res <- tf2 v
-           return (tf1res && tf2res)
+-- | Create a SimpleType test function which creates an error and always fails
+mkErrorSTTF :: String -> STTF
+mkErrorSTTF s
+  = \ _ -> do
+           env <- ask
+           tell [(xpath env, s)]
+           return False
 
+-- | Creates a SimpleType test function which does not allow any text
 mkNoTextSTTF :: STTF
 mkNoTextSTTF
   = \ s -> do
@@ -96,24 +105,7 @@ mkNoTextSTTF
                   return False
              else return True
 
-mkPassThroughSTTF :: STTF
-mkPassThroughSTTF
-  = \ _ -> return True
-
-mkWarnSTTF :: String -> STTF
-mkWarnSTTF s
-  = \ _ -> do
-           env <- ask
-           tell [(xpath env, s)]
-           return True
-
-mkErrorSTTF :: String -> STTF
-mkErrorSTTF s
-  = \ _ -> do
-           env <- ask
-           tell [(xpath env, s)]
-           return False
-
+-- | Create a SimpleType test function for basic W3C datatypes
 mkW3CCheckSTTF :: QName -> ParamList -> STTF
 mkW3CCheckSTTF n p
   = if n `elem` [ mkName "xs:boolean" -- TODO: extend W3CDataTypeCheck
@@ -137,7 +129,8 @@ mkW3CCheckSTTF n p
                               tell [(xpath env, msg)]
                               return False
 
-lookupSTTF :: QName -> XSC STTF
+-- | Create the SimpleType test function for a given type reference by name
+lookupSTTF :: QName -> ST STTF
 lookupSTTF n
   = do
     s <- ask
@@ -145,10 +138,12 @@ lookupSTTF n
       Just t  -> stToSTTF t
       Nothing -> return $ mkW3CCheckSTTF n []
 
+-- | Combines two given lists of restriction params
 mergeRestrAttrs :: RestrAttrs -> RestrAttrs -> RestrAttrs
 mergeRestrAttrs rlist rlist'
   = rlist ++ rlist'
 
+-- | Converts a list of restriction params into the ParamList datatype
 restrAttrsToParamList :: RestrAttrs -> ParamList
 restrAttrsToParamList rlist
   = concat $ map (\ x -> case x of
@@ -168,7 +163,15 @@ restrAttrsToParamList rlist
 
                  ) rlist
 
-rstrToSTTF :: STRestriction -> XSC STTF
+-- | Creates a SimpleType test function which applies two given STTFs
+checkBothSTTF :: STTF -> STTF -> STTF
+checkBothSTTF tf1 tf2
+  = \ v -> do
+           tf1res <- tf1 v
+           tf2res <- tf2 v
+           return (tf1res && tf2res)
+
+rstrToSTTF :: STRestriction -> ST STTF
 rstrToSTTF (tref, rlist)
   = do
     s <- ask
@@ -180,13 +183,15 @@ rstrToSTTF (tref, rlist)
     case t' of
       Left t   -> case t of
                     (Restr (tref', rlist')) -> rstrToSTTF (tref', mergeRestrAttrs rlist rlist')
-                    (Lst _)                 -> checkBothSTTF (mkWarnSTTF "no restriction checks implemented for lists.") <$> stToSTTF t
-                                               -- TODO: allowed: length, minLength, maxLength, pattern, enumeration, whiteSpace
-                    (Un _)                  -> checkBothSTTF (mkWarnSTTF "no restriction checks implemented for unions.") <$> stToSTTF t
-                                               -- TODO: allowed: pattern, enumeration
+                    (Lst _)                 -> checkBothSTTF (mkWarnSTTF "no restriction checks implemented for lists.")
+                                                         <$> stToSTTF t
+                                               -- TODO: length, minLength, maxLength, pattern, enumeration, whiteSpace
+                    (Un _)                  -> checkBothSTTF (mkWarnSTTF "no restriction checks implemented for unions.")
+                                                         <$> stToSTTF t
+                                               -- TODO: pattern, enumeration
       Right tf -> return tf
 
-stToSTTF :: SimpleType -> XSC STTF
+stToSTTF :: SimpleType -> ST STTF
 stToSTTF (Restr rstr)
   = rstrToSTTF rstr
 stToSTTF (Lst tref)
@@ -219,7 +224,7 @@ stToSTTF (Un ts)
 
 -- Create attribute descriptions
 
-createAttrMapEntry :: Attribute -> XSC (QName, AttrMapVal)
+createAttrMapEntry :: Attribute -> ST (QName, AttrMapVal)
 createAttrMapEntry (AttrRef n)
   = do
     s <- ask
@@ -240,7 +245,7 @@ createAttrMapEntry (AttrDef (AttributeDef n tdef use))
             ATDAnonymDecl t -> stToSTTF t
     return (n, (req, tf))
 
-attrGrpToAttrList :: AttributeGroup -> XSC AttrList
+attrGrpToAttrList :: AttributeGroup -> ST AttrList
 attrGrpToAttrList g
   = do
     s <- ask
@@ -250,7 +255,7 @@ attrGrpToAttrList g
                         Just g' -> attrGrpToAttrList g'
       AttrGrpDef l -> return l
 
-attrListToAttrDesc :: AttrList -> XSC AttrDesc
+attrListToAttrDesc :: AttrList -> ST AttrDesc
 attrListToAttrDesc l
   = do
     attrMap <- fromList <$> attrListToAttrMap l
@@ -259,7 +264,7 @@ attrListToAttrDesc l
 box :: a -> [a]
 box x = [x]
 
-attrListToAttrMap :: AttrList -> XSC [(QName, AttrMapVal)]
+attrListToAttrMap :: AttrList -> ST [(QName, AttrMapVal)]
 attrListToAttrMap l
   = concat <$> mapM (\ x -> case x of
                               Attr    a -> box <$> createAttrMapEntry a
@@ -267,7 +272,7 @@ attrListToAttrMap l
                               _         -> return []
                     ) l
 
-attrListToAttrWildcards :: AttrList -> XSC AttrWildcards
+attrListToAttrWildcards :: AttrList -> ST AttrWildcards
 attrListToAttrWildcards l
   = concat <$> mapM (\ x -> case x of
                               AnyAttr a -> box <$> anyToPredicate a
@@ -299,7 +304,7 @@ mkMixedRE mixed re
 
 mkErrorElemDesc :: String -> ElemDesc
 mkErrorElemDesc s
-  = ElemDesc (Just s) (empty, []) mkUnit empty mkPassThroughSTTF
+  = ElemDesc (Just s) (empty, []) mkUnit empty mkNoTextSTTF
 
 mkSimpleElemDesc :: AttrDesc -> STTF -> ElemDesc
 mkSimpleElemDesc ad tf
@@ -313,7 +318,7 @@ mkElemDesc :: AttrDesc -> XmlRegex -> SubElemDesc -> STTF -> ElemDesc
 mkElemDesc ad cm se tf
   = ElemDesc Nothing ad cm se tf
 
-groupToElemDesc :: Group -> XSC ElemDesc
+groupToElemDesc :: Group -> ST ElemDesc
 groupToElemDesc (GrpRef r)
   = do
     s <- ask
@@ -333,14 +338,14 @@ elementToName e
       ElRef r -> r
       ElDef d -> elemName d
 
-combineElemDescs :: ([XmlRegex] -> XmlRegex) -> [ElemDesc] -> XSC ElemDesc
+combineElemDescs :: ([XmlRegex] -> XmlRegex) -> [ElemDesc] -> ST ElemDesc
 combineElemDescs mkRE eds
   = do
     let re = mkRE $ map contentModel eds
     let se = foldr union empty $ map subElemDesc eds
     return $ mkComposeElemDesc re se
 
-allToElemDesc :: All -> XSC ElemDesc
+allToElemDesc :: All -> ST ElemDesc
 allToElemDesc l
   = do
     eds <- mapM (\ (occ, el) -> do 
@@ -350,7 +355,7 @@ allToElemDesc l
                 ) l
     combineElemDescs mkPerms eds
 
-anyToPredicate :: Any -> XSC (QName -> Bool)
+anyToPredicate :: Any -> ST (QName -> Bool)
 anyToPredicate an
   = do
     s <- ask
@@ -368,7 +373,7 @@ anyToPredicate an
                            )
     return $ p . namespaceUri
 
-anyToElemDesc :: Any -> XSC ElemDesc
+anyToElemDesc :: Any -> ST ElemDesc
 anyToElemDesc an
   = do
     re <- mkElemNamespaceRE <$> anyToPredicate an
@@ -377,7 +382,7 @@ anyToElemDesc an
 mkPair :: a -> b -> (a, b)
 mkPair x y = (x, y)
 
-chSeqContToElemDesc :: ChSeqContent -> XSC ElemDesc
+chSeqContToElemDesc :: ChSeqContent -> ST ElemDesc
 chSeqContToElemDesc c
   = do
     (occ, ed) <- case c of
@@ -392,11 +397,11 @@ chSeqContToElemDesc c
                          return $ mkComposeElemDesc (mkMinMaxRE occ $ mkElemNameRE n) (fromList [(n, ed)])
       _               -> return $ mkComposeElemDesc (mkMinMaxRE occ $ contentModel ed) (subElemDesc ed)
 
-choiceToElemDesc :: Choice -> XSC ElemDesc
+choiceToElemDesc :: Choice -> ST ElemDesc
 choiceToElemDesc l
   = mapM chSeqContToElemDesc l >>= combineElemDescs mkAlts
 
-sequenceToElemDesc :: Sequence -> XSC ElemDesc
+sequenceToElemDesc :: Sequence -> ST ElemDesc
 sequenceToElemDesc l
   = mapM chSeqContToElemDesc l >>= combineElemDescs mkSeqs
 
@@ -424,7 +429,7 @@ mkMinMaxRE occ re
                 Nothing -> "1"
                 Just i  -> i
 
-compToElemDesc :: CTCompositor -> XSC ElemDesc
+compToElemDesc :: CTCompositor -> ST ElemDesc
 compToElemDesc c
   = do
     (occ, ed) <- case c of
@@ -438,7 +443,7 @@ mergeAttrDescs :: AttrDesc -> AttrDesc -> AttrDesc
 mergeAttrDescs ad ad'
   = (union (fst ad) $ fst ad', snd ad ++ snd ad')
 
-ctModelToElemDesc :: CTModel -> XSC ElemDesc
+ctModelToElemDesc :: CTModel -> ST ElemDesc
 ctModelToElemDesc (comp, attrs)
   = do
     ad <- attrListToAttrDesc attrs
@@ -448,7 +453,7 @@ ctModelToElemDesc (comp, attrs)
                  ed <- compToElemDesc c
                  return $ mkElemDesc (mergeAttrDescs ad $ attrDesc ed) (contentModel ed) (subElemDesc ed) (sttf ed)
 
-simpleContentToElemDesc :: SimpleContent -> AttrDesc -> RestrAttrs -> XSC ElemDesc
+simpleContentToElemDesc :: SimpleContent -> AttrDesc -> RestrAttrs -> ST ElemDesc
 simpleContentToElemDesc (SCExt (n, attrs)) ad rlist
   = do
     s <- ask
@@ -471,7 +476,7 @@ simpleContentToElemDesc (SCRestr ((tref, rlist'), attrs)) ad rlist
                                    _        -> return $ mkErrorElemDesc "element validation error: illegal type reference in schema file"
       STRAnonymStDecl _ -> mkSimpleElemDesc ad' <$> rstrToSTTF (tref, mergedRlist)
 
-ctToElemDesc :: ComplexType -> XSC ElemDesc
+ctToElemDesc :: ComplexType -> ST ElemDesc
 ctToElemDesc ct
   = do
     s <- ask
@@ -517,7 +522,7 @@ ctToElemDesc ct
                                            (subElemDesc ed)
                                            (sttf ed)
 
-createElemDesc :: Element -> XSC ElemDesc
+createElemDesc :: Element -> ST ElemDesc
 createElemDesc (ElRef n)
   = do
     s <- ask
@@ -539,7 +544,7 @@ createElemDesc (ElDef (ElementDef _ tdef))
 
 -- ----------------------------------------
 
-createRootDesc' :: XSC ElemDesc
+createRootDesc' :: ST ElemDesc
 createRootDesc'
   = do
     s <- ask
@@ -549,5 +554,5 @@ createRootDesc'
 
 createRootDesc :: XmlSchema -> ElemDesc
 createRootDesc schema
-  = runXSC schema createRootDesc'
+  = runST schema createRootDesc'
 

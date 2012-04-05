@@ -8,7 +8,7 @@
    Portability: portable
    Version    : $Id$
 
-   Contains the basic datatypes to represent a schema description.
+   Contains the basic datatypes to represent a schema definition.
 -}
 
 module Text.XML.HXT.XMLSchema.AbstractSyntax
