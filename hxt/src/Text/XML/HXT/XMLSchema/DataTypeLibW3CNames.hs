@@ -26,7 +26,6 @@ where
 w3cNS   :: String
 w3cNS   = "http://www.w3.org/2001/XMLSchema-datatypes"
 
-
 xsd_string
  , xsd_normalizedString
  , xsd_token
@@ -58,7 +57,20 @@ xsd_string
  , xsd_unsignedLong
  , xsd_unsignedInt
  , xsd_unsignedShort
- , xsd_unsignedByte :: String
+ , xsd_unsignedByte
+
+ , xsd_boolean
+ , xsd_float
+ , xsd_double
+ , xsd_time
+ , xsd_duration
+ , xsd_date
+ , xsd_dateTime
+ , xsd_gDay
+ , xsd_gMonth
+ , xsd_gMonthDay
+ , xsd_gYear
+ , xsd_gYearMonth :: String
 
 xsd_string              = "string"
 xsd_normalizedString    = "normalizedString"
@@ -93,6 +105,18 @@ xsd_unsignedInt         = "unsignedInt"
 xsd_unsignedShort       = "unsignedShort"
 xsd_unsignedByte        = "unsignedByte"
 
+xsd_boolean             = "boolean"
+xsd_float               = "float"
+xsd_double              = "double"
+xsd_time                = "time"
+xsd_duration            = "duration"
+xsd_date                = "date"
+xsd_dateTime            = "dateTime"
+xsd_gDay                = "gDay"
+xsd_gMonth              = "gMonth"
+xsd_gMonthDay           = "gMonthDay"
+xsd_gYear               = "gYear"
+xsd_gYearMonth          = "gYearMonth"
 
 xsd_length
  , xsd_maxLength
@@ -104,7 +128,8 @@ xsd_length
  , xsd_totalDigits
  , xsd_fractionDigits
  , xsd_pattern
- , xsd_enumeration :: String
+ , xsd_enumeration
+ , xsd_whiteSpace :: String
 
 xsd_length              = "length"
 xsd_maxLength           = "maxLength"
@@ -120,5 +145,7 @@ xsd_fractionDigits      = "fractionDigits"
 
 xsd_pattern             = "pattern"
 xsd_enumeration         = "enumeration"
+
+xsd_whiteSpace          = "whiteSpace"
 
 -- ----------------------------------------
