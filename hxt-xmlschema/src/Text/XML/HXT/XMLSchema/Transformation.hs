@@ -510,9 +510,7 @@ ctToElemDesc ct
         let mixed = case ccMixed cc of
                       Just "true"  -> True
                       Just "false" -> False
-                      _            -> case ctMixed ct of
-                                        Just "true" -> True
-                                        _           -> False
+                      _            -> ctMixed ct == Just "true"
         case ccDef cc of
           CCExt   (n, m) -> case lookup n $ sComplexTypes s of
                               Nothing  -> return $ mkErrorElemDesc
@@ -537,9 +535,7 @@ ctToElemDesc ct
                                                               (sttf ed)
       NewCT m       -> do
                        ed <- ctModelToElemDesc m
-                       let mixed = case ctMixed ct of
-                                     Just "true" -> True
-                                     _           -> False
+                       let mixed = ctMixed ct == Just "true"
                        return $ mkElemDesc (attrDesc ed)
                                            (mkMixedRE mixed $ contentModel ed)
                                            (subElemDesc ed)
