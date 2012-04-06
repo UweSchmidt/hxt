@@ -34,7 +34,7 @@ mkSValTest :: String -> String -> String-> SValResult -> Test
 mkSValTest label descName instName expectedRes
   = label ~:
     do
-    res <- validateWithSchema ("./tests/" ++ descName ++ ".xsd") ("./tests/" ++ instName ++ ".xml")
+    res <- validateWithSchema ("./tests/" ++ descName ++ ".xsd") $ "./tests/" ++ instName ++ ".xml"
     res @?= expectedRes
 
 -- | A test for SimpleTypes as element values which match

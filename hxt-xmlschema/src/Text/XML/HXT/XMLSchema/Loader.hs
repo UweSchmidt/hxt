@@ -170,7 +170,7 @@ xpQName
 -- | Basic pickler for a list of QNames
 xpQNames :: PU QNames
 xpQNames
-  = xpWrap ( (map mkName) . words
+  = xpWrap ( map mkName . words
            , concat . map ((++ " ") . qualifiedName)
            ) xpText
 
@@ -216,7 +216,8 @@ xpInclude
     ps = [ xpWrap (Incl,  unIncl)  $ xpSchemaElem "include"  $ xpAttr "schemaLocation" xpText
          , xpWrap (Imp,   unImp)   $ xpSchemaElem "import"   $ xpPair (xpAttr "schemaLocation" xpText) $
                                                                       (xpAttr "namespace" xpText)
-         , xpWrap (Redef, unRedef) $ xpSchemaElem "redefine" $ xpPair (xpAttr "schemaLocation" xpText) (xpList xpRedefinition)
+         , xpWrap (Redef, unRedef) $ xpSchemaElem "redefine" $ xpPair (xpAttr "schemaLocation" xpText) $
+                                                                      (xpList xpRedefinition)
          ]
 
 -- | Pickler for redefinitions
@@ -383,7 +384,7 @@ xpCTCompositor
 xpMinMaxOcc :: PU MinMaxOcc
 xpMinMaxOcc
   = xpWrap (\ (a, b) -> MinMaxOcc a b , \ t -> (minOcc t, maxOcc t)) $
-    xpPair (xpOption $ xpAttr "minOccurs" xpText) (xpOption $ xpAttr "maxOccurs" xpText)
+    xpPair (xpOption $ xpAttr "minOccurs" xpText) $ xpOption $ xpAttr "maxOccurs" xpText
 
 -- | Pickler for all
 xpAll :: PU All
@@ -421,7 +422,7 @@ xpChSeqContent
 xpAny :: PU Any
 xpAny
   = xpWrap (\ (a, b) -> Any a b , \ t -> (namespace t, processContents t)) $
-    xpPair (xpOption $ xpAttr "namespace" xpText) (xpOption $ xpAttr "processContents" xpText)
+    xpPair (xpOption $ xpAttr "namespace" xpText) $ xpOption $ xpAttr "processContents" xpText
 
 -- | Pickler for a list of attributes
 xpAttrList :: PU AttrList
@@ -506,7 +507,7 @@ xpAttribute
 xpAttributeDef :: PU AttributeDef
 xpAttributeDef
   = xpWrap (\ (a, b, c) -> AttributeDef a b c, \ t -> (attrName t, attrTypeDef t, attrUse t)) $
-    xpTriple (xpAttr "name" xpQName) xpAttrTypeDef (xpOption $ xpAttr "use" xpText)
+    xpTriple (xpAttr "name" xpQName) xpAttrTypeDef $ xpOption $ xpAttr "use" xpText
 
 -- | Pickler for an attribute type definition
 xpAttrTypeDef :: PU AttrTypeDef
@@ -546,11 +547,11 @@ toSchema s
     toSchemaRec (XmlSchema' tns ((Ct (k, ct)):xs)) ins sts cts els grs ats ags
       = toSchemaRec (XmlSchema' tns xs) ins sts (insert k ct cts) els grs ats ags
     toSchemaRec (XmlSchema' tns ((El el)     :xs)) ins sts cts els grs ats ags
-      = toSchemaRec (XmlSchema' tns xs) ins sts cts (insert (elemName (unElDef el)) el els) grs ats ags
+      = toSchemaRec (XmlSchema' tns xs) ins sts cts (insert (elemName $ unElDef el) el els) grs ats ags
     toSchemaRec (XmlSchema' tns ((Gr (k, gr)):xs)) ins sts cts els grs ats ags
       = toSchemaRec (XmlSchema' tns xs) ins sts cts els (insert k gr grs) ats ags
     toSchemaRec (XmlSchema' tns ((At at)     :xs)) ins sts cts els grs ats ags
-      = toSchemaRec (XmlSchema' tns xs) ins sts cts els grs (insert (attrName (unAttrDef at)) at ats) ags
+      = toSchemaRec (XmlSchema' tns xs) ins sts cts els grs (insert (attrName $ unAttrDef at) at ats) ags
     toSchemaRec (XmlSchema' tns ((Ag (k, ag)):xs)) ins sts cts els grs ats ags
       = toSchemaRec (XmlSchema' tns xs) ins sts cts els grs ats (insert k ag ags)
 
@@ -615,7 +616,7 @@ applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefAg (k, ag')):xs)
 -- | Combines two given schema definitions
 mergeSchemata :: XmlSchema -> XmlSchema -> XmlSchema
 mergeSchemata (XmlSchema tns _ sts cts els grs ats ags) (XmlSchema _ _ sts' cts' els' grs' ats' ags')
-  = XmlSchema tns [] (union sts sts') (union cts cts') (union els els') (union grs grs') (union ats ats') (union ags ags')
+  = XmlSchema tns [] (union sts sts') (union cts cts') (union els els') (union grs grs') (union ats ats') $ union ags ags'
 
 -- ----------------------------------------
 
@@ -657,6 +658,6 @@ loadInstance uri
                 ((getAttrValue "status") &&& getChildren)
               )
     if (fst $ head s) == ""
-      then return $ Just (snd $ head s)
+      then return $ Just $ snd $ head s
       else return Nothing
 

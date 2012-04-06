@@ -238,11 +238,7 @@ createAttrMapEntry (AttrRef n)
                       return (n, (False, errorSTTF))
 createAttrMapEntry (AttrDef (AttributeDef n tdef use))
   = do
-    let req = case use of
-                Nothing -> False
-                Just s  -> case s of
-                             "required" -> True
-                             _          -> False
+    let req = maybe False (== "required") use
     tf <- case tdef of
             ATDTypeAttr r   -> lookupSTTF r
             ATDAnonymDecl t -> stToSTTF t
@@ -299,7 +295,7 @@ mkElemNamespaceRE p = mkPrim $ p . getElemName
 
 -- | Creates a regex which matches on text nodes
 mkTextRE :: XmlRegex
-mkTextRE = mkPrim $ isText
+mkTextRE = mkPrim isText
 
 -- | Creates a regex which applies the mixed-behaviour
 mkMixedRE :: Bool -> XmlRegex -> XmlRegex
@@ -446,12 +442,8 @@ mkMinMaxRE occ re
                                 Nothing       -> mkZero $ "element validation error: illegal maxOccurs in schema file"
                                 Just maxOcc'' -> mkRng minOcc'' maxOcc'' re
     where
-    minOcc' = case minOcc occ of
-                Nothing -> "1"
-                Just i  -> i
-    maxOcc' = case maxOcc occ of
-                Nothing -> "1"
-                Just i  -> i
+    minOcc' = maybe "1" id $ minOcc occ
+    maxOcc' = maybe "1" id $ maxOcc occ
 
 -- | Creates the element description for a given ComplexType compositor
 compToElemDesc :: CTCompositor -> ST ElemDesc
