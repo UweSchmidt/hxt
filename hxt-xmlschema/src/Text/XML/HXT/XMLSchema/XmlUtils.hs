@@ -37,11 +37,11 @@ mkRoot = XN.mkRoot
 
 -- | Retrieve an element's name
 getElemName :: XmlTree -> QName
-getElemName t = fromMaybe (mkName "") $ XN.getElemName t
+getElemName = (fromMaybe (mkName "")) . XN.getElemName
 
 -- | Retrieve an element's attributes
 getAttrList :: XmlTree -> [XmlTree]
-getAttrList t = fromMaybe [] $ XN.getAttrl t
+getAttrList = (fromMaybe []) . XN.getAttrl
 
 -- | Redefine an element's attributes
 setAttrList :: XmlTrees -> XmlTree -> XmlTree
@@ -49,7 +49,7 @@ setAttrList = XN.setElemAttrl
 
 -- | Retrieve an element's attributes as a list of key-value pairs
 getElemAttrs :: XmlTree -> [(QName, String)]
-getElemAttrs t = map (\ x -> (getAttrName x, getAttrValue x)) $ getAttrList t
+getElemAttrs = (map (\ x -> (getAttrName x, getAttrValue x))) . getAttrList
 
 -- | Retrieve a node's children
 getChildren :: XmlTree -> XmlTrees
@@ -57,7 +57,7 @@ getChildren (NTree _ c) = c
 
 -- | Retrieve an element's children which are relevant for validation
 getElemChildren :: XmlTree -> XmlTrees
-getElemChildren t = filter isRelevant $ getChildren t
+getElemChildren = (filter isRelevant) . getChildren
 
 -- | Split a list of trees into a list of elements and a list of the rest
 extractElems :: XmlTrees -> (XmlTrees, XmlTrees)
@@ -77,15 +77,15 @@ isRelevant t = (isElem t) || (isText t)
 
 -- | Retrieve an attribute's name
 getAttrName :: XmlTree -> QName
-getAttrName t = fromMaybe (mkName "") $  XN.getAttrName t
+getAttrName = (fromMaybe (mkName "")) .  XN.getAttrName
 
 -- | Retrieve an attribute's value
 getAttrValue :: XmlTree -> String
-getAttrValue t = getCombinedText $ getChildren t
+getAttrValue = getCombinedText . getChildren
 
 -- | Retrieve the concatenated text inside a node
 getCombinedText :: XmlTrees -> String
-getCombinedText t = concat $ getTexts t
+getCombinedText = concat . getTexts
 
 -- | Retrieve a list of strings from a list of nodes
 getTexts :: XmlTrees -> [String]
@@ -93,5 +93,5 @@ getTexts = map getText
 
 -- | Retrieve the text inside a node
 getText :: XmlTree -> String
-getText t = fromMaybe "" $ XN.getText t
+getText = (fromMaybe "") . XN.getText
 

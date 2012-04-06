@@ -83,11 +83,13 @@ import Prelude hiding (lookup)
 
 -- ----------------------------------------
 
+-- | Helper type for unpickling a schema definition
 data XmlSchema'        = XmlSchema'
                        { targetNS :: Maybe Namespace
                        , parts    :: [XmlSchemaPart]
                        }
 
+-- | Helper type for unpickling schema definition parts
 data XmlSchemaPart     = In {unIn :: Include}
                        | St {unSt :: (QName, SimpleType)}
                        | Ct {unCt :: (QName, ComplexType)}
@@ -98,21 +100,25 @@ data XmlSchemaPart     = In {unIn :: Include}
 
 -- ----------------------------------------
 
--- | ...
+-- | The XML Schema namespace
 nsUri :: String
 nsUri = "http://www.w3.org/2001/XMLSchema"
 
+-- | The XML Schema namespace prefix
 nsPrefix :: String
 nsPrefix = "xs"
 
+-- | Basic namespace-aware element pickler
 xpElem' :: String -> PU a -> PU a
 xpElem' name
   = xpElemNS nsUri nsPrefix name
 
+-- | Basic schema element pickler
 xpSchemaElem :: String -> PU a -> PU a
 xpSchemaElem name
   = xpElem' name . xpFilterSchema
 
+-- | Filter for inessential schema definition parts
 xpFilterSchema :: PU a -> PU a
 xpFilterSchema
   = -- keep elems from xs namespace which are not blacklisted
@@ -156,16 +162,19 @@ xpFilterSchema
                                 , mkQName ""       "substitutionGroup"    ""
                                 ]
 
+-- | Basic QName pickler
 xpQName :: PU QName
 xpQName
   = xpWrap (mkName, qualifiedName) xpText -- TODO: namespaces / target namespace
 
+-- | Basic pickler for a list of QNames
 xpQNames :: PU QNames
 xpQNames
-  = xpWrap ( \ x -> map mkName $ words x
-           , \ x -> (qualifiedName $ head x) ++ (concat $ map (\ y -> ' ':(qualifiedName y)) (tail x))
+  = xpWrap ( (map mkName) . words
+           , \ x -> concat $ map ((++ " ") . qualifiedName) x
            ) xpText
 
+-- | Entry point to unpickle a schema definition into an internal representation
 xpXmlSchema' :: PU XmlSchema'
 xpXmlSchema'
   = xpSchemaElem "schema" $
@@ -175,6 +184,7 @@ xpXmlSchema'
     xpPair (xpOption $ xpAttr "targetNamespace" xpText) $
     xpList $ xpSchemaPart
 
+-- | Pickler for schema definition parts
 xpSchemaPart :: PU XmlSchemaPart
 xpSchemaPart
   = xpAlt tag ps
@@ -195,6 +205,7 @@ xpSchemaPart
          , xpWrap (Ag, unAg) $ xpSchemaElem "attributeGroup" $ xpPair (xpAttr "name" xpQName) xpAttributeGroup
          ]
 
+-- | Pickler for external references
 xpInclude :: PU Include
 xpInclude
   = xpAlt tag ps
@@ -208,6 +219,7 @@ xpInclude
          , xpWrap (Redef, unRedef) $ xpSchemaElem "redefine" $ xpPair (xpAttr "schemaLocation" xpText) (xpList xpRedefinition)
          ]
 
+-- | Pickler for redefinitions
 xpRedefinition :: PU Redefinition
 xpRedefinition
   = xpAlt tag ps
@@ -222,6 +234,7 @@ xpRedefinition
          , xpWrap (RedefAg, unRedefAg) $ xpSchemaElem "attributeGroup" $ xpPair (xpAttr "name" xpQName) xpAttributeGroup
          ]
 
+-- | Pickler for SimpleTypes
 xpSimpleType :: PU SimpleType
 xpSimpleType
   = xpAlt tag ps
@@ -234,10 +247,12 @@ xpSimpleType
          , xpWrap (Un,    unUn)    $ xpSchemaElem "union"       $ xpSTUnion
          ]
 
+-- | Pickler for SimpleType restrictions
 xpSTRestriction :: PU STRestriction
 xpSTRestriction
   = xpPair xpSimpleTypeRef $ xpList $ xpRestrAttr
 
+-- | Pickler for SimpleType references
 xpSimpleTypeRef :: PU SimpleTypeRef
 xpSimpleTypeRef
   = xpAlt tag ps
@@ -248,6 +263,7 @@ xpSimpleTypeRef
          , xpWrap (STRAnonymStDecl, unSTRAnonymStDecl) $ xpSchemaElem "simpleType" $ xpSimpleType
          ]
 
+-- | Pickler for restriction attributes
 xpRestrAttr :: PU RestrAttr
 xpRestrAttr
   = xpAlt tag ps
@@ -278,6 +294,7 @@ xpRestrAttr
          , xpWrap (WhiteSpace,     unWhiteSpace)     $ xpSchemaElem "whiteSpace"     $ xpAttr "value" xpText
          ]
 
+-- | Pickler for a list of a referenced SimpleType
 xpSTList :: PU STList
 xpSTList
   = xpAlt tag ps
@@ -288,17 +305,20 @@ xpSTList
          , xpWrap (STLAnonymStDecl, unSTLAnonymStDecl) $ xpSchemaElem "simpleType" $ xpSimpleType
          ]
 
+-- | Pickler for an union of referenced SimpleTypes
 xpSTUnion :: PU STUnion
 xpSTUnion
   = xpWrap (\ (a, b) -> STUnion a b , \ t -> (memberTypes t, anonymDecls t)) $
     xpPair (xpOption $ xpAttr "memberTypes" xpQNames) $
     xpList $ xpSchemaElem "simpleType" $ xpSimpleType
 
+-- | Pickler for a ComplexType
 xpComplexType :: PU ComplexType
 xpComplexType
   = xpWrap (\ (a, b) -> ComplexType a b , \ t -> (ctMixed t, ctDef t)) $
     xpPair (xpOption $ xpAttr "mixed" xpText) xpCTDef
 
+-- | Pickler for a ComplexType definition
 xpCTDef :: PU CTDef
 xpCTDef
   = xpAlt tag ps
@@ -311,6 +331,7 @@ xpCTDef
          , xpWrap (NewCT, unNewCT) $ xpCTModel
          ]
 
+-- | Pickler for simple content
 xpSimpleContent :: PU SimpleContent
 xpSimpleContent
   = xpAlt tag ps
@@ -321,11 +342,13 @@ xpSimpleContent
          , xpWrap (SCRestr, unSCRestr) $ xpSchemaElem "restriction" $ xpPair xpSTRestriction xpAttrList 
          ]
 
+-- | Pickler for complex content
 xpComplexContent :: PU ComplexContent
 xpComplexContent
   = xpWrap (\ (a, b) -> ComplexContent a b , \ t -> (ccMixed t, ccDef t)) $
     xpPair (xpOption $ xpAttr "mixed" xpText) xpCCDef
 
+-- | Pickler for a complex content definition
 xpCCDef :: PU CCDef
 xpCCDef
   = xpAlt tag ps
@@ -336,10 +359,12 @@ xpCCDef
          , xpWrap (CCRestr, unCCRestr) $ xpSchemaElem "restriction" $ xpPair (xpAttr "base" xpQName) $ xpCTModel
          ]
 
+-- | Pickler for a complex type model
 xpCTModel :: PU CTModel
 xpCTModel
   = xpPair (xpOption xpCTCompositor) xpAttrList
 
+-- | Pickler for a complex type compositor
 xpCTCompositor :: PU CTCompositor
 xpCTCompositor
   = xpAlt tag ps
@@ -354,6 +379,7 @@ xpCTCompositor
          , xpWrap (CompSq, unCompSq) $ xpSchemaElem "sequence" $ xpPair xpMinMaxOcc xpSequence
          ]
 
+-- | Pickler for restrictions 
 xpMinMaxOcc :: PU MinMaxOcc
 xpMinMaxOcc
   = xpWrap (\ (a, b) -> MinMaxOcc a b , \ t -> (minOcc t, maxOcc t)) $

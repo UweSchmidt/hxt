@@ -108,9 +108,7 @@ fctTableInteger
     cvi :: (Integer -> Integer -> Bool) -> (String -> Integer -> Bool)
     cvi op = \ x y -> isNumber x && read x `op` y
 
-    totalD i
-      | i < 0     = totalD (0-i)
-      | otherwise = toInteger . length . show $ i
+    totalD i =  toInteger . length . show . abs $ i
 
 -- | Tests whether an integer is valid
 integerValid :: DatatypeName -> ParamList -> CheckA Integer Integer
@@ -262,9 +260,9 @@ readDecimal' s
 -- | Reads total digits of a rational
 totalDigits :: Rational -> Int
 totalDigits r
-  | r == 0             = 0
-  | r < 0              = totalDigits' . negate  $ r
-  | otherwise          = totalDigits'           $ r
+  | r == 0    = 0
+  | r < 0     = totalDigits' . negate  $ r
+  | otherwise = totalDigits'           $ r
 
 -- | Helper function to read total digits of a rational
 totalDigits' :: Rational -> Int
@@ -282,15 +280,15 @@ fractionDigits r
 -- | Transforms a decimal into a string
 showDecimal :: Rational -> String
 showDecimal d
-  | d < 0                 = ('-':) . showDecimal' . negate    $ d
-  | d < 1                 = drop 1 . showDecimal' . (+ (1%1)) $ d
-  | otherwise             =          showDecimal'             $ d
+  | d < 0     = ('-':) . showDecimal' . negate    $ d
+  | d < 1     = drop 1 . showDecimal' . (+ (1%1)) $ d
+  | otherwise =          showDecimal'             $ d
 
 -- | Helper function to transform a decimal into a string
 showDecimal' :: Rational -> String
 showDecimal' d
-  | denominator d == 1    = show . numerator $ d
-  | otherwise             = times10 0        $ d
+  | denominator d == 1 = show . numerator $ d
+  | otherwise          = times10 0        $ d
   where
   times10 i' d'
     | denominator d' == 1 = let
