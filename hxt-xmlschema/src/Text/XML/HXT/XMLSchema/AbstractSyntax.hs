@@ -142,13 +142,13 @@ data MinMaxOcc         = MinMaxOcc
                        { minOcc :: Maybe String
                        , maxOcc :: Maybe String
                        }
--- | All is a list of elements and restrictions to the number of occurrences
+-- | All is a list of elements and restrictions on the number of occurrences
 type All               = [(MinMaxOcc, Element)]
 -- | Choice is a list of elements, groups, choices, sequences and element wildcards
 type Choice            = [ChSeqContent]
 -- | Sequence is a list of elements, groups, choices, sequences and element wildcards
 type Sequence          = [ChSeqContent]
--- | Contents of choice and sequence with restrictions to the number of occurrences
+-- | Contents of choice and sequence with restrictions on the number of occurrences
 data ChSeqContent      = ChSeqEl {unChSeqEl :: (MinMaxOcc, Element)}
                        | ChSeqGr {unChSeqGr :: (MinMaxOcc, Group)}
                        | ChSeqCh {unChSeqCh :: (MinMaxOcc, Choice)}

@@ -37,11 +37,11 @@ mkRoot = XN.mkRoot
 
 -- | Retrieve an element's name
 getElemName :: XmlTree -> QName
-getElemName = (fromMaybe (mkName "")) . XN.getElemName
+getElemName = fromMaybe (mkName "") . XN.getElemName
 
 -- | Retrieve an element's attributes
 getAttrList :: XmlTree -> [XmlTree]
-getAttrList = (fromMaybe []) . XN.getAttrl
+getAttrList = fromMaybe [] . XN.getAttrl
 
 -- | Redefine an element's attributes
 setAttrList :: XmlTrees -> XmlTree -> XmlTree
@@ -49,7 +49,7 @@ setAttrList = XN.setElemAttrl
 
 -- | Retrieve an element's attributes as a list of key-value pairs
 getElemAttrs :: XmlTree -> [(QName, String)]
-getElemAttrs = (map (\ x -> (getAttrName x, getAttrValue x))) . getAttrList
+getElemAttrs = map (\ x -> (getAttrName x, getAttrValue x)) . getAttrList
 
 -- | Retrieve a node's children
 getChildren :: XmlTree -> XmlTrees
@@ -57,7 +57,7 @@ getChildren (NTree _ c) = c
 
 -- | Retrieve an element's children which are relevant for validation
 getElemChildren :: XmlTree -> XmlTrees
-getElemChildren = (filter isRelevant) . getChildren
+getElemChildren = filter isRelevant . getChildren
 
 -- | Split a list of trees into a list of elements and a list of the rest
 extractElems :: XmlTrees -> (XmlTrees, XmlTrees)
@@ -77,7 +77,7 @@ isRelevant t = (isElem t) || (isText t)
 
 -- | Retrieve an attribute's name
 getAttrName :: XmlTree -> QName
-getAttrName = (fromMaybe (mkName "")) .  XN.getAttrName
+getAttrName = fromMaybe (mkName "") .  XN.getAttrName
 
 -- | Retrieve an attribute's value
 getAttrValue :: XmlTree -> String
@@ -93,5 +93,5 @@ getTexts = map getText
 
 -- | Retrieve the text inside a node
 getText :: XmlTree -> String
-getText = (fromMaybe "") . XN.getText
+getText = fromMaybe "" . XN.getText
 

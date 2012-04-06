@@ -171,7 +171,7 @@ xpQName
 xpQNames :: PU QNames
 xpQNames
   = xpWrap ( (map mkName) . words
-           , \ x -> concat $ map ((++ " ") . qualifiedName) x
+           , concat . map ((++ " ") . qualifiedName)
            ) xpText
 
 -- | Entry point to unpickle a schema definition into an internal representation
@@ -379,7 +379,7 @@ xpCTCompositor
          , xpWrap (CompSq, unCompSq) $ xpSchemaElem "sequence" $ xpPair xpMinMaxOcc xpSequence
          ]
 
--- | Pickler for restrictions 
+-- | Pickler for restrictions on
 xpMinMaxOcc :: PU MinMaxOcc
 xpMinMaxOcc
   = xpWrap (\ (a, b) -> MinMaxOcc a b , \ t -> (minOcc t, maxOcc t)) $
