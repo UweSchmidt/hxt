@@ -308,8 +308,8 @@ mkMixedRE mixed re
 
 -- | Creates an element description for elements without subelems
 mkSimpleElemDesc :: AttrDesc -> STTF -> ElemDesc
-mkSimpleElemDesc ad tf
-  = ElemDesc Nothing ad mkTextRE empty tf
+mkSimpleElemDesc ad
+  = ElemDesc Nothing ad mkTextRE empty
 
 -- | Creates an element description for elements without attributes or textual content
 mkComposeElemDesc :: XmlRegex -> SubElemDesc -> ElemDesc
@@ -318,8 +318,8 @@ mkComposeElemDesc cm se
 
 -- | Creates a general element description
 mkElemDesc :: AttrDesc -> XmlRegex -> SubElemDesc -> STTF -> ElemDesc
-mkElemDesc ad cm se tf
-  = ElemDesc Nothing ad cm se tf
+mkElemDesc 
+  = ElemDesc Nothing
 
 -- | Creates an element description which passes an error message
 mkErrorElemDesc :: String -> ElemDesc
