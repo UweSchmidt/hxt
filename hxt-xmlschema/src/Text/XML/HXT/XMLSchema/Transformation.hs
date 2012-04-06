@@ -134,7 +134,7 @@ lookupSTTF :: QName -> ST STTF
 lookupSTTF n
   = do
     s <- ask
-    case lookup n (sSimpleTypes s) of
+    case lookup n $ sSimpleTypes s of
       Just t  -> stToSTTF t
       Nothing -> return $ mkW3CCheckSTTF n []
 
@@ -170,7 +170,7 @@ checkBothSTTF tf1 tf2
   = \ v -> do
            tf1res <- tf1 v
            tf2res <- tf2 v
-           return (tf1res && tf2res)
+           return $ tf1res && tf2res
 
 -- | Accumulates SimpleType restrictions to create a combined SimpleType test function
 rstrToSTTF :: STRestriction -> ST STTF
@@ -178,7 +178,7 @@ rstrToSTTF (tref, rlist)
   = do
     s <- ask
     let t' = case tref of
-               BaseAttr n        -> case lookup n (sSimpleTypes s) of
+               BaseAttr n        -> case lookup n $ sSimpleTypes s of
                                       Just t  -> Left t
                                       Nothing -> Right $ mkW3CCheckSTTF n $ restrAttrsToParamList rlist
                STRAnonymStDecl t -> Left t
@@ -367,7 +367,7 @@ allToElemDesc l
     eds <- mapM (\ (occ, el) -> do 
                                 ed <- createElemDesc el
                                 let n = elementToName el
-                                return $ mkComposeElemDesc (mkMinMaxRE occ $ mkElemNameRE n) (fromList [(n, ed)])
+                                return $ mkComposeElemDesc (mkMinMaxRE occ $ mkElemNameRE n) $ fromList [(n, ed)]
                 ) l
     combineElemDescs mkPerms eds
 

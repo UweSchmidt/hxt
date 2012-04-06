@@ -53,7 +53,7 @@ patternValid params
   = foldr (>>>) ok . map paramPatternValid $ params
     where
     paramPatternValid (pn, pv)
-      | pn == xsd_pattern = assert (patParamValid pv) (errorMsgParam pn pv)
+      | pn == xsd_pattern = assert (patParamValid pv) $ errorMsgParam pn pv
       | otherwise         = ok
 
 -- | Helper function to test pattern params
@@ -238,14 +238,14 @@ normBase64 = filter isB64
 -- | Reads a decimal from a string
 readDecimal :: String -> Rational
 readDecimal ('+':s) = readDecimal' s
-readDecimal ('-':s) = negate (readDecimal' s)
+readDecimal ('-':s) = negate $ readDecimal' s
 readDecimal      s  = readDecimal' s
 
 -- | Helper function to read a decimal from a string
 readDecimal' :: String -> Rational
 readDecimal' s
   | f == 0    = (n % 1)
-  | otherwise = (n % 1) + (f % (10 ^ (toInteger (length fs))))
+  | otherwise = (n % 1) + (f % (10 ^ (toInteger $ length fs)))
   where
   (ns, fs') = span (/= '.') s
   fs = drop 1 fs'

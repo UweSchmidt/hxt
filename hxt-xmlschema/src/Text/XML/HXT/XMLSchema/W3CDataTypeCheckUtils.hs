@@ -129,7 +129,7 @@ failure msg = C (Left . msg)
 --   else an error message is generated
 assert :: (a -> Bool) -> (a -> String) -> CheckA a a
 assert p msg
-  = C $ \ x -> if p x then Right x else Left (msg x)
+  = C $ \ x -> if p x then Right x else Left $ msg x
 
 -- | Perform a check, but convert the value before checking
 checkWith :: (a -> b) -> CheckA b c -> CheckA a a
@@ -149,7 +149,7 @@ isNumber
     parseNumber'
       = do
         skipS0
-        m <- option "" (string "-")
+        m <- option "" $ string "-"
         n <- many1 digit
         skipS0
         return $ m ++ n
