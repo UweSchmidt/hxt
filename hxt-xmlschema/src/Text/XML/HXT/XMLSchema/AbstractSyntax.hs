@@ -132,12 +132,12 @@ type CCRestriction     = (QName, CTModel)
 
 -- | A ComplexType model can contain a ComplexType compositor and a list of attributes
 type CTModel           = (Maybe CTCompositor, AttrList)
--- | Compositors can be group, all, choice or sequence with restriction to the number occurrences
+-- | Compositors can be group, all, choice or sequence with restriction on the number occurrences
 data CTCompositor      = CompGr {unCompGr :: (MinMaxOcc, Group)}
                        | CompAl {unCompAl :: (MinMaxOcc, All)}
                        | CompCh {unCompCh :: (MinMaxOcc, Choice)}
                        | CompSq {unCompSq :: (MinMaxOcc, Sequence)}
--- | Restriction to minimum and maximum number of occurrences
+-- | Restriction on minimum and maximum number of occurrences
 data MinMaxOcc         = MinMaxOcc
                        { minOcc :: Maybe String
                        , maxOcc :: Maybe String

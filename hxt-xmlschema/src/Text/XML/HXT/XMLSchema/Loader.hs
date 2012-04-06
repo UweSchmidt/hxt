@@ -379,24 +379,28 @@ xpCTCompositor
          , xpWrap (CompSq, unCompSq) $ xpSchemaElem "sequence" $ xpPair xpMinMaxOcc xpSequence
          ]
 
--- | Pickler for restrictions on
+-- | Pickler for restrictions on the number of occurrences
 xpMinMaxOcc :: PU MinMaxOcc
 xpMinMaxOcc
   = xpWrap (\ (a, b) -> MinMaxOcc a b , \ t -> (minOcc t, maxOcc t)) $
     xpPair (xpOption $ xpAttr "minOccurs" xpText) (xpOption $ xpAttr "maxOccurs" xpText)
 
+-- | Pickler for all
 xpAll :: PU All
 xpAll
   = xpList $ xpSchemaElem "element" $ xpPair xpMinMaxOcc xpElement
 
+-- | Pickler for choice
 xpSchemaChoice :: PU Choice
 xpSchemaChoice
   = xpList xpChSeqContent
 
+-- | Pickler for sequence
 xpSequence :: PU Sequence
 xpSequence
   = xpList xpChSeqContent
 
+-- | Pickler for contents of choice and sequence
 xpChSeqContent :: PU ChSeqContent
 xpChSeqContent
   = xpAlt tag ps
@@ -413,11 +417,13 @@ xpChSeqContent
          , xpWrap (ChSeqAn, unChSeqAn) $ xpSchemaElem "any"      $ xpPair xpMinMaxOcc xpAny
          ]
 
+-- | Pickler for wildcards
 xpAny :: PU Any
 xpAny
   = xpWrap (\ (a, b) -> Any a b , \ t -> (namespace t, processContents t)) $
     xpPair (xpOption $ xpAttr "namespace" xpText) (xpOption $ xpAttr "processContents" xpText)
 
+-- | Pickler for a list of attributes
 xpAttrList :: PU AttrList
 xpAttrList
   = xpList $
@@ -431,6 +437,7 @@ xpAttrList
          , xpWrap (AnyAttr, unAnyAttr) $ xpSchemaElem "anyAttribute"   $ xpAny
          ]
 
+-- | Pickler for an element
 xpElement :: PU Element
 xpElement
   = xpAlt tag ps
@@ -441,11 +448,13 @@ xpElement
          , xpWrap (ElDef, unElDef) $ xpElementDef
          ]
 
+-- | Pickler for an element definition
 xpElementDef :: PU ElementDef
 xpElementDef
   = xpWrap (\ (a, b) -> ElementDef a b, \ t -> (elemName t, elemTypeDef t)) $
     xpPair (xpAttr "name" xpQName) xpElemTypeDef
 
+-- | Pickler for an element's type
 xpElemTypeDef :: PU ElemTypeDef
 xpElemTypeDef
   = xpAlt tag ps
@@ -458,6 +467,7 @@ xpElemTypeDef
          , xpWrap (ETDAnonymCtDecl, unETDAnonymCtDecl) $ xpSchemaElem "complexType" $ xpComplexType
          ]
 
+-- | Pickler for group
 xpGroup :: PU Group
 xpGroup
   = xpAlt tag ps
@@ -468,6 +478,7 @@ xpGroup
          , xpWrap (GrpDef, unGrpDef) $ xpOption $ xpGroupDef
          ]
 
+-- | Pickler for a group definition
 xpGroupDef :: PU GroupDef
 xpGroupDef
   = xpAlt tag ps
@@ -480,6 +491,7 @@ xpGroupDef
          , xpWrap (Sq, unSq) $ xpSchemaElem "sequence" $ xpSequence
          ]
 
+-- | Pickler for an attribute
 xpAttribute :: PU Attribute
 xpAttribute
   = xpAlt tag ps
@@ -490,11 +502,13 @@ xpAttribute
          , xpWrap (AttrDef, unAttrDef) $ xpAttributeDef
          ]
 
+-- | Pickler for an attribute definition
 xpAttributeDef :: PU AttributeDef
 xpAttributeDef
   = xpWrap (\ (a, b, c) -> AttributeDef a b c, \ t -> (attrName t, attrTypeDef t, attrUse t)) $
     xpTriple (xpAttr "name" xpQName) xpAttrTypeDef (xpOption $ xpAttr "use" xpText)
 
+-- | Pickler for an attribute type definition
 xpAttrTypeDef :: PU AttrTypeDef
 xpAttrTypeDef
   = xpAlt tag ps
@@ -505,6 +519,7 @@ xpAttrTypeDef
          , xpWrap (ATDAnonymDecl, unATDAnonymDecl) $ xpSchemaElem "simpleType" $ xpSimpleType
          ]
 
+-- | Pickler for an attribute group
 xpAttributeGroup :: PU AttributeGroup
 xpAttributeGroup
   = xpAlt tag ps
@@ -517,7 +532,7 @@ xpAttributeGroup
 
 -- ----------------------------------------
 
--- | Conversion from Schema' to Schema
+-- | Conversion from XmlSchema' helper type to XmlSchema type
 toSchema :: XmlSchema' -> XmlSchema
 toSchema s
   = toSchemaRec s [] empty empty empty empty empty empty
@@ -541,8 +556,7 @@ toSchema s
 
 -- ----------------------------------------
 
--- Processing of includes
-
+-- | Processes a list of external references
 resolveIncls :: XmlSchema -> Includes -> IO XmlSchema
 resolveIncls s []
   = return s
@@ -553,6 +567,7 @@ resolveIncls s (x:xs)
       Nothing   -> resolveIncls s xs
       Just incl -> resolveIncls (mergeSchemata s incl) xs
 
+-- | Processes a single external reference
 resolveIncl :: Include -> IO (Maybe XmlSchema) -- TODO: apply namespaces
 resolveIncl (Incl loc)
   = loadDefinition loc
@@ -565,13 +580,14 @@ resolveIncl (Redef (loc, redefs))
       Nothing -> return Nothing
       Just s  -> return $ Just $ applyRedefs s redefs
 
+-- | Applies a list of redefinitions
 applyRedefs :: XmlSchema -> Redefinitions -> XmlSchema
 applyRedefs s []
   = s
 applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefSt (k, st')):xs)
   = applyRedefs (XmlSchema tns ins sts'' cts els grs ats ags) xs
     where
-    k'    = setLocalPart' (newXName ((localPart k) ++ "_redef")) k
+    k'    = setLocalPart' (newXName $ (localPart k) ++ "_redef") k
     sts'  = case lookup k sts of
               Just st -> insert k' st sts
               Nothing -> sts
@@ -581,28 +597,29 @@ applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefSt (k, st')):xs)
 applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefCt (k, ct')):xs)
   = applyRedefs (XmlSchema tns ins sts cts'' els grs ats ags) xs
     where
-    k'    = setLocalPart' (newXName ((localPart k) ++ "_redef")) k
+    k'    = setLocalPart' (newXName $ (localPart k) ++ "_redef") k
     cts'  = case lookup k cts of
               Just ct -> insert k' ct cts
               Nothing -> cts
     cts'' = case ct' of
               (ComplexType ctm (CCont (ComplexContent ccm (CCExt   (_, m))))) ->
-                insert k (ComplexType ctm (CCont (ComplexContent ccm (CCExt   (k', m))))) cts'
+                insert k (ComplexType ctm $ CCont $ ComplexContent ccm $ CCExt   (k', m)) cts'
               (ComplexType ctm (CCont (ComplexContent ccm (CCRestr (_, m))))) ->
-                insert k (ComplexType ctm (CCont (ComplexContent ccm (CCRestr (k', m))))) cts'
+                insert k (ComplexType ctm $ CCont $ ComplexContent ccm $ CCRestr (k', m)) cts'
               _                                                               -> cts
 applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefGr (k, gr')):xs)
   = applyRedefs (XmlSchema tns ins sts cts els (insert k gr' grs) ats ags) xs
 applyRedefs (XmlSchema tns ins sts cts els grs ats ags) ((RedefAg (k, ag')):xs)
   = applyRedefs (XmlSchema tns ins sts cts els grs ats (insert k ag' ags)) xs
 
+-- | Combines two given schema definitions
 mergeSchemata :: XmlSchema -> XmlSchema -> XmlSchema
 mergeSchemata (XmlSchema tns _ sts cts els grs ats ags) (XmlSchema _ _ sts' cts' els' grs' ats' ags')
   = XmlSchema tns [] (union sts sts') (union cts cts') (union els els') (union grs grs') (union ats ats') (union ags ags')
 
 -- ----------------------------------------
 
--- Load schema from given url
+-- | Loads a schema definition from a given url
 loadDefinition :: String -> IO (Maybe XmlSchema)
 loadDefinition uri
   = do
@@ -625,6 +642,7 @@ loadDefinition uri
 
 -- ----------------------------------------
 
+-- | Loads a schema instance from a given url
 loadInstance :: String -> IO (Maybe XmlTree)
 loadInstance uri
   = do
