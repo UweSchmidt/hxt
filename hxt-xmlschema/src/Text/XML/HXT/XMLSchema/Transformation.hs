@@ -217,7 +217,7 @@ stToSTTF (Un ts)
     tdefTFs <- mapM stToSTTF $ anonymDecls ts
     return $ \ x -> do
                     env <- ask
-                    if not $ or $ fst $ runSVal env $ mapM (\ f -> f x) (trefTFs ++ tdefTFs)
+                    if not $ or $ fst $ runSVal env $ mapM (\ f -> f x) $ trefTFs ++ tdefTFs
                       then do
                            tell [(xpath env, "value does not match union type.")]
                            return False
@@ -230,7 +230,7 @@ createAttrMapEntry :: Attribute -> ST (QName, AttrMapVal)
 createAttrMapEntry (AttrRef n)
   = do
     s <- ask
-    case lookup n (sAttributes s) of
+    case lookup n $ sAttributes s of
            Just a  -> createAttrMapEntry a
            Nothing -> do
                       let errorSTTF = mkErrorSTTF $
@@ -558,14 +558,14 @@ createElemDesc :: Element -> ST ElemDesc
 createElemDesc (ElRef n)
   = do
     s <- ask
-    case lookup n (sElements s) of
+    case lookup n $ sElements s of
            Just e  -> createElemDesc e
            Nothing -> return $ mkErrorElemDesc "element validation error: illegal element reference in schema file"
 createElemDesc (ElDef (ElementDef _ tdef))
   = do
     s <- ask
     t <- case tdef of
-           ETDTypeAttr r      -> case lookup r (sComplexTypes s) of
+           ETDTypeAttr r      -> case lookup r $ sComplexTypes s of
                                    Nothing  -> Left <$> lookupSTTF r
                                    Just ctr -> return $ Right ctr
            ETDAnonymStDecl st -> Left <$> stToSTTF st
@@ -582,7 +582,7 @@ createRootDesc'
   = do
     s <- ask
     let cm = mkAlts $ map mkElemNameRE $ keys $ sElements s
-    se <- fromList <$> zip (keys (sElements s)) <$> (mapM createElemDesc $ elems $ sElements s)
+    se <- fromList <$> zip (keys $ sElements s) <$> (mapM createElemDesc $ elems $ sElements s)
     return $ mkComposeElemDesc cm se
 
 -- | Starts the transformation for a given schema representation
