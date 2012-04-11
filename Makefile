@@ -8,6 +8,7 @@ PL1	= hxt-charproperties \
 	  hxt-expat \
           hxt-xpath \
           hxt-relaxng \
+          hxt-xmlschema\
 	  hxt-xslt \
 	  hxt-cache
 

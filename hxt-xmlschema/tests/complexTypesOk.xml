@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<root>
+
+  <password safety="high">verySafe42</password>
+
+  <login safety="medium" username="guest">verySafe</login>
+
+  <customer age="42">
+    <firstName>Random</firstName>
+    <lastName>Guy</lastName>
+  </customer>
+
+  <shoppingList>
+    <bread>2</bread>
+    <butter>1</butter>
+    <milk>4</milk>
+  </shoppingList>
+
+  <computer>
+    <laptop>
+      <name>Supermobile 1000</name>
+    </laptop>
+  </computer>
+
+  <computerData>
+    <name>Superfast 2000</name>
+    <ram>64GB</ram>
+    <comment>super fast!</comment>
+  </computerData>
+
+  <computerDataWithGPU>
+    <name>Superfast 3000</name>
+    <comment>stunning graphics!</comment>
+    <gpu>Reality Simulator</gpu>
+  </computerDataWithGPU>
+
+  <computerDataWithoutComments>
+    <name>Supertablet</name>
+  </computerDataWithoutComments>
+
+</root>

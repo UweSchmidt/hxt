@@ -181,6 +181,9 @@ instance Eq QName where
                                   &&                    -- and prefixes are not set or they are equal
                                   px1 == px2
 
+instance Ord QName where
+  compare x y = compare (qualifiedName x) (qualifiedName y)
+
 instance NFData  QName
 instance WNFData QName
 
