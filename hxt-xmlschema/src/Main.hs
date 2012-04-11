@@ -21,7 +21,7 @@ import Text.XML.HXT.XMLSchema.Validation ( validateWithSchema
 
 import Text.XML.HXT.XMLSchema.TestSuite  ( runTestSuite )
 
-import System                            ( getArgs )
+import System.Environment                ( getArgs )
 
 -- ----------------------------------------
 
