@@ -178,10 +178,16 @@ testElem e
       Nothing  -> do
                   attrRes <- testAttrs e
                   let content = getElemChildren e
-                  contModelRes <- testContentModel content
+                  let (tags, text) = extractElems content
+                  contModelRes <- if mixedContent $ elemDesc env
+                                    then testContentModel tags
+                                    else if (length tags > 0 && length text > 0)
+                                           then do
+                                                tell [(xpath env ++ "/*", "no mixed content allowed here.")]
+                                                return False
+                                           else testContentModel content
                   contRes <- if contModelRes
                                then do
-                                    let (tags, text) = extractElems content
                                     textRes <- testElemText text
                                     tagsRes <- testElemChildren empty tags
                                     return $ textRes && tagsRes

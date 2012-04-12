@@ -171,7 +171,7 @@ xpQName
 xpQNames :: PU QNames
 xpQNames
   = xpWrap ( map mkName . words
-           , concat . map ((++ " ") . qualifiedName)
+           , unwords . map qualifiedName
            ) xpText
 
 -- | Entry point to unpickle a schema definition into an internal representation

@@ -28,6 +28,13 @@
     <comment>super fast!</comment>
   </computerData>
 
+  <computerData>
+    <name>Superfast 2000</name>
+    some text to test mixed content
+    <ram>64GB</ram>
+    <comment>super fast!</comment>
+  </computerData>
+
   <computerDataWithGPU>
     <name>Superfast 3000</name>
     <comment>stunning graphics!</comment>

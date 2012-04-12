@@ -114,6 +114,8 @@ complexTypesErrors
             , ( "/root[1]/computerData[1]/*"
               , "content does not match content model.\nunexpected tree NTree (XTag \"ram\" []) [NTree (XText \"64GB\") []]")
             , ( "/root[1]/computerDataWithGPU[1]/*"
+              , "no mixed content allowed here.")
+            , ( "/root[1]/computerDataWithGPU[2]/*"
               , "content does not match content model.\ninput does not match " ++ 
                 "{single tree pred}({single tree pred})?({single tree pred})?({single tree pred})*{single tree pred}")
             , ( "/root[1]/computerDataWithoutComments[1]/*"
