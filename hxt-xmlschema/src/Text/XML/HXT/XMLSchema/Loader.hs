@@ -706,7 +706,7 @@ propagateTargetNamespace
       = getChildren >>> isSchema >>> getAttrValue "targetNamespace"
     propagate tns
       = processTopDown $
-        addTns `when` (isElement <+> isAttribute)
+        addTns `when` (isSimpleType <+> isComplexType <+> isElement <+> isAttribute <+> isGroup <+> isAttributeGroup)
         where
           addUri
             | null tns  = id
@@ -718,6 +718,14 @@ propagateTargetNamespace
 isSchema :: LA XmlTree XmlTree
 isSchema = isXSElem "schema"
 
+-- | Checks whether a given XmlTree is a xs:simpleType tag
+isSimpleType :: LA XmlTree XmlTree
+isSimpleType = isXSElem "simpleType"
+
+-- | Checks whether a given XmlTree is a xs:complexType tag
+isComplexType :: LA XmlTree XmlTree
+isComplexType = isXSElem "complexType"
+
 -- | Checks whether a given XmlTree is a xs:element tag
 isElement :: LA XmlTree XmlTree
 isElement = isXSElem "element"
@@ -725,6 +733,14 @@ isElement = isXSElem "element"
 -- | Checks whether a given XmlTree is a xs:attribute tag
 isAttribute :: LA XmlTree XmlTree
 isAttribute = isXSElem "attribute"
+
+-- | Checks whether a given XmlTree is a xs:group tag
+isGroup :: LA XmlTree XmlTree
+isGroup = isXSElem "group"
+
+-- | Checks whether a given XmlTree is a xs:attributeGroup tag
+isAttributeGroup :: LA XmlTree XmlTree
+isAttributeGroup = isXSElem "attributeGroup"
 
 -- | Checks whether a given XmlTree is a xs tag with a given name
 isXSElem :: String -> LA XmlTree XmlTree
@@ -739,6 +755,22 @@ hasXSName lp
             &&
             localPart qn == lp
 
+-- | Checks whether a given XmlTree is a xs:restriction tag
+isRestriction :: LA XmlTree XmlTree
+isRestriction = isXSElem "restriction"
+
+-- | Checks whether a given XmlTree is a xs:list tag
+isList :: LA XmlTree XmlTree
+isList = isXSElem "list"
+
+-- | Checks whether a given XmlTree is a xs:union tag
+isUnion :: LA XmlTree XmlTree
+isUnion = isXSElem "union" -- TODO: memberTypes: List of QNames
+
+-- | Checks whether a given XmlTree is a xs:extension tag
+isExtension :: LA XmlTree XmlTree
+isExtension = isXSElem "extension"
+
 -- | Propagates namespaces which are defined by xmlns attributes
 propagateXmlSchemaNamespaces :: LA XmlTree XmlTree
 propagateXmlSchemaNamespaces
@@ -747,8 +779,8 @@ propagateXmlSchemaNamespaces
     , (xmlnsXName, xmlnsNamespaceXName)
     ]
     where
-    hasPropAttr = isElement <+> isAttribute
-    isPropAttr  = hasName "type" <+> hasName "ref"
+    hasPropAttr = isRestriction <+> isList <+> isUnion <+> isExtension <+> isElement <+> isAttribute <+> isGroup <+> isAttributeGroup
+    isPropAttr  = hasName "base" <+> hasName "itemType" <+> hasName "type" <+> hasName "ref"
     propagate env
       = addXns `when` hasPropAttr
         where
