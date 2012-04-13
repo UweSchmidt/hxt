@@ -22,62 +22,83 @@ where
 
 import Text.XML.HXT.XMLSchema.AbstractSyntax
 
-import Text.XML.HXT.Core   ( PU
-                           , xpText
-                           , xpAttr
-                           , xpWrap
-                           , xpAlt
-                           , xpList
-                           , xpOption
-                           , xpPair
-                           , xpTriple
-                           , xpElemNS
-                           -- , xpAddNSDecl
-                           , xpFilterCont
-                           , xpFilterAttr
+import Text.XML.HXT.Core                       ( PU
+                                               , xpText
+                                               , xpAttr
+                                               , xpWrap
+                                               , xpAlt
+                                               , xpList
+                                               , xpOption
+                                               , xpPair
+                                               , xpTriple
+                                               , xpElemNS
+                                               , xpFilterCont
+                                               , xpFilterAttr
 
-                           , QName
-                           , mkQName
-                           , mkName
-                           , localPart
-                           , setLocalPart'
-                           , qualifiedName
-                           , namespaceUri
-                           , newXName
+                                               , QName
+                                               , mkQName
+                                               , localPart
+                                               , setLocalPart'
+                                               , qualifiedName
+                                               , namespaceUri
+                                               , newXName
 
-                           , neg
-                           , none
-                           , (<+>)
-                           , (>>>)
-                           , hasNameWith
-                           , hasQName
+                                               , neg
+                                               , none
+                                               , (<+>)
+                                               , (>>>)
+                                               , hasNameWith
+                                               , hasQName
 
-                           , runX
-                           , xunpickleDocument
-                           , withValidate
-                           , withTrace
-                           , withRemoveWS
-                           , withPreserveComment
-                           , withCheckNamespaces
-                           , yes
-                           , no
+                                               , runX
+                                               , withValidate
+                                               , withTrace
+                                               , withRemoveWS
+                                               , withPreserveComment
+                                               , withCheckNamespaces
+                                               , yes
+                                               , no
 
-                           , XmlTree
-                           , readDocument
-                           , (&&&)
-                           , getAttrValue
-                           , getChildren
-                           )
+                                               , LA
+                                               , ($<)
+                                               , unXN
+                                               , fromLA
+                                               , when
+                                               , isElem
+                                               , hasName
+                                               , processTopDown
+                                               , processAttrl
+                                               , processWithNsEnvWithoutAttrl
+                                               , changeAttrValue
+                                               , xmlXName
+                                               , xmlNamespaceXName
+                                               , xmlnsXName
+                                               , xmlnsNamespaceXName
+                                               , xunpickleVal
 
-import Text.XML.HXT.Curl   ( withCurl )
+                                               , XmlTree
+                                               , readDocument
+                                               , (&&&)
+                                               , getAttrValue
+                                               , getChildren
+                                               )
 
-import Control.Applicative ( (<$>) )
+import Text.XML.HXT.Arrow.XmlState.URIHandling ( expandURIString )
 
-import Data.Map            ( empty
-                           , lookup
-                           , insert
-                           , union
-                           )
+import Text.XML.HXT.Curl                       ( withCurl )
+
+import Control.Applicative                     ( (<$>) )
+
+import Data.List                               ( isPrefixOf
+                                               , findIndex
+                                               )
+
+import Data.Map                                ( empty
+                                               , lookup
+                                               , insert
+                                               , union
+                                               , fromList
+                                               )
 
 import Prelude hiding (lookup)
 
@@ -162,23 +183,41 @@ xpFilterSchema
                                 , mkQName ""       "substitutionGroup"    ""
                                 ]
 
+-- | Split a string at a given delimiter
+splitWith :: Char -> String -> (String, String)
+splitWith del s
+  = case mn of
+      Nothing -> ("", s)
+      Just n  -> (take n s, drop (n+1) s)
+    where
+    mn = findIndex (== del) s
+
+-- | Parse a QName from a string in format "{uri}prefix:localPart"
+parseQName :: String -> QName
+parseQName s
+  = mkQName pf lp uri 
+    where
+    (pf, lp) = splitWith ':' n
+    (uri, n) = if isPrefixOf "{" s
+                 then splitWith '}' $ tail s
+                 else ("", s)
+
 -- | Basic QName pickler
 xpQName :: PU QName
 xpQName
-  = xpWrap (mkName, qualifiedName) xpText -- TODO: namespaces / target namespace
+  = xpWrap (parseQName, qualifiedName) xpText -- TODO: namespaces / target namespace
 
 -- | Basic pickler for a list of QNames
 xpQNames :: PU QNames
 xpQNames
-  = xpWrap ( map mkName . words
-           , concat . map ((++ " ") . qualifiedName)
+  = xpWrap ( map parseQName . words
+           , unwords . map qualifiedName
            ) xpText
 
 -- | Entry point to unpickle a schema definition into an internal representation
 xpXmlSchema' :: PU XmlSchema'
 xpXmlSchema'
   = xpSchemaElem "schema" $
-    -- TODO: xpAddNSDecl nsPrefix nsUri $
     xpFilterSchema $
     xpWrap (\ (a, b) -> XmlSchema' a b , \ t -> (targetNS t, parts t)) $
     xpPair (xpOption $ xpAttr "targetNamespace" xpText) $
@@ -572,7 +611,7 @@ resolveIncls s (x:xs)
 resolveIncl :: Include -> IO (Maybe XmlSchema) -- TODO: apply namespaces
 resolveIncl (Incl loc)
   = loadDefinition loc
-resolveIncl (Imp (loc, _))       
+resolveIncl (Imp (loc, _)) -- second param: ns      
   = loadDefinition loc
 resolveIncl (Redef (loc, redefs))
   = do
@@ -620,26 +659,139 @@ mergeSchemata (XmlSchema tns _ sts cts els grs ats ags) (XmlSchema _ _ sts' cts'
 
 -- ----------------------------------------
 
+-- | Transforms the location of an external reference into an absolute path
+mkAbsPath :: String -> Include -> Include
+mkAbsPath anchor incl
+  = case incl of
+      (Incl loc)            -> Incl  $ modLoc loc
+      (Imp (loc, ns))       -> Imp   $ (modLoc loc, ns)
+      (Redef (loc, redefs)) -> Redef $ (modLoc loc, redefs)
+    where
+    modLoc l = case expandURIString l anchor of
+                 Nothing -> l
+                 Just l' -> l'
+
 -- | Loads a schema definition from a given url
 loadDefinition :: String -> IO (Maybe XmlSchema)
 loadDefinition uri
   = do
     s' <- runX (
-                -- TODO: readDocument, add namespaces to each node, finally unpickle
-                xunpickleDocument xpXmlSchema'
-                                  [ withValidate yes        -- validate source
-                                  , withTrace 0             -- trace processing steps?
-                                  , withRemoveWS yes        -- remove redundant whitespace
-                                  , withPreserveComment no  -- keep comments
-                                  , withCheckNamespaces yes -- check namespaces
-                                  , withCurl []             -- use libCurl for http access
-                                  ] uri
+                readDocument [ withValidate yes        -- validate source
+                             , withTrace 0             -- trace processing steps?
+                             , withRemoveWS yes        -- remove redundant whitespace
+                             , withPreserveComment no  -- keep comments
+                             , withCheckNamespaces yes -- check namespaces
+                             , withCurl []             -- use libCurl for http access
+                             ] uri
+                >>>
+                fromLA propagateTargetNamespace
+                >>>
+                fromLA propagateXmlSchemaNamespaces
+                >>>
+                ((getAttrValue "transfer-URI") &&& xunpickleVal xpXmlSchema')
                )
     if null s'
       then return Nothing
       else do
-           let s = toSchema $ head s'
-           Just <$> resolveIncls s (sIncludes s)
+           let h = head s'
+           let s = toSchema $ snd h
+           Just <$> (resolveIncls s $ map (mkAbsPath $ fst h) $ sIncludes s)
+
+-- | Propagates the target namespace
+propagateTargetNamespace :: LA XmlTree XmlTree
+propagateTargetNamespace
+  = propagate $< getTargetNS
+    where
+    getTargetNS
+      = getChildren >>> isSchema >>> getAttrValue "targetNamespace"
+    propagate tns
+      = processTopDown $
+        addTns `when` (isSimpleType <+> isComplexType <+> isElement <+> isAttribute <+> isGroup <+> isAttributeGroup)
+        where
+          addUri
+            | null tns  = id
+            | otherwise = (("{" ++ tns ++ "}") ++)
+          addTns
+            = processAttrl $ changeAttrValue addUri `when` hasName "name"
+
+-- | Checks whether a given XmlTree is a xs:schema tag
+isSchema :: LA XmlTree XmlTree
+isSchema = isXSElem "schema"
+
+-- | Checks whether a given XmlTree is a xs:simpleType tag
+isSimpleType :: LA XmlTree XmlTree
+isSimpleType = isXSElem "simpleType"
+
+-- | Checks whether a given XmlTree is a xs:complexType tag
+isComplexType :: LA XmlTree XmlTree
+isComplexType = isXSElem "complexType"
+
+-- | Checks whether a given XmlTree is a xs:element tag
+isElement :: LA XmlTree XmlTree
+isElement = isXSElem "element"
+
+-- | Checks whether a given XmlTree is a xs:attribute tag
+isAttribute :: LA XmlTree XmlTree
+isAttribute = isXSElem "attribute"
+
+-- | Checks whether a given XmlTree is a xs:group tag
+isGroup :: LA XmlTree XmlTree
+isGroup = isXSElem "group"
+
+-- | Checks whether a given XmlTree is a xs:attributeGroup tag
+isAttributeGroup :: LA XmlTree XmlTree
+isAttributeGroup = isXSElem "attributeGroup"
+
+-- | Checks whether a given XmlTree is a xs tag with a given name
+isXSElem :: String -> LA XmlTree XmlTree
+isXSElem name
+  = isElem >>> hasXSName name
+
+-- | Checks whether a given XmlTree is from xs namespace and has a given name
+hasXSName :: String -> LA XmlTree XmlTree
+hasXSName lp
+  = hasNameWith $
+    \ qn -> namespaceUri qn == nsUri
+            &&
+            localPart qn == lp
+
+-- | Checks whether a given XmlTree is a xs:restriction tag
+isRestriction :: LA XmlTree XmlTree
+isRestriction = isXSElem "restriction"
+
+-- | Checks whether a given XmlTree is a xs:list tag
+isList :: LA XmlTree XmlTree
+isList = isXSElem "list"
+
+-- | Checks whether a given XmlTree is a xs:union tag
+isUnion :: LA XmlTree XmlTree
+isUnion = isXSElem "union" -- TODO: memberTypes: List of QNames
+
+-- | Checks whether a given XmlTree is a xs:extension tag
+isExtension :: LA XmlTree XmlTree
+isExtension = isXSElem "extension"
+
+-- | Propagates namespaces which are defined by xmlns attributes
+propagateXmlSchemaNamespaces :: LA XmlTree XmlTree
+propagateXmlSchemaNamespaces
+  = processWithNsEnvWithoutAttrl propagate
+    [ (xmlXName,   xmlNamespaceXName)
+    , (xmlnsXName, xmlnsNamespaceXName)
+    ]
+    where
+    hasPropAttr = isRestriction <+> isList <+> isUnion <+> isExtension <+> isElement <+> isAttribute <+> isGroup <+> isAttributeGroup
+    isPropAttr  = hasName "base" <+> hasName "itemType" <+> hasName "type" <+> hasName "ref"
+    propagate env
+      = addXns `when` hasPropAttr
+        where
+        addXns = processAttrl $ changeAttrValue addUri `when` isPropAttr
+        addUri n
+          = maybe n (\ u -> "{" ++ unXN u ++ "}" ++ n) $ lookup (newXName px) $ fromList env
+            where
+            (px', lp') = span (/= ':') n
+            px
+              | null lp'  = ""
+              | otherwise = px'
 
 -- ----------------------------------------
 

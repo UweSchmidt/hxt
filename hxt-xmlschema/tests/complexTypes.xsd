@@ -50,7 +50,7 @@
     </xs:choice>
   </xs:complexType>
 
-  <xs:complexType name="computerData">
+  <xs:complexType name="computerData" mixed="true">
     <xs:sequence>
       <xs:element name="name" type="xs:string"/>
       <xs:element name="cpu" type="xs:string" minOccurs="0"/>
@@ -93,8 +93,8 @@
         <xs:element name="customer" type="customer"/>
         <xs:element name="shoppingList" type="shoppingList"/>
         <xs:element name="computer" type="computer"/>
-        <xs:element name="computerData" type="computerData"/>
-        <xs:element name="computerDataWithGPU" type="computerDataWithGPU"/>
+        <xs:element name="computerData" type="computerData" maxOccurs="2"/>
+        <xs:element name="computerDataWithGPU" type="computerDataWithGPU" maxOccurs="2"/>
         <xs:element name="computerDataWithoutComments" type="computerDataWithoutComments"/>
       </xs:sequence>
     </xs:complexType>
