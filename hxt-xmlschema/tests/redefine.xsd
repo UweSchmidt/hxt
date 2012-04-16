@@ -3,7 +3,7 @@
 
   <!-- redefine -->
  
-  <xs:redefine schemaLocation="tests/incl.xsd">
+  <xs:redefine schemaLocation="incl.xsd">
     <xs:simpleType name="validAge">
       <xs:restriction base="validAge">
         <xs:maxInclusive value="18"/>

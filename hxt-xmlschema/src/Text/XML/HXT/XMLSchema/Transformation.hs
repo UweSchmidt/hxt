@@ -33,7 +33,6 @@ import Text.XML.HXT.Arrow.XmlRegex ( XmlRegex
                                    , mkZero
                                    , mkUnit
                                    , mkPrim
-                                   , mkAlt
                                    , mkAlts
                                    , mkSeq
                                    , mkSeqs
@@ -104,6 +103,11 @@ mkNoTextSTTF
                   tell [(xpath env, "no text allowed here.")]
                   return False
              else return True
+
+-- | Creates a SimpleType test function which always succeeds
+mkPassthroughSTTF :: STTF
+mkPassthroughSTTF
+  = \ _ -> return True
 
 -- | Creates a SimpleType test function for basic W3C datatypes
 mkW3CCheckSTTF :: QName -> ParamList -> STTF
@@ -297,34 +301,32 @@ mkElemNamespaceRE p = mkPrim $ p . getElemName
 mkTextRE :: XmlRegex
 mkTextRE = mkPrim isText
 
--- | Creates a regex which applies the mixed-behaviour
-mkMixedRE :: Bool -> XmlRegex -> XmlRegex
-mkMixedRE mixed re
-  = if mixed
-      then mkAlt re mkTextRE -- TODO: regex for mixed
-      else re
-
 -- ----------------------------------------
 
 -- | Creates an element description for elements without subelems
 mkSimpleElemDesc :: AttrDesc -> STTF -> ElemDesc
 mkSimpleElemDesc ad
-  = ElemDesc Nothing ad mkTextRE empty
+  = ElemDesc Nothing ad False mkTextRE empty
 
 -- | Creates an element description for elements without attributes or textual content
 mkComposeElemDesc :: XmlRegex -> SubElemDesc -> ElemDesc
 mkComposeElemDesc cm se
-  = ElemDesc Nothing (empty, []) cm se mkNoTextSTTF
+  = ElemDesc Nothing (empty, []) False cm se mkPassthroughSTTF
 
 -- | Creates a general element description
 mkElemDesc :: AttrDesc -> XmlRegex -> SubElemDesc -> STTF -> ElemDesc
-mkElemDesc 
+mkElemDesc ad
+  = ElemDesc Nothing ad False
+
+-- | Creates a general element description with mixed content flag
+mkElemDescMixed :: AttrDesc -> Bool -> XmlRegex -> SubElemDesc -> STTF -> ElemDesc
+mkElemDescMixed
   = ElemDesc Nothing
 
 -- | Creates an element description which passes an error message
 mkErrorElemDesc :: String -> ElemDesc
 mkErrorElemDesc s
-  = ElemDesc (Just s) (empty, []) mkUnit empty mkNoTextSTTF
+  = ElemDesc (Just s) (empty, []) False mkUnit empty mkPassthroughSTTF
 
 -- | Creates the element description for a given group
 groupToElemDesc :: Group -> ST ElemDesc
@@ -518,28 +520,30 @@ ctToElemDesc ct
                               Just ct' -> do
                                           base <- ctToElemDesc ct'
                                           ed <- ctModelToElemDesc m
-                                          return $ mkElemDesc (mergeAttrDescs (attrDesc ed) $ attrDesc base)
-                                                              (mkMixedRE mixed $
-                                                               mkSeq (contentModel base) $ contentModel ed)
-                                                              (union (subElemDesc ed) $ subElemDesc base)
-                                                              (sttf base)
+                                          return $ mkElemDescMixed (mergeAttrDescs (attrDesc ed) $ attrDesc base)
+                                                                   (mixed)
+                                                                   (mkSeq (contentModel base) $ contentModel ed)
+                                                                   (union (subElemDesc ed) $ subElemDesc base)
+                                                                   (sttf base)
           CCRestr (n, m) -> case lookup n $ sComplexTypes s of
                               Nothing  -> return $ mkErrorElemDesc
                                                    "element validation error: illegal type reference in schema file"
                               Just ct' -> do
                                           base <- ctToElemDesc ct'
                                           ed <- ctModelToElemDesc m
-                                          return $ mkElemDesc (mergeAttrDescs (attrDesc ed) $ attrDesc base)
-                                                              (mkMixedRE mixed $ contentModel ed)
-                                                              (subElemDesc ed)
-                                                              (sttf ed)
+                                          return $ mkElemDescMixed (mergeAttrDescs (attrDesc ed) $ attrDesc base)
+                                                                   (mixed)
+                                                                   (contentModel ed)
+                                                                   (subElemDesc ed)
+                                                                   (sttf ed)
       NewCT m       -> do
                        ed <- ctModelToElemDesc m
                        let mixed = ctMixed ct == Just "true"
-                       return $ mkElemDesc (attrDesc ed)
-                                           (mkMixedRE mixed $ contentModel ed)
-                                           (subElemDesc ed)
-                                           (sttf ed)
+                       return $ mkElemDescMixed (attrDesc ed)
+                                                (mixed)
+                                                (contentModel ed)
+                                                (subElemDesc ed)
+                                                (sttf ed)
 
 -- | Creates the element description for a given element
 createElemDesc :: Element -> ST ElemDesc

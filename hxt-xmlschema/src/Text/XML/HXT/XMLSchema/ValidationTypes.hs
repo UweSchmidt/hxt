@@ -48,6 +48,7 @@ type XPath         = String
 data ElemDesc      = ElemDesc
                    { errmsg       :: Maybe String
                    , attrDesc     :: AttrDesc
+                   , mixedContent :: Bool
                    , contentModel :: XmlRegex
                    , subElemDesc  :: SubElemDesc
                    , sttf         :: STTF

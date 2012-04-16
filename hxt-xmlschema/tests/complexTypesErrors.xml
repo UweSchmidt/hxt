@@ -27,6 +27,12 @@
 
   <computerDataWithGPU>
     <name>Superfast 3000</name>
+    some text to test mixed content
+    <comment>stunning graphics!</comment>
+  </computerDataWithGPU>
+
+  <computerDataWithGPU>
+    <name>Superfast 3000</name>
     <comment>stunning graphics!</comment>
   </computerDataWithGPU>
 
