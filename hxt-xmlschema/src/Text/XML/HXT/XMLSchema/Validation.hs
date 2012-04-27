@@ -1,18 +1,16 @@
 {- |
    Module     : Text.XML.HXT.XMLSchema.Validation
-   Copyright  : Copyright (C) 2005-2012 Uwe Schmidt
+   Copyright  : Copyright (C) 2005-2012 Thorben Guelck, Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id$
 
    Contains functions to perform validation following a given schema definition.
 -}
 
 module Text.XML.HXT.XMLSchema.Validation
-
   ( validateWithSchema
   , SValResult
   , printSValResult
@@ -20,33 +18,12 @@ module Text.XML.HXT.XMLSchema.Validation
 
 where
 
-import Text.XML.HXT.XMLSchema.XmlUtils
-import Text.XML.HXT.XMLSchema.ValidationTypes
-
-import Text.XML.HXT.XMLSchema.Transformation ( createRootDesc )
-
-import Text.XML.HXT.XMLSchema.Loader         ( loadDefinition
-                                             , loadInstance
-                                             )
-
-import Text.XML.HXT.Core                     ( QName
-                                             , localPart
-                                             , namePrefix
-                                             , qualifiedName
-                                             , XmlTree
-                                             , XmlTrees
-                                             )
-
-import Text.XML.HXT.Arrow.XmlRegex           ( matchXmlRegex )
-
 import Control.Monad.Reader                  ( ask
                                              , local
                                              )
-
 import Control.Monad.Writer                  ( tell )
 
 import Data.List                             ( partition )
-
 import Data.Map                              ( Map
                                              , empty
                                              , lookup
@@ -55,7 +32,25 @@ import Data.Map                              ( Map
                                              , toList
                                              )
 
-import Prelude hiding (lookup)
+import Prelude                        hiding ( lookup )
+
+import Text.XML.HXT.Arrow.XmlRegex           ( matchXmlRegex )
+
+import Text.XML.HXT.Core                     ( QName
+                                             , localPart
+                                             , namePrefix
+                                             , qualifiedName
+                                             , XmlTree
+                                             , XmlTrees
+                                             , SysConfigList
+                                             )
+
+import Text.XML.HXT.XMLSchema.Loader         ( loadDefinition
+                                             , loadInstance
+                                             )
+import Text.XML.HXT.XMLSchema.ValidationTypes
+import Text.XML.HXT.XMLSchema.Transformation ( createRootDesc )
+import Text.XML.HXT.XMLSchema.XmlUtils
 
 -- ----------------------------------------
 
@@ -213,17 +208,19 @@ testRoot r
 -- ----------------------------------------
 
 -- | Loads the schema definition and instance documents and invokes validation
-validateWithSchema :: String -> String -> IO SValResult
-validateWithSchema defUri instUri
+validateWithSchema :: SysConfigList -> String -> String -> IO SValResult
+validateWithSchema config defUri instUri
   = do
-    def <- loadDefinition defUri
+    def <- loadDefinition config defUri
     case def of
       Nothing -> return (False, [("/", "Could not process definition file.")])
       Just d  -> do
-                 inst <- loadInstance instUri
+                 inst <- loadInstance config instUri
                  case inst of
                    Nothing -> return (False, [("/", "Could not process instance file.")])
                    Just i  -> return $ runSVal (SValEnv "" $ createRootDesc d) $ testRoot i
+
+-- ----------------------------------------
 
 -- | Prints validation results to stdout
 printSValResult :: SValResult -> IO ()
@@ -234,4 +231,6 @@ printSValResult (status, l)
       else putStrLn "\nerrors occurred:\n"
     mapM_ (\ (a, b) -> putStrLn $ a ++ "\n" ++ b ++ "\n") l
     return ()
+
+-- ----------------------------------------
 

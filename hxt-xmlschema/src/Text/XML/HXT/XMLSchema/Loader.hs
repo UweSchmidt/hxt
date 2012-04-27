@@ -1,23 +1,20 @@
 {- |
    Module     : Text.XML.HXT.XMLSchema.Loader
-   Copyright  : Copyright (C) 2005-2012 Uwe Schmidt
+   Copyright  : Copyright (C) 2012 Thorben Guelck, Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id$
 
    Contains functions to load schema definition and instance documents
    and provide an internal representation.
 -}
 
 module Text.XML.HXT.XMLSchema.Loader
-
   ( loadDefinition
   , loadInstance
   )
-
 where
 
 import Text.XML.HXT.XMLSchema.AbstractSyntax
@@ -52,12 +49,13 @@ import Text.XML.HXT.Core                       ( PU
 
                                                , runX
                                                , withValidate
-                                               , withTrace
                                                , withRemoveWS
                                                , withPreserveComment
                                                , withCheckNamespaces
                                                , yes
                                                , no
+                                               , traceMsg
+                                               , SysConfigList
 
                                                , LA
                                                , ($<)
@@ -78,14 +76,13 @@ import Text.XML.HXT.Core                       ( PU
 
                                                , XmlTree
                                                , readDocument
+                                               , documentStatusOk
                                                , (&&&)
                                                , getAttrValue
                                                , getChildren
                                                )
 
 import Text.XML.HXT.Arrow.XmlState.URIHandling ( expandURIString )
-
-import Text.XML.HXT.Curl                       ( withCurl )
 
 import Control.Applicative                     ( (<$>) )
 
@@ -596,30 +593,6 @@ toSchema s
 
 -- ----------------------------------------
 
--- | Processes a list of external references
-resolveIncls :: XmlSchema -> Includes -> IO XmlSchema
-resolveIncls s []
-  = return s
-resolveIncls s (x:xs)
-  = do
-    incl' <- resolveIncl x
-    case incl' of
-      Nothing   -> resolveIncls s xs
-      Just incl -> resolveIncls (mergeSchemata s incl) xs
-
--- | Processes a single external reference
-resolveIncl :: Include -> IO (Maybe XmlSchema) -- TODO: apply namespaces
-resolveIncl (Incl loc)
-  = loadDefinition loc
-resolveIncl (Imp (loc, _)) -- second param: ns      
-  = loadDefinition loc
-resolveIncl (Redef (loc, redefs))
-  = do
-    s' <- loadDefinition loc
-    case s' of
-      Nothing -> return Nothing
-      Just s  -> return $ Just $ applyRedefs s redefs
-
 -- | Applies a list of redefinitions
 applyRedefs :: XmlSchema -> Redefinitions -> XmlSchema
 applyRedefs s []
@@ -672,23 +645,29 @@ mkAbsPath anchor incl
                  Just l' -> l'
 
 -- | Loads a schema definition from a given url
-loadDefinition :: String -> IO (Maybe XmlSchema)
-loadDefinition uri
+loadDefinition :: SysConfigList -> String -> IO (Maybe XmlSchema)
+loadDefinition config uri
   = do
     s' <- runX (
-                readDocument [ withValidate yes        -- validate source
-                             , withTrace 0             -- trace processing steps?
-                             , withRemoveWS yes        -- remove redundant whitespace
-                             , withPreserveComment no  -- keep comments
-                             , withCheckNamespaces yes -- check namespaces
-                             , withCurl []             -- use libCurl for http access
-                             ] uri
+                readDocument ( config ++
+                               [ withValidate yes        -- validate source
+                               , withRemoveWS yes        -- remove redundant whitespace
+                               , withPreserveComment no  -- keep comments
+                               , withCheckNamespaces yes -- check namespaces
+                               ]
+                             ) uri
+                >>>
+                traceMsg 2 "propagating namespaces into XMLSchema attribute values"
                 >>>
                 fromLA propagateTargetNamespace
                 >>>
                 fromLA propagateXmlSchemaNamespaces
                 >>>
-                ((getAttrValue "transfer-URI") &&& xunpickleVal xpXmlSchema')
+                traceMsg 2 ("start unpickling schema for " ++ show uri) 
+                >>>
+                (getAttrValue "transfer-URI" &&& xunpickleVal xpXmlSchema')
+                >>>
+                traceMsg 2 "unpickling schema done"
                )
     if null s'
       then return Nothing
@@ -696,6 +675,31 @@ loadDefinition uri
            let h = head s'
            let s = toSchema $ snd h
            Just <$> (resolveIncls s $ map (mkAbsPath $ fst h) $ sIncludes s)
+  where
+    loadDefinition' = loadDefinition config
+
+    -- | Processes a list of external references
+    resolveIncls :: XmlSchema -> Includes -> IO XmlSchema
+    resolveIncls s []
+        = return s
+    resolveIncls s (x:xs)
+        = do incl' <- resolveIncl x
+             case incl' of
+               Nothing   -> resolveIncls s xs
+               Just incl -> resolveIncls (mergeSchemata s incl) xs
+
+    -- | Processes a single external reference
+    resolveIncl :: Include -> IO (Maybe XmlSchema) -- TODO: apply namespaces
+    resolveIncl (Incl loc)
+        = loadDefinition' loc
+    resolveIncl (Imp (loc, _)) -- second param: ns      
+        = loadDefinition' loc
+    resolveIncl (Redef (loc, redefs))
+        = do s' <- loadDefinition' loc
+             case s' of
+               Nothing -> return Nothing
+               Just s  -> return $ Just $ applyRedefs s redefs
+
 
 -- | Propagates the target namespace
 propagateTargetNamespace :: LA XmlTree XmlTree
@@ -796,20 +800,31 @@ propagateXmlSchemaNamespaces
 -- ----------------------------------------
 
 -- | Loads a schema instance from a given url
-loadInstance :: String -> IO (Maybe XmlTree)
-loadInstance uri
+loadInstance :: SysConfigList -> String -> IO (Maybe XmlTree)
+loadInstance config uri
   = do
-    s <- runX ( readDocument [ withValidate yes        -- validate source
-                             , withTrace 0             -- trace processing steps?
-                             , withRemoveWS yes        -- remove redundant whitespace
-                             , withPreserveComment no  -- remove comments
-                             , withCheckNamespaces yes -- check namespaces
-                             , withCurl []             -- use libCurl for http access
-                             ] uri
+    s <- runX ( readDocument ( config ++
+                               -- these options can't are mandatory
+                               [ withValidate yes        -- validate source
+                               , withRemoveWS yes        -- remove redundant whitespace
+                               , withPreserveComment no  -- remove comments
+                               , withCheckNamespaces yes -- check namespaces
+                               ]
+                             ) uri
                 >>>
-                ((getAttrValue "status") &&& getChildren)
+                documentStatusOk
+                >>>
+                getChildren
+                >>>
+                isElem
               )
+    case s of
+      [] -> return Nothing
+      (t : _) ->  return $ Just t
+{-
     if (fst $ head s) == ""
       then return $ Just $ snd $ head s
       else return Nothing
+-}
+-- ----------------------------------------
 

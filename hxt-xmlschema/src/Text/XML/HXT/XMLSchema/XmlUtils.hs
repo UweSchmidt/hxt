@@ -1,18 +1,16 @@
 {- |
    Module     : Text.XML.HXT.XMLSchema.XmlUtils
-   Copyright  : Copyright (C) 2005-2012 Uwe Schmidt
+   Copyright  : Copyright (C) 2012 Thorben Guelck, Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id$
 
    Contains helper functions to work with the XmlTree datatype.
 -}
 
 module Text.XML.HXT.XMLSchema.XmlUtils
-
 where
 
 import qualified Text.XML.HXT.DOM.XmlNode as XN
@@ -95,3 +93,4 @@ getTexts = map getText
 getText :: XmlTree -> String
 getText = fromMaybe "" . XN.getText
 
+-- ----------------------------------------

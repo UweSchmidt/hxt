@@ -1,18 +1,16 @@
 {- |
    Module     : Text.XML.HXT.XMLSchema.ValidationTypes
-   Copyright  : Copyright (C) 2005-2012 Uwe Schmidt
+   Copyright  : Copyright (C) 2012 Thorben Guelck, Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id$
 
    Contains the basic datatypes which are used during validation.
 -}
 
 module Text.XML.HXT.XMLSchema.ValidationTypes
-
 where
 
 import Text.XML.HXT.Core           ( QName )
@@ -85,3 +83,4 @@ type SVal a        = ReaderT SValEnv (WriterT SValLog Identity) a
 runSVal :: SValEnv -> SVal a -> (a, SValLog)
 runSVal env val = runIdentity $ runWriterT $ runReaderT val env
 
+-- ----------------------------------------

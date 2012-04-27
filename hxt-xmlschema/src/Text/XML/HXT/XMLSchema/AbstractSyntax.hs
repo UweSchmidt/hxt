@@ -1,12 +1,11 @@
 {- |
    Module     : Text.XML.HXT.XMLSchema.AbstractSyntax
-   Copyright  : Copyright (C) 2005-2012 Uwe Schmidt
+   Copyright  : Copyright (C) 2012 Thorben Guelck, Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id$
 
    Contains the basic datatypes to represent a schema definition.
 -}
@@ -204,3 +203,4 @@ data AttrTypeDef       = ATDTypeAttr   {unATDTypeAttr   :: QName}
 data AttributeGroup    = AttrGrpRef {unAttrGrpRef :: QName}
                        | AttrGrpDef {unAttrGrpDef :: AttrList}
 
+-- ----------------------------------------

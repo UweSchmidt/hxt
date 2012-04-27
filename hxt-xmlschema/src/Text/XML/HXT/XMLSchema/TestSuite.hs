@@ -1,12 +1,11 @@
 {- |
    Module     : Text.XML.HXT.XMLSchema.TestSuite
-   Copyright  : Copyright (C) 2005-2012 Uwe Schmidt
+   Copyright  : Copyright (C) 2012 Thorben Guelck, Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id$
 
    Contains a HUnit testsuite for the hxt-xmlschema validator.
 -}
@@ -16,6 +15,8 @@ module Text.XML.HXT.XMLSchema.TestSuite
   ( runTestSuite )
 
 where
+
+import Text.XML.HXT.Core                 ( withTrace )
 
 import Text.XML.HXT.XMLSchema.Validation ( validateWithSchema
                                          , SValResult
@@ -34,7 +35,9 @@ mkSValTest :: String -> String -> String-> SValResult -> Test
 mkSValTest label descName instName expectedRes
   = label ~:
     do
-    res <- validateWithSchema ("./tests/" ++ descName ++ ".xsd") $ "./tests/" ++ instName ++ ".xml"
+    res <- validateWithSchema [ withTrace 0 ]
+           ("./tests/" ++ descName ++ ".xsd") $
+            "./tests/" ++ instName ++ ".xml"
     res @?= expectedRes
 
 -- | A test for SimpleTypes as element values which match
@@ -154,3 +157,4 @@ runTestSuite
     _ <- runTestTT testSuite
     return ()
 
+-- ----------------------------------------
