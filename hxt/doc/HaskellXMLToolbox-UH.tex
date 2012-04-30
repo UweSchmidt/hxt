@@ -1,8 +1,8 @@
 % HaskellXMLToolbox-UH.tex
 \begin{hcarentry}[updated]{Haskell XML Toolbox}
 \label{hxt}
-\report{Uwe Schmidt}%11/11
-\status{seventh major release (current release: 9.1)}
+\report{Uwe Schmidt}%05/12
+\status{seventh major release (current release: 9.2)}
 \makeheader
 
 \subsubsection*{Description}
@@ -65,6 +65,7 @@ hxt-9 mayor version.
 \item Tested with W3C XML validation suite
 \item Example programs
 \item Relax~NG schema validator
+\item XML Schema validator (next release)
 \item Lightweight regex library with full support of Unicode and XML Schema
   Datatype regular expression syntax
 \item An HXT Cookbook for using the toolbox and the arrow interface
@@ -75,15 +76,13 @@ hxt-9 mayor version.
 
 \subsubsection*{Current Work}
 
-In October 2011 a project has been started as part of a master thesis
-for an XML validator based on XML Schema. Experiences with developing
-the Relax-NG have shown, that such a project may be done within such a limited
-time. The XML picklers can be used to easily parse XML Schema an transform it
-into an AST. So the core work consists of developing an appropriate abstract
-syntax and to normalize, check and transform this AST before validating XML documents.
-Within this project the XML data type library already in use with Relax-NG is planned
-to be completed. In the current version, time and date data types are not yet supported.
-We expect to finish the work in March 2012.
+The master thesis and project implementing an XML Schema validator
+started in October 2011 has been finished. The validator will be released
+in a separate module hxt-xmlschema. Integration with hxt has still to be done,
+so the first release will be in May or June this year.
+The implementation will be rather complete, except the datatype library
+for XML Schema. Some of the time and date types are not yet included.
+With the next HXT release the master thesis will be published on the HXT homepage.
 
 \FurtherReading
 The Haskell XML Toolbox Web page

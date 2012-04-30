@@ -1,9 +1,9 @@
 % HolumbusSearchEngineFrame-UH.tex
 \begin{hcarentry}[updated]{Holumbus Search Engine Framework}
 \label{holumbus}
-\report{Uwe Schmidt}%11/11
-\participants{Timo~B.\ H\"ubel, Sebastian Gauck,
-  Stefan Schmidt, Sebastian Schr\"oder}
+\report{Uwe Schmidt}%05/12
+\participants{Timo~B.~Kranz, Sebastian Gauck,
+  Stefan Schmidt}
 \status{first release}
 \makeheader
 
@@ -57,16 +57,21 @@ and a distributed storage system.
 
 \subsubsection*{Current Work}
 
-There are two running projects. The first, a masters thesis done by Sebastian Schr\"oder,
-deals with the development of a framework for news systems. The functionality
-will be like with google news, but the target is to build news systems for specialized topics.
-We expect to finish this project at the end of 2011.
+Currently there are activities to optimize the index structures
+of the framework. In the past there have been problems with the
+space requirements during indexing. The data structures and evaluation
+strategies have been optimized to prevent space leaks. A second index
+structure working with cryptographic keys for document identifiers
+is under construction. This will further simplify partial indexing and
+merging of indexes.
 
-In the second project a specialized search engine for our university web site has been built.
-The new aspect in this application is a specialized free text search for appointments, deadlines,
-announcements, meetings and other dates. There is a running prototype of this search engine.
-We expect to finish this work in November 2011 and then to use this engine as the official
-search engine of our university web site.
+The second project, a specialized search engine for the FH-Wedel web site has been finished
+ \url{http://w3w.fh-wedel.de/}. The new aspect in this application is a specialized
+free text search for appointments, deadlines,
+announcements, meetings and other dates.
+
+The Hayoo! and the FH-Wedel search engine have been adopted to run on top of the
+Snap framework \url{http://snapframework.com}.
 
 \FurtherReading
 
@@ -74,7 +79,7 @@ The Holumbus web page
 (\url{http://holumbus.fh-wedel.de/})
 includes downloads, Git web interface, current status, requirements, 
 and documentation.
-Timo H\"ubel's master thesis describing the Holumbus index structure and
+Timo Kranz's master thesis describing the Holumbus index structure and
 the search engine is available at
 \url{http://holumbus.fh-wedel.de/branches/develop/doc/thesis-searching.pdf}.
 Sebastian Gauck's  thesis dealing with the crawler component is
