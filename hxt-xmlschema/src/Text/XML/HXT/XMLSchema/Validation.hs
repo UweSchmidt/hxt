@@ -11,9 +11,14 @@
 -}
 
 module Text.XML.HXT.XMLSchema.Validation
-  ( validateWithSchema
+  ( validateWithXmlSchema
+  , validateWithXmlSchema'
   , SValResult
-  , printSValResult
+  , SValEnv(..)
+  , XmlSchema
+  , runSVal
+  , testRoot
+  , createRootDesc
   )
 
 where
@@ -36,20 +41,18 @@ import Prelude                        hiding ( lookup )
 
 import Text.XML.HXT.Arrow.XmlRegex           ( matchXmlRegex )
 
-import Text.XML.HXT.Core                     ( QName
-                                             , localPart
-                                             , namePrefix
-                                             , qualifiedName
-                                             , XmlTree
-                                             , XmlTrees
-                                             , SysConfigList
-                                             )
+import Text.XML.HXT.Core hiding              ( getElemName
+                                             , getAttrName
+                                             , getAttrValue
+                                             , getChildren
+                                             , isElem
+                                )
+import qualified Text.XML.HXT.Core           as C
 
-import Text.XML.HXT.XMLSchema.Loader         ( loadDefinition
-                                             , loadInstance
-                                             )
-import Text.XML.HXT.XMLSchema.ValidationTypes
+import Text.XML.HXT.XMLSchema.AbstractSyntax ( XmlSchema )
+import Text.XML.HXT.XMLSchema.Loader         ( loadDefinition )
 import Text.XML.HXT.XMLSchema.Transformation ( createRootDesc )
+import Text.XML.HXT.XMLSchema.ValidationTypes
 import Text.XML.HXT.XMLSchema.XmlUtils
 
 -- ----------------------------------------
@@ -207,6 +210,8 @@ testRoot r
 
 -- ----------------------------------------
 
+{- old stuff
+
 -- | Loads the schema definition and instance documents and invokes validation
 validateWithSchema :: SysConfigList -> String -> String -> IO SValResult
 validateWithSchema config defUri instUri
@@ -220,17 +225,46 @@ validateWithSchema config defUri instUri
                    Nothing -> return (False, [("/", "Could not process instance file.")])
                    Just i  -> return $ runSVal (SValEnv "" $ createRootDesc d) $ testRoot i
 
+-- -}
+
 -- ----------------------------------------
 
--- | Prints validation results to stdout
-printSValResult :: SValResult -> IO ()
-printSValResult (status, l)
-  = do
-    if status
-      then putStrLn "\nok.\n"
-      else putStrLn "\nerrors occurred:\n"
-    mapM_ (\ (a, b) -> putStrLn $ a ++ "\n" ++ b ++ "\n") l
-    return ()
+validateWithXmlSchema' :: XmlSchema -> XmlTree -> SValResult
+validateWithXmlSchema' schema doc
+    = runSVal (SValEnv "" $ createRootDesc schema) $ testRoot doc
+
+-- ----------------------------------------
+
+validateWithXmlSchema :: SysConfigList -> String -> IOSArrow XmlTree XmlTree
+validateWithXmlSchema config uri
+    = validate $< ( ( constA uri
+                      >>>
+                      loadDefinition config
+                    )
+                    `orElse`
+                    ( issueFatal ("Could not process XML Schema definition from " ++ show uri)
+                      >>>
+                      none
+                    )
+                  )
+    where
+      validate schema
+          = ( traceMsg 1 "validate document with XML Schema"
+              >>>
+              C.getChildren >>> C.isElem	-- select document root element
+              >>>
+              arr (validateWithXmlSchema' schema)
+              >>>
+              perform ( arrL snd
+                        >>>
+                        ( issueErr $< arr (\ (xp, e) -> xp ++ " : " ++ e) )
+                      )
+              >>>
+              traceMsg 1 "document validation done"
+              >>>
+              isA ( (== True) . fst)
+            )
+            `guards` this
 
 -- ----------------------------------------
 

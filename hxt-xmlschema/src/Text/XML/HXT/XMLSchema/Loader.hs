@@ -12,79 +12,8 @@
 -}
 
 module Text.XML.HXT.XMLSchema.Loader
-  ( loadDefinition
-  , loadInstance
-  )
+  ( loadDefinition )
 where
-
-import Text.XML.HXT.XMLSchema.AbstractSyntax
-
-import Text.XML.HXT.Core                       ( PU
-                                               , xpText
-                                               , xpAttr
-                                               , xpWrap
-                                               , xpAlt
-                                               , xpList
-                                               , xpOption
-                                               , xpPair
-                                               , xpTriple
-                                               , xpElemNS
-                                               , xpFilterCont
-                                               , xpFilterAttr
-
-                                               , QName
-                                               , mkQName
-                                               , localPart
-                                               , setLocalPart'
-                                               , qualifiedName
-                                               , namespaceUri
-                                               , newXName
-
-                                               , neg
-                                               , none
-                                               , (<+>)
-                                               , (>>>)
-                                               , hasNameWith
-                                               , hasQName
-
-                                               , runX
-                                               , withValidate
-                                               , withRemoveWS
-                                               , withPreserveComment
-                                               , withCheckNamespaces
-                                               , yes
-                                               , no
-                                               , traceMsg
-                                               , SysConfigList
-
-                                               , LA
-                                               , ($<)
-                                               , unXN
-                                               , fromLA
-                                               , when
-                                               , isElem
-                                               , hasName
-                                               , processTopDown
-                                               , processAttrl
-                                               , processWithNsEnvWithoutAttrl
-                                               , changeAttrValue
-                                               , xmlXName
-                                               , xmlNamespaceXName
-                                               , xmlnsXName
-                                               , xmlnsNamespaceXName
-                                               , xunpickleVal
-
-                                               , XmlTree
-                                               , readDocument
-                                               , documentStatusOk
-                                               , (&&&)
-                                               , getAttrValue
-                                               , getChildren
-                                               )
-
-import Text.XML.HXT.Arrow.XmlState.URIHandling ( expandURIString )
-
-import Control.Applicative                     ( (<$>) )
 
 import Data.List                               ( isPrefixOf
                                                , findIndex
@@ -97,7 +26,11 @@ import Data.Map                                ( empty
                                                , fromList
                                                )
 
-import Prelude hiding (lookup)
+import Prelude hiding                          ( lookup )
+
+import Text.XML.HXT.XMLSchema.AbstractSyntax
+
+import Text.XML.HXT.Core
 
 -- ----------------------------------------
 
@@ -106,6 +39,7 @@ data XmlSchema'        = XmlSchema'
                        { targetNS :: Maybe Namespace
                        , parts    :: [XmlSchemaPart]
                        }
+                       deriving (Show)
 
 -- | Helper type for unpickling schema definition parts
 data XmlSchemaPart     = In {unIn :: Include}
@@ -115,7 +49,12 @@ data XmlSchemaPart     = In {unIn :: Include}
                        | Gr {unGr :: (QName, Group)}
                        | At {unAt :: Attribute}
                        | Ag {unAg :: (QName, AttributeGroup)}
+                       deriving (Show)
 
+-- ----------------------------------------
+--
+-- the pickler for reading an XML schema
+--
 -- ----------------------------------------
 
 -- | The XML Schema namespace
@@ -644,11 +583,15 @@ mkAbsPath anchor incl
                  Nothing -> l
                  Just l' -> l'
 
+{- version witout arrows
+
 -- | Loads a schema definition from a given url
 loadDefinition :: SysConfigList -> String -> IO (Maybe XmlSchema)
 loadDefinition config uri
   = do
     s' <- runX (
+                setTraceLevel 2
+                >>>
                 readDocument ( config ++
                                [ withValidate yes        -- validate source
                                , withRemoveWS yes        -- remove redundant whitespace
@@ -665,9 +608,13 @@ loadDefinition config uri
                 >>>
                 traceMsg 2 ("start unpickling schema for " ++ show uri) 
                 >>>
+                traceValue 2 show
+                >>>
                 (getAttrValue "transfer-URI" &&& xunpickleVal xpXmlSchema')
                 >>>
                 traceMsg 2 "unpickling schema done"
+                >>>
+                traceValue 2 show
                )
     if null s'
       then return Nothing
@@ -699,9 +646,81 @@ loadDefinition config uri
              case s' of
                Nothing -> return Nothing
                Just s  -> return $ Just $ applyRedefs s redefs
+-- -}
+-- ------------------------------------------------------------
+--
+-- | the main function for reading an XML schema definition
 
+loadDefinition :: SysConfigList -> IOSArrow String XmlSchema
+loadDefinition config
+  = runInLocalURIContext
+    ( setTraceLevel 2
+      >>>
+      ( ( \ uri ->
+          readDocument ( config ++
+                         [ withValidate yes        -- validate source (or at least apply entity subst.)
+                         , withRemoveWS yes        -- remove redundant whitespace
+                         , withPreserveComment no  -- keep comments
+                         , withCheckNamespaces yes -- check namespaces
+                         ]
+                       ) uri
+        ) $< this
+      )
+      >>>
+      traceMsg 2 "propagating namespaces into XMLSchema attribute values"
+      >>>
+      fromLA propagateTargetNamespace
+      >>>
+      fromLA propagateXmlSchemaNamespaces
+      >>>
+      ( ( \ baseUri ->
+          traceMsg 2 ("start unpickling schema for " ++ show baseUri) 
+          >>>
+          traceValue 3 show
+          >>>
+          xunpickleVal xpXmlSchema'
+          >>>
+          traceMsg 2 "unpickling schema done"
+          >>>
+          traceValue 3 show
+          >>>
+          arr toSchema
+          >>>
+          ( resolveIncludes $< arr (map (mkAbsPath baseUri) . sIncludes) )
+        ) $< getAttrValue "transfer-URI"
+      )
+    )
+    where
+      loadDefinition' = loadDefinition config
 
--- | Propagates the target namespace
+      -- | Processes a list of external references
+      resolveIncludes :: Includes -> IOSArrow XmlSchema XmlSchema
+      resolveIncludes []
+          = this
+      resolveIncludes (x : xs)
+          = (this &&& resolveInclude x)
+            >>>
+            arr (uncurry mergeSchemata)
+            >>>
+            resolveIncludes xs
+
+      -- | Processes a single external reference
+      resolveInclude :: Include -> IOSArrow XmlSchema XmlSchema -- TODO: apply namespaces
+      resolveInclude (Incl loc)
+          = constA loc >>> loadDefinition'
+      resolveInclude (Imp (loc, _ns)) -- second param: ns      
+          = constA loc >>> loadDefinition'
+      resolveInclude (Redef (loc, redefs))
+          = constA loc >>> loadDefinition'
+            >>>
+            arr (\ s -> applyRedefs s redefs)
+
+-- ------------------------------------------------------------
+
+-- | Propagates the target namespace into attribute values of an .xsd tree
+--
+-- called after reading the .xsd and before pickling the DOM tree
+
 propagateTargetNamespace :: LA XmlTree XmlTree
 propagateTargetNamespace
   = propagate $< getTargetNS
@@ -775,7 +794,13 @@ isUnion = isXSElem "union" -- TODO: memberTypes: List of QNames
 isExtension :: LA XmlTree XmlTree
 isExtension = isXSElem "extension"
 
+-- ------------------------------------------------------------
+--
 -- | Propagates namespaces which are defined by xmlns attributes
+--   into attribute values of an .xsd tree
+--
+-- called after reading the .xsd and before pickling the DOM tree
+
 propagateXmlSchemaNamespaces :: LA XmlTree XmlTree
 propagateXmlSchemaNamespaces
   = processWithNsEnvWithoutAttrl propagate
@@ -783,8 +808,18 @@ propagateXmlSchemaNamespaces
     , (xmlnsXName, xmlnsNamespaceXName)
     ]
     where
-    hasPropAttr = isRestriction <+> isList <+> isUnion <+> isExtension <+> isElement <+> isAttribute <+> isGroup <+> isAttributeGroup
-    isPropAttr  = hasName "base" <+> hasName "itemType" <+> hasName "type" <+> hasName "ref"
+    hasPropAttr = isRestriction
+                  <+> isList
+                  <+> isUnion
+                  <+> isExtension
+                  <+> isElement
+                  <+> isAttribute
+                  <+> isGroup
+                  <+> isAttributeGroup
+    isPropAttr  = hasName "base"
+                  <+> hasName "itemType"
+                  <+> hasName "type"
+                  <+> hasName "ref"
     propagate env
       = addXns `when` hasPropAttr
         where
@@ -797,34 +832,5 @@ propagateXmlSchemaNamespaces
               | null lp'  = ""
               | otherwise = px'
 
--- ----------------------------------------
-
--- | Loads a schema instance from a given url
-loadInstance :: SysConfigList -> String -> IO (Maybe XmlTree)
-loadInstance config uri
-  = do
-    s <- runX ( readDocument ( config ++
-                               -- these options can't are mandatory
-                               [ withValidate yes        -- validate source
-                               , withRemoveWS yes        -- remove redundant whitespace
-                               , withPreserveComment no  -- remove comments
-                               , withCheckNamespaces yes -- check namespaces
-                               ]
-                             ) uri
-                >>>
-                documentStatusOk
-                >>>
-                getChildren
-                >>>
-                isElem
-              )
-    case s of
-      [] -> return Nothing
-      (t : _) ->  return $ Just t
-{-
-    if (fst $ head s) == ""
-      then return $ Just $ snd $ head s
-      else return Nothing
--}
 -- ----------------------------------------
 

@@ -11,22 +11,85 @@
 -}
 
 module Text.XML.HXT.XMLSchema.TestSuite
-
-  ( runTestSuite )
+  ( runTestSuite
+  , validateWithSchema
+  , printSValResult
+  )
 
 where
 
-import Text.XML.HXT.Core                 ( withTrace )
+import Text.XML.HXT.Core
 
-import Text.XML.HXT.XMLSchema.Validation ( validateWithSchema
-                                         , SValResult
-                                         )
+import Text.XML.HXT.XMLSchema.Validation
+import Text.XML.HXT.XMLSchema.Loader     ( loadDefinition )
 
 import Test.HUnit                        ( Test (TestList)
                                          , (~:)
                                          , (@?=)
                                          , runTestTT
                                          )
+
+-- ----------------------------------------
+
+-- | Loads the schema definition and instance documents and invokes validation
+validateWithSchema :: SysConfigList -> String -> String -> IO SValResult
+validateWithSchema config defUri instUri
+  = do
+    def <- loadDefinition' config defUri
+    case def of
+      Nothing -> return (False, [("/", "Could not process definition file.")])
+      Just d  -> do
+                 inst <- loadInstance config instUri
+                 case inst of
+                   Nothing -> return (False, [("/", "Could not process instance file.")])
+                   Just i  -> return $ runSVal (SValEnv "" $ createRootDesc d) $ testRoot i
+
+loadDefinition' :: SysConfigList -> String -> IO (Maybe XmlSchema)
+loadDefinition' config uri
+    = do d <- runX ( constA uri >>> loadDefinition config)
+         case d of
+           [] -> return Nothing
+           _  -> return $ Just $ head d
+
+-- | Loads a schema instance from a given url
+loadInstance :: SysConfigList -> String -> IO (Maybe XmlTree)
+loadInstance config uri
+  = do
+    s <- runX ( readDocument ( config ++
+                               -- these options can't are mandatory
+                               [ withValidate yes        -- validate source
+                               , withRemoveWS yes        -- remove redundant whitespace
+                               , withPreserveComment no  -- remove comments
+                               , withCheckNamespaces yes -- check namespaces
+                               ]
+                             ) uri
+                >>>
+                documentStatusOk
+                >>>
+                getChildren
+                >>>
+                isElem
+              )
+    case s of
+      [] -> return Nothing
+      (t : _) ->  return $ Just t
+{-
+    if (fst $ head s) == ""
+      then return $ Just $ snd $ head s
+      else return Nothing
+-}
+
+-- ----------------------------------------
+
+-- | Prints validation results to stdout
+printSValResult :: SValResult -> IO ()
+printSValResult (status, l)
+  = do
+    if status
+      then putStrLn "\nok.\n"
+      else putStrLn "\nerrors occurred:\n"
+    mapM_ (\ (a, b) -> putStrLn $ a ++ "\n" ++ b ++ "\n") l
+    return ()
 
 -- ----------------------------------------
 
