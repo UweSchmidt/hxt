@@ -50,8 +50,6 @@ import Control.Monad.Reader        ( ReaderT
                                    , ask
                                    )
 
-import Control.Monad.Writer        ( tell )
-
 import Control.Applicative         ( (<$>) )
 
 import Data.Maybe                  ( fromMaybe )
@@ -77,31 +75,12 @@ runST schema st = runIdentity $ runReaderT st schema
 
 -- ----------------------------------------
 
--- | Creates a SimpleType test function which creates a warning and always succeeds
-mkWarnSTTF :: String -> STTF
-mkWarnSTTF s
-  = \ _ -> do
-           env <- ask
-           tell [(xpath env, s)]
-           return True
-
--- | Creates a SimpleType test function which creates an error and always fails
-mkErrorSTTF :: String -> STTF
-mkErrorSTTF s
-  = \ _ -> do
-           env <- ask
-           tell [(xpath env, s)]
-           return False
-
 -- | Creates a SimpleType test function which does not allow any text
 mkNoTextSTTF :: STTF
 mkNoTextSTTF
   = \ s -> do
-           env <- ask
            if not $ null $ unwords $ words s
-             then do
-                  tell [(xpath env, "no text allowed here.")]
-                  return False
+             then mkErrorSTTF' "no text allowed here."
              else return True
 
 -- | Creates a SimpleType test function which always succeeds
@@ -128,10 +107,7 @@ mkW3CCheckSTTF n p
     then mkWarnSTTF $ "no check implemented for W3C type " ++ (localPart n) ++ "."
     else \ v -> case datatypeAllowsW3C (localPart n) p v of
                   Nothing  -> return True
-                  Just msg -> do
-                              env <- ask
-                              tell [(xpath env, msg)]
-                              return False
+                  Just msg -> mkErrorSTTF' msg
 
 -- | Creates the SimpleType test function for a given type reference by name
 lookupSTTF :: QName -> ST STTF
@@ -201,6 +177,7 @@ rstrToSTTF (tref, rlist)
 stToSTTF :: SimpleType -> ST STTF
 stToSTTF (Restr rstr)
   = rstrToSTTF rstr
+
 stToSTTF (Lst tref)
   = do
     baseTF  <- case tref of
@@ -209,10 +186,9 @@ stToSTTF (Lst tref)
     return $ \ x -> do
                     env <- ask
                     if not $ and $ fst $ runSVal env $ mapM baseTF $ words x
-                      then do
-                           tell [(xpath env, "value does not match list type.")]
-                           return False
+                      then mkErrorSTTF' "value does not match list type."
                       else return True
+
 stToSTTF (Un ts)
   = do
     trefTFs <- case memberTypes ts of
@@ -222,9 +198,7 @@ stToSTTF (Un ts)
     return $ \ x -> do
                     env <- ask
                     if not $ or $ fst $ runSVal env $ mapM (\ f -> f x) $ trefTFs ++ tdefTFs
-                      then do
-                           tell [(xpath env, "value does not match union type.")]
-                           return False
+                      then mkErrorSTTF' "value does not match union type."
                       else return True
 
 -- ----------------------------------------
@@ -240,6 +214,7 @@ createAttrMapEntry (AttrRef n)
                       let errorSTTF = mkErrorSTTF $
                                       "attribute validation error: illegal attribute reference in schema file"
                       return (n, (False, errorSTTF))
+
 createAttrMapEntry (AttrDef (AttributeDef n tdef use))
   = do
     let req = maybe False (== "required") use
@@ -582,3 +557,4 @@ createRootDesc :: XmlSchema -> ElemDesc
 createRootDesc schema
   = runST schema createRootDesc'
 
+-- ----------------------------------------

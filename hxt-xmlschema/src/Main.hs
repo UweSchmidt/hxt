@@ -6,7 +6,6 @@
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
    Stability  : experimental
    Portability: portable
-   Version    : $Id$
 
    A test prog for the XML schema validation
 -}
@@ -30,7 +29,7 @@ printUsage
   = do
     putStrLn $ "\nUsage:\n\n"
             ++ "validateWithSchema -runTestSuite\n"
-            ++ "> Run the hxt-xmlschema test suite (for development purposes).\n\n"
+            ++ "> Run the hxt-xmlschema test suite (cwd must be the hxt-xmlschema dir).\n\n"
             ++ "validateWithSchema <schemaFileURI> <instanceFileURI>\n"
             ++ "> Test an instance file against a schema file.\n"
     return ()
@@ -67,12 +66,3 @@ validateDoc config schemaUri docUri
       validateDocumentWithXmlSchema config schemaUri
 
 -- ----------------------------------------
-{-
-test1 :: IO [XmlTree]
-test1
-    = runX $ validateDoc [] "../tests/simpleTypesElems.xsd" "../tests/simpleTypesElemsOk.xml"
-
-test2 :: IO [XmlTree]
-test2
-    = runX $ validateDoc [] "../tests/simpleTypesElems.xsd" "../tests/simpleTypesElemsErrors.xml"
--}

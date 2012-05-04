@@ -105,7 +105,7 @@ parseXmlDocument validateD substDTD substHTML validateRX
         ( ifA (fromLA getDTDSubset)
           ( processDTDandEntities
             >>>
-            ( if validate'			-- validation only possible if DTD there
+            ( if validate'			-- validation only possible if there is a DTD
               then validateDocument
               else this
             )

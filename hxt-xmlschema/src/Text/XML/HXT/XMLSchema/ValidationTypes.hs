@@ -13,7 +13,10 @@
 module Text.XML.HXT.XMLSchema.ValidationTypes
 where
 
-import Text.XML.HXT.Core           ( QName )
+import Text.XML.HXT.Core           ( QName
+                                   , c_warn
+                                   , c_err
+                                   )
 
 import Text.XML.HXT.Arrow.XmlRegex ( XmlRegex )
 
@@ -23,10 +26,12 @@ import Control.Monad.Identity      ( Identity
 
 import Control.Monad.Reader        ( ReaderT
                                    , runReaderT
+                                   , asks
                                    )
 
 import Control.Monad.Writer        ( WriterT
                                    , runWriterT
+                                   , tell
                                    )
 
 import Data.Map                    ( Map )
@@ -73,8 +78,11 @@ type STTF          = String -> SVal Bool
 -- | Validation result contains the validation status and log
 type SValResult    = (Bool, SValLog)
 
--- | Validation log is a list of XPaths and messages
-type SValLog       = [(XPath, String)]
+-- | Validation log is a list of error levels, XPaths and messages
+type SValLog       = [SValLogMsg]
+
+-- | Validation log message
+type SValLogMsg    = (Int, XPath, String)
 
 -- | Schema validation monad
 type SVal a        = ReaderT SValEnv (WriterT SValLog Identity) a
@@ -84,3 +92,34 @@ runSVal :: SValEnv -> SVal a -> (a, SValLog)
 runSVal env val = runIdentity $ runWriterT $ runReaderT val env
 
 -- ----------------------------------------
+
+-- | Creates a SimpleType test function which creates a warning and always succeeds
+mkWarnSTTF :: String -> STTF
+mkWarnSTTF msg
+  = \ _ -> mkLogSTTF c_warn id msg
+
+mkWarnSTTF'' :: (XPath -> XPath) -> String -> SVal Bool
+mkWarnSTTF''
+    = mkLogSTTF c_warn
+
+-- | Creates a SimpleType test function which creates an error and always fails
+mkErrorSTTF :: String -> STTF
+mkErrorSTTF msg
+  = \ _ -> mkErrorSTTF' msg
+
+mkErrorSTTF' :: STTF
+mkErrorSTTF' msg
+    = mkLogSTTF c_err id msg
+
+mkErrorSTTF'' :: (XPath -> XPath) -> String -> SVal Bool
+mkErrorSTTF''
+    = mkLogSTTF c_err
+
+mkLogSTTF :: Int -> (XPath -> XPath) -> String -> SVal Bool
+mkLogSTTF lev fpos msg
+  = do pos <- asks xpath
+       tell [(lev, fpos pos, msg)]
+       return (lev < c_err)
+
+-- ----------------------------------------
+

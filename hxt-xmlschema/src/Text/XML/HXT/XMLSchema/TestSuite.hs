@@ -11,11 +11,7 @@
 -}
 
 module Text.XML.HXT.XMLSchema.TestSuite
-  ( runTestSuite
-  , validateWithSchema
-  , printSValResult
-  )
-
+  ( runTestSuite )
 where
 
 import Text.XML.HXT.Core
@@ -31,17 +27,25 @@ import Test.HUnit                        ( Test (TestList)
 
 -- ----------------------------------------
 
+type SValResult'   = (Bool, [(String, String)])
+
+toSValResult' :: SValResult -> SValResult'
+toSValResult' (t, xs)
+    = (t, map (\ (_, x2, x3) -> (x2, x3)) xs)
+
+-- ----------------------------------------
+
 -- | Loads the schema definition and instance documents and invokes validation
 validateWithSchema :: SysConfigList -> String -> String -> IO SValResult
 validateWithSchema config defUri instUri
   = do
     def <- loadDefinition' config defUri
     case def of
-      Nothing -> return (False, [("/", "Could not process definition file.")])
+      Nothing -> return (False, [(c_err, "/", "Could not process definition file.")])
       Just d  -> do
                  inst <- loadInstance config instUri
                  case inst of
-                   Nothing -> return (False, [("/", "Could not process instance file.")])
+                   Nothing -> return (False, [(c_err, "/", "Could not process instance file.")])
                    Just i  -> return $ runSVal (SValEnv "" $ createRootDesc d) $ testRoot i
 
 loadDefinition' :: SysConfigList -> String -> IO (Maybe XmlSchema)
@@ -80,10 +84,11 @@ loadInstance config uri
 -}
 
 -- ----------------------------------------
+{- currently not used
 
 -- | Prints validation results to stdout
-printSValResult :: SValResult -> IO ()
-printSValResult (status, l)
+printSValResult' :: SValResult' -> IO ()
+printSValResult' (status, l)
   = do
     if status
       then putStrLn "\nok.\n"
@@ -91,17 +96,18 @@ printSValResult (status, l)
     mapM_ (\ (a, b) -> putStrLn $ a ++ "\n" ++ b ++ "\n") l
     return ()
 
+-- -}
 -- ----------------------------------------
 
 -- | Create a HUnit test for SValResults
-mkSValTest :: String -> String -> String-> SValResult -> Test
+mkSValTest :: String -> String -> String-> SValResult' -> Test
 mkSValTest label descName instName expectedRes
   = label ~:
     do
     res <- validateWithSchema [ withTrace 0 ]
            ("./tests/" ++ descName ++ ".xsd") $
             "./tests/" ++ instName ++ ".xml"
-    res @?= expectedRes
+    (toSValResult' res) @?= expectedRes
 
 -- | A test for SimpleTypes as element values which match
 simpleTypesElemsOk :: Test

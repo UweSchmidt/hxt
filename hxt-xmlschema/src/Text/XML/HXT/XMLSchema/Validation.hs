@@ -28,7 +28,6 @@ where
 import Control.Monad.Reader                  ( ask
                                              , local
                                              )
-import Control.Monad.Writer                  ( tell )
 
 import Data.List                             ( partition )
 import Data.Map                              ( Map
@@ -70,41 +69,48 @@ type PrefixMap     = Map String String
 
 -- | Computes a list of required attributes
 getReqAttrNames :: AttrMap -> [QName]
-getReqAttrNames m = map fst $ filter (fst . snd) $ toList m
+getReqAttrNames m
+    = map fst $ filter (fst . snd) $ toList m
 
 -- | Checks list inclusion with a list of required attributes for a list of attributes
 hasReqAttrs :: [QName] -> [QName] -> SVal Bool
 hasReqAttrs [] _
   = return True
+
 hasReqAttrs (x:xs) attrs
-  = do
-    env <- ask
-    if x `notElem` attrs
-      then do
-           tell [((xpath env) ++ "/@" ++ (qualifiedName x), "required attribute is missing.")]
-           _ <- hasReqAttrs xs attrs
-           return False
-      else hasReqAttrs xs attrs
+    | x `notElem` attrs
+        = mkErrorSTTF''
+              (++ ("/@" ++ qualifiedName x))
+              "required attribute is missing."
+          >>
+          hasReqAttrs xs attrs
+          >>
+          return False
+
+    | otherwise
+        = hasReqAttrs xs attrs
 
 -- | Checks whether a list of attributes is allowed for an element and checks each attribute's value
 checkAllowedAttrs :: [(QName, String)] -> SVal Bool
 checkAllowedAttrs []
   = return True
+
 checkAllowedAttrs ((n, val):xs)
   = do
     env <- ask
     let (am, wp) = attrDesc $ elemDesc env
     res <- case lookup n am of
-             Nothing      -> if or $ map (\ f -> f n) wp
-                               then do
-                                    tell [((xpath env) ++ "/@" ++ (qualifiedName n),
-                                           "no check implemented for attribute wildcard's content.")]
-                                           -- TODO: check attribute wildcard's content?
-                                    return True
-                               else do
-                                    tell [((xpath env) ++ "/@" ++ (qualifiedName n), "attribute not allowed here.")]
-                                    return False
-             Just (_, tf) -> local (const $ appendXPath ("/@" ++ (qualifiedName n)) env) $ tf val
+             Nothing
+                 -> if or $ map (\ f -> f n) wp
+                    then mkWarnSTTF''
+                             (++ ("/@" ++ qualifiedName n))
+                             "no check implemented for attribute wildcard's content."
+                         -- TODO: check attribute wildcard's content?
+                    else mkErrorSTTF''
+                             (++ ("/@" ++ qualifiedName n))
+                             "attribute not allowed here."
+             Just (_, tf)
+                 -> local (const $ appendXPath ("/@" ++ (qualifiedName n)) env) $ tf val
     rest <- checkAllowedAttrs xs
     return $ res && rest
 
@@ -124,10 +130,12 @@ testContentModel t
   = do
     env <- ask
     case matchXmlRegex (contentModel $ elemDesc env) t of
-      Nothing -> return True
-      Just msg-> do
-                 tell [(xpath env ++ "/*", "content does not match content model.\n" ++ msg)]
-                 return False
+      Nothing
+          -> return True
+      Just msg
+          -> mkErrorSTTF''
+                 (++ "/*")
+                 ("content does not match content model.\n" ++ msg)
 
 -- | Extends the validation environment's XPath
 appendXPath :: String -> SValEnv -> SValEnv
@@ -144,6 +152,7 @@ newDesc d env
 testElemChildren :: CountingTable -> XmlTrees -> SVal Bool
 testElemChildren _ []
   = return True
+
 testElemChildren t (x:xs)
   = do
     env <- ask
@@ -151,12 +160,13 @@ testElemChildren t (x:xs)
     let c = maybe 1 (+1) $ lookup n t
     let elemXPath = "/" ++ (qualifiedName n) ++ "[" ++ (show c) ++ "]"
     res <- case lookup n $ subElemDesc $ elemDesc env of
-             Nothing -> do
-                        tell [((xpath env) ++ elemXPath,
-                               "no check implemented for element wildcard's content.")]
-                               -- TODO: check element wildcard's content?
-                        return True
-             Just d  -> local (const (appendXPath elemXPath $ newDesc d env)) $ testElem x
+             Nothing
+                 -> mkWarnSTTF''
+                        (++ elemXPath)
+                        "no check implemented for element wildcard's content."
+                        -- TODO: check element wildcard's content?
+             Just d
+                 -> local (const (appendXPath elemXPath $ newDesc d env)) $ testElem x
     rest <- testElemChildren (insert n c t) xs
     return $ res && rest
 
@@ -173,9 +183,7 @@ testElem e
   = do
     env <- ask
     case (errmsg $ elemDesc env) of
-      Just msg -> do
-                  tell [(xpath env, msg)]
-                  return False
+      Just msg -> mkErrorSTTF' msg
       Nothing  -> do
                   attrRes <- testAttrs e
                   let content = getElemChildren e
@@ -183,9 +191,7 @@ testElem e
                   contModelRes <- if mixedContent $ elemDesc env
                                     then testContentModel tags
                                     else if (length tags > 0 && length text > 0)
-                                           then do
-                                                tell [(xpath env ++ "/*", "no mixed content allowed here.")]
-                                                return False
+                                           then mkErrorSTTF'' (++ "/*") "no mixed content allowed here."
                                            else testContentModel content
                   contRes <- if contModelRes
                                then do
@@ -210,25 +216,6 @@ testRoot r
   = do
     let (el, _) = extractPrefixMap r -- TODO: apply namespaces
     testElem $ mkRoot [] [el]
-
--- ----------------------------------------
-
-{- old stuff
-
--- | Loads the schema definition and instance documents and invokes validation
-validateWithSchema :: SysConfigList -> String -> String -> IO SValResult
-validateWithSchema config defUri instUri
-  = do
-    def <- loadDefinition config defUri
-    case def of
-      Nothing -> return (False, [("/", "Could not process definition file.")])
-      Just d  -> do
-                 inst <- loadInstance config instUri
-                 case inst of
-                   Nothing -> return (False, [("/", "Could not process instance file.")])
-                   Just i  -> return $ runSVal (SValEnv "" $ createRootDesc d) $ testRoot i
-
--- -}
 
 -- ----------------------------------------
 
@@ -279,6 +266,10 @@ validateWithSchema uri
                     )
                   )
     where
+      issueMsg (lev, xp, e)
+          = (if lev < c_err then issueWarn else issueErr) $
+            "At XPath " ++ xp ++ ": " ++ e
+
       validate schema
           = ( C.getChildren >>> C.isElem	-- select document root element
               >>>
@@ -288,10 +279,10 @@ validateWithSchema uri
               >>>
               perform ( arrL snd
                         >>>
-                        ( issueErr $< arr (\ (xp, e) -> xp ++ " : " ++ e) )
+                        ( issueMsg $< this )
                       )
               >>>
-              isA ( (== True) . fst)
+              isA ((== True) . fst)
             )
             `guards` this
 
