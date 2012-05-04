@@ -1,6 +1,6 @@
 -- arch-tag: Haskell XML Toolbox main description file
 Name:           hxt-xmlschema
-Version:        9.0.0
+Version:        9.3.0
 Synopsis:       The HXT XMLSchema validator
 Description:    The HXT XMLSchema validator
 License:        MIT
@@ -35,6 +35,15 @@ library
   exposed-modules:
     Text.XML.HXT.XMLSchema.Validation
 
+  other-modules:
+    Text.XML.HXT.XMLSchema.AbstractSyntax
+    Text.XML.HXT.XMLSchema.Loader
+    Text.XML.HXT.XMLSchema.Transformation
+    Text.XML.HXT.XMLSchema.ValidationTypes
+    Text.XML.HXT.XMLSchema.W3CDataTypeCheck
+    Text.XML.HXT.XMLSchema.W3CDataTypeCheckUtils
+    Text.XML.HXT.XMLSchema.XmlUtils
+
   hs-source-dirs: src
 
   ghc-options: -Wall
@@ -44,13 +53,15 @@ library
                  containers          >= 0.2   && < 1,
                  parsec              >= 2.1   && < 4,
                  network             >= 2.1   && < 3,
-                 hxt                 >= 9.2.3 && < 10,
+                 hxt                 >= 9.3.0 && < 10,
                  hxt-regex-xmlschema >= 9     && < 10,
-                 hxt-curl            >= 9.1.1 && < 10,
                  mtl                 >= 2     && < 3
 
 executable validateWithSchema
   main-is: Main.hs
+
+  other-modules:
+    Text.XML.HXT.XMLSchema.TestSuite
 
   hs-source-dirs: src
 

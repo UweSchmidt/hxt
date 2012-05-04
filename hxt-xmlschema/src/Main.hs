@@ -17,7 +17,7 @@ where
 
 import Text.XML.HXT.Core                 -- ( withTrace )
 import Text.XML.HXT.Curl                 ( withCurl )
-import Text.XML.HXT.XMLSchema.Validation ( validateWithXmlSchema )
+import Text.XML.HXT.XMLSchema.Validation ( validateDocumentWithXmlSchema )
 import Text.XML.HXT.XMLSchema.TestSuite  ( runTestSuite )
 
 import System.Environment                ( getArgs )
@@ -47,8 +47,11 @@ main
              then runTestSuite
              else printUsage
       2 -> runX ( validateDoc [ withCurl []
-                              , withTrace 2
-                              ] (argv !! 0) (argv !! 1) ) >> return ()
+                              , withTrace 1
+                              ] (argv !! 0) (argv !! 1)
+                  >>>
+                  writeDocument [ withIndent yes ] ""
+                ) >> return ()
       _ -> printUsage
 
 validateDoc :: SysConfigList -> String -> String -> IOSArrow a XmlTree
@@ -56,12 +59,12 @@ validateDoc config schemaUri docUri
     = readDocument ( config ++
                      [ withValidate yes        -- validate source
                      , withRemoveWS yes        -- remove redundant whitespace
-                     , withPreserveComment no  -- keep comments
+                     , withPreserveComment no  -- do'nt keep comments
                      , withCheckNamespaces yes -- check namespaces
                      ]
                    ) docUri
       >>>
-      validateWithXmlSchema config schemaUri
+      validateDocumentWithXmlSchema config schemaUri
 
 -- ----------------------------------------
 {-

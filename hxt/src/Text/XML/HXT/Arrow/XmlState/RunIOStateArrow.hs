@@ -95,6 +95,7 @@ initialSysEnv                   = XIOEnv
                                   , xioParseConfig       = initialParseConfig
                                   , xioOutputConfig      = initialOutputConfig
                                   , xioRelaxConfig       = initialRelaxConfig
+                                  , xioXmlSchemaConfig   = initialXmlSchemaConfig
                                   , xioCacheConfig       = initialCacheConfig
                                   }
 
@@ -158,6 +159,13 @@ initialRelaxConfig              = XIORxc
                                   , xioRelaxValidator           = dummyRelaxValidator
                                   }
 
+initialXmlSchemaConfig          :: XIOXmlSchemaConfig
+initialXmlSchemaConfig          = XIOScc
+                                  { xioXmlSchemaValidate        = False
+                                  , xioXmlSchemaSchema          = ""
+                                  , xioXmlSchemaValidator       = dummyXmlSchemaValidator
+                                  }
+
 initialCacheConfig              :: XIOCacheConfig
 initialCacheConfig              = XIOCch
                                    { xioBinaryCompression       = id
@@ -208,6 +216,14 @@ dummyRelaxValidator     =  issueFatal $
                            [ "RelaxNG validator not configured,"
                            , "please install package hxt-relaxng"
                            , " and use 'withRelaxNG' config option from this package"
+                           ]
+
+dummyXmlSchemaValidator :: IOSArrow b b
+dummyXmlSchemaValidator =  issueFatal $
+                           unlines $
+                           [ "XML Schema validator not configured,"
+                           , "please install package hxt-xmlschema"
+                           , " and use 'withXmlSchema' config option from this package"
                            ]
 
 dummyCacheRead          :: String -> IOSArrow b b

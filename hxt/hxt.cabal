@@ -1,6 +1,6 @@
 -- arch-tag: Haskell XML Toolbox main description file
 Name:           hxt
-Version:        9.2.3
+Version:        9.3.0
 Synopsis:       A collection of tools for processing XML with Haskell.
 Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
                 but introduces a more general approach for processing XML with Haskell.
@@ -16,7 +16,7 @@ Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
                 hxt-unicode contains encoding and decoding functions,
                 hxt-charproperties char properties for unicode and XML.
                 .
-                Changes to 9.2.2: XMLSchema related changes
+                Changes to 9.2.2: XMLSchema validation integrated
                 .
                 Changes to 9.2.1: user defined mime type handlers added
                 .

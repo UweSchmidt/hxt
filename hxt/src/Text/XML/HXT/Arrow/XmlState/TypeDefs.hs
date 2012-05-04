@@ -180,6 +180,7 @@ data XIOSysEnv          = XIOEnv  { xioTraceLevel               :: ! Int
                                   , xioParseConfig              :: ! XIOParseConfig
                                   , xioOutputConfig             :: ! XIOOutputConfig
                                   , xioRelaxConfig              :: ! XIORelaxConfig
+                                  , xioXmlSchemaConfig          :: ! XIOXmlSchemaConfig
                                   , xioCacheConfig              :: ! XIOCacheConfig
                                   }
 
@@ -235,6 +236,11 @@ data XIORelaxConfig     = XIORxc  { xioRelaxValidate            :: ! Bool
                                   , xioRelaxValidateInclude     :: ! Bool
                                   , xioRelaxCollectErrors       :: ! Bool
                                   , xioRelaxValidator           ::   IOSArrow XmlTree XmlTree
+                                  }
+
+data XIOXmlSchemaConfig = XIOScc  { xioXmlSchemaValidate        :: ! Bool
+                                  , xioXmlSchemaSchema          ::   String
+                                  , xioXmlSchemaValidator       ::   IOSArrow XmlTree XmlTree
                                   }
 
 data XIOCacheConfig     = XIOCch  { xioBinaryCompression        ::   CompressionFct
@@ -495,12 +501,42 @@ theRelaxCollectErrors           = theRelaxConfig
                                     , setS = \ x s -> s { xioRelaxCollectErrors = x}
                                     }
 
-theRelaxValidator                :: Selector XIOSysState (IOSArrow XmlTree XmlTree)
-theRelaxValidator                = theRelaxConfig
-                                   >>>
-                                   S { getS = xioRelaxValidator
-                                     , setS = \ x s -> s { xioRelaxValidator = x}
-                                     }
+theRelaxValidator               :: Selector XIOSysState (IOSArrow XmlTree XmlTree)
+theRelaxValidator               = theRelaxConfig
+                                  >>>
+                                  S { getS = xioRelaxValidator
+                                    , setS = \ x s -> s { xioRelaxValidator = x}
+                                    }
+
+-- ----------------------------------------
+
+theXmlSchemaConfig              :: Selector XIOSysState XIOXmlSchemaConfig
+theXmlSchemaConfig              = theSysEnv
+                                  >>>
+                                  S { getS = xioXmlSchemaConfig
+                                    , setS = \ x s -> s { xioXmlSchemaConfig = x}
+                                    }
+
+theXmlSchemaValidate            :: Selector XIOSysState Bool
+theXmlSchemaValidate            = theXmlSchemaConfig
+                                  >>>
+                                  S { getS = xioXmlSchemaValidate
+                                    , setS = \ x s -> s { xioXmlSchemaValidate = x}
+                                    }
+
+theXmlSchemaSchema              :: Selector XIOSysState String
+theXmlSchemaSchema              = theXmlSchemaConfig
+                                  >>>
+                                  S { getS = xioXmlSchemaSchema
+                                    , setS = \ x s -> s { xioXmlSchemaSchema = x}
+                                    }
+
+theXmlSchemaValidator           :: Selector XIOSysState (IOSArrow XmlTree XmlTree)
+theXmlSchemaValidator           = theXmlSchemaConfig
+                                  >>>
+                                  S { getS = xioXmlSchemaValidator
+                                    , setS = \ x s -> s { xioXmlSchemaValidator = x}
+                                    }
 
 -- ----------------------------------------
 

@@ -654,13 +654,11 @@ loadDefinition config uri
 loadDefinition :: SysConfigList -> IOSArrow String XmlSchema
 loadDefinition config
   = runInLocalURIContext
-    ( setTraceLevel 2
-      >>>
-      ( ( \ uri ->
+    ( ( ( \ uri ->
           readDocument ( config ++
                          [ withValidate yes        -- validate source (or at least apply entity subst.)
                          , withRemoveWS yes        -- remove redundant whitespace
-                         , withPreserveComment no  -- keep comments
+                         , withPreserveComment no  -- don't keep comments
                          , withCheckNamespaces yes -- check namespaces
                          ]
                        ) uri

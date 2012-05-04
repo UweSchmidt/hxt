@@ -11,7 +11,9 @@
 -}
 
 module Text.XML.HXT.XMLSchema.Validation
-  ( validateWithXmlSchema
+  ( validateDocumentWithXmlSchema
+
+    -- these are only used in test suite
   , validateWithXmlSchema'
   , SValResult
   , SValEnv(..)
@@ -48,6 +50,7 @@ import Text.XML.HXT.Core hiding              ( getElemName
                                              , isElem
                                 )
 import qualified Text.XML.HXT.Core           as C
+import Text.XML.HXT.Arrow.XmlState.TypeDefs
 
 import Text.XML.HXT.XMLSchema.AbstractSyntax ( XmlSchema )
 import Text.XML.HXT.XMLSchema.Loader         ( loadDefinition )
@@ -235,23 +238,51 @@ validateWithXmlSchema' schema doc
 
 -- ----------------------------------------
 
-validateWithXmlSchema :: SysConfigList -> String -> IOSArrow XmlTree XmlTree
-validateWithXmlSchema config uri
+validateDocumentWithXmlSchema :: SysConfigList -> String -> IOStateArrow s XmlTree XmlTree
+validateDocumentWithXmlSchema config schemaUri
+    = ( withoutUserState
+        $
+        localSysEnv
+        $
+        configSysVars (config ++ [setS theXmlSchemaValidate False])
+        >>>
+        traceMsg 1 ( "validating document with XML schema: " ++ show schemaUri )
+        >>>
+        ( ( validateWithSchema schemaUri
+            >>>
+            traceMsg 1 "document validation done, no errors found"
+          )
+          `orElse`
+          ( traceMsg 1 "document not valid, errors found"
+            >>>
+            setDocumentStatusFromSystemState "validating with XML schema"
+          )
+        )
+      )
+      `when`
+      documentStatusOk                                 -- only do something when document status is ok
+
+validateWithSchema :: String -> IOSArrow XmlTree XmlTree
+validateWithSchema uri
     = validate $< ( ( constA uri
                       >>>
-                      loadDefinition config
+                      traceMsg 1 ("reading XML schema definition from " ++ show uri)
+                      >>>
+                      loadDefinition []
+                      >>>
+                      traceMsg 1 ("XML schema definition read from " ++ show uri)
                     )
                     `orElse`
-                    ( issueFatal ("Could not process XML Schema definition from " ++ show uri)
+                    ( issueFatal ("Could not read XML Schema definition from " ++ show uri)
                       >>>
                       none
                     )
                   )
     where
       validate schema
-          = ( traceMsg 1 "validate document with XML Schema"
+          = ( C.getChildren >>> C.isElem	-- select document root element
               >>>
-              C.getChildren >>> C.isElem	-- select document root element
+              traceMsg 1 "document validation process started"
               >>>
               arr (validateWithXmlSchema' schema)
               >>>
@@ -259,8 +290,6 @@ validateWithXmlSchema config uri
                         >>>
                         ( issueErr $< arr (\ (xp, e) -> xp ++ " : " ++ e) )
                       )
-              >>>
-              traceMsg 1 "document validation done"
               >>>
               isA ( (== True) . fst)
             )

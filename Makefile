@@ -12,9 +12,9 @@ PL1	= hxt-charproperties \
 	  hxt-xslt \
 	  hxt-cache
 
-PL	= $(PL1) \
-          janus/janus-library
+PL	= $(PL1)
 
+#          janus/janus-library                # no longer maintained
 #                 hxt-filter                  # not maintained to work with hxt-9
 #                 hxt-binary                  # no longer required, integrated into hxt-9
 

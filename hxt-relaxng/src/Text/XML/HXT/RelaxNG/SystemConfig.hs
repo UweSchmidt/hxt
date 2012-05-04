@@ -35,7 +35,11 @@ withRelaxNG                     :: String -> SysConfig
 withRelaxNG s                   = setS (theRelaxValidate
                                         .&&&. theRelaxSchema
                                         .&&&. theRelaxValidator
-                                       ) (True, (s, validateDocumentWithRelaxSchema [] s))
+                                       ) ( not (null s)		-- null s turns off validation
+                                         , ( s
+                                           , validateDocumentWithRelaxSchema [] s
+                                           )
+                                         )
 
 withRelaxCheckRestr             ::  Bool -> SysConfig
 withRelaxCheckRestr             = setS theRelaxCheckRestr

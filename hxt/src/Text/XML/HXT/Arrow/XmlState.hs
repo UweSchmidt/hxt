@@ -104,7 +104,7 @@ module Text.XML.HXT.Arrow.XmlState
     , setMimeTypeTable
     , setMimeTypeTableFromFile
 
-    , -- System Configuration and options
+    , -- * System Configuration and Options
       yes
     , no
 

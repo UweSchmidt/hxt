@@ -55,7 +55,8 @@ import Text.XML.HXT.Arrow.XmlState.TypeDefs
 {- |
 the main document input filter
 
-this filter can be configured by a list of configuration options, a value of type 'Text.XML.HXT.XmlState.TypeDefs.SysConfig'
+this filter can be configured by a list of configuration options,
+a value of type 'Text.XML.HXT.XmlState.TypeDefs.SysConfig'
 
 for all available options see module 'Text.XML.HXT.XmlState.SystemConfig'
 
@@ -72,7 +73,8 @@ for all available options see module 'Text.XML.HXT.XmlState.SystemConfig'
 - @withSubstHTMLEntities yes\/no@ :
   switch on\/off entity substitution for general entities defined in HTML validation.
   Default is @no@.
-  Switching this option on and the validation and substDTDEntities off can lead to faster parsing, in that case
+  Switching this option on and the validation and substDTDEntities off can lead to faster parsing,
+  in that case
   reading the DTD documents is not longer necessary, HTML general entities are still substituted.
   Only used with XML parsed documents, not with HTML parsing.
 
@@ -222,7 +224,8 @@ readDocument'' src
           getSysVar (theParseByMimeType   .&&&.
                      theParseHTML         .&&&.
                      theAcceptedMimeTypes .&&&.
-                     theRelaxValidate
+                     theRelaxValidate     .&&&.
+                     theXmlSchemaValidate
                     )
         )
       )
@@ -276,7 +279,12 @@ readDocument'' src
             processDoc' mimeType options
           )
 
-    processDoc' mimeType (parseByMimeType, (parseHtml, (acceptedMimeTypes, validateWithRelax)))
+    processDoc' mimeType ( parseByMimeType
+                         , ( parseHtml
+                           , ( acceptedMimeTypes
+                             , ( validateWithRelax
+                               , validateWithXmlSchema
+                               ))))
         = ( if isAcceptedMimeType acceptedMimeTypes mimeType
             then ( processNoneEmptyDoc
                    ( ( parse $< getSysVar (theValidate              .&&&.
@@ -307,7 +315,7 @@ readDocument'' src
                                                         )
                               )
                               >>>
-                              relax
+                              relaxOrXmlSchema
                             )
                        else this
                      )
@@ -339,7 +347,13 @@ readDocument'' src
                                             (mi == mis || mis == "*")
                                           )
                                           || r
-        parse (validate, (substDTD, (substHTML, (removeNoneXml, (withTagSoup', withExpat')))))
+        parse ( validate
+              , ( substDTD
+                , ( substHTML
+                  , ( removeNoneXml
+                    , ( withTagSoup'
+                      , withExpat'
+                      )))))
             | not isXmlOrHtml           = if removeNoneXml
                                           then replaceChildren none             -- don't parse, if mime type is not XML nor HTML
                                           else this                             -- but remove contents when option is set
@@ -352,7 +366,11 @@ readDocument'' src
 
             | isXml                     = if withExpat'
                                           then parseXmlDocumentWithExpat
-                                          else parseXmlDocument validate substDTD substHTML validateWithRelax
+                                          else parseXmlDocument
+                                               validate
+                                               substDTD
+                                               substHTML
+                                               validateWithRelax
                                                                                 -- parse as XML
             | otherwise                 = this                                  -- suppress warning
 
@@ -363,25 +381,35 @@ readDocument'' src
 
             | withNamespaces
               ||
-              validateWithRelax         = propagateAndValidateNamespaces        -- RelaxNG requires correct namespaces
+              validateWithRelax
+              ||
+              validateWithXmlSchema
+                                        = propagateAndValidateNamespaces        -- RelaxNG and XML Schema require correct namespaces
 
             | otherwise                 = this
 
         canonicalize (preserveCmt, (canonicalize', withTagSoup'))
             | withTagSoup'              = this                                  -- tagsoup already removes redundant stuff
-            | validateWithRelax         = canonicalizeAllNodes
+            | validateWithRelax
+              ||
+              validateWithXmlSchema     = canonicalizeAllNodes                  -- no comments in schema validation
+
             | canonicalize'
               &&
               preserveCmt               = canonicalizeForXPath
             | canonicalize'             = canonicalizeAllNodes
             | otherwise                 = this
 
-        relax
+        relaxOrXmlSchema
+            | validateWithXmlSchema     = withoutUserState $< getSysVar theXmlSchemaValidator
             | validateWithRelax         = withoutUserState $< getSysVar theRelaxValidator
             | otherwise                 = this
 
         whitespace (removeWS, withTagSoup')
-            | removeWS
+            | ( removeWS
+                ||
+                validateWithXmlSchema                                           -- XML Schema does not like WS
+              )
               &&
               not withTagSoup'          = removeDocWhiteSpace                   -- tagsoup already removes whitespace
             | otherwise                 = this
