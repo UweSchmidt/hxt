@@ -31,8 +31,8 @@ import           Network.URI            ( unEscapeString
 import           System.IO.Error        ( ioeGetErrorString
                                         )
 import           System.Directory       ( doesFileExist
-                                        , getPermissions
-                                        , readable
+                                        -- , getPermissions
+                                        -- , readable
                                         )
 import           Text.XML.HXT.DOM.XmlKeywords
 
@@ -66,8 +66,9 @@ getCont strictInput source
       case source'' of
            Nothing -> return $ fileErr "file not found"
            Just fn -> do
-                      perm <- getPermissions fn
-                      if not (readable perm)
+                      -- perm <- getPermissions fn  -- getPermission may fail
+                      -- if not (readable perm)
+                      if False
                          then return $ fileErr "file not readable"
                          else do
                               c <- try $
