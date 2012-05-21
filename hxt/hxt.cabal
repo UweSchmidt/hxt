@@ -16,11 +16,11 @@ Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
                 hxt-unicode contains encoding and decoding functions,
                 hxt-charproperties char properties for unicode and XML.
                 .
-                Changes to 9.2.2: XMLSchema validation integrated
+                Changes from 9.2.2: XMLSchema validation integrated
                 .
-                Changes to 9.2.1: user defined mime type handlers added
+                Changes from 9.2.1: user defined mime type handlers added
                 .
-                Changes to 9.2.0: New warnings from ghc-7.4 removed
+                Changes from 9.2.0: New warnings from ghc-7.4 removed
 License:        MIT
 License-file:   LICENSE
 Author:         Uwe Schmidt, Martin Schmidt, Torben Kuseler
