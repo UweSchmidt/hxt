@@ -55,7 +55,9 @@ import System.IO                                ( Handle
                                                 , stdout
                                                 )
 
-import System.IO.Error                          ( try )
+import Control.Exception                        ( try
+                                                , SomeException
+                                                )
 
 -- ------------------------------------------------------------
 --
@@ -65,7 +67,7 @@ putXmlDocument  :: Bool -> String -> IOStateArrow s XmlTree XmlTree
 putXmlDocument textMode dst
     = perform ( xshow getChildren
                 >>>
-                arrIO (\ s -> try ( hPutDocument (\h -> hPutStrLn h s)))
+                arrIO (\ s -> try' ( hPutDocument (\h -> hPutStrLn h s)))
                 >>>
                 ( ( traceMsg 1 ("io error, document not written to " ++ outFile)
                     >>>
@@ -81,6 +83,9 @@ putXmlDocument textMode dst
                 )
               )
       where
+      try' :: IO a -> IO (Either SomeException a)
+      try' = try
+
       isStdout  = null dst || dst == "-"
 
       outFile   = if isStdout

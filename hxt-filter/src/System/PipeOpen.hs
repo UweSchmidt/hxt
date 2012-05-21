@@ -2,15 +2,14 @@
 
 {- |
    Module     : System.PipeOpen
-   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   Copyright  : Copyright (C) 2012 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe\@fh-wedel.de)
    Stability  : experimental
    Portability: none portable
-   Version    : $Id: PipeOpen.hs,v 1.2 2005/09/02 17:09:39 hxml Exp $
 
-pipe open implemented with System.Process functions
+   pipe open implemented with System.Process functions
 
 -}
 
@@ -20,7 +19,7 @@ module System.PipeOpen
     ( popen )
 where
 
-import IO
+import System.IO
     ( hGetContents
     , hClose
     )

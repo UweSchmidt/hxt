@@ -30,8 +30,9 @@ import Text.XML.HXT.DOM.EditFilters     ( indentDoc
                                         , addHeadlineToXmlDoc
                                         )
 
-import System.IO
-import System.IO.Error
+import System.IO                        
+
+import qualified Control.Exception      as CE
 
 -- ------------------------------------------------------------
 
@@ -51,10 +52,10 @@ putXmlDoc       = hPutXmlDoc stdout
 hPutXmlDoc      :: Handle -> XmlStateFilter a
 hPutXmlDoc handle t
     = do
-      res <- io $ try (hPutStr handle content)
+      res <- io $ CE.try (hPutStr handle content)
       case res of
         Left ioerr
-            -> ( issueFatal (show ioerr)
+            -> ( issueFatal (show (ioerr::CE.SomeException))
                  +++>>
                  thisM
                ) t
@@ -74,19 +75,22 @@ hPutXmlDoc handle t
 putXmlDocToFile :: String -> XmlStateFilter a
 putXmlDocToFile fn t
     = do
-      res <- io $ try (openBinaryFile fn WriteMode)
+      res <- io $ CE.try (openBinaryFile fn WriteMode)
       case res of
         Left ioerr
-            -> ( issueFatal (show ioerr)
+            -> ( issueFatal (show (ioerr::CE.SomeException))
                  +++>>
                  thisM
                ) t
         Right h
             -> do
                t' <- hPutXmlDoc h t
-               _  <- io $ try (hClose h)
+               _ <- io $ try' (hClose h)
                trace 2 ("document written to file: " ++ fn)
                return t'
+    where
+      try' :: IO a -> IO (Either CE.SomeException a)
+      try' = CE.try
 
 -- ------------------------------------------------------------
 

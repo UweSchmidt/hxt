@@ -22,6 +22,9 @@ module Text.XML.HXT.IO.GetFILE
 
 where
 
+import Control.Exception                ( try
+                                        )
+
 import qualified Data.ByteString        as B
 import qualified Data.ByteString.Char8  as C
 
@@ -35,7 +38,6 @@ import           System.IO              ( IOMode(..)
                                         )
 
 import           System.IO.Error        ( ioeGetErrorString
-                                        , try
                                         )
 
 import           System.Directory       ( doesFileExist

@@ -26,7 +26,11 @@ import Network.URI
     )
 
 import System.IO
-import System.IO.Error
+import System.IO.Error                  ( ioeGetErrorString
+                                        )
+
+import Control.Exception                ( try
+                                        )
 
 -- ------------------------------------------------------------
 --
@@ -48,7 +52,7 @@ getFileContents uri n
                                  -> readErr ( "system error when reading file "
                                               ++ show source
                                               ++ ": "
-                                              ++ ioeGetErrorString e
+                                              ++ ioeGetErrorString (e :: IOError)
                                             )
                              Right h'
                                  -> do

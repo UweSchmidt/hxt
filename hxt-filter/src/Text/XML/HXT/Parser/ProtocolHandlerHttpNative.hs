@@ -26,7 +26,11 @@ import Text.ParserCombinators.Parsec
     )
 
 import System.IO
-import System.IO.Error
+import System.IO.Error                  ( ioeGetErrorString
+                                        )
+
+import Control.Exception                ( try
+                                        )
 
 import Network.URI
     ( URI
@@ -59,7 +63,7 @@ getHttpContentsWithHttp uri n
                    -> readErr ( "http error when requesting URI "
                                 ++ show uri
                                 ++ ": "
-                                ++ ioeGetErrorString e
+                                ++ ioeGetErrorString (e :: IOError)
                                 ++ " (perhaps server does not understand HTTP/1.1) "
                               )
                Right response
