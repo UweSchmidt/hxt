@@ -178,21 +178,19 @@ complexTypesErrors
             , ( "/root[1]/customer[1]/@age"
               , "\"wrong\" is no valid integer.")
             , ( "/root[1]/customer[1]/*"
-              , "content does not match content model.\ninput does not match {single tree pred}{single tree pred}")
+              , "content does not match content model.\ninput does not match <firstName><lastName>")
             , ( "/root[1]/shoppingList[1]/*"
-              , "content does not match content model.\nunexpected tree NTree (XTag \"butter\" []) [NTree (XText \"1\") []]")
+              , "content does not match content model.\nexpected: <bread>, but got: <butter>1</butter>")
             , ( "/root[1]/computer[1]/*"
-              , "content does not match content model.\nunexpected tree NTree (XTag \"tablet\" []) []")
+              , "content does not match content model.\nexpected: <desktop>|<laptop>, but got: <tablet/>")
             , ( "/root[1]/computerData[1]/*"
-              , "content does not match content model.\nunexpected tree NTree (XTag \"ram\" []) [NTree (XText \"64GB\") []]")
+              , "content does not match content model.\nexpected: <comment>, but got: <ram>64GB</ram>")
             , ( "/root[1]/computerDataWithGPU[1]/*"
               , "no mixed content allowed here.")
             , ( "/root[1]/computerDataWithGPU[2]/*"
-              , "content does not match content model.\ninput does not match " ++ 
-                "{single tree pred}({single tree pred})?({single tree pred})?({single tree pred})*{single tree pred}")
+              , "content does not match content model.\ninput does not match <name>(<cpu>)?(<ram>)?(<comment>)*<gpu>")
             , ( "/root[1]/computerDataWithoutComments[1]/*"
-              , "content does not match content model.\nunexpected tree " ++ 
-                "NTree (XTag \"comment\" []) [NTree (XText \"good display!\") []]")
+              , "content does not match content model.\nexpected: <cpu>, but got: <comment>good display!</comment>")
             ])
 
 -- | A test for redefinitions

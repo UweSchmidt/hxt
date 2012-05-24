@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<root summerMonth="10"
+      temperature="421"
+      password="safe"
+      monthByName="Foo"
+      plz="42"
+      monthList="a wrong list"
+      month="0"/>

@@ -27,12 +27,13 @@ import Text.XML.HXT.Core           ( QName
                                    , mkName
                                    , localPart
                                    , namespaceUri
+                                   , qualifiedName
                                    )
 
 import Text.XML.HXT.Arrow.XmlRegex ( XmlRegex
                                    , mkZero
                                    , mkUnit
-                                   , mkPrim
+                                   , mkPrim'
                                    , mkAlts
                                    , mkSeq
                                    , mkSeqs
@@ -266,15 +267,15 @@ attrListToAttrDesc l
 
 -- | Creates a regex which matches on an element with a given name
 mkElemNameRE :: QName -> XmlRegex
-mkElemNameRE s = mkPrim $ (== s) . getElemName
+mkElemNameRE s = mkPrim' ((== s) . getElemName) ("<" ++ qualifiedName s ++ ">")
 
 -- | Creates a regex which matches on an element with a given namespace predicate
-mkElemNamespaceRE :: (QName -> Bool) -> XmlRegex
-mkElemNamespaceRE p = mkPrim $ p . getElemName
+mkElemNamespaceRE :: String -> (QName -> Bool) -> XmlRegex
+mkElemNamespaceRE s p = mkPrim' (p . getElemName) s
 
 -- | Creates a regex which matches on text nodes
 mkTextRE :: XmlRegex
-mkTextRE = mkPrim isText
+mkTextRE = mkPrim' isText "{plain text}>"
 
 -- ----------------------------------------
 
@@ -367,7 +368,7 @@ anyToPredicate an
 anyToElemDesc :: Any -> ST ElemDesc
 anyToElemDesc an
   = do
-    re <- mkElemNamespaceRE <$> anyToPredicate an
+    re <- mkElemNamespaceRE "<namespace wildcard test>" <$> anyToPredicate an
     return $ mkComposeElemDesc re empty
 
 -- | Helper function to create a pair from two values

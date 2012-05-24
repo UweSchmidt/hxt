@@ -24,6 +24,7 @@ module Text.XML.HXT.Arrow.XmlRegex
     , mkZero
     , mkUnit
     , mkPrim
+    , mkPrim'
     , mkPrimA
     , mkDot
     , mkStar
@@ -52,6 +53,7 @@ import Control.Arrow.ListArrows
 import Data.Maybe
 
 import Text.XML.HXT.DOM.Interface
+import Text.XML.HXT.DOM.ShowXml  ( xshow )
 
 -- ------------------------------------------------------------
 -- the exported regex arrows
@@ -90,7 +92,7 @@ scanRegexA re ts        = ts >>. (fromMaybe [] . scanXmlRegex re)
 
 data XmlRegex   = Zero String
                 | Unit
-                | Sym (XmlTree -> Bool)
+                | Sym (XmlTree -> Bool) String  -- optional external repr. of predicate
                 | Dot
                 | Star XmlRegex
                 | Alt XmlRegex XmlRegex
@@ -109,7 +111,7 @@ class Inv a where
 instance Inv XmlRegex where
     inv (Zero _)        = True
     inv Unit            = True
-    inv (Sym p)         = p holds for some XmlTrees
+    inv (Sym p _)       = p holds for some XmlTrees
     inv Dot             = True
     inv (Star e)        = inv e
     inv (Alt e1 e2)     = inv e1 &&
@@ -133,7 +135,10 @@ mkUnit          :: XmlRegex
 mkUnit          = Unit
 
 mkPrim          :: (XmlTree -> Bool) -> XmlRegex
-mkPrim          = Sym
+mkPrim p        = Sym p ""
+
+mkPrim'         :: (XmlTree -> Bool) -> String -> XmlRegex
+mkPrim'         = Sym
 
 mkPrimA         :: LA XmlTree XmlTree -> XmlRegex
 mkPrimA a       = mkPrim (not . null . runLA a)
@@ -160,9 +165,14 @@ mkAlt e1            (Zero _)            = e1                            -- e1 u 
 mkAlt (Zero _)      e2                  = e2                            -- {} u e2 = e2
 mkAlt e1@(Star Dot) _e2                 = e1                            -- A* u e1 = A*
 mkAlt _e1           e2@(Star Dot)       = e2                            -- e1 u A* = A*
-mkAlt (Sym p1)      (Sym p2)            = mkPrim $ \ x -> p1 x || p2 x  -- melting of predicates
-mkAlt e1            e2@(Sym _)          = mkAlt e2 e1                   -- symmetry: predicates always first
-mkAlt e1@(Sym _)    (Alt e2@(Sym _) e3) = mkAlt (mkAlt e1 e2) e3        -- prepare melting of predicates
+mkAlt (Sym p1 e1)   (Sym p2 e2)         = mkPrim' (\ x -> p1 x || p2 x)  (e e1 e2) -- melting of predicates
+                                          where
+                                            e "" x2 = x2
+                                            e x1 "" = x1
+                                            e x1 x2 = x1 ++ "|" ++ x2
+mkAlt e1            e2@(Sym _ _)        = mkAlt e2 e1                   -- symmetry: predicates always first
+mkAlt e1@(Sym _ _)  (Alt e2@(Sym _ _) e3)
+                                        = mkAlt (mkAlt e1 e2) e3        -- prepare melting of predicates
 mkAlt (Alt e1 e2)   e3                  = mkAlt e1 (mkAlt e2 e3)        -- associativity
 mkAlt e1 e2                             = Alt e1 e2
 
@@ -215,7 +225,8 @@ mkPerms                          = foldr mkPerm mkUnit
 instance Show XmlRegex where
     show (Zero s)       = "{err:" ++ s ++ "}"
     show Unit           = "()"
-    show (Sym _p)       = "{single tree pred}"
+    show (Sym _p "")    = "<pred>"
+    show (Sym _p r )    = r
     show Dot            = "."
     show (Star e)       = "(" ++ show e ++ ")*"
     show (Alt e1 e2)    = "(" ++ show e1 ++ "|" ++ show e2 ++ ")"
@@ -228,10 +239,23 @@ instance Show XmlRegex where
 
 -- ------------------------------------------------------------
 
+unexpected 		:: XmlTree -> String -> String
+unexpected t e		= emsg e ++ (cut 80 . xshow) [t]
+    where
+      emsg ""           = "unexpected: "
+      emsg s            = "expected: " ++ s ++ ", but got: "
+      cut n s
+          | null rest   = s'
+          | otherwise   = s' ++ "..."
+          where
+            (s', rest)  = splitAt n s
+
+-- ------------------------------------------------------------
+
 nullable        :: XmlRegex -> Bool
 nullable (Zero _)       = False
 nullable Unit           = True
-nullable (Sym _p)       = False         -- assumption: p holds for at least one tree
+nullable (Sym _p _)     = False         -- assumption: p holds for at least one tree
 nullable Dot            = False
 nullable (Star _)       = True
 nullable (Alt e1 e2)    = nullable e1 ||
@@ -248,12 +272,10 @@ nullable (Perm e1 e2)   = nullable e1 &&
 
 delta   :: XmlRegex -> XmlTree -> XmlRegex
 delta e@(Zero _)   _    = e
-delta Unit         c    = mkZero $
-                          "unexpected tree " ++ show c
-delta (Sym p)      c
+delta Unit         c    = mkZero $ unexpected c ""
+delta (Sym p e)    c
     | p c               = mkUnit
-    | otherwise         = mkZero $
-                          "unexpected tree " ++ show c
+    | otherwise         = mkZero $ unexpected c e
 delta Dot          _    = mkUnit
 delta e@(Star e1)  c    = mkSeq (delta e1 c) e
 delta (Alt e1 e2)  c    = mkAlt (delta e1 c) (delta e2 c)

@@ -300,6 +300,7 @@ showDecimal' d
 -- ----------------------------------------
 
 -- | Tests whether value matches a given datatype and parameter list
+
 datatypeAllowsW3C :: DatatypeName -> ParamList -> String -> Maybe String
 datatypeAllowsW3C d params value
   = performCheck check value
