@@ -133,6 +133,8 @@ simpleTypesElemsErrors
               , "value does not match list type.")
             , ( "/root[1]/month[1]/child::text()"
               , "value does not match union type.")
+            , ( "/root[1]/leapYear[1]/child::text()"
+              , "\"perhaps\" is no valid boolean.")
             ])
 
 -- | A test for SimpleTypes as attribute values which match

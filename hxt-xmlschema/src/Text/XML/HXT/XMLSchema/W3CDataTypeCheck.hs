@@ -187,6 +187,10 @@ rexBase64Binary = rex $
                   where
                   b64     = "[A-Za-z0-9+/]"
 
+-- | Creates a boolean regex
+rexBoolean :: Regex
+rexBoolean = rex "true|false|1|0"
+
 -- | Creates a decimal regex
 rexDecimal :: Regex
 rexDecimal = rex "(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))"
@@ -356,6 +360,11 @@ datatypeAllowsW3C d params value
         >>>
         checkWith read (integerValid inRange params)
 
+    validBoolean
+        = validPattern
+          >>>
+          assertW3C (matchRE rexBoolean)
+
     check :: CheckA String String
     check = fromMaybe notFound . lookup d $ checks
 
@@ -380,6 +389,7 @@ datatypeAllowsW3C d params value
              , (xsd_NOTATION,           validQName)
              , (xsd_hexBinary,          validString id         >>> assertW3C isHexBinary)
              , (xsd_base64Binary,       validString normBase64 >>> assertW3C isBase64Binary)
+             , (xsd_boolean,            validNormString >>> validBoolean)
              , (xsd_decimal,            validPattern >>> validDecimal)
              , (xsd_integer,            validInteger xsd_integer)
              , (xsd_nonPositiveInteger, validInteger xsd_nonPositiveInteger)

@@ -92,8 +92,8 @@ mkPassthroughSTTF
 -- | Creates a SimpleType test function for basic W3C datatypes
 mkW3CCheckSTTF :: QName -> ParamList -> STTF
 mkW3CCheckSTTF n p
-  = if n `elem` [ mkName "xs:boolean" -- TODO: extend W3CDataTypeCheck
-                , mkName "xs:float"
+  = if n `elem` -- [ mkName "xs:boolean" -- added
+                [ mkName "xs:float"    -- TODO: extend W3CDataTypeCheck
                 , mkName "xs:double"
                 , mkName "xs:time"
                 , mkName "xs:duration"

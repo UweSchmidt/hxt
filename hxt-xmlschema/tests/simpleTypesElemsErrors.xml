@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <root>
   <summerMonth>3</summerMonth>
   <temperature>42</temperature>
@@ -7,4 +7,5 @@
   <plz>42</plz>
   <monthList>a wrong list</monthList>
   <month>wrong</month>
+  <leapYear>perhaps</leapYear>
 </root>
