@@ -153,6 +153,42 @@ integerRangeTable = [ (xsd_integer,            const True)
 
 -- ----------------------------------------
 
+-- | Function table for floating tests
+fctTableFloating :: (Floating n, Read n, Ord n) => [(String, String -> n -> Bool)]
+fctTableFloating
+  = [ (xsd_maxExclusive, cvf (>))
+    , (xsd_minExclusive, cvf (<))
+    , (xsd_maxInclusive, cvf (>=))
+    , (xsd_minInclusive, cvf (<=))
+    ]
+    where
+    cvf :: (Floating n, Read n) => (n -> n -> Bool) -> (String -> n -> Bool)
+    cvf op = \ x y -> isFloating x && readFloating x `op` y
+
+readFloating :: (Floating n, Read n) => String -> n
+readFloating  "INF" =  1.0 / 0.0
+readFloating "-INF" = -1.0 / 0.0
+readFloating  "NaN" =  0.0 / 0.0
+readFloating s      =  read s
+
+-- | Tests whether an integer is valid
+floatingValid :: (Floating n, Ord n, Read n, Show n) => DatatypeName -> ParamList -> CheckA n n
+floatingValid _datatype params
+  = (foldr (>>>) ok . map paramFloatingValid $ params)
+    where
+    paramFloatingValid (pn, pv)
+      = assert
+        ((fromMaybe (const . const $ True) . lookup pn $ fctTableFloating) pv)
+        (errorMsgParam pn pv . show)
+
+floatValid :: DatatypeName -> ParamList -> CheckA Float Float
+floatValid = floatingValid
+
+doubleValid :: DatatypeName -> ParamList -> CheckA Double Double
+doubleValid = floatingValid
+
+-- ----------------------------------------
+
 -- | Tests whether a string matches a name list
 isNameList :: (String -> Bool) -> String -> Bool
 isNameList p w
@@ -199,6 +235,9 @@ rexDecimal = rex "(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))"
 rexInteger :: Regex
 rexInteger = rex "(\\+|-)?[0-9]+"
 
+rexFloating :: Regex
+rexFloating = rex "(-?INF)|NaN|(\\+|-)?([0-9]+(.[0-9]*)?|.[0-9]+)([Ee](\\+|-)?[0-9]+)?"
+
 -- | Tests whether a string matches a language value
 isLanguage :: String -> Bool
 isLanguage = matchRE rexLanguage
@@ -218,6 +257,9 @@ isDecimal = matchRE rexDecimal
 -- | Tests whether a string matches an integer
 isInteger :: String -> Bool 
 isInteger = matchRE rexInteger
+
+isFloating :: String -> Bool
+isFloating = matchRE rexFloating
 
 -- ----------------------------------------
 
@@ -360,6 +402,13 @@ datatypeAllowsW3C d params value
         >>>
         checkWith read (integerValid inRange params)
 
+    validFloating validFl
+        = validPattern
+          >>>
+          assertW3C isFloating
+          >>>
+          checkWith readFloating (validFl d params)
+
     validBoolean
         = validPattern
           >>>
@@ -390,6 +439,9 @@ datatypeAllowsW3C d params value
              , (xsd_hexBinary,          validString id         >>> assertW3C isHexBinary)
              , (xsd_base64Binary,       validString normBase64 >>> assertW3C isBase64Binary)
              , (xsd_boolean,            validNormString >>> validBoolean)
+             , (xsd_decimal,            validPattern >>> validDecimal)
+             , (xsd_double,             validFloating doubleValid)
+             , (xsd_float,              validFloating floatValid)
              , (xsd_decimal,            validPattern >>> validDecimal)
              , (xsd_integer,            validInteger xsd_integer)
              , (xsd_nonPositiveInteger, validInteger xsd_nonPositiveInteger)
