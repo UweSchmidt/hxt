@@ -6,7 +6,7 @@
    License    : MIT
 
    Maintainer : Uwe Schmidt <uwe@fh-wedel.de>
-   Stability  : experimental
+   Stability  : stable
    Portability: portable
 
    Convenient functions for W3C XML Schema Regular Expression Matcher.
@@ -24,6 +24,8 @@ module Text.Regex.XMLSchema.String
 
     , grep
     , grepExt
+    , grepRE
+    , grepREwithLineNum
 
     , match
     , matchExt
@@ -76,12 +78,12 @@ module Text.Regex.XMLSchema.String
 
     , parseRegex        -- re-export of Text.Regex.XMLSchema.String.RegexParser
     , parseRegexExt
+    , parseContextRegex
     )
 where
 
 import Control.Arrow
 
-import Data.List
 import Data.Maybe
 
 import Text.Regex.XMLSchema.String.Regex
@@ -270,12 +272,12 @@ tokenizeRE' re
 
         addMatched t            = addUnmatched . ((Right t) :)
 
-        evalRes Nothing = token'' ((head inp) : unmatched) (tail inp)                   -- re does not match any prefix
+        evalRes Nothing = token'' ((head inp) : unmatched) (tail inp)           -- re does not match any prefix
 
         evalRes (Just (toks, rest))
-            | null tok  = addMatched tok $ token'' (take 1 rest) (tail rest)            -- re is nullable and only the empty prefix matches
-                                                                                        -- discard one char and try again
-            | otherwise = addMatched tok $ token1'' "" rest                             -- real token found, next token must not be empty
+            | null tok  = addMatched tok $ token'' (take 1 rest) (tail rest)    -- re is nullable and only the empty prefix matches
+                                                                                -- discard one char and try again
+            | otherwise = addMatched tok $ token1'' "" rest                     -- real token found, next token must not be empty
             where
             tok = snd . head $ toks
 
@@ -448,19 +450,16 @@ grepExt                 :: String -> [String] -> [String]
 grepExt                 = grep' parseRegexExt
 
 grep'                   :: (String -> Regex) -> String -> [String] -> [String]
-grep' parseRegex' re    = filter (matchRE re')
-                          where
-                          re' = mkSeqs . concat $ [ startContext
-                                                  , (:[]) . parseRegex' $ re2
-                                                  , endContext
-                                                  ]
-                          (startContext, re1)
-                              | "^"   `isPrefixOf` re   = ([],                          tail   re)
-                              | "\\<" `isPrefixOf` re   = ([parseRegexExt "(\\A\\W)?"], drop 2 re)
-                              | otherwise               = ([mkStar mkDot],                     re)
-                          (endContext, re2)
-                              | "$"   `isSuffixOf` re1  = ([],                          init          re1)
-                              | "\\>" `isSuffixOf` re1  = ([parseRegexExt "(\\W\\A)?"], init . init $ re1)
-                              | otherwise               = ([mkStar mkDot],                            re1)
+grep' parseRegex'       = grepRE . parseContextRegex parseRegex'
+
+-- | grep with already prepared Regex (ususally with 'parseContextRegex')
+
+grepRE                  :: Regex -> [String] -> [String]
+grepRE re               = filter (matchRE re)
+
+-- | grep with Regex and line numbers
+
+grepREwithLineNum       :: Regex -> [String] -> [(Int,String)]
+grepREwithLineNum re     = filter (matchRE re . snd) . zip [(1::Int)..]
 
 -- ------------------------------------------------------------

@@ -22,12 +22,15 @@
 module Text.Regex.XMLSchema.String.RegexParser
     ( parseRegex
     , parseRegexExt
+    , parseContextRegex
     )
 where
 
 import Data.Char.Properties.UnicodeBlocks
 import Data.Char.Properties.UnicodeCharProps
 import Data.Char.Properties.XMLCharProps
+
+import Data.List                        ( isPrefixOf, isSuffixOf )
 
 import Data.Maybe
 
@@ -67,6 +70,35 @@ parseRegex' regExp'    	= either (mkZero . ("syntax error: " ++) . show) id
                                   eof
                                   return r
                                 ) ""
+
+-- ------------------------------------------------------------
+
+-- | parse a regular expression surrounded by contenxt spec
+--
+-- a leading @^@ denotes start of text,
+-- a trailing @$@ denotes end of text,
+-- a leading @\\<@ denotes word start,
+-- a trailing @\\>@ denotes word end.
+--
+-- The 1. param ist the regex parser ('parseRegex' or 'parseRegexExt')
+
+parseContextRegex :: (String -> Regex) -> String -> Regex
+parseContextRegex parseRe re
+    = re'
+    where
+      re' = mkSeqs . concat $ [ startContext
+                              , (:[]) . parseRe $ re2
+                              , endContext
+                              ]
+      (startContext, re1)
+          | "^"   `isPrefixOf` re   = ([],                          tail   re)
+          | "\\<" `isPrefixOf` re   = ([parseRegexExt "(\\A\\W)?"], drop 2 re)
+          | otherwise               = ([mkStar mkDot],                     re)
+      (endContext, re2)
+          | "$"   `isSuffixOf` re1  = ([],                          init          re1)
+          | "\\>" `isSuffixOf` re1  = ([parseRegexExt "(\\W\\A)?"], init . init $ re1)
+          | otherwise               = ([mkStar mkDot],                            re1)
+
 
 -- ------------------------------------------------------------
 

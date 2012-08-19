@@ -1,2 +1,4 @@
 *~
 make.out
+*.hi
+*.o

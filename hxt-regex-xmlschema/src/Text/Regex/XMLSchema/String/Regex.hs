@@ -575,7 +575,10 @@ delta1 (Cbr e ss)   c           = mkCbr   (delta1 e  c) ss
 -- ------------------------------------------------------------
 
 delta                           :: Eq l => GenRegex l -> String -> GenRegex l
-delta                           = foldl' delta1
+delta e                     []  = e
+delta e@(Zero _)           _xs  = e
+delta e@(Star Dot)         _xs  = e
+delta e                (x : xs) = delta (delta1 e x) xs
 
 matchWithRegex                  :: Eq l => GenRegex l -> String -> Bool
 matchWithRegex e                = nullable . delta e

@@ -24,14 +24,14 @@ import Control.Arrow
 import Data.List
 import Data.Maybe
 
-import System
+import System.Environment
 import System.IO                        -- import the IO and commandline option stuff
 import System.Environment
 import System.Console.GetOpt
 import System.Exit
 
 import Text.Regex.XMLSchema.String
-import Text.XML.HXT.Arrow
+import Text.XML.HXT.Core
 import Text.XML.HXT.Parser.XhtmlEntities
 
 
@@ -221,7 +221,7 @@ formatHtmlTok (m, t)
     | otherwise         = colorizeTokens m (escapeText >>> sed (const "&nbsp;") " " $ t)
 
 escapeText      :: String -> String
-escapeText      = concat . runLA (xshow (mkText >>> escapeHtmlDoc))
+escapeText      = concat . runLA (xshowEscapeXml mkText)
 
 
 fullHtml        :: String -> String -> String
