@@ -39,13 +39,14 @@ import Data.Char
 import Data.Either
 import Data.Maybe
 import Data.Digest.Pure.SHA
+import Data.Time
 
 import System.FilePath
 import System.Directory
 import System.IO
 import System.Locale
 import System.Posix                            ( touchFile )
-import System.Time
+-- import System.Time
 import System.IO.Unsafe                        ( unsafePerformIO )
 
 import Text.XML.HXT.Core
@@ -208,7 +209,7 @@ lookupCache' (dir, (age, e404)) src
                                                  )
                           ]
         where
-        fmtTime         = formatCalendarTime defaultTimeLocale rfc822DateFormat . toUTCTime
+        fmtTime         = formatTime defaultTimeLocale rfc822DateFormat
 
 -- ------------------------------------------------------------
 
@@ -276,7 +277,7 @@ cacheFile dir f          = (dir </> fd, fn)
 -- Just Nothing  : cache hit, cache data valid: use cache data
 -- Just (Just t) : cache hit, but cache data out of date: get document conditionally with if-modified-since t
 
-cacheHit                :: Int -> FilePath -> IO (Maybe (Maybe ClockTime))
+cacheHit                :: Int -> FilePath -> IO (Maybe (Maybe UTCTime))
 cacheHit age cf         = ( try' $
                             do
                             e <- doesFileExist cf
@@ -284,15 +285,13 @@ cacheHit age cf         = ( try' $
                               then return Nothing
                               else do
                                    mt <- getModificationTime cf
-                                   ct <- getClockTime
-                                   return . Just $ if (dt `addToClockTime` mt) >= ct
+                                   ct <- getCurrentTime
+                                   return . Just $ if (dt `addUTCTime` mt) >= ct
                                                    then Nothing
                                                    else Just mt
                           ) >>= return . either (const Nothing) id
     where
-    seconds             = age `mod` 60
-    minutes             = age `div` 60
-    dt                  = normalizeTimeDiff $ TimeDiff 0 0 0 0 minutes seconds 0
+    dt                  = fromInteger . toInteger $ age
 
 try'                    :: IO a -> IO (Either SomeException a)
 try'                    = try
