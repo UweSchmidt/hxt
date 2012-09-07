@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2011 (http://www.altova.com) by Noel Merket (NATIONAL RENEWABLE ENERGY LABORATORY) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://hpxml.org/hpxml/2011/1"
+	targetNamespace="http://hpxml.org/hpxml/2011/1" elementFormDefault="unqualified"
+	attributeFormDefault="unqualified">
+	<xs:include schemaLocation="HPXMLDataTypes.xsd"/>
+	<xs:include schemaLocation="BaseElements.xsd"/>
+	<xs:element name="MaintainContractorRequest">
+		<xs:annotation>
+			<xs:documentation>Home Performance XML Root</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="XMLTransactionHeaderInformation"/>
+				<xs:element ref="SoftwareInfo" minOccurs="0"/>
+				<xs:element name="Contractor" type="ContractorType"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="MaintainContractorResponse">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ContractorSystemIdentifiers"/>
+				<xs:element maxOccurs="unbounded" minOccurs="0" name="StatusMessage"
+					type="StatusMessage"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

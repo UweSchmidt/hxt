@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://hpxml.org/hpxml/2011/1"
+	targetNamespace="http://hpxml.org/hpxml/2011/1" elementFormDefault="unqualified"
+	attributeFormDefault="unqualified">
+	<xs:include schemaLocation="HPXMLDataTypes.xsd"/>
+	<xs:include schemaLocation="BaseElements.xsd"/>
+	<xs:element name="MaintainBuildingRequest">
+		<xs:annotation>
+			<xs:documentation>Home Performance XML Root</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="XMLTransactionHeaderInformation"/>
+				<xs:element ref="SoftwareInfo" minOccurs="0"/>
+				<xs:element name="BuildingID" type="SystemIdentifiersInfoType"/>
+				<xs:element name="CustomerID" type="SystemIdentifiersInfoType"/>
+				<xs:element name="Address" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="AddressSystemIdentifiers"/>
+							<xs:group ref="AddressInformation" minOccurs="0"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="BuildingDetails">
+					<xs:annotation>
+						<xs:documentation>Building Description</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="ConstructionInfo"/>
+							<xs:element ref="ClimateandRiskZonesInfo"/>
+							<xs:element name="Enclosure" type="Enclosure"/>
+							<xs:element name="Systems" type="Systems"/>
+							<xs:element name="Appliances" type="Appliances"/>
+							<xs:element name="Lighting" type="Lighting"/>
+							<xs:element name="MiscLoads" type="MiscLoads"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="Consumption">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element maxOccurs="unbounded" ref="ConsumptionInfo"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="MaintainBuildingResponse">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="BuildingID" type="SystemIdentifiersInfoType"/>
+				<xs:element maxOccurs="unbounded" minOccurs="0" name="StatusMessages"
+					type="StatusMessage"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+
+</xs:schema>

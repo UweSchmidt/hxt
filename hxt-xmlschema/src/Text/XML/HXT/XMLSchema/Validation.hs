@@ -101,14 +101,18 @@ checkAllowedAttrs ((n, val):xs)
     let (am, wp) = attrDesc $ elemDesc env
     res <- case lookup n am of
              Nothing
-                 -> if or $ map (\ f -> f n) wp
-                    then mkWarnSTTF''
-                             (++ ("/@" ++ qualifiedName n))
-                             "no check implemented for attribute wildcard's content."
-                         -- TODO: check attribute wildcard's content?
-                    else mkErrorSTTF''
-                             (++ ("/@" ++ qualifiedName n))
-                             "attribute not allowed here."
+                 -> if isNameSpaceName n
+                    then
+                        return True  -- namespace declarations may occure everywhere  
+                    else
+                        if or $ map (\ f -> f n) wp
+                        then mkWarnSTTF''
+                                 (++ ("/@" ++ qualifiedName n))
+                                 "no check implemented for attribute wildcard's content."
+                                 -- TODO: check attribute wildcard's content?
+                        else mkErrorSTTF''
+                                 (++ ("/@" ++ qualifiedName n))
+                                 "attribute not allowed here."
              Just (_, tf)
                  -> local (const $ appendXPath ("/@" ++ (qualifiedName n)) env) $ tf val
     rest <- checkAllowedAttrs xs

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2011 (http://www.altova.com) by Noel Merket (NATIONAL RENEWABLE ENERGY LABORATORY) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://hpxml.org/hpxml/2011/1"
+	targetNamespace="http://hpxml.org/hpxml/2011/1" elementFormDefault="unqualified"
+	attributeFormDefault="unqualified">
+	<xs:include schemaLocation="HPXMLDataTypes.xsd"/>
+	<xs:include schemaLocation="BaseElements.xsd"/>
+	<xs:element name="ReportTestResultsRequest">
+		<xs:annotation>
+			<xs:documentation>Home Performance XML Root</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="XMLTransactionHeaderInformation"/>
+				<xs:element ref="SoftwareInfo" minOccurs="0"/>
+				<xs:element ref="HomeownerQuestionaireInfo" minOccurs="0"/>
+				<xs:element name="BuildingIdentifier" type="SystemIdentifiersInfoType"/>
+				<xs:element name="TestResults">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="General">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element minOccurs="0" name="OutsideTemperature"
+											type="OutsideTemperature"/>
+										<xs:element minOccurs="0" name="TestDate" type="TestDate"/>
+										<xs:element minOccurs="0" name="TestInorOut"
+											type="TestInorOut"/>
+										<xs:element minOccurs="0"
+											name="NameofIndividualConductingTest"
+											type="NameofIndividualConductingTest"/>
+										<xs:element minOccurs="0"
+											name="NameofBusinessConductingTest"
+											type="NameofBusinessConductingTest"/>
+										<xs:element name="Comments" type="xs:string"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element maxOccurs="unbounded" minOccurs="0"
+								ref="AirInfiltrationMeasurement"/>
+							<xs:element maxOccurs="unbounded" minOccurs="0" ref="VentilationInfo"/>
+							<xs:element maxOccurs="unbounded" ref="MoistureControlInfo"
+								minOccurs="0"/>
+							<xs:element maxOccurs="unbounded" minOccurs="0"
+								ref="CombustionApplianceZoneTestInfo"/>
+							<xs:element maxOccurs="unbounded" minOccurs="0" ref="StoveTest"/>
+							<xs:element maxOccurs="unbounded" minOccurs="0"
+								ref="OtherHealthandSafetyInfo"/>
+							<xs:element maxOccurs="unbounded" minOccurs="0"
+								ref="DuctLeakageMeasurement"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="ReportTestResultsResponse">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="BuildingIdentifier" type="SystemIdentifiersInfoType"/>
+				<xs:element maxOccurs="unbounded" minOccurs="0" name="StatusMessages"
+					type="StatusMessage"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

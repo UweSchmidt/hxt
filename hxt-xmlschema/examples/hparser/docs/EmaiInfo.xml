@@ -1,0 +1,4 @@
+<EmailInfo xmlns="http://hpxml.org/hpxml/2011/1">
+  <EmailTypeCode>simple</EmailTypeCode>
+  <EmailAddress>homer@simpson.com</EmailAddress>
+</EmailInfo>

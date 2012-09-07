@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2011 (http://www.altova.com) by Noel Merket (NATIONAL RENEWABLE ENERGY LABORATORY) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://hpxml.org/hpxml/2011/1"
+	targetNamespace="http://hpxml.org/hpxml/2011/1" elementFormDefault="unqualified"
+	attributeFormDefault="unqualified">
+	<xs:include schemaLocation="HPXMLDataTypes.xsd"/>
+	<xs:include schemaLocation="BaseElements.xsd"/>
+	<xs:element name="MaintainUtilityRequest">
+		<xs:annotation>
+			<xs:documentation>Home Performance XML Root</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="XMLTransactionHeaderInformation"/>
+				<xs:element ref="SoftwareInfo" minOccurs="0"/>
+				<xs:element name="Utilities" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Utility company information</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="UtilityInfo" maxOccurs="unbounded"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="MaintainUtilityResponse">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element maxOccurs="unbounded" name="UtilityIdentifiers"
+					type="SystemIdentifiersInfoType"/>
+				<xs:element maxOccurs="unbounded" minOccurs="0" name="StatusMessages"
+					type="StatusMessage"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

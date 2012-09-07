@@ -188,10 +188,10 @@ xpInclude
     tag (Incl _)  = 0
     tag (Imp _)   = 1
     tag (Redef _) = 2
-    ps = [ xpWrap (Incl,  unIncl)  $ xpSchemaElem "include"  $ xpAttr "schemaLocation" xpText
-         , xpWrap (Imp,   unImp)   $ xpSchemaElem "import"   $ xpPair (xpAttr "schemaLocation" xpText) $
-                                                                      (xpAttr "namespace" xpText)
-         , xpWrap (Redef, unRedef) $ xpSchemaElem "redefine" $ xpPair (xpAttr "schemaLocation" xpText) $
+    ps = [ xpWrap (Incl,  unIncl)  $ xpSchemaElem "include"  $         xpDefault "" $ xpAttr "schemaLocation" xpText
+         , xpWrap (Imp,   unImp)   $ xpSchemaElem "import"   $ xpPair (xpDefault "" $ xpAttr "schemaLocation" xpText) $   -- there are schemas around containing "<import />"
+                                                                      (xpDefault "" $ xpAttr "namespace"      xpText)
+         , xpWrap (Redef, unRedef) $ xpSchemaElem "redefine" $ xpPair (xpDefault "" $ xpAttr "schemaLocation" xpText) $
                                                                       (xpList xpRedefinition)
          ]
 
@@ -435,12 +435,13 @@ xpElemTypeDef :: PU ElemTypeDef
 xpElemTypeDef
   = xpAlt tag ps
     where
-    tag (ETDTypeAttr _)     = 0
-    tag (ETDAnonymStDecl _) = 1
-    tag (ETDAnonymCtDecl _) = 2
-    ps = [ xpWrap (ETDTypeAttr,     unETDTypeAttr)     $ xpAttr "type" xpQName
-         , xpWrap (ETDAnonymStDecl, unETDAnonymStDecl) $ xpSchemaElem "simpleType"  $ xpSimpleType
+    tag (ETDAnonymStDecl _) = 0  -- here sequencing is important
+    tag (ETDAnonymCtDecl _) = 1  -- ETDTypeAttr must be the last one to be tried when reading a schema
+    tag (ETDTypeAttr _)     = 2  -- if just a name is given, no simple or complex type, type defaults to xs:anyType
+    ps = [ xpWrap (ETDAnonymStDecl, unETDAnonymStDecl) $ xpSchemaElem "simpleType"  $ xpSimpleType
          , xpWrap (ETDAnonymCtDecl, unETDAnonymCtDecl) $ xpSchemaElem "complexType" $ xpComplexType
+         , xpWrap (ETDTypeAttr,     unETDTypeAttr)     $ xpDefault (mkQName nsPrefix "anyType" nsUri)
+                                                       $ xpAttr "type" xpQName
          ]
 
 -- | Pickler for group
@@ -684,7 +685,7 @@ loadDefinition config
           >>>
           arr toSchema
           >>>
-          ( resolveIncludes $< arr (map (mkAbsPath baseUri) . sIncludes) )
+          ( resolveIncludes $< arr (map (mkAbsPath baseUri) . filter (not . emptyInclude) . sIncludes) )
         ) $< getAttrValue "transfer-URI"
       )
     )
@@ -712,6 +713,12 @@ loadDefinition config
           = constA loc >>> loadDefinition'
             >>>
             arr (\ s -> applyRedefs s redefs)
+
+      emptyInclude :: Include -> Bool
+      emptyInclude (Incl   "")     = True
+      emptyInclude (Imp   ("", _)) = True
+      emptyInclude (Redef ("", _)) = True
+      emptyInclude _               = False
 
 -- ------------------------------------------------------------
 

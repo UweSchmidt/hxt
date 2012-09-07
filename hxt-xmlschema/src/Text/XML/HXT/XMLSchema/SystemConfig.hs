@@ -47,7 +47,7 @@ withXmlSchema s                 = setS (theXmlSchemaValidate
 
 xmlSchemaOptions :: [OptDescr SysConfig]
 xmlSchemaOptions
-    = [ Option "Y" [a_xml_schema]   (ReqArg withXmlSchema "SCHEMA")  "validation with XML schema NG, SCHEMA is the URI for the XML schema document"
+    = [ Option "Y" [a_xml_schema]   (ReqArg withXmlSchema "SCHEMA")  "validation with XML schema, SCHEMA is the URI for the XML schema document"
       ]
 
 -- ------------------------------------------------------------

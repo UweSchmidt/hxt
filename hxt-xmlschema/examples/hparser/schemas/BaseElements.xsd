@@ -1,0 +1,1342 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://hpxml.org/hpxml/2011/1"
+	targetNamespace="http://hpxml.org/hpxml/2011/1" elementFormDefault="unqualified"
+	attributeFormDefault="unqualified">
+	<xs:include schemaLocation="HPXMLDataTypes.xsd"/>
+	<xs:import/>
+	<xs:element name="XMLTransactionHeaderInformation">
+		<xs:annotation>
+			<xs:documentation>These are a series of elements that indicate the type of XML and basic descriptive data about the XML.</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="XMLType" type="XMLType"/>
+				<xs:element name="XMLGeneratedBy" type="XMLGeneratedBy"/>
+				<xs:element name="CreatedDateAndTime" type="CreatedDateAndTime"/>
+				<xs:element name="Transaction" type="TransactionType"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:group name="AddressInformation">
+		<xs:annotation>
+			<xs:documentation>Address information contains the basic descriptive elements of a location.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="AddressTypeCode" type="AddressTypeCode"/>
+			<xs:element name="Address1" type="Address1" minOccurs="0"/>
+			<xs:element name="Address2" type="Address2" minOccurs="0"/>
+			<xs:element name="CityMunicipality" type="CityMunicipality"/>
+			<xs:element name="StateCode" type="StateCode"/>
+			<xs:element name="ZipCodePlus4" type="ZipCodePlus4"/>
+			<xs:element name="USPSBarCode" type="USPSBarCode" minOccurs="0"/>
+			<xs:group ref="ExtensibilityGroup"/>
+		</xs:sequence>
+	</xs:group>
+	<xs:complexType name="SystemIdentifiersInfoType">
+		<xs:annotation>
+			<xs:documentation>System identifiers contain type codes and an identifier for both a sending and a receiving system.  These fields are needed to be able to transmit data between two systems, and have it identified in the two systems.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="SendingSystemIdentifierType" type="SendingSystemIdentifierType"/>
+			<xs:element name="SendingSystemIdentifierValue" type="SendingSystemIdentifierValue"/>
+			<xs:element name="ReceivingSystemIdentifierType" type="ReceivingSystemIdentifierType"
+				minOccurs="0"/>
+			<xs:element name="ReceivingSystemIdentifierValue" type="ReceivingSystemIdentifierValue"
+				minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="AddressSystemIdentifiers" type="SystemIdentifiersInfoType">
+		<xs:annotation>
+			<xs:documentation>Most HPXML records contain data about a specfic address, or location.  This element contains the root elements for address identifier values between a sending and a receiving system.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="IndividualSystemIdentifiers" type="SystemIdentifiersInfoType">
+		<xs:annotation>
+			<xs:documentation>HPXML records may contain data about an individual, either a person, or a business.  This element contains the root elements for individual identifier values between a sending and a receiving system.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="ContractorSystemIdentifiers" type="SystemIdentifiersInfoType">
+		<xs:annotation>
+			<xs:documentation>These are the system identifiers for a specific contractor at a business</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="MiscDataFields">
+		<xs:annotation>
+			<xs:documentation>These attributes allow for the addition of undefined data fields to any attribute group.</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence minOccurs="0" maxOccurs="unbounded">
+				<xs:element name="FieldSequenceNumber" type="FieldSequenceNumber"/>
+				<xs:element name="FieldName" type="FieldName"/>
+				<xs:element name="FieldDataType" type="FieldDataType"/>
+				<xs:element name="FieldValue" type="FieldValue"/>
+				<xs:element name="FieldMask" type="FieldMask" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:group name="ExtensibilityGroup">
+		<xs:sequence>
+			<xs:element ref="MiscDataFields" minOccurs="0"/>
+			<xs:any namespace="##other" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:group>
+	<xs:group name="StandardMeasureFieldsGroup">
+		<xs:sequence>
+			<xs:element name="ImplementationCost" minOccurs="0" type="xs:double"/>
+			<xs:element name="AdditionalInformation" minOccurs="0" type="xs:string"/>
+			<xs:element ref="ContractorSystemIdentifiers" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="CompletionDate" type="xs:date" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Date measure was completed</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="EnergySavingsInfo" minOccurs="0"/>
+			<xs:group ref="ExtensibilityGroup"/>
+		</xs:sequence>
+	</xs:group>
+	<xs:element name="TelephoneInfo">
+		<xs:annotation>
+			<xs:documentation>Contains all telephone elements.</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="TelephoneTypeCode" type="TelephoneTypeCode"/>
+				<xs:element name="TelephoneNumber" type="TelephoneNumber"/>
+				<xs:element name="TelephoneExtension" type="TelephoneExtension" minOccurs="0"/>
+				<xs:group ref="ExtensibilityGroup"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="EmailInfo">
+		<xs:annotation>
+			<xs:documentation>Contains all email elements.</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence minOccurs="0" maxOccurs="unbounded">
+				<xs:element name="EmailTypeCode" type="EmailTypeCode"/>
+				<xs:element name="EmailAddress" type="EmailAddress"/>
+				<xs:group ref="ExtensibilityGroup"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="IndividualNameInfo">
+		<xs:annotation>
+			<xs:documentation>Contains all name elements for either an individual or a business.</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="NameTypeCode" type="NameTypeCode"/>
+				<xs:element name="FirstName" type="FirstName"/>
+				<xs:element name="LastName" type="LastName"/>
+				<xs:element name="MiddleName" type="MiddleName" minOccurs="0"/>
+				<xs:element name="PrefixName" type="PrefixName" minOccurs="0"/>
+				<xs:element name="SuffixName" type="SuffixName" minOccurs="0"/>
+				<xs:group ref="ExtensibilityGroup"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:group name="IndividualInfo">
+		<xs:sequence>
+			<xs:element ref="IndividualSystemIdentifiers"/>
+			<xs:element ref="IndividualNameInfo"/>
+			<xs:element ref="TelephoneInfo" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="EmailInfo" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="IndividualTypeCode" type="IndividualTypeCode"/>
+			<xs:group ref="ExtensibilityGroup"/>
+		</xs:sequence>
+	</xs:group>
+	<xs:element name="UtilityInfo">
+		<xs:annotation>
+			<xs:documentation>Contains all utility elements.</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="UtilityIdentifiers" type="SystemIdentifiersInfoType"/>
+				<xs:element name="UtilityAccountNumber" type="UtilityAccountNumber"/>
+				<xs:element name="UtilityName" type="UtilityName" minOccurs="0"/>
+				<xs:element name="UtilityServiceTypeProvided" type="UtilityServiceTypeProvided"
+					minOccurs="0"/>
+				<xs:element ref="BusinessInfo" minOccurs="0"/>
+				<xs:element ref="BusinessContactInfo" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:group ref="ExtensibilityGroup"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="BusinessInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="IndividualSystemIdentifiers"/>
+				<xs:element ref="BusinessNameInfo"/>
+				<xs:element name="BusinessSpecialization" type="BusinessSpecialization"
+					minOccurs="0"/>
+				<xs:element name="BusinessType" type="BusinessType" minOccurs="0"/>
+				<xs:element ref="EmailInfo" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="TelephoneInfo" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:group ref="ExtensibilityGroup"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="BusinessContactInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="ContactType" type="ContactType" minOccurs="0"/>
+				<xs:element name="FirstName" type="FirstName" minOccurs="0"/>
+				<xs:element name="LastName" type="LastName" minOccurs="0"/>
+				<xs:group ref="ExtensibilityGroup"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="BusinessNameInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="NameTypeCode" type="NameTypeCode"/>
+				<xs:element name="BusinessName" type="BusinessName"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="AirInfiltrationMeasurement">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="BuildingAirLeakage" type="BuildingAirLeakage" minOccurs="0"/>
+				<xs:element name="BuildingAirLeakageUnit" type="BuildingAirLeakageUnit"
+					minOccurs="0"/>
+				<xs:element name="HousePressure" type="xs:double"/>
+				<xs:element name="FanPressure" type="FanPressure" minOccurs="0"/>
+				<xs:element name="FanRingUsed" type="FanRingUsed" minOccurs="0"/>
+				<xs:element name="TypeofTest" type="TypeofTest" minOccurs="0"/>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="ClimateandRiskZonesInfo">
+		<xs:complexType>
+			<xs:sequence minOccurs="0">
+				<xs:element name="ClimateZoneDOE" type="ClimateZoneDOE" minOccurs="0"/>
+				<xs:element name="ClimateZoneIECC" type="ClimateZoneIECC" minOccurs="0"/>
+				<xs:element name="EarthquakeZone" type="EarthquakeZone" minOccurs="0"/>
+				<xs:element name="RadonZone" type="RadonZone" minOccurs="0"/>
+				<xs:element name="TermiteZone" type="TermiteZone" minOccurs="0"/>
+				<xs:element minOccurs="0" name="HurricaneZone" type="xs:boolean"/>
+				<xs:element minOccurs="0" name="FloodZone" type="xs:boolean"/>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="ConstructionInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="YearBuilt" type="YearBuilt" minOccurs="0"/>
+				<xs:element name="Hometype" type="Hometype" minOccurs="0"/>
+				<xs:element name="NumberofUnitsRetrofit" type="NumberofUnitsRetrofit" minOccurs="0"/>
+				<xs:element name="NumberofOccupants" type="NumberofOccupants" minOccurs="0"/>
+				<xs:element name="NumberofBedrooms" type="NumberofBedrooms" minOccurs="0"/>
+				<xs:element name="NumberofBathrooms" type="NumberofBedrooms" minOccurs="0"/>
+				<xs:element name="NumberofStoriesAboveGrade" type="NumberofStoriesAboveGrade"
+					minOccurs="0"/>
+				<xs:element name="AverageCeilingHeight" type="AverageCeilingHeightType"
+					minOccurs="0"/>
+				<xs:element name="ConditionedFloorArea" type="ConditionedFloorArea" minOccurs="0"/>
+				<xs:element name="ConditionedVolume" type="ConditionedVolume" minOccurs="0"/>
+				<xs:element name="FoundationType" type="FoundationType" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Primary foundation type of building</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="ShieldingofHome" type="ShieldingofHome" minOccurs="0"/>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="ConsumptionInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="UtilityID" type="SystemIdentifiersInfoType"/>
+				<xs:element name="ConsumptionType" type="ConsumptionType">
+					<xs:annotation>
+						<xs:documentation>Energy Type + other consumption types like water</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="UnitofMeasure" type="UnitofMeasure"/>
+				<xs:element ref="ConsumptionDetailInfo" maxOccurs="unbounded" minOccurs="1">
+					<xs:annotation>
+						<xs:documentation>Consumption records with enough granularity to be able to use smart meter data.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element minOccurs="0" name="MarginalRate" type="xs:double"/>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="ConsumptionDetailInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="EnergyConsumption" type="EnergyConsumption"/>
+				<xs:element name="StartDateTime" type="StartDateTime" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Date/time stamp in the ISO 8601 format when the usage measured began. Set time to midnight if time is not known.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="EndDateTime" type="EndDateTime">
+					<xs:annotation>
+						<xs:documentation>Date/time stamp of the meter reading.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element minOccurs="0" name="ConsumptionCost" type="xs:double"/>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="StoveTest">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Fuel" type="HeatingStoveFuel" minOccurs="0"/>
+				<xs:element name="COReading" type="COReading" minOccurs="0"/>
+				<xs:element name="GasLeaksIdentified" type="GasLeaksIdentified" minOccurs="0"/>
+				<xs:element name="HeatingStoveProperlyVented" type="HeatingStoveProperlyVented"
+					minOccurs="0"/>
+				<xs:element name="ActionsTaken" minOccurs="0" type="xs:string"/>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="OtherHealthandSafetyInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="ExtDisturbanceExceed6SQFTforPre1978"
+					type="ExtDisturbanceExceed6SQFTforPre1978" minOccurs="0"/>
+				<xs:element name="OneCODetectorPerFloorMeetsLocalCode"
+					type="OneCODetectorPerFloorMeetsLocalCode" minOccurs="0"/>
+				<xs:element name="OtherActionsTakenDescription" type="OtherActionsTakenDescription"
+					minOccurs="0"/>
+				<xs:element name="OtherHealthandSafetyIdentifier"
+					type="OtherHealthandSafetyIdentifier" minOccurs="0"/>
+				<xs:element minOccurs="0" name="RadonTested" type="xs:boolean"/>
+				<xs:element name="RadonTestResults" type="RadonTestResults" minOccurs="0"/>
+				<xs:element name="SmokeAlarmsMeetLocalCode" type="SmokeAlarmsMeetLocalCode"
+					minOccurs="0"/>
+				<xs:element name="OtherHealthandSafetyIssues" type="xs:string" minOccurs="0"/>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="AirSealingInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:group ref="SystemInfo"/>
+				<xs:group ref="StandardMeasureFieldsGroup" minOccurs="0"/>
+				<xs:element name="OtherAreasDescription" type="OtherAreasDescription" minOccurs="0"/>
+				<xs:element name="BuildingAirLeakage" type="BuildingAirLeakage"/>
+				<xs:element name="BuildingAirLeakageUnit" type="BuildingAirLeakageUnit"/>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="DoorsInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:group ref="SystemInfo"/>
+				<xs:element name="ExistingStormDoor" type="ExistingStormDoor" minOccurs="0"/>
+				<xs:element name="PreRetrofitDescription" type="PreRetrofitDescription"
+					minOccurs="0"/>
+				<xs:element minOccurs="0" maxOccurs="unbounded" name="DoorImprovementInfo">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:group ref="StandardMeasureFieldsGroup" minOccurs="0"/>
+							<xs:element name="ReplacementDescription" type="ReplacementDescription"
+								minOccurs="0"/>
+							<xs:element name="ReplacementRValue" type="ReplacementRValue"
+								minOccurs="0"/>
+							<xs:element name="StormDoorInstalled" type="StormDoorInstalled"
+								minOccurs="0"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="InsulationInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:group ref="SystemInfo"/>
+				<xs:sequence maxOccurs="unbounded">
+					<xs:element name="AreaInsulated" type="AreaInsulatedType"/>
+					<xs:element name="LayerNumber" type="LayerNumber" minOccurs="0"/>
+					<xs:element name="InstallationType" type="InstallationType" minOccurs="0"> </xs:element>
+					<xs:element name="InsulationMaterial" type="InsulationMaterial" minOccurs="0"/>
+					<xs:element name="NominalRValue" type="NominalRValue" minOccurs="0"/>
+					<xs:element name="Thickness" type="Thickness" minOccurs="0"/>
+					<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+				</xs:sequence>
+				<xs:element minOccurs="0" maxOccurs="unbounded" name="InsulationImprovementInfo">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:group ref="StandardMeasureFieldsGroup"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="LightingInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:group ref="SystemInfo"/>
+				<xs:element name="AverageWattage" minOccurs="0" type="xs:double"/>
+				<xs:element name="AverageHoursPerDay" minOccurs="0" type="xs:double"/>
+				<xs:element name="NumberofUnits" minOccurs="0" type="xs:integer"/>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+				<xs:element maxOccurs="unbounded" minOccurs="0" name="LightingImprovementInfo">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:group ref="StandardMeasureFieldsGroup" minOccurs="0"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="LightingControlsInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:group ref="SystemInfo"/>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+				<xs:element name="LightingControlsImprovmentInfo" maxOccurs="unbounded"
+					minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Type" type="TypeofReplacement" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>occupancy sensor, photo sensor, timer</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:group ref="StandardMeasureFieldsGroup" minOccurs="0"/>
+							<xs:element name="NumberofLightingControls"
+								type="NumberofReplacementsInstalled" minOccurs="0"/>
+							<xs:element name="Location" type="LocationOfReplacement" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>interior, exterior</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="MoistureControlInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:group ref="SystemInfo"/>
+				<xs:element name="ExteriorLocationsWaterIntrusionorDamage"
+					type="ExteriorLocationsWaterIntrusionorDamage" minOccurs="0"/>
+				<xs:element name="InteriorLocationsofWaterLeaksorDamage"
+					type="InteriorLocationsofWaterLeaksorDamage" minOccurs="0"/>
+				<xs:element minOccurs="0" name="MoistureControlImprovementInfo"
+					maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:group ref="StandardMeasureFieldsGroup" minOccurs="0"/>
+							<xs:element name="GuttersInstalledorRepaired"
+								type="GuttersInstalledorRepaired" minOccurs="0"/>
+							<xs:element name="FlashingInstalledorRepaired"
+								type="FlashingInstalledorRepaired" minOccurs="0"/>
+							<xs:element name="FoundationGradingImproved"
+								type="FoundationGradingImproved" minOccurs="0"/>
+							<xs:element name="OtherMeasuresImplementedDescription"
+								type="OtherMeasuresImplementedDescription" minOccurs="0"/>
+							<xs:element name="VaporRetardersInstalled"
+								type="VaporRetardersInstalled" minOccurs="0"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="PlugLoadControlInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:group ref="SystemInfo"/>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+				<xs:element minOccurs="0" name="PlugLoadControlImprovementInfo"
+					maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="NumberInstalled" type="NumberInstalled" minOccurs="0"/>
+							<xs:group ref="StandardMeasureFieldsGroup" minOccurs="0"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="ShadingAndSolarReflectanceInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:group ref="SystemInfo"/>
+				<xs:element name="RadiantBarrier" type="RadiantBarrier" minOccurs="0"/>
+				<xs:element name="RadiantBarrierLocation" type="RadiantBarrierLocation"
+					minOccurs="0"/>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+				<xs:element minOccurs="0" maxOccurs="unbounded"
+					name="ShadingAndSolarReflectanceImprovementInfo">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:group ref="StandardMeasureFieldsGroup"/>
+							<xs:element name="OtherShadingandSolarMeasuresInstalled"
+								type="OtherShadingandSolarMeasuresInstalled" minOccurs="0"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="VentilationInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:group ref="SystemInfo"/>
+				<xs:element name="MechanicalVentilationDetermination"
+					type="MechanicalVentilationDetermination" minOccurs="0"/>
+				<xs:element name="MVRatCFM50" type="MVRatCFM50" minOccurs="0"/>
+				<xs:element name="MVRDeterminationMethod" type="MVRDeterminationMethod"
+					minOccurs="0"/>
+				<xs:element minOccurs="0" name="MVRRecommendation" type="MVRRecommendation"/>
+				<xs:element name="OtherVentilationIssuesDescription"
+					type="OtherVentilationIssuesDescription" minOccurs="0"/>
+				<xs:element name="AirLeakage" type="BuildingAirLeakage" minOccurs="0"/>
+				<xs:element name="ProperClothersDryerVenting" type="ProperClothersDryerVenting"
+					minOccurs="0"/>
+				<xs:element name="VentType" type="VentType" minOccurs="0"/>
+				<xs:element name="VentLocation" type="VentLocation" minOccurs="0"/>
+				<xs:element name="VentstoOutdoors" type="VentstoOutdoors" minOccurs="0"/>
+				<xs:element minOccurs="0" name="AirBarrierBetweenHouseAndGarage" type="xs:boolean"/>
+				<xs:element maxOccurs="unbounded" minOccurs="0" name="VentilationImprovementInfo">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:group ref="StandardMeasureFieldsGroup" minOccurs="0"/>
+							<xs:element name="GarageDuctsandAirHandlersAirSealed"
+								type="GarageDuctsandAirHandlersAirSealed" minOccurs="0"/>
+							<xs:element name="MechanicalVentilationInstalled"
+								type="MechanicalVentilationInstalled" minOccurs="0"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="WindowInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:group ref="SystemInfo"/>
+				<xs:element name="Glazing" type="Glazing" minOccurs="0"/>
+				<xs:element name="Treatments" type="Treatments" minOccurs="0"/>
+				<xs:element name="Frame" type="Frame" minOccurs="0"/>
+				<xs:element name="Condition" minOccurs="0" type="WindowCondition"/>
+				<xs:element name="Area" minOccurs="0" type="xs:double"/>
+				<xs:element name="EnergyStarCertified" type="EnergyStarCertified" minOccurs="0"/>
+				<xs:element name="NFRCCertified" type="NFRCCertified" minOccurs="0"/>
+				<xs:element name="UFactor" type="UFactor" minOccurs="0"/>
+				<xs:element name="SHGC" type="SHGC" minOccurs="0"/>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+				<xs:element maxOccurs="unbounded" minOccurs="0" name="WindowImprovementInfo">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:group ref="StandardMeasureFieldsGroup"/>
+							<xs:element minOccurs="0" name="WindowAreaImproved" type="xs:double"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="CombustionApplicanceTestInfo">
+		<xs:complexType>
+			<xs:sequence minOccurs="0">
+				<xs:element name="CAZApplianceType" type="CAZApplianceType"/>
+				<xs:element name="CAZApplianceID" type="SystemIdentifiersInfoType"/>
+				<xs:element name="FlueInspected" type="FlueInspected" minOccurs="0"/>
+				<xs:element name="FlueCondition" type="FlueCondition" minOccurs="0"/>
+				<xs:element name="OutsideTemperatureFlueDraftTest"
+					type="OutsideTemperatureFlueDraftTest" minOccurs="0"/>
+				<xs:element name="StackTemperature" type="StackTemperature" minOccurs="0"/>
+				<xs:element maxOccurs="unbounded" minOccurs="0" name="FuelLeaks">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="FuelType" type="energyType"/>
+							<xs:element name="LeaksIdentified" type="xs:boolean"/>
+							<xs:element name="LeaksAddressed" type="xs:boolean"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="WorstCase-AirHandler" type="WorstCase-AirHandler" minOccurs="0"/>
+				<xs:element name="WorstCase-BathExhaustFan" type="WorstCase-BathExhaustFan"
+					minOccurs="0"/>
+				<xs:element name="WorstCase-KitchenExhaustFan" type="WorstCase-KitchenExhaustFan"
+					minOccurs="0"/>
+				<xs:element name="WorstCase-ClothesDryer" type="WorstCase-ClothesDryer"
+					minOccurs="0"/>
+				<xs:element name="WorstCase-CentralVacuum" type="WorstCase-CentralVacuum"
+					minOccurs="0"/>
+				<xs:element name="WorstCase-BasementDoor" type="WorstCase-BasementDoor"
+					minOccurs="0"/>
+				<xs:element name="WorstCase-OtherDoors" type="WorstCase-OtherDoors" minOccurs="0"/>
+				<xs:element name="WorstCase-OtherDescription" type="WorstCase-OtherDescription"
+					minOccurs="0"/>
+				<xs:element maxOccurs="unbounded" name="CAZApplicanceTestResult" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="NormalWorstCaseIndicator"
+								type="NormalWorstCaseIndicator"/>
+							<xs:element name="CAZApplianceMeasurement"
+								type="CAZApplianceMeasurement"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="CombustionApplianceZoneTestInfo">
+		<xs:complexType>
+			<xs:sequence minOccurs="0">
+				<xs:group ref="SystemInfo"/>
+				<xs:element name="CAZVentConfiguration" type="CAZVentConfiguration" minOccurs="0"/>
+				<xs:element name="CAZDepressurizationLimit" type="CAZDepressurizationLimit"
+					minOccurs="0"/>
+				<xs:element name="WorstCaseConditions" type="WorstCaseConditions" minOccurs="0"/>
+				<xs:element name="BaselinePressure" type="BaselinePressure" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>With respect to outdoors</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="WorstCasePressure" type="WorstCasePressure" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>With respect to outdoors</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="NetPressureChange" type="NetPressureChange" minOccurs="0"/>
+				<xs:element name="DepressurizationFindingWorstCase"
+					type="DepressurizationFindingWorstCase" minOccurs="0"/>
+				<xs:element name="AmountAmbientCOinCAZduringTesting"
+					type="AmountAmbientCOinCAZduringTesting" minOccurs="0"/>
+				<xs:element name="AmbientCOinCAZExceeded35ppmduringTesting"
+					type="AmbientCOinCAZExceeded35ppmduringTesting" minOccurs="0"/>
+				<xs:element minOccurs="0" ref="CombustionApplicanceTestInfo"/>
+				<xs:element maxOccurs="unbounded" minOccurs="0" name="CAZImprovementInfo">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:group ref="StandardMeasureFieldsGroup"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="CoolingSystemInfo" type="CoolingSystemInfoType"> </xs:element>
+	<xs:element name="HeatPumpInfo" type="HeatPumpInfoType"> </xs:element>
+	<xs:element name="HVACDistributionInfo">
+		<xs:complexType>
+			<xs:group maxOccurs="unbounded" minOccurs="0" ref="HVACDistributionGroup"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="ThermostatInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:group ref="SystemInfo"/>
+				<xs:element name="ThermostatType" type="ThermostatType" minOccurs="0"/>
+				<xs:element name="IsProgrammable" type="IsProgrammable" minOccurs="0"/>
+				<xs:element name="SetpointTempHeatingSeason" type="SetpointTempHeatingSeason"
+					minOccurs="0"/>
+				<xs:element name="SetbackTempHeatingSeason" type="SetbackTempHeatingSeason"
+					minOccurs="0"/>
+				<xs:element name="TotalSetbackHoursperWeekHeating"
+					type="TotalSetbackHoursperWeekHeating" minOccurs="0"/>
+				<xs:element name="SetbackTempCoolingSeason" type="SetbackTempCoolingSeason"
+					minOccurs="0"/>
+				<xs:element name="SetpointTempCoolingSeason" type="SetpointTempCoolingSeason"
+					minOccurs="0"/>
+				<xs:element name="TotalSetbackHoursperWeekCooling"
+					type="TotalSetbackHoursperWeekCooling" minOccurs="0"/>
+				<xs:element minOccurs="0" maxOccurs="unbounded" name="ThermostatImprovementInfo">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:group ref="StandardMeasureFieldsGroup"/>
+							<xs:element name="NumberInstalled" type="NumberInstalled" minOccurs="0"
+							/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="HVACSystemsServed" type="SystemIdentifiersInfoType" minOccurs="0"
+					maxOccurs="unbounded"/>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="HeatingSystemInfo" type="HeatingSystemInfoType"> </xs:element>
+	<xs:element name="WaterHeatingSystemInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:group ref="SystemInfo"/>
+				<xs:element name="Fuel" type="Fuel" minOccurs="0"/>
+				<xs:element name="Type" type="WaterHeaterType" minOccurs="0"/>
+				<xs:element name="Location" type="Location" minOccurs="0"/>
+				<xs:element name="Year" type="Year" minOccurs="0"/>
+				<xs:element name="Manufacturer" type="Manufacturer" minOccurs="0"/>
+				<xs:element name="Model" type="Model" minOccurs="0"/>
+				<xs:element name="Size" type="Size" minOccurs="0"/>
+				<xs:element name="EnergyStarCertified" type="EnergyStarCertified" minOccurs="0"/>
+				<xs:element name="EnergyFactor" type="EnergyFactor" minOccurs="0"/>
+				<xs:element name="RecoveryEfficiency" type="RecoveryEfficiency" minOccurs="0"/>
+				<xs:element name="ThermalEfficiency" type="ThermalEfficiency" minOccurs="0"/>
+				<xs:element name="JacketRValue" type="JacketRValue" minOccurs="0"/>
+				<xs:element name="PipeRValue" type="PipeRValue" minOccurs="0"/>
+				<xs:element name="PCTPipeInsulation" type="PCTPipeInsulation" minOccurs="0"/>
+				<xs:element name="VentSystem" type="VentSystem" minOccurs="0"/>
+				<xs:element name="OrphanedIndicator" type="OrphanedIndocator" minOccurs="0"/>
+				<xs:element name="PipeInsulated" type="PipeInsulated" minOccurs="0"/>
+				<xs:element name="LinearFTPipeInsulated" type="LinearFTPipeInsulated" minOccurs="0"/>
+				<xs:element name="MeetsACCA5QIHVACSpecification"
+					type="MeetsACCA5QIHVACSpecification" minOccurs="0"/>
+				<xs:element name="HotWaterTemperature" type="HotWaterTemperature" minOccurs="0"/>
+				<xs:element maxOccurs="unbounded" minOccurs="0" name="SharedVenting">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="SharedVentingSystemType"
+								type="SharedVentingSystemType"/>
+							<xs:element name="SharedVentingSystemID"
+								type="SystemIdentifiersInfoType"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element minOccurs="0" name="RelatedHeatingSystem"
+					type="SystemIdentifiersInfoType"/>
+				<xs:element name="WaterHeatingImprovementInfo" maxOccurs="unbounded" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:group ref="StandardMeasureFieldsGroup"/>
+							<xs:element name="JacketInstalledIndicator"
+								type="JacketInstalledIndicator" minOccurs="0"/>
+							<xs:element name="DispositionofExistingSystem"
+								type="DispositionofExistingSystem" minOccurs="0"/>
+							<xs:element name="RepairsDescription" type="RepairDescription"
+								minOccurs="0" maxOccurs="unbounded"/>
+							<xs:element name="SystemReplaced" type="xs:boolean"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:group name="ApplianceTypeSummaryInfo">
+		<xs:sequence>
+			<xs:group ref="SystemInfo"/>
+			<xs:element name="SequenceNumber" type="xs:integer"/>
+			<xs:element name="NumberofUnits" type="NumberofUnits" minOccurs="0"/>
+			<xs:element name="EnergyStarCertified" type="EnergyStarCertified" minOccurs="0"/>
+			<xs:element name="Manufacturer" type="Manufacturer" minOccurs="0"/>
+			<xs:element name="Model" type="Model" minOccurs="0"/>
+			<xs:element name="ModelYear" type="ModelYear" minOccurs="0"/>
+			<xs:element minOccurs="0" maxOccurs="unbounded" name="ApplianceImprovementInfo">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:group ref="StandardMeasureFieldsGroup" minOccurs="0"/>
+						<xs:element name="DispositionofExistingUnit"
+							type="DispositionofExistingUnit" minOccurs="0"/>
+						<xs:element minOccurs="0" name="NumberImproved" type="xs:integer"/>
+						<xs:element minOccurs="0" name="ApplianceRepaired" type="xs:boolean"/>
+						<xs:element minOccurs="0" name="ApplianceReplaced" type="xs:boolean"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+		</xs:sequence>
+	</xs:group>
+	<xs:element name="ClothesDryerDetailInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="FuelType" type="FuelType" minOccurs="0"/>
+				<xs:group ref="ExtensibilityGroup"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="ClothesDryers">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:group ref="ApplianceTypeSummaryInfo"/>
+				<xs:element ref="ClothesDryerDetailInfo" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="ClothesWasherDetailInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="MEF" type="MEF" minOccurs="0"/>
+				<xs:element name="Type" type="ClothesWasherType" minOccurs="0"/>
+				<xs:element name="WF" type="WF" minOccurs="0"/>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="ClothesWashers">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:group ref="ApplianceTypeSummaryInfo"/>
+				<xs:element ref="ClothesWasherDetailInfo" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="DishwasherDetailInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="HeatDryDefaultOff" type="HeatDryDefaultOff" minOccurs="0"/>
+				<xs:group ref="ExtensibilityGroup"/>
+				<xs:element name="AuxillaryWaterHeaterDefaultOff" type="xs:boolean"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="Dishwashers">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:group ref="ApplianceTypeSummaryInfo"/>
+				<xs:element ref="DishwasherDetailInfo" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="FreezerDetailInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="EnergyConsumption" type="EnergyConsumption" minOccurs="0"/>
+				<xs:element name="Size" type="Size" minOccurs="0"/>
+				<xs:element name="Style" type="FreezerStyle" minOccurs="0"/>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="Freezers">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:group ref="ApplianceTypeSummaryInfo"/>
+				<xs:element ref="FreezerDetailInfo" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="RefrigeratorDetailInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="NewAnnualEnergyConsumption" type="NewAnnualEnergyConsumption"
+					minOccurs="0"/>
+				<xs:element name="PrimaryIndicator" type="PrimaryIndicator" minOccurs="0"/>
+				<xs:element name="Size" type="Size" minOccurs="0"/>
+				<xs:element name="Style" type="RefrigeratorStyle" minOccurs="0"/>
+				<xs:group ref="ExtensibilityGroup"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="Refrigerators">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:group ref="ApplianceTypeSummaryInfo"/>
+				<xs:element ref="RefrigeratorDetailInfo" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="HomeownerQuestionaireInfo">
+		<xs:annotation>
+			<xs:documentation>Please assign 10 points the reason(s) why you choose to invest in the retrofit. 
+You may assign all 10 points to one reason, or distribute the points among several reasons – as long as they total 10.</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence minOccurs="0">
+				<xs:element name="Comfort" type="HomeownerQuestionaireScore"/>
+				<xs:element name="EnergySavings" type="HomeownerQuestionaireScore"/>
+				<xs:element name="IndoorAirQuality" type="HomeownerQuestionaireScore"/>
+				<xs:element name="Durability" type="HomeownerQuestionaireScore"/>
+				<xs:element name="Environment" type="HomeownerQuestionaireScore"/>
+				<xs:element name="SupportLocalBusiness" type="HomeownerQuestionaireScore"/>
+				<xs:element name="Other" type="HomeownerQuestionaireScore"/>
+				<xs:element name="OtherDescription" type="xs:string" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Optional description if Other above is greater than zero.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:group ref="ExtensibilityGroup"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="SoftwareInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="SoftwareProgramUsed" type="SoftwareProgramUsed" minOccurs="0"/>
+				<xs:element name="SoftwareProgramVersion" type="SoftwareProgramVersion"
+					minOccurs="0"/>
+				<xs:group ref="ExtensibilityGroup"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="EnergySavingsInfo">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="AnnualConsumptionReduction" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:group ref="FuelSavings"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="AnnualElectricityDemandReduction" minOccurs="0"/>
+				<xs:element name="AnnualPercentReduction" type="AnnualPCTReductionWholeHome"
+					minOccurs="0"/>
+				<xs:element name="TotalCostHealthSafetyMeasures"
+					type="TotalCostHealthSafetyMeasures" minOccurs="0"/>
+				<xs:element name="TotalCostQualEnergyMeasures" type="TotalCostQualEnergyMeasures"
+					minOccurs="0"/>
+				<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="ContractorType">
+		<xs:sequence>
+			<xs:element ref="ContractorSystemIdentifiers"/>
+			<xs:element ref="BusinessInfo"/>
+			<xs:element ref="BusinessContactInfo" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="Certification" type="Certification" minOccurs="0"
+				maxOccurs="unbounded"/>
+			<xs:element name="SubContractor" type="ContractorType" minOccurs="0"
+				maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="Enclosure">
+		<xs:sequence>
+			<xs:element name="AtticAndRoof" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="ShadingAndSolarReflectanceInfo" minOccurs="0"
+							maxOccurs="unbounded"/>
+						<xs:element ref="InsulationInfo" minOccurs="0" maxOccurs="unbounded"/>
+						<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element minOccurs="0" name="Foundations">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="unbounded" name="FoundationInfo">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:group ref="SystemInfo"/>
+									<xs:element name="FoundationType" type="FoundationType"/>
+									<xs:element maxOccurs="unbounded" minOccurs="0"
+										ref="InsulationInfo"/>
+									<xs:element maxOccurs="unbounded" minOccurs="0"
+										name="FoundationImprovementInfo">
+										<xs:complexType>
+											<xs:sequence>
+												<xs:group ref="StandardMeasureFieldsGroup"/>
+											</xs:sequence>
+										</xs:complexType>
+									</xs:element>
+									<xs:group minOccurs="0" ref="ExtensibilityGroup"/>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="AirInfiltration" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="AirInfiltrationMeasurement" minOccurs="0"
+							maxOccurs="unbounded"/>
+						<xs:element ref="AirSealingInfo" minOccurs="0" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Walls" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Wall" maxOccurs="unbounded">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:group ref="SystemInfo"/>
+									<xs:element name="WallType" type="xs:string" minOccurs="0">
+										<xs:annotation>
+											<xs:documentation>ie Wood Stud Wall, Double Stud Wall, CMU, SIP, etc. Need to add enumerator?</xs:documentation>
+										</xs:annotation>
+									</xs:element>
+									<xs:element name="Location" type="xs:string" minOccurs="0">
+										<xs:annotation>
+											<xs:documentation>ie above ground, basement, crawlspace, garage.</xs:documentation>
+										</xs:annotation>
+									</xs:element>
+									<xs:element name="FramingFactor" type="xs:double" minOccurs="0"/>
+									<xs:element name="StudSize" type="xs:string" minOccurs="0"/>
+									<xs:element name="StudSpacing" type="xs:double" minOccurs="0"/>
+									<xs:element name="Azimuth" type="AzimuthType" minOccurs="0"/>
+									<xs:element ref="InsulationInfo" minOccurs="0"
+										maxOccurs="unbounded"/>
+									<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Windows" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="WindowGroup" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:documentation>Window Group is a set of windows with the same or identical characteristics</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element ref="WindowInfo" maxOccurs="unbounded"/>
+									<xs:element name="Azimuth" type="AzimuthType" minOccurs="0"/>
+									<xs:group ref="ExtensibilityGroup"/>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Doors" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Door" maxOccurs="unbounded">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element ref="DoorsInfo" maxOccurs="unbounded"/>
+									<xs:element name="Azimuth" type="AzimuthType" minOccurs="0"/>
+									<xs:group ref="ExtensibilityGroup"/>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Systems">
+		<xs:sequence>
+			<xs:element name="HVAC" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="HVACPlantInfo" maxOccurs="unbounded">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element ref="HeatingSystemInfo" minOccurs="0"
+										maxOccurs="unbounded"/>
+									<xs:element ref="CoolingSystemInfo" minOccurs="0"
+										maxOccurs="unbounded"/>
+									<xs:element ref="HeatPumpInfo" minOccurs="0"
+										maxOccurs="unbounded"/>
+									<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+						<xs:element ref="ThermostatInfo" minOccurs="0" maxOccurs="unbounded"/>
+						<xs:element ref="HVACDistributionInfo" minOccurs="0" maxOccurs="unbounded">
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="WaterHeating" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="WaterHeatingSystemInfo" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Appliances">
+		<xs:sequence>
+			<xs:element ref="ClothesWashers" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="ClothesDryers" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="Dishwashers" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="Refrigerators" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="Freezers" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+			<xs:element maxOccurs="unbounded" minOccurs="0"
+				name="OtherHighElectricConsumptionDevices">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="OtherHECDeviceType" type="OtherHECDeviceType"/>
+						<xs:element name="NumberOfOtherHECDevice" type="xs:integer"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Lighting">
+		<xs:sequence>
+			<xs:element name="LightingGroup" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Light bulbs of the same type. For example you could have all the 60W incandescants.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="LightingInfo" minOccurs="0" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:documentation>For example: 15 x 60 W incandescant, replaced by 15 x 13W CFL. As many replacement options as you want.</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="LightingControlsGroup" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>A similar group of lighting controls</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="LightingControlsInfo" minOccurs="0" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:documentation>Existing option plus different replacement options available or installed.</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="MiscLoads">
+		<xs:sequence>
+			<xs:element ref="PlugLoadControlInfo" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="HealthAndSafety">
+		<xs:sequence>
+			<xs:element name="Ventilation" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="VentilationInfo" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="MoistureControl" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="MoistureControlInfo" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element ref="CombustionApplianceZoneTestInfo" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="StoveTest" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="OtherHealthandSafetyInfo" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="StatusMessage">
+		<xs:sequence>
+			<xs:element name="MessageType" type="xs:string"/>
+			<xs:element name="MessageID" type="xs:string"/>
+			<xs:element name="Message" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:group name="FuelSavings">
+		<xs:sequence>
+			<xs:element name="FuelType" type="energyType"/>
+			<xs:element name="Unit" type="energyUnitType"/>
+			<xs:element name="KBtuPerUnit" type="xs:double" minOccurs="0"/>
+			<xs:element name="TotalKBtuSavings" type="xs:double"/>
+			<xs:group ref="EndUseSavings"/>
+
+			<xs:element name="TotalDollarSavings" type="xs:double" minOccurs="0"/>
+		</xs:sequence>
+	</xs:group>
+	<xs:group name="EndUseSavings">
+		<xs:sequence>
+			<xs:element name="EndUse" type="endUseType"/>
+			<xs:element name="EndUseKBtuSavings" type="xs:double"/>
+		</xs:sequence>
+	</xs:group>
+	<xs:complexType name="EnclosureInfo">
+		<xs:sequence>
+			<xs:element ref="ShadingAndSolarReflectanceInfo" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="InsulationInfo" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="AirSealingInfo" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="WindowInfo" maxOccurs="unbounded" minOccurs="0"/>
+			<xs:element ref="DoorsInfo" maxOccurs="unbounded" minOccurs="0"/>
+			<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="CAZApplianceMeasurement">
+		<xs:sequence>
+			<xs:element minOccurs="0" name="Spillage" type="SpillageResult"/>
+			<xs:element name="COResult" type="COResult" minOccurs="0"/>
+			<xs:element minOccurs="0" name="CarbonMonoxide" type="COValue"/>
+			<xs:element name="FlueDraftResult" type="FlueDraftResult" minOccurs="0"/>
+			<xs:element minOccurs="0" name="FlueDraft" type="FlueDraftValue"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:group name="SystemInfo">
+		<xs:sequence>
+			<xs:element name="SystemIdentifier" type="SystemIdentifiersInfoType"/>
+			<xs:element name="Event" type="Event">
+				<xs:annotation>
+					<xs:documentation>This used to be the PreOrPost indicator. If you have an idea for a better name that reflects the multiplicity of possibilities, please let me know.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:group>
+	<xs:group name="HVACSystemInfo">
+		<xs:sequence>
+			<xs:group ref="SystemInfo"/>
+			<xs:element name="HVACSystemType" minOccurs="0" type="HVACSystemType"/>
+			<xs:element name="UnitLocation" minOccurs="0" type="UnitLocation"/>
+			<xs:element name="ModelYear" minOccurs="0" type="ModelYear"/>
+			<xs:element name="Manufacturer" minOccurs="0" type="Manufacturer"/>
+			<xs:element name="Model" minOccurs="0" type="Model"/>
+			<xs:element name="Capacity" minOccurs="0" type="Capacity"/>
+			<xs:element name="EnergyStarCertified" type="EnergyStarCertified" minOccurs="0"/>
+			<xs:element maxOccurs="unbounded" minOccurs="0" name="SharedVenting">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="SharedVentingSystemType" type="SharedVentingSystemType"/>
+						<xs:element name="SharedVentingSystemID" type="SystemIdentifiersInfoType"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element maxOccurs="unbounded" minOccurs="0" name="DistributionSystems"
+				type="SystemIdentifiersInfoType"/>
+			<xs:element minOccurs="0" name="HVACSystemImprovement" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:group ref="StandardMeasureFieldsGroup"/>
+						<xs:element name="CleanandTune" minOccurs="0" type="CleanandTune"/>
+						<xs:element name="RepairDescription" minOccurs="0" type="RepairDescription"
+							maxOccurs="unbounded"/>
+						<xs:element name="DispositionofExistingSystem" minOccurs="0"
+							type="DispositionofExistingSystem"/>
+						<xs:element minOccurs="0" name="MeetsACCA5QISpec" type="xs:boolean"/>
+						<xs:element minOccurs="0" name="SizingCalculationType"
+							type="SizingCalculationType"/>
+						<xs:element name="AirSealingAndInsulationImplementedPrior" type="xs:boolean"
+							minOccurs="0"/>
+						<xs:element name="SystemReplaced" type="xs:boolean" minOccurs="0"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+		</xs:sequence>
+	</xs:group>
+	<xs:complexType name="HeatingSystemInfoType">
+		<xs:sequence minOccurs="0" maxOccurs="unbounded">
+			<xs:element name="HeatingSystemType" type="HeatingSystemType"/>
+			<xs:element name="HeatSystemFuel" type="HeatingStoveFuel" minOccurs="0"/>
+			<xs:element name="CondensingSystem" type="CondensingSystem" minOccurs="0"/>
+			<xs:element name="DistributionSystem" type="DistributionSystem" minOccurs="0"/>
+			<xs:element name="PCTHeatLoadServed" type="PCTHeatLoadServed" minOccurs="0"/>
+			<xs:element name="InputCapacity" type="InputCapacity" minOccurs="0"/>
+			<xs:element name="AFUE" type="AFUE" minOccurs="0"/>
+			<xs:element name="VentSystem" type="VentSystem" minOccurs="0"/>
+			<xs:group ref="HVACSystemInfo"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="HeatPumpInfoType">
+		<xs:sequence minOccurs="0">
+			<xs:group ref="HVACSystemInfo"/>
+			<xs:element name="HeatPumpType" type="HeatPumpType" minOccurs="0"/>
+			<xs:element name="GeothermalLoop" type="GeothermalLoop" minOccurs="0"/>
+			<xs:element name="BackUpSystemFuel" type="BackUpSystemFuel" minOccurs="0"/>
+			<xs:element name="PCTofHeatLoadServed" type="PCTofHeatLoadServed" minOccurs="0"/>
+			<xs:element name="PCTofCoolLoadServed" type="PCTCoolLoadServed" minOccurs="0"/>
+			<xs:element name="AnnualCoolEfficiencyType" type="AnnualCoolEfficiencyType"
+				minOccurs="0"/>
+			<xs:element name="AnnualCoolEfficiency" type="Efficiency" minOccurs="0"/>
+			<xs:element name="AnnualHeatEfficiencyType" type="AnnualHeatEfficiencyType"
+				minOccurs="0"/>
+			<xs:element name="AnnualHeatEfficiency" type="Efficiency" minOccurs="0"/>
+			<xs:element name="VentSystem" type="VentSystem" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="CoolingSystemInfoType">
+		<xs:sequence>
+			<xs:group ref="HVACSystemInfo"/>
+			<xs:element name="CoolingSystemType" type="CoolingSystemType" minOccurs="0"/>
+			<xs:element name="SystemDucted" type="SystemDucted" minOccurs="0"/>
+			<xs:element name="PCTCoolLoadServed" type="PCTCoolLoadServed" minOccurs="0"/>
+			<xs:element name="EfficiencyType" type="EfficiencyType" minOccurs="0"/>
+			<xs:element name="Efficiency" type="Efficiency" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:group name="HVACDistributionGroup">
+		<xs:sequence>
+			<xs:group ref="SystemInfo"/>
+			<xs:element name="HVACDistributionSystemType" type="HVACDistributionSystemType"/>
+			<xs:element name="HVACSystemsServed" type="SystemIdentifiersInfoType" minOccurs="0"
+				maxOccurs="unbounded"/>
+			<xs:element minOccurs="0" maxOccurs="unbounded" name="DistributionSystemImprovementInfo">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:group ref="StandardMeasureFieldsGroup" minOccurs="0"/>
+						<xs:element name="DuctSystemSealed" type="DuctSystemSealed" minOccurs="0"/>
+						<xs:element name="DuctOutsideEnvelopeInsulatedaspartofRetrofit"
+							type="DuctOutsideEnvelopeInsulatedaspartofRetrofit" minOccurs="0"/>
+						<xs:element name="DuctSystemReplaced" type="DuctSystemReplaced"
+							minOccurs="0"/>
+						<xs:element name="SystemPumpandZoneValveCorrectionsMade"
+							type="SystemPumpandZoneValveCorrectionsMade" minOccurs="0"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:group ref="ExtensibilityGroup" minOccurs="0"/>
+		</xs:sequence>
+	</xs:group>
+	<xs:complexType name="HydronicDistributionInfo">
+		<xs:sequence>
+			<xs:element name="PCTHydronicPipeInsulated" type="PCTHydronicPipeInsulated"
+				minOccurs="0"/>
+			<xs:group ref="HVACDistributionGroup"/>
+			<xs:element name="HydronicDistributionType" type="HydronicDistributionType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="AirDistributionInfo">
+		<xs:sequence>
+			<xs:group ref="HVACDistributionGroup"/>
+			<xs:element name="AirDistributionType" type="AirDistributionType"/>
+			<xs:element name="AirHandlerMotorType" minOccurs="0" type="AirHandlerMotorType"/>
+			<xs:element name="ReturnDuctInsulationOutsideEnvelope" type="DuctInsulationLevel"
+				minOccurs="0"/>
+			<xs:element name="PreRetrofitDuctSizingWasAppropriate"
+				type="PreRetrofitDuctSizingWasAppropriate" minOccurs="0"/>
+			<xs:element name="PCTDuctSystemOutsideCondSpace" type="PCTDuctSystemOutsideCondSpace"
+				minOccurs="0"/>
+			<xs:element name="MaterialDuctSystemOutsideCondSpace"
+				type="MaterialDuctSystemOutsideCondSpace" minOccurs="0"/>
+			<xs:element name="PCTDuctSystemOutsideCondSpaceinWallCavity"
+				type="PCTDuctSystemOutsideCondSpaceinWallCavity" minOccurs="0"/>
+			<xs:element name="SupplyDuctInsulationOutsideEnvelope" type="DuctInsulationLevel"
+				minOccurs="0"/>
+			<xs:element ref="DuctLeakageMeasurement"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ElectricResistanceDistribution">
+		<xs:sequence>
+			<xs:group ref="HVACDistributionGroup"/>
+			<xs:element name="ElectricResistanceDistributionType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="DuctLeakageMeasurement">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="DuctLeakageTestUnitofMeasure" type="DuctLeakageTestUnitofMeasure"
+					minOccurs="0"/>
+				<xs:element name="LeakinessObservedVisualInspection"
+					type="LeakinessObservedVisualInspection" minOccurs="0"/>
+				<xs:element name="DuctLeakageTestMethod" type="DuctLeakageTestMethod" minOccurs="0"/>
+				<xs:element name="DuctLeakageTest" type="DuctLeakageTest" minOccurs="0"/>
+				<xs:element name="MeasuredDuctLeakage" type="MeasuredDuctLeakage" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>
