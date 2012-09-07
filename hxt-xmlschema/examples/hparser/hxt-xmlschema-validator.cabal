@@ -1,0 +1,20 @@
+name:                hxt-xmlschema-valdator
+version:             0.1.0.0
+synopsis:            HXT XML Parser and Validator for XML Schema
+-- description:         
+license:             MIT
+-- license-file:        LICENSE
+author:              Uwe Schmidt
+maintainer:          uwe@fh-wedel.de
+-- copyright:           
+category:            Text
+build-type:          Simple
+cabal-version:       >=1.8
+
+executable hxt-xmlschema-validator
+  main-is:             HXmlParser.hs
+  -- other-modules:       
+  build-depends:       base          >= 4
+                     , hxt           >= 9.3
+                     , hxt-curl      >= 9
+                     , hxt-xmlschema >= 9.3
