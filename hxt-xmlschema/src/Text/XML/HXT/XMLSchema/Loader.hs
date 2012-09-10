@@ -65,6 +65,10 @@ nsUri = "http://www.w3.org/2001/XMLSchema"
 nsPrefix :: String
 nsPrefix = "xs"
 
+mkXsdName :: String -> QName
+mkXsdName name
+    = mkQName nsPrefix name nsUri
+
 -- | Basic namespace-aware element pickler
 xpElem' :: String -> PU a -> PU a
 xpElem' name
@@ -85,38 +89,38 @@ xpFilterSchema
     where
     -- element blacklist
     isXmlSchemaElem           = hasNameWith $ (== nsUri) . namespaceUri
-    elementBlacklist          = foldr (<+>) none $ map hasQName $
-                                [ mkQName nsPrefix "annotation"           nsUri
-                                , mkQName nsPrefix "notation"             nsUri
+    elementBlacklist          = foldr (<+>) none $ map (hasQName .mkXsdName) $
+                                [ "annotation"
+                                , "notation"
                                 -- skipped content for element
-                                , mkQName nsPrefix "unique"               nsUri
-                                , mkQName nsPrefix "key"                  nsUri
-                                , mkQName nsPrefix "keyref"               nsUri
+                                , "unique"
+                                , "key"
+                                , "keyref"
                                 ]
     -- attribute blacklist
     isAttrWithoutNamespaceUri = hasNameWith $ null       . namespaceUri
-    attributeBlacklist        = foldr (<+>) none $ map hasQName $
-                                [ mkQName ""       "id"                   ""
+    attributeBlacklist        = foldr (<+>) none $ map (hasQName . mkName) $
+                                [ "id"
                                 -- skipped attributes for schema
-                                , mkQName ""       "attributeFormDefault" ""
-                                , mkQName ""       "blockDefault"         ""
-                                , mkQName ""       "elementFormDefault"   ""
-                                , mkQName ""       "finalDefault"         ""
-                                , mkQName ""       "version"              ""
-                                , mkQName ""       "lang"                 ""
+                                , "attributeFormDefault"
+                                , "blockDefault"
+                                , "elementFormDefault"
+                                , "finalDefault"
+                                , "version"
+                                , "lang"
                                 -- skipped attributes for simpleType, complexType and element
-                                , mkQName ""       "final"                ""
+                                , "final"
                                 -- skipped attributes for simpleType restrictions, complexType, element and attribute
-                                , mkQName ""       "fixed"                ""
+                                , "fixed"
                                 -- skipped attributes for complexType and element
-                                , mkQName ""       "abstract"             ""
-                                , mkQName ""       "block"                ""
+                                , "abstract"
+                                , "block"
                                 -- skipped attributes for element and attribute
-                                , mkQName ""       "default"              ""
-                                , mkQName ""       "form"                 ""
+                                , "default"
+                                , "form"
                                 -- skipped attributes for element
-                                , mkQName ""       "nillable"             ""
-                                , mkQName ""       "substitutionGroup"    ""
+                                , "nillable"
+                                , "substitutionGroup"
                                 ]
 
 -- | Split a string at a given delimiter

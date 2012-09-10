@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
   <!-- simple types (restrictions) -->
@@ -57,6 +57,13 @@
       <!--
       <xs:whiteSpace value="collapse"/>
       -->
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="gameDur">
+    <xs:restriction base="xs:duration">
+      <xs:minInclusive value="PT90M"/>     <!-- 90 minutes -->
+      <xs:maxInclusive value="PT2H5M30S"/> <!-- 125 1/2 minutes -->
     </xs:restriction>
   </xs:simpleType>
 

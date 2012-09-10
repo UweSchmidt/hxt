@@ -16,6 +16,7 @@
         <xs:element name="monthList"   type="months"/>
         <xs:element name="month"       type="generalMonth"/>
         <xs:element name="leapYear"    type="xs:boolean"/>
+	<xs:element name="game"        type="gameDur"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>

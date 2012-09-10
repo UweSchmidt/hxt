@@ -2,3 +2,4 @@
 make.out
 *.hi
 *.o
+dist*/

@@ -135,6 +135,8 @@ simpleTypesElemsErrors
               , "value does not match union type.")
             , ( "/root[1]/leapYear[1]/child::text()"
               , "\"perhaps\" is no valid boolean.")
+            , ( "/root[1]/game[1]/child::text()"
+              , "Parameter restriction: \"maxInclusive = PT2H5M30S\" does not hold for value = \"P3D\".")
             ])
 
 -- | A test for SimpleTypes as attribute values which match

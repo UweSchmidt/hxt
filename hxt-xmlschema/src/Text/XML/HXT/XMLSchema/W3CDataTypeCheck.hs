@@ -37,11 +37,16 @@ import Text.XML.HXT.DOM.Util          ( normalizeWhitespace
                                       , escapeURI
                                       )
 
+import Data.Char                      ( isAlpha
+                                      , isDigit
+                                      , toUpper
+                                      )
 import Data.Maybe                     ( fromMaybe )
 import Data.Ratio                     ( numerator
                                       , denominator
                                       , (%)
                                       )
+import Data.Time
 
 import Network.URI                    ( isURIReference )
 
@@ -171,7 +176,7 @@ readFloating "-INF" = -1.0 / 0.0
 readFloating  "NaN" =  0.0 / 0.0
 readFloating s      =  read s
 
--- | Tests whether an integer is valid
+-- | Tests whether an floating value is valid
 floatingValid :: (Floating n, Ord n, Read n, Show n) => DatatypeName -> ParamList -> CheckA n n
 floatingValid _datatype params
   = (foldr (>>>) ok . map paramFloatingValid $ params)
@@ -260,6 +265,140 @@ isInteger = matchRE rexInteger
 
 isFloating :: String -> Bool
 isFloating = matchRE rexFloating
+
+-- ----------------------------------------
+
+type Duration = NominalDiffTime
+
+rexDuration :: Regex
+rexDuration
+    = rex $ sign ++ "P" ++ alt (ymd ++ opt tim) tim
+    where
+      sign = "-?"
+      ymd = alt (y ++ opt md) md
+      md  = alt (m ++ opt  d)  d
+      y   = n ++ "Y"
+      m   = n ++ "M"
+      d   = n ++ "D"
+
+      tim = "T" ++ hms      
+      hms = alt (h  ++ opt ms) ms
+      ms  = alt (m' ++ opt  s)  s
+      h   = n ++ "H"
+      m'  = n ++ "M"
+      s   = n'n ++ "S"
+
+      n   = "[0-9]+"
+      n'n = n ++ opt ("[.]" ++ n)
+
+      opt x     = "(" ++ x ++ ")?"
+      alt s1 s2 = "((" ++ s1 ++ ")|(" ++ s2 ++ "))"
+
+isDuration :: String -> Bool
+isDuration = matchRE rexDuration
+
+readDuration :: String -> Duration
+readDuration ('-' : s) = negate $ readDuration s
+readDuration s0@('P' : s)
+    = readYearMonthDay s1 + readHourMinSec (drop 1 s2)
+    where
+      (s1, s2) = span (/= 'T') s
+
+      errDur = error $ "readDuration: wrong argument " ++ show s0
+
+      readDur = fromInteger . read
+
+      readYearMonthDay ""
+          = fromInteger 0
+      readYearMonthDay x
+          | head x2 == 'Y'
+              = (365 * 24 * 60 * 60) * readDur x1 + readYearMonthDay (tail x2)
+          | head x2 == 'M'
+              = ( 30 * 24 * 60 * 60) * readDur x1 + readYearMonthDay (tail x2)
+          | head x2 == 'D'
+              = (      24 * 60 * 60) * readDur x1
+          | otherwise
+              = errDur
+          where
+            (x1, x2) = span isDigit x
+
+
+      readHourMinSec ""
+          = fromInteger 0
+      readHourMinSec x
+          | head x2 == 'H'
+              = (60 * 60) * readDur x1 + readHourMinSec (tail x2)
+          | head x2 == 'M'
+              = (     60) * readDur x1 + readHourMinSec (tail x2)
+          | head x2 == 'S'
+              = fromRational $ readDecimal x1
+
+          | otherwise
+              = errDur
+          where
+            (x1, x2) = span (not . isAlpha) x
+readDuration s0
+    = error $ "readDuration: illegal argument " ++ show s0
+
+showDuration :: Duration -> String
+showDuration d
+    | d < fromInteger 0
+        = '-' : (showDuration $ negate d)
+    | otherwise
+        = addP . years $ d
+    where
+      addP "" = "P0D"
+      addP s  = 'P' : s
+
+      addT "" = ""
+      addT s  = 'T' : s
+
+      times scale unit next x
+          | r == 0 = res
+          | otherwise = show r ++ [unit] ++ res
+          where
+            r :: Integer
+            r = truncate $ x / scale
+            y = x - fromInteger r * scale
+            res = next y
+
+      years   = times (365 * 24 * 60 * 60) 'Y' months
+      months  = times  (30 * 24 * 60 * 60) 'M' days
+      days    = times       (24 * 60 * 60) 'D' $ addT . hours
+      hours   = times            (60 * 60) 'H' minutes
+      minutes = times                   60 'M' seconds
+      seconds d'
+          | d' == fromInteger 0 = ""
+          | otherwise           = map toUpper . show $ d'
+
+-- | Function table for integer tests
+--
+-- TODO: the 4 comparison operators can not be implemented ba the relatinal ops of Duration,
+-- in the standard ("http://www.w3.org/TR/xmlschema-2/#duration")
+-- there is a description of comparing durations: they must be compared
+-- combining with 4 special dates and if all comparisons reflect the required relation,
+-- the restriction is considdered as valid.
+
+fctTableDuration :: [(String, String -> Duration -> Bool)]
+fctTableDuration
+  = [ (xsd_maxExclusive, cvi (>))
+    , (xsd_minExclusive, cvi (<))
+    , (xsd_maxInclusive, cvi (>=))
+    , (xsd_minInclusive, cvi (<=))
+    ]
+    where
+    cvi :: (Duration -> Duration -> Bool) -> (String -> Duration -> Bool)
+    cvi op = \ x y -> isDuration x && readDuration x `op` y
+
+-- | Tests whether an duration value is valid
+durationValid :: ParamList -> CheckA Duration Duration
+durationValid params
+  = (foldr (>>>) ok . map paramDurationValid $ params)
+    where
+    paramDurationValid (pn, pv)
+      = assert
+        ((fromMaybe (const . const $ True) . lookup pn $ fctTableDuration) pv)
+        (errorMsgParam pn pv . showDuration)
 
 -- ----------------------------------------
 
@@ -353,10 +492,8 @@ datatypeAllowsW3C d params value
     where
     validString normFct
       = validPattern
-        >>>
-        arr normFct
-        >>>
-        validLength
+        >>> arr normFct
+        >>> validLength
 
     validNormString
       = validString normalizeWhitespace
@@ -369,10 +506,8 @@ datatypeAllowsW3C d params value
 
     validList
       = validPattern
-        >>>
-        arr normalizeWhitespace
-        >>>
-        validListLength
+        >>> arr normalizeWhitespace
+        >>> validListLength
 
     validListLength
       = listValid d params
@@ -381,38 +516,40 @@ datatypeAllowsW3C d params value
       = assertW3C isN
 
     validNCName
-      = validNormString >>> validName isNCName
+      = validNormString
+        >>> validName isNCName
 
     validQName
-      = validNormString >>> validName isWellformedQualifiedName
+      = validNormString
+        >>> validName isWellformedQualifiedName
 
     validDecimal
-      = arr normalizeWhitespace
-        >>>
-        assertW3C isDecimal
-        >>>
-        checkWith readDecimal (decimalValid params)
+      = validPattern
+        >>> arr normalizeWhitespace
+        >>> assertW3C isDecimal
+        >>> checkWith readDecimal (decimalValid params)
 
     validInteger inRange
       = validPattern
-        >>>
-        arr normalizeWhitespace
-        >>>
-        assertW3C isInteger
-        >>>
-        checkWith read (integerValid inRange params)
+        >>> arr normalizeWhitespace
+        >>> assertW3C isInteger
+        >>> checkWith read (integerValid inRange params)
 
     validFloating validFl
         = validPattern
-          >>>
-          assertW3C isFloating
-          >>>
-          checkWith readFloating (validFl d params)
+          >>> assertW3C isFloating
+          >>> checkWith readFloating (validFl d params)
 
     validBoolean
-        = validPattern
-          >>>
-          assertW3C (matchRE rexBoolean)
+        = validNormString
+          >>> validPattern
+          >>> assertW3C (matchRE rexBoolean)
+
+    validDuration
+      = validPattern
+        >>> arr normalizeWhitespace
+        >>> assertW3C isDuration
+        >>> checkWith readDuration (durationValid params)
 
     check :: CheckA String String
     check = fromMaybe notFound . lookup d $ checks
@@ -422,10 +559,13 @@ datatypeAllowsW3C d params value
     checks :: [(String, CheckA String String)]
     checks = [ (xsd_string,             validString id)
              , (xsd_normalizedString,   validString normalizeBlanks)
+
              , (xsd_token,              validNormString)
              , (xsd_language,           validNormString >>> assertW3C isLanguage)
+
              , (xsd_NMTOKEN,            validNormString >>> validName isNmtoken)
              , (xsd_NMTOKENS,           validList       >>> validName (isNameList isNmtoken))
+
              , (xsd_Name,               validNormString >>> validName isName)
              , (xsd_NCName,             validNCName)
              , (xsd_ID,                 validNCName)
@@ -433,16 +573,19 @@ datatypeAllowsW3C d params value
              , (xsd_IDREFS,             validList       >>> validName (isNameList isNCName))
              , (xsd_ENTITY,             validNCName)
              , (xsd_ENTITIES,           validList       >>> validName (isNameList isNCName))
+
              , (xsd_anyURI,             validName isURIReference >>> validString escapeURI)
              , (xsd_QName,              validQName)
              , (xsd_NOTATION,           validQName)
+
              , (xsd_hexBinary,          validString id         >>> assertW3C isHexBinary)
              , (xsd_base64Binary,       validString normBase64 >>> assertW3C isBase64Binary)
-             , (xsd_boolean,            validNormString >>> validBoolean)
-             , (xsd_decimal,            validPattern >>> validDecimal)
+
+             , (xsd_boolean,            validBoolean)
+             , (xsd_decimal,            validDecimal)
              , (xsd_double,             validFloating doubleValid)
              , (xsd_float,              validFloating floatValid)
-             , (xsd_decimal,            validPattern >>> validDecimal)
+
              , (xsd_integer,            validInteger xsd_integer)
              , (xsd_nonPositiveInteger, validInteger xsd_nonPositiveInteger)
              , (xsd_negativeInteger,    validInteger xsd_negativeInteger)
@@ -456,6 +599,8 @@ datatypeAllowsW3C d params value
              , (xsd_unsignedInt,        validInteger xsd_unsignedInt)
              , (xsd_unsignedShort,      validInteger xsd_unsignedShort)
              , (xsd_unsignedByte,       validInteger xsd_unsignedByte)
+
+             , (xsd_duration,           validDuration)
              ]
     assertW3C p = assert p errW3C
     errW3C      = errorMsgDataDoesNotMatch d

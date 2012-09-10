@@ -95,8 +95,8 @@ mkW3CCheckSTTF n p
   = if n `elem` -- [ mkName "xs:boolean" -- already added
                 -- , mkName "xs:float"
                 -- , mkName "xs:double"
+                -- , mkName "xs:duration"
                 [ mkName "xs:time"    -- TODO: extend W3CDataTypeCheck
-                , mkName "xs:duration"
                 , mkName "xs:date"
                 , mkName "xs:dateTime"
                 , mkName "xs:gDay"
