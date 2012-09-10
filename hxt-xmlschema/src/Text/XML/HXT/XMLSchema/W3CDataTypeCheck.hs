@@ -402,6 +402,42 @@ durationValid params
 
 -- ----------------------------------------
 
+rexDateTime, rexDate, rexTime :: Regex
+(rexDateTime, rexDate, rexTime)
+    = (rex dateTime, rex date, rex time)
+    where
+      date     = ymd'               ++ tz
+      dateTime = ymd' ++ "T" ++ hms ++ tz
+      time     =                hms ++ tz
+
+      ymd   = "-?" ++ y4 ++ "-" ++ m2 ++ "-" ++ t2
+      ymd'  = y42 ++ ymd
+
+      hms   = alt (h2 ++ ":" ++ i2 ++ ":" ++ s2 ++ fr)
+                  ("24:00:00" ++ opt ".0+")             -- 24:00 is legal
+
+      tz    = opt (alt tz0 "Z")
+      tz0   = (alt "\\-" "\\+") ++ tz1
+      tz1   = alt (h13 ++ ":" ++ i2) "14:00:00"
+
+      m2    = alt "0[1-9]" "1[0-2]"			-- Month
+      t2    = alt "0[1-9]" (alt "[12][0-9]" "3[01]")    -- Tag
+      h2    = alt "[01][0-9]" "2[0-3]"                  -- Hour
+      i2    = "[0-5][0-9]"                              -- mInute
+      s2    = i2                                        -- Seconds
+
+      y4    = "[0-9]{4}"
+
+      y42   = opt "[1-9][0-9]*"
+      fr    = opt ".[0-9]+"
+
+      h13   = alt "0[0-9]" "1[0-3]"
+
+      opt x     = "(" ++ x ++ ")?"
+      alt x y   = "((" ++ x ++ ")|(" ++ y ++ "))"
+
+-- ----------------------------------------
+
 -- | Transforms a base64 value
 normBase64 :: String -> String
 normBase64 = filter isB64
