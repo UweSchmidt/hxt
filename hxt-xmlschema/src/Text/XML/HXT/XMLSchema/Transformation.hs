@@ -96,10 +96,10 @@ mkW3CCheckSTTF n p
                 -- , mkName "xs:float"
                 -- , mkName "xs:double"
                 -- , mkName "xs:duration"
-                [ mkName "xs:time"    -- TODO: extend W3CDataTypeCheck
-                , mkName "xs:date"
-                , mkName "xs:dateTime"
-                , mkName "xs:gDay"
+                -- , mkName "xs:time"
+                -- , mkName "xs:date"
+                -- , mkName "xs:dateTime"
+                [ mkName "xs:gDay"    -- TODO: extend W3CDataTypeCheck
                 , mkName "xs:gMonth"
                 , mkName "xs:gMonthDay"
                 , mkName "xs:gYear"

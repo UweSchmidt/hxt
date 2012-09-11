@@ -41,12 +41,15 @@ import Data.Char                      ( isAlpha
                                       , isDigit
                                       , toUpper
                                       )
-import Data.Maybe                     ( fromMaybe )
+import Data.Function                  ( on )
+import Data.Maybe                     ( fromMaybe
+                                      , isJust
+                                      )
 import Data.Ratio                     ( numerator
                                       , denominator
                                       , (%)
                                       )
-import Data.Time
+import Data.Time                      hiding ( readTime )
 
 import Network.URI                    ( isURIReference )
 
@@ -300,7 +303,7 @@ isDuration = matchRE rexDuration
 readDuration :: String -> Duration
 readDuration ('-' : s) = negate $ readDuration s
 readDuration s0@('P' : s)
-    = readYearMonthDay s1 + readHourMinSec (drop 1 s2)
+    = readYearMonthDay s1 + readHourMinSecD (drop 1 s2)
     where
       (s1, s2) = span (/= 'T') s
 
@@ -323,13 +326,13 @@ readDuration s0@('P' : s)
             (x1, x2) = span isDigit x
 
 
-      readHourMinSec ""
+      readHourMinSecD ""
           = fromInteger 0
-      readHourMinSec x
+      readHourMinSecD x
           | head x2 == 'H'
-              = (60 * 60) * readDur x1 + readHourMinSec (tail x2)
+              = (60 * 60) * readDur x1 + readHourMinSecD (tail x2)
           | head x2 == 'M'
-              = (     60) * readDur x1 + readHourMinSec (tail x2)
+              = (     60) * readDur x1 + readHourMinSecD (tail x2)
           | head x2 == 'S'
               = fromRational $ readDecimal x1
 
@@ -373,7 +376,7 @@ showDuration d
 
 -- | Function table for integer tests
 --
--- TODO: the 4 comparison operators can not be implemented ba the relatinal ops of Duration,
+-- TODO: the 4 comparison operators can not be implemented by the relatinal ops of Duration,
 -- in the standard ("http://www.w3.org/TR/xmlschema-2/#duration")
 -- there is a description of comparing durations: they must be compared
 -- combining with 4 special dates and if all comparisons reflect the required relation,
@@ -399,6 +402,49 @@ durationValid params
       = assert
         ((fromMaybe (const . const $ True) . lookup pn $ fctTableDuration) pv)
         (errorMsgParam pn pv . showDuration)
+
+-- ----------------------------------------
+
+data Date = Date UTCTime MaybeTimeZone
+          deriving (Show)
+
+type MaybeTimeZone = Maybe Seconds
+
+type Seconds = Int
+
+instance Eq Date where
+    (==) = (==) `on` toUTCTime
+
+instance Ord Date where
+    compare = compare `on` toUTCTime
+
+mkDateTime :: Day -> DiffTime -> MaybeTimeZone -> Date
+mkDateTime d t z
+    = Date (UTCTime d t) z
+
+mkDate :: Day -> MaybeTimeZone -> Date
+mkDate d z
+    = mkDateTime d (fromInteger 0) z
+
+mkTime :: DiffTime -> MaybeTimeZone -> Date
+mkTime
+    = mkDateTime (fromGregorian 0 1 1)
+
+mkYear :: Integer -> MaybeTimeZone -> Date
+mkYear y z
+    = mkYearMonthDay y 1 1 z
+
+mkYearMonth :: Integer -> Int -> MaybeTimeZone -> Date
+mkYearMonth y m z
+    = mkYearMonthDay y m 1 z
+
+mkYearMonthDay :: Integer -> Int -> Int -> MaybeTimeZone -> Date
+mkYearMonthDay y m d z
+    = mkDate (fromGregorian y m d) z
+
+toUTCTime :: Date -> UTCTime
+toUTCTime (Date d Nothing) = d
+toUTCTime (Date d (Just tz)) = addUTCTime (fromInteger . toInteger $ tz) d
 
 -- ----------------------------------------
 
@@ -435,6 +481,157 @@ rexDateTime, rexDate, rexTime :: Regex
 
       opt x     = "(" ++ x ++ ")?"
       alt x y   = "((" ++ x ++ ")|(" ++ y ++ "))"
+
+isDateTime, isDate, isTime :: String -> Bool
+isDateTime = matchRE rexDateTime
+isDate     = matchRE rexDate
+isTime     = matchRE rexTime
+
+readTimeZone :: String -> MaybeTimeZone
+readTimeZone ""
+    = Nothing
+readTimeZone "Z"
+    = Just 0
+readTimeZone (s : xs)
+    = Just .
+      ( if s == '-' then negate else id ) .
+      readZone $ xs
+    where
+      readZone s'
+          = 60 * (60 * read hs + read ms)
+          where
+            (hs, (_ : ms)) = span (/= ':') s'
+
+readYearMonthDayS :: String -> (Day, String)
+readYearMonthDayS s0
+    = (fromGregorian (sign $ read year) (read month) (read day), rest)
+    where
+      (sign,          s ) = if head s0 == '-'
+                            then (negate, tail s0)
+                            else (id,          s0)
+      (year,  (_ : rest1)) = span (/= '-') s
+      (month, (_ : rest2)) = span (/= '-') rest1
+      (day,        rest  ) = span isDigit rest2
+
+readHourMinSec :: String -> DiffTime
+readHourMinSec s
+    = fromInteger (60 * (60 * read hours + read minutes))
+      +
+      fromRational (readDecimal seconds)
+    where
+      (hours,   (_ :    rest)) = span (/= ':') s
+      (minutes, (_ : seconds)) = span (/= ':') rest
+
+readDateTime :: String -> Date
+readDateTime s
+    = mkDateTime day (readHourMinSec time) (readTimeZone zone)
+    where
+      (day,  (_ : rest)) = readYearMonthDayS s
+      (time,       zone) = span (\ x -> isDigit x || x `elem` ":.") rest
+
+readDate :: String -> Date
+readDate s
+    = mkDateTime day nullTime (readTimeZone zone)
+    where
+      (day, zone) = readYearMonthDayS s
+
+readTime :: String -> Date
+readTime s
+    = mkDateTime nullDay (readHourMinSec time) (readTimeZone zone)
+    where
+      (time, zone) = span (\ x -> isDigit x || x `elem` ":.") s
+      
+nullTime :: DiffTime
+nullTime = fromInteger 0
+
+nullDay :: Day
+nullDay = fromGregorian 0 1 1
+
+-- --------------------
+-- the show must go on
+
+showDateTime :: Date -> String
+showDateTime (Date d tz)
+    = ymd ++ "T" ++ hms ++ showTimeZone tz
+    where
+      (ymd : hms : _) = words . show $ d
+
+showDate :: Date -> String
+showDate (Date d tz)
+    = ymd ++ showTimeZone tz
+    where
+      (ymd : _) = words . show $ d
+
+-- it's
+showTime :: Date -> String
+showTime (Date d tz)
+    = hms ++ showTimeZone tz
+    where
+      (_ymd : hms : _) = words . show $ d
+
+showTimeZone :: MaybeTimeZone -> String
+showTimeZone Nothing
+    = ""
+showTimeZone (Just s)
+    | s == 0    = "Z"
+    | s >  0    = '+' : showHourMin s
+    | otherwise = '-' : showHourMin (negate s)
+
+showHourMin :: Int -> String
+showHourMin s0
+    = showDec 2 (s `div` 60) ++ ":" ++ showDec 2 (s `mod` 60)
+    where
+      s = s0 `div` 60
+
+showDec :: Int -> Int -> String
+showDec n = reverse . toStr n
+    where
+      toStr 0 _ = ""
+      toStr l i = show (i `mod` 10) ++ toStr (l-1) (i `div` 10)
+
+-- --------------------
+--
+-- the real checks for date and time
+
+-- Comparison of dates with timezone with dates without timezone
+-- is only defined, when the difference is larger than 14 hours
+
+fuzzyCmp :: (Date -> Date -> Bool) -> (Date -> Date -> Bool)
+fuzzyCmp op d1@(Date _ tz1) d2@(Date _ tz2)
+    | isJust tz1 == isJust tz2
+        = d1 `op` d2
+    | otherwise
+        = d1 `op` d2 && distLarger14Hours
+    where
+      distLarger14Hours
+          = abs (toUTCTime d1 `diffUTCTime` toUTCTime d2) > hours'14
+
+hours'14 :: NominalDiffTime
+hours'14 = fromInteger (14 * 60 * 60)
+
+fctTableDateTime :: (String -> Bool) -> (String -> Date) -> [(String, String -> Date -> Bool)]
+fctTableDateTime isDT readDT
+  = [ (xsd_maxExclusive, cvi (>))
+    , (xsd_minExclusive, cvi (<))
+    , (xsd_maxInclusive, cvi (>=))
+    , (xsd_minInclusive, cvi (<=))
+    ]
+    where
+    cvi :: (Date -> Date -> Bool) -> (String -> Date -> Bool)
+    cvi op = \ x y -> isDT x && readDT x `fuzzyop` y
+        where
+          fuzzyop = fuzzyCmp op
+
+-- | Tests whether an duration value is valid
+dateTimeValid :: (String -> Bool) -> (String -> Date) -> (Date -> String) -> ParamList -> CheckA Date Date
+dateTimeValid isDT readDT showDT params
+  = (foldr (>>>) ok . map paramDateTimeValid $ params)
+    where
+    paramDateTimeValid (pn, pv)
+      = assert
+        ((fromMaybe (const . const $ True) . lookup pn $ fctTableDateTime isDT readDT) pv)
+        (errorMsgParam pn pv . showDT)
+
 
 -- ----------------------------------------
 
@@ -587,6 +784,12 @@ datatypeAllowsW3C d params value
         >>> assertW3C isDuration
         >>> checkWith readDuration (durationValid params)
 
+    validDateTime isDT readDT showDT
+        = validPattern
+          >>> arr normalizeWhitespace
+          >>> assertW3C isDT
+          >>> checkWith readDT (dateTimeValid isDT readDT showDT params)
+
     check :: CheckA String String
     check = fromMaybe notFound . lookup d $ checks
 
@@ -637,6 +840,9 @@ datatypeAllowsW3C d params value
              , (xsd_unsignedByte,       validInteger xsd_unsignedByte)
 
              , (xsd_duration,           validDuration)
+             , (xsd_dateTime,           validDateTime isDateTime readDateTime showDateTime)
+             , (xsd_date,               validDateTime isDate     readDate     showDate    )
+             , (xsd_time,               validDateTime isTime     readTime     showTime    )
              ]
     assertW3C p = assert p errW3C
     errW3C      = errorMsgDataDoesNotMatch d
