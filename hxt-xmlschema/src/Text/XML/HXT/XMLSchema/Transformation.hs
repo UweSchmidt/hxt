@@ -24,7 +24,6 @@ import Text.XML.HXT.XMLSchema.W3CDataTypeCheck
 import Text.XML.HXT.XMLSchema.ValidationTypes
 
 import Text.XML.HXT.Core           ( QName
-                                   , mkName
                                    , localPart
                                    , namespaceUri
                                    , qualifiedName
@@ -92,23 +91,9 @@ mkPassthroughSTTF
 -- | Creates a SimpleType test function for basic W3C datatypes
 mkW3CCheckSTTF :: QName -> ParamList -> STTF
 mkW3CCheckSTTF n p
-  = if n `elem` -- [ mkName "xs:boolean" -- already added
-                -- , mkName "xs:float"
-                -- , mkName "xs:double"
-                -- , mkName "xs:duration"
-                -- , mkName "xs:time"
-                -- , mkName "xs:date"
-                -- , mkName "xs:dateTime"
-                [ mkName "xs:gDay"    -- TODO: extend W3CDataTypeCheck
-                , mkName "xs:gMonth"
-                , mkName "xs:gMonthDay"
-                , mkName "xs:gYear"
-                , mkName "xs:gYearMonth"
-                ]
-    then mkWarnSTTF $ "no check implemented for W3C type " ++ (localPart n) ++ "."
-    else \ v -> case datatypeAllowsW3C (localPart n) p v of
-                  Nothing  -> return True
-                  Just msg -> mkErrorSTTF' msg
+  = \ v -> case datatypeAllowsW3C (localPart n) p v of
+             Nothing  -> return True
+             Just msg -> mkErrorSTTF' msg
 
 -- | Creates the SimpleType test function for a given type reference by name
 lookupSTTF :: QName -> ST STTF

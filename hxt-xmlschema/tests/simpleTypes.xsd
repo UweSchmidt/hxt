@@ -67,6 +67,20 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="olympics">
+    <xs:restriction base="xs:dateTime">
+      <xs:minInclusive value="2012-07-01T12:00:07+00:00"/>
+      <xs:maxInclusive value="2012-07-25T24:00:00-02:30"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="dimido">
+    <xs:restriction base="xs:gDay">
+      <xs:minInclusive value="---02"/>
+      <xs:maxInclusive value="---04"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <!-- simple types (list / union) -->
 
   <xs:simpleType name="months">

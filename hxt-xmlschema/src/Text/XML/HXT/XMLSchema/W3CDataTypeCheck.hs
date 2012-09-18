@@ -422,42 +422,29 @@ mkDateTime :: Day -> DiffTime -> MaybeTimeZone -> Date
 mkDateTime d t z
     = Date (UTCTime d t) z
 
-mkDate :: Day -> MaybeTimeZone -> Date
-mkDate d z
-    = mkDateTime d (fromInteger 0) z
-
-mkTime :: DiffTime -> MaybeTimeZone -> Date
-mkTime
-    = mkDateTime (fromGregorian 0 1 1)
-
-mkYear :: Integer -> MaybeTimeZone -> Date
-mkYear y z
-    = mkYearMonthDay y 1 1 z
-
-mkYearMonth :: Integer -> Int -> MaybeTimeZone -> Date
-mkYearMonth y m z
-    = mkYearMonthDay y m 1 z
-
-mkYearMonthDay :: Integer -> Int -> Int -> MaybeTimeZone -> Date
-mkYearMonthDay y m d z
-    = mkDate (fromGregorian y m d) z
-
 toUTCTime :: Date -> UTCTime
 toUTCTime (Date d Nothing) = d
 toUTCTime (Date d (Just tz)) = addUTCTime (fromInteger . toInteger $ tz) d
 
 -- ----------------------------------------
 
-rexDateTime, rexDate, rexTime :: Regex
-(rexDateTime, rexDate, rexTime)
-    = (rex dateTime, rex date, rex time)
+rexDates :: [Regex]
+rexDates
+    = map rex [dateTime, date, time, gYearMonth, gYear, gMonthDay, gMonth, gDay]
     where
-      date     = ymd'               ++ tz
-      dateTime = ymd' ++ "T" ++ hms ++ tz
-      time     =                hms ++ tz
+      dateTime   = ymd ++ "T" ++ hms ++ tz
+      time       =               hms ++ tz
+      date       = ymd               ++ tz
+      gYearMonth = ym                ++ tz
+      gYear      = y                 ++ tz
 
-      ymd   = "-?" ++ y4 ++ "-" ++ m2 ++ "-" ++ t2
-      ymd'  = y42 ++ ymd
+      gMonthDay  = "--" ++ m2 ++ "-" ++ t2 ++ tz
+      gMonth     = "--" ++ m2              ++ tz
+      gDay       = "--"       ++ "-" ++ t2 ++ tz
+
+      y     = "-?" ++ y4'
+      ym    = y           ++ "-" ++ m2
+      ymd   = ym                       ++ "-" ++ t2
 
       hms   = alt (h2 ++ ":" ++ i2 ++ ":" ++ s2 ++ fr)
                   ("24:00:00" ++ opt ".0+")             -- 24:00 is legal
@@ -472,20 +459,22 @@ rexDateTime, rexDate, rexTime :: Regex
       i2    = "[0-5][0-9]"                              -- mInute
       s2    = i2                                        -- Seconds
 
-      y4    = "[0-9]{4}"
+      y1    = "000[1-9]"                                -- 0000 isn't a year
+      y2    = "00[1-9][0-9]"                            -- leading 0-s are only allowd for year < 1000
+      y3    = "0[1-9][0-9]{2}"
+      y4    = "[1-9][0-9]{3,}"
+      y4'   = alt y4 $ alt y3 $ alt y2 y1
 
-      y42   = opt "[1-9][0-9]*"
       fr    = opt ".[0-9]+"
 
       h13   = alt "0[0-9]" "1[0-3]"
 
       opt x     = "(" ++ x ++ ")?"
-      alt x y   = "((" ++ x ++ ")|(" ++ y ++ "))"
+      alt x1 x2 = "((" ++ x1 ++ ")|(" ++ x2 ++ "))"
 
-isDateTime, isDate, isTime :: String -> Bool
-isDateTime = matchRE rexDateTime
-isDate     = matchRE rexDate
-isTime     = matchRE rexTime
+isDateTime, isDate, isTime, isGYearMonth, isGYear, isGMonthDay, isGMonth, isGDay :: String -> Bool
+[isDateTime, isDate, isTime, isGYearMonth, isGYear, isGMonthDay, isGMonth, isGDay]
+    = map matchRE rexDates
 
 readTimeZone :: String -> MaybeTimeZone
 readTimeZone ""
@@ -513,6 +502,44 @@ readYearMonthDayS s0
       (month, (_ : rest2)) = span (/= '-') rest1
       (day,        rest  ) = span isDigit rest2
 
+readYearMonthS :: String -> (Day, String)
+readYearMonthS s0
+    = (fromGregorian (sign $ read year) (read month) 1, rest)
+    where
+      (sign,          s ) = if head s0 == '-'
+                            then (negate, tail s0)
+                            else (id,          s0)
+      (year,  (_ : rest1)) = span (/= '-') s
+      (month,      rest  ) = span isDigit rest1
+
+readYearS :: String -> (Day, String)
+readYearS s0
+    = (fromGregorian (sign $ read year) 1 1, rest)
+    where
+      (sign,          s ) = if head s0 == '-'
+                            then (negate, tail s0)
+                            else (id,          s0)
+      (year,       rest  ) = span isDigit s
+
+readMonthDayS :: String -> (Day, String)
+readMonthDayS s0
+    = (fromGregorian 1 (read month) (read day), rest)
+    where
+      (month, (_ : rest1)) = span isDigit . drop 2 $ s0
+      (day,        rest  ) = span isDigit rest1
+
+readMonthS :: String -> (Day, String)
+readMonthS s0
+    = (fromGregorian 1 (read month) 1, rest)
+    where
+      (month,       rest ) = span isDigit . drop 2 $ s0
+
+readDayS :: String -> (Day, String)
+readDayS s0
+    = (fromGregorian 1 1 (read day), rest)
+    where
+      (day,         rest ) = span isDigit . drop 3 $ s0
+
 readHourMinSec :: String -> DiffTime
 readHourMinSec s
     = fromInteger (60 * (60 * read hours + read minutes))
@@ -529,11 +556,20 @@ readDateTime s
       (day,  (_ : rest)) = readYearMonthDayS s
       (time,       zone) = span (\ x -> isDigit x || x `elem` ":.") rest
 
-readDate :: String -> Date
-readDate s
+readDate' :: (String -> (Day, String)) -> String -> Date
+readDate' read' s
     = mkDateTime day nullTime (readTimeZone zone)
     where
-      (day, zone) = readYearMonthDayS s
+      (day, zone) = read' s
+
+readDate, readGYearMonth, readGYear, readGMonthDay, readGMonth, readGDay :: String -> Date
+readDate       = readDate' readYearMonthDayS
+readGYearMonth = readDate' readYearMonthS
+readGYear      = readDate' readYearS
+readGMonthDay  = readDate' readMonthDayS
+readGMonth     = readDate' readMonthS
+readGDay       = readDate' readDayS
+
 
 readTime :: String -> Date
 readTime s
@@ -556,11 +592,32 @@ showDateTime (Date d tz)
     where
       (ymd : hms : _) = words . show $ d
 
-showDate :: Date -> String
-showDate (Date d tz)
-    = ymd ++ showTimeZone tz
+showDate' :: (String -> String) -> Date -> String
+showDate' fmt (Date d tz)
+    = fmt ymd ++ showTimeZone tz
     where
       (ymd : _) = words . show $ d
+
+dropRev :: Int -> String -> String
+dropRev i = reverse . drop i . reverse
+
+showDate :: Date -> String
+showDate = showDate' $ id
+
+showGYearMonth :: Date -> String
+showGYearMonth = showDate' $ dropRev 3
+
+showGYear :: Date -> String
+showGYear = showDate' $ dropRev 6
+
+showGMonthDay :: Date -> String
+showGMonthDay = showDate' $ ('-' :) . reverse . take 6 . reverse
+
+showGMonth :: Date -> String
+showGMonth = showDate' $ ('-' :) . reverse . take 3 . drop 3 . reverse
+
+showGDay :: Date -> String
+showGDay = showDate' $ ('-' :) . ('-' :) . reverse . take 3 . reverse
 
 -- it's
 showTime :: Date -> String
@@ -622,7 +679,7 @@ fctTableDateTime isDT readDT
         where
           fuzzyop = fuzzyCmp op
 
--- | Tests whether an duration value is valid
+-- | Tests whether a date or time value is valid
 dateTimeValid :: (String -> Bool) -> (String -> Date) -> (Date -> String) -> ParamList -> CheckA Date Date
 dateTimeValid isDT readDT showDT params
   = (foldr (>>>) ok . map paramDateTimeValid $ params)
@@ -840,9 +897,14 @@ datatypeAllowsW3C d params value
              , (xsd_unsignedByte,       validInteger xsd_unsignedByte)
 
              , (xsd_duration,           validDuration)
-             , (xsd_dateTime,           validDateTime isDateTime readDateTime showDateTime)
-             , (xsd_date,               validDateTime isDate     readDate     showDate    )
-             , (xsd_time,               validDateTime isTime     readTime     showTime    )
+             , (xsd_dateTime,           validDateTime isDateTime   readDateTime   showDateTime  )
+             , (xsd_date,               validDateTime isDate       readDate       showDate      )
+             , (xsd_time,               validDateTime isTime       readTime       showTime      )
+             , (xsd_gYearMonth,         validDateTime isGYearMonth readGYearMonth showGYearMonth)
+             , (xsd_gYear,              validDateTime isGYear      readGYear      showGYear     )
+             , (xsd_gMonthDay,          validDateTime isGMonthDay  readGMonthDay  showGMonthDay )
+             , (xsd_gMonth,             validDateTime isGMonth     readGMonth     showGMonth    )
+             , (xsd_gDay,               validDateTime isGDay       readGDay       showGDay      )
              ]
     assertW3C p = assert p errW3C
     errW3C      = errorMsgDataDoesNotMatch d

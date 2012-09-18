@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
   <xs:include schemaLocation="simpleTypes.xsd"/>
@@ -14,6 +14,8 @@
         <xs:attribute name="plz"         type="plz"/>
         <xs:attribute name="monthList"   type="months"/>
         <xs:attribute name="month"       type="generalMonth"/>
+        <xs:attribute name="otime"       type="olympics"/>
+        <xs:attribute name="wday"        type="dimido"/>
     </xs:complexType>
   </xs:element>
 

@@ -1,8 +1,10 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <root summerMonth="10"
       temperature="421"
       password="safe"
       monthByName="Foo"
       plz="42"
       monthList="a wrong list"
-      month="0"/>
+      month="0"
+      otime="2012-07-01T12:00:08-00:30"
+      wday="---05"/>

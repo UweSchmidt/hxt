@@ -137,6 +137,8 @@ simpleTypesElemsErrors
               , "\"perhaps\" is no valid boolean.")
             , ( "/root[1]/game[1]/child::text()"
               , "Parameter restriction: \"maxInclusive = PT2H5M30S\" does not hold for value = \"P3D\".")
+            , ("/root[1]/olympics[1]/child::text()"
+              , "Parameter restriction: \"minInclusive = 2012-07-01T12:00:07+00:00\" does not hold for value = \"2012-06-15T12:00:00Z\".")
             ])
 
 -- | A test for SimpleTypes as attribute values which match
@@ -161,6 +163,10 @@ simpleTypesAttrsErrors
               , "value does not match list type.")
             , ( "/root[1]/@month"
               , "value does not match union type.")
+            , ( "/root[1]/@otime"
+              , "Parameter restriction: \"minInclusive = 2012-07-01T12:00:07+00:00\" does not hold for value = \"2012-07-01T12:00:08-00:30\".")
+            , ("/root[1]/@wday"
+              , "Parameter restriction: \"maxInclusive = ---04\" does not hold for value = \"---05\".")
             ])
 
 -- | A test for ComplexTypes which match
