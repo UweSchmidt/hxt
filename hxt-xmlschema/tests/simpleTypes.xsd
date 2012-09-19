@@ -34,7 +34,6 @@
   <xs:simpleType name="monthAbbr">
     <xs:restriction base="xs:string">
       <xs:length value="3"/>
-      <!--
       <xs:enumeration value="Jan"/>
       <xs:enumeration value="Feb"/>
       <xs:enumeration value="Mar"/>
@@ -47,16 +46,15 @@
       <xs:enumeration value="Okt"/>
       <xs:enumeration value="Nov"/>
       <xs:enumeration value="Dec"/>
-      -->
     </xs:restriction>
   </xs:simpleType>
 
   <xs:simpleType name="plz">
     <xs:restriction base="xs:string">
-      <xs:pattern value="(D )?[0-9]{5}"/>
-      <!--
+      <xs:pattern value=" *(D *)?[0-9]+ *"/>
       <xs:whiteSpace value="collapse"/>
-      -->
+      <xs:minLength value="5"/>
+      <xs:maxLength value="7"/>
     </xs:restriction>
   </xs:simpleType>
 

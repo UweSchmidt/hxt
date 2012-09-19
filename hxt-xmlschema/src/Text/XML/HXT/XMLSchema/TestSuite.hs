@@ -125,10 +125,10 @@ simpleTypesElemsErrors
               , "Parameter restriction: \"totalDigits = 3\" does not hold for value = \"42\".")
             , ( "/root[1]/password[1]/child::text()"
               , "Parameter restriction: \"maxLength = 10\" does not hold for value = \"a wrong password\".")
-            , ( "/root[1]/monthByName[1]/child::text()"
-              , "Parameter restriction: \"length = 3\" does not hold for value = \"wrong\".")
-            , ( "/root[1]/plz[1]/child::text()"
-              , "Parameter restriction: \"pattern = (D )?[0-9]{5}\" does not hold for value = \"42\".")
+            , ("/root[1]/monthByName[1]/child::text()"
+              , "value \"wrong\" not element of enumeration: [\"Jan\",\"Feb\",\"Mar\",\"Apr\",\"May\",\"Jun\",\"Jul\",\"Aug\",\"Sep\",\"Okt\",\"Nov\",\"Dec\"]")
+            , ("/root[1]/plz[1]/child::text()"
+              , "Parameter restriction: \"minLength = 5\" does not hold for value = \"42\".")
             , ( "/root[1]/monthList[1]/child::text()"
               , "value does not match list type.")
             , ( "/root[1]/month[1]/child::text()"
@@ -157,8 +157,10 @@ simpleTypesAttrsErrors
               , "Parameter restriction: \"fractionDigits = 1\" does not hold for value = \"421\".")
             , ( "/root[1]/@password"
               , "Parameter restriction: \"minLength = 5\" does not hold for value = \"safe\".")
-            , ( "/root[1]/@plz"
-              , "Parameter restriction: \"pattern = (D )?[0-9]{5}\" does not hold for value = \"42\".")
+            , ("/root[1]/@monthByName"
+              ,"value \"Foo\" not element of enumeration: [\"Jan\",\"Feb\",\"Mar\",\"Apr\",\"May\",\"Jun\",\"Jul\",\"Aug\",\"Sep\",\"Okt\",\"Nov\",\"Dec\"]")
+            , ("/root[1]/@plz"
+              ,"Parameter restriction: \"minLength = 5\" does not hold for value = \"42\".")
             , ( "/root[1]/@monthList"
               , "value does not match list type.")
             , ( "/root[1]/@month"

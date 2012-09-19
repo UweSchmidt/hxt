@@ -13,9 +13,7 @@
 -}
 
 module Text.XML.HXT.XMLSchema.Transformation
-
   ( createRootDesc )
-
 where
 
 import Text.XML.HXT.XMLSchema.XmlUtils
@@ -112,23 +110,21 @@ mergeRestrAttrs rlist rlist'
 -- | Converts a list of restriction params into the ParamList datatype
 restrAttrsToParamList :: RestrAttrs -> ParamList
 restrAttrsToParamList rlist
-  = concat $ map (\ x -> case x of
-                           MinIncl v        -> [(xsd_minInclusive,   v)]
-                           MaxIncl v        -> [(xsd_maxInclusive,   v)]
-                           MinExcl v        -> [(xsd_minExclusive,   v)]
-                           MaxExcl v        -> [(xsd_maxExclusive,   v)]
-                           TotalDigits v    -> [(xsd_totalDigits,    v)]
-                           FractionDigits v -> [(xsd_fractionDigits, v)]
-                           Length v         -> [(xsd_length,         v)]
-                           MinLength v      -> [(xsd_minLength,      v)]
-                           MaxLength v      -> [(xsd_maxLength,      v)]
-                           Pattern v        -> [(xsd_pattern,        v)]
-                           -- TODO: extend W3CDataTypeCheck
-                           -- Enumeration v    -> [(xsd_enumeration,    v)]
-                           -- WhiteSpace v     -> [(xsd_whiteSpace,     v)]
-                           _                -> []
-
-                 ) rlist
+    = concat $
+      map (\ x -> case x of
+                    MinIncl v        -> [(xsd_minInclusive,   v)]
+                    MaxIncl v        -> [(xsd_maxInclusive,   v)]
+                    MinExcl v        -> [(xsd_minExclusive,   v)]
+                    MaxExcl v        -> [(xsd_maxExclusive,   v)]
+                    TotalDigits v    -> [(xsd_totalDigits,    v)]
+                    FractionDigits v -> [(xsd_fractionDigits, v)]
+                    Length v         -> [(xsd_length,         v)]
+                    MinLength v      -> [(xsd_minLength,      v)]
+                    MaxLength v      -> [(xsd_maxLength,      v)]
+                    Pattern v        -> [(xsd_pattern,        v)]
+                    Enumeration v    -> [(xsd_enumeration,    v)]
+                    WhiteSpace v     -> [(xsd_whiteSpace,     v)]
+          ) rlist
 
 -- | Creates a SimpleType test function which applies two given SimpleType test functions
 checkBothSTTF :: STTF -> STTF -> STTF

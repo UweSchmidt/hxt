@@ -12,12 +12,10 @@
 -}
 
 module Text.XML.HXT.XMLSchema.W3CDataTypeCheck
-
   ( module Text.XML.HXT.XMLSchema.DataTypeLibW3CNames
   , ParamList
   , datatypeAllowsW3C
   )
-
 where
 
 import Text.XML.HXT.XMLSchema.W3CDataTypeCheckUtils
@@ -84,7 +82,21 @@ patParamValid regex a
 
 enumerationValid :: ParamList -> CheckA String String
 enumerationValid params
-    = undefined
+    | null values
+        = ok
+    | otherwise
+        = assert (`elem` values) err
+    where
+      values = map snd . filter ((== xsd_enumeration) . fst) $ params
+      err v  = unwords ["value", show v, "not element of enumeration:", show values]
+
+whiteSpaceNorm :: ParamList -> (String -> String)
+whiteSpaceNorm params
+    = maybe id wsf $ lookup xsd_whiteSpace params
+      where
+        wsf "collapse" = normalizeWhitespace
+        wsf "replace"  = normalizeBlanks
+        wsf _          = id
 
 -- ----------------------------------------
 
@@ -859,136 +871,145 @@ showDecimal' d
 
 datatypeAllowsW3C :: DatatypeName -> ParamList -> String -> Maybe String
 datatypeAllowsW3C d params value
-  = performCheck check value
+    = performCheck check value
     where
-    validString normFct
-      = validPattern
-        >>> arr normFct
-        >>> validLength
+      validPattern
+          = patternValid params
 
-    validNormString
-      = validString normalizeWhitespace
+      validEnum
+          = enumerationValid params
 
-    validPattern
-      = patternValid params
+      validPatternEnum
+          = validPattern
+            >>> validEnum
 
-    validLength
-      = stringValid d 0 (-1) params
+      validPatternNormEnum normFct
+          = validPatternEnum
+            >>> arr normFct
+            >>> validEnum
 
-    validList
-      = validPattern
-        >>> arr normalizeWhitespace
-        >>> validListLength
+      validPatternCollapseEnum
+          = validPatternNormEnum normalizeWhitespace
 
-    validListLength
-      = listValid d params
+      validLength
+          = stringValid d 0 (-1) params
 
-    validName isN
-      = assertW3C isN
+      validList
+          = validPatternCollapseEnum
+            >>> listValid d params
 
-    validNCName
-      = validNormString
-        >>> validName isNCName
+      validString normFct
+          = validPatternNormEnum normFct
+            >>> validLength
 
-    validQName
-      = validNormString
-        >>> validName isWellformedQualifiedName
+      validNormString
+          = validString normalizeWhitespace
 
-    validDecimal
-      = validPattern
-        >>> arr normalizeWhitespace
-        >>> assertW3C isDecimal
-        >>> checkWith readDecimal (decimalValid params)
+      validName isN
+          = assertW3C isN
 
-    validInteger inRange
-      = validPattern
-        >>> arr normalizeWhitespace
-        >>> assertW3C isInteger
-        >>> checkWith read (integerValid inRange params)
+      validNCName
+          = validNormString
+            >>> validName isNCName
 
-    validFloating validFl
-        = validPattern
-          >>> assertW3C isFloating
-          >>> checkWith readFloating (validFl d params)
+      validQName
+          = validNormString
+            >>> validName isWellformedQualifiedName
 
-    validBoolean
-        = validNormString
-          >>> validPattern
-          >>> assertW3C (matchRE rexBoolean)
+      validDecimal
+          = validPatternCollapseEnum
+            >>> assertW3C isDecimal
+            >>> checkWith readDecimal (decimalValid params)
 
-    validDuration
-      = validPattern
-        >>> arr normalizeWhitespace
-        >>> assertW3C isDuration
-        >>> checkWith readDuration (durationValid params)
+      validInteger inRange
+          = validPatternCollapseEnum
+            >>> assertW3C isInteger
+            >>> checkWith read (integerValid inRange params)
 
-    validDateTime isDT readDT showDT
-        = validPattern
-          >>> arr normalizeWhitespace
-          >>> assertW3C isDT
-          >>> checkWith readDT (dateTimeValid isDT readDT showDT params)
+      validFloating validFl
+          = validPatternCollapseEnum
+            >>> assertW3C isFloating
+            >>> checkWith readFloating (validFl d params)
 
-    check :: CheckA String String
-    check = fromMaybe notFound . lookup d $ checks
+      validBoolean
+          = validPattern	-- no enumeration allowed
+            >>> arr normalizeWhitespace
+            >>> assertW3C (matchRE rexBoolean)
 
-    notFound = failure $ errorMsgDataTypeNotAllowed d params
+      validDuration
+          = validPatternCollapseEnum
+            >>> assertW3C isDuration
+            >>> checkWith readDuration (durationValid params)
 
-    checks :: [(String, CheckA String String)]
-    checks = [ (xsd_string,             validString id)
-             , (xsd_normalizedString,   validString normalizeBlanks)
+      validDateTime isDT readDT showDT
+          = validPatternCollapseEnum
+            >>> assertW3C isDT
+            >>> checkWith readDT (dateTimeValid isDT readDT showDT params)
 
-             , (xsd_token,              validNormString)
-             , (xsd_language,           validNormString >>> assertW3C isLanguage)
+      normWS = whiteSpaceNorm params
 
-             , (xsd_NMTOKEN,            validNormString >>> validName isNmtoken)
-             , (xsd_NMTOKENS,           validList       >>> validName (isNameList isNmtoken))
+      check :: CheckA String String
+      check = fromMaybe notFound . lookup d $ checks
 
-             , (xsd_Name,               validNormString >>> validName isName)
-             , (xsd_NCName,             validNCName)
-             , (xsd_ID,                 validNCName)
-             , (xsd_IDREF,              validNCName)
-             , (xsd_IDREFS,             validList       >>> validName (isNameList isNCName))
-             , (xsd_ENTITY,             validNCName)
-             , (xsd_ENTITIES,           validList       >>> validName (isNameList isNCName))
+      notFound = failure $ errorMsgDataTypeNotAllowed d params
 
-             , (xsd_anyURI,             validName isURIReference >>> validString escapeURI)
-             , (xsd_QName,              validQName)
-             , (xsd_NOTATION,           validQName)
+      checks :: [(String, CheckA String String)]
+      checks = [ (xsd_string,             validString normWS)
+               , (xsd_normalizedString,   validString normalizeBlanks)
 
-             , (xsd_hexBinary,          validString id         >>> assertW3C isHexBinary)
-             , (xsd_base64Binary,       validString normBase64 >>> assertW3C isBase64Binary)
+               , (xsd_token,              validNormString)
+               , (xsd_language,           validNormString >>> assertW3C isLanguage)
 
-             , (xsd_boolean,            validBoolean)
-             , (xsd_decimal,            validDecimal)
-             , (xsd_double,             validFloating doubleValid)
-             , (xsd_float,              validFloating floatValid)
+               , (xsd_NMTOKEN,            validNormString >>> validName isNmtoken)
+               , (xsd_NMTOKENS,           validList       >>> validName (isNameList isNmtoken))
 
-             , (xsd_integer,            validInteger xsd_integer)
-             , (xsd_nonPositiveInteger, validInteger xsd_nonPositiveInteger)
-             , (xsd_negativeInteger,    validInteger xsd_negativeInteger)
-             , (xsd_nonNegativeInteger, validInteger xsd_nonNegativeInteger)
-             , (xsd_positiveInteger,    validInteger xsd_positiveInteger)
-             , (xsd_long,               validInteger xsd_long)
-             , (xsd_int,                validInteger xsd_int)
-             , (xsd_short,              validInteger xsd_short)
-             , (xsd_byte,               validInteger xsd_byte)
-             , (xsd_unsignedLong,       validInteger xsd_unsignedLong)
-             , (xsd_unsignedInt,        validInteger xsd_unsignedInt)
-             , (xsd_unsignedShort,      validInteger xsd_unsignedShort)
-             , (xsd_unsignedByte,       validInteger xsd_unsignedByte)
+               , (xsd_Name,               validNormString >>> validName isName)
+               , (xsd_NCName,             validNCName)
+               , (xsd_ID,                 validNCName)
+               , (xsd_IDREF,              validNCName)
+               , (xsd_IDREFS,             validList       >>> validName (isNameList isNCName))
+               , (xsd_ENTITY,             validNCName)
+               , (xsd_ENTITIES,           validList       >>> validName (isNameList isNCName))
 
-             , (xsd_duration,           validDuration)
-             , (xsd_dateTime,           validDateTime isDateTime   readDateTime   showDateTime  )
-             , (xsd_date,               validDateTime isDate       readDate       showDate      )
-             , (xsd_time,               validDateTime isTime       readTime       showTime      )
-             , (xsd_gYearMonth,         validDateTime isGYearMonth readGYearMonth showGYearMonth)
-             , (xsd_gYear,              validDateTime isGYear      readGYear      showGYear     )
-             , (xsd_gMonthDay,          validDateTime isGMonthDay  readGMonthDay  showGMonthDay )
-             , (xsd_gMonth,             validDateTime isGMonth     readGMonth     showGMonth    )
-             , (xsd_gDay,               validDateTime isGDay       readGDay       showGDay      )
-             ]
-    assertW3C p = assert p errW3C
-    errW3C      = errorMsgDataDoesNotMatch d
+               , (xsd_anyURI,             validName isURIReference >>> validString escapeURI)
+               , (xsd_QName,              validQName)
+               , (xsd_NOTATION,           validQName)
+
+               , (xsd_hexBinary,          validString id         >>> assertW3C isHexBinary)
+               , (xsd_base64Binary,       validString normBase64 >>> assertW3C isBase64Binary)
+
+               , (xsd_boolean,            validBoolean)
+               , (xsd_decimal,            validDecimal)
+               , (xsd_double,             validFloating doubleValid)
+               , (xsd_float,              validFloating floatValid)
+                 
+               , (xsd_integer,            validInteger xsd_integer)
+               , (xsd_nonPositiveInteger, validInteger xsd_nonPositiveInteger)
+               , (xsd_negativeInteger,    validInteger xsd_negativeInteger)
+               , (xsd_nonNegativeInteger, validInteger xsd_nonNegativeInteger)
+               , (xsd_positiveInteger,    validInteger xsd_positiveInteger)
+               , (xsd_long,               validInteger xsd_long)
+               , (xsd_int,                validInteger xsd_int)
+               , (xsd_short,              validInteger xsd_short)
+               , (xsd_byte,               validInteger xsd_byte)
+               , (xsd_unsignedLong,       validInteger xsd_unsignedLong)
+               , (xsd_unsignedInt,        validInteger xsd_unsignedInt)
+               , (xsd_unsignedShort,      validInteger xsd_unsignedShort)
+               , (xsd_unsignedByte,       validInteger xsd_unsignedByte)
+
+               , (xsd_duration,           validDuration)
+               , (xsd_dateTime,           validDateTime isDateTime   readDateTime   showDateTime  )
+               , (xsd_date,               validDateTime isDate       readDate       showDate      )
+               , (xsd_time,               validDateTime isTime       readTime       showTime      )
+               , (xsd_gYearMonth,         validDateTime isGYearMonth readGYearMonth showGYearMonth)
+               , (xsd_gYear,              validDateTime isGYear      readGYear      showGYear     )
+               , (xsd_gMonthDay,          validDateTime isGMonthDay  readGMonthDay  showGMonthDay )
+               , (xsd_gMonth,             validDateTime isGMonth     readGMonth     showGMonth    )
+               , (xsd_gDay,               validDateTime isGDay       readGDay       showGDay      )
+               ]
+
+      assertW3C p = assert p errW3C
+      errW3C      = errorMsgDataDoesNotMatch d
 
 -- ----------------------------------------
 
