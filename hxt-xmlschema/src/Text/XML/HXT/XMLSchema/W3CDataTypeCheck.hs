@@ -39,7 +39,6 @@ import Text.XML.HXT.DOM.Util          ( normalizeWhitespace
 
 import Data.Char                      ( isAlpha
                                       , isDigit
-                                      , toUpper
                                       )
 import Data.Function                  ( on )
 import Data.Maybe                     ( fromMaybe
@@ -49,13 +48,24 @@ import Data.Ratio                     ( numerator
                                       , denominator
                                       , (%)
                                       )
-import Data.Time                      hiding ( readTime )
+import Data.Time                      ( Day
+                                      , DiffTime
+                                      , NominalDiffTime
+                                      , UTCTime(..)
+                                      , addDays
+                                      , addGregorianYearsRollOver
+                                      , addGregorianMonthsRollOver
+                                      , addUTCTime
+                                      , diffUTCTime
+                                      , fromGregorian
+                                      )
 
 import Network.URI                    ( isURIReference )
 
 -- ----------------------------------------
 
 -- | Tests whether a pattern is valid
+
 patternValid :: ParamList -> CheckA String String
 patternValid params
   = foldr (>>>) ok . map paramPatternValid $ params
@@ -71,6 +81,10 @@ patParamValid regex a
   | otherwise = matchRE ex a
   where
   ex = parseRegex regex
+
+enumerationValid :: ParamList -> CheckA String String
+enumerationValid params
+    = undefined
 
 -- ----------------------------------------
 
@@ -271,8 +285,6 @@ isFloating = matchRE rexFloating
 
 -- ----------------------------------------
 
-type Duration = NominalDiffTime
-
 rexDuration :: Regex
 rexDuration
     = rex $ sign ++ "P" ++ alt (ymd ++ opt tim) tim
@@ -300,41 +312,84 @@ rexDuration
 isDuration :: String -> Bool
 isDuration = matchRE rexDuration
 
+
+data Duration =
+    Dur { dNeg     :: Bool
+        , dYears   :: Integer
+        , dMonths  :: Integer
+        , dDays    :: Integer
+        , dSeconds :: Rational
+    } deriving Show
+
+nullDuration :: Duration
+nullDuration
+    = Dur { dNeg     = False
+          , dYears   = 0
+          , dMonths  = 0
+          , dDays    = 0
+          , dSeconds = fromInteger 0
+          }
+
+addSeconds :: Rational -> Duration -> Duration
+addSeconds sec d
+    = d { dDays    = dDays d + q
+        , dSeconds = dSeconds d + fromInteger r
+        }
+    where
+      (q, r) = sec' `quotRem` ds
+      ds     = 24 * 60 * 60
+      sec'   = floor sec
+
+addDuration :: Duration -> UTCTime -> UTCTime
+addDuration dur ut0
+    = UTCTime (addDur ud1) ut1
+      where
+        (UTCTime ud1 ut1) = addUTCTime (fromRational $ neg $ dSeconds dur) ut0
+        addDur
+            = addGregorianYearsRollOver    (neg $ dYears  dur)
+              . addGregorianMonthsRollOver (neg $ dMonths dur)
+              . addDays                    (neg $ dDays   dur)
+
+        neg :: Num a => a -> a
+        neg | dNeg dur  = negate
+            | otherwise = id
+
 readDuration :: String -> Duration
-readDuration ('-' : s) = negate $ readDuration s
+readDuration ('-' : s)
+    = (readDuration s) {dNeg = True}
+
 readDuration s0@('P' : s)
-    = readYearMonthDay s1 + readHourMinSecD (drop 1 s2)
+    = readHourMinSecD (drop 1 s2) `addSeconds` readYearMonthDay s1
     where
       (s1, s2) = span (/= 'T') s
 
       errDur = error $ "readDuration: wrong argument " ++ show s0
 
-      readDur = fromInteger . read
-
+      readYearMonthDay :: String -> Duration
       readYearMonthDay ""
-          = fromInteger 0
+          = nullDuration
       readYearMonthDay x
           | head x2 == 'Y'
-              = (365 * 24 * 60 * 60) * readDur x1 + readYearMonthDay (tail x2)
+              = (readYearMonthDay (tail x2)) {dYears = read x1}
           | head x2 == 'M'
-              = ( 30 * 24 * 60 * 60) * readDur x1 + readYearMonthDay (tail x2)
+              = (readYearMonthDay (tail x2)) {dMonths = read x1}
           | head x2 == 'D'
-              = (      24 * 60 * 60) * readDur x1
+              = nullDuration {dDays = read x1}
           | otherwise
               = errDur
           where
             (x1, x2) = span isDigit x
 
-
+      readHourMinSecD :: String -> Rational
       readHourMinSecD ""
           = fromInteger 0
       readHourMinSecD x
           | head x2 == 'H'
-              = (60 * 60) * readDur x1 + readHourMinSecD (tail x2)
+              = fromInteger ((60 * 60) * read x1) + readHourMinSecD (tail x2)
           | head x2 == 'M'
-              = (     60) * readDur x1 + readHourMinSecD (tail x2)
+              = fromInteger ((     60) * read x1) + readHourMinSecD (tail x2)
           | head x2 == 'S'
-              = fromRational $ readDecimal x1
+              = readDecimal x1
 
           | otherwise
               = errDur
@@ -345,8 +400,8 @@ readDuration s0
 
 showDuration :: Duration -> String
 showDuration d
-    | d < fromInteger 0
-        = '-' : (showDuration $ negate d)
+    | dNeg d
+        = '-' : (showDuration $ d {dNeg = False})
     | otherwise
         = addP . years $ d
     where
@@ -355,6 +410,9 @@ showDuration d
 
       addT "" = ""
       addT s  = 'T' : s
+
+      ymds 0 _ = ""
+      ymds i c = show i ++ [c]
 
       times scale unit next x
           | r == 0 = res
@@ -365,14 +423,29 @@ showDuration d
             y = x - fromInteger r * scale
             res = next y
 
-      years   = times (365 * 24 * 60 * 60) 'Y' months
-      months  = times  (30 * 24 * 60 * 60) 'M' days
-      days    = times       (24 * 60 * 60) 'D' $ addT . hours
-      hours   = times            (60 * 60) 'H' minutes
-      minutes = times                   60 'M' seconds
+      years   x = ymds (dYears  x) 'Y' ++ months x
+      months  x = ymds (dMonths x) 'M' ++ days x
+      days    x = ymds (dDays   x) 'D' ++ (addT . hours $ dSeconds x)
+
+      hours     = times (60 * 60)  'H' minutes
+      minutes   = times        60  'M' seconds
       seconds d'
           | d' == fromInteger 0 = ""
-          | otherwise           = map toUpper . show $ d'
+          | otherwise           = showDecimal d' ++ "S"
+
+fourDates :: [UTCTime]
+fourDates
+    = map (dUTCTime . readDateTime)
+      [ "1696-09-01T00:00:00Z"
+      , "1697-02-01T00:00:00Z"
+      , "1903-03-01T00:00:00Z"
+      , "1903-07-01T00:00:00Z"
+      ]
+
+cmpDuration :: (UTCTime -> UTCTime -> Bool) -> (Duration -> Duration -> Bool)
+cmpDuration op d1 d2
+    = and $ zipWith op (map (addDuration d1) fourDates)
+                       (map (addDuration d2) fourDates)
 
 -- | Function table for integer tests
 --
@@ -384,10 +457,10 @@ showDuration d
 
 fctTableDuration :: [(String, String -> Duration -> Bool)]
 fctTableDuration
-  = [ (xsd_maxExclusive, cvi (>))
-    , (xsd_minExclusive, cvi (<))
-    , (xsd_maxInclusive, cvi (>=))
-    , (xsd_minInclusive, cvi (<=))
+  = [ (xsd_maxExclusive, cvi $ cmpDuration (>))
+    , (xsd_minExclusive, cvi $ cmpDuration (<))
+    , (xsd_maxInclusive, cvi $ cmpDuration (>=))
+    , (xsd_minInclusive, cvi $ cmpDuration (<=))
     ]
     where
     cvi :: (Duration -> Duration -> Bool) -> (String -> Duration -> Bool)
@@ -405,8 +478,11 @@ durationValid params
 
 -- ----------------------------------------
 
-data Date = Date UTCTime MaybeTimeZone
-          deriving (Show)
+data Date =
+    Date { dUTCTime :: UTCTime
+         , _dTZ     :: MaybeTimeZone
+         }
+    deriving (Show)
 
 type MaybeTimeZone = Maybe Seconds
 
@@ -562,14 +638,19 @@ readDate' read' s
     where
       (day, zone) = read' s
 
-readDate, readGYearMonth, readGYear, readGMonthDay, readGMonth, readGDay :: String -> Date
+readDate
+  , readGYearMonth
+  , readGYear
+  , readGMonthDay
+  , readGMonth
+  , readGDay :: String -> Date
+
 readDate       = readDate' readYearMonthDayS
 readGYearMonth = readDate' readYearMonthS
 readGYear      = readDate' readYearS
 readGMonthDay  = readDate' readMonthDayS
 readGMonth     = readDate' readMonthS
 readGDay       = readDate' readDayS
-
 
 readTime :: String -> Date
 readTime s
@@ -581,7 +662,7 @@ nullTime :: DiffTime
 nullTime = fromInteger 0
 
 nullDay :: Day
-nullDay = fromGregorian 0 1 1
+nullDay = fromGregorian 1 1 1
 
 -- --------------------
 -- the show must go on
