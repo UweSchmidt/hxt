@@ -125,8 +125,8 @@ simpleTypesElemsErrors
               , "Parameter restriction: \"totalDigits = 3\" does not hold for value = \"42\".")
             , ( "/root[1]/password[1]/child::text()"
               , "Parameter restriction: \"maxLength = 10\" does not hold for value = \"a wrong password\".")
-            , ("/root[1]/monthByName[1]/child::text()"
-              , "value \"wrong\" not element of enumeration: [\"Jan\",\"Feb\",\"Mar\",\"Apr\",\"May\",\"Jun\",\"Jul\",\"Aug\",\"Sep\",\"Okt\",\"Nov\",\"Dec\"]")
+            , ( "/root[1]/monthByName[1]/child::text()"
+              , "value \"Foo\" not element of enumeration [\"Jan\",\"Feb\",\"Mar\",\"Apr\",\"May\",\"Jun\",\"Jul\",\"Aug\",\"Sep\",\"Okt\",\"Nov\",\"Dec\"]")
             , ("/root[1]/plz[1]/child::text()"
               , "Parameter restriction: \"minLength = 5\" does not hold for value = \"42\".")
             , ( "/root[1]/monthList[1]/child::text()"
@@ -134,7 +134,7 @@ simpleTypesElemsErrors
             , ( "/root[1]/month[1]/child::text()"
               , "value does not match union type.")
             , ( "/root[1]/leapYear[1]/child::text()"
-              , "\"perhaps\" is no valid boolean.")
+              , "\"perhaps\" is not a valid boolean.")
             , ( "/root[1]/game[1]/child::text()"
               , "Parameter restriction: \"maxInclusive = PT2H5M30S\" does not hold for value = \"P3D\".")
             , ("/root[1]/olympics[1]/child::text()"
@@ -158,7 +158,7 @@ simpleTypesAttrsErrors
             , ( "/root[1]/@password"
               , "Parameter restriction: \"minLength = 5\" does not hold for value = \"safe\".")
             , ("/root[1]/@monthByName"
-              ,"value \"Foo\" not element of enumeration: [\"Jan\",\"Feb\",\"Mar\",\"Apr\",\"May\",\"Jun\",\"Jul\",\"Aug\",\"Sep\",\"Okt\",\"Nov\",\"Dec\"]")
+              ,"value \"Foo\" not element of enumeration [\"Jan\",\"Feb\",\"Mar\",\"Apr\",\"May\",\"Jun\",\"Jul\",\"Aug\",\"Sep\",\"Okt\",\"Nov\",\"Dec\"]")
             , ("/root[1]/@plz"
               ,"Parameter restriction: \"minLength = 5\" does not hold for value = \"42\".")
             , ( "/root[1]/@monthList"
@@ -169,6 +169,10 @@ simpleTypesAttrsErrors
               , "Parameter restriction: \"minInclusive = 2012-07-01T12:00:07+00:00\" does not hold for value = \"2012-07-01T12:00:08-00:30\".")
             , ("/root[1]/@wday"
               , "Parameter restriction: \"maxInclusive = ---04\" does not hold for value = \"---05\".")
+            , ( "/root[1]/@prime1"
+              , "value \"8\" not element of enumeration [\"2\",\"3\",\"5\",\"007\",\"11\",\"13\",\"17\",\"19\"]")
+            , ("/root[1]/@prime2"
+              , "value \"0021\" not element of enumeration [\"2\",\"3\",\"5\",\"007\",\"11\",\"13\",\"17\",\"19\"]")
             ])
 
 -- | A test for ComplexTypes which match
@@ -188,7 +192,7 @@ complexTypesErrors
             , ( "/root[1]/login[1]/child::text()"
               , "Parameter restriction: \"minLength = 5\" does not hold for value = \"foo\".")
             , ( "/root[1]/customer[1]/@age"
-              , "\"wrong\" is no valid integer.")
+              , "\"wrong\" is not a valid integer.")
             , ( "/root[1]/customer[1]/*"
               , "content does not match content model.\ninput does not match <firstName><lastName>")
             , ( "/root[1]/shoppingList[1]/*"

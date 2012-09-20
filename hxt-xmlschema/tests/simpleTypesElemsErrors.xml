@@ -3,7 +3,7 @@
   <summerMonth>3</summerMonth>
   <temperature>42</temperature>
   <password>a wrong password</password>
-  <monthByName>wrong</monthByName>
+  <monthByName>Foo</monthByName>
   <plz>42</plz>
   <monthList>a wrong list</monthList>
   <month>wrong</month>

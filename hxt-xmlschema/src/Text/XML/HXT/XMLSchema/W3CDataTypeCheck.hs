@@ -80,15 +80,22 @@ patParamValid regex a
   where
   ex = parseRegex regex
 
-enumerationValid :: ParamList -> CheckA String String
-enumerationValid params
+-- | enumeration checks must be done in the value space,
+-- so the strings must be converted into values before testing on equality
+enumerationValid' :: (String -> Bool) -> (String -> a) -> (a -> a -> Bool) -> ParamList -> CheckA String String
+enumerationValid' isVal readVal eqVal params
     | null values
         = ok
+    | all isVal values
+        = assert chek err1
     | otherwise
-        = assert (`elem` values) err
+        = failure err2
     where
       values = map snd . filter ((== xsd_enumeration) . fst) $ params
-      err v  = unwords ["value", show v, "not element of enumeration:", show values]
+      chek v = isVal v && (or . map (eqVal (readVal v) . readVal) $ values)
+
+      err1 v = unwords ["value", show v, "not element of enumeration", show values]
+      err2 _ = unwords ["some enumeration values are illegal in", show values]
 
 whiteSpaceNorm :: ParamList -> (String -> String)
 whiteSpaceNorm params
@@ -221,6 +228,12 @@ floatValid = floatingValid
 doubleValid :: DatatypeName -> ParamList -> CheckA Double Double
 doubleValid = floatingValid
 
+floatEq :: Float -> Float -> Bool
+floatEq = (==)
+
+doubleEq :: Double -> Double -> Bool
+doubleEq = (==)
+
 -- ----------------------------------------
 
 -- | Tests whether a string matches a name list
@@ -294,6 +307,9 @@ isInteger = matchRE rexInteger
 
 isFloating :: String -> Bool
 isFloating = matchRE rexFloating
+
+readInteger :: String -> Integer
+readInteger = read
 
 -- ----------------------------------------
 
@@ -804,6 +820,7 @@ normBase64 = filter isB64
 -- ----------------------------------------
 
 -- | Reads a decimal from a string
+
 readDecimal :: String -> Rational
 readDecimal ('+':s) = readDecimal' s
 readDecimal ('-':s) = negate $ readDecimal' s
@@ -876,31 +893,22 @@ datatypeAllowsW3C d params value
       validPattern
           = patternValid params
 
-      validEnum
-          = enumerationValid params
-
-      validPatternEnum
-          = validPattern
-            >>> validEnum
-
-      validPatternNormEnum normFct
-          = validPatternEnum
-            >>> arr normFct
-            >>> validEnum
-
-      validPatternCollapseEnum
-          = validPatternNormEnum normalizeWhitespace
+      validPatternCollapse
+          = validPattern >>> arr normalizeWhitespace
 
       validLength
           = stringValid d 0 (-1) params
 
       validList
-          = validPatternCollapseEnum
+          = validPatternCollapse
             >>> listValid d params
+            >>> enumerationValid' (const True) id (==) params
 
       validString normFct
-          = validPatternNormEnum normFct
+          = validPattern
+            >>> arr normFct
             >>> validLength
+            >>> enumerationValid' (const True) id (==) params
 
       validNormString
           = validString normalizeWhitespace
@@ -917,19 +925,22 @@ datatypeAllowsW3C d params value
             >>> validName isWellformedQualifiedName
 
       validDecimal
-          = validPatternCollapseEnum
+          = validPatternCollapse
             >>> assertW3C isDecimal
             >>> checkWith readDecimal (decimalValid params)
+            >>> enumerationValid' isDecimal readDecimal (==) params
 
       validInteger inRange
-          = validPatternCollapseEnum
+          = validPatternCollapse
             >>> assertW3C isInteger
             >>> checkWith read (integerValid inRange params)
+            >>> enumerationValid' isInteger readInteger (==) params
 
-      validFloating validFl
-          = validPatternCollapseEnum
+      validFloating validFl eqFl
+          = validPatternCollapse
             >>> assertW3C isFloating
             >>> checkWith readFloating (validFl d params)
+            >>> enumerationValid' isFloating readFloating eqFl params
 
       validBoolean
           = validPattern	-- no enumeration allowed
@@ -937,14 +948,16 @@ datatypeAllowsW3C d params value
             >>> assertW3C (matchRE rexBoolean)
 
       validDuration
-          = validPatternCollapseEnum
+          = validPatternCollapse
             >>> assertW3C isDuration
             >>> checkWith readDuration (durationValid params)
+            >>> enumerationValid' isDuration readDuration (cmpDuration (==)) params
 
       validDateTime isDT readDT showDT
-          = validPatternCollapseEnum
+          = validPatternCollapse
             >>> assertW3C isDT
             >>> checkWith readDT (dateTimeValid isDT readDT showDT params)
+            >>> enumerationValid' isDT readDT (fuzzyCmp (==)) params
 
       normWS = whiteSpaceNorm params
 
@@ -980,8 +993,8 @@ datatypeAllowsW3C d params value
 
                , (xsd_boolean,            validBoolean)
                , (xsd_decimal,            validDecimal)
-               , (xsd_double,             validFloating doubleValid)
-               , (xsd_float,              validFloating floatValid)
+               , (xsd_double,             validFloating doubleValid doubleEq)
+               , (xsd_float,              validFloating floatValid  floatEq)
                  
                , (xsd_integer,            validInteger xsd_integer)
                , (xsd_nonPositiveInteger, validInteger xsd_nonPositiveInteger)

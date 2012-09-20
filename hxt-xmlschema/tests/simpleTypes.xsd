@@ -49,6 +49,20 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="primes">
+    <xs:restriction base="xs:positiveInteger">
+      <xs:length value="3"/>
+      <xs:enumeration value="2"/>
+      <xs:enumeration value="3"/>
+      <xs:enumeration value="5"/>
+      <xs:enumeration value="007"/>
+      <xs:enumeration value="11"/>
+      <xs:enumeration value="13"/>
+      <xs:enumeration value="17"/>
+      <xs:enumeration value="19"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:simpleType name="plz">
     <xs:restriction base="xs:string">
       <xs:pattern value=" *(D *)?[0-9]+ *"/>

@@ -275,7 +275,7 @@ formatStringList sf spacer l
 -- | Error message for not matching datatype
 errorMsgDataDoesNotMatch :: String -> String -> String
 errorMsgDataDoesNotMatch n v
-  = show v ++ " is no valid " ++ n ++ "."
+  = show v ++ " is not a valid " ++ n ++ "."
 
 -- | Error message for not matching params
 errorMsgParam :: LocalName -> String -> String -> String

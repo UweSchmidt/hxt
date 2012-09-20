@@ -16,6 +16,8 @@
         <xs:attribute name="month"       type="generalMonth"/>
         <xs:attribute name="otime"       type="olympics"/>
         <xs:attribute name="wday"        type="dimido"/>
+        <xs:attribute name="prime1"      type="primes"/>
+        <xs:attribute name="prime2"      type="primes"/>
     </xs:complexType>
   </xs:element>
 
