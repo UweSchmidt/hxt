@@ -505,6 +505,21 @@ durationValid params
         (errorMsgParam pn pv . showDuration)
 
 -- ----------------------------------------
+--
+-- Days are represented here
+-- as in ISO 8601:2000 Second Edition:
+--    ISO (International Organization for Standardization).
+--    Representations of dates and times, second edition, 2000-12-15.
+--
+-- NOT as in
+-- ISO 8601
+--    ISO (International Organization for Standardization).
+--    Representations of dates and times, 1988-06-15.
+--
+-- The main difference is dealing with year 0.
+-- in the older ISO standard, this is excluded and
+-- "-0001" is the representation of year 1 Before Common Era "-1 BCE".
+-- In the latter standard "0000" represents "-1 BCE" and "-0001" represents "-2 BCE"
 
 data Date =
     Date { dUTCTime :: UTCTime
@@ -563,11 +578,18 @@ rexDates
       i2    = "[0-5][0-9]"                              -- mInute
       s2    = i2                                        -- Seconds
 
-      y1    = "000[1-9]"                                -- 0000 isn't a year
+{-                                                      -- this conforms to ISO 8601 from 1988
+      y1    = "000[1-9]"                                -- "0000" isn't a year, "-0001" represents "-1 BCE"
       y2    = "00[1-9][0-9]"                            -- leading 0-s are only allowd for year < 1000
       y3    = "0[1-9][0-9]{2}"
       y4    = "[1-9][0-9]{3,}"
       y4'   = alt y4 $ alt y3 $ alt y2 y1
+-- -}
+
+-- {-                                                   -- this conforms to ISO 8601 Second Edition from 2000
+      y4    = "[0-9]{4}"                                -- year "0000" is legal and represents "-1 BCE"
+      y4'   = opt "[1-9][0-9]*" ++ y4
+-- -}
 
       fr    = opt ".[0-9]+"
 
