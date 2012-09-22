@@ -37,6 +37,7 @@ module Text.XML.HXT.Arrow.XmlRegex
     , mkOpt
     , mkPerm
     , mkPerms
+    , mkMerge
     , nullable
     , delta
     , matchXmlRegex
@@ -92,14 +93,15 @@ scanRegexA re ts        = ts >>. (fromMaybe [] . scanXmlRegex re)
 
 data XmlRegex   = Zero String
                 | Unit
-                | Sym (XmlTree -> Bool) String  -- optional external repr. of predicate
+                | Sym  (XmlTree -> Bool) String    -- optional external repr. of predicate
                 | Dot
-                | Star XmlRegex
-                | Alt XmlRegex XmlRegex
-                | Seq XmlRegex XmlRegex
-                | Rep Int XmlRegex              -- 1 or more repetitions
-                | Rng Int Int XmlRegex          -- n..m repetitions
-                | Perm XmlRegex XmlRegex
+                | Star  XmlRegex
+                | Alt   XmlRegex XmlRegex
+                | Seq   XmlRegex XmlRegex
+                | Rep   Int      XmlRegex          -- 1 or more repetitions
+                | Rng   Int Int  XmlRegex          -- n..m repetitions
+                | Perm  XmlRegex XmlRegex
+                | Merge XmlRegex XmlRegex
 
 -- ------------------------------------------------------------
 
@@ -220,6 +222,13 @@ mkPerm e1          e2            = Perm e1 e2
 mkPerms                          :: [XmlRegex] -> XmlRegex
 mkPerms                          = foldr mkPerm mkUnit
 
+mkMerge                          :: XmlRegex -> XmlRegex -> XmlRegex
+mkMerge e1@(Zero _) _            = e1
+mkMerge _           e2@(Zero _)  = e2
+mkMerge Unit        e2           = e2
+mkMerge e1          Unit         = e1
+mkMerge e1          e2           = Merge e1 e2
+
 -- ------------------------------------------------------------
 
 instance Show XmlRegex where
@@ -236,6 +245,7 @@ instance Show XmlRegex where
     show (Rng 0 1 e)    = "(" ++ show e ++ ")?"
     show (Rng i j e)    = "(" ++ show e ++ "){" ++ show i ++ "," ++ show j ++ "}"
     show (Perm e1 e2)   = "(" ++ show e1 ++ show e2 ++ "|" ++ show e2 ++ show e1 ++ ")"
+    show (Merge e1 e2)  = "(" ++ show e1 ++ "&" ++ show e2 ++ ")"
 
 -- ------------------------------------------------------------
 
@@ -267,6 +277,8 @@ nullable (Rng i _ e)    = i == 0 ||
                           nullable e
 nullable (Perm e1 e2)   = nullable e1 &&
                           nullable e2
+nullable (Merge e1 e2)  = nullable e1 &&
+                          nullable e2
 
 -- ------------------------------------------------------------
 
@@ -289,6 +301,8 @@ delta (Perm e1 e2) c    = case e1' of
                             _        -> mkPerm e1' e2
                           where
                           e1' = delta e1 c
+delta (Merge e1 e2) c   = mkAlt (mkMerge (delta e1 c) e2)
+                                (mkMerge e1 (delta e2 c))
 
 -- ------------------------------------------------------------
 

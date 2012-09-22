@@ -13,7 +13,9 @@
 -}
 
 module Text.XML.HXT.XMLSchema.Transformation
-  ( createRootDesc )
+  ( createRootDesc
+  , mkTextRE
+  )
 where
 
 import Text.XML.HXT.XMLSchema.XmlUtils
@@ -25,6 +27,7 @@ import Text.XML.HXT.Core           ( QName
                                    , localPart
                                    , namespaceUri
                                    , qualifiedName
+                                   , universalName
                                    )
 
 import Text.XML.HXT.Arrow.XmlRegex ( XmlRegex
@@ -34,6 +37,7 @@ import Text.XML.HXT.Arrow.XmlRegex ( XmlRegex
                                    , mkAlts
                                    , mkSeq
                                    , mkSeqs
+                                   , mkStar
                                    , mkRep
                                    , mkRng
                                    , mkPerms
@@ -46,6 +50,7 @@ import Control.Monad.Identity      ( Identity
 import Control.Monad.Reader        ( ReaderT
                                    , runReaderT
                                    , ask
+                                   , asks
                                    )
 
 import Control.Applicative         ( (<$>) )
@@ -53,11 +58,13 @@ import Control.Applicative         ( (<$>) )
 import Data.Maybe                  ( fromMaybe )
 
 import Data.Map                    ( empty
+                                   , singleton
                                    , lookup
                                    , union
                                    , fromList
+                                   , toList
                                    , keys
-                                   , elems
+                                   -- , elems
                                    )
 
 import Prelude hiding ( lookup )
@@ -216,15 +223,11 @@ attrGrpToAttrList g
                         Just g' -> attrGrpToAttrList g'
       AttrGrpDef l -> return l
 
--- | Helper function to wrap values into a one-element list
-box :: a -> [a]
-box x = [x]
-
 -- | Extracts an attribute map from an attribute list
 attrListToAttrMap :: AttrList -> ST [(QName, AttrMapVal)]
 attrListToAttrMap l
   = concat <$> mapM (\ x -> case x of
-                              Attr    a -> box <$> createAttrMapEntry a
+                              Attr    a -> (:[]) <$> createAttrMapEntry a
                               AttrGrp g -> attrGrpToAttrList g >>= attrListToAttrMap
                               _         -> return []
                     ) l
@@ -233,7 +236,7 @@ attrListToAttrMap l
 attrListToAttrWildcards :: AttrList -> ST AttrWildcards
 attrListToAttrWildcards l
   = concat <$> mapM (\ x -> case x of
-                              AnyAttr a -> box <$> anyToPredicate a
+                              AnyAttr a -> (:[]) <$> anyToPredicate a
                               _         -> return []
                     ) l
 
@@ -248,7 +251,7 @@ attrListToAttrDesc l
 
 -- | Creates a regex which matches on an element with a given name
 mkElemNameRE :: QName -> XmlRegex
-mkElemNameRE s = mkPrim' ((== s) . getElemName) ("<" ++ qualifiedName s ++ ">")
+mkElemNameRE s = mkPrim' ((== s) . getElemName) ("<" ++ universalName s ++ ">")
 
 -- | Creates a regex which matches on an element with a given namespace predicate
 mkElemNamespaceRE :: String -> (QName -> Bool) -> XmlRegex
@@ -256,34 +259,56 @@ mkElemNamespaceRE s p = mkPrim' (p . getElemName) s
 
 -- | Creates a regex which matches on text nodes
 mkTextRE :: XmlRegex
-mkTextRE = mkPrim' isText "{plain text}>"
+mkTextRE = mkStar $ mkPrim' isText "{plain text}"
 
 -- ----------------------------------------
 
+nullElemDesc :: ElemDesc
+nullElemDesc
+    = ElemDesc Nothing (empty, []) False mkUnit empty [] mkPassthroughSTTF
+
 -- | Creates an element description for elements without subelems
 mkSimpleElemDesc :: AttrDesc -> STTF -> ElemDesc
-mkSimpleElemDesc ad
-  = ElemDesc Nothing ad False mkTextRE empty
+mkSimpleElemDesc ad f
+    = nullElemDesc { attrDesc     = ad
+                   , contentModel = mkTextRE
+                   , sttf         = f
+                   }
 
 -- | Creates an element description for elements without attributes or textual content
-mkComposeElemDesc :: XmlRegex -> SubElemDesc -> ElemDesc
-mkComposeElemDesc cm se
-  = ElemDesc Nothing (empty, []) False cm se mkPassthroughSTTF
+mkComposeElemDesc :: XmlRegex -> SubElemDesc -> Wildcards -> ElemDesc
+mkComposeElemDesc cm se wc
+    = nullElemDesc { contentModel = cm
+                   , subElemDesc  = se
+                   , wildcards    = wc
+                   }
+
+setMixedContent :: Bool -> ElemDesc -> ElemDesc
+setMixedContent mx ed
+    = ed {mixedContent = mx}
+
+setWildcard :: Wildcard -> ElemDesc -> ElemDesc
+setWildcard wc ed
+    = ed {wildcards = wc : wildcards ed}
+
+mergeAttrDesc :: ElemDesc -> ElemDesc -> ElemDesc
+mergeAttrDesc base ed
+    = ed {attrDesc = mergeAttrDescs (attrDesc ed) (attrDesc base)}
 
 -- | Creates a general element description
-mkElemDesc :: AttrDesc -> XmlRegex -> SubElemDesc -> STTF -> ElemDesc
-mkElemDesc ad
-  = ElemDesc Nothing ad False
-
--- | Creates a general element description with mixed content flag
-mkElemDescMixed :: AttrDesc -> Bool -> XmlRegex -> SubElemDesc -> STTF -> ElemDesc
-mkElemDescMixed
-  = ElemDesc Nothing
+mkElemDesc :: AttrDesc -> XmlRegex -> SubElemDesc -> Wildcards -> STTF -> ElemDesc
+mkElemDesc ad cm se wc sf
+    = nullElemDesc { attrDesc     = ad
+                   , contentModel = cm
+                   , subElemDesc  = se
+                   , wildcards    = wc
+                   , sttf         = sf
+                   }
 
 -- | Creates an element description which passes an error message
 mkErrorElemDesc :: String -> ElemDesc
 mkErrorElemDesc s
-  = ElemDesc (Just s) (empty, []) False mkUnit empty mkPassthroughSTTF
+    = nullElemDesc {errmsg = Just s}
 
 -- | Creates the element description for a given group
 groupToElemDesc :: Group -> ST ElemDesc
@@ -295,7 +320,7 @@ groupToElemDesc (GrpRef r)
       Just g  -> groupToElemDesc g
 groupToElemDesc (GrpDef d)
   = case d of
-      Nothing      -> return $ mkComposeElemDesc mkUnit empty
+      Nothing      -> return $ mkComposeElemDesc mkUnit empty []
       Just (Al al) -> allToElemDesc al
       Just (Ch ch) -> choiceToElemDesc ch
       Just (Sq sq) -> sequenceToElemDesc sq
@@ -313,7 +338,8 @@ combineElemDescs mkRE eds
   = do
     let re = mkRE $ map contentModel eds
     let se = foldr union empty $ map subElemDesc eds
-    return $ mkComposeElemDesc re se
+    let wc = concat $ map wildcards eds
+    return $ mkComposeElemDesc re se wc
 
 -- | Creates the element description for a given all
 allToElemDesc :: All -> ST ElemDesc
@@ -322,7 +348,10 @@ allToElemDesc l
     eds <- mapM (\ (occ, el) -> do 
                                 ed <- createElemDesc el
                                 let n = elementToName el
-                                return $ mkComposeElemDesc (mkMinMaxRE occ $ mkElemNameRE n) $ fromList [(n, ed)]
+                                return $ mkComposeElemDesc
+                                           (mkMinMaxRE occ $ mkElemNameRE n)
+                                           (singleton n ed)
+                                           (wildcards ed)
                 ) l
     combineElemDescs mkPerms eds
 
@@ -348,9 +377,16 @@ anyToPredicate an
 -- | Creates the element description for a given element wildcard
 anyToElemDesc :: Any -> ST ElemDesc
 anyToElemDesc an
-  = do
-    re <- mkElemNamespaceRE "<namespace wildcard test>" <$> anyToPredicate an
-    return $ mkComposeElemDesc re empty
+  = do wtf <- anyToPredicate an
+       return $ setWildcard (WC wtf waction)
+              $ nullElemDesc { contentModel = mkElemNamespaceRE "<namespace wildcard test>" wtf
+                             }
+    where
+      waction
+          = case processContents an of
+              Just "skip" -> Skip
+              Just "lax"  -> Lax
+              _           -> Strict
 
 -- | Helper function to create a pair from two values
 mkPair :: a -> b -> (a, b)
@@ -369,8 +405,14 @@ chSeqContToElemDesc c
     case c of
       ChSeqEl (_, el) -> do
                          let n = elementToName el
-                         return $ mkComposeElemDesc (mkMinMaxRE occ $ mkElemNameRE n)  $ fromList [(n, ed)]
-      _               -> return $ mkComposeElemDesc (mkMinMaxRE occ $ contentModel ed) $ subElemDesc ed
+                         return $ mkComposeElemDesc
+                                    (mkMinMaxRE occ $ mkElemNameRE n)
+                                    (singleton n ed)
+                                    (wildcards ed)
+      _               -> return $ mkComposeElemDesc
+                                    (mkMinMaxRE occ $ contentModel ed)
+                                    (subElemDesc ed)
+                                    (wildcards ed)
 
 -- | Creates the element description for a given choice
 choiceToElemDesc :: Choice -> ST ElemDesc
@@ -413,7 +455,7 @@ compToElemDesc c
                    CompAl (occ, al) -> mkPair occ <$> allToElemDesc al
                    CompCh (occ, ch) -> mkPair occ <$> choiceToElemDesc ch
                    CompSq (occ, sq) -> mkPair occ <$> sequenceToElemDesc sq
-    return $ mkElemDesc (attrDesc ed) (mkMinMaxRE occ $ contentModel ed) (subElemDesc ed) $ sttf ed
+    return $ ed {contentModel = mkMinMaxRE occ $ contentModel ed}
 
 -- | Combines two given attribute descriptions
 mergeAttrDescs :: AttrDesc -> AttrDesc -> AttrDesc
@@ -426,10 +468,12 @@ ctModelToElemDesc (comp, attrs)
   = do
     ad <- attrListToAttrDesc attrs
     case comp of
-      Nothing -> return $ mkElemDesc ad mkUnit empty mkNoTextSTTF
+      Nothing -> return $ nullElemDesc { attrDesc = ad
+                                       , sttf     = mkNoTextSTTF
+                                       }
       Just c  -> do
                  ed <- compToElemDesc c
-                 return $ mkElemDesc (mergeAttrDescs ad $ attrDesc ed) (contentModel ed) (subElemDesc ed) $ sttf ed
+                 return $ ed {attrDesc = mergeAttrDescs ad $ attrDesc ed}
 
 -- | Creates the element description for a given simple content
 --   Accumulates the restrictions to create the combined element description
@@ -477,30 +521,23 @@ ctToElemDesc ct
                               Just ct' -> do
                                           base <- ctToElemDesc ct'
                                           ed <- ctModelToElemDesc m
-                                          return $ mkElemDescMixed (mergeAttrDescs (attrDesc ed) $ attrDesc base)
-                                                                   (mixed)
-                                                                   (mkSeq (contentModel base) $ contentModel ed)
-                                                                   (union (subElemDesc ed) $ subElemDesc base)
-                                                                   (sttf base)
+                                          return $ setMixedContent mixed
+                                                 $ mkElemDesc
+                                                       (mergeAttrDescs (attrDesc ed) $ attrDesc base)
+                                                       (mkSeq (contentModel base) $ contentModel ed)
+                                                       (union (subElemDesc ed) $ subElemDesc base)
+                                                       (wildcards ed ++ wildcards base)
+                                                       (sttf base)
           CCRestr (n, m) -> case lookup n $ sComplexTypes s of
                               Nothing  -> return $ mkErrorElemDesc
                                                    "element validation error: illegal type reference in schema file"
                               Just ct' -> do
                                           base <- ctToElemDesc ct'
-                                          ed <- ctModelToElemDesc m
-                                          return $ mkElemDescMixed (mergeAttrDescs (attrDesc ed) $ attrDesc base)
-                                                                   (mixed)
-                                                                   (contentModel ed)
-                                                                   (subElemDesc ed)
-                                                                   (sttf ed)
+                                          ed   <- ctModelToElemDesc m
+                                          return (setMixedContent mixed . mergeAttrDesc base $ ed)
       NewCT m       -> do
                        ed <- ctModelToElemDesc m
-                       let mixed = ctMixed ct == Just "true"
-                       return $ mkElemDescMixed (attrDesc ed)
-                                                (mixed)
-                                                (contentModel ed)
-                                                (subElemDesc ed)
-                                                (sttf ed)
+                       return $ setMixedContent (ctMixed ct == Just "true") ed
 
 -- | Creates the element description for a given element
 createElemDesc :: Element -> ST ElemDesc
@@ -526,16 +563,20 @@ createElemDesc (ElDef (ElementDef _ tdef))
 -- ----------------------------------------
 
 -- | Creates the element description for the root element
-createRootDesc' :: ST ElemDesc
+
+createRootDesc' :: ST (ElemDesc, SubElemDesc, XmlRegex)
 createRootDesc'
-  = do
-    s <- ask
-    let cm = mkAlts $ map mkElemNameRE $ keys $ sElements s
-    se <- fromList <$> zip (keys $ sElements s) <$> (mapM createElemDesc $ elems $ sElements s)
-    return $ mkComposeElemDesc cm se
+    = do elements <- asks sElements
+         let cm   =  mkAlts $ map mkElemNameRE $ keys elements
+         se       <- fromList <$> mapM mkED (toList elements)
+         return   $  (mkComposeElemDesc cm se [], se, cm)
+    where
+      mkED (k, e)
+          = do ed <- createElemDesc e
+               return (k, ed)
 
 -- | Starts the transformation for a given schema representation
-createRootDesc :: XmlSchema -> ElemDesc
+createRootDesc :: XmlSchema -> (ElemDesc, SubElemDesc, XmlRegex)
 createRootDesc schema
   = runST schema createRootDesc'
 

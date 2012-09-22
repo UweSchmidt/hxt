@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
   <!-- complex types with simple content (restriction / extension) -->
@@ -47,6 +47,9 @@
     <xs:choice>
       <xs:element name="desktop" type="computerDataWithoutComments"/>
       <xs:element name="laptop" type="computerDataWithoutComments"/>
+      <xs:element name="tablet">
+	<xs:complexType/>
+      </xs:element>
     </xs:choice>
   </xs:complexType>
 
@@ -92,7 +95,7 @@
         <xs:element name="login" type="login"/>
         <xs:element name="customer" type="customer"/>
         <xs:element name="shoppingList" type="shoppingList"/>
-        <xs:element name="computer" type="computer"/>
+        <xs:element name="computer" type="computer" maxOccurs="2"/>
         <xs:element name="computerData" type="computerData" maxOccurs="2"/>
         <xs:element name="computerDataWithGPU" type="computerDataWithGPU" maxOccurs="2"/>
         <xs:element name="computerDataWithoutComments" type="computerDataWithoutComments"/>

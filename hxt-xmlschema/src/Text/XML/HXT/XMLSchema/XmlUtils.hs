@@ -69,6 +69,9 @@ isElem = XN.isElem
 isText :: XmlTree -> Bool
 isText = XN.isText
 
+isElemOrText :: XmlTree -> Bool
+isElemOrText t = isElem t || isText t
+
 -- | Tests whether a tree is relevant for validation
 isRelevant :: XmlTree -> Bool
 isRelevant t = (isElem t) || (isText t)

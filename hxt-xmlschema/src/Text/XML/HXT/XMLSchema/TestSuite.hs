@@ -46,7 +46,7 @@ validateWithSchema config defUri instUri
                  inst <- loadInstance config instUri
                  case inst of
                    Nothing -> return (False, [(c_err, "/", "Could not process instance file.")])
-                   Just i  -> return $ runSVal (SValEnv "" $ createRootDesc d) $ testRoot i
+                   Just i  -> return $ validateWithXmlSchema' d i
 
 loadDefinition' :: SysConfigList -> String -> IO (Maybe XmlSchema)
 loadDefinition' config uri
@@ -197,8 +197,8 @@ complexTypesErrors
               , "content does not match content model.\ninput does not match <firstName><lastName>")
             , ( "/root[1]/shoppingList[1]/*"
               , "content does not match content model.\nexpected: <bread>, but got: <butter>1</butter>")
-            , ( "/root[1]/computer[1]/*"
-              , "content does not match content model.\nexpected: <desktop>|<laptop>, but got: <tablet/>")
+            , ("/root[1]/computer[1]/*"
+              , "content does not match content model.\nexpected: <desktop>|<laptop>|<tablet>, but got: <ipad/>")
             , ( "/root[1]/computerData[1]/*"
               , "content does not match content model.\nexpected: <comment>, but got: <ram>64GB</ram>")
             , ( "/root[1]/computerDataWithGPU[1]/*"

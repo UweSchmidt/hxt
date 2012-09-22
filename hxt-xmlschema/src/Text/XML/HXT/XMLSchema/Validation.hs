@@ -25,11 +25,16 @@ module Text.XML.HXT.XMLSchema.Validation
 
 where
 
+import Control.Monad                         ( liftM2
+                                             )
 import Control.Monad.Reader                  ( ask
+                                             , asks
                                              , local
                                              )
 
-import Data.List                             ( partition )
+import Data.List                             ( isPrefixOf
+                                             , partition
+                                             )
 import Data.Map                              ( Map
                                              , empty
                                              , lookup
@@ -42,18 +47,65 @@ import Prelude                        hiding ( lookup )
 
 import Text.XML.HXT.Arrow.XmlRegex           ( matchXmlRegex )
 
-import Text.XML.HXT.Core hiding              ( getElemName
-                                             , getAttrName
-                                             , getAttrValue
-                                             , getChildren
-                                             , isElem
-                                )
+import Text.XML.HXT.Core                     ( QName
+                                             , XmlTree
+                                             , XmlTrees
+
+                                             , isNameSpaceName	-- QName stuff
+                                             , qualifiedName
+                                             , namespaceUri
+                                             , localPart
+                                             , namePrefix
+
+                                             , arr		-- arrow stuff
+                                             , arrL
+                                             , constA
+                                             , isA
+                                             , none
+                                             , this
+                                             , traceMsg
+                                             , perform
+                                             , (>>>)
+                                             , ($<)
+                                             , orElse
+                                             , when
+                                             , guards
+                                             , setDocumentStatusFromSystemState
+                                             , documentStatusOk
+                                             , issueWarn
+                                             , issueErr
+                                             , issueFatal
+                                             , c_err
+                                             )
 import qualified Text.XML.HXT.Core           as C
-import Text.XML.HXT.Arrow.XmlState.TypeDefs
+import Text.XML.HXT.Arrow.XmlRegex           ( XmlRegex
+                                             -- , mkZero
+                                             -- , mkUnit
+                                             -- , mkPrim'
+                                             -- , mkAlts
+                                             -- , mkStar
+                                             -- , mkSeq
+                                             -- , mkSeqs
+                                             -- , mkRep
+                                             -- , mkRng
+                                             -- , mkPerms
+                                             -- , mkMerge
+                                             )
+import Text.XML.HXT.Arrow.XmlState.TypeDefs  ( SysConfigList
+                                             , IOStateArrow
+                                             , IOSArrow
+                                             , setS
+                                             , theXmlSchemaValidate
+                                             , withoutUserState
+                                             , localSysEnv
+                                             , configSysVars
+                                             )
 
 import Text.XML.HXT.XMLSchema.AbstractSyntax ( XmlSchema )
-import Text.XML.HXT.XMLSchema.Loader         ( loadDefinition )
-import Text.XML.HXT.XMLSchema.Transformation ( createRootDesc )
+import Text.XML.HXT.XMLSchema.Loader
+import Text.XML.HXT.XMLSchema.Transformation ( createRootDesc
+                                             -- , mkTextRE
+                                             )
 import Text.XML.HXT.XMLSchema.ValidationTypes
 import Text.XML.HXT.XMLSchema.XmlUtils
 
@@ -102,54 +154,59 @@ checkAllowedAttrs ((n, val):xs)
     res <- case lookup n am of
              Nothing
                  -> if isNameSpaceName n
-                    then
-                        return True  -- namespace declarations may occure everywhere  
+                    then return True  -- namespace declarations may occure everywhere  
                     else
-                        if or $ map (\ f -> f n) wp
-                        then mkWarnSTTF''
-                                 (++ ("/@" ++ qualifiedName n))
-                                 "no check implemented for attribute wildcard's content."
-                                 -- TODO: check attribute wildcard's content?
-                        else mkErrorSTTF''
-                                 (++ ("/@" ++ qualifiedName n))
-                                 "attribute not allowed here."
+                    if illegalNsUri `isPrefixOf` namespaceUri n
+                    then mkErrorSTTF''
+                             (++ ("/@" ++ qualifiedName n))
+                             (namespaceUri n)
+                    else
+                    if or $ map (\ f -> f n) wp
+                    then mkWarnSTTF''
+                             (++ ("/@" ++ qualifiedName n))
+                             "no check implemented for attribute wildcard's content."
+                             -- TODO: check attribute wildcard's content?
+                    else mkErrorSTTF''
+                             (++ ("/@" ++ qualifiedName n))
+                             "attribute not allowed here."
              Just (_, tf)
-                 -> local (const $ appendXPath ("/@" ++ (qualifiedName n)) env) $ tf val
+                 -> local (appendXPath ("/@" ++ qualifiedName n)) $ tf val
     rest <- checkAllowedAttrs xs
     return $ res && rest
 
 -- | Performs the combined attribute list check for a given element
 testAttrs :: XmlTree -> SVal Bool
 testAttrs e
-  = do
-    env <- ask
-    let attrl = getElemAttrs e
-    allowedAttrsRes <- checkAllowedAttrs attrl
-    reqAttrsRes <- hasReqAttrs (getReqAttrNames $ fst $ attrDesc $ elemDesc env) $ map fst attrl
-    return $ allowedAttrsRes && reqAttrsRes
-
+    = do ed              <- asks elemDesc
+         allowedAttrsRes <- checkAllowedAttrs attrl
+         reqAttrsRes     <- hasReqAttrs (getReqAttrNames $ fst $ attrDesc ed) $ map fst attrl
+         return          $  allowedAttrsRes && reqAttrsRes
+    where
+      attrl = getElemAttrs e
+      
 -- | Checks the content model of a given element using regular expression derivation
-testContentModel :: XmlTrees -> SVal Bool
-testContentModel t
-  = do
-    env <- ask
-    case matchXmlRegex (contentModel $ elemDesc env) t of
-      Nothing
-          -> return True
-      Just msg
-          -> mkErrorSTTF''
-                 (++ "/*")
-                 ("content does not match content model.\n" ++ msg)
+
+testContentModel :: XmlRegex -> XmlTrees -> SVal Bool
+testContentModel re t
+    = case matchXmlRegex re t of
+        Nothing
+            -> return True
+        Just msg
+            -> mkErrorSTTF''
+               (++ "/*")
+               ("content does not match content model.\n" ++ msg) -- ++ "\ncontent model: " ++ show re)
 
 -- | Extends the validation environment's XPath
 appendXPath :: String -> SValEnv -> SValEnv
 appendXPath s env
-  = SValEnv ((xpath env) ++ s) $ elemDesc env
+    = env {xpath = xpath env ++ s}
 
 -- | Exchanges the validation environment's element description
 newDesc :: ElemDesc -> SValEnv -> SValEnv
 newDesc d env
-  = SValEnv (xpath env) d
+    = env {elemDesc = d}
+
+{- old stuff
 
 -- | Recursively invokes checks on all subelems of a given element
 --   Also constructs an absolute XPath for each subelem for accurate error reporting
@@ -167,10 +224,10 @@ testElemChildren t (x:xs)
              Nothing
                  -> mkWarnSTTF''
                         (++ elemXPath)
-                        "no check implemented for element wildcard's content."
+                        ("no check implemented for element wildcard's content." ++ show x)
                         -- TODO: check element wildcard's content?
              Just d
-                 -> local (const (appendXPath elemXPath $ newDesc d env)) $ testElem x
+                 -> local (appendXPath elemXPath . newDesc d) $ testElem x
     rest <- testElemChildren (insert n c t) xs
     return $ res && rest
 
@@ -179,24 +236,23 @@ testElemText :: XmlTrees -> SVal Bool
 testElemText t
   = do
     env <- ask
-    local (const (appendXPath "/child::text()" env)) $ (sttf $ elemDesc env) $ getCombinedText t
+    local (appendXPath "/child::text()") $ (sttf $ elemDesc env) $ getCombinedText t
 
 -- | Performs the combined checks for a given element
 testElem :: XmlTree -> SVal Bool
 testElem e
-  = do
-    env <- ask
-    case (errmsg $ elemDesc env) of
-      Just msg -> mkErrorSTTF' msg
-      Nothing  -> do
+    = do ed <- asks elemDesc
+         case (errmsg ed) of
+           Just msg -> mkErrorSTTF' msg
+           Nothing  -> do
                   attrRes <- testAttrs e
                   let content = getElemChildren e
                   let (tags, text) = extractElems content
-                  contModelRes <- if mixedContent $ elemDesc env
-                                    then testContentModel tags
+                  contModelRes <- if mixedContent ed
+                                    then testContentModel (contentModel ed) tags
                                     else if (length tags > 0 && length text > 0)
                                            then mkErrorSTTF'' (++ "/*") "no mixed content allowed here."
-                                           else testContentModel content
+                                           else testContentModel (contentModel ed) content
                   contRes <- if contModelRes
                                then do
                                     textRes <- testElemText text
@@ -204,14 +260,80 @@ testElem e
                                     return $ textRes && tagsRes
                                else return False
                   return $ attrRes && contRes
+-- -}
+
+testCont :: CountingTable -> XmlTree  -> SVal (CountingTable, Bool)
+testCont t e
+    | isElem e
+        = let n        = getElemName e in
+          let (xp, t') = path n in
+          do ed <- asks elemDesc
+             res <- case lookup n $ subElemDesc ed of
+                      Nothing
+                          -> mkWarnSTTF'' (++ xp)
+                             ("no check implemented for element wildcard's content.") -- ++ show e)
+                             -- TODO: check element wildcard's content?
+                             -- testCont must be further parameterized with wildcard spec
+                             -- for variants: skip, lax, strict
+                             -- if skip or lax are given this case is ok
+                             -- else it's an error
+                             -- the subElemDesc must be set to allElemDesc when transforming a wildcard type
+                      Just d
+                          -> local (appendXPath xp . newDesc d) $ testElem' e
+             
+             return (t', res)
+
+    | otherwise
+        = return (t, True)
+    where
+      path qn = (xp, insert qn c t)
+          where
+            n  = qualifiedName qn
+            c  = maybe 1 (+1) $ lookup qn t
+            xp = "/" ++ n ++ "[" ++ (show c) ++ "]"
+
+testContent :: CountingTable -> XmlTrees -> SVal Bool
+testContent _ []
+    = return True
+testContent t (x : xs)
+    = do (t1, res1) <- testCont t x
+         res2       <- testContent t1 xs
+         return     $  res1 && res2
+
+testElem' :: XmlTree -> SVal Bool
+testElem' e
+    = do ed <- asks elemDesc
+         case (errmsg ed) of
+           Just msg -> mkErrorSTTF' msg
+           Nothing  -> testAttrs e
+                       .&&.
+                       if mixedContent ed
+                       then testContentModel (contentModel ed) contentElems
+                            .&&&.
+                            testContent empty                  contentElems
+                       else
+                       if allText || allElem
+                       then testContentModel (contentModel ed) content
+                            .&&&.
+                            if all isText content
+                               then local (appendXPath "/child::text()")
+                                        $ (sttf ed)
+                                        $ getCombinedText content
+                               else testContent empty content
+                       else mkErrorSTTF'' (++ "/*") "no mixed content allowed here."
+    where
+      content       = filter isElemOrText $ getElemChildren e
+      contentElems  = filter isElem       $ content
+      allText       = null contentElems
+      allElem       = length content == length contentElems
 
 -- | Extracts a namespace prefix table from a given element's attribute list
 extractPrefixMap :: XmlTree -> (XmlTree, PrefixMap)
 extractPrefixMap el
   = (el', prefixMap)
     where
-    el' = setAttrList rest el
-    prefixMap = fromList $ map (\ x -> (localPart $ getAttrName x, getAttrValue x)) nsAttrs
+    el'             = setAttrList rest el
+    prefixMap       = fromList $ map (\ x -> (localPart $ getAttrName x, getAttrValue x)) nsAttrs
     (nsAttrs, rest) = partition ((== "xmlns") . namePrefix . getAttrName) $ getAttrList el
 
 -- | Entry point for the instance document's validation
@@ -219,13 +341,30 @@ testRoot :: XmlTree -> SVal Bool
 testRoot r
   = do
     let (el, _) = extractPrefixMap r -- TODO: apply namespaces
-    testElem $ mkRoot [] [el]
+    testElem' $ mkRoot [] [el]
+
+(.&&.) :: SVal Bool -> SVal Bool -> SVal Bool
+(.&&.) = liftM2 (&&)
+
+(.&&&.) :: SVal Bool -> SVal Bool -> SVal Bool
+x1 .&&&. x2
+    = do r1 <- x1
+         if r1
+           then x2
+           else return r1
 
 -- ----------------------------------------
 
 validateWithXmlSchema' :: XmlSchema -> XmlTree -> SValResult
 validateWithXmlSchema' schema doc
-    = runSVal (SValEnv "" $ createRootDesc schema) $ testRoot doc
+    = runSVal (SValEnv { xpath = ""
+                       , elemDesc        = rootElemDesc
+                       , allElemDesc     = allElems
+                       , allContentModel = allCont
+                       }
+              ) $ testRoot doc
+    where
+      (rootElemDesc, allElems, allCont) = createRootDesc schema
 
 -- ----------------------------------------
 

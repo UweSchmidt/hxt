@@ -40,8 +40,10 @@ import Data.Map                    ( Map )
 
 -- | The environment used during validation
 data SValEnv       = SValEnv
-                   { xpath    :: XPath
-                   , elemDesc :: ElemDesc
+                   { xpath           :: XPath
+                   , elemDesc        :: ElemDesc
+                   , allElemDesc     :: SubElemDesc	-- all declared elements, used with wilcard contents
+                   , allContentModel :: XmlRegex	-- r.e. for document or wildcard contents
                    }
 
 -- | Simple XPath representation
@@ -54,6 +56,7 @@ data ElemDesc      = ElemDesc
                    , mixedContent :: Bool
                    , contentModel :: XmlRegex
                    , subElemDesc  :: SubElemDesc
+                   , wildcards    :: Wildcards
                    , sttf         :: STTF
                    }
 
@@ -67,10 +70,19 @@ type AttrMap       = Map QName AttrMapVal
 type AttrMapVal    = (Bool, STTF)
 
 -- | List of test functions for attribute wildcards
-type AttrWildcards = [(QName -> Bool)]
+type AttrWildcards = [QName -> Bool]
 
 -- | Table of possible subelems and their descriptions
 type SubElemDesc   = Map QName ElemDesc
+
+-- | List of wildcard specs
+type Wildcards     = [Wildcard]
+
+-- | Pair of namespace test and action
+data Wildcard      = WC (QName -> Bool) WildcardClass
+
+-- | wildcard validation strategie
+data WildcardClass = Skip | Lax | Strict
 
 -- | SimpleType test function to validate basic values
 type STTF          = String -> SVal Bool

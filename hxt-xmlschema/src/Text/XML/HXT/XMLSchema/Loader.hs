@@ -12,7 +12,9 @@
 -}
 
 module Text.XML.HXT.XMLSchema.Loader
-  ( loadDefinition )
+  ( loadDefinition
+  , illegalNsUri
+  )
 where
 
 import Data.List                               ( isPrefixOf
@@ -64,6 +66,9 @@ nsUri = "http://www.w3.org/2001/XMLSchema"
 -- | The XML Schema namespace prefix
 nsPrefix :: String
 nsPrefix = "xs"
+
+illegalNsUri :: String
+illegalNsUri ="missing namespace URI for prefix"
 
 mkXsdName :: String -> QName
 mkXsdName name
@@ -834,7 +839,12 @@ propagateXmlSchemaNamespaces
         where
         addXns = processAttrl $ changeAttrValue addUri `when` isPropAttr
         addUri n
-          = maybe n (\ u -> "{" ++ unXN u ++ "}" ++ n) $ lookup (newXName px) $ fromList env
+          = maybe (if null px
+                   then n
+                   else "{" ++ illegalNsUri ++ ": " ++ px ++ "}" ++ n
+                  )
+                  (\ u -> "{" ++ unXN u ++ "}" ++ n)
+                  $ lookup (newXName px) $ fromList env
             where
             (px', lp') = span (/= ':') n
             px
