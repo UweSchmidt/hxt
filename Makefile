@@ -10,7 +10,9 @@ PL1	= hxt-charproperties \
           hxt-relaxng \
           hxt-xmlschema \
 	  hxt-xslt \
-	  hxt-cache
+
+# head version of hxt-cache needs directory 1.2, that is shipped with ghc-7.6, not with ghc-7.4
+#	  hxt-cache
 
 PL	= $(PL1)
 

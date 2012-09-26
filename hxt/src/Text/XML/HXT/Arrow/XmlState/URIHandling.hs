@@ -166,7 +166,8 @@ expandURIString uri base
     = do
       base' <- parseURIReference' base
       uri'  <- parseURIReference' uri
-      abs'  <- nonStrictRelativeTo uri' base'
+      --  abs' <- nonStrictRelativeTo uri' base'
+      let abs' =  nonStrictRelativeTo uri' base'
       return $ show abs'
 
 -- | arrow variant of 'expandURIString', fails if 'expandURIString' returns Nothing
