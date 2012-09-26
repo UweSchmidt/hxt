@@ -38,9 +38,11 @@ library
   other-modules:
     Text.XML.HXT.XMLSchema.AbstractSyntax
     Text.XML.HXT.XMLSchema.Loader
+    Text.XML.HXT.XMLSchema.Regex
     Text.XML.HXT.XMLSchema.SystemConfig
     Text.XML.HXT.XMLSchema.Transformation
     Text.XML.HXT.XMLSchema.Validation
+    Text.XML.HXT.XMLSchema.ValidationCore
     Text.XML.HXT.XMLSchema.ValidationTypes
     Text.XML.HXT.XMLSchema.W3CDataTypeCheck
     Text.XML.HXT.XMLSchema.W3CDataTypeCheckUtils

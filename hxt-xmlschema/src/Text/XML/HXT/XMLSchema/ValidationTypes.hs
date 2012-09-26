@@ -14,6 +14,7 @@ module Text.XML.HXT.XMLSchema.ValidationTypes
 where
 
 import Text.XML.HXT.Core           ( QName
+                                   , XmlTree
                                    , c_warn
                                    , c_err
                                    )
@@ -35,6 +36,8 @@ import Control.Monad.Writer        ( WriterT
                                    )
 
 import Data.Map                    ( Map )
+
+import Text.XML.HXT.XMLSchema.Regex
 
 -- ----------------------------------------
 
@@ -102,6 +105,17 @@ type SVal a        = ReaderT SValEnv (WriterT SValLog Identity) a
 -- | Runs a computation in the schema validation monad
 runSVal :: SValEnv -> SVal a -> (a, SValLog)
 runSVal env val = runIdentity $ runWriterT $ runReaderT val env
+
+-- | the result state of a matching test with XmlTree regular expressions
+--
+-- the result is a function for testing the content model of all elements
+-- contained in the children of an element
+
+type XmlRegexState = XmlTree -> SVal Bool
+
+-- | A substitute for XmlRegex from hxt Arrow.XmlRegex
+
+type XmlRegex' = Regex XmlRegexState XmlTree
 
 -- ----------------------------------------
 

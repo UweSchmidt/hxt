@@ -1,4 +1,6 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, MultiParamTypeClasses #-}
+{- # LANGUAGE #-}
+
+-- ----------------------------------------
 
 module Text.XML.HXT.XMLSchema.Regex
 where
@@ -37,6 +39,10 @@ toList t
       where
         go (Leaf x)   = (x :)
         go (Fork l r) = go l . go r
+
+headTree :: Tree2 a -> a
+headTree (Leaf x) = x
+headTree (Fork l _r) = headTree l
 
 -- ----------------------------------------
 --
@@ -114,13 +120,21 @@ instance Show (Regex s a) where
     show (Sym _p _f "") = "<pred>"
     show (Sym _p _f r ) = r
     show (Star e)       = "(" ++ show e ++ ")*"
-    show (Alt e1 e2)    = "(" ++ show e1 ++ "|" ++ show e2 ++ ")"
+    show e@(Alt _ _)    = "(" ++ (intercalate "|" . map show . flattenAlt $ e) ++ ")"
     show (Seq e1 e2)    = show e1 ++ show e2
     show (Rep 1 e)      = "(" ++ show e ++ ")+"
     show (Rep i e)      = "(" ++ show e ++ "){" ++ show i ++ ",}"
     show (Rng 0 1 e)    = "(" ++ show e ++ ")?"
     show (Rng i j e)    = "(" ++ show e ++ "){" ++ show i ++ "," ++ show j ++ "}"
-    show (Perm e1 e2)   = "(" ++ show e1 ++ show e2 ++ "|" ++ show e2 ++ show e1 ++ ")"
+    show e@(Perm _ _)   = "(" ++ (intercalate "||" . map show . flattenPerm $ e) ++ ")"
+
+flattenAlt :: Regex s a -> [Regex s a]
+flattenAlt (Alt e1 e2) = flattenAlt e1 ++ flattenAlt e2
+flattenAlt e           = [e]
+
+flattenPerm :: Regex s a -> [Regex s a]
+flattenPerm (Perm e1 e2) = flattenPerm e1 ++ flattenPerm e2
+flattenPerm e            = [e]
 
 -- ------------------------------------------------------------
 --
@@ -203,7 +217,7 @@ mkPerm Unit        e2            = e2
 mkPerm e1          Unit          = e1
 mkPerm e1          e2            = Perm e1 e2
 
-mkPerms                          :: [Regex s a] -> Regex s a
+mkPerms :: [Regex s a] -> Regex s a
 mkPerms                          = foldr mkPerm mkUnit
 
 -- ----------------------------------------
@@ -290,20 +304,25 @@ matchRegex :: ShowSym a => [a] -> Regex s a -> s -> Either String s
 matchRegex xs re s
     = evalRes $ runDelta' xs re s
       where
+        -- prepare the error messages
         evalRes (Errs es) = Left $ unwords ["expected:", expected, "but input was:", got]
                             where
                               expected = intercalate "|" . map fst . toList $ es
-                              got      = snd . head                . toList $ es
+                              got      = snd . headTree $ es
+
+        -- look for the first nullable r.e. (the first parse) and take the associated state
         evalRes (Vals vs) = either noMatch Right . foldTree2 mplus' isNullable $ vs
                             where
                               isNullable (re', s')
                                   | nullable re' = Right s'
                                   | otherwise    = Left re'
+
                               noMatch e
                                   = Left $ unwords ["input missing to match regular expression:", show e]
-                              mplus' x1@(Right _) _ = x1
-                              mplus' _ x2@(Right _) = x2
-                              mplus' x1 _           = x1
+
+                              mplus' x1@(Right _) _            = x1
+                              mplus' _            x2@(Right _) = x2
+                              mplus' x1           _            = x1
 
 -- ----------------------------------------
 --
@@ -322,179 +341,12 @@ unexpected x e
               (s', rest)  = splitAt n s
 
 -- ----------------------------------------
-{-
--- ------------------------------------------------------------
---
--- smart constructors
-
-mkUnit :: (Regex a)
-mkUnit
-    = Unit
-
-mkPrim :: (a -> Bool) -> (Regex a)
-mkPrim p
-    = Sym p ""
-
-mkPrim' :: (a -> Bool) -> String -> (Regex a)
-mkPrim'
-    = Sym
-
-mkStar :: (Regex a) -> (Regex a)
-mkStar e@Unit
-    = e                     -- ()* == ()
-
-mkStar e@(Star _e1)
-    = e                     -- (r*)* == r*
-
--- mkStar (Rep 1 e1)       = mkStar e1             -- (r+)* == r*
-
-mkStar e@(Alt _ _)
-    = Star (rmStar e)       -- (a*|b)* == (a|b)*
-mkStar e
-    = Star e
-
-rmStar :: (Regex a) -> (Regex a)
-rmStar (Alt e1 e2)
-    = mkAlt (rmStar e1) (rmStar e2)
-
-rmStar (Star e1)
-    = rmStar e1
--- rmStar (Rep 1 e1)       = rmStar e1
-
-rmStar e1
-    = e1
-
-mkAlt :: (Regex a) -> (Regex a) -> (Regex a)
-
-mkAlt (Sym p1 e1) (Sym p2 e2)
-    = mkPrim' (\ x -> p1 x || p2 x)  (e e1 e2) -- melting of predicates
-      where
-        e "" x2 = x2
-        e x1 "" = x1
-        e x1 x2 = x1 ++ "|" ++ x2
-
-mkAlt e1 e2@(Sym _ _)
-    = mkAlt e2 e1                   -- symmetry: predicates always first
-
-mkAlt e1@(Sym _ _) (Alt e2@(Sym _ _) e3)
-    = mkAlt (mkAlt e1 e2) e3        -- prepare melting of predicates
-
-mkAlt (Alt e1 e2) e3
-    = mkAlt e1 (mkAlt e2 e3)        -- associativity
-
-mkAlt e1 e2
-    = Alt e1 e2
-
-mkAlts :: [(Regex a)] -> (Regex a)
-mkAlts []
-    = error "mkAlts: illegal argument []"
-mkAlts es
-    = foldr1 mkAlt es
-
-mkSeq :: (Regex a) -> (Regex a) -> (Regex a)
-mkSeq Unit e2
-    = e2
-
-mkSeq e1 Unit
-    = e1
-
-mkSeq (Seq e1 e2) e3
-    = mkSeq e1 (mkSeq e2 e3)
-
-mkSeq e1 e2
-    = Seq e1 e2
-
-mkSeqs :: [(Regex a)] -> (Regex a)
-mkSeqs
-    = foldr mkSeq mkUnit
-
--- ----------------------------------------
-
-nullable :: (Regex a) -> Bool
-nullable Unit           = True
-nullable (Sym _p _)     = False         -- assumption: p holds for at least one tree
-nullable (Star _)       = True
-nullable (Alt e1 e2)    = nullable e1 ||
-                          nullable e2
-nullable (Seq e1 e2)    = nullable e1 &&
-                          nullable e2
-{-
-nullable (Rep _i e)     = nullable e
-nullable (Rng i _ e)    = i == 0 ||
-                          nullable e
-nullable (Perm e1 e2)   = nullable e1 &&
-                          nullable e2
-nullable (Merge e1 e2)  = nullable e1 &&
-                          nullable e2
--- -}
-
--- ----------------------------------------
-
-type RegexResult a = ResultSet (Regex a)
-
-delta :: ShowSym a => a -> Regex a -> RegexResult a
-delta c Unit
-    = unexpected c ""
-
-delta c (Sym p e)
-    | p c       = return mkUnit
-    | otherwise = unexpected c e
-
-delta c (Seq e1 e2)
-    | nullable e1 = res1 `mplus` delta c e2
-    | otherwise   = res1
-    where
-      res1 = delta c e1 <***> e2
-
-delta c (Alt e1 e2)
-    = delta c e1 `mplus` delta c e2
-
-delta c e@(Star e1)
-    = delta c e1 <***> e
-
-
-delta' :: ShowSym a => [a] -> Regex a -> RegexResult a
-delta' [] re
-    = return re
-delta' (x : xs) re
-    = delta x re >>= delta' xs
-
-matches :: ShowSym a => [a] -> Regex a -> Maybe [String]
-matches xs re = res . delta' xs $ re
-    where
-      res (Errs es) = Just $ toList es
-      res (Vals vs)
-          | any nullable . toList $ vs = Nothing
-          | otherwise                  = Just ["input does not match " ++ show re]
-      
-
--- | append a regex to every value in the result set
-
-(<***>) :: RegexResult a -> Regex a -> RegexResult a
-rs <***> re
-    = (`mkSeq` re) <$> rs
-
--- ----------------------------------------
---
--- error handling
-
-unexpected :: ShowSym a => a -> String -> RegexResult a
-unexpected x e
-    = throwError $ emsg e ++ (cut 80 . showSym $ x)
-      where
-        emsg ""           = "unexpected: "
-        emsg s            = "expected: " ++ s ++ ", but got: "
-        cut n s
-            | null rest   = s'
-            | otherwise   = s' ++ "..."
-            where
-              (s', rest)  = splitAt n s
--- -}
 
 class ShowSym a where
     showSym :: a -> String
 
 -- ------------------------------------------------------------
+{- a few tests
 
 type IntSet = ResultSet Int
 
@@ -514,12 +366,16 @@ type RE = Regex Int Char
 instance ShowSym Char where
     showSym = (:[])
 
-r1, r2, r3, r4, r5 :: RE
+r1, r2, r3, r4, r5, r6 :: RE
 r1 = mkPrim' (== 'a') (const (+1)) "a"
 r2 = mkPrim' (== 'b') (const id) "b"
+r6 = mkPrim' (== 'c') (const id) "c"
 r3 = mkStar (mkAlt r1 r2)
 r4 = mkRep 5 r1
 r5 = mkRng 3 6 r1
 
+countAs :: String -> ResultSet (RE, Int)
 countAs xs = runDelta' xs r3 0
 
+-- -}
+-- ------------------------------------------------------------
