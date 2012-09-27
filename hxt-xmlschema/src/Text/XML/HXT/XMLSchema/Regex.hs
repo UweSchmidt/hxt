@@ -33,8 +33,8 @@ foldTree2 :: (b -> b -> b) -> (a -> b)-> Tree2 a -> b
 foldTree2 _  f (Leaf x) = f x
 foldTree2 op f (Fork l r) = (foldTree2 op f l) `op` (foldTree2 op f r)
 
-toList :: Tree2 a -> [a]
-toList t
+toListTree2 :: Tree2 a -> [a]
+toListTree2 t
     = go t []
       where
         go (Leaf x)   = (x :)
@@ -140,29 +140,29 @@ flattenPerm e            = [e]
 --
 -- smart constructors
 
-mkUnit 		:: (Regex s a)
-mkUnit    	= Unit
+mkUnit          :: (Regex s a)
+mkUnit          = Unit
 
-mkPrim 		:: (a -> Bool) -> String -> (Regex s a)
-mkPrim p    	= Sym p (const id)
+mkPrim'                 :: (a -> Bool) -> String -> (Regex s a)
+mkPrim' p       = Sym p (const id)
 
-mkPrim'         :: (a -> Bool) -> (a -> s -> s) -> String -> (Regex s a)
-mkPrim'    	= Sym
+mkPrim          :: (a -> Bool) -> (a -> s -> s) -> String -> (Regex s a)
+mkPrim          = Sym
 
 mkStar :: (Regex s a) -> (Regex s a)
 
-mkStar e@Unit   	= e                     -- ()* == ()
-mkStar e@(Star _e1)	= e                     -- (r*)* == r*
+mkStar e@Unit           = e                     -- ()* == ()
+mkStar e@(Star _e1)     = e                     -- (r*)* == r*
 mkStar (Rep 1 e1)       = mkStar e1             -- (r+)* == r*
-mkStar e@(Alt _ _)    	= Star (rmStar e)       -- (a*|b)* == (a|b)*
-mkStar e    		= Star e
+mkStar e@(Alt _ _)      = Star (rmStar e)       -- (a*|b)* == (a|b)*
+mkStar e                = Star e
 
 rmStar :: (Regex s a) -> (Regex s a)
 
 rmStar (Alt e1 e2)      = mkAlt (rmStar e1) (rmStar e2)
 rmStar (Star e1)        = rmStar e1
 rmStar (Rep 1 e1)       = rmStar e1
-rmStar e1    		= e1
+rmStar e1               = e1
 
 mkAlt :: (Regex s a) -> (Regex s a) -> (Regex s a)
 mkAlt e1 e2             = Alt e1 e2
@@ -307,7 +307,7 @@ matchRegex xs re s
         -- prepare the error messages
         evalRes (Errs es) = Left $ unwords ["expected:", expected, "but input was:", got]
                             where
-                              expected = intercalate "|" . map fst . toList $ es
+                              expected = intercalate "|" . map fst . toListTree2 $ es
                               got      = snd . headTree $ es
 
         -- look for the first nullable r.e. (the first parse) and take the associated state
@@ -330,15 +330,10 @@ matchRegex xs re s
 
 unexpected :: ShowSym a => a -> String -> RegexResult s a
 unexpected x e
-    = throwErr (emsg e) (cut 80 . showSym $ x)
+    = throwErr (emsg e) (showSym x)
       where
         emsg ""           = "{?}"
         emsg s            = s
-        cut n s
-            | null rest   = s'
-            | otherwise   = s' ++ "..."
-            where
-              (s', rest)  = splitAt n s
 
 -- ----------------------------------------
 

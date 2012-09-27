@@ -75,11 +75,10 @@ validateWithXmlSchema' schema doc
     = runSVal (SValEnv { xpath = ""
                        , elemDesc        = rootElemDesc
                        , allElemDesc     = allElems
-                       , allContentModel = allCont
                        }
               ) $ testRoot doc
     where
-      (rootElemDesc, allElems, allCont) = createRootDesc schema
+      (rootElemDesc, allElems) = createRootDesc schema
 
 -- ----------------------------------------
 

@@ -18,31 +18,10 @@ module Text.XML.HXT.XMLSchema.Transformation
   )
 where
 
-import Text.XML.HXT.XMLSchema.XmlUtils
-import Text.XML.HXT.XMLSchema.AbstractSyntax
-import Text.XML.HXT.XMLSchema.W3CDataTypeCheck
-import Text.XML.HXT.XMLSchema.ValidationTypes
-
 import Text.XML.HXT.Core           ( QName
                                    , localPart
                                    , namespaceUri
-                                   , qualifiedName
-                                   , universalName
                                    )
-
-import Text.XML.HXT.Arrow.XmlRegex ( XmlRegex
-                                   , mkZero
-                                   , mkUnit
-                                   , mkPrim'
-                                   , mkAlts
-                                   , mkSeq
-                                   , mkSeqs
-                                   , mkStar
-                                   , mkRep
-                                   , mkRng
-                                   , mkPerms
-                                   )
-
 import Control.Monad.Identity      ( Identity
                                    , runIdentity
                                    )
@@ -63,11 +42,15 @@ import Data.Map                    ( empty
                                    , union
                                    , fromList
                                    , toList
-                                   , keys
-                                   -- , elems
                                    )
 
-import Prelude hiding ( lookup )
+import Prelude hiding              ( lookup )
+
+import Text.XML.HXT.XMLSchema.AbstractSyntax
+import Text.XML.HXT.XMLSchema.W3CDataTypeCheck
+import Text.XML.HXT.XMLSchema.ValidationTypes
+import Text.XML.HXT.XMLSchema.ValidationCore
+import Text.XML.HXT.XMLSchema.Regex
 
 -- ----------------------------------------
 
@@ -79,19 +62,6 @@ runST :: XmlSchema -> ST a -> a
 runST schema st = runIdentity $ runReaderT st schema
 
 -- ----------------------------------------
-
--- | Creates a SimpleType test function which does not allow any text
-mkNoTextSTTF :: STTF
-mkNoTextSTTF
-  = \ s -> do
-           if not $ null $ unwords $ words s
-             then mkErrorSTTF' "no text allowed here."
-             else return True
-
--- | Creates a SimpleType test function which always succeeds
-mkPassthroughSTTF :: STTF
-mkPassthroughSTTF
-  = \ _ -> return True
 
 -- | Creates a SimpleType test function for basic W3C datatypes
 mkW3CCheckSTTF :: QName -> ParamList -> STTF
@@ -249,34 +219,26 @@ attrListToAttrDesc l
 
 -- ----------------------------------------
 
--- | Creates a regex which matches on an element with a given name
-mkElemNameRE :: QName -> XmlRegex
-mkElemNameRE s = mkPrim' ((== s) . getElemName) ("<" ++ universalName s ++ ">")
-
--- | Creates a regex which matches on an element with a given namespace predicate
-mkElemNamespaceRE :: String -> (QName -> Bool) -> XmlRegex
-mkElemNamespaceRE s p = mkPrim' (p . getElemName) s
-
--- | Creates a regex which matches on text nodes
-mkTextRE :: XmlRegex
-mkTextRE = mkStar $ mkPrim' isText "{plain text}"
-
--- ----------------------------------------
-
 nullElemDesc :: ElemDesc
 nullElemDesc
-    = ElemDesc Nothing (empty, []) False mkUnit empty [] mkPassthroughSTTF
+    = ElemDesc Nothing (empty, []) False mkUnit empty [] Nothing
+      -- don't change the defaults,
+      -- it's assumed, this is a complex type, no attributes, not mixed, empty content mode and no wildcards
+
+rootElemDesc :: ElemDesc
+rootElemDesc
+    = nullElemDesc {contentModel = mkWildcardRE (WC (const True) Strict)}
 
 -- | Creates an element description for elements without subelems
 mkSimpleElemDesc :: AttrDesc -> STTF -> ElemDesc
 mkSimpleElemDesc ad f
     = nullElemDesc { attrDesc     = ad
-                   , contentModel = mkTextRE
-                   , sttf         = f
+                   , contentModel = mkSimpleContentRE f
+                   , sttf         = Just f
                    }
 
 -- | Creates an element description for elements without attributes or textual content
-mkComposeElemDesc :: XmlRegex -> SubElemDesc -> Wildcards -> ElemDesc
+mkComposeElemDesc :: XmlRegex' -> SubElemDesc -> Wildcards -> ElemDesc
 mkComposeElemDesc cm se wc
     = nullElemDesc { contentModel = cm
                    , subElemDesc  = se
@@ -289,14 +251,16 @@ setMixedContent mx ed
 
 setWildcard :: Wildcard -> ElemDesc -> ElemDesc
 setWildcard wc ed
-    = ed {wildcards = wc : wildcards ed}
+    = ed { contentModel = mkWildcardRE wc
+         , wildcards = wc : wildcards ed	-- TODO: should be redundant
+         }
 
 mergeAttrDesc :: ElemDesc -> ElemDesc -> ElemDesc
 mergeAttrDesc base ed
     = ed {attrDesc = mergeAttrDescs (attrDesc ed) (attrDesc base)}
 
 -- | Creates a general element description
-mkElemDesc :: AttrDesc -> XmlRegex -> SubElemDesc -> Wildcards -> STTF -> ElemDesc
+mkElemDesc :: AttrDesc -> XmlRegex' -> SubElemDesc -> Wildcards -> MaybeSTTF -> ElemDesc
 mkElemDesc ad cm se wc sf
     = nullElemDesc { attrDesc     = ad
                    , contentModel = cm
@@ -313,27 +277,30 @@ mkErrorElemDesc s
 -- | Creates the element description for a given group
 groupToElemDesc :: Group -> ST ElemDesc
 groupToElemDesc (GrpRef r)
-  = do
-    s <- ask
-    case lookup r $ sGroups s of
-      Nothing -> return $ mkErrorElemDesc "element validation error: illegal group reference in schema file"
-      Just g  -> groupToElemDesc g
+  = do s <- ask
+       case lookup r $ sGroups s of
+         Nothing
+             -> return $ mkErrorElemDesc
+                         "element validation error: illegal group reference in schema file"
+         Just g
+             -> groupToElemDesc g
+
 groupToElemDesc (GrpDef d)
-  = case d of
-      Nothing      -> return $ mkComposeElemDesc mkUnit empty []
-      Just (Al al) -> allToElemDesc al
-      Just (Ch ch) -> choiceToElemDesc ch
-      Just (Sq sq) -> sequenceToElemDesc sq
+    = case d of
+        Nothing      -> return $ mkComposeElemDesc mkUnit empty []
+        Just (Al al) -> allToElemDesc al
+        Just (Ch ch) -> choiceToElemDesc ch
+        Just (Sq sq) -> sequenceToElemDesc sq
 
 -- | Extracts an element's name
 elementToName :: Element -> QName
 elementToName e
-  = case e of
-      ElRef r -> r
-      ElDef d -> elemName d
+    = case e of
+        ElRef r -> r
+        ElDef d -> elemName d
 
 -- | Helper function to combine a list of element descriptions using a regex constructor
-combineElemDescs :: ([XmlRegex] -> XmlRegex) -> [ElemDesc] -> ST ElemDesc
+combineElemDescs :: ([XmlRegex'] -> XmlRegex') -> [ElemDesc] -> ST ElemDesc
 combineElemDescs mkRE eds
   = do
     let re = mkRE $ map contentModel eds
@@ -344,43 +311,42 @@ combineElemDescs mkRE eds
 -- | Creates the element description for a given all
 allToElemDesc :: All -> ST ElemDesc
 allToElemDesc l
-  = do
-    eds <- mapM (\ (occ, el) -> do 
-                                ed <- createElemDesc el
-                                let n = elementToName el
-                                return $ mkComposeElemDesc
-                                           (mkMinMaxRE occ $ mkElemNameRE n)
-                                           (singleton n ed)
-                                           (wildcards ed)
+    = do eds <- mapM (\ (occ, el) ->
+                      do ed    <- createElemDesc el
+                         let n =  elementToName el
+                         return $ mkComposeElemDesc
+                                    (mkMinMaxRE occ $ mkElemNameRE n)
+                                    (singleton n ed)
+                                    (wildcards ed)
                 ) l
-    combineElemDescs mkPerms eds
+         combineElemDescs mkPerms eds
 
 -- | Transforms a wildcard into a namespace checking predicate
 anyToPredicate :: Any -> ST (QName -> Bool)
 anyToPredicate an
-  = do
-    s <- ask
-    let ns = fromMaybe "##any" $ namespace an
-    let p = case ns of
-              "##any"   -> const True
-              "##other" -> case sTargetNS s of
-                             Nothing  -> (/= "")
-                             Just tns -> (/= tns)
-              _         -> (`elem` (map (\ x -> case x of
-                                                  "##targetNamespace" -> fromMaybe "" $ sTargetNS s
-                                                  "##local"           -> ""
-                                                  _                   -> x
-                                        ) $ words ns)
+  = do s <- ask
+       let ns = fromMaybe "##any" $ namespace an
+       let p = case ns of
+                 "##any"
+                     -> const True
+                 "##other"
+                     -> case sTargetNS s of
+                          Nothing  -> (/= "")
+                          Just tns -> (/= tns)
+                 _
+                     -> (`elem` (map (\ x -> case x of
+                                               "##targetNamespace" -> fromMaybe "" $ sTargetNS s
+                                               "##local"           -> ""
+                                               _                   -> x
+                                     ) $ words ns)
                            )
-    return $ p . namespaceUri
+       return $ p . namespaceUri
 
 -- | Creates the element description for a given element wildcard
 anyToElemDesc :: Any -> ST ElemDesc
 anyToElemDesc an
   = do wtf <- anyToPredicate an
-       return $ setWildcard (WC wtf waction)
-              $ nullElemDesc { contentModel = mkElemNamespaceRE "<namespace wildcard test>" wtf
-                             }
+       return $ setWildcard (WC wtf waction) $ nullElemDesc
     where
       waction
           = case processContents an of
@@ -395,67 +361,81 @@ mkPair x y = (x, y)
 -- | Create the element description for a choice or sequence content item
 chSeqContToElemDesc :: ChSeqContent -> ST ElemDesc
 chSeqContToElemDesc c
-  = do
-    (occ, ed) <- case c of
-                   ChSeqEl (occ, el) -> mkPair occ <$> createElemDesc el
-                   ChSeqGr (occ, gr) -> mkPair occ <$> groupToElemDesc gr
-                   ChSeqCh (occ, ch) -> mkPair occ <$> choiceToElemDesc ch
-                   ChSeqSq (occ, sq) -> mkPair occ <$> sequenceToElemDesc sq
-                   ChSeqAn (occ, an) -> mkPair occ <$> anyToElemDesc an
-    case c of
-      ChSeqEl (_, el) -> do
-                         let n = elementToName el
-                         return $ mkComposeElemDesc
-                                    (mkMinMaxRE occ $ mkElemNameRE n)
-                                    (singleton n ed)
-                                    (wildcards ed)
-      _               -> return $ mkComposeElemDesc
-                                    (mkMinMaxRE occ $ contentModel ed)
-                                    (subElemDesc ed)
-                                    (wildcards ed)
+  = do (occ, ed) <- case c of
+                      ChSeqEl (occ, el)
+                          -> mkPair occ <$> createElemDesc el
+                      ChSeqGr (occ, gr)
+                          -> mkPair occ <$> groupToElemDesc gr
+                      ChSeqCh (occ, ch)
+                          -> mkPair occ <$> choiceToElemDesc ch
+                      ChSeqSq (occ, sq)
+                          -> mkPair occ <$> sequenceToElemDesc sq
+                      ChSeqAn (occ, an)
+                          -> mkPair occ <$> anyToElemDesc an
+       case c of
+         ChSeqEl (_, el)
+             -> let n = elementToName el
+                in
+                return $ mkComposeElemDesc
+                           (mkMinMaxRE occ $ mkElemNameRE n)
+                           (singleton n ed)
+                           (wildcards ed)
+         _
+             -> return $ mkComposeElemDesc
+                           (mkMinMaxRE occ $ contentModel ed)
+                           (subElemDesc ed)
+                           (wildcards ed)
 
 -- | Creates the element description for a given choice
 choiceToElemDesc :: Choice -> ST ElemDesc
 choiceToElemDesc l
-  = mapM chSeqContToElemDesc l >>= combineElemDescs mkAlts
+    = mapM chSeqContToElemDesc l >>= combineElemDescs mkAlts1
 
 -- | Creates the element description for a given sequence
 sequenceToElemDesc :: Sequence -> ST ElemDesc
 sequenceToElemDesc l
-  = mapM chSeqContToElemDesc l >>= combineElemDescs mkSeqs
+    = mapM chSeqContToElemDesc l >>= combineElemDescs mkSeqs
 
 -- | Attempts to read an integer value from a string
 readMaybeInt :: String -> Maybe Int
 readMaybeInt str
-  = val $ reads str
+    = val $ reads str
     where
-    val [(x, "")] = Just x
-    val _         = Nothing
+      val [(x, "")] = Just x
+      val _         = Nothing
 
 -- | Creates a regex wrapper for restrictions on the number of occurrences
-mkMinMaxRE :: MinMaxOcc -> XmlRegex -> XmlRegex
+mkMinMaxRE :: MinMaxOcc -> XmlRegex' -> XmlRegex'
 mkMinMaxRE occ re
-  = case readMaybeInt minOcc' of
-      Nothing       -> mkZero $ "element validation error: illegal minOccurs in schema file"
-      Just minOcc'' -> if maxOcc' == "unbounded"
-                         then mkRep minOcc'' re
-                         else case readMaybeInt maxOcc' of
-                                Nothing       -> mkZero $ "element validation error: illegal maxOccurs in schema file"
-                                Just maxOcc'' -> mkRng minOcc'' maxOcc'' re
+  = case minOcc' of
+      Nothing
+          -> mkErrorRE $ "element validation error: illegal minOccurs in schema file"
+      Just minOcc''
+          -> if maxOcc0 == "unbounded"
+             then mkRep minOcc'' re
+             else case maxOcc' of
+                    Nothing
+                        -> mkErrorRE $ "element validation error: illegal maxOccurs in schema file"
+                    Just maxOcc''
+                        -> mkRng minOcc'' maxOcc'' re
     where
-    minOcc' = maybe "1" id $ minOcc occ
-    maxOcc' = maybe "1" id $ maxOcc occ
+    minOcc'  = readMaybeInt $ maybe "1" id $ minOcc occ
+    maxOcc0  =                maybe "1" id $ maxOcc occ
+    maxOcc'  = readMaybeInt   maxOcc0
 
 -- | Creates the element description for a given ComplexType compositor
 compToElemDesc :: CTCompositor -> ST ElemDesc
 compToElemDesc c
-  = do
-    (occ, ed) <- case c of
-                   CompGr (occ, gr) -> mkPair occ <$> groupToElemDesc gr
-                   CompAl (occ, al) -> mkPair occ <$> allToElemDesc al
-                   CompCh (occ, ch) -> mkPair occ <$> choiceToElemDesc ch
-                   CompSq (occ, sq) -> mkPair occ <$> sequenceToElemDesc sq
-    return $ ed {contentModel = mkMinMaxRE occ $ contentModel ed}
+  = do (occ, ed) <- case c of
+                      CompGr (occ, gr)
+                          -> mkPair occ <$> groupToElemDesc gr
+                      CompAl (occ, al)
+                          -> mkPair occ <$> allToElemDesc al
+                      CompCh (occ, ch)
+                          -> mkPair occ <$> choiceToElemDesc ch
+                      CompSq (occ, sq)
+                          -> mkPair occ <$> sequenceToElemDesc sq
+       return $ ed {contentModel = mkMinMaxRE occ $ contentModel ed}
 
 -- | Combines two given attribute descriptions
 mergeAttrDescs :: AttrDesc -> AttrDesc -> AttrDesc
@@ -468,9 +448,7 @@ ctModelToElemDesc (comp, attrs)
   = do
     ad <- attrListToAttrDesc attrs
     case comp of
-      Nothing -> return $ nullElemDesc { attrDesc = ad
-                                       , sttf     = mkNoTextSTTF
-                                       }
+      Nothing -> return $ nullElemDesc {attrDesc = ad}
       Just c  -> do
                  ed <- compToElemDesc c
                  return $ ed {attrDesc = mergeAttrDescs ad $ attrDesc ed}
@@ -479,104 +457,124 @@ ctModelToElemDesc (comp, attrs)
 --   Accumulates the restrictions to create the combined element description
 simpleContentToElemDesc :: SimpleContent -> AttrDesc -> RestrAttrs -> ST ElemDesc
 simpleContentToElemDesc (SCExt (n, attrs)) ad rlist
-  = do
-    s <- ask
-    ad' <- mergeAttrDescs ad <$> attrListToAttrDesc attrs
-    case lookup n $ sComplexTypes s of
-      Nothing -> mkSimpleElemDesc ad' <$> rstrToSTTF (BaseAttr n, rlist)
-      Just ct -> case ctDef ct of
-                   SCont sc -> simpleContentToElemDesc sc ad' rlist
-                   _        -> return $ mkErrorElemDesc "element validation error: illegal type reference in schema file"
+  = do s   <- ask
+       ad' <- mergeAttrDescs ad <$> attrListToAttrDesc attrs
+       case lookup n $ sComplexTypes s of
+         Nothing
+           -> mkSimpleElemDesc ad' <$> rstrToSTTF (BaseAttr n, rlist)
+         Just ct
+             -> case ctDef ct of
+                  SCont sc
+                      -> simpleContentToElemDesc sc ad' rlist
+                  _
+                      -> return $ mkErrorElemDesc "element validation error: illegal type reference in schema file"
+
 simpleContentToElemDesc (SCRestr ((tref, rlist'), attrs)) ad rlist
-  = do
-    s <- ask
-    ad' <- mergeAttrDescs ad <$> attrListToAttrDesc attrs
-    let mergedRlist = mergeRestrAttrs rlist rlist'
-    case tref of
-      BaseAttr n -> case lookup n $ sComplexTypes s of
-                      Nothing -> mkSimpleElemDesc ad' <$> rstrToSTTF (BaseAttr n, mergedRlist)
-                      Just ct -> case ctDef ct of
-                                   SCont sc -> simpleContentToElemDesc sc ad' mergedRlist
-                                   _        -> return $ mkErrorElemDesc $
-                                                        "element validation error: illegal type reference in schema file"
-      STRAnonymStDecl _ -> mkSimpleElemDesc ad' <$> rstrToSTTF (tref, mergedRlist)
+  = do s   <- ask
+       ad' <- mergeAttrDescs ad <$> attrListToAttrDesc attrs
+       let mergedRlist = mergeRestrAttrs rlist rlist'
+       case tref of
+         BaseAttr n
+             -> case lookup n $ sComplexTypes s of
+                  Nothing
+                      -> mkSimpleElemDesc ad' <$> rstrToSTTF (BaseAttr n, mergedRlist)
+                  Just ct
+                      -> case ctDef ct of
+                           SCont sc
+                               -> simpleContentToElemDesc sc ad' mergedRlist
+                           _
+                               -> return $ mkErrorElemDesc
+                                           "element validation error: illegal type reference in schema file"
+         STRAnonymStDecl _
+             -> mkSimpleElemDesc ad' <$> rstrToSTTF (tref, mergedRlist)
 
 -- | Creates the element description for a given ComplexType
 ctToElemDesc :: ComplexType -> ST ElemDesc
 ctToElemDesc ct
-  = do
-    s <- ask
-    case ctDef ct of
-      SCont sc      -> simpleContentToElemDesc sc (empty, []) []
-      CCont cc      ->
-        do
-        let mixed = case ccMixed cc of
-                      Just "true"  -> True
-                      Just "false" -> False
-                      _            -> ctMixed ct == Just "true"
-        case ccDef cc of
-          CCExt   (n, m) -> case lookup n $ sComplexTypes s of
-                              Nothing  -> return $ mkErrorElemDesc
-                                                   "element validation error: illegal type reference in schema file"
-                              Just ct' -> do
-                                          base <- ctToElemDesc ct'
-                                          ed <- ctModelToElemDesc m
-                                          return $ setMixedContent mixed
-                                                 $ mkElemDesc
-                                                       (mergeAttrDescs (attrDesc ed) $ attrDesc base)
-                                                       (mkSeq (contentModel base) $ contentModel ed)
-                                                       (union (subElemDesc ed) $ subElemDesc base)
-                                                       (wildcards ed ++ wildcards base)
-                                                       (sttf base)
-          CCRestr (n, m) -> case lookup n $ sComplexTypes s of
-                              Nothing  -> return $ mkErrorElemDesc
-                                                   "element validation error: illegal type reference in schema file"
-                              Just ct' -> do
-                                          base <- ctToElemDesc ct'
-                                          ed   <- ctModelToElemDesc m
-                                          return (setMixedContent mixed . mergeAttrDesc base $ ed)
-      NewCT m       -> do
-                       ed <- ctModelToElemDesc m
-                       return $ setMixedContent (ctMixed ct == Just "true") ed
+  = do s <- ask
+       case ctDef ct of
+         SCont sc
+             -> simpleContentToElemDesc sc (empty, []) []
+         CCont cc
+             -> let mixed
+                        = case ccMixed cc of
+                            Just "true"  -> True
+                            Just "false" -> False
+                            _            -> ctMixed ct == Just "true"
+                in
+                  case ccDef cc of
+                    CCExt (n, m)
+                        -> case lookup n $ sComplexTypes s of
+                             Nothing
+                                 -> return $ mkErrorElemDesc
+                                             "element validation error: illegal type reference in schema file"
+                             Just ct'
+                                 -> do base <- ctToElemDesc ct'
+                                       ed <- ctModelToElemDesc m
+                                       return $ setMixedContent mixed
+                                              $ mkElemDesc
+                                                    (mergeAttrDescs (attrDesc ed) $ attrDesc base)
+                                                    (mkSeq (contentModel base) $ contentModel ed)
+                                                    (union (subElemDesc ed) $ subElemDesc base)
+                                                    (wildcards ed ++ wildcards base)
+                                                    (sttf base)
+                    CCRestr (n, m)
+                        -> case lookup n $ sComplexTypes s of
+                             Nothing
+                                 -> return $ mkErrorElemDesc
+                                             "element validation error: illegal type reference in schema file"
+                             Just ct'
+                                 -> do base <- ctToElemDesc ct'
+                                       ed   <- ctModelToElemDesc m
+                                       return (setMixedContent mixed . mergeAttrDesc base $ ed)
+         NewCT m
+             -> do ed <- ctModelToElemDesc m
+                   return $ setMixedContent (ctMixed ct == Just "true") ed
 
 -- | Creates the element description for a given element
 createElemDesc :: Element -> ST ElemDesc
 createElemDesc (ElRef n)
-  = do
-    s <- ask
-    case lookup n $ sElements s of
-           Just e  -> createElemDesc e
-           Nothing -> return $ mkErrorElemDesc "element validation error: illegal element reference in schema file"
+  = do s <- ask
+       case lookup n $ sElements s of
+         Just e  -> createElemDesc e
+         Nothing -> return $ mkErrorElemDesc
+                             "element validation error: illegal element reference in schema file"
+
 createElemDesc (ElDef (ElementDef _ tdef))
-  = do
-    s <- ask
-    t <- case tdef of
-           ETDTypeAttr r      -> case lookup r $ sComplexTypes s of
-                                   Nothing  -> Left <$> lookupSTTF r
-                                   Just ctr -> return $ Right ctr
-           ETDAnonymStDecl st -> Left <$> stToSTTF st
-           ETDAnonymCtDecl ct -> return $ Right ct
-    case t of
-      Left tf  -> return $ mkSimpleElemDesc (empty, []) tf 
-      Right ct -> ctToElemDesc ct
+  = do s <- ask
+       t <- case tdef of
+              ETDTypeAttr r
+                  -> case lookup r $ sComplexTypes s of
+                       Nothing
+                           -> Left <$> lookupSTTF r
+                       Just ctr
+                           -> return $ Right ctr
+              ETDAnonymStDecl st
+                  -> Left <$> stToSTTF st
+              ETDAnonymCtDecl ct
+                  -> return $ Right ct
+       case t of
+         Left tf
+             -> return $ mkSimpleElemDesc (empty, []) tf 
+         Right ct
+             -> ctToElemDesc ct
 
 -- ----------------------------------------
 
 -- | Creates the element description for the root element
 
-createRootDesc' :: ST (ElemDesc, SubElemDesc, XmlRegex)
+createRootDesc' :: ST (ElemDesc, SubElemDesc)
 createRootDesc'
     = do elements <- asks sElements
-         let cm   =  mkAlts $ map mkElemNameRE $ keys elements
          se       <- fromList <$> mapM mkED (toList elements)
-         return   $  (mkComposeElemDesc cm se [], se, cm)
+         return   $  (rootElemDesc, se)
     where
       mkED (k, e)
           = do ed <- createElemDesc e
                return (k, ed)
 
 -- | Starts the transformation for a given schema representation
-createRootDesc :: XmlSchema -> (ElemDesc, SubElemDesc, XmlRegex)
+createRootDesc :: XmlSchema -> (ElemDesc, SubElemDesc)
 createRootDesc schema
   = runST schema createRootDesc'
 

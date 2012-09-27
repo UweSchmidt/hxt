@@ -1,3 +1,6 @@
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+{-# OPTIONS -fno-warn-orphans #-}
+
 {- |
    Module     : Text.XML.HXT.XMLSchema.ValidationTypes
    Copyright  : Copyright (C) 2012 Thorben Guelck, Uwe Schmidt
@@ -18,8 +21,9 @@ import Text.XML.HXT.Core           ( QName
                                    , c_warn
                                    , c_err
                                    )
+import Text.XML.HXT.DOM.ShowXml    ( xshow )
 
-import Text.XML.HXT.Arrow.XmlRegex ( XmlRegex )
+-- import Text.XML.HXT.Arrow.XmlRegex ( XmlRegex )
 
 import Control.Monad.Identity      ( Identity
                                    , runIdentity
@@ -46,7 +50,6 @@ data SValEnv       = SValEnv
                    { xpath           :: XPath
                    , elemDesc        :: ElemDesc
                    , allElemDesc     :: SubElemDesc	-- all declared elements, used with wilcard contents
-                   , allContentModel :: XmlRegex	-- r.e. for document or wildcard contents
                    }
 
 -- | Simple XPath representation
@@ -57,10 +60,10 @@ data ElemDesc      = ElemDesc
                    { errmsg       :: Maybe String
                    , attrDesc     :: AttrDesc
                    , mixedContent :: Bool
-                   , contentModel :: XmlRegex
+                   , contentModel :: XmlRegex'
                    , subElemDesc  :: SubElemDesc
-                   , wildcards    :: Wildcards
-                   , sttf         :: STTF
+                   , wildcards    :: Wildcards		-- redundant: never read, only set
+                   , sttf         :: MaybeSTTF		-- in case of simple types Just the string test, else Nothing
                    }
 
 -- | Description for allowed attributes of an element
@@ -90,6 +93,9 @@ data WildcardClass = Skip | Lax | Strict
 -- | SimpleType test function to validate basic values
 type STTF          = String -> SVal Bool
 
+-- | SimpleType test function to validate basic values
+type MaybeSTTF     = Maybe STTF
+
 -- | Validation result contains the validation status and log
 type SValResult    = (Bool, SValLog)
 
@@ -111,11 +117,22 @@ runSVal env val = runIdentity $ runWriterT $ runReaderT val env
 -- the result is a function for testing the content model of all elements
 -- contained in the children of an element
 
-type XmlRegexState = XmlTree -> SVal Bool
+type XmlRegexState = SVal Bool
 
 -- | A substitute for XmlRegex from hxt Arrow.XmlRegex
 
 type XmlRegex' = Regex XmlRegexState XmlTree
+
+instance ShowSym XmlTree where
+    showSym = cut 80 . xshow . (:[])
+
+cut :: Int -> String -> String
+cut n s
+    | null rest   = s'
+    | otherwise   = s' ++ "..."
+    where
+      (s', rest)  = splitAt n s
+
 
 -- ----------------------------------------
 
@@ -146,6 +163,24 @@ mkLogSTTF lev fpos msg
   = do pos <- asks xpath
        tell [(lev, fpos pos, msg)]
        return (lev < c_err)
+
+-- ----------------------------------------
+--
+-- simple tracing
+
+-- {-
+logg :: [String] -> SVal ()
+logg msg
+    = do pos <- asks xpath
+         tell [(0, pos, unwords msg)]
+-- -}
+
+{-
+logg :: [String] -> SVal ()
+logg msg
+    = return ()
+{-# INLINE #-}
+-- -}
 
 -- ----------------------------------------
 
