@@ -31,6 +31,12 @@ import Data.Map                                ( empty
 import Prelude hiding                          ( lookup )
 
 import Text.XML.HXT.XMLSchema.AbstractSyntax
+import Text.XML.HXT.XMLSchema.XmlUtils         ( nsUri
+                                               , nsPrefix
+                                               , illegalNsUri
+                                               , mkXsdName
+                                               , anyTypeQName
+                                               )
 
 import Text.XML.HXT.Core
 
@@ -58,21 +64,6 @@ data XmlSchemaPart     = In {unIn :: Include}
 -- the pickler for reading an XML schema
 --
 -- ----------------------------------------
-
--- | The XML Schema namespace
-nsUri :: String
-nsUri = "http://www.w3.org/2001/XMLSchema"
-
--- | The XML Schema namespace prefix
-nsPrefix :: String
-nsPrefix = "xs"
-
-illegalNsUri :: String
-illegalNsUri ="missing namespace URI for prefix"
-
-mkXsdName :: String -> QName
-mkXsdName name
-    = mkQName nsPrefix name nsUri
 
 -- | Basic namespace-aware element pickler
 xpElem' :: String -> PU a -> PU a
@@ -449,7 +440,7 @@ xpElemTypeDef
     tag (ETDTypeAttr _)     = 2  -- if just a name is given, no simple or complex type, type defaults to xs:anyType
     ps = [ xpWrap (ETDAnonymStDecl, unETDAnonymStDecl) $ xpSchemaElem "simpleType"  $ xpSimpleType
          , xpWrap (ETDAnonymCtDecl, unETDAnonymCtDecl) $ xpSchemaElem "complexType" $ xpComplexType
-         , xpWrap (ETDTypeAttr,     unETDTypeAttr)     $ xpDefault (mkQName nsPrefix "anyType" nsUri)
+         , xpWrap (ETDTypeAttr,     unETDTypeAttr)     $ xpDefault anyTypeQName
                                                        $ xpAttr "type" xpQName
          ]
 

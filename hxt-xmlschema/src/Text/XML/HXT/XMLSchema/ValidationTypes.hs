@@ -39,7 +39,9 @@ import Control.Monad.Writer        ( WriterT
                                    , tell
                                    )
 
-import Data.Map                    ( Map )
+import Data.Map                    ( Map
+                                   , keys
+                                   )
 
 import Text.XML.HXT.XMLSchema.Regex
 
@@ -181,6 +183,31 @@ logg msg
     = return ()
 {-# INLINE #-}
 -- -}
+
+showElemDesc :: ElemDesc -> String
+showElemDesc e
+    = unwords [ "ElemDesc {"
+              , show $ errmsg e
+              , ",attrDesc ="
+              , showAttrDesc $ attrDesc e
+              , ",mixedDontent ="
+              , show $ mixedContent e
+              , ",contentModel ="
+              , show $ contentModel e
+              , ",subElemDesc = "
+              , show . keys $ subElemDesc e
+              , ",sttf ="
+              , show . fmap (const "<sttf>") $ sttf e
+              ]
+
+showAttrDesc :: AttrDesc -> String
+showAttrDesc a
+    = unwords [ "("
+              , show . keys . fst $ a
+              , ","
+              , show . map (const "<wcf>") . snd $ a
+              , ")"
+              ]
 
 -- ----------------------------------------
 

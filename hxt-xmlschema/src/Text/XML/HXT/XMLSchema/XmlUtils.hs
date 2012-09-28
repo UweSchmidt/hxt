@@ -17,6 +17,7 @@ import qualified Text.XML.HXT.DOM.XmlNode as XN
 
 import Text.XML.HXT.Core ( QName
                          , mkName
+                         , mkQName
                          , XmlTree
                          , XmlTrees
                          )
@@ -26,6 +27,39 @@ import Data.Maybe        ( fromMaybe )
 import Data.List         ( partition )
 
 import Data.Tree.NTree.TypeDefs
+
+-- ----------------------------------------
+
+-- | The XML Schema namespace
+nsUri :: String
+nsUri = "http://www.w3.org/2001/XMLSchema"
+
+-- | The XML Schema namespace prefix
+nsPrefix :: String
+nsPrefix = "xs"
+
+nsUriXMLSchemaInstance :: String
+nsUriXMLSchemaInstance = "http://www.w3.org/2001/XMLSchema-instance"
+
+localNamesXMLSchemaInstance :: [String]
+localNamesXMLSchemaInstance
+    = [ "type"
+      , "nil"
+      , "schemaLocation"
+      , "noNamespaceSchemaLocation"
+      ]
+
+
+illegalNsUri :: String
+illegalNsUri ="missing namespace URI for prefix"
+
+mkXsdName :: String -> QName
+mkXsdName name
+    = mkQName nsPrefix name nsUri
+
+anyTypeQName :: QName
+anyTypeQName
+    = mkQName nsPrefix "anyType" nsUri
 
 -- ----------------------------------------
 

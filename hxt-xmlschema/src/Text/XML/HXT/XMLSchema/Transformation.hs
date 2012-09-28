@@ -51,6 +51,7 @@ import Text.XML.HXT.XMLSchema.W3CDataTypeCheck
 import Text.XML.HXT.XMLSchema.ValidationTypes
 import Text.XML.HXT.XMLSchema.ValidationCore
 import Text.XML.HXT.XMLSchema.Regex
+import Text.XML.HXT.XMLSchema.XmlUtils
 
 -- ----------------------------------------
 
@@ -542,22 +543,26 @@ createElemDesc (ElRef n)
 
 createElemDesc (ElDef (ElementDef _ tdef))
   = do s <- ask
-       t <- case tdef of
-              ETDTypeAttr r
-                  -> case lookup r $ sComplexTypes s of
-                       Nothing
-                           -> Left <$> lookupSTTF r
-                       Just ctr
-                           -> return $ Right ctr
-              ETDAnonymStDecl st
-                  -> Left <$> stToSTTF st
-              ETDAnonymCtDecl ct
-                  -> return $ Right ct
-       case t of
-         Left tf
-             -> return $ mkSimpleElemDesc (empty, []) tf 
-         Right ct
-             -> ctToElemDesc ct
+       case tdef of
+         ETDTypeAttr r
+             ->  if r == anyTypeQName
+                 then return $
+                        setWildcard (WC (const True) Strict) $ nullElemDesc
+                 else
+                 case lookup r $ sComplexTypes s of
+                   Nothing
+                       -> (Left <$> lookupSTTF r) >>= toED
+                   Just ctr
+                       -> toED $ Right ctr
+         ETDAnonymStDecl st
+             -> (Left <$> stToSTTF st) >>= toED
+         ETDAnonymCtDecl ct
+             -> toED $ Right ct
+    where
+     toED (Left tf)
+         = return $ mkSimpleElemDesc (empty, []) tf 
+     toED (Right ct)
+         = ctToElemDesc ct
 
 -- ----------------------------------------
 

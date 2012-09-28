@@ -32,6 +32,7 @@ import Data.Map                              ( Map
                                              -- , insert
                                              , fromList
                                              , toList
+                                             , keys
                                              )
 
 import Prelude                        hiding ( lookup )
@@ -159,9 +160,14 @@ checkAllowedAttr (n, val)
     res <- case lookup n am of
              Nothing
                  -> if isNameSpaceName n
-                    then return True  -- namespace declarations may occure everywhere  
+                    then return True  -- namespace declarations may occure everywhere
                     else
-                    if illegalNsUri `isPrefixOf` namespaceUri n
+                    if namespaceUri n == nsUriXMLSchemaInstance
+                       &&
+                       localPart n `elem` localNamesXMLSchemaInstance
+                    then return True  -- predefined XML schema instance names
+                    else
+                    if illegalNsUri `isPrefixOf` namespaceUri n -- TODO: this is a hack
                     then mkErrorSTTF''
                              (++ ("/@" ++ qualifiedName n))
                              (namespaceUri n)
@@ -333,7 +339,7 @@ testElem
 testElem' :: XmlTree -> SVal Bool
 testElem' e
     = do ed <- asks elemDesc
-         logg ["testElem'", showSym e]
+         logg ["testElem'", showSym e, "elemDesc =", showElemDesc ed]
          case (errmsg ed) of
            Just msg -> mkErrorSTTF' msg
            Nothing  -> testElem'' ed
@@ -351,7 +357,7 @@ testElem' e
                 | allText
                      = local (appendXPath "/child::text()") $ sf $ getCombinedText content
                 | otherwise
-                    = mkErrorSTTF'' (++ "/*") "no mixed content allowed here."
+                    = mkErrorSTTF'' (++ "/*") $ "no mixed content allowed here." ++ show content
 
       content       = filter isElemOrText $ getElemChildren e
       allText       = all isText content
@@ -373,13 +379,17 @@ testWildcard' wc t
            Strict -> maybe errMsg        test ed
     where
       test ed' = localED ed' testElem' t
-      qn = qualifiedName . getElemName $ t
+      -- qn = qualifiedName . getElemName $ t
+      un = getElemName $ t
       errMsg
           = do xp <- asks xpath
+               alluns <- asks (keys . allElemDesc)
                mkErrorSTTF'' (const xp) $
-                             unwords [ "undefined element"
-                                     , show qn
-                                     , "found in wildcard contents (processContents=\"strict\")"
+                             unwords [ "undefined element:"
+                                     , show un -- qn
+                                     , ", found in wildcard contents (processContents=\"strict\")"
+                                     , "\nelements defined:", show alluns
+                                     , "\ninput", show t
                                      ]
 
 localPath :: (XmlTree -> SVal a) -> XmlTree -> SVal a
