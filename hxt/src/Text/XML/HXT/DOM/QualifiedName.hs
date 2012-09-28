@@ -182,7 +182,11 @@ instance Eq QName where
                                   px1 == px2
 
 instance Ord QName where
-  compare x y = compare (qualifiedName x) (qualifiedName y)
+  compare (QN lp1 px1 ns1) (QN lp2 px2 ns2)
+      | isNullXName ns1 && isNullXName ns2              -- no namespaces set: px is significant
+          = compare (px1, lp1) (px2, lp2)
+      | otherwise                                       -- namespace aware cmp: ns is significant, px is irrelevant
+          = compare (lp1, ns1) (lp2, ns2)
 
 instance NFData  QName
 instance WNFData QName
