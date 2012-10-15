@@ -12,7 +12,7 @@ Category:       XML
 Homepage:       http://www.fh-wedel.de/~si/HXmlToolbox/index.html
 Copyright:      Copyright (c) 2012 Thorben Guelck, Uwe Schmidt
 Build-type:     Simple
-Cabal-version:  >=1.6
+Cabal-version:  >=1.8
 
 extra-source-files:
   tests/complexTypesErrors.xml
@@ -82,4 +82,9 @@ executable validateWithSchema
                  hxt-curl            >= 9.1.1 && < 10,
                  mtl                 >= 2     && < 3,
                  HUnit               >= 1.2   && < 2
+
+Source-Repository head
+  Type:     git
+  Location: git://github.com/UweSchmidt/hxt.git
+
 

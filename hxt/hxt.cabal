@@ -16,6 +16,8 @@ Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
                 hxt-unicode contains encoding and decoding functions,
                 hxt-charproperties char properties for unicode and XML.
                 .
+                Changes from 9.3.1.0: in readString all input decoding switched off
+                .
                 Changes from 9.3.0.1: lower bound for network set to be >= 2.4
                 .
                 Changes from 9.3.0: upper bound for network set to be < 2.4 (URI signatures changed in 2.4)
@@ -34,7 +36,7 @@ Category:       XML
 Homepage:       http://www.fh-wedel.de/~si/HXmlToolbox/index.html
 Copyright:      Copyright (c) 2005-2012 Uwe Schmidt
 Build-type:     Simple
-Cabal-version:  >=1.6
+Cabal-version:  >=1.8
 
 extra-source-files:
  examples/arrows/absurls/AbsURIs.hs
@@ -189,3 +191,7 @@ library
                 hxt-charproperties  >= 9.1    && < 10,
                 hxt-unicode         >= 9.0.1  && < 10,
                 hxt-regex-xmlschema >= 9      && < 10
+
+Source-Repository head
+  Type:     git
+  Location: git://github.com/UweSchmidt/hxt.git

@@ -58,7 +58,7 @@ the main document input filter
 this filter can be configured by a list of configuration options,
 a value of type 'Text.XML.HXT.XmlState.TypeDefs.SysConfig'
 
-for all available options see module 'Text.XML.HXT.XmlState.SystemConfig'
+for all available options see module 'Text.XML.HXT.Arrow.XmlState.SystemConfig'
 
 - @withValidate yes\/no@ :
   switch on\/off DTD validation. Only for XML parsed documents, not for HTML parsing.
@@ -88,27 +88,27 @@ for all available options see module 'Text.XML.HXT.XmlState.SystemConfig'
 - @withCheckNamespaces yes\/no@ :
   Switch on\/off namespace propagation and checking
 
-- @withInputEncoding <encoding-spec>@ :
+- @withInputEncoding \<encoding-spec\>@ :
   Set default encoding.
 
 - @withTagSoup@ :
   use light weight and lazy parser based on tagsoup lib.
   This is only available when package hxt-tagsoup is installed and
-  'Text.XML.HXT.TagSoup' is imported
+  the source contains an @import Text.XML.HXT.TagSoup@.
 
-- @withRelaxNG <schema.rng>@ :
+- @withRelaxNG \<schema.rng\>@ :
   validate document with Relax NG, the parameter is for the schema URI.
   This implies using XML parser, no validation against DTD, and canonicalisation.
 
-- @withCurl [<curl-option>...]@ :
+- @withCurl [\<curl-option\>...]@ :
   Use the libCurl binding for HTTP access.
   This is only available when package hxt-curl is installed and
-  'Text.XML.HXT.Curl' is imported
+  the source contains an @import Text.XML.HXT.Curl@.
                    
-- @withHTTP [<http-option>...]@ :
+- @withHTTP [\<http-option\>...]@ :
   Use the Haskell HTTP package for HTTP access.
   This is only available when package hxt-http is installed and
-  'Text.XML.HXT.HTTP' is imported
+  the source contains an @import Text.XML.HXT.HTTP@.
 
 examples:
 
@@ -445,15 +445,16 @@ readFromDocument config
 -- read a document that is stored in a normal Haskell String
 --
 -- the same function as readDocument, but the parameter forms the input.
--- All options available for 'readDocument' are applicable for readString.
+-- All options available for 'readDocument' are applicable for readString,
+-- except input encoding options.
 --
--- Default encoding: No encoding is done, the String argument is taken as Unicode string
+-- Encoding: No decoding is done, the String argument is taken as Unicode string
+-- All decoding must be done before calling readString, even if the
+-- XML document contains an encoding spec.
 
 readString :: SysConfigList -> String -> IOStateArrow s b XmlTree
 readString config content
-    = readDocument
-      (withInputEncoding unicodeString : config)
-      (stringProtocol ++ content)
+    = readDocument config (stringProtocol ++ content)
 
 -- ------------------------------------------------------------
 

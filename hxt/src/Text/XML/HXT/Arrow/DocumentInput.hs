@@ -15,8 +15,7 @@
 -- ------------------------------------------------------------
 
 module Text.XML.HXT.Arrow.DocumentInput
-    ( getURIContents
-    , getXmlContents
+    ( getXmlContents
     , getXmlEntityContents
     , getEncoding
     , getTextEncoding
@@ -171,35 +170,31 @@ getHttpContents         :: IOStateArrow s XmlTree XmlTree
 getHttpContents
     = withoutUserState $ applyA $ getSysVar theHttpHandler
 
-getURIContents          :: IOStateArrow s XmlTree XmlTree
-getURIContents
-    = getContentsFromString
-      `orElse`
-      getContentsFromDoc
-    where
-    getContentsFromString
-        = ( getAttrValue a_source
-            >>>
-            isA (isPrefixOf stringProtocol)
-          )
-          `guards`
-          getStringContents
+getContentsFromString   :: IOStateArrow s XmlTree XmlTree
+getContentsFromString
+    = ( getAttrValue a_source
+        >>>
+        isA (isPrefixOf stringProtocol)
+      )
+      `guards`
+      getStringContents
 
-    getContentsFromDoc
-        = ( ( addTransferURI $< getBaseURI
-              >>>
-              getCont
-            )
-            `when`
-            ( setAbsURI $< ( getAttrValue a_source
-                             >>^
-                             ( \ src-> (if null src then "stdin:" else src) )   -- empty document name -> read from stdin
-                           )
-            )
-          )
+getContentsFromDoc      :: IOStateArrow s XmlTree XmlTree
+getContentsFromDoc
+    = ( ( addTransferURI $< getBaseURI
           >>>
-          setDocumentStatusFromSystemState "getURIContents"
-
+          getCont
+        )
+        `when`
+        ( setAbsURI $< ( getAttrValue a_source
+                         >>^
+                         ( \ src-> (if null src then "stdin:" else src) )   -- empty document name -> read from stdin
+                       )
+        )
+      )
+      >>>
+      setDocumentStatusFromSystemState "getContentsFromDoc"
+    where
     setAbsURI src
         = ifA ( constA src >>> changeBaseURI )
           this
@@ -211,7 +206,7 @@ getURIContents
     getCont
         = applyA ( getBaseURI                           -- compute the handler and call it
                    >>>
-                   traceValue 2 (("getURIContents: reading " ++) . show)
+                   traceValue 2 (("getContentsFromDoc: reading " ++) . show)
                    >>>
                    getSchemeFromURI
                    >>>
@@ -280,25 +275,28 @@ getXmlEntityContents
 
 getXmlContents'         :: IOStateArrow s XmlTree XmlTree -> IOStateArrow s XmlTree XmlTree
 getXmlContents' parseEncodingSpec
-    = ( getURIContents
-        >>>
-        choiceA
-        [ isXmlHtmlDoc  :-> ( parseEncodingSpec
-                              >>>
-                              filterErrorMsg
-                              >>>
-                              decodeDocument
-                            )
-        , isTextDoc     :->  decodeDocument
-        , this          :-> this
-        ]
-        >>>
-        perform ( getAttrValue transferURI
-                  >>>
-                  traceValue 1 (("getXmlContents: content read and decoded for " ++) . show)
-                )
-        >>>
-        traceDoc "getXmlContents'"
+    = ( getContentsFromString    -- no decoding done for string: protocol
+        `orElse`
+        ( getContentsFromDoc
+          >>>
+          choiceA
+          [ isXmlHtmlDoc  :-> ( parseEncodingSpec
+                                >>>
+                                filterErrorMsg
+                                >>>
+                                decodeDocument
+                              )
+          , isTextDoc     :-> decodeDocument
+          , this          :-> this
+          ]
+          >>>
+          perform ( getAttrValue transferURI
+                    >>>
+                    traceValue 1 (("getXmlContents: content read and decoded for " ++) . show)
+                  )
+          >>>
+          traceDoc "getXmlContents'"
+        )
       )
       `when`
       isRoot
