@@ -22,11 +22,9 @@ where
 import Control.Arrow
 
 import Data.List
-import Data.Maybe
 
 import System.Environment
 import System.IO                        -- import the IO and commandline option stuff
-import System.Environment
 import System.Console.GetOpt
 import System.Exit
 
@@ -48,6 +46,7 @@ data Process            = P { inFilter    :: String -> String
                             , inputFile   :: String
                             }
 
+defaultProcess          :: Process
 defaultProcess          = P { inFilter    = id
                             , tokenRE     = plainRE
                             , markupRE    = id
@@ -98,6 +97,7 @@ exitErr msg             = do
                           usage
                           exitWith (ExitFailure (-1))
 
+evalArgs                :: ([(String, String)], [FilePath], [String]) -> IO Process
 evalArgs (opts, files, errs)
     | not (null errs)           = exitErr ("illegal arguments " ++ show errs)
     | null files                = evalOpts opts defaultProcess
@@ -147,6 +147,7 @@ evalOpt ("markup", "1") p       = return $ p { markupRE    = addMarkup          
 evalOpt ("html",   "1") p       = return $ p { formatToken = formatHtmlTok
                                              , formatDoc   = formatHtmlDoc                      }
 evalOpt ("full",   "1") p       = return $ p { outFilter   = outFilter p >>> fullHtml (inputFile p)     }
+evalOpt (opt,      _v ) p       = exitErr ("illegal option " ++ show opt) >> return p
 
 usage                   :: IO ()
 usage                   = hPutStrLn stderr use
@@ -166,13 +167,13 @@ process p       = inFilter p
                   >>> outFilter p
 
 addMarkup       :: Regex -> Regex
-addMarkup       = mkElse (parseRegex . mkLE $ markupT)
+addMarkup       = mkElse (parseRegexExt . mkLE $ markupT)
 
 tokenizeLines   :: String -> [(String, String)]
 tokenizeLines   = map (\ l -> ("",l ++ "\n")) . lines
 
 numberLines     :: [String] -> [String]
-numberLines     = zipWith addNum [1..]
+numberLines     = zipWith addNum [(1::Int)..]
                   where
                   addNum i l = "<span class=\"linenr\">" ++ fmt 4 i ++ "</span>" ++ l
                   fmt l = sed (const "&nbsp;") " "
@@ -185,6 +186,7 @@ numberLines     = zipWith addNum [1..]
 substTabs       :: String -> String
 substTabs       = subs 0
 
+subs            :: Int -> String -> String
 subs _ ""       = ""
 subs i (x:xs)
     | x == '\t' = replicate (8 - (i `mod` 8)) ' ' ++ subs 0 xs
@@ -207,6 +209,7 @@ formatHList     = ("[" ++) . (++ "\n]") . intercalate "\n, "
 formatTok       :: String -> String -> String
 formatTok kw tok = " (" ++ show kw ++ ",\t" ++ show tok ++ "\t)\n"
 
+formatHtmlDoc   :: [String] -> String
 formatHtmlDoc   = map (("<div class=\"codeline\">" ++) . (++ "</div>") . preserveEmptyLines)
                   >>> ("<div class=\"codeblock\">" :)
                   >>> (++ ["</div>"])
@@ -216,12 +219,17 @@ formatHtmlDoc   = map (("<div class=\"codeline\">" ++) . (++ "</div>") . preserv
                   preserveEmptyLines l  = l
 
 formatHtmlTok   :: (String, String) -> String
+formatHtmlTok ("markup", t@(x:_))
+    | x `elem` "<&"     = t
 formatHtmlTok (m, t)
-    | m == "markup"     = t
     | otherwise         = colorizeTokens m (escapeText >>> sed (const "&nbsp;") " " $ t)
 
 escapeText      :: String -> String
-escapeText      = concat . runLA (xshowEscapeXml mkText)
+escapeText      = foldr cquote ""
+    where
+      cquote    = fst escapeHtmlRefs
+
+-- escapeText      = concat . runLA (xshowEscapeXml mkText)
 
 
 fullHtml        :: String -> String -> String
@@ -302,7 +310,7 @@ colorizeTokens tok
 -- ------------------------------------------------------------
 
 buildRegex              :: [(String, String)] -> Regex
-buildRegex              = foldr1 mkElse . map (uncurry mkBr') . map (second parseRegex)
+buildRegex              = foldr1 mkElse . map (uncurry mkBr') . map (second parseRegexExt)
                           where
                           mkBr' ""      = id
                           mkBr' l       = mkBr l
@@ -317,11 +325,13 @@ untilRE re              = "(\\A{" ++ "\\}\\A" ++ re ++ "\\A)" ++ re
 mkLE                    :: (String, String) -> String
 mkLE (l, re)            = "({" ++ l ++ "}(" ++ re ++ "))"
 
+ws1RE, ws1RE',ws0RE     :: String
 ws1RE                   = "\\s+"
 ws1RE'                  = "[ \t]+"
 ws0RE                   = "[ \t]*"
 
-javacmt1, javacmt, strconst,
+ws, ws', javacmt1, javacmt, shcmt1, strconst,
+  markupT,
   charconst, number,
   par, xxx              :: (String, String)
 
@@ -457,6 +467,7 @@ javaRE                  = buildRegex
 
 -- ------------------------------------------------------------
 
+bnfRE                   :: Regex
 bnfRE                   = buildRegex
                           [ ws
                           , ("bnfnt"            , "[A-Z][a-zA-Z0-9_]*"  )
@@ -553,6 +564,7 @@ cppRE                   = buildRegex
 
 -- ------------------------------------------------------------
 
+shRE                    :: Regex
 shRE                    = buildRegex
                           [ ws
                           , shcmt1
@@ -585,6 +597,7 @@ shRE                    = buildRegex
 
 -- ------------------------------------------------------------
 
+rubyRE                  :: Regex
 rubyRE                  = buildRegex
                           [ ws
                           , rubycmt
