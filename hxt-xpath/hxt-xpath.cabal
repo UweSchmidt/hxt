@@ -1,9 +1,10 @@
 -- arch-tag: Haskell XML Toolbox XPath Package
 Name:           hxt-xpath
-Version:        9.1.2
+Version:        9.1.2.1
 Synopsis:       The XPath modules for HXT.
 Description:    The Haskell XML Toolbox XPath library.
-                Since version 8.5 this library is packed in a separate package.
+                .
+                Changes from 9.1.2: Bug in indexing result sets removed
 License:        OtherLicense
 License-file:   LICENSE
 Author:         Torben Kuseler
@@ -60,3 +61,6 @@ library
                 parsec     >= 2.1 && < 4,
                 hxt        >= 9.1 && < 10
 
+Source-Repository head
+  Type:     git
+  Location: git://github.com/UweSchmidt/hxt.git

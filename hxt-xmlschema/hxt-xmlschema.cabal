@@ -81,6 +81,7 @@ executable validateWithSchema
                  hxt-regex-xmlschema >= 9     && < 10,
                  hxt-curl            >= 9.1.1 && < 10,
                  mtl                 >= 2     && < 3,
+                 time                >= 1.4   && < 2,
                  HUnit               >= 1.2   && < 2
 
 Source-Repository head

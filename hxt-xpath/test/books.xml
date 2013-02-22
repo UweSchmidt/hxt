@@ -1,0 +1,22 @@
+<root>
+  <bookstore>
+    <book>
+      <name>Learn You a Haskell for a Great Good!</name>
+      <author>Miran Lipovaca</author>
+    </book>
+    <book>
+      <name>Programming in Haskell</name>
+      <author>Graham Hutton</author>
+    </book>
+  </bookstore>
+  <bookstore>
+    <book>
+      <name>JavaScript: The Good Parts</name>
+      <author>Douglas Crockford</author>
+    </book>
+    <book>
+      <name>JavaScript: The Definitive Guide</name>
+      <author>David Flanagan</author>
+    </book>
+  </bookstore>
+</root>

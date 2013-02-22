@@ -23,13 +23,16 @@ where
 
 import qualified Control.Monad as M
 
+import Data.Maybe
+
 import Text.XML.HXT.Core
 import Text.XML.HXT.XPath
 import Text.XML.HXT.Curl
 
 import Text.XML.HXT.Parser.XmlCharParser( withNormNewline )
 
-import System.Console.Editline.Readline
+import System.Console.Haskeline
+import System.Console.Haskeline.IO
 import System.Environment
 
 import Text.ParserCombinators.Parsec    ( runParser )
@@ -43,7 +46,7 @@ main
       (path, env, doc) <- evalArgs args
       if not (null path) && not (null doc)
          then evalXPath path env (head doc)
-         else evalLoop env doc
+         else startEvalLoop env doc
 
 evalArgs                        :: [String] -> IO (String, NsEnv', XmlTrees)
 evalArgs []                     = evalArgs (""   : "[]" : ""  : [])
@@ -112,21 +115,38 @@ evalXPath path env doc
     pathTree    = either show formatXPathTree           $ pathEx
     xr          = runLA ( xshow $ getXPathTreesWithNsEnv env path) doc
 
-evalLoop        :: NsEnv' -> XmlTrees -> IO ()
-evalLoop env doc
+startEvalLoop        :: NsEnv' -> XmlTrees -> IO ()
+startEvalLoop env doc
+    = do is0 <- initializeInput defaultSettings
+         evalLoop0 (readCmdLine is0 "xpath> ") env doc
+         closeInput is0
+         return ()
+
+readCmdLine     :: InputState -> String -> IO String
+readCmdLine is0 prompt
+  = do
+    line <- queryInput is0 (getInputLine prompt)
+    let line' = stringTrim . fromMaybe "" $ line
+    if null line'
+      then readCmdLine is0 prompt
+      else return line'
+
+evalLoop0        :: IO String -> NsEnv' -> XmlTrees -> IO ()
+evalLoop0 readCmdLine' env doc
     = do
-      maybeLine <- readline "xpath> "
-      case maybeLine of
-        Nothing -> return () -- EOF / control-d
-        Just ":q"       -> return ()
-        Just line -> do
+      line <- readCmdLine'
+      case line of
+        "" -> return () -- EOF / control-d
+        ":q" -> return ()
+        _ -> do
                      let ws = words line
                      if null ws
                         then evalLoop env doc
                         else do
-                             addHistory line
                              evalCmd (words line)
     where
+    evalLoop = evalLoop0 readCmdLine'
+
     evalCmd []          = evalLoop env doc
     evalCmd [":ns",uri] = evalCmd [":ns", "", uri]
     evalCmd [":ns", ns, uri]

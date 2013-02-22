@@ -275,7 +275,7 @@ evalSpezExpr _ _ _                      = XPVError "Call to evalExpr with a wron
 filterEval                              :: Env -> Context -> [Expr] -> XPathFilter
 filterEval env cont (prim:predicates) ns
                                         = case evalExpr env cont prim ns of
-                                          (XPVNode nns) -> evalStep'' env predicates . Right . fromNodeSet $ nns         -- old: evalPredL env predicates new_ns
+                                          (XPVNode nns) -> nodeListResToXPathValue . evalPredL env predicates . Right . fromNodeSet $ nns
                                           _             -> XPVError "Return of a filterexpression is not a nodeset"
 filterEval _ _ _ _                      = XPVError "Call to filterEval without an expression"
 
@@ -446,8 +446,8 @@ mapNL' f (Right ns)     = sumNL . zipWith f [1..] $ ns
 --    * 1.parameter as :  axis specifier
 --
 
-getAxisNodes                            :: AxisSpec ->  NodeSet -> NodeListRes
-getAxisNodes as                         = Right . (concatMap (fromJust $ lookup as axisFctL)) . fromNodeSet
+getAxisNodes                            :: AxisSpec ->  NodeSet -> [NodeListRes]
+getAxisNodes as                         =  map (Right . (fromJust $ lookup as axisFctL)) . fromNodeSet
 
 -- |
 -- Axis-Function-Table.
@@ -492,19 +492,24 @@ evalStep                                :: Env -> XStep -> XPathFilter
 
 evalStep _   (Step Namespace _  _ ) _   = XPVError "namespace-axis not supported"
 evalStep _   (Step Attribute nt _ ) ns  = withXPVNode "Call to getAxis without a nodeset"
-                                          ( evalAttr nt . getAxisNodes Attribute )
+                                          evalAttr'
                                           ns
+    where
+      evalAttr' = nodeListResToXPathValue . sumNL . map (evalAttr nt) . getAxisNodes Attribute
+
 evalStep env (Step axisSpec  nt pr) ns  = withXPVNode "Call to getAxis without a nodeset"
-                                          ( evalStep' env pr nt . getAxisNodes axisSpec )
+                                          evalSingleStep
                                           ns
+    where
+      evalSingleStep = nodeListResToXPathValue . sumNL . map (evalStep' env pr nt) . getAxisNodes axisSpec
 
 -- -----------------------------------------------------------------------------
 
 -- the goal:
 -- evalAttr                                :: NodeTest -> NavXmlTrees -> XPathValue
 
-evalAttr                                :: NodeTest -> NodeListRes -> XPathValue
-evalAttr nt                             = nodeListResToXPathValue . mapNL (Right . evalAttrNodeTest nt)
+evalAttr                                :: NodeTest -> NodeListRes -> NodeListRes
+evalAttr nt                             =  mapNL (Right . evalAttrNodeTest nt)
 
 evalAttrNodeTest                        :: NodeTest -> NavXmlTree -> NavXmlTrees
 evalAttrNodeTest (NameTest qn)
@@ -528,11 +533,8 @@ evalAttrNodeTest _ _                    = []
 
 -- -----------------------------------------------------------------------------
 
-evalStep'                               :: Env -> [Expr] -> NodeTest -> NodeListRes -> XPathValue
-evalStep' env pr nt                     = evalStep'' env pr . nodeTest nt
-
-evalStep''                              :: Env -> [Expr] -> NodeListRes -> XPathValue
-evalStep'' env pr                       = nodeListResToXPathValue . evalPredL env pr
+evalStep'                               :: Env -> [Expr] -> NodeTest -> NodeListRes -> NodeListRes
+evalStep' env pr nt                     = evalPredL env pr . nodeTest nt
 
 evalPredL                               :: Env -> [Expr] -> NodeListRes -> NodeListRes
 evalPredL env pr ns                     = foldl (flip $ evalPred env) ns pr
@@ -626,20 +628,6 @@ typeTest XPNode                         = id
 typeTest XPCommentNode                  = filterNodes' XN.isCmt
 typeTest XPPINode                       = filterNodes' XN.isPi
 typeTest XPTextNode                     = filterNodes' XN.isText
-
--- -----------------------------------------------------------------------------
-{- old stuff
-
--- |
--- the filter selects the NTree part of a navigable tree and
--- tests whether the node is of the necessary type
---
---    * 1.parameter fct :  filter function from the XmlTreeFilter module which tests the type of a node
-
-filterNodes                             :: (XNode -> Bool) -> XPathFilter
-filterNodes fct                         = withXPVNode "Call to filterNodes without a nodeset" $
-                                          (XPVNode . withNodeSet (filter (fct . dataNT)))
-end old stuff -}
 
 -- -----------------------------------------------------------------------------
 -- |
