@@ -18,15 +18,15 @@
 module Main
 where
 
-import Text.XML.HXT.Core
-import Text.XML.HXT.Curl
-import Text.XML.HXT.XPath
-import Text.XML.HXT.Arrow.XmlState.TypeDefs
+import           Text.XML.HXT.Arrow.XmlState.TypeDefs
+import           Text.XML.HXT.Core
+import           Text.XML.HXT.Curl
+import           Text.XML.HXT.XPath
 
-import System.IO                        -- import the IO and commandline option stuff
-import System.Environment
-import System.Console.GetOpt
-import System.Exit
+import           System.Console.GetOpt
+import           System.Environment
+import           System.Exit
+import           System.IO
 
 -- ------------------------------------------------------------
 
@@ -37,7 +37,7 @@ main :: IO ()
 main
     = do
       argv <- getArgs                                   -- get the commandline arguments
-      (al, expr, src) <- cmdlineOpts argv                       -- and evaluate them, return a key-value list
+      (al, expr, src) <- cmdlineOpts argv               -- and evaluate them, return a key-value list
       [rc]  <- runX (xpath al expr src)                 -- run the parser arrow
       exitProg (rc >= c_err)                            -- set return code and terminate
 
@@ -57,8 +57,8 @@ exitProg False  = exitWith ExitSuccess
 
 xpath   :: SysConfigList -> String -> String -> IOSArrow b Int
 xpath cf expr src
-    = configSysVars cf                                  -- set all global config options, the output file and the
-      >>>                                               -- other user options are stored as key-value pairs in the stystem state
+    = configSysVars cf       -- set all global config options, the output file and the
+      >>>                    -- other user options are stored as key-value pairs in the stystem state
       readDocument [withCurl []] src
       >>>
       evalXPathExpr
@@ -126,7 +126,7 @@ usage errl
              "Usage: " ++ progName ++ " [OPTION...] <XPath expr> <URL or FILE>"
     use    = usageInfo header options
 
-cmdlineOpts     :: [String] -> IO (SysConfigList, String, String)
+cmdlineOpts :: [String] -> IO ([SysConfig], String, String)
 cmdlineOpts argv
     = case (getOpt Permute options argv) of
       (scfg,n,[]  )
