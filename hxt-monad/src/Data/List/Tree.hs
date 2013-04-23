@@ -40,7 +40,7 @@ data Tree a
     | Bin (Tree a) (Tree a)
     | Empty
     | Fail String
-      deriving (Show)
+      deriving (Eq, Show)
 
 -- ----------------------------------------
 
@@ -54,14 +54,24 @@ instance Applicative Tree where
     pure = Tip				-- pure = return
     f <*> x = f >>= \ f' -> fmap f' x	-- (<*>) = ap
 
+    {-# INLINE pure #-}
+    {-# INLINE (<*>) #-}
+
 instance Monad Tree where
     return = Tip
     (>>=)  = substTree
     fail   = Fail
 
+    {-# INLINE return #-}
+    {-# INLINE (>>=) #-}
+    {-# INLINE fail #-}
+
 instance MonadPlus Tree where
     mzero = Empty
     mplus = bin
+
+    {-# INLINE mzero #-}
+    {-# INLINE mplus #-}
 
 instance MonadError String Tree where
     throwError = Fail
@@ -69,21 +79,35 @@ instance MonadError String Tree where
     catchError (Fail s) h = h s
     catchError t        _ = t
 
+    {-# INLINE throwError #-}
+
 instance Monoid (Tree a) where
     mempty  = Empty
     mappend = bin
+
+    {-# INLINE mempty #-}
+    {-# INLINE mappend #-}
 
 instance MonadList Tree where
     fromList = fromListTree
     toList   = return . toListTree
 
+    {-# INLINE fromList #-}
+    {-# INLINE toList #-}
+
 instance MonadConv Tree [] where
     convFrom   = fromListTree
     convTo     = return . toListTree
 
+    {-# INLINE convFrom #-}
+    {-# INLINE convTo #-}
+
 instance MonadConv Tree Tree where
     convFrom = id
     convTo   = return
+
+    {-# INLINE convFrom #-}
+    {-# INLINE convTo #-}
 
 instance MonadCond Tree where
     ifM (Fail s) _ _ = Fail s
@@ -224,6 +248,10 @@ splitTree :: Int -> Tree a -> (Tree a, Tree a)
 splitTree n t = (l, r)
     where
       (_, l, r) = split' n t
+
+{-# INLINE takeTree #-}
+{-# INLINE dropTree #-}
+{-# INLINE splitTree #-}
 
 -- ----------------------------------------
 

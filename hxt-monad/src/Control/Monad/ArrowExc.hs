@@ -21,4 +21,7 @@ catchA f h  = tryA f
               >>>
               ( h ||| returnA )
 
+{-# INLINE tryA #-}
+{-# INLINE catchA #-}
+
 -- ----------------------------------------
