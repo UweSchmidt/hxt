@@ -32,6 +32,14 @@ import           Data.Monoid
 
 -- ----------------------------------------
 
+instance MonadList m => MonadList (StateT s m) where
+    fromList xs = StateT $ \ s ->
+                  fromList xs >>= \ x -> return (x, s)
+    toList (StateT f)  = StateT $ \ s ->
+                         do (x, s1) <- f s
+                            xs <- toList (return x)
+                            return (xs, s1)
+
 mk2 :: a -> a -> Tree a
 mk2 x y = Bin (Tip x) (Tip y)
 
