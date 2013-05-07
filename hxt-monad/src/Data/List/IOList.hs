@@ -9,7 +9,7 @@ import           Control.Applicative
 import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Error
-import           Control.Monad.MonadList
+import           Control.Monad.MonadSequence
 import           Data.List.List
 
 -- ----------------------------------------
@@ -24,7 +24,7 @@ instance Functor IOList where
     {-# INLINE fmap #-}
 
 instance Applicative IOList where
-    pure = return
+    pure  = return
     (<*>) = ap
 
     {-# INLINE pure  #-}
@@ -32,7 +32,7 @@ instance Applicative IOList where
 
 instance Monad IOList where
     return        = IOL . return . return
-    (IOL a) >>= f = IOL $ a >>= \ x -> substListM x (unIOL . f)
+    (IOL a) >>= f = IOL $ a >>= \ x -> substS x (unIOL . f)
     fail          = IOL . return . fail
 
     {-# INLINE return #-}
@@ -47,14 +47,14 @@ instance MonadPlus IOList where
     {-# INLINE mplus #-}
 
 
-instance MonadError String IOList where
+instance MonadError [String] IOList where
     throwError = IOL . return . throwError
 
     catchError (IOL a) h = IOL $
                            do t <- a
-                              case t of
-                                Fail s -> (unIOL . h) s
-                                _      -> return t
+                              case failS t of
+                                Left  s -> (unIOL . h) s
+                                Right _ -> return t
 
     {-# INLINE throwError #-}
 
@@ -70,28 +70,29 @@ instance MonadList IOList where
     {-# INLINE fromList #-}
     {-# INLINE toList   #-}
 
-instance MonadConv IOList [] where
-    convFrom   = fromList
-    convTo     = toList
+instance MonadConv IOList List where
+    convFrom   = IOL . return
+    convTo (IOL a) = IOL $ a >>= return . return
 
     {-# INLINE convFrom #-}
     {-# INLINE convTo   #-}
 
-instance MonadCond IOList where
-    ifM (IOL a) (IOL t) (IOL e) = IOL $
-                                  do x <- a
-                                     case x of
-                                       List [] -> e
-                                       Fail s  -> return (Fail s)
-                                       _       -> t
 
-    orElseM (IOL t) (IOL e) = IOL $
-                              do x <- t
-                                 case x of
-                                   List [] -> e
-                                   Fail s  -> return (Fail s)
-                                   _       -> t
+instance MonadCond IOList List where
+    ifM (IOL a) (IOL t) (IOL e)
+        = IOL $ do x <- a
+                   if nullS x
+                      then e
+                      else t
 
+    orElseM (IOL t) (IOL e)
+        = IOL $ do x <- t
+                   if nullS x
+                      then e
+                      else return x
+
+    {-# INLINE ifM     #-}
+    {-# INLINE orElseM #-}
 
 instance MonadTry IOList where
     tryM (IOL a) = IOL $

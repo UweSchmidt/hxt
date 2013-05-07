@@ -27,18 +27,17 @@ import           Control.Monad.State.Strict
 import           Data.List                  (partition)
 import           Data.List.IOList
 import           Data.List.IOTree
+import           Data.List.StateTree
 import           Data.List.Tree
 import           Data.Monoid
 
 -- ----------------------------------------
 
-instance MonadList m => MonadList (StateT s m) where
-    fromList xs = StateT $ \ s ->
-                  fromList xs >>= \ x -> return (x, s)
-    toList (StateT f)  = StateT $ \ s ->
-                         do (x, s1) <- f s
-                            xs <- toList (return x)
-                            return (xs, s1)
+type StateIOTree s a = StateT s IOTree a
+
+type SIOLA s a b = a -> StateIOTree s b
+
+type IntSLA a b = SLA Int a b
 
 mk2 :: a -> a -> Tree a
 mk2 x y = Bin (Tip x) (Tip y)
@@ -47,3 +46,7 @@ tt1,tt7,tt8 :: Tree Integer
 tt1 = fromList [1]
 tt7 = fromList [1..7]
 tt8 = fromList [1..8]
+
+st1 :: IntSLA [Int] [Int]
+st1 = fromList >>> arr (+1) >>> listA this
+

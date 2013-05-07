@@ -6,21 +6,6 @@ module Data.List.List
 {- just for testing
     ( List(..)
     , LA
-
-    , dropTree
-    , foldTree
-    , headTree
-    , initTree
-    , isFail
-    , lastTree
-    , reverseTree
-    , sequenceTree
-    , sizeTree
-    , substTree
-    , substTreeM
-    , tailTree
-    , takeTree
-    , zipTree
     )
 -- -}
 where
@@ -28,7 +13,8 @@ where
 import           Control.Applicative
 import           Control.Monad
 import           Control.Monad.Error
-import           Control.Monad.MonadList
+import           Control.Monad.MonadSequence
+
 import           Data.Monoid
 
 -- ----------------------------------------
@@ -37,8 +23,32 @@ type LA a b = a -> List b
 
 data List a
     = List { unList :: [a] }
-    | Fail String
+    | Fail { unFail :: [String] }
       deriving (Eq, Show)
+
+-- ----------------------------------------
+
+instance Sequence List where
+    emptyS                  = List []
+    consS x xs              = List (x : unList xs)
+    unconsS (List [])       = Nothing
+    unconsS (List (x : xs)) = Just (x, List xs)
+    nullS                   = null . unList
+    toS                     = List
+    fromS                   = unList
+    substS                  = substListM
+
+    {-# INLINE emptyS  #-}
+    {-# INLINE consS   #-}
+    {-# INLINE unconsS #-}
+    {-# INLINE nullS   #-}
+    {-# INLINE toS     #-}
+    {-# INLINE fromS   #-}
+    {-# INLINE substS  #-}
+
+instance ErrSeq [String] List where
+    failS (Fail xs) = Left xs
+    failS s         = Right s
 
 -- ----------------------------------------
 
@@ -55,9 +65,9 @@ instance Applicative List where
 
 instance Monad List where
     return x = List [x]
-    (List xs) >>= f = List $ concat . map (unList . f) $ xs
+    (List xs) >>= f = foldr mappend mempty . map f $ xs
     (Fail s)  >>= _ = Fail s
-    fail   = Fail
+    fail   = Fail . (:[])
 
     {-# INLINE return #-}
     {-# INLINE (>>=) #-}
@@ -66,13 +76,14 @@ instance Monad List where
 instance MonadPlus List where
     mzero = List []
     (List xs) `mplus` (List ys) = List $ xs ++ ys
+    (Fail xs) `mplus` (Fail ys) = Fail $ xs ++ ys
     (Fail s ) `mplus` _         = Fail s
     _         `mplus` (Fail s ) = Fail s
 
     {-# INLINE mzero #-}
     {-# INLINE mplus #-}
 
-instance MonadError String List where
+instance MonadError [String] List where
     throwError = Fail
 
     catchError (Fail s) h = h s
@@ -83,8 +94,9 @@ instance MonadError String List where
 instance Monoid (List a) where
     mempty  = List []
     (List xs) `mappend` (List ys) = List $ xs ++ ys
-    (Fail s)  `mappend` _         = Fail s
-    _         `mappend` (Fail s)  = Fail s
+    (Fail xs) `mappend` (Fail ys) = Fail $ xs ++ ys
+    (Fail xs) `mappend` _         = Fail xs
+    _         `mappend` (Fail ys) = Fail ys
 
     {-# INLINE mempty #-}
     {-# INLINE mappend #-}
@@ -95,23 +107,16 @@ instance MonadList List where
     toList (Fail _)    = return []
 
     {-# INLINE fromList #-}
-    {-# INLINE toList #-}
-
-instance MonadConv List [] where
-    convFrom   = fromList
-    convTo     = toList
-
-    {-# INLINE convFrom #-}
-    {-# INLINE convTo #-}
+    {-# INLINE toList   #-}
 
 instance MonadConv List List where
     convFrom = id
     convTo   = return
 
     {-# INLINE convFrom #-}
-    {-# INLINE convTo #-}
+    {-# INLINE convTo   #-}
 
-instance MonadCond List where
+instance MonadCond List List where
     ifM (Fail s)  _ _ = Fail s
     ifM (List []) _ e = e
     ifM _         t _ = t
@@ -120,19 +125,14 @@ instance MonadCond List where
     orElseM (List []) e = e
     orElseM t         _ = t
 
-{- there's no need for exporting construtors
-
-   Tip   = return  or Tip   = pure
-   bin   = mappend or bin   = mplus      or bin = (<>)	-- bin smart constr for Bin
-   Empty = mempty  or Empty = mzero
-   Fail  = fail    or Fail  = throwError
-
--- -}
+    {-# INLINE ifM     #-}
+    {-# INLINE orElseM #-}
 
 -- ----------------------------------------
 
-substListM :: (Functor m, Monad m) => List a -> (a -> m (List b)) -> m (List b)
-substListM (List xs) k = fmap (List . concat . map unList) . sequence . map k $ xs
+substListM :: Monad m => List a -> (a -> m (List b)) -> m (List b)
+substListM (List xs) k = do rs <- sequence . map k $ xs
+                            return $ foldr mappend mempty rs
 substListM (Fail s)  _ = return (Fail s)
 
 -- ----------------------------------------

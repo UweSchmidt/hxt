@@ -9,7 +9,7 @@ import           Control.Applicative
 import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Error
-import           Control.Monad.MonadList
+import           Control.Monad.MonadSequence
 import           Data.List.Tree
 
 -- ----------------------------------------
@@ -32,7 +32,7 @@ instance Applicative IOTree where
 
 instance Monad IOTree where
     return        = IOT . return . return
-    (IOT a) >>= f = IOT $ a >>= \ x -> substTreeM x (unIOT . f)
+    (IOT a) >>= f = IOT $ a >>= \ x -> substS x (unIOT . f)
     fail          = IOT . return . fail
 
     {-# INLINE return #-}
@@ -46,7 +46,7 @@ instance MonadPlus IOTree where
     {-# INLINE mzero #-}
     {-# INLINE mplus #-}
 
-instance MonadError String IOTree where
+instance MonadError (Tree String) IOTree where
     throwError = IOT . return . throwError
 
     catchError (IOT a) h = IOT $
@@ -69,34 +69,25 @@ instance MonadList IOTree where
     {-# INLINE fromList #-}
     {-# INLINE toList   #-}
 
-instance MonadConv IOTree [] where
-    convFrom   = fromList
-    convTo     = toList
-
-    {-# INLINE convFrom #-}
-    {-# INLINE convTo   #-}
-
 instance MonadConv IOTree Tree where
-    convFrom = IOT . return
-    convTo (IOT a)   = IOT $ a >>= return . return
+    convFrom       = IOT . return
+    convTo (IOT a) = IOT $ a >>= return . return
 
     {-# INLINE convFrom #-}
     {-# INLINE convTo   #-}
 
-instance MonadCond IOTree where
-    ifM (IOT a) (IOT t) (IOT e) = IOT $
-                                  do x <- a
-                                     case x of
-                                       Empty  -> e
-                                       Fail s -> return (Fail s)
-                                       _      -> t
+instance MonadCond IOTree Tree where
+    ifM (IOT a) (IOT t) (IOT e)
+        = IOT $ do x <- a
+                   if nullS x
+                      then e
+                      else t
 
-    orElseM (IOT t) (IOT e) = IOT $
-                              do x <- t
-                                 case x of
-                                   Empty  -> e
-                                   Fail s -> return (Fail s)
-                                   _      -> t
+    orElseM (IOT t) (IOT e)
+        = IOT $ do x <- t
+                   if nullS x
+                      then e
+                      else return x
 
 instance MonadTry IOTree where
     tryM (IOT a) = IOT $

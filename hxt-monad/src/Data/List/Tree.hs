@@ -11,7 +11,6 @@ module Data.List.Tree
     , foldTree
     , headTree
     , initTree
-    , isFail
     , lastTree
     , reverseTree
     , sequenceTree
@@ -28,7 +27,7 @@ where
 import           Control.Applicative
 import           Control.Monad
 import           Control.Monad.Error
-import           Control.Monad.MonadList
+import           Control.Monad.MonadSequence
 import           Data.Monoid
 
 -- ----------------------------------------
@@ -39,7 +38,7 @@ data Tree a
     = Tip a
     | Bin (Tree a) (Tree a)
     | Empty
-    | Fail String
+    | Fail (Tree String)
       deriving (Eq, Show)
 
 -- ----------------------------------------
@@ -60,11 +59,11 @@ instance Applicative Tree where
 instance Monad Tree where
     return = Tip
     (>>=)  = substTree
-    fail   = Fail
+    fail   = throwError . Tip
 
     {-# INLINE return #-}
-    {-# INLINE (>>=) #-}
-    {-# INLINE fail #-}
+    {-# INLINE (>>=)  #-}
+    {-# INLINE fail   #-}
 
 instance MonadPlus Tree where
     mzero = Empty
@@ -73,7 +72,7 @@ instance MonadPlus Tree where
     {-# INLINE mzero #-}
     {-# INLINE mplus #-}
 
-instance MonadError String Tree where
+instance MonadError (Tree String) Tree where
     throwError = Fail
 
     catchError (Fail s) h = h s
@@ -89,27 +88,20 @@ instance Monoid (Tree a) where
     {-# INLINE mappend #-}
 
 instance MonadList Tree where
-    fromList = fromListTree
-    toList   = return . toListTree
+    fromList = toS
+    toList   = return . fromS
 
     {-# INLINE fromList #-}
     {-# INLINE toList #-}
-
-instance MonadConv Tree [] where
-    convFrom   = fromListTree
-    convTo     = return . toListTree
-
-    {-# INLINE convFrom #-}
-    {-# INLINE convTo #-}
 
 instance MonadConv Tree Tree where
     convFrom = id
     convTo   = return
 
     {-# INLINE convFrom #-}
-    {-# INLINE convTo #-}
+    {-# INLINE convTo   #-}
 
-instance MonadCond Tree where
+instance MonadCond Tree Tree where
     ifM (Fail s) _ _ = Fail s
     ifM Empty    _ e = e
     ifM _ t _        = t
@@ -118,14 +110,34 @@ instance MonadCond Tree where
     orElseM Empty    e = e
     orElseM t        _ = t
 
-{- there's no need for exporting construtors
+instance Sequence Tree where
+    emptyS          = Empty
+    consS           = bin . Tip
+    unconsS t       = case uncons' t of
+                        (Tip x, t') -> Just (x, t')
+                        _           -> Nothing
 
-   Tip   = return  or Tip   = pure
-   bin   = mappend or bin   = mplus      or bin = (<>)	-- bin smart constr for Bin
-   Empty = mempty  or Empty = mzero
-   Fail  = fail    or Fail  = throwError
+    nullS (Tip _)   = False
+    nullS (Bin _ _) = False
+    nullS _         = True
 
--- -}
+    fromS           = toListTree
+    toS             = fromListTree
+    substS          = substTreeM
+
+    {-# INLINE emptyS  #-}
+    {-# INLINE consS   #-}
+    {-# INLINE unconsS #-}
+    {-# INLINE nullS   #-}
+    {-# INLINE toS     #-}
+    {-# INLINE fromS   #-}
+    {-# INLINE substS   #-}
+
+instance ErrSeq (Tree String) Tree where
+    failS (Fail s) = Left  s
+    failS t        = Right t
+
+    {-# INLINE failS   #-}
 
 -- ----------------------------------------
 
@@ -150,11 +162,12 @@ substTreeM (Fail s)  _ = return (Fail s)
 bin :: Tree a -> Tree a -> Tree a
 bin     Empty   t2          = t2
 bin t1          Empty       = t1
+bin    (Fail x)    (Fail y) = Fail $ bin x y
 bin t1@(Fail _) _           = t1
 bin _           t2@(Fail _) = t2
 bin t1          t2          = Bin t1 t2
 
-foldTree :: (String -> b) -> b -> (a -> b) -> (b -> b -> b) -> (Tree a -> b)
+foldTree :: (Tree String -> b) -> b -> (a -> b) -> (b -> b -> b) -> (Tree a -> b)
 foldTree ff e tf bf t = fold' t
     where
       fold' (Tip x)   = tf x
@@ -165,6 +178,7 @@ foldTree ff e tf bf t = fold' t
 zipTree :: (a -> b -> c) -> (Tree a -> Tree b -> Tree c)
 zipTree op (Tip x)     (Tip y)     = Tip $ x `op` y
 zipTree op (Bin l1 r1) (Bin l2 r2) = bin (zipTree op l1 l2) (zipTree op r1 r2)
+zipTree _  (Fail s1)   (Fail s2)   = Fail $ bin s1 s2
 zipTree _  (Fail s1)   _           = Fail s1
 zipTree _  _           (Fail s2)   = Fail s2
 zipTree _  _           _           = Empty
@@ -199,10 +213,6 @@ toListTree t = t2l t []
 
 -- ----------------------------------------
 
-isFail :: Tree t -> Bool
-isFail (Fail _) = True
-isFail _        = False
-
 sizeTree :: Tree a -> Int
 sizeTree = foldTree (const 0) 0 (const 1) (+)
 
@@ -222,14 +232,14 @@ lastTree t = case l of
 
 tailTree :: Tree a -> Tree a
 tailTree t = case r of
-            Empty -> throwError "Tree.tailTree: empty tree"
+            Empty -> fail "Tree.tailTree: empty tree"
             _     -> r
     where
       r = snd . uncons' $ t
 
 initTree :: Tree a -> Tree a
 initTree t = case r of
-            Empty -> throwError "Tree.initTree: empty tree"
+            Empty -> fail "Tree.initTree: empty tree"
             _     -> reverseTree r
     where
       r = snd . uncons' . reverseTree $ t
