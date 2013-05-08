@@ -62,7 +62,7 @@ instance MonadIO IOTree where
 
     {-# INLINE liftIO #-}
 
-instance MonadList IOTree where
+instance MonadSequence IOTree where
     fromList = IOT . return . fromList
     toList (IOT a) = IOT $ a >>= return . toList
 

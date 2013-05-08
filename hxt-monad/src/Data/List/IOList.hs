@@ -63,7 +63,7 @@ instance MonadIO IOList where
 
     {-# INLINE liftIO #-}
 
-instance MonadList IOList where
+instance MonadSequence IOList where
     fromList = IOL . return . fromList
     toList (IOL a) = IOL $ a >>= return . toList
 

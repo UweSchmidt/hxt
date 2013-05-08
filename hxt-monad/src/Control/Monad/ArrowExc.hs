@@ -5,9 +5,9 @@
 module Control.Monad.ArrowExc
 where
 
-import           Control.Exception       (SomeException)
+import           Control.Exception           (SomeException)
 import           Control.Monad.Arrow
-import           Control.Monad.MonadList
+import           Control.Monad.MonadSequence
 
 -- ----------------------------------------
 

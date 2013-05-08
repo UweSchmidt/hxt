@@ -101,7 +101,7 @@ instance Monoid (List a) where
     {-# INLINE mempty #-}
     {-# INLINE mappend #-}
 
-instance MonadList List where
+instance MonadSequence List where
     fromList = List
     toList (List xs)   = return xs
     toList (Fail _)    = return []

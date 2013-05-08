@@ -7,7 +7,7 @@ where
 
 import           Control.Monad
 import           Control.Monad.Arrow
-import           Control.Monad.MonadList
+import           Control.Monad.MonadSequence
 
 -- ----------------------------------------
 
@@ -30,16 +30,16 @@ arr4 f = arr (\ ~(x1, ~(x2, ~(x3, x4))) -> f x1 x2 x3 x4)
 arr2A :: Monad m => (b -> c -> m d) -> (b, c) -> m d
 arr2A f = first (arr f) >>> app
 
-arrL :: MonadList m => (b -> [c]) -> b -> m c
+arrL :: MonadSequence m => (b -> [c]) -> b -> m c
 arrL f = fromList . f
 
-arr2L :: MonadList m => (b -> c -> [d]) -> (b, c) -> m d
+arr2L :: MonadSequence m => (b -> c -> [d]) -> (b, c) -> m d
 arr2L = arrL . uncurry
 
 constA :: Monad m => c -> b -> m c
 constA = arr . const
 
-constL :: MonadList m => [c] -> b -> m c
+constL :: MonadSequence m => [c] -> b -> m c
 constL = arrL . const
 
 isA :: MonadPlus m => (b -> Bool) -> b -> m b
@@ -47,16 +47,16 @@ isA p x
     | p x       = return x
     | otherwise = mzero
 
-(>>.) :: MonadList m => (b -> m c) -> ([c] -> [d]) -> (b -> m d)
+(>>.) :: MonadSequence m => (b -> m c) -> ([c] -> [d]) -> (b -> m d)
 f >>. g = \ x -> toList (f x) >>= return . g >>= fromList
 
-(>.) :: MonadList m => (b -> m c) -> ([c] ->  d ) -> b -> m d
+(>.) :: MonadSequence m => (b -> m c) -> ([c] ->  d ) -> b -> m d
 af >. f = af >>. ((:[]) . f)
 
-listA :: MonadList m => (b -> m c) -> b -> m [c]
+listA :: MonadSequence m => (b -> m c) -> b -> m [c]
 listA af = af >>.  (:[])
 
-unlistA :: MonadList m => [b] -> m b
+unlistA :: MonadSequence m => [b] -> m b
 unlistA = arrL id
 
 this :: Monad m => b -> m b
@@ -70,7 +70,7 @@ none = zeroArrow
 -- withDefault :: MonadCond m => (b -> m c) -> c -> (b -> m c)
 -- withDefault a d = a `orElse` constA d
 
-single :: MonadList m => (b -> m c) -> b -> m c
+single :: MonadSequence m => (b -> m c) -> b -> m c
 single f = f >>. take 1
 
 applyA :: Monad m => (b -> m (b -> m c)) -> (b -> m c)
@@ -91,7 +91,7 @@ f $<<< g = applyA (g >>> arr3 f)
            (b -> m d)
 f $<<<< g           = applyA (g >>> arr4 f)
 
-($<$) :: MonadList m =>
+($<$) :: MonadSequence m =>
          (c -> (b -> m b)) -> (b -> m c) -> (b -> m b)
 g $<$ f = applyA (listA (f >>> arr g) >>> arr seqA)
 
@@ -100,7 +100,7 @@ mergeA :: Monad m =>
           ((a1, b1) -> m c)
 mergeA op = (\ x -> arr fst `op` constA (snd x)) $< this
 
-perform :: MonadList m => (b -> m c) -> (b -> m b)
+perform :: MonadSequence m => (b -> m c) -> (b -> m b)
 perform f = listA f &&& this >>> arr snd
 
 catA :: MonadPlus m => [b -> m c] -> b -> m c

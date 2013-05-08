@@ -8,21 +8,21 @@ where
 import           Control.Monad
 import           Control.Monad.Arrow
 import           Control.Monad.ArrowList
-import           Control.Monad.MonadList
-import           Data.List               (partition)
+import           Control.Monad.MonadSequence
+import           Data.List                   (partition)
 
 -- ----------------------------------------
 
 -- simulating Control.ArrowIf with monads
 
-ifA :: MonadCond m => (b -> m c) -> (b -> m d) -> (b -> m d) -> (b -> m d)
-ifA c t e = \ x -> ifM (c x) (t x) (e x)
+ifA :: MonadCond m c => (b -> m a) -> (b -> m d) -> (b -> m d) -> (b -> m d)
+ifA c t e = \ x -> ifM (convTo (c x)) (t x) (e x)
 
 ifP :: Monad m => (b -> Bool) -> (b -> m d) -> (b -> m d) -> (b -> m d)
 ifP c t e = \ x -> if c x
                    then t x
                    else e x
-
+{-
 neg :: MonadCond m => (b -> m c) -> (b -> m b)
 neg f = ifA f none this
 
@@ -54,10 +54,12 @@ f `containing` g    = f >>> g `guards` this
 
 notContaining :: MonadCond m => (b -> m c) -> (c -> m d) -> (b -> m c)
 f `notContaining` g = f >>> ifA g none this
+-- -}
 
-orElse :: MonadCond m => (b -> m c) -> (b -> m c) -> (b -> m c)
+orElse :: MonadCond m a => (b -> m c) -> (b -> m c) -> (b -> m c)
 orElse t e = \ x -> orElseM (t x) (e x)
 
+{-
 data IfThen a b = a :-> b
 
 choiceA :: MonadCond m => [IfThen (b -> m c) (b -> m d)] -> (b -> m d)
@@ -71,7 +73,7 @@ withDefault a d = a `orElse` constA d
 tagA :: MonadCond m => (b -> m c) -> (b -> m (Either b b))
 tagA p = ifA p (arr Left) (arr Right)
 
-spanA :: (MonadList m, MonadCond m) => (b -> m b) -> ([b] -> m ([b],[b]))
+spanA :: (MonadSequence m, MonadCond m) => (b -> m b) -> ([b] -> m ([b],[b]))
 spanA p = ifA ( arrL (take 1) >>> p )
               ( arr head &&& (arr tail >>> spanA p)
                 >>>
@@ -79,7 +81,7 @@ spanA p = ifA ( arrL (take 1) >>> p )
               )
               ( arr (\ l -> ([],l)) )
 
-partitionA :: (MonadList m, MonadCond m) => (b -> m b) -> ([b] -> m ([b],[b]))
+partitionA :: (MonadSequence m, MonadCond m) => (b -> m b) -> ([b] -> m ([b],[b]))
 partitionA  p = listA ( arrL id >>> tagA p )
                 >>^
                 ( (\ ~(l1, l2) -> (unTag l1, unTag l2) ) . partition (isLeft) )
@@ -104,3 +106,4 @@ partitionA  p = listA ( arrL id >>> tagA p )
 {-# INLINE withDefault #-}
 
 -- ----------------------------------------
+-- -}

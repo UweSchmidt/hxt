@@ -24,7 +24,7 @@ import           Data.Maybe
 --
 -- Law: @toList . fromList = id@
 
-class MonadList m where
+class Monad m => MonadSequence m where
     fromList :: [a] -> m a
     toList   :: m a -> m [a]
 
@@ -38,8 +38,8 @@ class (Monad m, Sequence c) => MonadConv m c | m -> c where
 -- | Monadic branching
 
 class (MonadPlus m, MonadConv m c) => MonadCond m c | m -> c where
-    ifM      :: m (c a) -> m (c b) -> m (c b) -> m (c b)
-    orElseM  :: m (c a) -> m (c a) -> m (c a)
+    ifM      :: m (c a) -> m b -> m b -> m b
+    orElseM  :: m a -> m a -> m a
 
 -- | catch exceptions from the IO monad
 
@@ -76,6 +76,7 @@ class ErrSeq e s | s -> e where
 
     errS  :: s a -> Bool
     errS  = either (const True) (const False) . failS
+
     {-# INLINE errS #-}
 
 -- ----------------------------------------

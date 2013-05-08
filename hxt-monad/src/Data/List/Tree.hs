@@ -87,7 +87,7 @@ instance Monoid (Tree a) where
     {-# INLINE mempty #-}
     {-# INLINE mappend #-}
 
-instance MonadList Tree where
+instance MonadSequence Tree where
     fromList = toS
     toList   = return . fromS
 

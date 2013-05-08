@@ -17,7 +17,7 @@ module Data.List.StateSeq
 where
 
 import           Control.Applicative
-import           Control.Exception
+-- import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Error
 import           Control.Monad.MonadSequence
@@ -101,34 +101,37 @@ instance (Monad s, Sequence s) => MonadIO (StateSeq s st) where
     liftIO x = STS $ x >>= return . return
 
     {-# INLINE liftIO #-}
+-- -}
 
-instance (MonadList s) => MonadList (StateSeq s st) where
-    fromList = STS . return . fromList
-    toList (STS a) = STS $ a >>= return . toList
+instance (MonadSequence s, Sequence s) => MonadSequence (StateSeq s st) where
+    fromList xs    = STS $ \ s0 -> (fromList xs, s0)
+    toList (STS a) = STS $ \ s0 -> let (xs, s1) = a s0 in (toList xs, s1)
 
     {-# INLINE fromList #-}
     {-# INLINE toList   #-}
 
 instance (Monad s, Sequence s) => MonadConv (StateSeq s st) s where
-    convFrom       = STS . return
-    convTo (STS a) = STS $ a >>= return . return
+    convFrom xs    = STS $ \ s0 -> (xs, s0)
+    convTo (STS a) = STS $ \ s0 -> let (xs, s1) = a s0 in (return xs, s1)
 
     {-# INLINE convFrom #-}
     {-# INLINE convTo   #-}
 
 instance (MonadPlus s, Sequence s) => MonadCond (StateSeq s st) s where
     ifM (STS a) (STS t) (STS e)
-        = STS $ do x <- a
-                   if nullS x
-                      then e
-                      else t
+        = STS $ \ s0 ->
+                let (xs, s1) = a s0 in
+                if nullS xs
+                   then e s1
+                   else t s1
 
     orElseM (STS t) (STS e)
-        = STS $ do x <- t
-                   if nullS x
-                      then e
-                      else return x
-
+        = STS $ \ s0 ->
+                let (xs, s1) = t s0 in
+                if nullS xs
+                   then e s1
+                   else (xs, s1)
+{-
 instance (Monad s, Functor s, Sequence s) => MonadTry (StateSeq s st) where
     tryM (STS a) = STS $
                    do x <- try' a
