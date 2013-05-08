@@ -77,18 +77,26 @@ instance (MonadPlus s, Sequence s) => MonadPlus (StateSeq s st) where
     {-# INLINE mzero #-}
     {-# INLINE mplus #-}
 
-{-
-instance (Monad s, MonadError e s, Sequence s, ErrSeq e s) => MonadError e (StateSeq s st) where
-    throwError = STS . return . throwError
 
-    catchError (STS a) h = STS $
-                           do t <- a
-                              case failS t of
-                                Left s -> (unSTS . h) s
-                                _      -> return t
+instance (Monad s, MonadError e s, Sequence s, ErrSeq e s) => MonadError e (StateSeq s st) where
+    throwError x         = STS $ \ s0 -> (throwError x, s0)
+
+    catchError (STS a) h = STS $ \ s0 ->
+                                 let (xs, s1) = a s0 in
+                                 case failS xs of
+                                   Left e -> unSTS (h e) $ s1
+                                   _      -> (xs, s1)
 
     {-# INLINE throwError #-}
 
+instance(Monad s, Sequence s) => MonadState st (StateSeq s st) where
+    get    = STS $ \  s0 -> (return s0, s0)
+    put s1 = STS $ \ _s0 -> (return (), s1)
+
+    {-# INLINE get #-}
+    {-# INLINE put #-}
+
+{-
 instance (Monad s, Sequence s) => MonadIO (StateSeq s st) where
     liftIO x = STS $ x >>= return . return
 
