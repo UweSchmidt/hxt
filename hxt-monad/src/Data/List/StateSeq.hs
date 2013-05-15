@@ -22,28 +22,26 @@ import           Control.Monad
 import           Control.Monad.Error
 import           Control.Monad.MonadSequence
 import           Control.Monad.State.Strict
--- import           Data.List.List
--- import           Data.List.Tree
-
--- ----------------------------------------
-
-type SLA' s st a b = a -> StateSeq s st b
 
 -- ----------------------------------------
 
 newtype StateSeq s st a = STS {unSTS :: st -> (s a, st)}
 
 runSLA :: (Sequence s) =>
-           SLA' s st a b -> (st -> a -> (st, [b]))
+          (a -> StateSeq s st b) -> (st -> a -> (st, [b]))
 runSLA f = \ s0 x ->
            let (xs, s1) = unSTS (f x) s0
            in (s1, fromS xs) 
+
 {-# INLINE runSLA #-}
 
+
 fromSLA :: (MonadSequence m, Sequence m, Sequence s) =>
-           st -> SLA' s st b c -> (b -> m c)
+           st -> (a -> StateSeq s st b) -> (a -> m b)
 fromSLA s f =  fromList . (snd . (runSLA f s))
+
 {-# INLINE fromSLA #-}
+
 
 instance (Functor s) => Functor (StateSeq s st) where
     fmap f (STS a) = STS $ \ s0 ->

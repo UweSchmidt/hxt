@@ -5,7 +5,6 @@
 module Data.List.Tree
 -- {- just for testing
     ( Tree(..)
-    , LA
 
     , dropTree
     , foldTree
@@ -31,8 +30,6 @@ import           Control.Monad.MonadSequence
 import           Data.Monoid
 
 -- ----------------------------------------
-
-type LA a b = a -> Tree b
 
 data Tree a
     = Tip a

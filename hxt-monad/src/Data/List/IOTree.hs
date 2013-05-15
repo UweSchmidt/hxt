@@ -14,8 +14,6 @@ import           Data.List.Tree
 
 -- ----------------------------------------
 
-type IOLA a b = a -> IOTree b
-
 newtype IOTree a = IOT {unIOT :: IO (Tree a)}
 
 instance Functor IOTree where

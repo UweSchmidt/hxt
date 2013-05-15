@@ -19,8 +19,6 @@ import           Data.Monoid
 
 -- ----------------------------------------
 
-type LA a b = a -> List b
-
 data List a
     = List { unList :: [a] }
     | Fail { unFail :: [String] }

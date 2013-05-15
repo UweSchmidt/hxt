@@ -14,8 +14,6 @@ import           Data.List.List
 
 -- ----------------------------------------
 
-type IOLA a b = a -> IOList b
-
 newtype IOList a = IOL {unIOL :: IO (List a)}
 
 instance Functor IOList where
