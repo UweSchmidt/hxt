@@ -12,6 +12,7 @@
 module Control.Monad.MonadSequence
 where
 
+import           Control.Applicative
 import           Control.Exception   (SomeException)
 import           Control.Monad
 import           Control.Monad.Error
@@ -59,6 +60,8 @@ class Sequence s where
     fromS   :: s a -> [a]
     toS     :: [a] -> s a
 
+    -- | The important operation for lifting nonderministic computations
+
     substS  :: Monad m => s a -> (a -> m (s b)) -> m (s b)
 
     nullS   = isNothing . unconsS
@@ -68,6 +71,11 @@ class Sequence s where
     {-# INLINE nullS #-}
     {-# INLINE toS   #-}
     {-# INLINE fromS #-}
+
+-- | the class for all necessary features of a sequenc
+
+class (Functor s, Applicative s, Monad s, Sequence s, MonadPlus s) => Seq s where
+
 
 -- | Extraction of errors out of sequence datatypes
 

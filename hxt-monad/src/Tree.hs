@@ -27,9 +27,9 @@ import           Control.Monad.State.Strict
 import           Data.List                   (partition)
 import           Data.List.IOList
 import           Data.List.IOTree
-import Data.List.List
+import           Data.List.List
 import           Data.List.StateSeq
-import Data.List.Tree
+import           Data.List.Tree
 import           Data.Monoid
 
 -- ----------------------------------------
