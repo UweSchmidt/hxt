@@ -2,6 +2,16 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
+{-# LANGUAGE UndecidableInstances  #-}
+
+-- ----------------------------------------
+{- |
+
+   Lifting of sequences (lists, trees, ...)
+   into the IO monad
+
+-}
+-- ----------------------------------------
 
 module Data.List.IOSequence
 where
@@ -15,77 +25,77 @@ import           Data.List.List
 
 -- ----------------------------------------
 
-newtype IOSeq s a = IOL {unIOL :: IO (s a)}
+newtype IOSequence s a = IOS {unIOS :: IO (s a)}
 
-instance (Functor s) => Functor (IOSeq s) where
-    fmap f (IOL a) = IOL $ a >>= return . fmap f
+instance (Sequence s) => Functor (IOSequence s) where
+    fmap f (IOS a) = IOS $ a >>= return . fmap f
 
     {-# INLINE fmap #-}
 
-instance (Functor s, Monad s, Sequence s) => Applicative (IOSeq s) where
+instance (Sequence s) => Applicative (IOSequence s) where
     pure  = return
     (<*>) = ap
 
     {-# INLINE pure  #-}
     {-# INLINE (<*>) #-}
 
-instance (Monad s, Sequence s) => Monad (IOSeq s) where
-    return        = IOL . return . return
-    (IOL a) >>= f = IOL $ a >>= \ x -> substS x (unIOL . f)
-    fail          = IOL . return . fail
+instance (Sequence s) => Monad (IOSequence s) where
+    return        = IOS . return . return
+    (IOS a) >>= f = IOS $ a >>= \ x -> substS x (unIOS . f)
+    fail          = IOS . return . fail
 
     {-# INLINE return #-}
     {-# INLINE (>>=)  #-}
     {-# INLINE fail   #-}
 
-instance (MonadPlus s, Sequence s) => MonadPlus (IOSeq s) where
-    mzero                   = IOL $ return mzero
-    (IOL x) `mplus` (IOL y) = IOL $ liftM2 mplus x y
+instance (Sequence s) => MonadPlus (IOSequence s) where
+    mzero                   = IOS $ return mzero
+    (IOS x) `mplus` (IOS y) = IOS $ liftM2 mplus x y
 
     {-# INLINE mzero #-}
     {-# INLINE mplus #-}
 
 
-instance (Monad s, Sequence s, ErrSeq [String] s, MonadError [String] s) => MonadError [String] (IOSeq s) where
-    throwError = IOL . return . throwError
+instance (Sequence s, ErrSeq e s, MonadError e s) => MonadError e (IOSequence s) where
+    throwError = IOS . return . throwError
 
-    catchError (IOL a) h = IOL $
+    catchError (IOS a) h = IOS $
                            do t <- a
                               case failS t of
-                                Left  s -> (unIOL . h) s
+                                Left  s -> (unIOS . h) s
                                 Right _ -> return t
 
     {-# INLINE throwError #-}
 
-instance (Monad s, Sequence s) => MonadIO (IOSeq s) where
-    liftIO x = IOL $ x >>= return . return
+instance (Sequence s) => MonadIO (IOSequence s) where
+    liftIO x = IOS $ x >>= return . return
 
     {-# INLINE liftIO #-}
 
-instance (MonadSequence s, Sequence s) => MonadSequence (IOSeq s) where
-    fromList = IOL . return . fromList
-    toList (IOL a) = IOL $ a >>= return . toList
+instance (Sequence s) => MonadSequence (IOSequence s) where
+    fromList       = IOS . return . fromList
+    toList (IOS a) = IOS $ a >>= return . toList
 
     {-# INLINE fromList #-}
     {-# INLINE toList   #-}
 
-instance (MonadSequence s, Sequence s) => MonadConv (IOSeq s) s where
-    convFrom   = IOL . return
-    convTo (IOL a) = IOL $ a >>= return . return
+instance (Sequence s) => MonadConv (IOSequence s) s where
+    convFrom       = IOS . return
+    convTo (IOS a) = IOS $ a >>= return . return
 
     {-# INLINE convFrom #-}
     {-# INLINE convTo   #-}
 
 
-instance (MonadPlus s, MonadSequence s, Sequence s) => MonadCond (IOSeq s) s where
-    ifM (IOL a) (IOL t) (IOL e)
-        = IOL $ do x <- a
+instance (Sequence s) => MonadCond (IOSequence s) s where
+    ifM (IOS a) (IOS t) (IOS e)
+        = IOS $ do x <- a
                    if nullS x
                       then e
                       else t
 
-    orElseM (IOL t) (IOL e)
-        = IOL $ do x <- t
+    orElseM (IOS t) (IOS e)
+        = IOS $ do x <- t
                    if nullS x
                       then e
                       else return x
@@ -93,8 +103,8 @@ instance (MonadPlus s, MonadSequence s, Sequence s) => MonadCond (IOSeq s) s whe
     {-# INLINE ifM     #-}
     {-# INLINE orElseM #-}
 
-instance (Functor s, Monad s, Sequence s) => MonadTry (IOSeq s) where
-    tryM (IOL a) = IOL $
+instance (Sequence s) => MonadTry (IOSequence s) where
+    tryM (IOS a) = IOS $
                    do x <- try' a
                       return $ case x of
                                  Left er -> return $ Left er

@@ -8,55 +8,55 @@
 {- |
 
    Lifting of sequences (lists, trees, ...)
-   into the IO monad
+   into the state monad
 
 -}
 -- ----------------------------------------
 
-module Data.List.StateSeq
+module Data.List.StateSequence
 where
 
 import           Control.Applicative
--- import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Error
 import           Control.Monad.MonadSequence
-import           Control.Monad.State.Strict
+import           Control.Monad.State
 
 -- ----------------------------------------
 
-newtype StateSeq s st a = STS {unSTS :: st -> (s a, st)}
+newtype StateSequence s st a = STS {unSTS :: st -> (s a, st)}
 
 runSLA :: (Sequence s) =>
-          (a -> StateSeq s st b) -> (st -> a -> (st, [b]))
+          (a -> StateSequence s st b) -> (st -> a -> (st, [b]))
 runSLA f = \ s0 x ->
            let (xs, s1) = unSTS (f x) s0
-           in (s1, fromS xs) 
+           in (s1, fromS xs)
 
 {-# INLINE runSLA #-}
 
 
-fromSLA :: (MonadSequence m, Sequence m, Sequence s) =>
-           st -> (a -> StateSeq s st b) -> (a -> m b)
+fromSLA :: (Sequence m, Sequence s) =>
+           st -> (a -> StateSequence s st b) -> (a -> m b)
 fromSLA s f =  fromList . (snd . (runSLA f s))
 
 {-# INLINE fromSLA #-}
 
+-- ----------------------------------------
 
-instance (Functor s) => Functor (StateSeq s st) where
+instance (Sequence s) => Functor (StateSequence s st) where
     fmap f (STS a) = STS $ \ s0 ->
                      let (xs, s1) = a s0 in (fmap f xs, s1)
 
     {-# INLINE fmap #-}
 
-instance (Monad s, Functor s, Sequence s) => Applicative (StateSeq s st) where
+instance (Sequence s) => Applicative (StateSequence s st) where
     pure  = return
     (<*>) = ap
 
     {-# INLINE pure  #-}
     {-# INLINE (<*>) #-}
 
-instance (Monad s, Sequence s) => Monad (StateSeq s st) where
+instance (Sequence s) => Monad (StateSequence s st) where
     return x      = STS $ \ s0 -> (return x, s0)
     (STS a) >>= f = STS ( \ s0 ->
                           let (xs, s1) = a s0 in
@@ -74,7 +74,7 @@ instance (Monad s, Sequence s) => Monad (StateSeq s st) where
     {-# INLINE fail   #-}
 
 
-instance (MonadPlus s, Sequence s) => MonadPlus (StateSeq s st) where
+instance (Sequence s) => MonadPlus (StateSequence s st) where
     mzero                   = STS $ \ s0 -> (mzero, s0)
     (STS x) `mplus` (STS y) = STS $ \ s0 ->
                               let (xs, s1) = x s0
@@ -85,7 +85,7 @@ instance (MonadPlus s, Sequence s) => MonadPlus (StateSeq s st) where
     {-# INLINE mplus #-}
 
 
-instance (Monad s, MonadError e s, Sequence s, ErrSeq e s) => MonadError e (StateSeq s st) where
+instance (Sequence s, MonadError e s, ErrSeq e s) => MonadError e (StateSequence s st) where
     throwError x         = STS $ \ s0 -> (throwError x, s0)
 
     catchError (STS a) h = STS $ \ s0 ->
@@ -96,35 +96,28 @@ instance (Monad s, MonadError e s, Sequence s, ErrSeq e s) => MonadError e (Stat
 
     {-# INLINE throwError #-}
 
-instance(Monad s, Sequence s) => MonadState st (StateSeq s st) where
+instance (Sequence s) => MonadState st (StateSequence s st) where
     get    = STS $ \  s0 -> (return s0, s0)
     put s1 = STS $ \ _s0 -> (return (), s1)
 
     {-# INLINE get #-}
     {-# INLINE put #-}
 
-{-
-instance (Monad s, Sequence s) => MonadIO (StateSeq s st) where
-    liftIO x = STS $ x >>= return . return
-
-    {-# INLINE liftIO #-}
--- -}
-
-instance (MonadSequence s, Sequence s) => MonadSequence (StateSeq s st) where
+instance (Sequence s) => MonadSequence (StateSequence s st) where
     fromList xs    = STS $ \ s0 -> (fromList xs, s0)
     toList (STS a) = STS $ \ s0 -> let (xs, s1) = a s0 in (toList xs, s1)
 
     {-# INLINE fromList #-}
     {-# INLINE toList   #-}
 
-instance (Monad s, Sequence s) => MonadConv (StateSeq s st) s where
+instance (Sequence s) => MonadConv (StateSequence s st) s where
     convFrom xs    = STS $ \ s0 -> (xs, s0)
     convTo (STS a) = STS $ \ s0 -> let (xs, s1) = a s0 in (return xs, s1)
 
     {-# INLINE convFrom #-}
     {-# INLINE convTo   #-}
 
-instance (MonadPlus s, Sequence s) => MonadCond (StateSeq s st) s where
+instance (Sequence s) => MonadCond (StateSequence s st) s where
     ifM (STS a) (STS t) (STS e)
         = STS $ \ s0 ->
                 let (xs, s1) = a s0 in
@@ -138,15 +131,5 @@ instance (MonadPlus s, Sequence s) => MonadCond (StateSeq s st) s where
                 if nullS xs
                    then e s1
                    else (xs, s1)
-{-
-instance (Monad s, Functor s, Sequence s) => MonadTry (StateSeq s st) where
-    tryM (STS a) = STS $
-                   do x <- try' a
-                      return $ case x of
-                                 Left er -> return $ Left er
-                                 Right t -> fmap Right t
-        where
-          try' :: IO a -> IO (Either SomeException a)
-          try' = try
--- -}
+
 -- ----------------------------------------

@@ -44,8 +44,6 @@ instance Sequence List where
     {-# INLINE fromS   #-}
     {-# INLINE substS  #-}
 
-instance Seq List where
-
 instance ErrSeq [String] List where
     failS (Fail xs) = Left xs
     failS s         = Right s

@@ -24,22 +24,23 @@ import           Control.Monad.ArrowState
 import           Control.Monad.Error
 import           Control.Monad.MonadSequence
 import           Control.Monad.State.Strict
-import           Data.List                   (partition)
+-- import           Data.List                   (partition)
 import           Data.List.IOList
+import           Data.List.IOSequence
 import           Data.List.IOTree
 import           Data.List.List
-import           Data.List.StateSeq
+import           Data.List.StateSequence
 import           Data.List.Tree
 import           Data.Monoid
 
 -- ----------------------------------------
 
 type LA      a b = a -> List            b
-type SLA   s a b = a -> StateSeq List s b
+type SLA   s a b = a -> StateSequence List s b
 type IOLA    a b = a -> IOList          b
 
 type LA'     a b = a -> Tree            b
-type SLA'  s a b = a -> StateSeq Tree s b
+type SLA'  s a b = a -> StateSequence Tree s b
 type IOLA'   a b = a -> IOTree          b
 
 type StateIOTree s a = StateT s IOTree a
@@ -56,7 +57,7 @@ tt1 = fromList [1]
 tt7 = fromList [1..7]
 tt8 = fromList [1..8]
 
-st1 :: (MonadPlus s, MonadSequence s, Sequence s) => ([Int] -> StateSeq s Int Int)
+st1 :: (Sequence s) => [Int] -> StateSequence s Int Int
 st1 = fromList >>> (this <+> arr (+10)) >>> arr (+1) >>> perform (changeState (+) . const 1)
 
 st1' :: SLA Int [Int] Int
@@ -64,4 +65,5 @@ st1' = st1
 
 st1'' :: SLA' Int [Int] Int
 st1'' = st1
+
 

@@ -51,7 +51,7 @@ class MonadIO m => MonadTry m where
 
 -- | Common features of a sequence datatype
 
-class Sequence s where
+class (Functor s, Applicative s, Monad s, MonadPlus s, MonadSequence s) => Sequence s where
     emptyS  :: s a
     consS   :: a -> s a -> s a
     unconsS :: s a -> Maybe (a, s a)
@@ -71,11 +71,6 @@ class Sequence s where
     {-# INLINE nullS #-}
     {-# INLINE toS   #-}
     {-# INLINE fromS #-}
-
--- | the class for all necessary features of a sequenc
-
-class (Functor s, Applicative s, Monad s, Sequence s, MonadPlus s) => Seq s where
-
 
 -- | Extraction of errors out of sequence datatypes
 
@@ -107,6 +102,10 @@ instance Sequence [] where
     {-# INLINE nullS   #-}
     {-# INLINE toS     #-}
     {-# INLINE fromS   #-}
+
+instance MonadSequence [] where
+    fromList = id
+    toList   = return
 
 -- | Pure lists never contain an error value
 
