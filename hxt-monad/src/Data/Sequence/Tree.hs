@@ -2,7 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 
-module Data.List.Tree
+module Data.Sequence.Tree
 -- {- just for testing
     ( Tree(..)
 

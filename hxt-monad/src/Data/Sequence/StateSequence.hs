@@ -13,7 +13,7 @@
 -}
 -- ----------------------------------------
 
-module Data.List.StateSequence
+module Data.Sequence.StateSequence
 where
 
 import           Control.Applicative

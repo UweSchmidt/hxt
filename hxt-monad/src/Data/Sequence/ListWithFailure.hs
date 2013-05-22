@@ -2,7 +2,15 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 
-module Data.List.List
+-- ----------------------------------------
+{- |
+
+   A Sequence implementation with lists and failure
+
+-}
+-- ----------------------------------------
+
+module Data.Sequence.ListWithFailure
 {- just for testing
     ( List(..)
     , LA
@@ -19,14 +27,14 @@ import           Data.Monoid
 
 -- ----------------------------------------
 
-data List a
+data Seq a
     = List { unList :: [a] }
     | Fail { unFail :: [String] }
       deriving (Eq, Show)
 
 -- ----------------------------------------
 
-instance Sequence List where
+instance Sequence Seq where
     emptyS                  = List []
     consS x xs              = List (x : unList xs)
     unconsS (List [])       = Nothing
@@ -44,24 +52,24 @@ instance Sequence List where
     {-# INLINE fromS   #-}
     {-# INLINE substS  #-}
 
-instance ErrSeq [String] List where
+instance ErrSeq [String] Seq where
     failS (Fail xs) = Left xs
     failS s         = Right s
 
 -- ----------------------------------------
 
-instance Functor List where
+instance Functor Seq where
     fmap f (List xs) = List $ map f xs
     fmap _ (Fail s)  = Fail s
 
-instance Applicative List where
+instance Applicative Seq where
     pure  = return
     (<*>) = ap
 
     {-# INLINE pure #-}
     {-# INLINE (<*>) #-}
 
-instance Monad List where
+instance Monad Seq where
     return x = List [x]
     (List xs) >>= f = foldr mappend mempty . map f $ xs
     (Fail s)  >>= _ = Fail s
@@ -71,7 +79,7 @@ instance Monad List where
     {-# INLINE (>>=) #-}
     {-# INLINE fail #-}
 
-instance MonadPlus List where
+instance MonadPlus Seq where
     mzero = List []
     (List xs) `mplus` (List ys) = List $ xs ++ ys
     (Fail xs) `mplus` (Fail ys) = Fail $ xs ++ ys
@@ -81,7 +89,7 @@ instance MonadPlus List where
     {-# INLINE mzero #-}
     {-# INLINE mplus #-}
 
-instance MonadError [String] List where
+instance MonadError [String] Seq where
     throwError = Fail
 
     catchError (Fail s) h = h s
@@ -89,7 +97,7 @@ instance MonadError [String] List where
 
     {-# INLINE throwError #-}
 
-instance Monoid (List a) where
+instance Monoid (Seq a) where
     mempty  = List []
     (List xs) `mappend` (List ys) = List $ xs ++ ys
     (Fail xs) `mappend` (Fail ys) = Fail $ xs ++ ys
@@ -99,7 +107,7 @@ instance Monoid (List a) where
     {-# INLINE mempty #-}
     {-# INLINE mappend #-}
 
-instance MonadSequence List where
+instance MonadSequence Seq where
     fromList = List
     toList (List xs)   = return xs
     toList (Fail _)    = return []
@@ -107,14 +115,14 @@ instance MonadSequence List where
     {-# INLINE fromList #-}
     {-# INLINE toList   #-}
 
-instance MonadConv List List where
+instance MonadConv Seq Seq where
     convFrom = id
     convTo   = return
 
     {-# INLINE convFrom #-}
     {-# INLINE convTo   #-}
 
-instance MonadCond List List where
+instance MonadCond Seq Seq where
     ifM (Fail s)  _ _ = Fail s
     ifM (List []) _ e = e
     ifM _         t _ = t
@@ -128,7 +136,7 @@ instance MonadCond List List where
 
 -- ----------------------------------------
 
-substListM :: Monad m => List a -> (a -> m (List b)) -> m (List b)
+substListM :: Monad m => Seq a -> (a -> m (Seq b)) -> m (Seq b)
 substListM (List xs) k = do rs <- sequence . map k $ xs
                             return $ foldr mappend mempty rs
 substListM (Fail s)  _ = return (Fail s)

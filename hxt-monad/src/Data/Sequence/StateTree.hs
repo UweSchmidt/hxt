@@ -2,11 +2,11 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 
-module Data.List.StateTree
+module Data.Sequence.StateTree
 where
 
 import           Control.Monad.State.Strict
-import           Data.List.Tree
+import           Data.Sequence.Tree
 
 type StateTree s a = StateT s Tree a
 

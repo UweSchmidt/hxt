@@ -2,7 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 
-module Data.List.IOList
+module Data.Sequence.IOList
 where
 
 import           Control.Applicative
@@ -10,11 +10,11 @@ import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Error
 import           Control.Monad.MonadSequence
-import           Data.List.List
+import           Data.Sequence.List
 
 -- ----------------------------------------
 
-newtype IOList a = IOL {unIOL :: IO (List a)}
+newtype IOList a = IOL {unIOL :: IO (Seq a)}
 
 instance Functor IOList where
     fmap f (IOL a) = IOL $ a >>= return . fmap f
@@ -45,17 +45,6 @@ instance MonadPlus IOList where
     {-# INLINE mplus #-}
 
 
-instance MonadError [String] IOList where
-    throwError = IOL . return . throwError
-
-    catchError (IOL a) h = IOL $
-                           do t <- a
-                              case failS t of
-                                Left  s -> (unIOL . h) s
-                                Right _ -> return t
-
-    {-# INLINE throwError #-}
-
 instance MonadIO IOList where
     liftIO x = IOL $ x >>= return . return
 
@@ -68,7 +57,7 @@ instance MonadSequence IOList where
     {-# INLINE fromList #-}
     {-# INLINE toList   #-}
 
-instance MonadConv IOList List where
+instance MonadConv IOList Seq where
     convFrom   = IOL . return
     convTo (IOL a) = IOL $ a >>= return . return
 
@@ -76,7 +65,7 @@ instance MonadConv IOList List where
     {-# INLINE convTo   #-}
 
 
-instance MonadCond IOList List where
+instance MonadCond IOList Seq where
     ifM (IOL a) (IOL t) (IOL e)
         = IOL $ do x <- a
                    if nullS x

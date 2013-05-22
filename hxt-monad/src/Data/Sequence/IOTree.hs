@@ -2,7 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 
-module Data.List.IOTree
+module Data.Sequence.IOTree
 where
 
 import           Control.Applicative
@@ -10,7 +10,7 @@ import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Error
 import           Control.Monad.MonadSequence
-import           Data.List.Tree
+import           Data.Sequence.Tree
 
 -- ----------------------------------------
 

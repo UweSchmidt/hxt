@@ -25,29 +25,34 @@ import           Control.Monad.Error
 import           Control.Monad.MonadSequence
 import           Control.Monad.State.Strict
 -- import           Data.List                   (partition)
-import           Data.List.IOList
-import           Data.List.IOSequence
-import           Data.List.IOTree
-import           Data.List.List
-import           Data.List.StateSequence
-import           Data.List.Tree
+-- import           Data.Sequence.IOList        -- old stuff
+import           Data.Sequence.IOSequence
+import           Data.Sequence.IOTree
+import qualified Data.Sequence.List            as SL
+import qualified Data.Sequence.ListWithFailure as FL
+import           Data.Sequence.StateSequence
+import           Data.Sequence.Tree
 import           Data.Monoid
 
 -- ----------------------------------------
 
-type LA      a b = a -> List            b
-type SLA   s a b = a -> StateSequence List s b
-type IOLA    a b = a -> IOList          b
+type LA       a b = a ->               SL.Seq   b
+type SLA    s a b = a -> StateSequence SL.Seq s b
+type IOLA     a b = a -> IOSequence    SL.Seq   b
 
-type LA'     a b = a -> Tree            b
-type SLA'  s a b = a -> StateSequence Tree s b
-type IOLA'   a b = a -> IOTree          b
+type LA1      a b = a ->               FL.Seq   b
+type SLA1   s a b = a -> StateSequence FL.Seq s b
+type IOLA1    a b = a -> IOSequence    FL.Seq   b
+
+type LA2      a b = a -> Tree            b
+type SLA2   s a b = a -> StateSequence Tree s b
+type IOLA2    a b = a -> IOTree          b
 
 type StateIOTree s a = StateT s IOTree a
 
 type SIOLA s a b = a -> StateIOTree s b
 
-type IntSLA a b = SLA' Int a b
+type IntSLA a b = SLA2 Int a b
 
 mk2 :: a -> a -> Tree a
 mk2 x y = Bin (Tip x) (Tip y)
@@ -63,7 +68,10 @@ st1 = fromList >>> (this <+> arr (+10)) >>> arr (+1) >>> perform (changeState (+
 st1' :: SLA Int [Int] Int
 st1' = st1
 
-st1'' :: SLA' Int [Int] Int
+st1'' :: SLA2 Int [Int] Int
 st1'' = st1
+
+st11 :: SLA1 Int [Int] Int
+st11 = st1
 
 
