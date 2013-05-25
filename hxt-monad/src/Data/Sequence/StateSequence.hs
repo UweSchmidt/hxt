@@ -26,21 +26,6 @@ import           Control.Monad.State
 
 newtype StateSequence s st a = STS {unSTS :: st -> (s a, st)}
 
-runSLA :: (Sequence s) =>
-          (a -> StateSequence s st b) -> (st -> a -> (st, [b]))
-runSLA f = \ s0 x ->
-           let (xs, s1) = unSTS (f x) s0
-           in (s1, fromS xs)
-
-{-# INLINE runSLA #-}
-
-
-fromSLA :: (Sequence m, Sequence s) =>
-           st -> (a -> StateSequence s st b) -> (a -> m b)
-fromSLA s f =  fromList . (snd . (runSLA f s))
-
-{-# INLINE fromSLA #-}
-
 -- ----------------------------------------
 
 instance (Sequence s) => Functor (StateSequence s st) where
@@ -104,15 +89,21 @@ instance (Sequence s) => MonadState st (StateSequence s st) where
     {-# INLINE put #-}
 
 instance (Sequence s) => MonadSequence (StateSequence s st) where
-    fromList xs    = STS $ \ s0 -> (fromList xs, s0)
-    toList (STS a) = STS $ \ s0 -> let (xs, s1) = a s0 in (toList xs, s1)
+    fromList xs    = STS $ \ s0 ->
+                     (fromList xs, s0)
+
+    toList (STS a) = STS $ \ s0 ->
+                     let (xs, s1) = a s0 in
+                     (toList xs, s1)
 
     {-# INLINE fromList #-}
     {-# INLINE toList   #-}
 
 instance (Sequence s) => MonadConv (StateSequence s st) s where
     convFrom xs    = STS $ \ s0 -> (xs, s0)
-    convTo (STS a) = STS $ \ s0 -> let (xs, s1) = a s0 in (return xs, s1)
+    convTo (STS a) = STS $ \ s0 ->
+                     let (xs, s1) = a s0 in
+                     (return xs, s1)
 
     {-# INLINE convFrom #-}
     {-# INLINE convTo   #-}
@@ -120,16 +111,33 @@ instance (Sequence s) => MonadConv (StateSequence s st) s where
 instance (Sequence s) => MonadCond (StateSequence s st) s where
     ifM (STS a) (STS t) (STS e)
         = STS $ \ s0 ->
-                let (xs, s1) = a s0 in
-                if nullS xs
-                   then e s1
-                   else t s1
+          let (xs, s1) = a s0 in
+          if nullS xs
+             then e s1
+             else t s1
 
     orElseM (STS t) (STS e)
         = STS $ \ s0 ->
-                let (xs, s1) = t s0 in
-                if nullS xs
-                   then e s1
-                   else (xs, s1)
+          let res@(xs, s1) = t s0 in
+          if nullS xs
+             then e s1
+             else res
+
+-- ----------------------------------------
+
+runSLA :: (Sequence s) =>
+          (a -> StateSequence s st b) -> (st -> a -> (st, [b]))
+runSLA f = \ s0 x ->
+           let (xs, s1) = unSTS (f x) s0
+           in (s1, fromS xs)
+
+{-# INLINE runSLA #-}
+
+
+fromSLA :: (Sequence m, Sequence s) =>
+           st -> (a -> StateSequence s st b) -> (a -> m b)
+fromSLA s f =  fromList . (snd . (runSLA f s))
+
+{-# INLINE fromSLA #-}
 
 -- ----------------------------------------

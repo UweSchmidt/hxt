@@ -21,7 +21,6 @@ import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Error
 import           Control.Monad.MonadSequence
-import           Data.Sequence.List
 
 -- ----------------------------------------
 
@@ -57,7 +56,7 @@ instance (Sequence s) => MonadPlus (IOSequence s) where
 
 
 instance (Sequence s, ErrSeq e s, MonadError e s) => MonadError e (IOSequence s) where
-    throwError = IOS . return . throwError
+    throwError           = IOS . return . throwError
 
     catchError (IOS a) h = IOS $
                            do t <- a
@@ -89,26 +88,28 @@ instance (Sequence s) => MonadConv (IOSequence s) s where
 
 instance (Sequence s) => MonadCond (IOSequence s) s where
     ifM (IOS a) (IOS t) (IOS e)
-        = IOS $ do x <- a
-                   if nullS x
-                      then e
-                      else t
+        = IOS $
+          do x <- a
+             if nullS x
+                then e
+                else t
 
     orElseM (IOS t) (IOS e)
-        = IOS $ do x <- t
-                   if nullS x
-                      then e
-                      else return x
+        = IOS $
+          do x <- t
+             if nullS x
+                then e
+                else return x
 
     {-# INLINE ifM     #-}
     {-# INLINE orElseM #-}
 
 instance (Sequence s) => MonadTry (IOSequence s) where
     tryM (IOS a) = IOS $
-                   do x <- try' a
-                      return $ case x of
-                                 Left er -> return $ Left er
-                                 Right t -> fmap Right t
+                   do res <- try' a
+                      return $ case res of
+                                 Left  er -> return (Left  er)
+                                 Right xs -> fmap    Right xs
         where
           try' :: IO a -> IO (Either SomeException a)
           try' = try
