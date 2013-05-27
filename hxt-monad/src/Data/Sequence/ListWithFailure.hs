@@ -24,6 +24,8 @@ import           Control.Monad
 import           Control.Monad.Error
 import           Control.Monad.MonadSequence
 
+import           Data.Foldable               (Foldable)
+import qualified Data.Foldable               as F
 import           Data.Monoid
 
 -- ----------------------------------------
@@ -102,16 +104,6 @@ instance MonadError [String] Seq where
 
     {-# INLINE throwError #-}
 
-instance Monoid (Seq a) where
-    mempty  = List []
-    (List xs) `mappend` (List ys) = List $ xs ++ ys
-    (Fail xs) `mappend` (Fail ys) = Fail $ xs ++ ys
-    (Fail xs) `mappend` _         = Fail xs
-    _         `mappend` (Fail ys) = Fail ys
-
-    {-# INLINE mempty #-}
-    {-# INLINE mappend #-}
-
 instance MonadSequence Seq where
     fromList = List
     toList (List xs)   = return xs
@@ -138,6 +130,20 @@ instance MonadCond Seq Seq where
 
     {-# INLINE ifM     #-}
     {-# INLINE orElseM #-}
+
+instance Monoid (Seq a) where
+    mempty  = List []
+    (List xs) `mappend` (List ys) = List $ xs ++ ys
+    (Fail xs) `mappend` (Fail ys) = Fail $ xs ++ ys
+    (Fail xs) `mappend` _         = Fail xs
+    _         `mappend` (Fail ys) = Fail ys
+
+    {-# INLINE mempty #-}
+    {-# INLINE mappend #-}
+
+instance Foldable Seq where
+    foldr op z (List xs) = foldr op z xs
+    foldr _  z _         = z
 
 -- ----------------------------------------
 

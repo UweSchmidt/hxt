@@ -19,6 +19,8 @@ import           Control.DeepSeq
 import           Control.Monad
 import           Control.Monad.MonadSequence
 
+import           Data.Foldable               (Foldable)
+import qualified Data.Foldable               as F
 import           Data.Monoid
 
 -- ----------------------------------------
@@ -111,6 +113,9 @@ instance MonadCond Seq Seq where
 
     {-# INLINE ifM     #-}
     {-# INLINE orElseM #-}
+
+instance Foldable Seq where
+    foldr op z (List xs) = foldr op z xs
 
 -- ----------------------------------------
 

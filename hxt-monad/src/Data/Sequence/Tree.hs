@@ -39,6 +39,8 @@ import           Control.DeepSeq
 import           Control.Monad
 import           Control.Monad.MonadSequence
 
+import           Data.Foldable               (Foldable)
+import qualified Data.Foldable               as F
 import           Data.Monoid
 
 import           Prelude                     hiding (drop, head, init, last,
@@ -138,6 +140,11 @@ instance Sequence Tree where
     {-# INLINE toS     #-}
     {-# INLINE fromS   #-}
     {-# INLINE substS   #-}
+
+instance Foldable Tree where
+    foldr op z (Tip x)   = x `op` z
+    foldr op z (Bin l r) = F.foldr op (F.foldr op z r) l
+    foldr _  z Empty     = z
 
 instance ErrSeq (Tree String) Tree where
     failS t        = Right t

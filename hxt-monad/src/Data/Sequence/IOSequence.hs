@@ -54,6 +54,8 @@ instance (Sequence s) => MonadPlus (IOSequence s) where
     {-# INLINE mzero #-}
     {-# INLINE mplus #-}
 
+-- MonadPlus laws violated !!!
+-- (IOS $ print 42) >> mzero /= mzero
 
 instance (Sequence s, ErrSeq e s, MonadError e s) => MonadError e (IOSequence s) where
     throwError           = IOS . return . throwError

@@ -50,6 +50,9 @@ class MonadIO m => MonadTry m where
 -- ----------------------------------------
 
 -- | Common features of a sequence datatype
+--
+-- The long list of constraints bundles the necessary list of constraints
+-- in function signatures into the only constraint @(Sequence s) => ...@
 
 class (Functor s, Applicative s, Monad s, MonadPlus s, MonadSequence s) => Sequence s where
     emptyS  :: s a
