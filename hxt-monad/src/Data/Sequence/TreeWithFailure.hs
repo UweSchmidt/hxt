@@ -12,30 +12,39 @@
 
 module Data.Sequence.TreeWithFailure
     ( Tree
+
+    , foldTree
     , fromListTree
     , fromListTree'
-    , toListTree
-    , dropTree
-    , foldTree
-    , headTree
-    , initTree
-    , lastTree
-    , reverseTree
     , sequenceTree
-    , sizeTree
+    , toListTree
     , substTree
     , substTreeM
-    , tailTree
-    , takeTree
     , zipTree
+
+    , drop	-- list like functions, import qualified
+    , head
+    , init
+    , last
+    , length
+    , reverse
+    , splitAt
+    , tail
+    , take
     )
 where
 
 import           Control.Applicative
+import           Control.DeepSeq
 import           Control.Monad
 import           Control.Monad.Error
 import           Control.Monad.MonadSequence
+
 import           Data.Monoid
+
+import           Prelude                     hiding (drop, head, init, last,
+                                              length, reverse, splitAt, tail,
+                                              take)
 
 -- ----------------------------------------
 
@@ -47,6 +56,12 @@ data Tree a
       deriving (Eq, Show)
 
 -- ----------------------------------------
+
+instance NFData a => NFData (Tree a) where
+    rnf (Tip x)   = rnf x
+    rnf (Bin l r) = rnf l `seq` rnf r
+    rnf Empty     = ()
+    rnf (Fail e)  = rnf e
 
 instance Functor Tree where
     fmap f (Tip x)   = Tip (f x)
@@ -238,55 +253,55 @@ toListTree t = t2l t []
 
 -- ----------------------------------------
 
-sizeTree :: Tree a -> Int
-sizeTree = foldTree (const 0) 0 (const 1) (+)
+length :: Tree a -> Int
+length = foldTree (const 0) 0 (const 1) (+)
 
-headTree :: Tree a -> a
-headTree t = case l of
+head :: Tree a -> a
+head t = case l of
             Tip x -> x
-            _     ->  error "Tree.headTree: empty tree"
+            _     ->  error "Tree.head: empty tree"
     where
       l = fst . uncons' $ t
 
-lastTree :: Tree a -> a
-lastTree t = case l of
+last :: Tree a -> a
+last t = case l of
             Tip x -> x
-            _     -> error "Tree.lastTree: empty tree"
+            _     -> error "Tree.last: empty tree"
     where
-      l = fst . uncons' . reverseTree $ t
+      l = fst . uncons' . reverse $ t
 
-tailTree :: Tree a -> Tree a
-tailTree t = case r of
-            Empty -> fail "Tree.tailTree: empty tree"
+tail :: Tree a -> Tree a
+tail t = case r of
+            Empty -> fail "Tree.tail: empty tree"
             _     -> r
     where
       r = snd . uncons' $ t
 
-initTree :: Tree a -> Tree a
-initTree t = case r of
-            Empty -> fail "Tree.initTree: empty tree"
-            _     -> reverseTree r
+init :: Tree a -> Tree a
+init t = case r of
+            Empty -> fail "Tree.init: empty tree"
+            _     -> reverse r
     where
-      r = snd . uncons' . reverseTree $ t
+      r = snd . uncons' . reverse $ t
 
-reverseTree :: Tree a -> Tree a
-reverseTree (Bin l r) = Bin (reverseTree r) (reverseTree l)
-reverseTree t         = t
+reverse :: Tree a -> Tree a
+reverse (Bin l r) = Bin (reverse r) (reverse l)
+reverse t         = t
 
-takeTree :: Int -> Tree a -> Tree a
-takeTree n = fst . splitTree n
+take :: Int -> Tree a -> Tree a
+take n = fst . splitAt n
 
-dropTree :: Int -> Tree a -> Tree a
-dropTree n = snd . splitTree n
+drop :: Int -> Tree a -> Tree a
+drop n = snd . splitAt n
 
-splitTree :: Int -> Tree a -> (Tree a, Tree a)
-splitTree n t = (l, r)
+splitAt :: Int -> Tree a -> (Tree a, Tree a)
+splitAt n t = (l, r)
     where
       (_, l, r) = split' n t
 
-{-# INLINE takeTree #-}
-{-# INLINE dropTree #-}
-{-# INLINE splitTree #-}
+{-# INLINE take #-}
+{-# INLINE drop #-}
+{-# INLINE splitAt #-}
 
 -- ----------------------------------------
 

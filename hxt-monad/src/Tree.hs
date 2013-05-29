@@ -20,12 +20,12 @@ import           Control.Monad.ArrowExc
 import           Control.Monad.ArrowIf
 import           Control.Monad.ArrowIO
 import           Control.Monad.ArrowList
+import           Control.Monad.ArrowNF
 import           Control.Monad.ArrowState
 import           Control.Monad.Error
 import           Control.Monad.MonadSequence
 import           Control.Monad.State.Strict
--- import           Data.List                   (partition)
--- import           Data.Sequence.IOList        -- old stuff
+
 import           Data.Monoid
 
 import           Data.Sequence.IOSequence

@@ -35,6 +35,7 @@ module Data.Sequence.Tree
 where
 
 import           Control.Applicative
+import           Control.DeepSeq
 import           Control.Monad
 import           Control.Monad.MonadSequence
 
@@ -53,6 +54,11 @@ data Tree a
       deriving (Eq, Show)
 
 -- ----------------------------------------
+
+instance NFData a => NFData (Tree a) where
+    rnf (Tip x)   = rnf x
+    rnf (Bin l r) = rnf l `seq` rnf r
+    rnf Empty     = ()
 
 instance Functor Tree where
     fmap f (Tip x)   = Tip (f x)

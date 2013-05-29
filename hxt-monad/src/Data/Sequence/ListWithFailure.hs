@@ -19,6 +19,7 @@ module Data.Sequence.ListWithFailure
 where
 
 import           Control.Applicative
+import           Control.DeepSeq
 import           Control.Monad
 import           Control.Monad.Error
 import           Control.Monad.MonadSequence
@@ -57,6 +58,10 @@ instance ErrSeq [String] Seq where
     failS s         = Right s
 
 -- ----------------------------------------
+
+instance NFData a => NFData (Seq a) where
+    rnf (List x) = rnf x
+    rnf (Fail e) = rnf e
 
 instance Functor Seq where
     fmap f (List xs) = List $ map f xs
