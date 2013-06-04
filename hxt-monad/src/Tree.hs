@@ -3,30 +3,22 @@
 {-# LANGUAGE TypeSynonymInstances  #-}
 
 module Tree
-{- just for testing
-    ( Tree
-    , isNull
-    , isFail
-    , fromList
-    , toList
-    )
--- -}
 where
 
-import           Control.Applicative
-import           Control.Monad
+import           Control.Applicative           ()
+import           Control.Monad                 ()
 import           Control.Monad.Arrow
-import           Control.Monad.ArrowExc
-import           Control.Monad.ArrowIf
-import           Control.Monad.ArrowIO
+import           Control.Monad.ArrowExc        ()
+import           Control.Monad.ArrowIf         ()
+import           Control.Monad.ArrowIO         ()
 import           Control.Monad.ArrowList
-import           Control.Monad.ArrowNF
+import           Control.Monad.ArrowNF         ()
 import           Control.Monad.ArrowState
-import           Control.Monad.Error
+import           Control.Monad.ArrowTree       ()
+import           Control.Monad.Error           ()
 import           Control.Monad.MonadSequence
-import           Control.Monad.State.Strict
-
-import           Data.Monoid
+import           Control.Monad.State           ()
+import           Data.Monoid                   ()
 
 import           Data.Sequence.IOSequence
 import           Data.Sequence.IOStateSequence
@@ -35,6 +27,9 @@ import qualified Data.Sequence.ListWithFailure as FL
 import           Data.Sequence.StateSequence
 import qualified Data.Sequence.Tree            as ST
 import qualified Data.Sequence.TreeWithFailure as FT
+
+import           Text.XML.HXT.Monad.ArrowXml   ()
+
 
 -- ----------------------------------------
 
@@ -67,7 +62,7 @@ type IntSLA a b = SLA2 Int a b
 mk2 :: Sequence s => a -> a -> s a
 mk2 x y = fromList [x, y]
 
-tt1,tt7,tt8 :: MonadSequence s => s Integer
+tt1,tt7,tt8 :: MonadSeq s => s Integer
 tt1 = fromList [1]
 tt7 = fromList [1..7]
 tt8 = fromList [1..8]

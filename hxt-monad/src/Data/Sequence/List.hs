@@ -11,7 +11,9 @@
 -- ----------------------------------------
 
 module Data.Sequence.List
-    ( Seq )
+    ( Seq
+    , unList
+    )
 where
 
 import           Control.Applicative
@@ -90,7 +92,7 @@ instance Monoid (Seq a) where
     {-# INLINE mempty #-}
     {-# INLINE mappend #-}
 
-instance MonadSequence Seq where
+instance MonadSeq Seq where
     fromList = List
     toList (List xs)   = return xs
 

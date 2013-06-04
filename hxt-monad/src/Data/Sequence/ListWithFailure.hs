@@ -40,8 +40,8 @@ data Seq a
 instance Sequence Seq where
     emptyS                  = List []
     consS x xs              = List (x : unList xs)
-    unconsS (List [])       = Nothing
     unconsS (List (x : xs)) = Just (x, List xs)
+    unconsS _               = Nothing
     nullS                   = null . unList
     toS                     = List
     fromS                   = unList
@@ -104,7 +104,7 @@ instance MonadError [String] Seq where
 
     {-# INLINE throwError #-}
 
-instance MonadSequence Seq where
+instance MonadSeq Seq where
     fromList = List
     toList (List xs)   = return xs
     toList (Fail _)    = return []

@@ -102,7 +102,7 @@ instance (Sequence s) => MonadIO (IOStateSequence s st) where
 
     {-# INLINE liftIO #-}
 
-instance (Sequence s) => MonadSequence (IOStateSequence s st) where
+instance (Sequence s) => MonadSeq (IOStateSequence s st) where
     fromList xs    = ISS $ \ s0 ->
                      return (fromList xs, s0)
 
@@ -150,36 +150,5 @@ instance (Sequence s) => MonadTry (IOStateSequence s st) where
         where
           try' :: IO a -> IO (Either SomeException a)
           try' = try
-
--- ----------------------------------------
-
-runSt :: (Sequence s) =>
-         st2 -> (a -> IOStateSequence s (st, st2) b) -> (a -> IOStateSequence s st b)
-runSt s2 a
-    = \ x -> ISS $ \ s1 ->
-             do (ys, (s1', _s2')) <- unISS (a x) (s1, s2)
-                return (ys, s1')
-
-{-# INLINE runSt #-}
-
-
-liftSt :: (Sequence s) =>
-          (a -> IOStateSequence s st b) -> (a -> IOStateSequence s (st, st2) b)
-liftSt a
-    = \ x -> ISS $ \ (s1, s2) ->
-             do (ys, s1') <- unISS(a x) s1
-                return (ys, (s1', s2))
-
-{-# INLINE liftSt #-}
-
-
-runIOSLA :: (Sequence s) =>
-            (a -> IOStateSequence s st b) -> (st -> a -> IO (st, [b]))
-runIOSLA a
-    = \ s0 x ->
-      do (xs, s1) <- unISS (a x) s0
-         return (s1, fromS xs)
-
-{-# INLINE runIOSLA #-}
 
 -- ----------------------------------------

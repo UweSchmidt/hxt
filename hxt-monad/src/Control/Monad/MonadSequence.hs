@@ -10,11 +10,15 @@
 -- ----------------------------------------
 
 module Control.Monad.MonadSequence
+    ( module Control.Monad.MonadSequence
+    , module Control.Monad
+    , module Control.Applicative
+    )
 where
 
 import           Control.Applicative
 import           Control.Exception   (SomeException)
-import           Control.Monad
+import           Control.Monad       hiding (when)
 import           Control.Monad.Error
 
 import           Data.Maybe
@@ -25,7 +29,7 @@ import           Data.Maybe
 --
 -- Law: @toList . fromList = id@
 
-class Monad m => MonadSequence m where
+class Monad m => MonadSeq m where
     fromList :: [a] -> m a
     toList   :: m a -> m [a]
 
@@ -39,13 +43,20 @@ class (Monad m, Sequence c) => MonadConv m c | m -> c where
 -- | Monadic branching
 
 class (MonadPlus m, MonadConv m c) => MonadCond m c | m -> c where
-    ifM      :: m (c a) -> m b -> m b -> m b
+    ifM      :: m a -> m b -> m b -> m b
     orElseM  :: m a -> m a -> m a
 
 -- | catch exceptions from the IO monad
 
 class MonadIO m => MonadTry m where
     tryM :: m c -> m (Either SomeException c)
+
+-- | Common features of monadic computations with sequences of values.
+--
+-- The constaint list bundles the necessary features to simplify constraints
+-- in function signatures
+
+class (MonadSeq m, MonadConv m c, MonadCond m c, Sequence c) => MonadSequence m c | m -> c where
 
 -- ----------------------------------------
 
@@ -54,7 +65,7 @@ class MonadIO m => MonadTry m where
 -- The long list of constraints bundles the necessary list of constraints
 -- in function signatures into the only constraint @(Sequence s) => ...@
 
-class (Functor s, Applicative s, Monad s, MonadPlus s, MonadSequence s) => Sequence s where
+class (Functor s, Applicative s, Monad s, MonadPlus s, MonadSeq s) => Sequence s where
     emptyS  :: s a
     consS   :: a -> s a -> s a
     unconsS :: s a -> Maybe (a, s a)
@@ -106,7 +117,7 @@ instance Sequence [] where
     {-# INLINE toS     #-}
     {-# INLINE fromS   #-}
 
-instance MonadSequence [] where
+instance MonadSeq [] where
     fromList = id
     toList   = return
 

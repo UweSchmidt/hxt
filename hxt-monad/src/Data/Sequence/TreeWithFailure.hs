@@ -14,6 +14,7 @@ module Data.Sequence.TreeWithFailure
     ( Tree
 
     , foldTree
+    , foldTreeR
     , fromListTree
     , fromListTree'
     , sequenceTree
@@ -41,7 +42,7 @@ import           Control.Monad.Error
 import           Control.Monad.MonadSequence
 
 import           Data.Foldable               (Foldable)
-import qualified Data.Foldable               as F
+import qualified Data.Foldable
 import           Data.Monoid
 
 import           Prelude                     hiding (drop, head, init, last,
@@ -109,7 +110,7 @@ instance Monoid (Tree a) where
     {-# INLINE mempty #-}
     {-# INLINE mappend #-}
 
-instance MonadSequence Tree where
+instance MonadSeq Tree where
     fromList = toS
     toList   = return . fromS
 
@@ -156,9 +157,8 @@ instance Sequence Tree where
     {-# INLINE substS   #-}
 
 instance Foldable Tree where
-    foldr op z (Tip x)   = x `op` z
-    foldr op z (Bin l r) = F.foldr op (F.foldr op z r) l
-    foldr _  z _         = z
+    foldr = foldTreeR
+    {-# INLINE foldr   #-}
 
 instance ErrSeq (Tree String) Tree where
     failS (Fail s) = Left  s
@@ -193,6 +193,11 @@ bin    (Fail x)    (Fail y) = Fail $ bin x y
 bin t1@(Fail _) _           = t1
 bin _           t2@(Fail _) = t2
 bin t1          t2          = Bin t1 t2
+
+foldTreeR :: (a -> b -> b) -> b -> Tree a -> b
+foldTreeR op z (Tip x)   = x `op` z
+foldTreeR op z (Bin l r) = foldTreeR op (foldTreeR op z r) l
+foldTreeR _  z _         = z
 
 foldTree :: (Tree String -> b) -> b -> (a -> b) -> (b -> b -> b) -> (Tree a -> b)
 foldTree ff e tf bf t = fold' t
@@ -323,6 +328,23 @@ uncons' (Bin l r) = (t, l' <> r)
                        (t, l') = uncons' l
 uncons' t         = (t, t)
 
+{- not yet used
+
+-- | The dual to uncons', result is a pair
+-- with 1. component : all elements but the last
+-- and 2. component: the last or Empty in case of an empty tree
+
+unsnoc' :: Tree a -> (Tree a, Tree a)
+unsnoc' t@(Tip _) = (Empty, t)
+unsnoc' (Bin l r) = (l <> r', t)
+                     where
+                       (r', t) = unsnoc' r
+unsnoc' t         = (t, t)
+-- -}
+
+-- | split a tree into two, such that the left tree contains n
+-- elements or less, and the right tree contains the remaining elements.
+-- The first component contains the real number of elements in the first tree
 
 split' :: Int -> Tree a -> (Int, Tree a, Tree a)
 split' n t

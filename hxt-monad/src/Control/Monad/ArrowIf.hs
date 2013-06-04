@@ -71,7 +71,7 @@ withDefault a d = a `orElse` constA d
 tagA :: MonadCond m s => (b -> m c) -> (b -> m (Either b b))
 tagA p = ifA p (arr Left) (arr Right)
 
-spanA :: (MonadSequence m, MonadCond m s) => (b -> m b) -> ([b] -> m ([b],[b]))
+spanA :: (MonadSequence m s) => (b -> m b) -> ([b] -> m ([b],[b]))
 spanA p = ifA ( arrL (take 1) >>> p )
               ( arr head &&& (arr tail >>> spanA p)
                 >>>
@@ -79,7 +79,7 @@ spanA p = ifA ( arrL (take 1) >>> p )
               )
               ( arr (\ l -> ([],l)) )
 
-partitionA :: (MonadSequence m, MonadCond m s) => (b -> m b) -> ([b] -> m ([b],[b]))
+partitionA :: (MonadSequence m s) => (b -> m b) -> ([b] -> m ([b],[b]))
 partitionA  p = listA ( arrL id >>> tagA p )
                 >>^
                 ( (\ ~(l1, l2) -> (unTag l1, unTag l2) ) . partition (isLeft) )

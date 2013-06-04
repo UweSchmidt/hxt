@@ -73,7 +73,7 @@ instance (Sequence s) => MonadIO (IOSequence s) where
 
     {-# INLINE liftIO #-}
 
-instance (Sequence s) => MonadSequence (IOSequence s) where
+instance (Sequence s) => MonadSeq (IOSequence s) where
     fromList       = IOS . return . fromList
     toList (IOS a) = IOS $ a >>= return . toList
 

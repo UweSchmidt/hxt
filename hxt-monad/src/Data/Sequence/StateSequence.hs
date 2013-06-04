@@ -88,7 +88,7 @@ instance (Sequence s) => MonadState st (StateSequence s st) where
     {-# INLINE get #-}
     {-# INLINE put #-}
 
-instance (Sequence s) => MonadSequence (StateSequence s st) where
+instance (Sequence s) => MonadSeq (StateSequence s st) where
     fromList xs    = STS $ \ s0 ->
                      (fromList xs, s0)
 
@@ -122,22 +122,5 @@ instance (Sequence s) => MonadCond (StateSequence s st) s where
           if nullS xs
              then e s1
              else res
-
--- ----------------------------------------
-
-runSLA :: (Sequence s) =>
-          (a -> StateSequence s st b) -> (st -> a -> (st, [b]))
-runSLA f = \ s0 x ->
-           let (xs, s1) = unSTS (f x) s0
-           in (s1, fromS xs)
-
-{-# INLINE runSLA #-}
-
-
-fromSLA :: (Sequence m, Sequence s) =>
-           st -> (a -> StateSequence s st b) -> (a -> m b)
-fromSLA s f =  fromList . (snd . (runSLA f s))
-
-{-# INLINE fromSLA #-}
 
 -- ----------------------------------------
