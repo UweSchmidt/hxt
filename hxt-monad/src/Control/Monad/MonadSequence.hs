@@ -1,5 +1,6 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE FlexibleInstances      #-}
 
 -- ----------------------------------------
 {- |
@@ -21,6 +22,7 @@ import           Control.Exception   (SomeException)
 import           Control.Monad       hiding (when)
 import           Control.Monad.Error
 
+import           Data.Foldable               (Foldable)
 import           Data.Maybe
 
 -- ----------------------------------------
@@ -36,27 +38,56 @@ class Monad m => MonadSeq m where
 -- | constructing monadic actions from sequences
 -- and extracting sequences out of monadic actions
 
-class (Monad m, Sequence c) => MonadConv m c | m -> c where
-    convFrom :: c a -> m a
-    convTo   :: m a -> m (c a)
+class (Monad m, Sequence s) => MonadConv m s | m -> s where
+    convFrom :: s a -> m a
+    convTo   :: m a -> m (s a)
 
 -- | Monadic branching
 
-class (MonadPlus m, MonadConv m c) => MonadCond m c | m -> c where
+class (MonadPlus m, MonadConv m s) => MonadCond m s | m -> s where
     ifM      :: m a -> m b -> m b -> m b
     orElseM  :: m a -> m a -> m a
 
 -- | catch exceptions from the IO monad
 
 class MonadIO m => MonadTry m where
-    tryM :: m c -> m (Either SomeException c)
+    tryM :: m s -> m (Either SomeException s)
 
 -- | Common features of monadic computations with sequences of values.
 --
 -- The constaint list bundles the necessary features to simplify constraints
 -- in function signatures
 
-class (MonadSeq m, MonadConv m c, MonadCond m c, Sequence c) => MonadSequence m c | m -> c where
+class (MonadSeq m, MonadConv m s, MonadCond m s, Sequence s) => MonadSequence m s | m -> s where
+
+infixl 1 >>=*
+infixr 1 >=>*
+
+class (Monad m, Sequence s) => MonadList s m | m -> s where
+    returnS :: s a -> m a
+    (>>=*)  :: m a -> (s a -> m b) -> m b
+
+instance (Sequence s) => MonadList s s where
+    returnS = id
+    x >>=* f = f x
+
+(>=>*) :: (MonadList s m) => (a -> m b) -> (s b -> m c) -> (a -> m c)
+f >=>* g = \ x -> f x >>=* g
+
+orElseS :: (MonadList s m) => (a -> m b) -> (a -> m b) -> (a -> m b)
+f `orElseS` g = \ x -> f x >>=* (\ s -> if nullS s then g x else returnS s)
+
+ifS :: (MonadList s m) => (a -> m b) -> (a -> m c) -> (a -> m c) -> (a -> m c)
+ifS c t e = \ x -> c x >>=* (\ s -> if nullS s then t x else e x)
+
+convFromS :: (MonadList s m) => s a -> m a
+convFromS = returnS
+
+fromListS :: (MonadList s m) => [a] -> m a
+fromListS = returnS . toS
+
+toListS :: (MonadList s m) => m a -> m [a]
+toListS m = m >>=* return . fromS
 
 -- ----------------------------------------
 
@@ -65,7 +96,7 @@ class (MonadSeq m, MonadConv m c, MonadCond m c, Sequence c) => MonadSequence m 
 -- The long list of constraints bundles the necessary list of constraints
 -- in function signatures into the only constraint @(Sequence s) => ...@
 
-class (Functor s, Applicative s, Monad s, MonadPlus s, MonadSeq s) => Sequence s where
+class (Functor s, Applicative s, Foldable s, Monad s, MonadPlus s, MonadSeq s) => Sequence s where
     emptyS  :: s a
     consS   :: a -> s a -> s a
     unconsS :: s a -> Maybe (a, s a)

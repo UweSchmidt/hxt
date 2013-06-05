@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
+{-# LANGUAGE UndecidableInstances  #-}
 
 -- ----------------------------------------
 {- |
@@ -51,7 +52,7 @@ instance Sequence Seq where
     {-# INLINE fromS   #-}
     {-# INLINE substS  #-}
 
-instance ErrSeq [String] Seq where
+instance ErrSeq e Seq where
     failS s         = Right s
 
 -- ----------------------------------------
