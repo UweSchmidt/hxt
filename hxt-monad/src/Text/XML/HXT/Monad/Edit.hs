@@ -74,7 +74,9 @@ import           Text.XML.HXT.DOM.FormatXmlTree    (formatXmlTree)
 import           Text.XML.HXT.DOM.Interface
 import qualified Text.XML.HXT.DOM.ShowXml          as XS
 import qualified Text.XML.HXT.DOM.XmlNode          as XN
+
 import           Text.XML.HXT.Monad.ArrowXml
+
 import           Text.XML.HXT.Parser.HtmlParsec    (emptyHtmlTags)
 import           Text.XML.HXT.Parser.XhtmlEntities (xhtmlEntities)
 import           Text.XML.HXT.Parser.XmlEntities   (xmlEntities)
@@ -245,7 +247,7 @@ collapseAllXText        = fromLA $ processBottomUp collapseXText'
 --
 -- > xshowEscapeXml f >=> xread == f
 
-xshowEscapeXml :: MonadSeq m => (b -> m XmlTree) -> (b -> m String)
+xshowEscapeXml :: MonadList s m => (b -> m XmlTree) -> (b -> m String)
 xshowEscapeXml f        = f >. (uncurry XS.xshow'' escapeXmlRefs)
 
 -- ------------------------------------------------------------
@@ -333,7 +335,7 @@ lookupRef c             = fromMaybe ('#' : show (fromEnum c))
 
 -- ------------------------------------------------------------
 
-preventEmptyElements    :: (MonadSequence m Seq) => [String] -> Bool -> XmlTree -> m XmlTree
+preventEmptyElements    :: (MonadList Seq m) => [String] -> Bool -> XmlTree -> m XmlTree
 preventEmptyElements ns isHtml
     = fromLA $
       editNTreeA [ ( isElem
@@ -729,7 +731,7 @@ addXmlPi
 
 -- | add an encoding spec to the \<?xml version=\"1.0\"?\> processing instruction
 
-addXmlPiEncoding :: MonadSequence m Seq => String -> XmlTree -> m XmlTree
+addXmlPiEncoding :: MonadList Seq m => String -> XmlTree -> m XmlTree
 addXmlPiEncoding enc
     = fromLA $
       processChildren ( addAttr a_encoding enc
@@ -763,7 +765,7 @@ addXHtmlDoctypeFrameset
 -- The arguments are the root element name, the PUBLIC id and the SYSTEM id
 
 -- addDoctypeDecl  :: String -> String -> String -> SeqA m XmlTree XmlTree
-addDoctypeDecl :: MonadSequence m Seq => String -> String -> String -> XmlTree -> m XmlTree
+addDoctypeDecl :: MonadList Seq m => String -> String -> String -> XmlTree -> m XmlTree
 addDoctypeDecl rootElem public system
     = fromLA $
       replaceChildren

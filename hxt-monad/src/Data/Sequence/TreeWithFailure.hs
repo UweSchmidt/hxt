@@ -110,6 +110,14 @@ instance Monoid (Tree a) where
     {-# INLINE mempty #-}
     {-# INLINE mappend #-}
 
+instance MonadList Tree Tree where
+    returnS = id
+    xs >>=* f = f xs
+
+    {-# INLINE returnS #-}
+    {-# INLINE (>>=*) #-}
+
+{- old stuff
 instance MonadSeq Tree where
     fromList = toS
     toList   = return . fromS
@@ -132,6 +140,7 @@ instance MonadCond Tree Tree where
     orElseM (Fail s) _ = Fail s
     orElseM Empty    e = e
     orElseM t        _ = t
+-- -}
 
 instance Sequence Tree where
     emptyS          = Empty

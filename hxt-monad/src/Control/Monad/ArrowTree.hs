@@ -58,19 +58,19 @@ mkTree n = constA . T.mkTree n
 
     -- | select the children of the root of a tree
 
-getChildren         :: (Tree t, MonadSeq m) => (t b) -> m (t b)
+getChildren         :: (Tree t, MonadList s m) => (t b) -> m (t b)
 getChildren         = arrL T.getChildren
 {-# INLINE getChildren #-}
 
 -- | select the node info of the root of a tree
 
-getNode             :: (Tree t, MonadSeq m) => t b -> m b
+getNode             :: (Tree t, MonadList s m) => t b -> m b
 getNode             = arr T.getNode
 {-# INLINE getNode #-}
 
 -- | select the attribute of the root of a tree
 
-hasNode :: (Tree t, MonadSequence m s) => (b -> Bool) -> t b -> m (t b)
+hasNode :: (Tree t, MonadList s m) => (b -> Bool) -> t b -> m (t b)
 hasNode p = (getNode >>> isA p) `guards` this
 {-# INLINE hasNode #-}
 
@@ -106,7 +106,7 @@ changeNode nf = arr (T.changeNode nf)
 --
 -- example: @ processChildren (none \`when\` isCmt) @ removes all children, for which isCmt holds
 
-processChildren :: (Tree t, MonadSeq m) => (t b -> m (t b)) -> (t b -> m (t b))
+processChildren :: (Tree t, MonadList s m) => (t b -> m (t b)) -> (t b -> m (t b))
 processChildren f
     = arr T.getNode
       &&&
@@ -120,7 +120,7 @@ processChildren f
 -- example: @ replaceChildren (deep isText) @ selects all subtrees for which isText holds
 -- and substitutes the children component of the root node with this list
 
-replaceChildren :: (Tree t, MonadSeq m) => (t b -> m (t b)) -> (t b -> m (t b))
+replaceChildren :: (Tree t, MonadList s m) => (t b -> m (t b)) -> (t b -> m (t b))
 replaceChildren f
     = arr T.getNode
       &&&
@@ -139,7 +139,7 @@ replaceChildren f
 -- all \"h1\" elements in the \"body\" element of an \"html\" element, an expression, that
 -- corresponds 1-1 to the XPath selection path \"html\/body\/h1\"
 
-(/>) :: (Tree t, MonadSeq m) => (b -> m (t c)) -> (t c -> m d) -> (b -> m d)
+(/>) :: (Tree t, MonadList s m) => (b -> m (t c)) -> (t c -> m d) -> (b -> m d)
 f /> g = f >>> getChildren >>> g
 {-# INLINE (/>) #-}
 
@@ -156,7 +156,7 @@ f /> g = f >>> getChildren >>> g
 -- to the XPath selection path \"html\/\/table\". The latter on matches all table elements
 -- even nested ones, but @\/\/>@ gives in many cases the appropriate functionality.
 
-(//>) :: (Tree t, MonadSequence m s) => (b -> m (t c)) -> ((t c) -> m d) -> (b -> m d)
+(//>) :: (Tree t, MonadList s m) => (b -> m (t c)) -> ((t c) -> m d) -> (b -> m d)
 f //> g = f >>> getChildren >>> deep g
 {-# INLINE (//>) #-}
 
@@ -165,7 +165,8 @@ f //> g = f >>> getChildren >>> deep g
 --
 -- defined as @ f \<\/ g = f \`containing\` (getChildren >>> g) @
 
-(</) :: (Tree t, MonadSequence m s) => (t b -> m (t b)) -> (t b -> m (t b)) -> (t b -> m (t b))
+(</) :: (Tree t, MonadList s m) =>
+        (t b -> m (t b)) -> (t b -> m (t b)) -> (t b -> m (t b))
 
 f </ g =
     f `containing` (getChildren >>> g)
@@ -180,7 +181,7 @@ f </ g =
 -- example: @ deep isHtmlTable @ selects all top level table elements in a document
 -- (with an appropriate definition for isHtmlTable) but no tables occuring within a table cell.
 
-deep :: (Tree t, MonadSequence m s) => (t b -> m c) -> (t b -> m c)
+deep :: (Tree t, MonadList s m) => (t b -> m c) -> (t b -> m c)
 deep f
     = f                                     -- success when applying f
       `orElse`
@@ -193,7 +194,7 @@ deep f
 -- example: @ deepest isHtmlTable @ selects all innermost table elements in a document
 -- but no table elements containing tables. See 'deep' and 'multi' for other search strategies.
 
-deepest :: (Tree t, MonadSequence m s) => (t b -> m c) -> (t b -> m c)
+deepest :: (Tree t, MonadList s m) => (t b -> m c) -> (t b -> m c)
 deepest f
     = (getChildren >>> deepest f)           -- seach children
       `orElse`
@@ -206,7 +207,7 @@ deepest f
 --
 -- example: @ multi isHtmlTable @ selects all table elements, even nested ones.
 
-multi :: (Tree t, MonadSequence m s) => (t b -> m c) -> (t b -> m c)
+multi :: (Tree t, MonadList s m) => (t b -> m c) -> (t b -> m c)
 multi f
     = f                                     -- combine result for root
       <+>
@@ -219,7 +220,7 @@ multi f
 -- in a HTML document, even nested ones
 -- (with an appropriate definition of isHtmlFont)
 
-processBottomUp :: (Tree t, MonadSeq m) => (t b -> m (t b)) -> (t b -> m (t b))
+processBottomUp :: (Tree t, MonadList s m) => (t b -> m (t b)) -> (t b -> m (t b))
 processBottomUp f
     = processChildren (processBottomUp f)   -- process all descendants first
       >>>
@@ -232,7 +233,7 @@ processBottomUp f
 -- In many cases 'processBottomUp' and 'processTopDown'
 -- give same results.
 
-processTopDown :: (Tree t, MonadSeq m) => (t b -> m (t b)) -> (t b -> m (t b))
+processTopDown :: (Tree t, MonadList s m) => (t b -> m (t b)) -> (t b -> m (t b))
 processTopDown f
     = f                                     -- first process root
       >>>
@@ -243,7 +244,7 @@ processTopDown f
 -- but transformation stops when a predicte does not hold for a subtree,
 -- leaves are transformed first
 
-processBottomUpWhenNot :: (Tree t, MonadSequence m s) =>
+processBottomUpWhenNot :: (Tree t, MonadList s m) =>
                           (t b -> m (t b)) -> (t b -> m (t b)) -> (t b -> m (t b))
 processBottomUpWhenNot f p
     = ( processChildren (processBottomUpWhenNot f p)
@@ -258,7 +259,7 @@ processBottomUpWhenNot f p
 -- example: @ processTopDownUntil (isHtmlTable \`guards\` tranformTable) @
 -- transforms all top level table elements into something else, but inner tables remain unchanged
 
-processTopDownUntil :: (Tree t, MonadSequence m s) =>
+processTopDownUntil :: (Tree t, MonadList s m) =>
                        (t b -> m (t b)) -> (t b -> m (t b))
 processTopDownUntil f
     = f
@@ -272,7 +273,7 @@ processTopDownUntil f
 -- example: @ insertChildrenAt 0 (deep isCmt) @ selects all subtrees for which isCmt holds
 -- and copies theses in front of the existing children
 
-insertChildrenAt :: (Tree t, MonadSequence m s) =>
+insertChildrenAt :: (Tree t, MonadList s m) =>
                     Int -> (t b -> m (t b)) -> (t b -> m (t b))
 insertChildrenAt i f
     = listA f &&& this >>> arr2 insertAt
@@ -284,7 +285,7 @@ insertChildrenAt i f
 
 -- | similar to 'insertChildrenAt', but the insertion position is searched with a predicate
 
-insertChildrenAfter :: (Tree t, MonadSequence m s) =>
+insertChildrenAfter :: (Tree t, MonadList s m) =>
                        (t b -> m (t b)) -> (t b -> m (t b)) -> (t b -> m (t b))
 insertChildrenAfter p f
     = replaceChildren
@@ -304,7 +305,7 @@ insertChildrenAfter p f
 --
 -- Example
 --
--- > insertTreeTemplateTest :: MonadSeq m c => b -> m XmlTree
+-- > insertTreeTemplateTest :: MonadList s m => b -> m XmlTree
 -- > insertTreeTemplateTest
 -- >     = doc
 -- >       >>>
@@ -328,7 +329,7 @@ insertChildrenAfter p f
 --
 -- > "<html><head><title>The Title</title></head><body><h1>The content</h1></body></html>"
 
-insertTreeTemplate :: (Tree t, MonadSequence m s) =>
+insertTreeTemplate :: (Tree t, MonadList s m) =>
                       (t b -> m (t b)) ->                             -- the the template
                       [IfThen (t b -> m c) (t b -> m (t b))] ->       -- the list of nodes in the template to be substituted
                       (t b -> m (t b))

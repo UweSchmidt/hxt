@@ -72,7 +72,7 @@ instance (Sequence s) => MonadIO (IOSequence s) where
     liftIO x = IOS $ x >>= return . return
 
     {-# INLINE liftIO #-}
-
+{- old stuff
 instance (Sequence s) => MonadSeq (IOSequence s) where
     fromList       = IOS . return . fromList
     toList (IOS a) = IOS $ a >>= return . toList
@@ -83,11 +83,16 @@ instance (Sequence s) => MonadSeq (IOSequence s) where
 instance (Sequence s) => MonadConv (IOSequence s) s where
     convFrom       = IOS . return
     convTo (IOS a) = IOS $ a >>= return . return
+-- -}
 
-    {-# INLINE convFrom #-}
-    {-# INLINE convTo   #-}
+instance (Sequence s) => MonadList s (IOSequence s) where
+    returnS xs      = IOS $ return xs
+    (IOS m) >>=* f  = IOS $ m >>= unIOS . f
 
+    {-# INLINE returnS #-}
+    {-# INLINE (>>=*)  #-}
 
+{- old stuff
 instance (Sequence s) => MonadCond (IOSequence s) s where
     ifM (IOS a) (IOS t) (IOS e)
         = IOS $
@@ -105,6 +110,7 @@ instance (Sequence s) => MonadCond (IOSequence s) s where
 
     {-# INLINE ifM     #-}
     {-# INLINE orElseM #-}
+-- -}
 
 instance (Sequence s) => MonadTry (IOSequence s) where
     tryM (IOS a) = IOS $

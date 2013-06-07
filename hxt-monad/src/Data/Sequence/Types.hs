@@ -49,9 +49,17 @@ type IOSLA3 s a b = a -> IOStateSequence FT.Tree s b
 -- by substituting SL.Seq by one of the other 3 possibilities: FL.Seq, ST.Tree, FT.Tree
 -- or something else
 
-newtype Seq a = Seq {unSeq :: (SL.Seq a)}
-    deriving (Functor, Applicative, Monad, MonadPlus, MonadSeq, Sequence, NFData, Monoid, Foldable)
+newtype Seq a = Seq {unSeq :: (FT.Tree a)}
+    deriving (Functor, Applicative, Monad, MonadPlus, Sequence, NFData, Monoid, Foldable)
 
+instance MonadList Seq Seq where
+    returnS = id
+    xs >>=* f = f xs
+
+    {-# INLINE returnS #-}
+    {-# INLINE (>>=*) #-}
+
+{- old stuff
 instance MonadSequence Seq Seq where
 
 instance MonadConv Seq Seq where
@@ -67,13 +75,14 @@ instance MonadCond Seq Seq where
 
     {-# INLINE ifM     #-}
     {-# INLINE orElseM #-}
+-- -}
 
 type LA       a b = a ->                 Seq   b
 type SLA    s a b = a -> StateSequence   Seq s b
 type IOLA     a b = a -> IOSequence      Seq   b
 type IOSLA  s a b = a -> IOStateSequence Seq s b
 
-type SeqA   m a b = (MonadSequence m Seq) => a -> m b
+type SeqA   m a b = (MonadList Seq m) => a -> m b
 
 -- ----------------------------------------
 
@@ -82,7 +91,7 @@ type SeqA   m a b = (MonadSequence m Seq) => a -> m b
 runLA :: (a -> Seq b) -> (a -> [b])
 runLA f = fromS . f
 
-fromLA :: (MonadSequence m Seq) =>
+fromLA :: (MonadList Seq m) =>
           (a -> Seq b) -> (a -> m b)
 fromLA f = convFrom . f
 
@@ -98,9 +107,9 @@ runSLA f = \ s0 x ->
 {-# INLINE runSLA #-}
 
 
-fromSLA :: (Sequence m) =>
+fromSLA :: (MonadList s m) =>
            st -> (a -> StateSequence Seq st b) -> (a -> m b)
-fromSLA s f =  fromList . (snd . (runSLA f s))
+fromSLA s f =  fromList . (snd . runSLA f s)
 
 {-# INLINE fromSLA #-}
 

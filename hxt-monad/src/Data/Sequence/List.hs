@@ -93,6 +93,15 @@ instance Monoid (Seq a) where
     {-# INLINE mempty #-}
     {-# INLINE mappend #-}
 
+-- {- old stuff
+instance MonadList Seq Seq where
+    returnS = id
+    xs >>=* f = f xs
+
+    {-# INLINE returnS #-}
+    {-# INLINE (>>=*) #-}
+-- -}
+{- old stuff
 instance MonadSeq Seq where
     fromList = List
     toList (List xs)   = return xs
@@ -116,6 +125,7 @@ instance MonadCond Seq Seq where
 
     {-# INLINE ifM     #-}
     {-# INLINE orElseM #-}
+-- -}
 
 instance Foldable Seq where
     foldr op z (List xs) = foldr op z xs

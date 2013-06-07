@@ -88,6 +88,15 @@ instance (Sequence s) => MonadState st (StateSequence s st) where
     {-# INLINE get #-}
     {-# INLINE put #-}
 
+instance (Sequence s) => MonadList s (StateSequence s st) where
+    returnS xs      = STS $ \ s0 -> (xs, s0)
+    (STS m) >>=* f  = STS $ \ s0 -> let (xs, s1) = m s0 in
+                                        (unSTS (f xs)) s1
+
+    {-# INLINE returnS #-}
+    {-# INLINE (>>=*)  #-}
+
+{- old stuff
 instance (Sequence s) => MonadSeq (StateSequence s st) where
     fromList xs    = STS $ \ s0 ->
                      (fromList xs, s0)
@@ -122,5 +131,5 @@ instance (Sequence s) => MonadCond (StateSequence s st) s where
           if nullS xs
              then e s1
              else res
-
+-- -}
 -- ----------------------------------------

@@ -102,6 +102,15 @@ instance (Sequence s) => MonadIO (IOStateSequence s st) where
 
     {-# INLINE liftIO #-}
 
+instance (Sequence s) => MonadList s (IOStateSequence s st) where
+    returnS xs      = ISS $ \ s0 -> return (xs, s0)
+    (ISS m) >>=* f  = ISS $ \ s0 -> do (xs, s1) <- m s0
+                                       (unISS (f xs)) s1
+
+    {-# INLINE returnS #-}
+    {-# INLINE (>>=*)  #-}
+
+{- old stuff
 instance (Sequence s) => MonadSeq (IOStateSequence s st) where
     fromList xs    = ISS $ \ s0 ->
                      return (fromList xs, s0)
@@ -140,7 +149,7 @@ instance (Sequence s) => MonadCond (IOStateSequence s st) s where
 
     {-# INLINE ifM     #-}
     {-# INLINE orElseM #-}
-
+-- -}
 instance (Sequence s) => MonadTry (IOStateSequence s st) where
     tryM (ISS a) = ISS $ \ s0 ->
                    do res <- try' (a s0)

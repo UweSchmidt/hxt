@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
@@ -12,8 +13,8 @@ import           Control.Monad.MonadSequence
 
 -- simulating Control.ArrowNF with monads
 
-rnfA :: (MonadConv m s, Sequence s, NFData (s a)) =>
+rnfA :: (MonadList s m, Sequence s, NFData (s a)) =>
         (b -> m a) -> (b -> m a)
-rnfA f = \ x -> convTo (f x) >>= (\ res -> return $!! res) >>= convFrom
+rnfA f = \ x -> f x >>=* (\ res -> returnS $!! res)
 
 -- ----------------------------------------

@@ -29,6 +29,7 @@ import qualified Data.Sequence.Tree            as ST
 import qualified Data.Sequence.TreeWithFailure as FT
 
 import           Text.XML.HXT.Monad.ArrowXml   ()
+import           Text.XML.HXT.Monad.Edit       ()
 
 
 -- ----------------------------------------
@@ -59,10 +60,10 @@ type IOSLA3 s a b = a -> IOStateSequence FT.Tree s b
 
 type IntSLA a b = SLA2 Int a b
 
-mk2 :: Sequence s => a -> a -> s a
+mk2 :: MonadList s m => a -> a -> m a
 mk2 x y = fromList [x, y]
 
-tt1,tt7,tt8 :: MonadSeq s => s Integer
+tt1,tt7,tt8 :: MonadList s m => m Integer
 tt1 = fromList [1]
 tt7 = fromList [1..7]
 tt8 = fromList [1..8]

@@ -62,7 +62,7 @@ second f (x, y) = do r <- f y
                       return (r1, r2)
 
 zeroArrow :: MonadPlus m => a -> m b
-zeroArrow = const mzero
+zeroArrow = const $ mzero
 
 (<+>) :: MonadPlus m => (a -> m b) -> (a -> m b) -> (a -> m b)
 f <+> g = \ x -> f x `mplus` g x
