@@ -13,37 +13,42 @@
 -}
 -- ----------------------------------------
 
-module Data.Sequence.IOStateSequence
+module Data.Sequence.IOStateSeq
 where
 
 import           Control.Applicative
 import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Error
-import           Control.Monad.MonadSequence
 import           Control.Monad.State
+import           Control.Monad.MonadSeq
+import           Control.Monad.MonadTry
+
+import           Data.Sequence.ErrorSequence
+import           Data.Sequence.Seq
+import           Data.Sequence.Sequence
 
 -- ----------------------------------------
 
-newtype IOStateSequence s st a = ISS {unISS :: st -> IO (s a, st)}
+newtype IOStateSeq st a = ISS {unISS :: st -> IO (Seq a, st)}
 
 -- ----------------------------------------
 
-instance (Sequence s) => Functor (IOStateSequence s st) where
+instance Functor (IOStateSeq st) where
     fmap f (ISS a) = ISS $ \ s0 ->
                      do (xs, s1) <- a s0
                         return (fmap f xs, s1)
 
     {-# INLINE fmap #-}
 
-instance (Sequence s) => Applicative (IOStateSequence s st) where
+instance Applicative (IOStateSeq st) where
     pure  = return
     (<*>) = ap
 
     {-# INLINE pure  #-}
     {-# INLINE (<*>) #-}
 
-instance (Sequence s) => Monad (IOStateSequence s st) where
+instance Monad (IOStateSeq st) where
     return x      = ISS $ \ s0 ->
                     return (return x, s0)
 
@@ -63,7 +68,7 @@ instance (Sequence s) => Monad (IOStateSequence s st) where
     {-# INLINE (>>=)  #-}
     {-# INLINE fail   #-}
 
-instance (Sequence s) => MonadPlus (IOStateSequence s st) where
+instance MonadPlus (IOStateSeq st) where
     mzero                   = ISS $ \ s0 ->
                               return (mzero, s0)
 
@@ -76,7 +81,7 @@ instance (Sequence s) => MonadPlus (IOStateSequence s st) where
     {-# INLINE mplus #-}
 
 
-instance (Sequence s, ErrSeq e s, MonadError e s) => MonadError e (IOStateSequence s st) where
+instance (ErrorSequence e Seq, MonadError e Seq) => MonadError e (IOStateSeq st) where
     throwError x         = ISS $ \ s0 ->
                            return (throwError x, s0)
 
@@ -88,21 +93,21 @@ instance (Sequence s, ErrSeq e s, MonadError e s) => MonadError e (IOStateSequen
 
     {-# INLINE throwError #-}
 
-instance (Sequence s) => MonadState st (IOStateSequence s st) where
+instance MonadState st (IOStateSeq st) where
     get    = ISS $ \  s0 -> return (return s0, s0)
     put s1 = ISS $ \ _s0 -> return (return (), s1)
 
     {-# INLINE get #-}
     {-# INLINE put #-}
 
-instance (Sequence s) => MonadIO (IOStateSequence s st) where
+instance MonadIO (IOStateSeq st) where
     liftIO x = ISS $ \ s0 ->
                do res <- x
                   return (return res, s0)
 
     {-# INLINE liftIO #-}
 
-instance (Sequence s) => MonadList s (IOStateSequence s st) where
+instance MonadSeq (IOStateSeq st) where
     returnS xs      = ISS $ \ s0 -> return (xs, s0)
     (ISS m) >>=* f  = ISS $ \ s0 -> do (xs, s1) <- m s0
                                        (unISS (f xs)) s1
@@ -110,47 +115,7 @@ instance (Sequence s) => MonadList s (IOStateSequence s st) where
     {-# INLINE returnS #-}
     {-# INLINE (>>=*)  #-}
 
-{- old stuff
-instance (Sequence s) => MonadSeq (IOStateSequence s st) where
-    fromList xs    = ISS $ \ s0 ->
-                     return (fromList xs, s0)
-
-    toList (ISS a) = ISS $ \ s0 ->
-                     do (xs, s1) <- a s0
-                        return (toList xs, s1)
-
-    {-# INLINE fromList #-}
-    {-# INLINE toList   #-}
-
-instance (Sequence s) => MonadConv (IOStateSequence s st) s where
-    convFrom xs    = ISS $ \ s0 -> return (xs, s0)
-    convTo (ISS a) = ISS $ \ s0 ->
-                     do (xs, s1) <- a s0
-                        return (return xs, s1)
-
-    {-# INLINE convFrom #-}
-    {-# INLINE convTo   #-}
-
-
-instance (Sequence s) => MonadCond (IOStateSequence s st) s where
-    ifM (ISS a) (ISS t) (ISS e)
-        = ISS $ \ s0 ->
-          do (xs, s1) <- a s0
-             if nullS xs
-                then e s1
-                else t s1
-
-    orElseM (ISS t) (ISS e)
-        = ISS $ \ s0 ->
-          do res@(xs, s1) <- t s0
-             if nullS xs
-                then e s1
-                else return res
-
-    {-# INLINE ifM     #-}
-    {-# INLINE orElseM #-}
--- -}
-instance (Sequence s) => MonadTry (IOStateSequence s st) where
+instance MonadTry (IOStateSeq st) where
     tryM (ISS a) = ISS $ \ s0 ->
                    do res <- try' (a s0)
                       return $ case res of

@@ -5,20 +5,19 @@
 -- ----------------------------------------
 {- |
 
-   A Sequence implementation with Trees and failure
+   A Sequence implementation with Trees
 
 -}
 -- ----------------------------------------
 
-module Data.Sequence.TreeWithFailure
-    ( Tree
+module Data.Sequence.Impl.Tree
+    ( Seq
 
-    , foldTree
-    , foldTreeR
     , fromListTree
     , fromListTree'
-    , sequenceTree
     , toListTree
+    , foldTree
+    , sequenceTree
     , substTree
     , substTreeM
     , zipTree
@@ -38,12 +37,13 @@ where
 import           Control.Applicative
 import           Control.DeepSeq
 import           Control.Monad
-import           Control.Monad.Error
-import           Control.Monad.MonadSequence
 
 import           Data.Foldable               (Foldable)
-import qualified Data.Foldable
+import qualified Data.Foldable               as F
 import           Data.Monoid
+
+import           Data.Sequence.ErrorSequence
+import           Data.Sequence.Sequence
 
 import           Prelude                     hiding (drop, head, init, last,
                                               length, reverse, splitAt, tail,
@@ -51,98 +51,55 @@ import           Prelude                     hiding (drop, head, init, last,
 
 -- ----------------------------------------
 
-data Tree a
+data Seq a
     = Tip a
-    | Bin (Tree a) (Tree a)
+    | Bin (Seq a) (Seq a)
     | Empty
-    | Fail (Tree String)
       deriving (Eq, Show)
 
 -- ----------------------------------------
 
-instance NFData a => NFData (Tree a) where
+instance NFData a => NFData (Seq a) where
     rnf (Tip x)   = rnf x
     rnf (Bin l r) = rnf l `seq` rnf r
     rnf Empty     = ()
-    rnf (Fail e)  = rnf e
 
-instance Functor Tree where
+instance Functor Seq where
     fmap f (Tip x)   = Tip (f x)
     fmap f (Bin l r) = Bin (fmap f l) (fmap f r)
     fmap _  Empty    = Empty
-    fmap _ (Fail s)  = Fail s
 
-instance Applicative Tree where
+instance Applicative Seq where
     pure = Tip				-- pure = return
     f <*> x = f >>= \ f' -> fmap f' x	-- (<*>) = ap
 
     {-# INLINE pure #-}
     {-# INLINE (<*>) #-}
 
-instance Monad Tree where
+instance Monad Seq where
     return = Tip
     (>>=)  = substTree
-    fail   = throwError . Tip
+    fail   = const Empty
 
     {-# INLINE return #-}
     {-# INLINE (>>=)  #-}
     {-# INLINE fail   #-}
 
-instance MonadPlus Tree where
+instance MonadPlus Seq where
     mzero = Empty
     mplus = bin
 
     {-# INLINE mzero #-}
     {-# INLINE mplus #-}
 
-instance MonadError (Tree String) Tree where
-    throwError = Fail
-
-    catchError (Fail s) h = h s
-    catchError t        _ = t
-
-    {-# INLINE throwError #-}
-
-instance Monoid (Tree a) where
+instance Monoid (Seq a) where
     mempty  = Empty
     mappend = bin
 
     {-# INLINE mempty #-}
     {-# INLINE mappend #-}
 
-instance MonadList Tree Tree where
-    returnS = id
-    xs >>=* f = f xs
-
-    {-# INLINE returnS #-}
-    {-# INLINE (>>=*) #-}
-
-{- old stuff
-instance MonadSeq Tree where
-    fromList = toS
-    toList   = return . fromS
-
-    {-# INLINE fromList #-}
-    {-# INLINE toList #-}
-
-instance MonadConv Tree Tree where
-    convFrom = id
-    convTo   = return
-
-    {-# INLINE convFrom #-}
-    {-# INLINE convTo   #-}
-
-instance MonadCond Tree Tree where
-    ifM (Fail s) _ _ = Fail s
-    ifM Empty    _ e = e
-    ifM _ t _        = t
-
-    orElseM (Fail s) _ = Fail s
-    orElseM Empty    e = e
-    orElseM t        _ = t
--- -}
-
-instance Sequence Tree where
+instance Sequence Seq where
     emptyS          = Empty
     consS           = bin . Tip
     unconsS t       = case uncons' t of
@@ -165,72 +122,57 @@ instance Sequence Tree where
     {-# INLINE fromS   #-}
     {-# INLINE substS   #-}
 
-instance Foldable Tree where
-    foldr = foldTreeR
-    {-# INLINE foldr   #-}
+instance Foldable Seq where
+    foldr op z (Tip x)   = x `op` z
+    foldr op z (Bin l r) = F.foldr op (F.foldr op z r) l
+    foldr _  z Empty     = z
 
-instance ErrSeq (Tree String) Tree where
-    failS (Fail s) = Left  s
+instance ErrorSequence (Seq String) Seq where
     failS t        = Right t
 
     {-# INLINE failS   #-}
 
 -- ----------------------------------------
 
-substTree :: Tree a -> (a -> Tree b) -> Tree b
+substTree :: Seq a -> (a -> Seq b) -> Seq b
 substTree (Tip x)   k = k x
 substTree (Bin l r) k = bin (substTree l k) (substTree r k)
 substTree  Empty    _ = Empty
-substTree (Fail s)  _ = Fail s
 
 -- | Monadic version of substTree
 
-substTreeM :: Monad m => Tree a -> (a -> m (Tree b)) -> m (Tree b)
+substTreeM :: Monad m => Seq a -> (a -> m (Seq b)) -> m (Seq b)
 substTreeM (Tip x)   k = k x
 substTreeM (Bin l r) k = do l1 <- substTreeM l k
                             r1 <- substTreeM r k
                             return (bin l1 r1)
 substTreeM  Empty    _ = return Empty
-substTreeM (Fail s)  _ = return (Fail s)
 
 -- | smart constructor for Bin
 
-bin :: Tree a -> Tree a -> Tree a
+bin :: Seq a -> Seq a -> Seq a
 bin     Empty   t2          = t2
 bin t1          Empty       = t1
-bin    (Fail x)    (Fail y) = Fail $ bin x y
-bin t1@(Fail _) _           = t1
-bin _           t2@(Fail _) = t2
 bin t1          t2          = Bin t1 t2
 
-foldTreeR :: (a -> b -> b) -> b -> Tree a -> b
-foldTreeR op z (Tip x)   = x `op` z
-foldTreeR op z (Bin l r) = foldTreeR op (foldTreeR op z r) l
-foldTreeR _  z _         = z
-
-foldTree :: (Tree String -> b) -> b -> (a -> b) -> (b -> b -> b) -> (Tree a -> b)
-foldTree ff e tf bf t = fold' t
+foldTree :: b -> (a -> b) -> (b -> b -> b) -> (Seq a -> b)
+foldTree e tf bf t = fold' t
     where
       fold' (Tip x)   = tf x
       fold' (Bin l r) = bf (fold' l) (fold' r)
       fold'  Empty    = e
-      fold' (Fail s)  = ff s
 
-zipTree :: (a -> b -> c) -> (Tree a -> Tree b -> Tree c)
+zipTree :: (a -> b -> c) -> (Seq a -> Seq b -> Seq c)
 zipTree op (Tip x)     (Tip y)     = Tip $ x `op` y
 zipTree op (Bin l1 r1) (Bin l2 r2) = bin (zipTree op l1 l2) (zipTree op r1 r2)
-zipTree _  (Fail s1)   (Fail s2)   = Fail $ bin s1 s2
-zipTree _  (Fail s1)   _           = Fail s1
-zipTree _  _           (Fail s2)   = Fail s2
 zipTree _  _           _           = Empty
 
-sequenceTree :: Monad m => Tree (m a) -> m (Tree a)
+sequenceTree :: Monad m => Seq (m a) -> m (Seq a)
 sequenceTree (Tip x)   = x >>= return . Tip
 sequenceTree (Bin l r) = do l1 <- sequenceTree l
                             r1 <- sequenceTree r
                             return (Bin l1 r1)
 sequenceTree  Empty    = return Empty
-sequenceTree (Fail s)  = return (Fail s)
 
 -- ----------------------------------------
 
@@ -238,7 +180,7 @@ sequenceTree (Fail s)  = return (Fail s)
 --
 -- result is a balanced tree
 
-fromListTree :: [a] -> Tree a
+fromListTree :: [a] -> Seq a
 fromListTree
     = merge . map return
       where
@@ -253,7 +195,7 @@ fromListTree
 --
 -- result is a skew tree with growing right subtrees
 
-fromListTree' :: [a] -> Tree a
+fromListTree' :: [a] -> Seq a
 fromListTree'
     = merge . map return
       where
@@ -265,7 +207,7 @@ fromListTree'
         combine xs         = xs
 
 
-toListTree :: Tree a -> [a]
+toListTree :: Seq a -> [a]
 toListTree t = t2l t []
     where
       t2l (Tip x)   xs = x : xs
@@ -274,48 +216,48 @@ toListTree t = t2l t []
 
 -- ----------------------------------------
 
-length :: Tree a -> Int
-length = foldTree (const 0) 0 (const 1) (+)
+length :: Seq a -> Int
+length = foldTree 0 (const 1) (+)
 
-head :: Tree a -> a
+head :: Seq a -> a
 head t = case l of
             Tip x -> x
-            _     ->  error "Tree.head: empty tree"
+            _     ->  error "Seq.head: empty tree"
     where
       l = fst . uncons' $ t
 
-last :: Tree a -> a
+last :: Seq a -> a
 last t = case l of
             Tip x -> x
-            _     -> error "Tree.last: empty tree"
+            _     -> error "Seq.last: empty tree"
     where
       l = fst . uncons' . reverse $ t
 
-tail :: Tree a -> Tree a
+tail :: Seq a -> Seq a
 tail t = case r of
-            Empty -> fail "Tree.tail: empty tree"
+            Empty -> fail "Seq.tail: empty tree"
             _     -> r
     where
       r = snd . uncons' $ t
 
-init :: Tree a -> Tree a
+init :: Seq a -> Seq a
 init t = case r of
-            Empty -> fail "Tree.init: empty tree"
+            Empty -> fail "Seq.init: empty tree"
             _     -> reverse r
     where
       r = snd . uncons' . reverse $ t
 
-reverse :: Tree a -> Tree a
+reverse :: Seq a -> Seq a
 reverse (Bin l r) = Bin (reverse r) (reverse l)
 reverse t         = t
 
-take :: Int -> Tree a -> Tree a
+take :: Int -> Seq a -> Seq a
 take n = fst . splitAt n
 
-drop :: Int -> Tree a -> Tree a
+drop :: Int -> Seq a -> Seq a
 drop n = snd . splitAt n
 
-splitAt :: Int -> Tree a -> (Tree a, Tree a)
+splitAt :: Int -> Seq a -> (Seq a, Seq a)
 splitAt n t = (l, r)
     where
       (_, l, r) = split' n t
@@ -330,32 +272,15 @@ splitAt n t = (l, r)
 
 -- | uncons is a special form for @split' 1@
 
-uncons' :: Tree a -> (Tree a, Tree a)
+uncons' :: Seq a -> (Seq a, Seq a)
 uncons' t@(Tip _) = (t, Empty)
 uncons' (Bin l r) = (t, l' <> r)
                      where
                        (t, l') = uncons' l
 uncons' t         = (t, t)
 
-{- not yet used
 
--- | The dual to uncons', result is a pair
--- with 1. component : all elements but the last
--- and 2. component: the last or Empty in case of an empty tree
-
-unsnoc' :: Tree a -> (Tree a, Tree a)
-unsnoc' t@(Tip _) = (Empty, t)
-unsnoc' (Bin l r) = (l <> r', t)
-                     where
-                       (r', t) = unsnoc' r
-unsnoc' t         = (t, t)
--- -}
-
--- | split a tree into two, such that the left tree contains n
--- elements or less, and the right tree contains the remaining elements.
--- The first component contains the real number of elements in the first tree
-
-split' :: Int -> Tree a -> (Int, Tree a, Tree a)
+split' :: Int -> Seq a -> (Int, Seq a, Seq a)
 split' n t
     | n <= 0  = (0, mempty, t)
 

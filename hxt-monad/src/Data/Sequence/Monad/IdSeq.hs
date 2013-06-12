@@ -6,7 +6,7 @@
 
 -- ----------------------------------------
 
-module Data.Sequence.IdSeq
+module Data.Sequence.Monad.IdSeq
 where
 
 import           Control.Applicative

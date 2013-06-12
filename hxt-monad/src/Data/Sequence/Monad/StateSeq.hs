@@ -13,35 +13,39 @@
 -}
 -- ----------------------------------------
 
-module Data.Sequence.StateSequence
+module Data.Sequence.Monad.StateSeq
 where
 
 import           Control.Applicative
 import           Control.Monad
 import           Control.Monad.Error
-import           Control.Monad.MonadSequence
+import           Control.Monad.MonadSeq
 import           Control.Monad.State
 
+import           Data.Sequence.ErrorSequence
+import           Data.Sequence.Seq
+import           Data.Sequence.Sequence
+
 -- ----------------------------------------
 
-newtype StateSequence s st a = STS {unSTS :: st -> (s a, st)}
+newtype StateSeq st a = STS {unSTS :: st -> (Seq a, st)}
 
 -- ----------------------------------------
 
-instance (Sequence s) => Functor (StateSequence s st) where
+instance Functor (StateSeq st) where
     fmap f (STS a) = STS $ \ s0 ->
                      let (xs, s1) = a s0 in (fmap f xs, s1)
 
     {-# INLINE fmap #-}
 
-instance (Sequence s) => Applicative (StateSequence s st) where
+instance Applicative (StateSeq st) where
     pure  = return
     (<*>) = ap
 
     {-# INLINE pure  #-}
     {-# INLINE (<*>) #-}
 
-instance (Sequence s) => Monad (StateSequence s st) where
+instance Monad (StateSeq st) where
     return x      = STS $ \ s0 -> (return x, s0)
     (STS a) >>= f = STS ( \ s0 ->
                           let (xs, s1) = a s0 in
@@ -59,7 +63,7 @@ instance (Sequence s) => Monad (StateSequence s st) where
     {-# INLINE fail   #-}
 
 
-instance (Sequence s) => MonadPlus (StateSequence s st) where
+instance MonadPlus (StateSeq st) where
     mzero                   = STS $ \ s0 -> (mzero, s0)
     (STS x) `mplus` (STS y) = STS $ \ s0 ->
                               let (xs, s1) = x s0
@@ -70,7 +74,7 @@ instance (Sequence s) => MonadPlus (StateSequence s st) where
     {-# INLINE mplus #-}
 
 
-instance (Sequence s, MonadError e s, ErrSeq e s) => MonadError e (StateSequence s st) where
+instance (MonadError e Seq, ErrorSequence e Seq) => MonadError e (StateSeq st) where
     throwError x         = STS $ \ s0 -> (throwError x, s0)
 
     catchError (STS a) h = STS $ \ s0 ->
@@ -81,14 +85,14 @@ instance (Sequence s, MonadError e s, ErrSeq e s) => MonadError e (StateSequence
 
     {-# INLINE throwError #-}
 
-instance (Sequence s) => MonadState st (StateSequence s st) where
+instance MonadState st (StateSeq st) where
     get    = STS $ \  s0 -> (return s0, s0)
     put s1 = STS $ \ _s0 -> (return (), s1)
 
     {-# INLINE get #-}
     {-# INLINE put #-}
 
-instance (Sequence s) => MonadList s (StateSequence s st) where
+instance MonadSeq (StateSeq st) where
     returnS xs      = STS $ \ s0 -> (xs, s0)
     (STS m) >>=* f  = STS $ \ s0 -> let (xs, s1) = m s0 in
                                         (unSTS (f xs)) s1
