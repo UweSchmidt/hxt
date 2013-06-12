@@ -27,28 +27,6 @@ import           Data.Maybe
 
 -- ----------------------------------------
 
-{- old stuff
--- | Conversion between list like containers and lists
---
--- Law: @toList . fromList = id@
-
-class Monad m => MonadSeq m where
-    fromList :: [a] -> m a
-    toList   :: m a -> m [a]
-
--- | constructing monadic actions from sequences
--- and extracting sequences out of monadic actions
-
-class (Monad m, Sequence s) => MonadConv m s | m -> s where
-    convFrom :: s a -> m a
-    convTo   :: m a -> m (s a)
-
--- | Monadic branching
-
-class (MonadPlus m, MonadConv m s) => MonadCond m s | m -> s where
-    ifM      :: m a -> m b -> m b -> m b
-    orElseM  :: m a -> m a -> m a
--- -}
 -- | catch exceptions from the IO monad
 
 class MonadIO m => MonadTry m where
@@ -70,15 +48,6 @@ infixr 1 >=>*
 class (Monad m, MonadPlus m, Sequence s) => MonadList s m | m -> s where
     returnS :: s a -> m a
     (>>=*)  :: m a -> (s a -> m b) -> m b
-
-{- old stuff : results in funDep conflict
-instance (Sequence s) => MonadList s s where
-    returnS = id
-    x >>=* f = f x
-
-    {-# INLINE returnS #-}
-    {-# INLINE (>>=*)  #-}
--- -}
 
 (>=>*) :: (MonadList s m) => (a -> m b) -> (s b -> m c) -> (a -> m c)
 f >=>* g = \ x -> f x >>=* g
@@ -154,17 +123,6 @@ instance Sequence [] where
     {-# INLINE nullS   #-}
     {-# INLINE toS     #-}
     {-# INLINE fromS   #-}
-
-{-
-instance MonadList [] [] where
-    returnS = id
-    xs >>=* f = f xs
-
-
-instance MonadSeq [] where
-    fromList = id
-    toList   = return
--- -}
 
 -- | Pure lists never contain an error value
 

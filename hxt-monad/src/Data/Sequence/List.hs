@@ -20,11 +20,12 @@ where
 import           Control.Applicative
 import           Control.DeepSeq
 import           Control.Monad
-import           Control.Monad.MonadSequence
 
 import           Data.Foldable               (Foldable)
 import qualified Data.Foldable               as F
 import           Data.Monoid
+import           Data.Sequence.ErrorSequence
+import           Data.Sequence.Sequence
 
 -- ----------------------------------------
 
@@ -52,7 +53,7 @@ instance Sequence Seq where
     {-# INLINE fromS   #-}
     {-# INLINE substS  #-}
 
-instance ErrSeq e Seq where
+instance ErrorSequence e Seq where
     failS s         = Right s
 
 -- ----------------------------------------
@@ -92,40 +93,6 @@ instance Monoid (Seq a) where
 
     {-# INLINE mempty #-}
     {-# INLINE mappend #-}
-
--- {- old stuff
-instance MonadList Seq Seq where
-    returnS = id
-    xs >>=* f = f xs
-
-    {-# INLINE returnS #-}
-    {-# INLINE (>>=*) #-}
--- -}
-{- old stuff
-instance MonadSeq Seq where
-    fromList = List
-    toList (List xs)   = return xs
-
-    {-# INLINE fromList #-}
-    {-# INLINE toList   #-}
-
-instance MonadConv Seq Seq where
-    convFrom = id
-    convTo   = return
-
-    {-# INLINE convFrom #-}
-    {-# INLINE convTo   #-}
-
-instance MonadCond Seq Seq where
-    ifM (List []) _ e = e
-    ifM _         t _ = t
-
-    orElseM (List []) e = e
-    orElseM t         _ = t
-
-    {-# INLINE ifM     #-}
-    {-# INLINE orElseM #-}
--- -}
 
 instance Foldable Seq where
     foldr op z (List xs) = foldr op z xs
