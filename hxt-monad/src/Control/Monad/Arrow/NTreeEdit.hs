@@ -6,15 +6,15 @@
 
 -- ------------------------------------------------------------
 
-module Control.Monad.NTreeEdit
+module Control.Monad.Arrow.NTreeEdit
 where
 
-import           Control.Monad.Arrow
-import           Control.Monad.ArrowIf
-import           Control.Monad.ArrowList
+import           Control.Monad.Arrow.ArrowIf
+import           Control.Monad.Arrow.ArrowList
 
 import           Data.Maybe
-import           Data.Sequence.Types      (LA, runLA)
+import           Data.Sequence.ArrowTypes      (LA, runLA)
+
 import           Data.Tree.NTree.Edit
 import           Data.Tree.NTree.TypeDefs
 
@@ -32,6 +32,6 @@ editNTreeA cs           = arrL $ editNTreeBottomUp ef
     ef                  = listToMaybe . (runLA . foldr (\ (g :-> h) -> ifA g (listA h)) none $ cs)
 
 fmapNTreeA              :: (b -> Maybe b) -> LA (NTree b) (NTree b)
-fmapNTreeA f            = arr $ mapNTree' f
+fmapNTreeA f            = return . mapNTree' f
 
 -- eof ------------------------------------------------------------

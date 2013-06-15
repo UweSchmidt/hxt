@@ -1,13 +1,10 @@
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeSynonymInstances  #-}
 
-module Control.Monad.ArrowExc
+module Control.Monad.Arrow.ArrowExc
 where
 
-import           Control.Exception           (SomeException)
-import           Control.Monad.Arrow
-import           Control.Monad.MonadSequence
+import           Control.Exception                   (SomeException)
+import           Control.Monad.Arrow.ArrowSubstitute
+import           Control.Monad.MonadTry
 
 -- ----------------------------------------
 
@@ -18,8 +15,8 @@ tryA a = tryM . a
 
 catchA      :: MonadTry m => (b -> m c) -> (SomeException -> m c) -> (b -> m c)
 catchA f h  = tryA f
-              >>>
-              ( h ||| returnA )
+              >=>
+              ( h |=| return )
 
 {-# INLINE tryA #-}
 {-# INLINE catchA #-}

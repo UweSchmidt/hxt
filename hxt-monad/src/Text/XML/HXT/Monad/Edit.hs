@@ -58,17 +58,12 @@ module Text.XML.HXT.Monad.Edit
 where
 import qualified Control.Arrow                     as A
 import           Control.Monad.Arrow
-import           Control.Monad.ArrowIf
-import           Control.Monad.ArrowList
-import           Control.Monad.ArrowTree
-import           Control.Monad.MonadSequence
-import           Control.Monad.NTreeEdit
 
 import           Data.Char.Properties.XMLCharProps (isXmlSpaceChar)
 import           Data.List                         (isPrefixOf)
 import qualified Data.Map                          as M
 import           Data.Maybe
-import           Data.Sequence.Types
+import           Data.Sequence.ArrowTypes
 
 import           Text.XML.HXT.DOM.FormatXmlTree    (formatXmlTree)
 import           Text.XML.HXT.DOM.Interface
@@ -105,7 +100,7 @@ import           Text.XML.HXT.Parser.XmlEntities   (xmlEntities)
 canonicalizeTree'       :: LA XmlTree XmlTree -> LA XmlTree XmlTree
 canonicalizeTree' toBeRemoved
     = processChildren
-      ( (none `when` (isText <+> isXmlPi))      -- remove XML PI and all text around XML root element
+      ( (none `when` (isText <++> isXmlPi))      -- remove XML PI and all text around XML root element
         >=>
         (deep isPi `when` isDTD)                -- remove DTD parts, except PIs whithin DTD
       )
@@ -133,7 +128,7 @@ canonicalizeNodes toBeRemoved
 
       , isCharRef       :-> ( getCharRef
                               >=>
-                              arr (\ i -> [toEnum i])
+                              return . (\ i -> [toEnum i])
                               >=>
                               mkText
                             )
@@ -247,7 +242,7 @@ collapseAllXText        = fromLA $ processBottomUp collapseXText'
 --
 -- > xshowEscapeXml f >=> xread == f
 
-xshowEscapeXml :: MonadList s m => (b -> m XmlTree) -> (b -> m String)
+xshowEscapeXml :: MonadSeq m => (b -> m XmlTree) -> (b -> m String)
 xshowEscapeXml f        = f >. (uncurry XS.xshow'' escapeXmlRefs)
 
 -- ------------------------------------------------------------
@@ -335,7 +330,7 @@ lookupRef c             = fromMaybe ('#' : show (fromEnum c))
 
 -- ------------------------------------------------------------
 
-preventEmptyElements    :: (MonadList Seq m) => [String] -> Bool -> XmlTree -> m XmlTree
+preventEmptyElements    :: (MonadSeq m) => [String] -> Bool -> XmlTree -> m XmlTree
 preventEmptyElements ns isHtml
     = fromLA $
       editNTreeA [ ( isElem
@@ -363,7 +358,7 @@ preventEmptyElements ns isHtml
 haskellRepOfXmlDoc      :: SeqA m XmlTree XmlTree
 haskellRepOfXmlDoc
     = fromLA $
-      root [getAttrl] [show ^>> mkText]
+      root [getAttrl] [show ^=> mkText]
 
 -- |
 -- convert a document into a text and add line numbers to the text representation.
@@ -394,14 +389,14 @@ numberLinesInXmlDoc
 treeRepOfXmlDoc :: SeqA m XmlTree XmlTree
 treeRepOfXmlDoc
     = fromLA $
-      root [getAttrl] [formatXmlTree ^>> mkText]
+      root [getAttrl] [formatXmlTree ^=> mkText]
 
 addHeadlineToXmlDoc     :: SeqA m XmlTree XmlTree
 addHeadlineToXmlDoc
-    = fromLA $ ( addTitle $< (getAttrValue a_source >>^ formatTitle) )
+    = fromLA $ ( addTitle $< (getAttrValue a_source >=^ formatTitle) )
     where
     addTitle str
-        = replaceChildren ( txt str <+> getChildren <+> txt "\n" )
+        = replaceChildren ( txt str <++> getChildren <++> txt "\n" )
     formatTitle str
         = "\n" ++ headline ++ "\n" ++ underline ++ "\n\n"
         where
@@ -527,7 +522,7 @@ indentRoot              = processChildren indentRootChildren
         = removeText >=> indentChild >=> insertNL
         where
         removeText      = none `when` isText
-        insertNL        = this <+> txt "\n"
+        insertNL        = this <++> txt "\n"
         indentChild     = ( replaceChildren
                             ( getChildren
                               >>.
@@ -577,7 +572,7 @@ indentTrees indentFilter preserveSpace level ts
           | otherwise
               = (none `when` isWhiteSpace)
                 >=>
-                (indentFilter level <+> this)
+                (indentFilter level <++> this)
 
       indentRest        :: XmlTrees -> XmlTrees
       indentRest []
@@ -657,7 +652,7 @@ transfAllCdata          = fromLA $ editNTreeA [isCdata :-> (getCdata >=> mkText)
 
 transfCharRef           :: SeqA m XmlTree XmlTree
 transfCharRef           = fromLA $
-                          ( getCharRef >=> arr (\ i -> [toEnum i]) >=> mkText )
+                          ( getCharRef >=> return . (\ i -> [toEnum i]) >=> mkText )
                           `when`
                           isCharRef
 
@@ -665,7 +660,13 @@ transfCharRef           = fromLA $
 -- recursively converts all character references to normal text
 
 transfAllCharRef        :: SeqA m XmlTree XmlTree
-transfAllCharRef        = fromLA $ editNTreeA [isCharRef :-> (getCharRef >=> arr (\ i -> [toEnum i]) >=> mkText)]
+transfAllCharRef        = fromLA $
+                          editNTreeA [isCharRef :-> (getCharRef
+                                                     >=>
+                                                     return . (\ i -> [toEnum i])
+                                                     >=> mkText
+                                                    )
+                                     ]
 
 -- ------------------------------------------------------------
 
@@ -683,20 +684,26 @@ rememberDTDAttrl
 addDefaultDTDecl        :: SeqA m XmlTree XmlTree
 addDefaultDTDecl
     = fromLA $
-      ( addDTD $< listA (getAttrl >=> (getName &&& xshow getChildren) >=> hasDtdPrefix) )
+      ( addDTD $< listA ( getAttrl
+                          >=>
+                          (getName &=& xshow getChildren)
+                          >=>
+                          hasDtdPrefix
+                        )
+      )
     where
     hasDtdPrefix
         = isA ((dtdPrefix `isPrefixOf`) . fst)
           >=>
-          arr (A.first (drop (length dtdPrefix)))
+          return . (A.first (drop (length dtdPrefix)))
     addDTD []
         = this
     addDTD al
         = replaceChildren
           ( mkDTDDoctype al none
-            <+>
+            <++>
             txt "\n"
-            <+>
+            <++>
             ( getChildren >=> (none `when` isDTDDoctype) )      -- remove old DTD decl
           )
 
@@ -722,7 +729,7 @@ addXmlPi
                                >=>
                                addAttr a_version "1.0"
                              )
-                             <+>
+                             <++>
                              txt "\n"
                            )
         `whenNot`
@@ -731,7 +738,7 @@ addXmlPi
 
 -- | add an encoding spec to the \<?xml version=\"1.0\"?\> processing instruction
 
-addXmlPiEncoding :: MonadList Seq m => String -> XmlTree -> m XmlTree
+addXmlPiEncoding :: MonadSeq m => String -> XmlTree -> m XmlTree
 addXmlPiEncoding enc
     = fromLA $
       processChildren ( addAttr a_encoding enc
@@ -764,8 +771,7 @@ addXHtmlDoctypeFrameset
 --
 -- The arguments are the root element name, the PUBLIC id and the SYSTEM id
 
--- addDoctypeDecl  :: String -> String -> String -> SeqA m XmlTree XmlTree
-addDoctypeDecl :: MonadList Seq m => String -> String -> String -> XmlTree -> m XmlTree
+addDoctypeDecl :: MonadSeq m => String -> String -> String -> XmlTree -> m XmlTree
 addDoctypeDecl rootElem public system
     = fromLA $
       replaceChildren
@@ -774,9 +780,9 @@ addDoctypeDecl rootElem public system
                        ( if null system then id else ( (k_system, system) : ) )
                        $  [ (a_name, rootElem) ]
                      ) none
-        <+>
+        <++>
         txt "\n"
-        <+>
+        <++>
         getChildren
       )
 

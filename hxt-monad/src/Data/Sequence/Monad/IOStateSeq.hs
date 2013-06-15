@@ -13,16 +13,16 @@
 -}
 -- ----------------------------------------
 
-module Data.Sequence.IOStateSeq
+module Data.Sequence.Monad.IOStateSeq
 where
 
 import           Control.Applicative
 import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Error
-import           Control.Monad.State
 import           Control.Monad.MonadSeq
 import           Control.Monad.MonadTry
+import           Control.Monad.State
 
 import           Data.Sequence.ErrorSequence
 import           Data.Sequence.Seq

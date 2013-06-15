@@ -1,11 +1,9 @@
-{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeSynonymInstances  #-}
 
-module Control.Monad.ArrowState
+module Control.Monad.Arrow.ArrowState
 where
 
-import           Control.Monad.Arrow
+import           Control.Monad.Arrow.ArrowSubstitute
 import           Control.Monad.State.Strict
 
 -- ----------------------------------------
@@ -26,7 +24,7 @@ setState = changeState (\ _s x -> x)     -- changeState (const id)
 
 nextState :: (MonadState s m) => (s -> s) -> (b -> m s)
 nextState sf = changeState (\s -> const (sf s))
-               >>>
+               >=>
                getState
 
 -- ----------------------------------------

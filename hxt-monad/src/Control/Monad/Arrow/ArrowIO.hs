@@ -1,13 +1,9 @@
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeSynonymInstances  #-}
-
-module Control.Monad.ArrowIO
+module Control.Monad.Arrow.ArrowIO
 where
 
 import           Control.Monad
 import           Control.Monad.Error
-import           Control.Monad.MonadSequence
+import           Control.Monad.MonadSeq
 
 -- ----------------------------------------
 
@@ -28,7 +24,7 @@ arrIO3 f = arrIO (\ ~(x1, ~(x2, x3)) -> f x1 x2 x3)
 arrIO4 :: MonadIO m => (b1 -> b2 -> b3 -> b4 -> IO c) -> ((b1, (b2, (b3, b4))) -> m c)
 arrIO4 f            = arrIO (\ ~(x1, ~(x2, ~(x3, x4))) -> f x1 x2 x3 x4)
 
-isIOA :: (MonadList s m, MonadIO m) => (b -> IO Bool) -> (b -> m b)
+isIOA :: (MonadSeq m, MonadIO m) => (b -> IO Bool) -> (b -> m b)
 isIOA p = \ x -> liftIO (p x) >>= \ b -> if b then return x else returnS mzero
 
 {-# INLINE arrIO #-}
