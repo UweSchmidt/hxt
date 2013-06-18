@@ -15,8 +15,8 @@ import           Data.Sequence.Sequence
 
 ifA :: (MonadSeq m) => (a -> m b) -> (a -> m c) -> (a -> m c) -> (a -> m c)
 ifA c t e = \ x -> c x >>=* (\ s -> if nullS s
-                                    then t x
-                                    else e x
+                                    then e x
+                                    else t x
                             )
 
 ifP :: Monad m => (b -> Bool) -> (b -> m d) -> (b -> m d) -> (b -> m d)
@@ -27,8 +27,8 @@ ifP c t e = \ x -> if c x
 neg :: (MonadSeq m) => (b -> m a) -> (b -> m b)
 neg f = ifA f none this
 
-when :: MonadSeq m => (b -> m b) -> (b -> m a) -> (b -> m b)
-f `when` g = ifA g f this
+whenA :: MonadSeq m => (b -> m b) -> (b -> m a) -> (b -> m b)
+f `whenA` g = ifA g f this
 
 whenP :: Monad m => (b -> m b) -> (b -> Bool) -> (b -> m b)
 f `whenP` g         = ifP g f this
@@ -99,7 +99,7 @@ partitionA  p = listA ( arrL id >=> tagA p )
 {-# INLINE neg #-}
 {-# INLINE notContaining #-}
 {-# INLINE orElse #-}
-{-# INLINE when #-}
+{-# INLINE whenA #-}
 {-# INLINE whenNot #-}
 {-# INLINE whenNotP #-}
 {-# INLINE whenP #-}

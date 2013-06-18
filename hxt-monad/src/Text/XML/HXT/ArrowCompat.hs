@@ -1,8 +1,30 @@
+-- ------------------------------------------------------------
 
-module Control.Monad.Arrow.ArrowCompatible
+{- |
+   The HXT interface for compatibility to HXT.9 based
+   arrow implementation.
+
+   The names defined in this module simulate the
+   arrow operators and function with a monadic implementation.
+
+   To prevent nameing conflicts, do not import
+   Control.Arrow (unqualified), and do not import
+   Control.Monad (when) unqualified
+
+   When importing this module, instead of @Text.XML.HXT.Monad@,
+   there are only few points, where refactoring of old HXT code
+   becomes necessary.
+-}
+
+-- ------------------------------------------------------------
+
+module Text.XML.HXT.ArrowCompat
+    ( module Text.XML.HXT.Monad
+    , module Text.XML.HXT.ArrowCompat
+    )
 where
 
-import           Control.Monad.Arrow.ArrowSubstitute
+import           Text.XML.HXT.Monad hiding (when)
 
 -- ----------------------------------------
 
@@ -92,5 +114,10 @@ app (f, x) = f x
 {-# INLINE right #-}
 {-# INLINE second #-}
 {-# INLINE zeroArrow #-}
+
+-- ----------------------------------------
+
+when :: MonadSeq m => (b -> m b) -> (b -> m a) -> (b -> m b)
+when = whenA
 
 -- ----------------------------------------

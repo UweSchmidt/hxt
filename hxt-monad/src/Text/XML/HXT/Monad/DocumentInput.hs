@@ -162,7 +162,7 @@ getContentsFromDoc
           >=>
           getCont
         )
-        `when`
+        `whenA`
         ( setAbsURI $< ( getAttrValue a_source
                          >=^
                          ( \ src-> (if null src then "stdin:" else src) )   -- empty document name -> read from stdin
@@ -275,7 +275,7 @@ getXmlContents' parseEncodingSpec
           traceDoc "getXmlContents'"
         )
       )
-      `when`
+      `whenA`
       isRoot
 
 isMimeDoc               :: (String -> Bool) -> IOStateArrow s XmlTree XmlTree

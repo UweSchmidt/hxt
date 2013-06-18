@@ -55,7 +55,7 @@ trace level trc         = perform ( trc
                                     >=>
                                     arrIO (\ (cmd, msg) -> cmd level msg)
                                   )
-                          `when` ( getTraceLevel
+                          `whenA` ( getTraceLevel
                                    >=>
                                    isA (>= level)
                                  )

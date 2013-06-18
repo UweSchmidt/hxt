@@ -100,9 +100,9 @@ import           Text.XML.HXT.Parser.XmlEntities   (xmlEntities)
 canonicalizeTree'       :: LA XmlTree XmlTree -> LA XmlTree XmlTree
 canonicalizeTree' toBeRemoved
     = processChildren
-      ( (none `when` (isText <++> isXmlPi))      -- remove XML PI and all text around XML root element
+      ( (none `whenA` (isText <++> isXmlPi))      -- remove XML PI and all text around XML root element
         >=>
-        (deep isPi `when` isDTD)                -- remove DTD parts, except PIs whithin DTD
+        (deep isPi `whenA` isDTD)                -- remove DTD parts, except PIs whithin DTD
       )
       >=>
       canonicalizeNodes toBeRemoved
@@ -119,7 +119,7 @@ canonicalizeNodes toBeRemoved
                               )
                               >=>
                               ( collapseXText'                  -- and combine text in content
-                                `when`
+                                `whenA`
                                 (getChildren >>. has2XText)
                               )
                             )
@@ -409,7 +409,7 @@ addHeadlineToXmlDoc
 -- remove a Comment node
 
 removeComment           :: SeqA m XmlTree XmlTree
-removeComment           = none `when` isCmt
+removeComment           = none `whenA` isCmt
 
 -- |
 -- remove all comments in a tree recursively
@@ -428,7 +428,7 @@ removeAllComment        = fromLA $ editNTreeA [isCmt :-> none]
 -- see also : 'removeAllWhiteSpace', 'removeDocWhiteSpace'
 
 removeWhiteSpace        :: SeqA m XmlTree XmlTree
-removeWhiteSpace        = fromLA $ none `when` isWhiteSpace
+removeWhiteSpace        = fromLA $ none `whenA` isWhiteSpace
 
 -- |
 -- simple recursive filter for removing all whitespace.
@@ -468,7 +468,7 @@ removeDocWhiteSpace     = fromLA $ removeRootWhiteSpace
 removeRootWhiteSpace    :: SeqA m XmlTree XmlTree
 removeRootWhiteSpace
     =  processChildren processRootElement
-       `when`
+       `whenA`
        isRoot
     where
     -- processRootElement  :: XmlTree -> XmlTree
@@ -521,7 +521,7 @@ indentRoot              = processChildren indentRootChildren
     indentRootChildren
         = removeText >=> indentChild >=> insertNL
         where
-        removeText      = none `when` isText
+        removeText      = none `whenA` isText
         insertNL        = this <++> txt "\n"
         indentChild     = ( replaceChildren
                             ( getChildren
@@ -570,7 +570,7 @@ indentTrees indentFilter preserveSpace level ts
           | isSignificant
               = this
           | otherwise
-              = (none `when` isWhiteSpace)
+              = (none `whenA` isWhiteSpace)
                 >=>
                 (indentFilter level <++> this)
 
@@ -586,7 +586,7 @@ indentTrees indentFilter preserveSpace level ts
                       >=>
                       lsf
                     )
-                    `when` isElem
+                    `whenA` isElem
                   ) t'
             ++
             ( if null ts'
@@ -639,7 +639,7 @@ insertNothing _         = none
 
 transfCdata             :: SeqA m XmlTree XmlTree
 transfCdata             = fromLA $
-                          (getCdata >=> mkText) `when` isCdata
+                          (getCdata >=> mkText) `whenA` isCdata
 
 -- |
 -- converts CDATA sections in whole document tree into normal text nodes
@@ -653,7 +653,7 @@ transfAllCdata          = fromLA $ editNTreeA [isCdata :-> (getCdata >=> mkText)
 transfCharRef           :: SeqA m XmlTree XmlTree
 transfCharRef           = fromLA $
                           ( getCharRef >=> return . (\ i -> [toEnum i]) >=> mkText )
-                          `when`
+                          `whenA`
                           isCharRef
 
 -- |
@@ -704,7 +704,7 @@ addDefaultDTDecl
             <++>
             txt "\n"
             <++>
-            ( getChildren >=> (none `when` isDTDDoctype) )      -- remove old DTD decl
+            ( getChildren >=> (none `whenA` isDTDDoctype) )      -- remove old DTD decl
           )
 
 -- ------------------------------------------------------------
@@ -742,7 +742,7 @@ addXmlPiEncoding :: MonadSeq m => String -> XmlTree -> m XmlTree
 addXmlPiEncoding enc
     = fromLA $
       processChildren ( addAttr a_encoding enc
-                        `when`
+                        `whenA`
                         ( isPi >=> hasName t_xml )
                       )
 

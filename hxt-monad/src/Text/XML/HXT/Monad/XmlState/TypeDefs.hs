@@ -35,7 +35,6 @@ import           Control.Arrow
 
 import           Control.DeepSeq
 import           Control.Monad.Arrow
-import           Control.Monad.State.Strict
 
 import           Data.ByteString.Lazy       (ByteString)
 import           Data.Char                  (isDigit)

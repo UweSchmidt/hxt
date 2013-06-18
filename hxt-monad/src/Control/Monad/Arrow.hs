@@ -1,7 +1,11 @@
 -- ----------------------------------------
 
 module Control.Monad.Arrow
-    ( module Control.Monad.Arrow.ArrowSubstitute
+    ( module Control.Monad
+    , module Control.Monad.Error
+    , module Control.Monad.State
+    , module Control.Monad.MonadSeq
+    , module Control.Monad.Arrow.ArrowSubstitute
     , module Control.Monad.Arrow.ArrowExc
     , module Control.Monad.Arrow.ArrowIf
     , module Control.Monad.Arrow.ArrowIO
@@ -10,11 +14,13 @@ module Control.Monad.Arrow
     , module Control.Monad.Arrow.ArrowState
     , module Control.Monad.Arrow.ArrowTree
     , module Control.Monad.Arrow.NTreeEdit
-    , module Control.Monad.MonadSeq
     )
 where
 
+import           Control.Monad
+import           Control.Monad.Error
 import           Control.Monad.MonadSeq
+import           Control.Monad.State
 
 import           Control.Monad.Arrow.ArrowExc
 import           Control.Monad.Arrow.ArrowIf

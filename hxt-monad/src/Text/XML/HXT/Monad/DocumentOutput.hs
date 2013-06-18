@@ -202,7 +202,7 @@ encodeDocument' quoteXml supressXmlPi defaultEnc
             = none
         | otherwise
             = ( if supressXmlPi
-                then processChildren (none `when` isXmlPi)
+                then processChildren (none `whenA` isXmlPi)
                 else ( addXmlPi
                        >=>
                        addXmlPiEncoding encodingScheme

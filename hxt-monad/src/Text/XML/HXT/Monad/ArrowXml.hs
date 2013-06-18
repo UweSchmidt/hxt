@@ -483,31 +483,31 @@ getQAttrValue0 n    = getAttrl >=> hasQName n >=> xshow getChildren
 
 -- | edit the string of a text node
 changeText          :: (MonadSeq m) => (String -> String) -> XmlTree -> m XmlTree
-changeText cf       = (return . (XN.changeText     cf)) `when` isText
+changeText cf       = (return . (XN.changeText     cf)) `whenA` isText
 
 -- | edit the blob of a blob node
 changeBlob          :: (MonadSeq m) => (Blob -> Blob) -> XmlTree -> m XmlTree
-changeBlob cf       = (return . (XN.changeBlob     cf)) `when` isBlob
+changeBlob cf       = (return . (XN.changeBlob     cf)) `whenA` isBlob
 
 -- | edit the comment string of a comment node
 changeCmt           :: (MonadSeq m) => (String -> String) -> XmlTree -> m XmlTree
-changeCmt  cf       = (return . (XN.changeCmt      cf)) `when` isCmt
+changeCmt  cf       = (return . (XN.changeCmt      cf)) `whenA` isCmt
 
 -- | edit an element-, attribute- or pi- name
 changeQName         :: (MonadSeq m) => (QName  -> QName) -> XmlTree -> m XmlTree
-changeQName cf      = (return . (XN.changeName  cf)) `when` getQName
+changeQName cf      = (return . (XN.changeName  cf)) `whenA` getQName
 
 -- | edit an element name
 changeElemName      :: (MonadSeq m) => (QName  -> QName) -> XmlTree -> m XmlTree
-changeElemName cf   = (return . (XN.changeElemName  cf)) `when` isElem
+changeElemName cf   = (return . (XN.changeElemName  cf)) `whenA` isElem
 
 -- | edit an attribute name
 changeAttrName      :: (MonadSeq m) => (QName  -> QName) -> XmlTree -> m XmlTree
-changeAttrName cf   = (return . (XN.changeAttrName cf)) `when` isAttr
+changeAttrName cf   = (return . (XN.changeAttrName cf)) `whenA` isAttr
 
 -- | edit a pi name
 changePiName        :: (MonadSeq m) => (QName  -> QName) -> XmlTree -> m XmlTree
-changePiName cf     = (return . (XN.changePiName  cf)) `when` isPi
+changePiName cf     = (return . (XN.changePiName  cf)) `whenA` isPi
 
 -- | edit an attribute value
 changeAttrValue     :: (MonadSeq m) => (String -> String) -> XmlTree -> m XmlTree
@@ -515,7 +515,7 @@ changeAttrValue cf  = replaceChildren ( xshow getChildren
                                         >=> return . cf
                                         >=> mkText
                                       )
-                      `when` isAttr
+                      `whenA` isAttr
 
 
 -- | edit an attribute list of an element node
@@ -527,7 +527,7 @@ changeAttrl cf f    = ( ( listA f &=& this )
                         >=>
                         arr2 changeAL
                       )
-                      `when`
+                      `whenA`
                       ( isElem <++> isPi )
     where
       changeAL as x = XN.changeAttrl (\ xs -> cf xs as) x
@@ -569,11 +569,11 @@ addAttr an av       = addAttrl (sattr an av)
 
 -- | remove an attribute
 removeAttr          :: (MonadSeq m) => String  -> XmlTree -> m XmlTree
-removeAttr an       = processAttrl (none `when` hasName an)
+removeAttr an       = processAttrl (none `whenA` hasName an)
 
 -- | remove an attribute with a qualified name
 removeQAttr         :: (MonadSeq m) => QName  -> XmlTree -> m XmlTree
-removeQAttr an      = processAttrl (none `when` hasQName an)
+removeQAttr an      = processAttrl (none `whenA` hasQName an)
 
 -- | process the attributes of an element node with an arrow
 processAttrl        :: (MonadSeq m) => (XmlTree -> m XmlTree) -> XmlTree -> m XmlTree
@@ -583,7 +583,7 @@ processAttrl f      = setAttrl (getAttrl >=> f)
 -- see also: 'Control.Arrow.ArrowTree.processTopDown'
 
 processTopDownWithAttrl     :: (MonadSeq m) => (XmlTree -> m XmlTree) -> XmlTree -> m XmlTree
-processTopDownWithAttrl f   = processTopDown ( f >=> ( processAttrl (processTopDown f) `when` isElem))
+processTopDownWithAttrl f   = processTopDown ( f >=> ( processAttrl (processTopDown f) `whenA` isElem))
 
     -- | convenient op for adding attributes or children to a node
     --
@@ -690,7 +690,7 @@ getDTDAttrValue     :: (MonadSeq m) => String -> XmlTree -> m String
 getDTDAttrValue n   = arrL (maybeToList . lookup n . fromMaybe [] . XN.getDTDAttrl)
 
 setDTDAttrValue     :: (MonadSeq m) => String -> String -> XmlTree -> m XmlTree
-setDTDAttrValue n v = (return . (XN.changeDTDAttrl (addEntry n v))) `when` isDTD
+setDTDAttrValue n v = (return . (XN.changeDTDAttrl (addEntry n v))) `whenA` isDTD
 
 mkDTDElem           :: (MonadSeq m) => DTDElem -> Attributes -> (n -> m XmlTree) -> (n -> m XmlTree)
 mkDTDElem e al cf   = listA cf >=> (return . (XN.mkDTDElem e al))

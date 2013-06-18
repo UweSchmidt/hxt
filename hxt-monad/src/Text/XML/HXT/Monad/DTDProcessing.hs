@@ -81,7 +81,7 @@ processDTD
            >=>
            traceSource
          )
-      `when` ( isRoot >=> getChildren )
+      `whenA` ( isRoot >=> getChildren )
       where
 
       processRoot       :: IOStateArrow s XmlTree XmlTree
@@ -96,13 +96,13 @@ processDTD
               >=>
               traceMsg 1 ("processDTD: parameter entities processed")
             )
-            `when`
+            `whenA`
             documentStatusOk
 
 substParamEntities      :: IOStateArrow s XmlTree XmlTree
 substParamEntities
     = withOtherUserState emptyPeEnv processParamEntities
-      `when`
+      `whenA`
       isDTDDoctype
       where
 
@@ -252,7 +252,7 @@ substParamEntity loc recList
                                     )
           , this                :-> substPE
           ]
-          `when`
+          `whenA`
           isDTDPERef
         where
         peVal                   = constA pn >=> getPeValue
@@ -286,7 +286,7 @@ substParamEntity loc recList
             `whenNot`
             hasDTDAttr k_system                                         -- only apply for internal entities
           )
-          `when`
+          `whenA`
           ( isDTDEntity <++> isDTDPEntity )                              -- only apply for entity declarations
 
     substPeRefsInDTDpart        :: RecList -> DTDStateArrow XmlTree XmlTree
@@ -309,7 +309,7 @@ substParamEntity loc recList
                                  >=>
                                  substParamEntity loc (pn : recl)
                                )
-                `when`
+                `whenA`
                 isDTDPERef
               )
 
@@ -329,7 +329,7 @@ substParamEntity loc recList
                                  >=>
                                  processChildren ( substPeRefsInDTDdecl (pn : recl) )
                                )
-                `when`
+                `whenA`
                 isDTDPERef
               )
 
@@ -367,7 +367,7 @@ substParamEntity loc recList
     recursionCheck      :: String -> RecList -> (RecList -> String -> DTDStateArrow XmlTree XmlTree) -> DTDStateArrow XmlTree XmlTree
     recursionCheck wher rl subst
         = ( recusiveSubst  $< getDTDAttrValue a_peref )
-          `when`
+          `whenA`
           isDTDPERef
         where
         recusiveSubst name

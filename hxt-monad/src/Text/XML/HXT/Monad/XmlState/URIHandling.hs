@@ -44,7 +44,7 @@ getBaseURI              = getSysVar theBaseURI
                               >=>
                               getBaseURI
                             )
-                            `when`
+                            `whenA`
                             isA null                                -- set and get it, if not yet done
                           )
 
@@ -100,7 +100,7 @@ getDefaultBaseURI       = getSysVar theDefaultBaseURI            -- read default
                               >=>
                               getDefaultBaseURI
                             )
-                            `when` isA null
+                            `whenA` isA null
                           )                                         -- when uri not yet set
 
 -- ------------------------------------------------------------

@@ -148,7 +148,7 @@ cleanupNamespaces collectNamespaces
     renameNamespaces env
         = processBottomUp
           ( processAttrl
-            ( ( none `when` isNamespaceDeclAttr )       -- remove all namespace declarations
+            ( ( none `whenA` isNamespaceDeclAttr )       -- remove all namespace declarations
               >=>
               changeQName renamePrefix                  -- update namespace prefix of attribute names, if namespace uri is set
             )
@@ -218,7 +218,7 @@ processWithNsEnv1 withAttr f env
             >=>
             processChildren (processWithNsEnv f env')           -- apply the env recursively to all children
           )
-          `when` isElem                                         -- attrl and children only need processing for elem nodes
+          `whenA` isElem                                         -- attrl and children only need processing for elem nodes
 
     extendEnv   :: NsEnv -> XmlTree -> NsEnv
     extendEnv env' t'
@@ -258,11 +258,11 @@ attachNsEnv initialEnv
 
 attachEnv       :: NsEnv -> LA XmlTree XmlTree
 attachEnv env
-    = ( processAttrl (none `when` isNamespaceDeclAttr)
+    = ( processAttrl (none `whenA` isNamespaceDeclAttr)
         >=>
         addAttrl (catA nsAttrl)
       )
-      `when` isElem
+      `whenA` isElem
     where
     nsAttrl             :: [LA XmlTree XmlTree]
     nsAttrl             = map nsDeclToAttr env
@@ -315,7 +315,7 @@ propagateNamespaceEnv
           )
           `orElse`
           ( changeAttrName (const xmlnsQN)
-            `when`
+            `whenA`
             hasName a_xmlns
           )
 

@@ -125,7 +125,7 @@ filterErrorMsg          = ( setErrMsgStatus
                             >=>
                             none
                           )
-                          `when`
+                          `whenA`
                           isError
 
 -- | generate a warnig message
@@ -171,7 +171,7 @@ setDocumentStatus level msg
                               else this
                             )
                           )
-                      `when`
+                      `whenA`
                       isRoot
 
 -- |

@@ -66,7 +66,7 @@ processGeneralEntities
         >=>
         traceSource
       )
-      `when`
+      `whenA`
       documentStatusOk
 
 
@@ -91,8 +91,8 @@ processGeneralEntity context recl
                             ]
                   )
         where
-        isIntern        = none `when` hasDTDAttr k_system
-        isExtern        = none `when` hasDTDAttr k_ndata
+        isIntern        = none `whenA` hasDTDAttr k_system
+        isExtern        = none `whenA` hasDTDAttr k_ndata
         isUnparsed      = this
 
     addInternalEntity   :: GEArrow XmlTree b
@@ -175,12 +175,12 @@ processGeneralEntity context recl
                          )
                    >=> return . setDTDAttrValue a_default
                  )
-          `when` hasDTDAttr a_default
+          `whenA` hasDTDAttr a_default
 
     substEntitiesInAttrValue    :: GEArrow XmlTree XmlTree
     substEntitiesInAttrValue
         = ( processGeneralEntity ReferenceInAttributeValue recl
-            `when`
+            `whenA`
             isEntityRef
           )
           >=>

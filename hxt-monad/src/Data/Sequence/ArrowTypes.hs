@@ -18,7 +18,7 @@ type SLA    s a b = a -> StateSeq   s b
 type IOLA     a b = a -> IOSeq        b
 type IOSLA  s a b = a -> IOStateSeq s b
 
--- this type needs RankNTypes
+-- this type needs RankNTypes, do we really need this ?
 
 type SeqA   m a b = (MonadSeq m) => a -> m b
 
