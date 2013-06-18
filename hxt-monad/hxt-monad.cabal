@@ -1,0 +1,124 @@
+-- arch-tag: Haskell XML Toolbox main description file
+Name:           hxt-monad
+Version:        1.0.0.0
+Synopsis:       A collection of tools for processing XML with Haskell.
+Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
+                but introduces a more general approach for processing XML with Haskell.
+                The Haskell XML Toolbox uses a generic data model for representing XML documents,
+                including the DTD subset and the document subset, in Haskell.
+                It contains a validating XML parser, a HTML parser, namespace support,
+                an XPath expression evaluator, an XSLT library, a RelaxNG schema validator
+                and funtions for serialization and deserialization of user defined data
+                .
+                This library is a rewrite of the hxt library.
+                It is based on monadic datatypes, not on arrows,
+                but the functionality, and the names of most of the
+                functions and operators are the same.
+                So it is rather easy to modifiy any applications using hxt
+                to work with hxt-monad.
+                The advantage of the monadic approach is mainly,
+                that this enables working with the do-notation.
+                .               
+License:        MIT
+License-file:   LICENSE
+Author:         Uwe Schmidt
+Maintainer:     Uwe Schmidt <uwe@fh-wedel.de>
+Stability:      experimental
+Category:       XML
+Homepage:       http://www.fh-wedel.de/~si/HXmlToolbox/index.html
+Copyright:      Copyright (c) 2005-2013 Uwe Schmidt
+Build-type:     Simple
+Cabal-version:  >=1.8
+
+library
+  exposed-modules:
+    Control.Monad.Arrow
+    Control.Monad.MonadSeq
+    Control.Monad.MonadTry
+    Data.Sequence.ArrowTypes
+    Data.Sequence.ErrorSequence
+    Data.Sequence.Monad.IdSeq
+    Data.Sequence.Monad.IOSeq
+    Data.Sequence.Monad.IOStateSeq
+    Data.Sequence.Monad.StateSeq
+    Data.Sequence.Seq
+    Data.Sequence.Sequence
+    Text.XML.HXT.ArrowCompat
+    Text.XML.HXT.Monad
+    Text.XML.HXT.Monad.ArrowXml
+    Text.XML.HXT.Monad.Binary
+    Text.XML.HXT.Monad.DocumentInput
+    Text.XML.HXT.Monad.DocumentOutput
+    Text.XML.HXT.Monad.DTDProcessing
+    Text.XML.HXT.Monad.DTDValidation.AttributeValueValidation
+    Text.XML.HXT.Monad.DTDValidation.DocTransformation
+    Text.XML.HXT.Monad.DTDValidation.DocValidation
+    Text.XML.HXT.Monad.DTDValidation.DTDValidation
+    Text.XML.HXT.Monad.DTDValidation.IdValidation
+    Text.XML.HXT.Monad.DTDValidation.TypeDefs
+    Text.XML.HXT.Monad.DTDValidation.Validation
+    Text.XML.HXT.Monad.DTDValidation.XmlRE
+    Text.XML.HXT.Monad.Edit
+    Text.XML.HXT.Monad.GeneralEntitySubstitution
+    Text.XML.HXT.Monad.Namespace
+    Text.XML.HXT.Monad.ParserInterface
+    Text.XML.HXT.Monad.Pickle
+    Text.XML.HXT.Monad.Pickle.Xml
+    Text.XML.HXT.Monad.ProcessDocument
+    Text.XML.HXT.Monad.ReadDocument
+    Text.XML.HXT.Monad.WriteDocument
+    Text.XML.HXT.Monad.XmlOptions
+    Text.XML.HXT.Monad.XmlRegex
+    Text.XML.HXT.Monad.XmlState
+
+  other-modules:
+    Control.Monad.Arrow.ArrowExc
+    Control.Monad.Arrow.ArrowIf
+    Control.Monad.Arrow.ArrowIO
+    Control.Monad.Arrow.ArrowList
+    Control.Monad.Arrow.ArrowNF
+    Control.Monad.Arrow.ArrowState
+    Control.Monad.Arrow.ArrowSubstitute
+    Control.Monad.Arrow.ArrowTree
+    Control.Monad.Arrow.NTreeEdit
+    Data.Sequence.Impl.List
+    Data.Sequence.Impl.ListWithFailure
+    Data.Sequence.Impl.Tree
+    Data.Sequence.Impl.TreeWithFailure
+    Text.XML.HXT.Monad.XmlState.ErrorHandling
+    Text.XML.HXT.Monad.XmlState.MimeTypeTable
+    Text.XML.HXT.Monad.XmlState.RunIOStateArrow
+    Text.XML.HXT.Monad.XmlState.SystemConfig
+    Text.XML.HXT.Monad.XmlState.TraceHandling
+    Text.XML.HXT.Monad.XmlState.TypeDefs
+    Text.XML.HXT.Monad.XmlState.URIHandling
+
+  hs-source-dirs: src
+
+  ghc-options: -Wall
+  ghc-prof-options: -auto-all -caf-all
+
+  extensions:
+    MultiParamTypeClasses
+    DeriveDataTypeable
+    FunctionalDependencies
+    FlexibleInstances
+    TypeSynonymInstances
+
+ build-depends: base               >= 4   && < 5,
+                containers         >= 0.2 && < 1,
+                directory          >= 1   && < 2,
+                filepath           >= 1.0 && < 2,
+                mtl                >= 2   && < 3,
+                network            >= 2.4 && < 3,
+                deepseq            >= 1.1 && < 2,
+                bytestring         >= 0.9 && < 1,
+                binary             >= 0.5 && < 1,
+                hxt                >= 9.1 && < 10,
+                hxt-charproperties >= 9.1 && < 10,
+                hxt-unicode        >= 9   && < 10
+
+Source-Repository head
+  Type:     git
+  Location: git://github.com/UweSchmidt/hxt.git
+
