@@ -1,0 +1,16 @@
+name:                core9-hparser
+version:             0.1.0.0
+synopsis:            XML/HTML parser with monadic version of HXT and HXT.9 compatibility mode
+description:         XML/HTML parser with monadic version of HXT and HXT.9 compatibility mode         
+license:             MIT
+author:              Uwe Schmidt
+maintainer:          uwe@fh-wedel.de
+copyright:           2013, Uwe Schmidt
+category:            Testing
+build-type:          Simple
+cabal-version:       >=1.8
+
+executable core9-hparser
+  main-is:             Main.hs
+  build-depends:       base,
+                       hxt-monad ==1.0.*

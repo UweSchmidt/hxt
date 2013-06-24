@@ -18,9 +18,9 @@
 
 -- ------------------------------------------------------------
 
-module Text.XML.HXT.ArrowCompat
+module Text.XML.HXT.Core9
     ( module Text.XML.HXT.Monad
-    , module Text.XML.HXT.ArrowCompat
+    , module Text.XML.HXT.Core9
     )
 where
 

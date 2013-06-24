@@ -43,7 +43,7 @@ library
     Data.Sequence.Monad.StateSeq
     Data.Sequence.Seq
     Data.Sequence.Sequence
-    Text.XML.HXT.ArrowCompat
+    Text.XML.HXT.Core9
     Text.XML.HXT.Monad
     Text.XML.HXT.Monad.ArrowXml
     Text.XML.HXT.Monad.Binary
