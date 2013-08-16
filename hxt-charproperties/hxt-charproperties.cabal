@@ -1,12 +1,12 @@
 Name:                hxt-charproperties
-Version:             9.1.1
+Version:             9.1.1.1
 Synopsis:            Character properties and classes for XML and Unicode
 Description:         Character proprties defined by XML and Unicode standards.
                      These modules contain predicates for Unicode blocks and char proprties
                      and character predicates defined by XML.
                      Supported Unicode version is 5.2.0.
 Homepage:            http://www.fh-wedel.de/~si/HXmlToolbox/index.html
-License:             OtherLicense
+License:             MIT
 License-file:        LICENSE
 Author:              Uwe Schmidt
 Maintainer:          Uwe Schmidt <uwe@fh-wedel.de>
@@ -15,7 +15,7 @@ Stability:           Stable
 Category:            Text
 Build-type:          Simple
 
-Cabal-version:       >=1.2
+Cabal-version:       >=1.4
 
 Extra-source-files:
   gen/Makefile
@@ -38,5 +38,5 @@ Library
   
   hs-source-dirs: src
 
-  ghc-options: -Wall -O2
+  ghc-options: -Wall
   ghc-prof-options: -auto-all -caf-all
