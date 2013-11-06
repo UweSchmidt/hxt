@@ -2,7 +2,7 @@
 
 {- |
    Module     : Text.XML.HXT.Arrow.ReadDocument
-   Copyright  : Copyright (C) 2005 Uwe Schmidt
+   Copyright  : Copyright (C) 2005-2013 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
@@ -21,7 +21,9 @@ module Text.XML.HXT.Arrow.ReadDocument
     , readString
     , readFromString
     , hread
+    , hreadDoc
     , xread
+    , xreadDoc
     )
 where
 
@@ -39,7 +41,7 @@ import Text.XML.HXT.Arrow.Edit                  ( canonicalizeAllNodes
                                                 , rememberDTDAttrl
                                                 , removeDocWhiteSpace
                                                 )
-import Text.XML.HXT.Arrow.ParserInterface
+import qualified Text.XML.HXT.Arrow.ParserInterface as PI
 import Text.XML.HXT.Arrow.ProcessDocument       ( getDocumentContents
                                                 , parseXmlDocument
                                                 , parseXmlDocumentWithExpat
@@ -479,24 +481,38 @@ readFromString config
 hread :: ArrowXml a => a String XmlTree
 hread
     = fromLA $
-      parseHtmlContent                      -- substHtmlEntityRefs is done in parser
+      PI.hread                              -- substHtmlEntityRefs is done in parser
       >>>                                   -- as well as subst HTML char refs
       editNTreeA [isError :-> none]         -- ignores all errors
 
-{- no longer neccesary, text nodes are merged in parser
-      >>>
-      canonicalizeContents
--- -}
+-- | like hread, but accepts a whole document, not a HTML content
+
+hreadDoc :: ArrowXml a => a String XmlTree
+hreadDoc
+    = fromLA $
+      PI.hreadDoc                           -- substHtmlEntityRefs is done in parser
+      >>>                                   -- as well as subst HTML char refs
+      editNTreeA [isError :-> none]         -- ignores all errors
 
 -- ------------------------------------------------------------
 
 -- |
--- parse a string as XML content, substitute all predefined XML entity refs and canonicalize tree
+-- parse a string as XML CONTENT, (no xml decl or doctype decls are allowed),
+-- substitute all predefined XML entity refs and canonicalize tree
 -- This xread arrow delegates all work to the xread parser function in module XmlParsec
 
 xread :: ArrowXml a => a String XmlTree
-xread
-    = parseXmlContent
+xread = PI.xreadCont
+
+-- |
+-- a more general version of xread which
+-- parses a whole document including a prolog
+-- (xml decl, doctype decl) and processing
+-- instructions. Doctype decls remain uninterpreted,
+-- but are in the list of results trees.
+
+xreadDoc :: ArrowXml a => a String XmlTree
+xreadDoc = PI.xreadDoc
 
 {- -- the old version, where the parser does not subst char refs and cdata
 xread                   = root [] [parseXmlContent]       -- substXmlEntityRefs is done in parser

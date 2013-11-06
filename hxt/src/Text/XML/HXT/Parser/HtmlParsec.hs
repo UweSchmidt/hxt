@@ -119,7 +119,7 @@ parseHtmlDocument       :: String -> String -> XmlTrees
 parseHtmlDocument       = parseHtmlFromString htmlDocument
 
 parseHtmlContent        :: String -> XmlTrees
-parseHtmlContent        = parseHtmlFromString htmlContent "text"
+parseHtmlContent        = parseHtmlFromString htmlContent "string"
 
 -- ------------------------------------------------------------
 

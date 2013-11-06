@@ -37,6 +37,7 @@ module Text.XML.HXT.Parser.XmlParsec
     , textDecl
     , encodingDecl
     , xread
+    , xreadDoc
 
     , parseXmlContent
     , parseXmlDocEncodingSpec
@@ -618,13 +619,19 @@ encodingDecl
 -- see also: 'parseXmlContent'
 
 xread                   :: String -> XmlTrees
-xread str
+xread                   = xread' content         -- take the content parser for parsing the string
+
+xreadDoc                :: String -> XmlTrees
+xreadDoc                = xread' document'       -- take the document' parser for parsing the string
+
+xread'                   :: XParser () XmlTrees -> String -> XmlTrees
+xread' content' str
     = parseXmlFromString parser (withNormNewline ()) loc str
     where
     loc = "string: " ++ show (if length str > 40 then take 40 str ++ "..." else str)
     parser = do
-             res <- content             -- take the content parser for parsing the string
-             eof                        -- and test on everything consumed
+             res <- content'
+             eof                        -- test on everything consumed
              return res
 
 -- |

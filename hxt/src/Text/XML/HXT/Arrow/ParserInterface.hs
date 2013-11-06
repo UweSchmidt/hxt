@@ -35,8 +35,11 @@ parseXmlDoc                     =  arr2L XP.parseXmlDocument
 parseXmlDTDPart                 :: ArrowXml a => a (String, XmlTree) XmlTree
 parseXmlDTDPart                 =  arr2L XP.parseXmlDTDPart
 
-parseXmlContent                 :: ArrowXml a => a String XmlTree
-parseXmlContent                 =  arrL XP.xread
+xreadCont                       :: ArrowXml a => a String XmlTree
+xreadCont                       =  arrL XP.xread
+
+xreadDoc                        :: ArrowXml a => a String XmlTree
+xreadDoc                        =  arrL XP.xreadDoc
 
 parseXmlEntityEncodingSpec
   , parseXmlDocEncodingSpec
@@ -67,7 +70,10 @@ parseXmlEntityValueAsAttrValue  =  arrL . XP.parseXmlEntityValueAsAttrValue
 parseHtmlDoc                    :: ArrowList a => a (String, String) XmlTree
 parseHtmlDoc                    = arr2L HP.parseHtmlDocument
 
-parseHtmlContent                :: ArrowList a => a String XmlTree
-parseHtmlContent                = arrL  HP.parseHtmlContent
+hread                           :: ArrowList a => a String XmlTree
+hread                           = arrL   HP.parseHtmlContent
+
+hreadDoc                        :: ArrowList a => a String XmlTree
+hreadDoc                        = arrL $ HP.parseHtmlDocument "string"
 
 -- ------------------------------------------------------------
