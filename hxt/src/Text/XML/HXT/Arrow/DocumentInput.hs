@@ -58,6 +58,7 @@ protocolHandlers        :: AssocList String (IOStateArrow s XmlTree XmlTree)
 protocolHandlers
     = [ ("file",        getFileContents)
       , ("http",        getHttpContents)
+      , ("https",       getHttpContents)
       , ("stdin",       getStdinContents)
       ]
 
