@@ -244,7 +244,7 @@ extendNsEnv withNamespaces al1 env
 lookupEntity    :: Bool -> Bool -> (String, Bool) -> Tags
 lookupEntity withWarnings _asHtml (e0@('#':e), withSemicolon)
     = case lookupNumericEntity e of
-      Just c  -> (TagText [c])
+      Just c  -> (TagText c)
 		 : missingSemi
       Nothing -> ( TagText $ "&" ++ e0 ++ [';' | withSemicolon])
 		 : if withWarnings
