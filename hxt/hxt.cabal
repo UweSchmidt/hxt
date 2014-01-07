@@ -37,7 +37,7 @@ Maintainer:     Uwe Schmidt <uwe@fh-wedel.de>
 Stability:      Stable
 Category:       XML
 Homepage:       http://www.fh-wedel.de/~si/HXmlToolbox/index.html
-Copyright:      Copyright (c) 2005-2012 Uwe Schmidt
+Copyright:      Copyright (c) 2005-2014 Uwe Schmidt
 Build-type:     Simple
 Cabal-version:  >=1.8
 
