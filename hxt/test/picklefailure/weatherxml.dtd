@@ -1,0 +1,15 @@
+<!ELEMENT XML_File_ID (#PCDATA)>
+<!ELEMENT heading (#PCDATA)>
+<!ELEMENT category (#PCDATA)>
+<!ELEMENT sport (#PCDATA)>
+<!ELEMENT title (#PCDATA)>
+<!ELEMENT teams (#PCDATA)>
+<!ELEMENT weather (#PCDATA)>
+<!ELEMENT listing ( ( teams, weather ) )>
+<!ELEMENT league ( listing* )>
+<!ELEMENT forecast ( league )>
+<!ELEMENT time_stamp (#PCDATA)>
+<!ELEMENT message ( ( XML_File_ID, heading, category, sport, title, forecast*, time_stamp ) )>
+
+<!ATTLIST league name CDATA #REQUIRED>
+<!ATTLIST forecast gamedate CDATA #REQUIRED>

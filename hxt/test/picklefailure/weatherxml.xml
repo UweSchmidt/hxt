@@ -1,0 +1,50 @@
+<?xml version="1.0" standalone="no" ?>
+<!DOCTYPE message PUBLIC "-//TSN//DTD Weather 1.0/EN" "weatherxml.dtd">
+<message>
+<XML_File_ID>19996383</XML_File_ID>
+<heading>AFW%COLLFBWEATHER</heading>
+<category>Weather</category>
+<sport>CFOOT</sport>
+<title>College Football Weather Forecast</title>
+<forecast gamedate="Monday, December 30th">
+<league name="">
+<listing>
+<teams>Middle Tennessee at Navy, 11:45 a.m.</teams>
+<weather>Mostly sunny. Winds northwest at 5-10 m.p.h. (Fort Worth, TX)  Game-time temperature: Around 35.</weather>
+</listing>
+<listing>
+<teams>Ole Miss at Georgia Tech, 3:15 p.m.</teams>
+<weather>Partly cloudy. Winds northwest at 1-10 m.p.h. (Nashville, TN)  Game-time temperature: Near 40.</weather>
+</listing>
+<listing>
+<teams>Oregon at Texas, 6:45 p.m.</teams>
+<weather>Game is being played inside a dome. (San Antonio, TX)</weather>
+</listing>
+<listing>
+<teams>Arizona State at Texas Tech, 10:15 p.m.</teams>
+<weather>Clear. Winds northeast at 1-5 m.p.h. (San Diego, CA)  Game-time temperature: Around 60.</weather>
+</listing>
+</league>
+</forecast>
+<forecast gamedate="Tuesday, December 31st">
+<league name="">
+<listing>
+<teams>Arizona at Boston College, 12:30 p.m.</teams>
+<weather>Mostly sunny. Winds southeast at 1-5 m.p.h. (Shreveport, LA)  Game-time temperature: Around 50.</weather>
+</listing>
+<listing>
+<teams>Virginia Tech at UCLA, 2:10 p.m.</teams>
+<weather>Sunny. Winds southwest at 1-5 m.p.h. (El Paso, TX)  Game-time temperature: Around 55.</weather>
+</listing>
+<listing>
+<teams>Rice at Miss State, 4:00 p.m.</teams>
+<weather>Sunny. Winds southwest at 1-10 m.p.h. (Memphis, TN)  Game-time temperature: Around 45.</weather>
+</listing>
+<listing>
+<teams>Duke at Texas A&amp;M, 8:00 p.m.</teams>
+<weather>Game is being played inside a dome. (Atlanta, GA)</weather>
+</listing>
+</league>
+</forecast>
+<time_stamp> December 30, 2013, at 09:10 AM ET </time_stamp>
+</message>

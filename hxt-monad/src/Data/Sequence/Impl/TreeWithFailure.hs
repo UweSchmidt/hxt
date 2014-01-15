@@ -13,6 +13,7 @@
 module Data.Sequence.Impl.TreeWithFailure
     ( Seq
 
+    , invSeq
     , foldTree
     , foldTreeR
     , fromListTree
@@ -53,24 +54,44 @@ import           Prelude                     hiding (drop, head, init, last,
 -- ----------------------------------------
 
 data Seq a
-    = Tip a
-    | Bin (Seq a) (Seq a)
-    | Empty
-    | Fail (Seq String)
+    = Tip a                   -- single element
+    | Bin (Seq a) (Seq a)     -- concatenation
+    | Empty                   -- empty sequence
+    | Fail (Seq String)       -- error messages stored as a Seq
       deriving (Eq, Show)
+
+-- ----------------------------------------
+--
+-- | The invariant, that must hold for all values.
+--
+--  Empty and Fail are only allowed as root values
+--  The constructors are not exported, but internally
+--  the smart constructor bin will ensure this
+
+invSeq :: Seq a -> Bool
+invSeq (Bin l r) = onlyBinsAndTips l
+                   &&
+                   onlyBinsAndTips r
+                   where
+                     onlyBinsAndTips (Tip _)     = True
+                     onlyBinsAndTips (Bin l' r') = onlyBinsAndTips l'
+                                                   &&
+                                                   onlyBinsAndTips r'
+                     onlyBinsAndTips _           = False
+invSeq _         = True
 
 -- ----------------------------------------
 
 instance NFData a => NFData (Seq a) where
     rnf (Tip x)   = rnf x
     rnf (Bin l r) = rnf l `seq` rnf r
-    rnf Empty     = ()
+    rnf (Empty)   = ()
     rnf (Fail e)  = rnf e
 
 instance Functor Seq where
     fmap f (Tip x)   = Tip (f x)
     fmap f (Bin l r) = Bin (fmap f l) (fmap f r)
-    fmap _  Empty    = Empty
+    fmap _ (Empty)   = Empty
     fmap _ (Fail s)  = Fail s
 
 instance Applicative Seq where
