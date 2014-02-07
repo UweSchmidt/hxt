@@ -44,7 +44,7 @@ Here is an example, how to use it:
 > import Text.HXT.XML.TagSoup
 > ...
 >
-> readDocument [ withExpat ] "some-file.xml"
+> readDocument [ withTagSoup ] "some-file.xml"
 > ...
 
 reads the given document and parses it with the lazy tagsoup parser.
