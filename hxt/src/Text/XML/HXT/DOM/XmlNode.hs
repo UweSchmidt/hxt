@@ -435,7 +435,7 @@ mkAttr n        = mkTree (mkAttrNode n)
 mkDTDElem       :: DTDElem -> Attributes -> XmlTrees -> XmlTree
 mkDTDElem e al  = mkTree (mkDTDNode e al)
 
-addAttr         :: XmlTree -> XmlTrees -> XmlTrees
+addAttr         :: XmlNode xn => xn -> [xn] -> [xn]
 addAttr a al
     | isAttr a  = add al
     | otherwise = al
@@ -451,7 +451,7 @@ addAttr a al
         | otherwise
             = a1 : add al1
 
-mergeAttrl      :: XmlTrees -> XmlTrees -> XmlTrees
+mergeAttrl      :: XmlNode xn => [xn] -> [xn] -> [xn]
 mergeAttrl      = foldr addAttr
 
 -- ------------------------------------------------------------

@@ -568,25 +568,25 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     {-# INLINE setAttrl #-}
 
     -- | add a list of attributes to an element
-    addAttrl            :: a XmlTree XmlTree -> a XmlTree XmlTree
+    addAttrl            :: XmlNode xn => a xn XmlTree -> a xn xn
     addAttrl            = changeAttrl (XN.mergeAttrl)
     {-# INLINE addAttrl #-}
 
     -- | add (or replace) an attribute
-    addAttr             :: String -> String  -> a XmlTree XmlTree
+    addAttr             :: XmlNode xn => String -> String  -> a xn xn
     addAttr an av       = addAttrl (sattr an av)
     {-# INLINE addAttr #-}
 
     -- | remove an attribute
-    removeAttr          :: String  -> a XmlTree XmlTree
+    removeAttr          :: XmlNode xn => String  -> a xn xn
     removeAttr an       = processAttrl (none `when` hasName an)
 
     -- | remove an attribute with a qualified name
-    removeQAttr         :: QName  -> a XmlTree XmlTree
+    removeQAttr         :: XmlNode xn => QName  -> a xn xn
     removeQAttr an      = processAttrl (none `when` hasQName an)
 
     -- | process the attributes of an element node with an arrow
-    processAttrl        :: a XmlTree XmlTree -> a XmlTree XmlTree
+    processAttrl        :: XmlNode xn => a XmlTree XmlTree -> a xn xn
     processAttrl f      = setAttrl (getAttrl >>> f)
 
     -- | process a whole tree inclusive attribute list of element nodes
