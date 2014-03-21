@@ -524,7 +524,7 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
 
     -- | edit an attribute value
     changeAttrValue     :: (XmlNode xn, ToXmlTree t xn) => (String -> String) -> a (t xn) (t xn)
-    changeAttrValue cf  = replaceChildren (xshow getChildren
+    changeAttrValue cf  = replaceChildren ( xshow getChildren
                                             >>> arr cf
                                             >>> mkText
                                           )
