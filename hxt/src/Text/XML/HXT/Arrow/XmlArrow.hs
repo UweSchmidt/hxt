@@ -532,7 +532,7 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
 
 
     -- | edit an attribute list of an element node
-    changeAttrl         :: (XmlTrees -> XmlTrees -> XmlTrees) -> a XmlTree XmlTree -> a XmlTree XmlTree
+    changeAttrl         :: XmlNode xn => (XmlTrees -> [b] -> XmlTrees) -> a xn b -> a xn xn
     changeAttrl cf f    = ( ( listA f &&& this )
                             >>>
                             arr2 changeAL
@@ -563,7 +563,7 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     {-# INLINE setPiName #-}
 
     -- | replace an atribute list of an element node
-    setAttrl            :: a XmlTree XmlTree -> a XmlTree XmlTree
+    setAttrl            :: XmlNode xn => a xn XmlTree -> a xn xn
     setAttrl            = changeAttrl (const id)                -- (\ x y -> y)
     {-# INLINE setAttrl #-}
 
