@@ -562,7 +562,7 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     setPiName  n        = changePiName  (const n)
     {-# INLINE setPiName #-}
 
-    -- | replace an atribute list of an element node
+    -- | replace an attribute list of an element node
     setAttrl            :: XmlNode xn => a xn XmlTree -> a xn xn
     setAttrl            = changeAttrl (const id)                -- (\ x y -> y)
     {-# INLINE setAttrl #-}
