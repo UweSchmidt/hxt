@@ -166,9 +166,11 @@ class Tree t => ToXmlTree t a where
 
 instance ToXmlTree NTree XNode where
     toXmlTree = id
+    {-# INLINE toXmlTree #-}
 
 instance ToXmlTree NTZipper XNode where
     toXmlTree = toTree
+    {-# INLINE toXmlTree #-}
 
 -- -----------------------------------------------------------------------------
 --

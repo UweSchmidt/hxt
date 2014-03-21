@@ -45,11 +45,11 @@ import Text.XML.HXT.DOM.XmlNode                 ( mkDTDElem
 -- see also : 'xmlTreesToText' for filter version, 'Text.XML.HXT.Parser.XmlParsec.xread' for the inverse operation
 
 xshow                           :: ToXmlTree t a => [t a] -> String
-xshow xts = xshow1 $ fmap toXmlTree xts
+xshow xts                       = xshow_xt $ fmap toXmlTree xts
     where
-    xshow1 [(NTree (XText s) _)]     = s                     -- special case optimisation
-    xshow1 [(NTree (XBlob b) _)]     = blobToString b        -- special case optimisation
-    xshow1 ts                        = showXmlTrees showString showString ts ""
+    xshow_xt [(NTree (XText s) _)] = s                     -- special case optimisation
+    xshow_xt [(NTree (XBlob b) _)] = blobToString b        -- special case optimisation
+    xshow_xt ts                    = showXmlTrees showString showString ts ""
 
 -- | convert an XML tree into a binary large object (a bytestring)
 
