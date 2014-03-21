@@ -195,12 +195,12 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
 
     -- |
     -- test whether an element node has an attribute with a specific value
-    hasAttrValue        :: String -> (String -> Bool) -> a XmlTree XmlTree
+    hasAttrValue        :: XmlNode xn => String -> (String -> Bool) -> a xn xn
     hasAttrValue n p    = (getAttrl >>> hasName n >>> xshow getChildren >>> isA p)  `guards` this
 
     -- |
     -- test whether an element node has an attribute with a qualified name and a specific value
-    hasQAttrValue       :: QName -> (String -> Bool) -> a XmlTree XmlTree
+    hasQAttrValue       :: XmlNode xn => QName -> (String -> Bool) -> a xn xn
     hasQAttrValue n p   = (getAttrl >>> hasQName n >>> xshow getChildren >>> isA p)  `guards` this
 
     -- constructor arrows ------------------------------------------------------------
