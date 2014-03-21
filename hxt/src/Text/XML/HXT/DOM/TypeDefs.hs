@@ -40,7 +40,7 @@ import           Data.Tree.NTree.Zipper.TypeDefs
 import           Data.Typeable
 
 import           Text.XML.HXT.DOM.QualifiedName
-
+import Data.Tree.Class
 -- -----------------------------------------------------------------------------
 --
 -- Basic types for xml tree and filters
@@ -60,6 +60,15 @@ type XmlNavTree = NTZipper XNode
 -- | List of navigatable rose trees with XML nodes
 
 type XmlNavTrees = [NTZipper XNode]
+
+class Tree t => ToXmlTree t a where
+    toXmlTree :: t a -> XmlTree
+
+instance ToXmlTree NTree XNode where
+    toXmlTree = id
+
+--instance ToXmlTree XmlNavTree where
+--    toXmlTree = toTree
 
 -- -----------------------------------------------------------------------------
 --
@@ -261,3 +270,4 @@ data XmlNodeSet = XNS { thisNode        :: Bool         -- ^ is this node part o
 type ChildNodes = [(Int, XmlNodeSet)]
 
 -- -----------------------------------------------------------------------------
+

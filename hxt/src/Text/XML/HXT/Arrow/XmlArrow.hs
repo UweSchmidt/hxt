@@ -523,8 +523,8 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     changePiName cf     = arr (XN.changePiName  cf) `when` isPi
 
     -- | edit an attribute value
-    changeAttrValue     :: (String -> String) -> a XmlTree XmlTree
-    changeAttrValue cf  = replaceChildren ( xshow getChildren
+    changeAttrValue     :: (XmlNode xn, ToXmlTree t xn) => (String -> String) -> a (t xn) (t xn)
+    changeAttrValue cf  = replaceChildren (xshow getChildren
                                             >>> arr cf
                                             >>> mkText
                                           )
@@ -645,7 +645,7 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
 
     -- | apply an arrow to the input and convert the resulting XML trees into a string representation
 
-    xshow               :: a n XmlTree -> a n String
+    xshow               :: ToXmlTree t x => a n (t x) -> a n String
     xshow f             = f >. XS.xshow
     {-# INLINE xshow #-}
 
