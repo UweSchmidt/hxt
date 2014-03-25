@@ -49,6 +49,7 @@
 module Text.XML.HXT.Arrow.Pickle.Xml
 where
 
+import           Control.Applicative
 import           Control.Arrow.ArrowList
 import           Control.Arrow.ListArrows
 import           Control.Monad                    ( )
@@ -105,8 +106,20 @@ type UnpickleVal a      = Either UnpickleErr a
 
 type UnpickleErr        = (String, St)
 
+instance Functor Unpickler where
+    fmap f u    = UP $ \ st ->
+                  let (r, st') = runUP u st in (fmap f r, st')
+
+instance Applicative Unpickler where
+    pure a      = UP $ \ st -> (Right a, st)
+    uf <*> ua   = UP $ \ st ->
+                  let (f, st') = runUP uf st in
+                  case f of
+                    Left err -> (Left err, st')
+                    Right f' -> runUP (fmap f' ua) st'
+
 instance Monad Unpickler where
-    return x    = UP $ \ st -> (Right x, st)
+    return      = pure
     u >>= f     = UP $ \ st ->
                   let (r, st') = runUP u st in
                   case r of
