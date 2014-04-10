@@ -30,6 +30,9 @@ profile:
 	$(foreach i,$(PL), ( cd $i && cabal install -p; ); )
 	ghc-pkg list
 
+sdist	:
+	$(foreach i,$(PL), ( cd $i && cabal sdist; ); )
+
 global	:
 	$(foreach i,$(PL), ( cd $i && cabal configure && cabal build && cabal sdist && sudo cabal install --global; ); )
 	ghc-pkg list
@@ -60,5 +63,5 @@ sb-unregister	:
 	cabal sandbox hc-pkg list
 
 
-.PHONY	: all global clean test sb-init sb-unregister
+.PHONY	: all reinstall profile sdist global haddock clean test unregister sb-init sb-unregister
 
