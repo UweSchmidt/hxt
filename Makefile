@@ -51,5 +51,14 @@ unregister	:
 	ghc-pkg list --simple-output | xargs --max-args=1 echo | egrep '(hxt(-[a-z]+)?-|janus-library-)' | xargs --max-args=1 ghc-pkg --force unregister
 	ghc-pkg list
 
-.PHONY	: all global clean test
+sb-init	:
+	cabal sandbox init
+	$(foreach i,$(PL), (cd $i && cabal sandbox init --sandbox ../.cabal-sandbox; ); )
+
+sb-unregister	:
+	cabal sandbox hc-pkg list -- --simple-output | xargs --max-args=1 echo | egrep '(hxt(-[a-z]+)?-|janus-library-)' | xargs --max-args=1 cabal sandbox hc-pkg unregister -- --force
+	cabal sandbox hc-pkg list
+
+
+.PHONY	: all global clean test sb-init sb-unregister
 

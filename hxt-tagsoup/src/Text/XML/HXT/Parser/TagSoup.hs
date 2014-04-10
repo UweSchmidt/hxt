@@ -2,7 +2,7 @@
 
 {- |
    Module     : Text.XML.HXT.Parser.TagSoup
-   Copyright  : Copyright (C) 2005-2008 Uwe Schmidt
+   Copyright  : Copyright (C) 2005-2014 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
@@ -22,6 +22,9 @@ module Text.XML.HXT.Parser.TagSoup
 where
 
 -- ------------------------------------------------------------
+
+import Control.Applicative              ( Applicative(..) )
+import Control.Monad                    ( liftM, ap )
 
 import Data.Char                        ( toLower
                                         )
@@ -75,6 +78,13 @@ type Context            = ([String], NsEnv)
 type State              = Tags
 
 newtype Parser a        = P { parse :: State -> (a, State)}
+
+instance Functor Parser where
+    fmap = liftM
+
+instance Applicative Parser where
+    pure  = return
+    (<*>) = ap
 
 instance Monad Parser where
     return x    = P $ \ ts -> (x, ts)

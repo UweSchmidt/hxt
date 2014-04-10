@@ -1,6 +1,6 @@
 -- arch-tag: Haskell XML Toolbox main description file
 Name:           hxt-tagsoup
-Version:        9.1.2
+Version:        9.1.3
 Synopsis:       TagSoup parser for HXT
 Description:    The Tagsoup interface for the HXT lazy HTML parser.
 License:        OtherLicense

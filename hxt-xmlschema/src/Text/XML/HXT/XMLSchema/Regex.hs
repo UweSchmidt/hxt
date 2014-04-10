@@ -5,7 +5,9 @@
 module Text.XML.HXT.XMLSchema.Regex
 where
 
-import Control.Applicative  ( (<$>) )
+import Control.Applicative  ( Applicative(..)
+                            , Alternative(..)
+                            , (<$>) )
 import Control.Monad
 
 import Data.List ( intercalate )
@@ -18,16 +20,20 @@ data Tree2 a = Leaf a
              | Fork (Tree2 a) (Tree2 a)
                deriving (Show)
 
-instance Monad Tree2 where
-    return = Leaf
-    (Leaf x) >>= f = f x
-    (Fork l r) >>= f = Fork (l >>= f) (r >>= f)
-
 instance Functor Tree2 where
     fmap f t = map2 t
                where
                  map2 (Leaf x) = Leaf $ f x
                  map2 (Fork l r) = Fork (map2 l) (map2 r)
+
+instance Applicative Tree2 where
+    pure  = return
+    (<*>) = ap
+
+instance Monad Tree2 where
+    return = Leaf
+    (Leaf x) >>= f = f x
+    (Fork l r) >>= f = Fork (l >>= f) (r >>= f)
 
 foldTree2 :: (b -> b -> b) -> (a -> b)-> Tree2 a -> b
 foldTree2 _  f (Leaf x) = f x
@@ -56,11 +62,18 @@ data ResultSet a = Errs (Tree2 (String, String))
 instance Functor ResultSet where
     fmap f x = x >>= return . f
 
+instance Applicative ResultSet where
+    pure  = return
+    (<*>) = ap
+
 instance Monad ResultSet where
     return x = Vals (Leaf x)
     (Errs es) >>= _ = Errs es
     (Vals vs) >>= f = joinResultSets . fmap f $ vs
-                      where
+
+instance Alternative ResultSet where
+    (<|>) = mplus
+    empty = mzero
 
 instance MonadPlus ResultSet where
     mzero = Errs . Leaf $ ("","")
@@ -87,12 +100,20 @@ newtype Result s a = RS {unRS :: s -> ResultSet (a, s)}
 instance Functor (Result s) where
     fmap f x = x >>= return . f
 
+instance Applicative (Result s) where
+    pure  = return
+    (<*>) = ap
+
 instance Monad (Result s) where
     return x = RS $ \ st ->
                return (x, st)
     x >>= f  = RS $ \ st ->
                do (res, st1) <- unRS x st
                   unRS (f res) st1
+
+instance Alternative (Result s) where
+    (<|>) = mplus
+    empty = mzero
 
 instance MonadPlus (Result s) where
     mzero = RS $ \ _st -> mzero

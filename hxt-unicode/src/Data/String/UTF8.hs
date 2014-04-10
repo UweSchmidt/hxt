@@ -56,7 +56,7 @@ module Data.String.UTF8
 
 import Data.Char (ord, chr)
 import Data.Word (Word8, Word16, Word32)
-import Data.Bits (Bits, shiftL, shiftR, (.&.), (.|.))
+import Data.Bits (shiftL, shiftR, (.&.), (.|.))
 
 import Data.List (unfoldr)
 
