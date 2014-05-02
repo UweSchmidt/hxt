@@ -28,6 +28,8 @@ defineOrigName               = "RelaxDefineOriginalName"
 
 type Env = [(String, XmlTree)]
 
+type PatternEnv = [(String, Pattern)]
+
 -- | Start of a context attribute value
 -- (see also: 'Text.XML.HXT.RelaxNG.Simplification.simplificationStep1')
 --
