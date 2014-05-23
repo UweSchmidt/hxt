@@ -1152,13 +1152,14 @@ simplificationStep5
 
     createPatternElems :: String -> String -> IOSArrow XmlTree XmlTree
     createPatternElems pattern name
-        = ( ( listA (getElems pattern name >>> getRngAttrCombine)
-              >>>
-              checkPatternCombine pattern name
-            )
-            -- After determining this unique value, the combine attributes are removed.
-            &&&
-            listA (getElems pattern name >>> removeAttr "combine"))
+        = getElems pattern name
+          >>>
+          (
+             (listA getRngAttrCombine >>> checkPatternCombine pattern name)
+             -- After determining this unique value, the combine attributes are removed.
+             &&&
+             listA (removeAttr "combine")
+          )
           >>>                           -- ((errorCode::Int, errorMessage::String), result::XmlTrees)
           choiceA
           [ isA (\ ((code, _) , _)  -> code == 0)
