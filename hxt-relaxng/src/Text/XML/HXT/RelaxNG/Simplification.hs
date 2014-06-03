@@ -51,12 +51,10 @@ import Data.Maybe
     , fromMaybe
     )
 import Data.List
-    ( elemIndices
-    , nub
-    , deleteBy
-    , find
-    , (\\)
+    ( (\\)
     )
+import Data.Map
+    ( Map, fromListWithKey, toList )
 
 infixr 1 !>>>
 
@@ -975,11 +973,12 @@ simplificationStep5
             >>>
             -- For each grammar element, all define elements with the same
             -- name are combined together.
-            ( combinePatternList "define" $< (getPatternNamesInGrammar "define" >>> arr nub) )
+            -- ( combinePatternList "define" $< (getPatternNamesInGrammar "define" >>> arr nub) )
+            ( mergeCombinedPatternMap "define" $< getPatternNameMapInGrammar "define" (combinePatterns "define" True))
             >>>
             -- Similarly, for each grammar element all start elements
             -- are combined together.
-            ( combinePatternList "start" $< (getPatternNamesInGrammar "start" >>> arr nub) )
+            ( mergeCombinedPatternMap "start" $< (getPatternNameMapInGrammar "start" (combinePatterns "start" False)) )
           )
           `when`
           isRngGrammar
@@ -1034,6 +1033,31 @@ simplificationStep5
         )
       ) `when` collectErrors
     where
+    getPatternNameMapInGrammar :: (ArrowXml a) => String -> (String -> XmlTree -> XmlTree -> XmlTree)
+                                  -> a XmlTree (Map String XmlTree)
+    getPatternNameMapInGrammar pattern combinator
+        = (
+              getChildren 
+              >>>
+              allGrammarPatterns
+              >>>
+              (getRngAttrName &&& this)
+          )
+          >.
+          fromListWithKey combinator
+        where allGrammarPatterns 
+                  = choiceA
+                    [ hasRngElemName pattern
+                      :->
+                      this
+                    , isRngGrammar 
+                      :-> 
+                      none
+                    , this
+                      :->
+                      (getChildren >>> allGrammarPatterns)
+                    ]
+
     getPatternNamesInGrammar :: (ArrowXml a) => String -> a XmlTree [String]
     getPatternNamesInGrammar pattern
         = processChildren
@@ -1135,134 +1159,50 @@ simplificationStep5
     deleteAllDefines :: IOSArrow XmlTree XmlTree
     deleteAllDefines = processTopDown $ none `when` isRngDefine
 
-    combinePatternList :: String -> [String] -> IOSArrow XmlTree XmlTree
-    combinePatternList _ [] = this
-    combinePatternList pattern (x:xs)
-        = (replaceChildren $ combinePattern pattern x)
-          >>>
-          combinePatternList pattern xs
+    combinePatterns :: String -> Bool -> String -> XmlTree -> XmlTree -> XmlTree
+    combinePatterns pattern keepName name t1 t2 = combined
+        where [combined] = runLA (combine $<< parts) undefined
+              combine (c1, d1) (c2, d2)
+                  | c1 == "" && c2 == "" = mkRngRelaxError
+                                           >>>
+                                           addRngAttrDescr ("More than one " ++ pattern ++ "-Pattern: " ++ show name 
+                                                            ++ " without a combine-attribute in the same grammar")
+                  | c1 == "" = combineWith c2 d1 d2
+                  | c2 == "" = combineWith c1 d1 d2
+                  | c1 == c2 = combineWith c1 d1 d2
+                  | otherwise = mkRngRelaxError
+                                >>>
+                                addRngAttrDescr ("Different combine-Attributes: " ++
+                                                 (formatStringListQuot [c1, c2]) ++
+                                                 " for the " ++ pattern ++ "-Pattern " ++
+                                                 show name ++ " in the same grammar")
+              combineWith :: String -> XmlTree -> XmlTree -> LA n XmlTree
+              combineWith c d1 d2 = mkRngElement pattern
+                                        (mkRngAttr "combine" (constA c) <+> if keepName then mkRngAttrName name else none)
+                                        (mkRngElement c none $ arrL $ const [d1, d2])
+              parts = (
+                       (constA t1 >>> getRngAttrCombine &&& getChildren)
+                       &&&
+                       (constA t2 >>> getRngAttrCombine &&& getChildren)
+                      )
 
-    -- combine a define- or start-pattern (first parameter) with a
-    -- specific name (second parameter)
-    combinePattern :: String -> String -> IOSArrow XmlTree XmlTree
-    combinePattern pattern name
-        = createPatternElems pattern name
-          <+>
-          (getChildren >>> deletePatternElems pattern name)
-
-    createPatternElems :: String -> String -> IOSArrow XmlTree XmlTree
-    createPatternElems pattern name
-        = ( ( listA (getElems pattern name >>> getRngAttrCombine)
-              >>>
-              checkPatternCombine pattern name
-            )
-            -- After determining this unique value, the combine attributes are removed.
-            &&&
-            listA (getElems pattern name >>> removeAttr "combine"))
-          >>>                           -- ((errorCode::Int, errorMessage::String), result::XmlTrees)
-          choiceA
-          [ isA (\ ((code, _) , _)  -> code == 0)
-            :->
-            (mkRelaxError "" $< arr (snd . fst))
-
-          , isA (\ ((code, str) , _) -> code == 1 && str == "")
-            :->
-            arrL snd
-
-          , isA (\ ((code, str) , _) -> code == 1 && str /= "")
-            :->
-            ( createPatternElem pattern name $<<
-              ( arr (snd . fst) &&& (arr snd) )
-            )
-
-          , this
-            :->
-            ( mkRelaxError ""
-              ( "Can't create Pattern: " ++ show pattern ++
-                " with name " ++ show name ++ " in createPatternElems"
-              )
-            )
-          ]
-
-    createPatternElem :: (ArrowXml a) => String -> String -> String -> XmlTrees -> a n XmlTree
-    createPatternElem pattern name combine trees
-        = mkRngElement pattern (mkRngAttrName name)
-          ( ( mkRngElement combine none
-              (arrL (const trees) >>> getChildren)
-            )
-            >>>
-            (wrapPattern2Two $< getQName)
-          )
-
-    checkPatternCombine :: (ArrowXml a) => String -> String -> a [String] (Int, String)
-    checkPatternCombine pattern name
-        = choiceA
-          [ -- just one pattern with that name -> ok, no combine is needed
-            (isA (\ cl -> length cl == 1))
-            :->
-            constA (1, "")
-
-          , (isA (\ cl -> (length $ elemIndices "" cl) > 1))
-            :->
-            constA ( 0
-                   , "More than one " ++ pattern ++ "-Pattern: " ++ show name ++
-                     " without an combine-attribute in the same grammar"
-                   )
-
-          , (isA (\ cl -> (length $ nub $ deleteBy (==) "" cl) > 1))
-            :->
-            arr (\ cl -> ( 0
-                         , "Different combine-Attributes: " ++
-                           (formatStringListQuot $ noDoubles cl) ++
-                           " for the " ++ pattern ++ "-Pattern " ++
-                           show name ++ " in the same grammar"
-                         )
-                )
-
-          , -- ok -> combine value is returned
-            this
-            :->
-            arr (\ cl -> (1, fromJust $ find (/= "") cl))
-          ]
-
-    isElemWithNameValue :: (ArrowXml a) => String -> String -> a XmlTree XmlTree
-    isElemWithNameValue ename nvalue
-        = ( hasRngElemName ename
-            >>>
-            getRngAttrName
-            >>>
-            isA (== nvalue)
-          )
-          `guards` this
-
-    getElems :: (ArrowXml a) => String -> String -> a XmlTree XmlTree
-    getElems pattern name
-        = getChildren
-          >>>
-          choiceA
-          [ isElemWithNameValue pattern name
-            :->
-            (this <+> getElems pattern name)
-          , isRngGrammar
-            :-> none
-          , this
-            :->
-            getElems pattern name
-          ]
-
-    deletePatternElems :: (ArrowXml a) => String -> String -> a XmlTree XmlTree
-    deletePatternElems pattern name
-        = choiceA
-          [ isElemWithNameValue pattern name
-            :->
-            none
-          , isRngGrammar
-            :-> this
-          , this
-            :->
-            processChildren ( deletePatternElems pattern name )
-          ]
-
+    mergeCombinedPatternMap :: String -> Map String XmlTree -> IOSArrow XmlTree XmlTree
+    mergeCombinedPatternMap pattern definitions
+        = replaceChildren ((constL (toList definitions) >>> arr snd)
+                           <+>
+                           (getChildren >>> deleteDefinitions))
+          where deleteDefinitions 
+                   = choiceA
+                     [ hasRngElemName pattern
+                       :->
+                       none
+                     , isRngGrammar 
+                       :-> 
+                       this
+                     , this
+                       :->
+                       processChildren deleteDefinitions
+                     ]
 
 -- ------------------------------------------------------------
 

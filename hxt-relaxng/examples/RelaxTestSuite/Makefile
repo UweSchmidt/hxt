@@ -19,6 +19,9 @@ prof		:
 local		:
 		ghc --make -o $(prog) $(GHCFLAGS) -fglasgow-exts -ignore-package hxt -i../../../src $(prog).hs
 
+local-relaxng		:
+		ghc --make -o $(prog) $(GHCFLAGS) -fglasgow-exts -ignore-package hxt-relaxng -i../../src $(prog).hs
+
 $(prog)		: $(modules)
 		$(GHC) --make -o $@ $@.hs
 
