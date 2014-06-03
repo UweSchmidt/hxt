@@ -20,7 +20,7 @@ import Data.List
   , sort
   , isSuffixOf
   )
-import Maybe
+import Data.Maybe
   ( fromMaybe )
 
 
