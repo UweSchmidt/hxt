@@ -36,20 +36,23 @@ import qualified Debug.Trace as T
 -- | Creates the 'Pattern' datastructure from a simplified Relax NG schema.
 
 createPatternFromXmlTree :: LA XmlTree Pattern
-createPatternFromXmlTree = createPatternFromXml $< createEnv
- where
- -- | Selects all define-pattern and creates an environment list.
- -- Each list entry maps the define name to the children of the define-pattern.
- -- The map is used to replace a ref-pattern with the referenced define-pattern.
- createEnv :: LA XmlTree Env
- createEnv = listA $ deep isRngDefine
-                     >>>
-                     (getRngAttrName &&& getChildren)
+createPatternFromXmlTree = arr patternFromXmlTree
 
+patternFromXmlTree :: XmlTree -> Pattern
+patternFromXmlTree t = patternFromXml env t
+   where env = map (fmap $ patternFromXml env) definitions
+         definitions = runLA createDefinitionList t
+         createDefinitionList :: LA XmlTree (String, XmlTree)
+         createDefinitionList = deep isRngDefine
+                                >>>
+                                (getRngAttrName &&& getChildren)
+
+patternFromXml :: PatternEnv -> XmlTree -> Pattern
+patternFromXml env = head . runLA (createPatternFromXml env)
 
 -- | Transforms each XML-element to the corresponding pattern
 
-createPatternFromXml :: Env -> LA XmlTree Pattern
+createPatternFromXml :: PatternEnv -> LA XmlTree Pattern
 createPatternFromXml env
  = choiceA
    [ isRoot          :-> processRoot env
@@ -69,7 +72,7 @@ createPatternFromXml env
    , this            :-> mkRelaxError "internal HXT RelaxNG error"
    ]
 
-processRoot :: Env -> LA XmlTree Pattern
+processRoot :: PatternEnv -> LA XmlTree Pattern
 processRoot env
   = getChildren
     >>>
@@ -80,7 +83,7 @@ processRoot env
     ]
 
 
-processGrammar :: Env -> LA XmlTree Pattern
+processGrammar :: PatternEnv -> LA XmlTree Pattern
 processGrammar env
   = getChildren
     >>>
@@ -98,19 +101,20 @@ processGrammar env
   to find the corresponding define-pattern.
   Haskells lazy-evaluation is used to transform circular structures.
 -}
-mkRelaxRef :: Env -> LA XmlTree Pattern
+mkRelaxRef :: PatternEnv -> LA XmlTree Pattern
 mkRelaxRef e
  = getRngAttrName
    >>>
    arr (\n -> fromMaybe (notAllowed $ "define-pattern with name " ++ n ++ " not found")
-              . lookup n $ transformEnv e
+              $ lookup n e
        )
- where
+{-
+   where
  transformEnv :: [(String, XmlTree)] -> [(String, Pattern)]
  transformEnv env = [ (treeName, (transformEnvElem tree env)) | (treeName, tree) <- env]
  transformEnvElem :: XmlTree -> [(String, XmlTree)] -> Pattern
  transformEnvElem tree env = head $ runLA (createPatternFromXml env) tree
-
+-}
 
 -- | Transforms a notAllowed-element.
 mkNotAllowed :: LA XmlTree Pattern
@@ -144,7 +148,7 @@ mkRelaxError errStr
 
 
 -- | Transforms a choice-element.
-mkRelaxChoice :: Env -> LA XmlTree Pattern
+mkRelaxChoice :: PatternEnv -> LA XmlTree Pattern
 mkRelaxChoice env
     = ifA ( getChildren >>.
             ( \ l -> if length l == 1 then l else [] )
@@ -153,7 +157,7 @@ mkRelaxChoice env
       ( getTwoChildrenPattern env >>> arr2 Choice )
 
 -- | Transforms a interleave-element.
-mkRelaxInterleave :: Env -> LA XmlTree Pattern
+mkRelaxInterleave :: PatternEnv -> LA XmlTree Pattern
 mkRelaxInterleave env
     = getTwoChildrenPattern env
       >>>
@@ -161,7 +165,7 @@ mkRelaxInterleave env
 
 
 -- | Transforms a group-element.
-mkRelaxGroup :: Env -> LA XmlTree Pattern
+mkRelaxGroup :: PatternEnv -> LA XmlTree Pattern
 mkRelaxGroup env
     = getTwoChildrenPattern env
       >>>
@@ -169,7 +173,7 @@ mkRelaxGroup env
 
 
 -- | Transforms a oneOrMore-element.
-mkRelaxOneOrMore :: Env -> LA XmlTree Pattern
+mkRelaxOneOrMore :: PatternEnv -> LA XmlTree Pattern
 mkRelaxOneOrMore env
     = getOneChildPattern env
       >>>
@@ -177,7 +181,7 @@ mkRelaxOneOrMore env
 
 
 -- | Transforms a list-element.
-mkRelaxList :: Env -> LA XmlTree Pattern
+mkRelaxList :: PatternEnv -> LA XmlTree Pattern
 mkRelaxList env
     = getOneChildPattern env
       >>>
@@ -185,7 +189,7 @@ mkRelaxList env
 
 
 -- | Transforms a data- or dataExcept-element.
-mkRelaxData :: Env -> LA XmlTree Pattern
+mkRelaxData :: PatternEnv -> LA XmlTree Pattern
 mkRelaxData env
   = ifA (getChildren >>> isRngExcept)
      (processDataExcept >>> arr3 DataExcept)
@@ -243,7 +247,7 @@ getDatatype = getRngAttrDatatypeLibrary
 -- | Transforms a attribute-element.
 -- The first child is a 'NameClass', the second (the last) one a pattern.
 
-mkRelaxAttribute :: Env -> LA XmlTree Pattern
+mkRelaxAttribute :: PatternEnv -> LA XmlTree Pattern
 mkRelaxAttribute env
     = ( ( firstChild >>> createNameClass )
         &&&
@@ -254,7 +258,7 @@ mkRelaxAttribute env
 
 -- | Transforms a element-element.
 -- The first child is a 'NameClass', the second (the last) one a pattern.
-mkRelaxElement :: Env -> LA XmlTree Pattern
+mkRelaxElement :: PatternEnv -> LA XmlTree Pattern
 mkRelaxElement env
     = ( ( firstChild >>> createNameClass )
         &&&
@@ -333,12 +337,12 @@ mkNameClassError
               ]
 
 
-getOneChildPattern :: Env -> LA XmlTree Pattern
+getOneChildPattern :: PatternEnv -> LA XmlTree Pattern
 getOneChildPattern env
     = firstChild >>> createPatternFromXml env
 
 
-getTwoChildrenPattern :: Env -> LA XmlTree (Pattern, Pattern)
+getTwoChildrenPattern :: PatternEnv -> LA XmlTree (Pattern, Pattern)
 getTwoChildrenPattern env
     = ( getOneChildPattern env )
         &&&

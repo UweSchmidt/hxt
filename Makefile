@@ -51,6 +51,12 @@ test	:
 	$(MAKE) -C ~/tmp all
 
 unregister	:
+	if [ -d .cabal-sandbox ]; \
+	then $(MAKE) sb-unregister; \
+	else $(MAKE) gl-unregister; \
+	fi
+
+gl-unregister	:
 	ghc-pkg list --simple-output | xargs --max-args=1 echo | egrep '(hxt(-[a-z]+)?-|janus-library-)' | xargs --max-args=1 ghc-pkg --force unregister
 	ghc-pkg list
 
@@ -68,5 +74,5 @@ sb-unregister	:
 	cabal sandbox hc-pkg list
 
 
-.PHONY	: all reinstall profile sdist global haddock clean test unregister sb-init sb-unregister
+.PHONY	: all reinstall profile sdist global haddock clean test unregister gl-unregister sb-unregister sb-init
 
