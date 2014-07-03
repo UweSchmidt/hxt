@@ -55,8 +55,13 @@ unregister	:
 	ghc-pkg list
 
 sb-init	:
-	cabal sandbox init
-	$(foreach i,$(PL), (cd $i && cabal sandbox init --sandbox ../.cabal-sandbox; ); )
+	cabal sandbox init --sandbox .cabal-sandbox
+	$(foreach i, $(PL), (cd $i && cabal sandbox init --sandbox ../.cabal-sandbox; ); )
+	$(foreach i, $(PL), $(foreach j, $(PL), (cd $i && cabal sandbox add-source ../$j; ); ))
+	@echo now exec $(MAKE) sb-deps
+
+sb-deps	:
+	$(foreach i,$(PL), (cd $i && cabal install --only-dependencies --force-reinstall; ); )
 
 sb-unregister	:
 	cabal sandbox hc-pkg list -- --simple-output | xargs --max-args=1 echo | egrep '(hxt(-[a-z]+)?-|janus-library-)' | xargs --max-args=1 cabal sandbox hc-pkg unregister -- --force
