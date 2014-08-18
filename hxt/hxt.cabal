@@ -196,9 +196,10 @@ library
                 deepseq    >= 1.1 && < 2,
                 bytestring >= 0.9 && < 1,
                 binary     >= 0.5 && < 1,
-                hxt-charproperties  >= 9.1    && < 10,
-                hxt-unicode         >= 9.0.1  && < 10,
-                hxt-regex-xmlschema >= 9      && < 10
+                hxt-charproperties  >= 9.1     && < 10,
+                hxt-unicode         >= 9.0.1   && < 10,
+                hxt-regex-xmlschema >= 9       && < 10,
+                network-uri         >= 2.6.0.0 && < 3
 
 Source-Repository head
   Type:     git
