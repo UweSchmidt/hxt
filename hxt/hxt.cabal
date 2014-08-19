@@ -93,6 +93,10 @@ extra-source-files:
  examples/xhtml/xhtml-symbol.ent
  examples/xhtml/xhtml.xml
 
+flag network-uri
+  description: Get Network.URI from the network-uri package
+  default: True
+
 library
  exposed-modules:
   Control.Arrow.ArrowExc,
@@ -192,13 +196,16 @@ library
                 parsec     >= 2.1 && < 4,
                 HUnit      >= 1.2 && < 2,
                 mtl        >= 2   && < 3,
-                network    >= 2.4 && < 3,
                 deepseq    >= 1.1 && < 2,
                 bytestring >= 0.9 && < 1,
                 binary     >= 0.5 && < 1,
                 hxt-charproperties  >= 9.1    && < 10,
                 hxt-unicode         >= 9.0.1  && < 10,
                 hxt-regex-xmlschema >= 9      && < 10
+ if flag(network-uri)
+   build-depends: network-uri >= 2.6 && < 2.7
+ else
+   build-depends: network >= 2.4 && < 2.6
 
 Source-Repository head
   Type:     git
