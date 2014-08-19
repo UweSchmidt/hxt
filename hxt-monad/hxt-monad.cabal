@@ -1,6 +1,6 @@
 -- arch-tag: Haskell XML Toolbox main description file
 Name:           hxt-monad
-Version:        1.0.0.0
+Version:        1.0.0.1
 Synopsis:       A collection of tools for processing XML with Haskell.
 Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
                 but introduces a more general approach for processing XML with Haskell.
@@ -29,6 +29,10 @@ Homepage:       http://www.fh-wedel.de/~si/HXmlToolbox/index.html
 Copyright:      Copyright (c) 2005-2013 Uwe Schmidt
 Build-type:     Simple
 Cabal-version:  >=1.8
+
+flag network-uri
+  description: Get Network.URI from the network-uri package
+  default: False
 
 library
   exposed-modules:
@@ -110,13 +114,17 @@ library
                 directory          >= 1   && < 2,
                 filepath           >= 1.0 && < 2,
                 mtl                >= 2   && < 3,
-                network            >= 2.4 && < 3,
                 deepseq            >= 1.1 && < 2,
                 bytestring         >= 0.9 && < 1,
                 binary             >= 0.5 && < 1,
                 hxt                >= 9.1 && < 10,
                 hxt-charproperties >= 9.1 && < 10,
                 hxt-unicode        >= 9   && < 10
+
+ if flag(network-uri)
+   build-depends: network-uri >= 2.6
+ else
+   build-depends: network >= 2.4 && < 2.6
 
 Source-Repository head
   Type:     git
