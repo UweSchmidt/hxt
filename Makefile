@@ -22,7 +22,7 @@ all	:
 	$(foreach i,$(PL), ( cd $i && cabal configure && cabal build && cabal install && cabal sdist; ); )
 	@ echo not done: ghc-pkg list
 
-reinstall:
+install:
 	$(foreach i,$(PL), ( cd $i && cabal install; ); )
 	$(MAKE) list
 
@@ -69,26 +69,7 @@ gl-unregister	:
 sb-init	:
 	cabal sandbox init --sandbox .cabal-sandbox
 	$(foreach i, $(PL), (cd $i && cabal sandbox init --sandbox ../.cabal-sandbox; ); )
-	cd hxt-regex-xmlschema && cabal sandbox add-source ../hxt-charproperties
-	cd hxt-unicode         && cabal sandbox add-source ../hxt-charproperties
-	cd hxt                 && cabal sandbox add-source ../hxt-charproperties
-	cd hxt                 && cabal sandbox add-source ../hxt-unicode
-	cd hxt                 && cabal sandbox add-source ../hxt-regex-xmlschema
-	cd hxt-curl            && cabal sandbox add-source ../hxt
-	cd hxt-http            && cabal sandbox add-source ../hxt
-	cd hxt-tagsoup         && cabal sandbox add-source ../hxt-charproperties
-	cd hxt-tagsoup         && cabal sandbox add-source ../hxt-unicode
-	cd hxt-tagsoup         && cabal sandbox add-source ../hxt
-	cd hxt-expat           && cabal sandbox add-source ../hxt
-	cd hxt-xpath           && cabal sandbox add-source ../hxt
-	cd hxt-relaxng         && cabal sandbox add-source ../hxt-charproperties
-	cd hxt-relaxng         && cabal sandbox add-source ../hxt-regex-xmlschema
-	cd hxt-relaxng         && cabal sandbox add-source ../hxt
-	cd hxt-xmlschema       && cabal sandbox add-source ../hxt-regex-xmlschema
-	cd hxt-xmlschema       && cabal sandbox add-source ../hxt
-	cd hxt-xslt            && cabal sandbox add-source ../hxt
-	cd hxt-xslt            && cabal sandbox add-source ../hxt-xpath
-	cd hxt-cache           && cabal sandbox add-source ../hxt
+	$(foreach i, $(PL), (         cabal sandbox add-source $i; ); )
 	@echo now exec $(MAKE) sb-deps
 
 sb-deps	:
@@ -101,7 +82,10 @@ sb-unregister	:
 		| xargs --max-args=1 cabal sandbox hc-pkg unregister -- --force
 	cabal sandbox hc-pkg list
 
+sb-delete	:
+	cabal sandbox delete
+	rm -f */cabal.sandbox.config
 
 .PHONY	: all reinstall profile sdist global haddock clean test \
-		unregister gl-unregister sb-unregister sb-init
+		unregister gl-unregister sb-unregister sb-init sb-delete
 
