@@ -484,6 +484,8 @@ hread
       PI.hread                              -- substHtmlEntityRefs is done in parser
       >>>                                   -- as well as subst HTML char refs
       editNTreeA [isError :-> none]         -- ignores all errors
+      >>>
+      canonicalizeAllNodes                  -- combine text nodes, substitute char refs
 
 -- | like hread, but accepts a whole document, not a HTML content
 
@@ -493,7 +495,9 @@ hreadDoc
       PI.hreadDoc                           -- substHtmlEntityRefs is done in parser
       >>>                                   -- as well as subst HTML char refs
       editNTreeA [isError :-> none]         -- ignores all errors
-
+      >>>
+      canonicalizeAllNodes
+      
 -- ------------------------------------------------------------
 
 -- |

@@ -45,7 +45,7 @@ Cabal-version:       >=1.2
 
 Executable test
   -- .hs or .lhs file containing the Main module.
-  Main-is:             Test.hs
+  Main-is:             Fanout.hs
 
   hs-source-dirs       . ../src
   
