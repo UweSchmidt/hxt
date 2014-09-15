@@ -1,8 +1,10 @@
+{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE FlexibleInstances #-}
+
 -- ------------------------------------------------------------
 
 {- |
-   Module     : Text.Regex.XMLSchema.String.Regex
-   Copyright  : Copyright (C) 2010 - Uwe Schmidt
+   Copyright  : Copyright (C) 2014 - Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt <uwe@fh-wedel.de>
@@ -17,11 +19,11 @@
 
 -- ------------------------------------------------------------
 
-module Text.Regex.XMLSchema.String.Regex
-    ( Regex
-    , GenRegex
-
+module Text.Regex.XMLSchema.Generic.Regex
+    ( GenRegex
+      
     , mkZero
+    , mkZero'
     , mkUnit
     , mkSym
     , mkSym1
@@ -43,6 +45,7 @@ module Text.Regex.XMLSchema.String.Regex
     , mkInterleave
     , mkCompl
     , mkBr
+    , mkBr'
 
     , isZero
     , errRegex
@@ -64,34 +67,50 @@ module Text.Regex.XMLSchema.String.Regex
     )
 where
 
-import Data.List        -- ( intercalate )
-
+import Data.List        (intercalate)
+import Data.Monoid      ((<>))
 import Data.Set.CharSet
+import Data.String      (IsString(..))
 
+import Text.Regex.XMLSchema.Generic.StringLike
+
+{-
+import Debug.Trace      (traceShow)
+
+trc :: Show a => String -> a -> a
+trc msg x = traceShow (msg, x) x
+
+-- -}
 -- ------------------------------------------------------------
 
-data GenRegex l = Zero String
-                | Unit
-                | Sym  CharSet
-                | Dot
-                | Star (GenRegex l)
-                | Alt  (GenRegex l)   (GenRegex l)
-                | Else (GenRegex l)   (GenRegex l)
-                | Seq  (GenRegex l)   (GenRegex l)
-                | Rep  Int            (GenRegex l)              -- 1 or more repetitions
-                | Rng  Int Int        (GenRegex l)              -- n..m repetitions
-                | Diff (GenRegex l)   (GenRegex l)              -- r1 - r2
-                | Isec (GenRegex l)   (GenRegex l)              -- r1 n r2
-                | Exor (GenRegex l)   (GenRegex l)              -- r1 xor r2
-                | Intl (GenRegex l)   (GenRegex l)              -- r1 interleavedWith r2
-                | Br   (Label    l)   (GenRegex l) String       -- currently parsed (...)
-                | Cbr  (GenRegex l)   [(Label l, String)]       --already completely parsed (...)
-                  deriving (Eq, Ord {-, Show -})
+data GenRegex s
+  = Zero s
+  | Unit
+  | Sym  CharSet
+  | Dot
+  | Star (GenRegex s)
+  | Alt  (GenRegex s)        (GenRegex s)
+  | Else (GenRegex s)        (GenRegex s)
+  | Seq  (GenRegex s)        (GenRegex s)
+  | Rep  Int                 (GenRegex s)           -- 1 or more repetitions
+  | Rng  Int Int             (GenRegex s)           -- n..m repetitions
+  | Diff (GenRegex s)        (GenRegex s)           -- r1 - r2
+  | Isec (GenRegex s)        (GenRegex s)           -- r1 n r2
+  | Exor (GenRegex s)        (GenRegex s)           -- r1 xor r2
+  | Intl (GenRegex s)        (GenRegex s)           -- r1 interleavedWith r2
+  | Br   (Label    s)        (GenRegex s)           -- (...) not yet parsed
+  | Obr  (Label    s) s !Int (GenRegex s)           -- currently parsed (...)
+  | Cbr [(Label s, s)]       (GenRegex s)           -- already completely parsed (...)
+  deriving (Eq, Ord {-, Show -})
 
-type Regex      = GenRegex String
-type Label l    = Maybe l                                       -- we need one special label for the whole expression
-                                                                -- see splitWithRegex
-type Nullable l = (Bool, [(Label l, String)])
+type Label s
+  = Maybe s                           -- we need one special label for the whole expression
+                                      -- see splitWithRegex
+type SubexResults s
+  = [(Label s, s)]
+    
+type Nullable s
+  = (Bool, SubexResults s)
 
 -- ------------------------------------------------------------
 
@@ -100,7 +119,7 @@ type Nullable l = (Bool, [(Label l, String)])
 class Inv a where
     inv         :: a -> Bool
 
-instance Inv (GenRegex l) where
+instance Inv (GenRegex s) where
     inv (Zero _)        = True
     inv Unit            = True
     inv (Sym p)         = not (nulCS p) && not (fullCS p)
@@ -128,53 +147,64 @@ instance Inv (GenRegex l) where
 -- | construct the r.e. for the empty set.
 -- An (error-) message may be attached
 
-mkZero                                  :: String -> GenRegex l
+mkZero                                  :: s -> GenRegex s
 mkZero                                  = Zero
 {-# INLINE mkZero #-}
 
+mkZero'                                 :: (StringLike s) =>
+                                           String -> GenRegex s
+mkZero'                                 = Zero . fromString
+{-# INLINE mkZero' #-}
+
 -- | construct the r.e. for the set containing the empty word
 
-mkUnit                                  :: GenRegex l
+mkUnit                                  :: GenRegex s
 mkUnit                                  = Unit
 {-# INLINE mkUnit #-}
 
 -- | construct the r.e. for a set of chars
 
-mkSym                                   :: CharSet -> GenRegex l
+mkSym                                   :: (StringLike s) =>
+                                           CharSet -> GenRegex s
 mkSym s
-    | nullCS s                          = mkZero $ "empty char range"
+    | nullCS s                          = mkZero' "empty char range"
     | fullCS s                          = mkDot
     | otherwise                         = Sym s
 {-# INLINE mkSym #-}
 
 -- | construct an r.e. for a single char set
-mkSym1                                  :: Char -> GenRegex l
+mkSym1                                  :: (StringLike s) =>
+                                           Char -> GenRegex s
 mkSym1                                  = mkSym . singleCS
 {-# INLINE mkSym1 #-}
 
 -- | construct an r.e. for an intervall of chars
-mkSymRng                                :: Char -> Char -> GenRegex l
+mkSymRng                                :: (StringLike s) =>
+                                           Char -> Char -> GenRegex s
 mkSymRng c1 c2                          = mkSym $ rangeCS c1 c2
 {-# INLINE mkSymRng #-}
 
 -- | mkSym generaized for strings
-mkWord                                  :: [Char] -> GenRegex l
+mkWord                                  :: (StringLike s) =>
+                                           [Char] -> GenRegex s
 mkWord                                  = mkSeqs . map mkSym1
 
 -- | construct an r.e. for the set of all Unicode chars
-mkDot                                   :: GenRegex l
+mkDot                                   :: GenRegex s
 mkDot                                   = Dot
 {-# INLINE mkDot #-}
 
 -- | construct an r.e. for the set of all Unicode words
 
-mkAll                                   :: Eq l => GenRegex l
+mkAll                                   :: (StringLike s) =>
+                                           GenRegex s
 mkAll                                   = mkStar mkDot
 {-# INLINE mkAll #-}
 
 
 -- | construct r.e. for r*
-mkStar                                  :: Eq l => GenRegex l -> GenRegex l
+mkStar                                  :: (StringLike s) =>
+                                           GenRegex s -> GenRegex s
 mkStar (Zero _)                         = mkUnit                -- {}* == ()
 mkStar e@Unit                           = e                     -- ()* == ()
 mkStar e@(Star _e1)                     = e                     -- (r*)* == r*
@@ -186,12 +216,14 @@ mkStar (Rep i e1)
 mkStar e@(Rng _ _ e1)
     | nullable e                        = mkStar e1             -- (r{i,j})* == r*   when i == 0 or nullable r
 mkStar e@(Alt _ _)                      = Star (rmStar e)       -- (a*|b)* == (a|b)*
-{- this is wrong, not generally applicable
+
+                                                                {- this is wrong, not generally applicable
 mkStar (Br l r s)                       = mkBr0 l (mkStar r) s  -- ({l}r)* == ({l}r*) because we want the longest match as result for the subexpression
--}
+                                                                -}
 mkStar e                                = Star e
 
-rmStar                                  :: Eq l => GenRegex l -> GenRegex l
+rmStar                                  :: (StringLike s) =>
+                                           GenRegex s -> GenRegex s
 rmStar (Alt e1 e2)                      = mkAlt (rmStar e1) (rmStar e2)
 rmStar (Star e1)                        = rmStar e1
 rmStar (Rep 1 e1)                       = rmStar e1
@@ -199,7 +231,8 @@ rmStar e1                               = e1
 
 -- | construct the r.e for r1|r2
 
-mkAlt                                   :: Eq l => GenRegex l -> GenRegex l -> GenRegex l
+mkAlt                                   :: (StringLike s) =>
+                                           GenRegex s -> GenRegex s -> GenRegex s
 mkAlt e1            (Zero _)            = e1                            -- e1 u {} = e1
 mkAlt (Zero _)      e2                  = e2                            -- {} u e2 = e2
 mkAlt (Sym p1)      (Sym p2)            = mkSym $ p1 `unionCS` p2       -- melting of predicates
@@ -225,7 +258,8 @@ mkAlt e1 e2
 -- >
 -- > splitSubex "({1}x){|}({2}.)" "x" = ([("1","x")], "")
 
-mkElse                                  :: Eq l => GenRegex l -> GenRegex l -> GenRegex l
+mkElse                                  :: (StringLike s) =>
+                                           GenRegex s -> GenRegex s -> GenRegex s
 mkElse e1            (Zero _)           = e1                            -- e1 u {} = e1
 mkElse (Zero _)      e2                 = e2                            -- {} u e2 = e2
 mkElse (Sym p1)      (Sym p2)           = mkSym $ p1 `unionCS` p2       -- melting of predicates
@@ -241,21 +275,22 @@ mkElse e1 e2
 
 -- | Construct the sequence r.e. r1.r2
 
-mkSeq                                   :: GenRegex l -> GenRegex l -> GenRegex l
+mkSeq                                   :: GenRegex s -> GenRegex s -> GenRegex s
 mkSeq e1@(Zero _) _e2                   = e1
 mkSeq _e1         e2@(Zero _)           = e2
 mkSeq Unit        e2                    = e2
-mkSeq (Cbr e1 ss1) e2                   = mkCbr (mkSeq e1 e2) ss1               -- move finished submatches upwards
+mkSeq (Cbr ss1 e1) e2                   = mkCbr ss1 (mkSeq e1 e2)               -- move finished submatches upwards
 mkSeq e1          Unit                  = e1
 mkSeq (Seq e1 e2) e3                    = mkSeq e1 (mkSeq e2 e3)
 mkSeq e1 e2                             = Seq e1 e2
 
 -- | mkSeq extened to lists
-mkSeqs                                  :: [GenRegex l] -> GenRegex l
+mkSeqs                                  :: [GenRegex s] -> GenRegex s
 mkSeqs                                  = foldr mkSeq mkUnit
 
 -- | Construct repetition r{i,}
-mkRep                                   :: Eq l => Int -> GenRegex l -> GenRegex l
+mkRep                                   :: (StringLike s) =>
+                                           Int -> GenRegex s -> GenRegex s
 mkRep 0 e                               = mkStar e
 mkRep _ e@(Zero _)                      = e
 mkRep _ e
@@ -264,11 +299,12 @@ mkRep i (Rep j e)                       = mkRep (i * j) e
 mkRep i e                               = Rep i e
 
 -- | Construct range r{i,j}
-mkRng                                   :: Int -> Int -> GenRegex l -> GenRegex l
+mkRng                                   :: (StringLike s) =>
+                                           Int -> Int -> GenRegex s -> GenRegex s
 mkRng 0  0  _e                          = mkUnit
 mkRng 1  1  e                           = e
 mkRng lb ub _e
-    | lb > ub                           = Zero $
+    | lb > ub                           = mkZero' $
                                           "illegal range " ++
                                           show lb ++ ".." ++ show ub
 mkRng _l _u e@(Zero _)                  = e
@@ -276,7 +312,8 @@ mkRng _l _u e@Unit                      = e
 mkRng lb ub e                           = Rng lb ub e
 
 -- | Construct option r?
-mkOpt                                   :: GenRegex l -> GenRegex l
+mkOpt                                   :: (StringLike s) =>
+                                           GenRegex s -> GenRegex s
 mkOpt                                   = mkRng 0 1
 {-# INLINE mkOpt #-}
 
@@ -288,22 +325,24 @@ mkOpt                                   = mkRng 0 1
 -- > match "[a-z]+{\\}bush" "clinton"   = True
 -- > match "[a-z]+{\\}bush" "bush"      = False     -- not important any more
 
-mkDiff                                  :: Eq l => GenRegex l -> GenRegex l -> GenRegex l
+mkDiff                                  :: (StringLike s) =>
+                                           GenRegex s -> GenRegex s -> GenRegex s
 mkDiff e1@(Zero _) _e2                  = e1                                    -- {} - r2 = {}
 mkDiff e1          (Zero _)             = e1                                    -- r1 - {} = r1
-mkDiff _e1         (Star Dot)           = mkZero "empty set in difference expr" -- r1 - .* = {}
+mkDiff _e1         (Star Dot)           = mkZero' "empty set in difference expr" -- r1 - .* = {}
 mkDiff Dot         (Sym p)              = mkSym $ compCS p                      -- . - s  = ~s
-mkDiff (Sym _)     Dot                  = mkZero "empty set in difference expr" -- x - .  = {}
+mkDiff (Sym _)     Dot                  = mkZero' "empty set in difference expr" -- x - .  = {}
 mkDiff (Sym p1)    (Sym p2)             = mkSym $ p1 `diffCS` p2                -- set diff
 mkDiff e1          e2
-    | e1 == e2                          = mkZero "empty set in difference expr" -- r1 - r1 = {}
+    | e1 == e2                          = mkZero' "empty set in difference expr" -- r1 - r1 = {}
     | otherwise                         = Diff e1 e2
 
 -- | Construct the Complement of an r.e.: whole set of words - r
 
-mkCompl                                 :: Eq l => GenRegex l -> GenRegex l
+mkCompl                                 :: (StringLike s) =>
+                                           GenRegex s -> GenRegex s
 mkCompl (Zero _)                        = mkAll
-mkCompl (Star Dot)                      = mkZero "empty set in compl expr"
+mkCompl (Star Dot)                      = mkZero' "empty set in compl expr"
 mkCompl e                               = mkDiff (mkStar mkDot) e
 
 -- | Construct r.e. for intersection: r1 {&} r2
@@ -315,12 +354,13 @@ mkCompl e                               = mkDiff (mkStar mkDot) e
 -- > match ".*a.*{&}.*b.*" "-a-a-"  = False
 -- > match ".*a.*{&}.*b.*" "---b-"  = False
 
-mkIsect                                 :: Eq l => GenRegex l -> GenRegex l -> GenRegex l
+mkIsect                                 :: (StringLike s) =>
+                                           GenRegex s -> GenRegex s -> GenRegex s
 mkIsect e1@(Zero _) _e2                 = e1                                    -- {} n r2 = {}
 mkIsect _e1         e2@(Zero _)         = e2                                    -- r1 n {} = {}
 mkIsect e1@(Unit)   e2                                                  -- () n r2 = () if nullable r2
     | nullable e2                       = e1                                    -- () n r2 = {} if not nullable r2
-    | otherwise                         = mkZero "intersection empty"
+    | otherwise                         = mkZero' "intersection empty"
 mkIsect e1          e2@(Unit)           = mkIsect e2 e1                         -- symmetric version of las 2 laws
 
 mkIsect (Sym p1)    (Sym p2)            = mkSym $ p1 `intersectCS` p2           -- intersect sets
@@ -342,47 +382,53 @@ mkIsect e1          e2
 -- > match "[a-c]+{^}[c-d]+" "ccc"  = False
 -- > match "[a-c]+{^}[c-d]+" "cdc"  = True
 
-mkExor                                  :: Eq l => GenRegex l -> GenRegex l -> GenRegex l
+mkExor                                  :: (StringLike s) =>
+                                           GenRegex s -> GenRegex s -> GenRegex s
 mkExor (Zero _)     e2                  = e2
 mkExor e1           (Zero _)            = e1
-mkExor (Star Dot)   _e2                 = mkZero "empty set in exor expr"
-mkExor _e1          (Star Dot)          = mkZero "empty set in exor expr"
+mkExor (Star Dot)   _e2                 = mkZero' "empty set in exor expr"
+mkExor _e1          (Star Dot)          = mkZero' "empty set in exor expr"
 mkExor (Sym p1)     (Sym p2)            = mkSym $ p1 `exorCS` p2
 mkExor (Sym p1)     Dot                 = mkSym $ compCS p1
 mkExor Dot          (Sym p2)            = mkSym $ compCS p2
 mkExor e1           e2
-    | e1 == e2                          = mkZero "empty set in exor expr"       -- r1 xor r1 = {}
+    | e1 == e2                          = mkZero' "empty set in exor expr"       -- r1 xor r1 = {}
     | otherwise                         = Exor e1 e2
 
-mkInterleave                            :: GenRegex l -> GenRegex l -> GenRegex l
+mkInterleave                            :: GenRegex s -> GenRegex s -> GenRegex s
 mkInterleave e1@(Zero _) _              = e1
 mkInterleave _           e2@(Zero _)    = e2
 mkInterleave (Unit)      e2             = e2
 mkInterleave e1          (Unit)         = e1
 mkInterleave e1          e2             = Intl e1 e2
 
-mkBr0                                   :: Label l -> GenRegex l -> String -> GenRegex l
-mkBr0 _ e@(Zero _) _                    = e
-mkBr0 l Unit       s                    = mkCbr mkUnit [(l,reverse s)]
-mkBr0 l e          s                    = Br l e s
-
 -- | Construct a labeled subexpression: ({label}r)
 
-mkBr                                    :: l -> GenRegex l -> GenRegex l
-mkBr  l e                               = mkBr0 (Just l) e ""
+mkBr                                    :: s -> GenRegex s -> GenRegex s
+mkBr l e                                = Br (Just l) e
 
-mkBr'                                   :: GenRegex l -> GenRegex l
-mkBr' e                                 = mkBr0 Nothing e ""
+mkBr'                                   :: StringLike s =>
+                                           String -> GenRegex s -> GenRegex s
+mkBr' l e                               = Br (Just $ fromString l) e
 
-mkCbr                                   :: GenRegex l -> [(Label l, String)] -> GenRegex l
-mkCbr  e@(Zero _) _                     = e                             -- dead end, throw away subexpr matches
-mkCbr (Cbr e ss1) ss                    = mkCbr e (ss ++ ss1)           -- join inner and this subexpr match
-mkCbr  e          ss                    = Cbr e ss
+mkBrN                                   :: GenRegex s -> GenRegex s
+mkBrN e                                 = Br Nothing e
+
+mkObr                                   :: StringLike s =>
+                                           Label s -> s -> Int -> GenRegex s -> GenRegex s
+mkObr _ _ _ e@(Zero _)                  = e
+mkObr l s n Unit                        = mkCbr [(l, takeS n s)] mkUnit
+mkObr l s n e                           = Obr l s n e
+
+mkCbr                                   :: SubexResults s -> GenRegex s -> GenRegex s
+mkCbr  _  e@(Zero _)                    = e                             -- dead end, throw away subexpr matches
+mkCbr ss (Cbr ss1 e)                    = mkCbr (ss <> ss1) e           -- join inner and this subexpr match
+mkCbr ss  e                             = Cbr ss e
 
 -- ------------------------------------------------------------
-
-instance Show l => Show (GenRegex l) where
-    show (Zero e)               = "{" ++ e ++ "}"
+                                  
+instance (StringLike s) => Show (GenRegex s) where
+    show (Zero e)               = "{" ++ toString e ++ "}"
     show Unit                   = "()"
     show (Sym p)
         | p == compCS (stringCS "\n\r")
@@ -422,15 +468,13 @@ instance Show l => Show (GenRegex l) where
     show (Isec e1 e2)           = "(" ++ show e1 ++ "{&}" ++ show e2 ++ ")"
     show (Exor e1 e2)           = "(" ++ show e1 ++ "{^}" ++ show e2 ++ ")"
     show (Intl e1 e2)           = "(" ++ show e1 ++ "{:}" ++ show e2 ++ ")"
-    show (Br l e  s)            = "({" ++ showL l ++ (if null s
-                                                      then ""
-                                                      else "=" ++ reverse s
-                                                     ) ++ "}" ++ show e ++ ")"
-    show (Cbr  e ss)            = "([" ++ intercalate "," (map (\(l,s) -> showL l ++ "=" ++ s) ss) ++ "]"
+    show (Br  l     e)          = "({" ++ showL l ++ "}" ++ show e ++ ")"
+    show (Obr l s n e)          = "({" ++ showL l ++ "=" ++ toString (takeS n s) ++ "}" ++ show e ++ ")"
+    show (Cbr ss e)             = "([" ++ intercalate "," (map (\ (l, s) -> showL l ++ "=" ++ toString s) ss) ++ "]"
                                   ++ show e ++
                                   ")"
 
-showL                           :: Show l => Label l -> String
+showL                           :: Show s => Label s -> String
 showL                           = rmq . maybe "" show
                                   where
                                   rmq ('\"':xs) = init xs
@@ -438,22 +482,25 @@ showL                           = rmq . maybe "" show
 
 -- ------------------------------------------------------------
 
-isZero                          :: GenRegex l -> Bool
+isZero                          :: GenRegex s -> Bool
 isZero (Zero _)                 = True
 isZero _                        = False
 {-# INLINE isZero #-}
 
-errRegex                        :: GenRegex l -> String
+errRegex                        :: (StringLike s) =>
+                                   GenRegex s -> s
 errRegex (Zero e)               = e
-errRegex _                      = ""
+errRegex _                      = emptyS
 
 -- ------------------------------------------------------------
 
-nullable                        :: GenRegex l -> Bool
+nullable                        :: (StringLike s) =>
+                                   GenRegex s -> Bool
 nullable                        = fst . nullable'
 {-# INLINE nullable #-}
 
-nullable'                       :: GenRegex l -> Nullable l
+nullable'                       :: (StringLike s) =>
+                                   GenRegex s -> Nullable s
 
 nullable' (Zero _)              = (False, [])
 nullable' Unit                  = (True,  [])
@@ -472,26 +519,27 @@ nullable' (Diff  e1 e2)         = nullable' e1 `diffN`   nullable' e2
 nullable' (Exor  e1 e2)         = nullable' e1 `exorN`   nullable' e2
 nullable' (Intl  e1 e2)         = nullable' e1 `isectN`  nullable' e2
 
-nullable' (Br  l e s)           = (True, [(l, reverse s)]) `isectN` nullable' e
-nullable' (Cbr e  ss)           = (True, ss)               `isectN` nullable' e
+nullable' (Br  l e)             = (True, [(l, emptyS   )]) `isectN` nullable' e
+nullable' (Obr l s n e)         = (True, [(l, takeS n s)]) `isectN` nullable' e
+nullable' (Cbr ss e)            = (True, ss)               `isectN` nullable' e
 
-isectN                          :: Nullable l -> Nullable l -> Nullable l
+isectN                          :: Nullable s -> Nullable s -> Nullable s
 isectN (True, ws1) (True, ws2)  = (True, ws1 ++ ws2)
 isectN _           _            = (False, [])
 
-unionN                          :: Nullable l -> Nullable l -> Nullable l
+unionN                          :: Nullable s -> Nullable s -> Nullable s
 unionN (False, _) (False, _)    = (False, [])
 unionN (_, ws1)   (_, ws2)      = (True, ws1 ++ ws2)
 
-orElseN                         :: Nullable l -> Nullable l -> Nullable l
+orElseN                         :: Nullable s -> Nullable s -> Nullable s
 orElseN e1@(True, _ws1) _       = e1
 orElseN _            e2         = e2
 
-diffN                           :: Nullable l -> Nullable l -> Nullable l
+diffN                           :: Nullable s -> Nullable s -> Nullable s
 diffN n1          (False, _)    = n1
 diffN _           _             = (False, [])
 
-exorN                           :: Nullable l -> Nullable l -> Nullable l
+exorN                           :: Nullable s -> Nullable s -> Nullable s
 exorN n1@(True, _)  (False, _)  = n1
 exorN (False, _)  n2@(True, _)  = n2
 exorN _           _             = (False, [])
@@ -503,7 +551,8 @@ exorN _           _             = (False, [])
 -- this is only an approximation, the real set of char may be smaller,
 -- when the expression contains intersection, set difference or exor operators
 
-firstChars                      :: GenRegex l -> CharSet
+firstChars                      :: (StringLike s) =>
+                                   GenRegex s -> CharSet
 
 firstChars (Zero _)             = emptyCS
 firstChars Unit                 = emptyCS
@@ -522,86 +571,94 @@ firstChars (Diff e1 _e2)        = firstChars e1                                 
 firstChars (Isec e1 e2)         = firstChars e1 `intersectCS` firstChars e2     -- this is an approximation
 firstChars (Exor e1 e2)         = firstChars e1 `unionCS`     firstChars e2     -- this is an approximation
 firstChars (Intl e1 e2)         = firstChars e1 `unionCS`     firstChars e2
-firstChars (Br _l e _s)         = firstChars e
-firstChars (Cbr e _ss)          = firstChars e
+firstChars (Br _l e)            = firstChars e
+firstChars (Obr _l _s _n e)     = firstChars e
+firstChars (Cbr _ss e)          = firstChars e
 
 -- ------------------------------------------------------------
 
-delta1                          :: Eq l => GenRegex l -> Char -> GenRegex l
-delta1 e@(Zero _)   _           = e
-delta1 Unit         c           = mkZero $
-                                  "unexpected char " ++ show c
-delta1 (Sym p)      c
-    | c `elemCS` p              = mkUnit
-    | otherwise                 = mkZero $
-                                  "unexpected char " ++ show c
-
-delta1 Dot          _           = mkUnit
-
-delta1 e@(Star Dot) _           = e
-delta1 e@(Star e1)  c           = mkSeq   (delta1 e1 c) e
-
-delta1 (Alt e1 e2)  c           = mkAlt   (delta1 e1 c) (delta1 e2 c)
-
-delta1 (Else e1 e2) c           = mkElse  (delta1 e1 c) (delta1 e2 c)
-
-delta1 (Seq e1@(Br l e1' s) e2) c
-    | n                         = mkAlt   (mkSeq (delta1 e1 c) e2)
-                                          (mkCbr (delta1 e2 c) ((l, reverse s) : ws))
-                                  where
-                                  (n, ws) = nullable' e1'
-delta1 (Seq e1 e2)  c
-    | nullable e1               = mkAlt   (mkSeq (delta1 e1 c) e2)
-                                          (delta1 e2 c)
-    | otherwise                 = mkSeq   (delta1 e1 c) e2
-
-delta1 (Rep i e)    c           = mkSeq   (delta1 e  c) (mkRep (i-1) e)
-
-delta1 (Rng i j e)  c           = mkSeq   (delta1 e  c) (mkRng ((i-1) `max` 0) (j-1) e)
-
-delta1 (Diff e1 e2) c           = mkDiff  (delta1 e1 c) (delta1 e2 c)
-
-delta1 (Isec e1 e2) c           = mkIsect (delta1 e1 c) (delta1 e2 c)
-
-delta1 (Exor e1 e2) c           = mkExor  (delta1 e1 c) (delta1 e2 c)
-
-delta1 (Intl e1 e2) c           = mkAlt   (mkInterleave (delta1 e1 c)         e2   )
-                                          (mkInterleave         e1    (delta1 e2 c))
-
-delta1 (Br l e s)   c           = mkBr0 l (delta1 e  c) (c:s)
-
-delta1 (Cbr e ss)   c           = mkCbr   (delta1 e  c) ss
+delta1 :: (StringLike s) => Char -> s -> GenRegex s -> GenRegex s
+delta1 c inp e0
+  = d' e0
+  where
+    d' e@(Zero _)           = e
+    d' Unit                 = mkZero' $
+                              "unexpected char " ++ show c
+    d' (Sym p)
+      | c `elemCS` p        = mkUnit
+      | otherwise           = mkZero' $
+                              "unexpected char " ++ show c
+    d' Dot                  = mkUnit
+    d' e@(Star Dot)         = e
+    d' e@(Star e1)          = mkSeq  (d' e1) e
+    d' (Alt e1 e2)          = mkAlt  (d' e1) (d' e2)
+    d' (Else e1 e2)         = mkElse (d' e1) (d' e2)
+    d' (Seq e1@(Obr l s n e1') e2)
+      | nu                  = mkAlt (mkSeq (d' e1) e2)
+                                    (mkCbr ((l, takeS n s) : ws) (d' e2))
+                              where
+                                (nu, ws) = nullable' e1'
+    d' (Seq e1 e2)
+      | nullable e1         = mkAlt (mkSeq (d' e1) e2)
+                                    (d' e2)
+      | otherwise           = mkSeq (d' e1) e2
+    d' (Rep i e)            = mkSeq (d' e) (mkRep (i-1) e)
+    d' (Rng i j e)          = mkSeq (d' e) (mkRng ((i-1) `max` 0) (j-1) e)
+    d' (Diff e1 e2)         = mkDiff  (d' e1) (d' e2)
+    d' (Isec e1 e2)         = mkIsect (d' e1) (d' e2)
+    d' (Exor e1 e2)         = mkExor  (d' e1) (d' e2)
+    d' (Intl e1 e2)         = mkAlt   (mkInterleave (d' e1)     e2 )
+                                      (mkInterleave     e1  (d' e2))
+                              
+    d' (Br  l     e)        = d' (mkObr l inp 0 e)        -- a subex parse starts
+    d' (Obr l s n e)        = mkObr l s (n + 1) (d' e)    -- a subex parse cont.
+    d' (Cbr ss e)           = mkCbr ss (d' e)             -- the results of a subex parse
 
 -- ------------------------------------------------------------
 
-delta                           :: Eq l => GenRegex l -> String -> GenRegex l
-delta e                     []  = e
-delta e@(Zero _)           _xs  = e
-delta e@(Star Dot)         _xs  = e
-delta e                (x : xs) = delta (delta1 e x) xs
+delta :: (StringLike s) => s -> GenRegex s -> GenRegex s
+delta inp@(uncons -> Just (c, inp')) e0
+  = d' e0
+  where
+    d' e@(Zero _)   = e   -- don't process whole input, parse has failed
+    d' e@(Star Dot) = e   -- don't process input, derivative does not change
+    d' e            = delta inp' ( -- trc "delta1=" $
+                                   delta1 c inp e)
 
-matchWithRegex                  :: Eq l => GenRegex l -> String -> Bool
-matchWithRegex e                = nullable . delta e
+delta _empty e
+  = e
 
-matchWithRegex'                 :: Eq l => GenRegex l -> String -> Maybe [(Label l,String)]
-matchWithRegex' e               = (\ (r, l) -> if r then Just l else Nothing) . nullable' . delta e
+
+matchWithRegex :: (StringLike s) =>
+                  GenRegex s -> s -> Bool
+matchWithRegex e s
+  = nullable $ delta s e
+
+matchWithRegex' :: (StringLike s) =>
+                   GenRegex s -> s -> Maybe (SubexResults s)
+matchWithRegex' e s
+  = (\ (r, l) -> if r then Just l else Nothing) . nullable' $ delta s e
 
 -- ------------------------------------------------------------
 
 -- | This function wraps the whole regex in a subexpression before starting
--- the parse. This is done for getting acces to
+-- the parse. This is done for getting access to
 -- the whole parsed string. Therfore we need one special label, this label
 -- is the Nothing value, all explicit labels are Just labels.
 
-splitWithRegex                  :: Eq l => GenRegex l -> String -> Maybe ([(Label l,String)], String)
-splitWithRegex re inp           = do
-                                  (re', rest) <- splitWithRegex' (mkBr' re) inp
-                                  return ( snd . nullable' $ re', rest)
+splitWithRegex :: (StringLike s) =>
+                  GenRegex s -> s -> Maybe (SubexResults s, s)
+splitWithRegex re inp
+  = do
+    (re', rest) <- splitWithRegex' (mkBrN re) inp
+    return ( snd . nullable' $ re', rest)
 
-splitWithRegexCS                :: Eq l => GenRegex l -> CharSet -> String -> Maybe ([(Label l,String)], String)
-splitWithRegexCS re cs inp      = do
-                                  (re', rest) <- splitWithRegexCS' (mkBr' re) cs inp
-                                  return ( snd . nullable' $ re', rest)
+splitWithRegexCS :: (StringLike s) =>
+                    GenRegex s -> CharSet -> s -> Maybe (SubexResults s, s)
+splitWithRegexCS re cs inp
+  = do
+    (re', rest) <- splitWithRegexCS' (mkBrN re) cs inp
+    return ( snd . nullable' $ re', rest)
 
 -- ----------------------------------------
 --
@@ -609,7 +666,7 @@ splitWithRegexCS re cs inp      = do
 
 {- linear recursive function, can lead to stack overflow
 
-splitWithRegex'                 :: Eq l => GenRegex l -> String -> Maybe (GenRegex l, String)
+splitWithRegex'                 :: Eq l => GenRegex s -> String -> Maybe (GenRegex s, String)
 splitWithRegex' re ""
     | nullable re               = Just (re, "")
     | otherwise                 = Nothing
@@ -626,24 +683,29 @@ splitWithRegex' re inp@(c : inp')
 
 -- tail recursive version of above function
 
-splitWithRegex'                 :: Eq l => GenRegex l -> String -> Maybe (GenRegex l, String)
-splitWithRegex' re inp          = splitWithRegex''
-                                  ( if nullable re
-                                    then Just (re, inp)         -- first possible result: empty prefix
-                                    else Nothing                -- empty prefix not a result
-                                  ) re inp
+splitWithRegex' :: (StringLike s) =>
+                   GenRegex s -> s -> Maybe (GenRegex s, s)
+splitWithRegex' re inp
+  = splitWithRegex''
+    ( if nullable re
+      then Just (re, inp)         -- first possible result: empty prefix
+      else Nothing                -- empty prefix not a result
+    ) re inp
 
-splitWithRegex''                :: Eq l => Maybe (GenRegex l, String) -> GenRegex l -> String -> Maybe (GenRegex l, String)
-splitWithRegex'' lastRes _re "" = lastRes
+splitWithRegex'' :: (StringLike s) =>
+                    Maybe (GenRegex s, s) -> GenRegex s -> s -> Maybe (GenRegex s, s)
 
-splitWithRegex'' lastRes re (c : inp')
-    | isZero re                 = lastRes
-    | otherwise                 = splitWithRegex'' nextRes re' $ inp'
-    where
-    re'                         = delta1 re c
+splitWithRegex'' lastRes re inp@(uncons -> Just (c, inp'))
+  | isZero re = lastRes
+  | otherwise = splitWithRegex'' nextRes re' $ inp'
+  where
+    re' = delta1 c inp re
     nextRes
-        | nullable re'          = Just (re', inp')
-        | otherwise             = lastRes
+      | nullable re' = Just (re', inp')
+      | otherwise    = lastRes
+
+splitWithRegex'' lastRes _re _empty
+  = lastRes
 
 -- ----------------------------------------
 --
@@ -653,13 +715,14 @@ splitWithRegex'' lastRes re (c : inp')
 -- If this is not the case, the split fails. The FIRST set can be computed once
 -- for a whole tokenizer and reused by every call of split
 
-splitWithRegexCS'               :: Eq l => GenRegex l -> CharSet -> String -> Maybe (GenRegex l, String)
-
-splitWithRegexCS' re cs inp@(c : _)
-    | c `elemCS` cs             = splitWithRegex' re inp
+splitWithRegexCS' :: (StringLike s) =>
+                     GenRegex s -> CharSet -> s -> Maybe (GenRegex s, s)
+splitWithRegexCS' re cs inp@(uncons -> Just (c, _inp'))
+  | c `elemCS` cs = splitWithRegex' re inp
 
 splitWithRegexCS' re _cs inp
-    | nullable re               = Just (re, inp)
-    | otherwise                 = Nothing
+  | nullable re = Just (re, inp)
+  | otherwise = Nothing
 
 -- ------------------------------------------------------------
+

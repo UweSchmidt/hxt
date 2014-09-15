@@ -1,8 +1,8 @@
 -- ------------------------------------------------------------
 
 {- |
-   Module     : Text.Regex.XMLSchema.String.RegexParser
-   Copyright  : Copyright (C) 2010- Uwe Schmidt
+   Module     : Text.Regex.XMLSchema.RegexParser
+   Copyright  : Copyright (C) 2014- Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
@@ -13,15 +13,18 @@
 
    This parser supports the full W3C standard, the
    complete grammar can be found under <http://www.w3.org/TR/xmlschema11-2/#regexs>
-   and extensions for all missing set operations, intersection, difference, exclusive or, interleave, complement
+   and extensions for all missing set operations, intersection,
+   difference, exclusive or, interleave, complement
 
 -}
 
 -- ------------------------------------------------------------
 
-module Text.Regex.XMLSchema.String.RegexParser
+module Text.Regex.XMLSchema.Generic.RegexParser
     ( parseRegex
     , parseRegexExt
+    , parseRegex'
+    , parseRegexExt'
     , parseContextRegex
     )
 where
@@ -31,22 +34,22 @@ import Data.Char.Properties.UnicodeCharProps
 import Data.Char.Properties.XMLCharProps
 
 import Data.List                        ( isPrefixOf, isSuffixOf )
-
 import Data.Maybe
-
 import Data.Set.CharSet
 
 import Text.ParserCombinators.Parsec
-
-import Text.Regex.XMLSchema.String.Regex
-
+import Text.Regex.XMLSchema.Generic.Regex
+import Text.Regex.XMLSchema.Generic.StringLike
 
 -- ------------------------------------------------------------
 
 -- | parse a standard W3C XML Schema regular expression
 
-parseRegex 		:: String -> Regex
-parseRegex 		= parseRegex' regExpStd
+parseRegex 		:: StringLike s => s -> GenRegex s
+parseRegex 		= parseRegex' . toString
+
+parseRegex' 		:: StringLike s => String -> GenRegex s
+parseRegex' 		= parseRegex'' regExpStd
 
 -- | parse an extended syntax W3C XML Schema regular expression
 --
@@ -59,18 +62,21 @@ parseRegex 		= parseRegex' regExpStd
 -- empty set of words. Zero contains as data field a string for an error message.
 -- So error checking after parsing becomes possible by checking against Zero ('isZero' predicate)
 
-parseRegexExt 	:: String -> Regex
-parseRegexExt 	= parseRegex' regExpExt
+parseRegexExt 	:: StringLike s => s -> GenRegex s
+parseRegexExt 	= parseRegexExt' . toString
 
-parseRegex' 		:: Parser Regex -> String -> Regex
-parseRegex' regExp'    	= either (mkZero . ("syntax error: " ++) . show) id
-                          .
-                          parse ( do
-                                  r <- regExp'
-                                  eof
-                                  return r
-                                ) ""
+parseRegexExt' 	:: StringLike s => String -> GenRegex s
+parseRegexExt' 	= parseRegex'' regExpExt
 
+parseRegex'' :: StringLike s => Parser (GenRegex s) -> String -> GenRegex s
+parseRegex'' regExp'
+  = either (mkZero' . ("syntax error: " ++) . show) id
+    . parse ( do
+                 r <- regExp'
+                 eof
+                 return r
+            ) ""
+                          
 -- ------------------------------------------------------------
 
 -- | parse a regular expression surrounded by contenxt spec
@@ -82,33 +88,36 @@ parseRegex' regExp'    	= either (mkZero . ("syntax error: " ++) . show) id
 --
 -- The 1. param ist the regex parser ('parseRegex' or 'parseRegexExt')
 
-parseContextRegex :: (String -> Regex) -> String -> Regex
-parseContextRegex parseRe re
+parseContextRegex :: StringLike s => (String -> GenRegex s) -> s -> GenRegex s
+parseContextRegex parseRe re0
     = re'
     where
+      parseAW = parseRegexExt' "(\\A\\W)?"
+      parseWA = parseRegexExt' "(\\W\\A)?"
+      
+      re  = toString re0
       re' = mkSeqs . concat $ [ startContext
                               , (:[]) . parseRe $ re2
                               , endContext
                               ]
       (startContext, re1)
-          | "^"   `isPrefixOf` re   = ([],                          tail   re)
-          | "\\<" `isPrefixOf` re   = ([parseRegexExt "(\\A\\W)?"], drop 2 re)
-          | otherwise               = ([mkStar mkDot],                     re)
+          | "^"   `isPrefixOf` re   = ([],             tail   re)
+          | "\\<" `isPrefixOf` re   = ([parseAW],      drop 2 re)
+          | otherwise               = ([mkStar mkDot],        re)
       (endContext, re2)
-          | "$"   `isSuffixOf` re1  = ([],                          init          re1)
-          | "\\>" `isSuffixOf` re1  = ([parseRegexExt "(\\W\\A)?"], init . init $ re1)
-          | otherwise               = ([mkStar mkDot],                            re1)
-
+          | "$"   `isSuffixOf` re1  = ([],             init          re1)
+          | "\\>" `isSuffixOf` re1  = ([parseWA],      init . init $ re1)
+          | otherwise               = ([mkStar mkDot],               re1)
 
 -- ------------------------------------------------------------
 
-regExpExt  :: Parser Regex
+regExpExt  :: StringLike s => Parser (GenRegex s)
 regExpExt  = branchList orElseList
 
-regExpStd  :: Parser Regex
+regExpStd  :: StringLike s => Parser (GenRegex s)
 regExpStd  = branchList seqListStd
 
-branchList      :: Parser Regex -> Parser Regex
+branchList :: StringLike s => Parser (GenRegex s) -> Parser (GenRegex s)
 branchList exParser
     = do
       r1 <- exParser
@@ -121,7 +130,7 @@ branchList exParser
           _ <- char '|'
           exParser
 
-orElseList      :: Parser Regex
+orElseList      :: StringLike s => Parser (GenRegex s)
 orElseList
     = do
       r1 <- interleaveList
@@ -134,7 +143,7 @@ orElseList
           _ <- try (string "{|}")
           interleaveList
 
-interleaveList  :: Parser Regex
+interleaveList  :: StringLike s => Parser (GenRegex s)
 interleaveList
     = do
       r1 <- exorList
@@ -147,7 +156,7 @@ interleaveList
           _ <- try (string "{:}")
           exorList
 
-exorList        :: Parser Regex
+exorList        :: StringLike s => Parser (GenRegex s)
 exorList
     = do
       r1 <- diffList
@@ -159,7 +168,7 @@ exorList
           _ <- try (string "{^}")
           diffList
 
-diffList        :: Parser Regex
+diffList        :: StringLike s => Parser (GenRegex s)
 diffList
     = do
       r1 <- intersectList
@@ -171,7 +180,7 @@ diffList
           _ <- try (string "{\\}")
           intersectList
 
-intersectList   :: Parser Regex
+intersectList   :: StringLike s => Parser (GenRegex s)
 intersectList
     = do
       r1 <- seqListExt
@@ -183,25 +192,25 @@ intersectList
           _ <- try (string "{&}")
           seqListExt
 
-seqListExt	:: Parser Regex
+seqListExt	:: StringLike s => Parser (GenRegex s)
 seqListExt	= seqList' regExpLabel multiCharEscExt
 
-seqListStd	:: Parser Regex
+seqListStd	:: StringLike s => Parser (GenRegex s)
 seqListStd	= seqList' regExpStd multiCharEsc
 
-seqList'        :: Parser Regex -> Parser Regex -> Parser Regex
+seqList'        :: StringLike s => Parser (GenRegex s) -> Parser (GenRegex s) -> Parser (GenRegex s)
 seqList' regExp' multiCharEsc'
     = do
       rs <- many piece
       return $ mkSeqs rs
     where
-    piece           :: Parser Regex
+    -- piece :: StringLike s => Parser (GenRegex s)
     piece
         = do
           r <- atom
           quantifier r
 
-    atom    :: Parser Regex
+    -- atom :: StringLike s => Parser (GenRegex s)
     atom
         = char1
           <|>
@@ -209,7 +218,7 @@ seqList' regExp' multiCharEsc'
           <|>
           between (char '(') (char ')') regExp'
 
-    charClass       :: Parser Regex
+    -- charClass :: StringLike s => Parser (GenRegex s)
     charClass
         = charClassEsc multiCharEsc'
           <|>
@@ -219,7 +228,7 @@ seqList' regExp' multiCharEsc'
 
 
 
-quantifier      :: Regex -> Parser Regex
+quantifier      :: StringLike s => GenRegex s -> Parser (GenRegex s)
 quantifier r
     = ( do
         _ <- char '?'
@@ -242,13 +251,13 @@ quantifier r
       <|>
       ( return r )
 
-quantity        :: Regex -> Parser Regex
+quantity        :: StringLike s => GenRegex s -> Parser (GenRegex s)
 quantity r
     = do
       lb <- many1 digit
       quantityRest r (read lb)
 
-quantityRest    :: Regex -> Int -> Parser Regex
+quantityRest    :: StringLike s => GenRegex s -> Int -> Parser (GenRegex s)
 quantityRest r lb
     = ( do
         _ <- char ','
@@ -261,7 +270,7 @@ quantityRest r lb
       <|>
       ( return $ mkRng lb lb r)
 
-regExpLabel :: Parser Regex
+regExpLabel :: StringLike s => Parser (GenRegex s)
 regExpLabel
     = do
       lab <- option id (between (char '{') (char '}') label')
@@ -271,15 +280,15 @@ regExpLabel
     label'
         = do
           l <- many1 (satisfy isXmlNameChar)
-          return $ mkBr l
+          return $ mkBr' l
 
-char1   :: Parser Regex
+char1   :: StringLike s => Parser (GenRegex s)
 char1
     = do
       c <- satisfy (`notElem` ".\\?*+{}()|[]")
       return $ mkSym1 c
 
-charClassEsc    :: Parser Regex -> Parser Regex
+charClassEsc    :: StringLike s => Parser (GenRegex s) -> Parser (GenRegex s)
 charClassEsc multiCharEsc'
     = do
       _ <- char '\\'
@@ -291,7 +300,7 @@ charClassEsc multiCharEsc'
         <|>
         complEsc )
 
-singleCharEsc   :: Parser Regex
+singleCharEsc   :: StringLike s => Parser (GenRegex s)
 singleCharEsc
     = do
       c <- singleCharEsc'
@@ -303,7 +312,7 @@ singleCharEsc'
       c <- satisfy (`elem` "nrt\\|.?*+(){}-[]^")
       return $ maybe c id . lookup c . zip "ntr" $ "\n\r\t"
 
-multiCharEscExt    :: Parser Regex
+multiCharEscExt    :: StringLike s => Parser (GenRegex s)
 multiCharEscExt
     = multiCharEsc
       <|>
@@ -315,7 +324,7 @@ multiCharEscExt
         _ <- char 'A'
         return mkAll )
 
-multiCharEsc    :: Parser Regex
+multiCharEsc    :: StringLike s => Parser (GenRegex s)
 multiCharEsc
     = ( do
         c <- satisfy (`elem` es)
@@ -340,7 +349,7 @@ multiCharEsc
                       `unionCS`
                       charPropUnicodeC
 
-catEsc  :: Parser Regex
+catEsc  :: StringLike s => Parser (GenRegex s)
 catEsc
     = do
       _ <- char 'p'
@@ -435,52 +444,52 @@ isCategory'
                   return [c2] )
           return $ c1:s2
 
-complEsc        :: Parser Regex
+complEsc        :: StringLike s => Parser (GenRegex s)
 complEsc
     = do
       _ <- char 'P'
       s <- between (char '{') (char '}') charProp
       return $ mkSym $ compCS s
 
-charClassExpr   :: Parser Regex -> Parser Regex
+charClassExpr   :: StringLike s => Parser (GenRegex s) -> Parser (GenRegex s)
 charClassExpr multiCharEsc'
     = between (char '[') (char ']') charGroup
     where
 
-    charGroup       :: Parser Regex
+    -- charGroup       :: StringLike s => Parser (GenRegex s)
     charGroup
         = do
           r <- ( negCharGroup       -- a ^ at beginning denotes negation, not start of posCharGroup
                  <|>
                  posCharGroup
                )
-          s <- option (mkZero "")   -- charClassSub
+          s <- option (mkZero' "")   -- charClassSub
                ( do
                  _ <- char '-'
                  charClassExpr multiCharEsc'
                )
           return $ mkDiff r s
 
-    posCharGroup    :: Parser Regex
+    -- posCharGroup    :: StringLike s => Parser (GenRegex s)
     posCharGroup
         = do
           rs <- many1 (charRange <|> charClassEsc multiCharEsc')
           return $ foldr1 mkAlt rs
 
-    negCharGroup    :: Parser Regex
+    -- negCharGroup    :: StringLike s => Parser (GenRegex s)
     negCharGroup
         = do
           _ <- char '^'
           r <- posCharGroup
           return $ mkDiff mkDot r
 
-charRange       :: Parser Regex
+charRange       :: StringLike s => Parser (GenRegex s)
 charRange
     = try seRange
       <|>
       xmlCharIncDash
 
-seRange :: Parser Regex
+seRange :: StringLike s => Parser (GenRegex s)
 seRange
     = do
       c1 <- charOrEsc'
@@ -497,7 +506,7 @@ charOrEsc'
       <|>
       satisfy (`notElem` "\\-[]")
 
-xmlCharIncDash  :: Parser Regex
+xmlCharIncDash  :: StringLike s => Parser (GenRegex s)
 xmlCharIncDash
     = try ( do                          -- dash is only allowed if not followed by a [, else charGroup differences do not parse correctly
             _ <- char '-'
@@ -510,7 +519,7 @@ xmlCharIncDash
         return $ mkSym1 c
       )
 
-wildCardEsc     :: Parser Regex
+wildCardEsc     :: StringLike s => Parser (GenRegex s)
 wildCardEsc
     = do
       _ <- char '.'

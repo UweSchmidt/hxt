@@ -1,16 +1,20 @@
 Name:                hxt-regex-xmlschema
-Version:             9.1.0
+Version:             9.2.0
 Synopsis:            A regular expression library for W3C XML Schema regular expressions
 Description:         This library supports full W3C XML Schema regular expressions
                      inclusive all Unicode character sets and blocks.
                      The complete grammar can be found under <http://www.w3.org/TR/xmlschema11-2/#regexs>.
                      It is implemented by the technique of derivations of regular expressions.
+                     .
                      The W3C syntax is extended to support not only union of regular sets,
                      but also intersection, set difference, exor.
                      Matching of subexpressions is also supported.
+                     .
                      The library can be used for constricting lightweight scanners and tokenizers.
                      It is a standalone library, no external regex libraries are used.
-                     This package is a substitute for the old regex-xmlschema package.
+                     .
+                     Extensions in 9.2: The library does nor only support String's, but also
+                     ByteString's and Text in strict and lazy variants                     
 License:             MIT
 License-file:        LICENSE
 Author:              Uwe Schmidt
@@ -35,17 +39,23 @@ extra-source-files:
 
 Library
   Exposed-modules:
-    Text.Regex.XMLSchema.String.RegexParser
-    Text.Regex.XMLSchema.String.Regex
-    Text.Regex.XMLSchema.String
-    Text.Regex.Glob.String.RegexParser
     Text.Regex.Glob.String
+    Text.Regex.Glob.Generic
+    Text.Regex.Glob.Generic.RegexParser
+    Text.Regex.XMLSchema.String
+    Text.Regex.XMLSchema.Generic
+    Text.Regex.XMLSchema.Generic.Matching
+    Text.Regex.XMLSchema.Generic.RegexParser
+    Text.Regex.XMLSchema.Generic.Regex
+    Text.Regex.XMLSchema.Generic.StringLike
 
   hs-source-dirs: src
 
   ghc-options: -Wall
   ghc-prof-options: -auto-all -caf-all
 
-  build-depends:     base               >= 4   && < 5,
-                     parsec             >= 2.1 && < 4,
-                     hxt-charproperties >= 9   && < 10
+  build-depends:     base               >= 4     && < 5,
+                     bytestring         >= 0.10,
+                     hxt-charproperties >= 9     && < 10,
+                     parsec             >= 2.1   && < 4,
+                     text               >= 0.10

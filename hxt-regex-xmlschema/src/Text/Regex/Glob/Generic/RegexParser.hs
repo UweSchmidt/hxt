@@ -1,8 +1,7 @@
 -- ------------------------------------------------------------
 
 {- |
-   Module     : Text.Regex.Glob.String.RegexParser
-   Copyright  : Copyright (C) 2010- Uwe Schmidt
+   Copyright  : Copyright (C) 2014- Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
@@ -14,7 +13,7 @@
 
 -- ------------------------------------------------------------
 
-module Text.Regex.Glob.String.RegexParser
+module Text.Regex.Glob.Generic.RegexParser
     ( parseRegex
     , parseRegexNoCase
     )
@@ -27,25 +26,24 @@ import Data.Char                         ( isLower
                                          )
 
 import Text.ParserCombinators.Parsec
-
-import Text.Regex.XMLSchema.String.Regex
-
+import Text.Regex.XMLSchema.Generic.Regex
+import Text.Regex.XMLSchema.Generic.StringLike
 
 -- ------------------------------------------------------------
 
 -- | parse a glob pattern
 
-parseRegex :: String -> Regex
+parseRegex :: StringLike s => s -> GenRegex s
 parseRegex
-    = parseRegex' mkSymRng
+    = parseRegex' mkSymRng . toString
 
-parseRegexNoCase :: String -> Regex
+parseRegexNoCase :: StringLike s => s -> GenRegex s
 parseRegexNoCase
-    = parseRegex' mkNoCaseSymRng
+    = parseRegex' mkNoCaseSymRng . toString
 
-parseRegex' :: (Char -> Char -> Regex) -> String -> Regex
+parseRegex' :: StringLike s => (Char -> Char -> GenRegex s) -> String -> GenRegex s
 parseRegex' mkS
-    = either (mkZero . ("syntax error: " ++) . show) id
+    = either (mkZero' . ("syntax error: " ++) . show) id
       .
       parse ( do
               r <- pattern mkS
@@ -55,11 +53,11 @@ parseRegex' mkS
 
 -- ------------------------------------------------------------
 
-pattern  :: (Char -> Char -> Regex) -> Parser Regex
+pattern  :: StringLike s => (Char -> Char -> GenRegex s) -> Parser (GenRegex s)
 pattern mkS
     = many part >>= return . mkSeqs
     where
-      part :: Parser Regex
+      -- part :: Parser (GenRegex s)
       part
           = ( many1 (noneOf "\\?*[{") >>= return . mkWord' )
             <|>
@@ -77,15 +75,16 @@ pattern mkS
       mkWord'
           = mkSeqs . map (\ c -> mkS c c)
 
-      wordList :: Parser Regex
+      -- wordList :: Parser (GenRegex s)
       wordList
-          = sepBy (many1 (noneOf ",}")) (char ',') >>= return . foldr mkAlt (mkZero "") . map mkWord'
+          = sepBy (many1 (noneOf ",}")) (char ',')
+            >>= return . foldr mkAlt (mkZero' "") . map mkWord'
 
-      charSet :: Parser Regex
+      -- charSet :: Parser (GenRegex s)
       charSet
           = ( do p1 <- charSet' anyChar
                  ps <- many $ charSet' (noneOf "]")
-                 return $ foldr mkAlt (mkZero "") (p1 : ps)
+                 return $ foldr mkAlt (mkZero' "") (p1 : ps)
             )
           where
             charSet' cp
@@ -97,7 +96,7 @@ pattern mkS
 
 -- ------------------------------------------------------------
 
-mkNoCaseSymRng :: Char -> Char -> Regex
+mkNoCaseSymRng :: StringLike s => Char -> Char -> GenRegex s
 mkNoCaseSymRng c1 c2
     | isLower c1
       &&

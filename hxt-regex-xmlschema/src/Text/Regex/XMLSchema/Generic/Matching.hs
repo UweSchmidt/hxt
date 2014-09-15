@@ -1,27 +1,28 @@
+{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE ViewPatterns #-}
+
 -- ------------------------------------------------------------
 
 {- |
-   Copyright  : Copyright (C) 2010- Uwe Schmidt
+   Module     : Text.Regex.XMLSchema.Generic
+   Copyright  : Copyright (C) 2014- Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt <uwe@fh-wedel.de>
    Stability  : stable
    Portability: portable
 
-   Convenient functions for W3C XML Schema Regular Expression Matcher for Strings.
-   A specialisation of Text.Regex.XMLSchema.Generic as
-   compatibility module to old non generic version
+   Convenient functions for W3C XML Schema Regular Expression Matcher.
+   For internals see 'Text.Regex.XMLSchema.Regex'
 
    Grammar can be found under <http://www.w3.org/TR/xmlschema11-2/#regexs>
+
 -}
 
 -- ------------------------------------------------------------
 
-module Text.Regex.XMLSchema.String
-    {-# DEPRECATED "use the more general 'Text.Regex.XMLSchema.Generic' instead" #-}
-    ( Regex
-
-    , grep
+module Text.Regex.XMLSchema.Generic.Matching
+    ( grep
     , grepExt
     , grepRE
     , grepREwithLineNum
@@ -51,43 +52,24 @@ module Text.Regex.XMLSchema.String
     , tokenizeRE
     , tokenizeRE'
     , tokenizeSubexRE
-      
-      -- Text.Regex.XMLSchema.Generic.Regex
-    , mkZero
-    , mkUnit
-    , mkSym1
-    , mkSymRng
-    , mkWord
-    , mkDot
-    , mkStar
-    , mkAll
-    , mkAlt
-    , mkElse
-    , mkSeq
-    , mkSeqs
-    , mkRep
-    , mkRng
-    , mkOpt
-    , mkDiff
-    , mkIsect
-    , mkExor
-    , mkCompl
-    , mkBr
-    , isZero
-    , errRegex
-      
-    -- Text.Regex.XMLSchema.Generic.RegexParser
-    , parseRegex
-    , parseRegexExt
-    , parseContextRegex
     )
 where
 
-import           Text.Regex.XMLSchema.Generic.Regex
-import           Text.Regex.XMLSchema.Generic.RegexParser
-import qualified Text.Regex.XMLSchema.Generic             as G
-import           Text.Regex.XMLSchema.Generic             (Regex)
+import Control.Arrow
 
+import Data.Maybe
+
+import Text.Regex.XMLSchema.Generic.Regex
+import Text.Regex.XMLSchema.Generic.RegexParser
+import Text.Regex.XMLSchema.Generic.StringLike
+
+{-
+import Debug.Trace      (traceShow)
+
+trc :: Show a => String -> a -> a
+trc msg x = traceShow (msg, x) x
+
+-- -}
 -- ------------------------------------------------------------
 
 -- | split a string by taking the longest prefix matching a regular expression
@@ -95,8 +77,11 @@ import           Text.Regex.XMLSchema.Generic             (Regex)
 -- @Nothing@ is returned in case there is no matching prefix,
 -- else the pair of prefix and rest is returned
 
-splitRE 	:: Regex -> String -> Maybe (String, String)
-splitRE     	= G.splitRE
+splitRE         :: StringLike s => GenRegex s -> s -> Maybe (s, s)
+splitRE re input
+                = do
+                  (sms, rest) <- splitWithRegex re input
+                  return (snd . head $ sms, rest)
 
 -- | convenient function for 'splitRE'
 --
@@ -107,13 +92,18 @@ splitRE     	= G.splitRE
 -- > split "a+"  "bc"  = ("", "bc")    -- "a+" does not match, no split
 -- > split "["   "abc" = ("", "abc")   -- "["  syntax error, no split
 
-split           :: String -> String -> (String, String)
-split		= G.split
+split           :: StringLike s => s -> s -> (s, s)
+split		= split' parseRegex
 
 -- | split with extended syntax
 
-splitExt        :: String -> String -> (String, String)
-splitExt        = G.splitExt
+splitExt        :: StringLike s => s -> s -> (s, s)
+splitExt        = split' parseRegexExt
+
+split'           :: StringLike s => (s -> GenRegex s) -> s -> s -> (s, s)
+split' parseRe re input
+                 = fromMaybe (emptyS, input)
+                  . (splitRE . parseRe $ re) $ input
 
 -- ------------------------------------------------------------
 
@@ -124,8 +114,11 @@ splitExt        = G.splitExt
 -- else the list of pairs of labels and submatches and the
 -- rest is returned
 
-splitSubexRE    :: Regex -> String -> Maybe ([(String, String)], String)
-splitSubexRE    = G.splitSubexRE
+splitSubexRE    :: StringLike s => GenRegex s -> s -> Maybe ([(s, s)], s)
+splitSubexRE re input
+                = do
+                  (sms, rest) <- splitWithRegex re input
+                  return (map (first fromJust) . drop 1 $ sms, rest)
 
 -- | convenient function for 'splitSubex', uses extended syntax
 --
@@ -150,15 +143,37 @@ splitSubexRE    = G.splitSubexRE
 -- > splitSubex "["         "abc" = ([], "abc")                        -- syntax error
 
 
-splitSubex      :: String -> String -> ([(String,String)], String)
-splitSubex      = G.splitSubex
+splitSubex      :: StringLike s => s -> s -> ([(s, s)], s)
+splitSubex re inp
+                = fromMaybe ([], inp) . (splitSubexRE . parseRegexExt $ re) $ inp
 
 -- ------------------------------------------------------------
 
 -- | The function, that does the real work for 'tokenize'
 
-tokenizeRE      :: Regex -> String -> [String]
-tokenizeRE      = G.tokenizeRE
+tokenizeRE      :: StringLike s => GenRegex s -> s -> [s]
+tokenizeRE re
+    = token''
+    where
+    fcs         = firstChars re
+    re1         = mkDiff re mkUnit
+    token''     = token' re  fcs
+    token1''    = token' re1 fcs
+
+    -- token'   :: StringLike s => GenRegex s -> CharSet -> s -> [s]
+    token' re' fcs' inp
+      | nullS inp  = []
+      | otherwise  = evalRes . splitWithRegexCS re' fcs' $ inp
+      where
+        evalRes Nothing
+          = token'' (dropS 1 inp)         -- re does not match any prefix
+
+        evalRes (Just (toks, rest))
+          | nullS tok  = tok : token'' (dropS 1 rest) -- re is nullable and only the empty prefix matches
+                                                      -- discard one char and try again
+          | otherwise = tok : token1'' rest           -- real token found, next token must not be empty
+          where
+            tok = snd . head $ toks
 
 -- | split a string into tokens (words) by giving a regular expression
 -- which all tokens must match.
@@ -198,18 +213,18 @@ tokenizeRE      = G.tokenizeRE
 -- >
 -- > tokenize "[^ \t\n\r]*"    = words
 
-tokenize        :: String -> String -> [String]
-tokenize        = G.tokenize
+tokenize        :: StringLike s => s -> s -> [s]
+tokenize        = tokenizeRE . parseRegex
 
 -- | tokenize with extended syntax
 
-tokenizeExt     :: String -> String -> [String]
-tokenizeExt     = G.tokenizeExt
+tokenizeExt     :: StringLike s => s -> s -> [s]
+tokenizeExt     = tokenizeRE . parseRegexExt
 
 -- ------------------------------------------------------------
 
 -- | split a string into tokens and delimierter by giving a regular expression
--- wich all tokens must match
+-- which all tokens must match
 --
 -- This is a generalisation of the above 'tokenizeRE' functions.
 -- The none matching char sequences are marked with @Left@, the matching ones are marked with @Right@
@@ -220,19 +235,49 @@ tokenizeExt     = G.tokenizeExt
 --
 -- > concat . map (either id id) . tokenizeRE' re == id
 
-tokenizeRE'     :: Regex -> String -> [Either String String]
-tokenizeRE'     =  G.tokenizeRE'
+tokenizeRE'     :: StringLike s => GenRegex s -> s -> [Either s s]
+tokenizeRE' re inp0
+    = token'' (inp0, 0) inp0
+    where
+    fcs         = firstChars re
+    re1         = mkDiff re mkUnit
+    token''     = token' re  fcs
+    token1''    = token' re1 fcs
+
+    -- token'   :: StringLike s => GenRegex s -> CharSet -> (s, Int) -> s -> [Either s s]
+    token' re' fcs' (uns, ! n) inp
+      | nullS inp     = addUnmatched []
+      | otherwise     = evalRes . splitWithRegexCS re' fcs' $ inp
+      where
+        addUnmatched
+          | n == 0     = id
+          | otherwise  = ((Left $ takeS n uns) :)
+
+        addMatched t
+          = addUnmatched . ((Right t) :)
+
+        evalRes Nothing
+          = token'' (uns, n + 1) (dropS 1 inp)       -- re does not match any prefix
+              
+        evalRes (Just (toks, rest))
+            | nullS tok = addMatched tok           -- re is nullable and only the empty prefix matches
+                          $ token'' (rest, 1)
+                                    (dropS 1 rest) -- discard one char and try again
+                                                                                
+            | otherwise = addMatched tok
+                          $ token1'' (rest, 0) rest -- real token found, next token must not be empty
+          where
+            tok = snd . head $ toks
 
 -- | convenient function for 'tokenizeRE''
 --
--- When the regular expression parses as Zero,
--- @[Left input]@ is returned, that means no tokens are found
+-- When the regular expression parses as Zero, @[Left input]@ is returned, that means no tokens are found
 
-tokenize'       :: String -> String -> [Either String String]
-tokenize'       = G.tokenize'
+tokenize'       :: StringLike s => s -> s -> [Either s s]
+tokenize'       = tokenizeRE' . parseRegex
 
-tokenizeExt'    :: String -> String -> [Either String String]
-tokenizeExt'    = G.tokenizeExt'
+tokenizeExt'    :: StringLike s => s -> s -> [Either s s]
+tokenizeExt'    = tokenizeRE' . parseRegexExt
 
 -- ------------------------------------------------------------
 
@@ -250,8 +295,29 @@ tokenizeExt'    = G.tokenizeExt'
 -- All none matching chars are discarded. If the given regex contains syntax errors,
 -- @Nothing@ is returned
 
-tokenizeSubexRE :: Regex -> String -> [(String, String)]
-tokenizeSubexRE = G.tokenizeSubexRE
+tokenizeSubexRE :: StringLike s => GenRegex s -> s -> [(s, s)]
+tokenizeSubexRE re
+    = token''
+    where
+    fcs         = firstChars re
+    re1         = mkDiff re mkUnit
+    token''     = token' re  fcs
+    token1''    = token' re1 fcs
+
+    -- token'   :: StringLike s => GenRegex s -> CharSet -> s -> [(s, s)]
+    token' re' fcs' inp
+      | nullS inp      = []
+      | otherwise     = evalRes . splitWithRegexCS re' fcs' $ inp
+      where
+        evalRes Nothing
+          = token'' (dropS 1 inp)            -- re does not match any prefix
+
+        evalRes (Just (toks, rest))
+          | nullS tok = res ++ token'' (dropS 1 rest) -- re is nullable and only the empty prefix matches
+          | otherwise = res ++ token1'' rest         -- token found, tokenize the rest
+          where
+            res = map (first fromJust) . tail $ toks
+            tok = snd . head $ toks
 
 -- | convenient function for 'tokenizeSubexRE' a string
 --
@@ -277,8 +343,8 @@ tokenizeSubexRE = G.tokenizeSubexRE
 -- >                  "12 34.56"      = [("real","12"),("n","12"),("f","")
 -- >                                    ,("real","34.56"),("n","34"),("f","56")]
 
-tokenizeSubex   :: String -> String -> [(String,String)]
-tokenizeSubex   = G.tokenizeSubex
+tokenizeSubex   :: StringLike s => s -> s -> [(s, s)]
+tokenizeSubex   = tokenizeSubexRE . parseRegexExt
 
 -- ------------------------------------------------------------
 
@@ -287,8 +353,8 @@ tokenizeSubex   = G.tokenizeSubex
 -- All matching tokens are edited by the 1. argument, the editing function,
 -- all other chars remain as they are
 
-sedRE           :: (String -> String) ->  Regex -> String -> String
-sedRE           = G.sedRE
+sedRE           :: StringLike s => (s -> s) ->  GenRegex s -> s -> s
+sedRE edit re   = concatS . map (either id edit) . tokenizeRE' re
 
 -- | convenient function for 'sedRE'
 --
@@ -298,18 +364,18 @@ sedRE           = G.sedRE
 -- > sed (\ x -> x ++ x) "a" "xax"     = "xaax"
 -- > sed undefined       "[" "xxx"     = "xxx"
 
-sed             :: (String -> String) -> String -> String -> String
-sed             = G.sed
+sed             :: StringLike s => (s -> s) -> s -> s -> s
+sed edit        = sedRE edit . parseRegex
 
-sedExt          :: (String -> String) -> String -> String -> String
-sedExt          = G.sedExt
+sedExt          :: StringLike s => (s -> s) -> s -> s -> s
+sedExt edit     = sedRE edit . parseRegexExt
 
 -- ------------------------------------------------------------
 
 -- | match a string with a regular expression
 
-matchRE         :: Regex -> String -> Bool
-matchRE         = G.matchRE
+matchRE         :: StringLike s => GenRegex s -> s -> Bool
+matchRE         = matchWithRegex
 
 -- | convenient function for 'matchRE'
 --
@@ -319,21 +385,21 @@ matchRE         = G.matchRE
 -- > match "x" "xxx"  = False
 -- > match "[" "xxx"  = False
 
-match           :: String -> String -> Bool
-match           = G.match
+match           :: StringLike s => s -> s -> Bool
+match           = matchWithRegex . parseRegex
 
 -- | match with extended regular expressions
 
-matchExt        :: String -> String -> Bool
-matchExt        = G.matchExt
+matchExt        :: StringLike s => s -> s -> Bool
+matchExt        = matchWithRegex . parseRegexExt
 
 -- ------------------------------------------------------------
 
 -- | match a string with a regular expression
 -- and extract subexpression matches
 
-matchSubexRE            :: Regex -> String -> [(String, String)]
-matchSubexRE            = G.matchSubexRE
+matchSubexRE            :: StringLike s => GenRegex s -> s -> [(s, s)]
+matchSubexRE re         = map (first fromJust) . fromMaybe [] . matchWithRegex' re
 
 -- | convenient function for 'matchRE'
 --
@@ -344,8 +410,8 @@ matchSubexRE            = G.matchSubexRE
 -- > matchSubex "({w}[0-9]+)x({h}[0-9]+)" "800x600"  = [("w","800"),("h","600")]
 -- > matchSubex "[" "xxx"                            = []
 
-matchSubex              :: String -> String -> [(String, String)]
-matchSubex              = G.matchSubex
+matchSubex              :: StringLike s => s -> s -> [(s, s)]
+matchSubex              = matchSubexRE . parseRegexExt
 
 -- ------------------------------------------------------------
 
@@ -365,22 +431,25 @@ matchSubex              = G.matchSubex
 -- > grep "\\<a" ["x a b", " ax ", " xa ", "xab"]   => ["x a b", " ax "]
 -- > grep "a\\>" ["x a b", " ax ", " xa ", "xab"]   => ["x a b", " xa "]
 
-grep                    :: String -> [String] -> [String]
-grep                    = G.grep
+grep                    :: StringLike s => s -> [s] -> [s]
+grep                    = grep' parseRegex'
 
 -- | grep with extended regular expressions
 
-grepExt                 :: String -> [String] -> [String]
-grepExt                 = G.grepExt
+grepExt                 :: StringLike s => s -> [s] -> [s]
+grepExt                 = grep' parseRegexExt'
+
+grep'                   :: StringLike s => (String -> GenRegex s) -> s -> [s] -> [s]
+grep' parseRe           = grepRE . parseContextRegex parseRe
 
 -- | grep with already prepared Regex (ususally with 'parseContextRegex')
 
-grepRE                  :: Regex -> [String] -> [String]
-grepRE                  = G.grepRE
+grepRE                  :: StringLike s => GenRegex s-> [s] -> [s]
+grepRE re               = filter (matchRE re)
 
 -- | grep with Regex and line numbers
 
-grepREwithLineNum       :: Regex -> [String] -> [(Int,String)]
-grepREwithLineNum       = G.grepREwithLineNum
+grepREwithLineNum       :: StringLike s => GenRegex s -> [s] -> [(Int, s)]
+grepREwithLineNum re     = filter (matchRE re . snd) . zip [(1::Int)..]
 
 -- ------------------------------------------------------------

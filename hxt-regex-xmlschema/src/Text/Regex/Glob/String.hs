@@ -15,23 +15,30 @@
 -- ------------------------------------------------------------
 
 module Text.Regex.Glob.String
-    ( Regex
-    , match
-    , matchNoCase
-    , parseRegex
-    , parseRegexNoCase
-    )
+  {-# DEPRECATED "use the more general 'Text.Regex.Glob.Generic' instead" #-}
+  ( Regex
+  , match
+  , matchNoCase
+  , parseRegex
+  , parseRegexNoCase
+  )
 where
 
-import Text.Regex.XMLSchema.String.Regex
-import Text.Regex.Glob.String.RegexParser
+import           Text.Regex.Glob.Generic             (Regex)
+import qualified Text.Regex.Glob.Generic             as G
 
 -- ------------------------------------------------------------
 
-match           :: String -> String -> Bool
-match           = matchWithRegex . parseRegex
+match            :: String -> String -> Bool
+match            = G.match
 
-matchNoCase     :: String -> String -> Bool
-matchNoCase     = matchWithRegex . parseRegexNoCase
+matchNoCase      :: String -> String -> Bool
+matchNoCase      = G.matchNoCase
+
+parseRegex       :: String -> Regex
+parseRegex       = G.parseRegex
+
+parseRegexNoCase :: String -> Regex
+parseRegexNoCase = G.parseRegexNoCase
 
 -- ------------------------------------------------------------
