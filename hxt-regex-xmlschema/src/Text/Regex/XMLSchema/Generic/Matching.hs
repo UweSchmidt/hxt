@@ -1,5 +1,4 @@
 {-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE ViewPatterns #-}
 
 -- ------------------------------------------------------------
 
@@ -55,13 +54,13 @@ module Text.Regex.XMLSchema.Generic.Matching
     )
 where
 
-import Control.Arrow
+import           Control.Arrow
 
-import Data.Maybe
+import           Data.Maybe
 
-import Text.Regex.XMLSchema.Generic.Regex
-import Text.Regex.XMLSchema.Generic.RegexParser
-import Text.Regex.XMLSchema.Generic.StringLike
+import           Text.Regex.XMLSchema.Generic.Regex
+import           Text.Regex.XMLSchema.Generic.RegexParser
+import           Text.Regex.XMLSchema.Generic.StringLike
 
 {-
 import Debug.Trace      (traceShow)
@@ -93,7 +92,7 @@ splitRE re input
 -- > split "["   "abc" = ("", "abc")   -- "["  syntax error, no split
 
 split           :: StringLike s => s -> s -> (s, s)
-split		= split' parseRegex
+split           = split' parseRegex
 
 -- | split with extended syntax
 
@@ -258,12 +257,12 @@ tokenizeRE' re inp0
 
         evalRes Nothing
           = token'' (uns, n + 1) (dropS 1 inp)       -- re does not match any prefix
-              
+
         evalRes (Just (toks, rest))
             | nullS tok = addMatched tok           -- re is nullable and only the empty prefix matches
                           $ token'' (rest, 1)
                                     (dropS 1 rest) -- discard one char and try again
-                                                                                
+
             | otherwise = addMatched tok
                           $ token1'' (rest, 0) rest -- real token found, next token must not be empty
           where

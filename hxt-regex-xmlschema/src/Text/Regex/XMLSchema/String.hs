@@ -51,7 +51,7 @@ module Text.Regex.XMLSchema.String
     , tokenizeRE
     , tokenizeRE'
     , tokenizeSubexRE
-      
+
       -- Text.Regex.XMLSchema.Generic.Regex
     , mkZero
     , mkUnit
@@ -75,7 +75,7 @@ module Text.Regex.XMLSchema.String
     , mkBr
     , isZero
     , errRegex
-      
+
     -- Text.Regex.XMLSchema.Generic.RegexParser
     , parseRegex
     , parseRegexExt
@@ -83,10 +83,10 @@ module Text.Regex.XMLSchema.String
     )
 where
 
+import           Text.Regex.XMLSchema.Generic             (Regex)
+import qualified Text.Regex.XMLSchema.Generic             as G
 import           Text.Regex.XMLSchema.Generic.Regex
 import           Text.Regex.XMLSchema.Generic.RegexParser
-import qualified Text.Regex.XMLSchema.Generic             as G
-import           Text.Regex.XMLSchema.Generic             (Regex)
 
 -- ------------------------------------------------------------
 
@@ -95,8 +95,8 @@ import           Text.Regex.XMLSchema.Generic             (Regex)
 -- @Nothing@ is returned in case there is no matching prefix,
 -- else the pair of prefix and rest is returned
 
-splitRE 	:: Regex -> String -> Maybe (String, String)
-splitRE     	= G.splitRE
+splitRE         :: Regex -> String -> Maybe (String, String)
+splitRE         = G.splitRE
 
 -- | convenient function for 'splitRE'
 --
@@ -108,7 +108,7 @@ splitRE     	= G.splitRE
 -- > split "["   "abc" = ("", "abc")   -- "["  syntax error, no split
 
 split           :: String -> String -> (String, String)
-split		= G.split
+split           = G.split
 
 -- | split with extended syntax
 

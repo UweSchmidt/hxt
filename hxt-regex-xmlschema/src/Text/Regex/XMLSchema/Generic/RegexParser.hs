@@ -29,27 +29,28 @@ module Text.Regex.XMLSchema.Generic.RegexParser
     )
 where
 
-import Data.Char.Properties.UnicodeBlocks
-import Data.Char.Properties.UnicodeCharProps
-import Data.Char.Properties.XMLCharProps
+import           Data.Char.Properties.UnicodeBlocks
+import           Data.Char.Properties.UnicodeCharProps
+import           Data.Char.Properties.XMLCharProps
 
-import Data.List                        ( isPrefixOf, isSuffixOf )
-import Data.Maybe
-import Data.Set.CharSet
+import           Data.List                               (isPrefixOf,
+                                                          isSuffixOf)
+import           Data.Maybe
+import           Data.Set.CharSet
 
-import Text.ParserCombinators.Parsec
-import Text.Regex.XMLSchema.Generic.Regex
-import Text.Regex.XMLSchema.Generic.StringLike
+import           Text.ParserCombinators.Parsec
+import           Text.Regex.XMLSchema.Generic.Regex
+import           Text.Regex.XMLSchema.Generic.StringLike
 
 -- ------------------------------------------------------------
 
 -- | parse a standard W3C XML Schema regular expression
 
-parseRegex 		:: StringLike s => s -> GenRegex s
-parseRegex 		= parseRegex' . toString
+parseRegex              :: StringLike s => s -> GenRegex s
+parseRegex              = parseRegex' . toString
 
-parseRegex' 		:: StringLike s => String -> GenRegex s
-parseRegex' 		= parseRegex'' regExpStd
+parseRegex'             :: StringLike s => String -> GenRegex s
+parseRegex'             = parseRegex'' regExpStd
 
 -- | parse an extended syntax W3C XML Schema regular expression
 --
@@ -62,11 +63,11 @@ parseRegex' 		= parseRegex'' regExpStd
 -- empty set of words. Zero contains as data field a string for an error message.
 -- So error checking after parsing becomes possible by checking against Zero ('isZero' predicate)
 
-parseRegexExt 	:: StringLike s => s -> GenRegex s
-parseRegexExt 	= parseRegexExt' . toString
+parseRegexExt   :: StringLike s => s -> GenRegex s
+parseRegexExt   = parseRegexExt' . toString
 
-parseRegexExt' 	:: StringLike s => String -> GenRegex s
-parseRegexExt' 	= parseRegex'' regExpExt
+parseRegexExt'  :: StringLike s => String -> GenRegex s
+parseRegexExt'  = parseRegex'' regExpExt
 
 parseRegex'' :: StringLike s => Parser (GenRegex s) -> String -> GenRegex s
 parseRegex'' regExp'
@@ -76,7 +77,7 @@ parseRegex'' regExp'
                  eof
                  return r
             ) ""
-                          
+
 -- ------------------------------------------------------------
 
 -- | parse a regular expression surrounded by contenxt spec
@@ -94,7 +95,7 @@ parseContextRegex parseRe re0
     where
       parseAW = parseRegexExt' "(\\A\\W)?"
       parseWA = parseRegexExt' "(\\W\\A)?"
-      
+
       re  = toString re0
       re' = mkSeqs . concat $ [ startContext
                               , (:[]) . parseRe $ re2
@@ -192,11 +193,11 @@ intersectList
           _ <- try (string "{&}")
           seqListExt
 
-seqListExt	:: StringLike s => Parser (GenRegex s)
-seqListExt	= seqList' regExpLabel multiCharEscExt
+seqListExt      :: StringLike s => Parser (GenRegex s)
+seqListExt      = seqList' regExpLabel multiCharEscExt
 
-seqListStd	:: StringLike s => Parser (GenRegex s)
-seqListStd	= seqList' regExpStd multiCharEsc
+seqListStd      :: StringLike s => Parser (GenRegex s)
+seqListStd      = seqList' regExpStd multiCharEsc
 
 seqList'        :: StringLike s => Parser (GenRegex s) -> Parser (GenRegex s) -> Parser (GenRegex s)
 seqList' regExp' multiCharEsc'
