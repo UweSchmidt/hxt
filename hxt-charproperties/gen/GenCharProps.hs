@@ -18,8 +18,8 @@
 module Main
 where
 
-import qualified Data.Map  as M
 import qualified Data.List as L
+import qualified Data.Map  as M
 
 main :: IO()
 main
@@ -133,16 +133,16 @@ genPred n rngs
       , ""
       , "charPropUnicode" ++ n ++ " :: CharSet"
       , "charPropUnicode" ++ n
-      , "  = [ " ++ (join "\n    , " . map show) rngs
+      , "  = [ " ++ (joinStr "\n    , " . map show) rngs
       , "    ]"
       , ""
       , cmt
       ]
 
-join    :: String -> [String] -> String
-join js
+joinStr    :: String -> [String] -> String
+joinStr js
     = foldr1 (\ x y -> x ++ js ++ y)
 
 genExp  :: [String] -> String
 genExp ns
-    = "  ( " ++ join "\n  , " (map ("isUnicode" ++) ns ++ map ("charPropUnicode" ++) ns) ++ "\n  )"
+    = "  ( " ++ joinStr "\n  , " (map ("isUnicode" ++) ns ++ map ("charPropUnicode" ++) ns) ++ "\n  )"

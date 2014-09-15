@@ -18,9 +18,9 @@
 module Main
 where
 
-import Control.Arrow
+import           Control.Arrow
 
-import Data.Char (isAlphaNum)
+import           Data.Char     (isAlphaNum)
 
 main :: IO ()
 main
@@ -110,7 +110,7 @@ genBlocks
           trailer
 
     processExports
-        = join "\n  , "
+        = joinStr "\n  , "
           >>> (++ "\n")
           >>> ("  , " ++)
 
@@ -122,7 +122,7 @@ genBlocks
           ]
 
     processBlockTable ls
-        = header3 ++ "    [ " ++ join "\n    , " (map entry ls) ++ "\n    ]\n"
+        = header3 ++ "    [ " ++ joinStr "\n    , " (map entry ls) ++ "\n    ]\n"
         where
         entry (name, (lb, ub))
             = "( " ++ show name ++ ", ( " ++ hexChar lb ++ ", " ++ hexChar ub ++ ") )"
@@ -150,8 +150,8 @@ genBlocks
     blockName
         = ("is" ++) . filter isAlphaNum
 
-join :: String -> [String] -> String
-join js
+joinStr :: String -> [String] -> String
+joinStr js
     = foldr1 (\ x y -> x ++ js ++ y)
 
 hexChar :: String -> String
