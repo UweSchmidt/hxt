@@ -76,3 +76,18 @@ test-suite SimpleMatch
                    , hxt-regex-xmlschema
                    , text
                    , HUnit
+
+test-suite Date
+  hs-source-dirs:    test
+  main-is:           Date.hs
+  type:              exitcode-stdio-1.0
+  default-language:  Haskell2010
+  ghc-options:       -Wall
+
+  build-depends:     base
+                   , bytestring
+                   , hxt-regex-xmlschema
+                   , parsec >= 2
+                   , text
+                   , HUnit
+

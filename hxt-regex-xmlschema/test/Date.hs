@@ -1,17 +1,37 @@
-module Date
+{-# LANGUAGE ExplicitForAll      #-}
+{-# LANGUAGE Rank2Types          #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ViewPatterns        #-}
+
+module Main
 where
 
-import Control.Arrow  ( second )
-import Data.Char      ( toLower
-                      , toUpper
-                      )
--- import Data.Char.Properties.XMLCharProps
-import Data.List      ( isPrefixOf )
--- import Data.Maybe
+import           Control.Arrow ( (***), second )
 
-import Text.Parsec
-import Text.Regex.XMLSchema.String
+import           Data.Char ( toLower, toUpper )
+import           Data.List ( isPrefixOf )
+import qualified Data.ByteString.Char8 as B
+import qualified Data.ByteString.Lazy.Char8 as BL
+import           Data.String (IsString (..))
+import qualified Data.Text as T
+import qualified Data.Text.Lazy as TL
 
+import           System.Exit (ExitCode (..), exitWith)
+
+import           Test.HUnit
+
+import           Text.Parsec
+import           Text.Regex.XMLSchema.Generic
+import           Text.Regex.XMLSchema.Generic.StringLike
+
+-- ------------------------------------------------------------
+
+newtype Test' a = Test' {unTest' :: Test}
+
+type BS    = B.ByteString
+type BL    = BL.ByteString
+type Text  = T.Text
+type TextL = TL.Text
 
 -- ------------------------------------------------------------
 -- some little helpers for building r.e.s
@@ -170,7 +190,7 @@ num                   = "\\d+"
 tokenRE               :: String
 tokenRE               = foldr1 xor $
                         map  (uncurry subex) $
-                        [  ( "ddmmyyyy",    dayMonthYear )
+                        [ ( "ddmmyyyy",    dayMonthYear )
                         , ( "ddMonthyyyy", dayD `s0` monthN `s0` (year `orr` year') )
                         , ( "ddmm",        dayMonth)
                         , ( "ddMonth",     dayD `s0` monthN )
@@ -194,7 +214,7 @@ type TokenStream   = [Token]
 
 type DateParser a  = Parsec [(String, String)] () a
 
-type Text          = String -> String           -- for fast concatenation
+type StringFct          = String -> String           -- for fast concatenation
 
 -- must be extended for weekday or semester, if neccessay
 
@@ -206,8 +226,8 @@ data DateVal       = DT  { _year   :: ! Int
                          }
                      deriving (Eq, Show)
 
-data DateParse     = DP { _pre    ::   Text
-                        , _rep    ::   Text
+data DateParse     = DP { _pre    ::   StringFct
+                        , _rep    ::   StringFct
                         , _dat    :: ! DateVal
                         }
 
@@ -220,16 +240,16 @@ data DateRep       = DR { _p ::   String
 
 -- ------------------------------------------------------------
 
-emptyText       :: Text
+emptyText       :: StringFct
 emptyText       = id
 
-mkText          :: String -> Text
+mkText          :: String -> StringFct
 mkText          = (++)
 
-concText        :: Text -> Text -> Text
+concText        :: StringFct -> StringFct -> StringFct
 concText        = (.)
 
-textToString    :: Text -> String
+textToString    :: StringFct -> String
 textToString    = ($ [])
 
 emptyDateVal    :: DateVal
@@ -512,5 +532,102 @@ rr = map _r . dateSearch' . tt
 
 pp :: String -> [String]
 pp = map _p . dateSearch' . tt
+
+-- ------------------------------------------------------------
+
+testDate :: forall a . StringLike a => Test' a
+testDate
+  = Test' $
+    TestLabel "date and time extraction from free text" $
+    TestList $
+    zipWith parseT toks exx
+  where
+    parseT res ok
+      = TestCase $
+        assertEqual (show res ++ " == " ++ show ok) res ok
+        
+    toks :: [(a, a)]
+    toks = tokenizeSubex (fromString tokenRE) (fromString ts)
+
+    exx :: [(a, a)]
+    exx = map (fromString *** fromString) $
+          [("word","Am"),("del"," "),("weekday","Sonntag"),("del",", "),("word","dem"),("del"," ")
+          ,("ddMonthyyyy","17. Februar '03"),("del"," "),("word","findet"),("del"," "),("word","um")
+          ,("del"," "),("HH","9 Uhr"),("del"," "),("word","ein"),("del"," "),("word","wichtiger")
+          ,("del"," "),("word","Termin"),("del"," "),("word","f\252r"),("del"," "),("word","das")
+          ,("del"," "),("ssem","Sommersemester 2000"),("del"," "),("word","statt"),("del",". ")
+          ,("word","Dieser"),("del"," "),("word","wird"),("del"," "),("word","allerdings")
+          ,("del"," "),("word","auf"),("del"," "),("weekday","Montag"),("del"," ")
+          ,("word","verschoben"),("del",". "),("word","Und"),("del"," "),("word","zwar")
+          ,("del"," "),("word","auf"),("del"," "),("word","den"),("del"," "),("word","ersten")
+          ,("del"," "),("weekday","Montag"),("del"," "),("word","im"),("del"," ")
+          ,("wsem","Wintersemester 11/12"),("del",", "),("HHMM","12:30"),("del",". ")
+          ,("word","Ein"),("del"," "),("word","wichtiger"),("del"," "),("word","Termin")
+          ,("del"," "),("word","findet"),("del"," "),("word","im"),("del"," "),("ssem","SoSe 2011")
+          ,("del"," "),("word","statt"),("del",". "),("word","Im"),("del"," "),("word","Jahr")
+          ,("del"," '"),("word","12"),("del"," "),("word","gibt"),("del"," "),("word","es")
+          ,("del"," "),("word","Termine"),("del",", "),("word","aber"),("del"," "),("word","auch")
+          ,("del"," "),("word","in"),("del"," "),("wsem","WS 2010/11"),("del",". "),("word","Ein")
+          ,("del"," "),("word","weiterer"),("del"," "),("word","Termin"),("del"," "),("word","ist")
+          ,("del","  "),("word","am"),("del"," "),("ddmmyyyy","2.4.11"),("del"," "),("word","um")
+          ,("del"," "),("HH","12 Uhr"),("del",". "),("word","Oder"),("del"," "),("word","war")
+          ,("del"," "),("word","es"),("del"," "),("word","doch"),("del"," "),("weekday","Di.")
+          ,("del"," "),("word","der"),("del"," "),("ddmm","3.4."),("del","? "),("word","Egal")
+          ,("del",". "),("word","Ein"),("del"," "),("word","weiterer"),("del"," ")
+          ,("word","wichtiger"),("del"," "),("word","Termin"),("del"," "),("word","findet")
+          ,("del"," "),("word","am"),("del"," "),("yyyymmdd","2001-3-4"),("del"," ")
+          ,("word","statt"),("del"," "),("word","bzw"),("del",". "),("word","generell")
+          ,("del"," "),("word","zwischen"),("del"," "),("yyyymmdd","01/3/4"),("del"," - ")
+          ,("yyyymmdd","01/6/4"),("del"," "),("word","um"),("del"," "),("HH","13 Uhr")
+          ,("del",". "),("word","Am"),("del"," "),("word","kommenden"),("del"," ")
+          ,("weekday","Mittwoch"),("del"," "),("word","findet"),("del"," ")
+          ,("word","Changemanagement"),("del"," "),("word","in"),("del"," "),("word","HS5")
+          ,("del"," "),("word","statt"),("del",". "),("word","Dies"),("del"," "),("word","gilt")
+          ,("del"," "),("word","dann"),("del"," "),("word","auch"),("del"," "),("word","f\252r")
+          ,("del"," "),("word","den"),("del"," "),("ddMonth","7. Juni"),("del"," "),("word","des")
+          ,("del"," "),("word","Jahres"),("del"," "),("yyyy","2011"),("del",". "),("word","Noch")
+          ,("del"," "),("word","ein"),("del"," "),("word","wichtiger"),("del"," "),("word","Termin")
+          ,("del"," "),("word","findet"),("del"," "),("word","um"),("del"," "),("HHMM","16:15 Uhr")
+          ,("del"," "),("word","am"),("del"," "),("weekday","Do."),("del",", "),("ddmmyyyy","1.2.03")
+          ,("del"," "),("word","statt"),("del",". "),("weekday","Freitag"),("del",", ")
+          ,("word","der"),("del"," "),("ddMonth","13. Juli"),("del"," "),("word","ist"),("del"," ")
+          ,("word","kein"),("del"," "),("word","Gl\252ckstagund"),("del"," "),("weekday","Freitag")
+          ,("del",", "),("word","der"),("del"," "),("ddMonth","13. Juli"),("del"," "),("word","um")
+          ,("del"," "),("HHMM","11:55 Uhr"),("del"," "),("word","ist"),("del"," "),("word","es")
+          ,("del"," "),("word","zu"),("del"," "),("word","sp\228t"),("del",".")
+          ]
+
+    
+-- ------------------------------------------------------------
+
+genericTest :: (forall a . StringLike a => Test' a) -> Test
+genericTest t
+    = TestList $
+      [ TestLabel "Test with 'String'"          $ unTest' (t :: Test' String)
+      , TestLabel "Test with 'Text'"            $ unTest' (t :: Test' Text)
+      , TestLabel "Test with 'Text.Lazy'"       $ unTest' (t :: Test' TextL)
+      , TestLabel "Test with 'ByteString'"      $ unTest' (t :: Test' BS)
+      , TestLabel "Test with 'ByteString.Lazy'" $ unTest' (t :: Test' BL)
+      ]
+
+allTests        :: Test
+allTests
+    = TestList
+      [ genericTest testDate ]
+
+main    :: IO ()
+main
+    = do
+      c <- runTestTT allTests
+      putStrLn $ show c
+      let errs = errors c
+          fails = failures c
+      exitWith (codeGet errs fails)
+
+codeGet :: Int -> Int -> ExitCode
+codeGet errs fails
+    | fails > 0       = ExitFailure 2
+    | errs > 0        = ExitFailure 1
+    | otherwise       = ExitSuccess
 
 -- ------------------------------------------------------------
