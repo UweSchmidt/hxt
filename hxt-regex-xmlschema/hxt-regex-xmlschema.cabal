@@ -91,3 +91,21 @@ test-suite Date
                    , text
                    , HUnit
 
+Benchmark Benchmark
+  hs-source-dirs:    test
+  main-is:           Benchmark.hs
+  type:              exitcode-stdio-1.0
+
+  default-language:  Haskell2010
+
+  ghc-options:       -Wall -O2
+
+  build-depends:     base
+                   , bytestring
+                   , criterion           >= 1
+                   , deepseq             >= 1.2
+                   , hxt-regex-xmlschema
+                   , parsec              >= 2
+                   , text
+
+

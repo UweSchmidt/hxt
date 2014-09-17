@@ -1,5 +1,4 @@
-{-# LANGUAGE ExplicitForAll      #-}
-{-# LANGUAGE Rank2Types          #-}
+{-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns        #-}
 
