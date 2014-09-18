@@ -27,9 +27,6 @@ Build-type:          Simple
 Cabal-version:       >=1.18
 
 extra-source-files:
-  test/Main.hs
-  test/Makefile
-  test/.ghci
   examples/colorizeProgs/ColorizeSourceCode.hs
   examples/colorizeProgs/Makefile
   examples/performance/REtest.hs
