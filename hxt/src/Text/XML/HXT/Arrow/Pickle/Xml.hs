@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE TypeSynonymInstances  #-}
 
 -- ------------------------------------------------------------
 
@@ -49,27 +49,28 @@
 module Text.XML.HXT.Arrow.Pickle.Xml
 where
 
-import           Control.Applicative
+import           Control.Applicative              (Applicative (..))
 import           Control.Arrow.ArrowList
 import           Control.Arrow.ListArrows
-import           Control.Monad                    ( )
-import           Control.Monad.Error
-import           Control.Monad.State
+import           Control.Monad                    ()
+import           Control.Monad.Except             (MonadError (..))
+import           Control.Monad.State              (MonadState (..), gets,
+                                                   modify)
 
 import           Data.Char                        (isDigit)
 import           Data.List                        (foldl')
-import           Data.Maybe
 import           Data.Map                         (Map)
 import qualified Data.Map                         as M
+import           Data.Maybe                       (fromJust, fromMaybe)
 
-import           Text.XML.HXT.DOM.Interface
-import qualified Text.XML.HXT.DOM.XmlNode         as XN
-import qualified Text.XML.HXT.DOM.ShowXml         as XN
 import           Text.XML.HXT.Arrow.Edit          (xshowEscapeXml)
 import           Text.XML.HXT.Arrow.Pickle.Schema
 import           Text.XML.HXT.Arrow.ReadDocument  (xread)
 import           Text.XML.HXT.Arrow.WriteDocument (writeDocumentToString)
 import           Text.XML.HXT.Arrow.XmlState
+import           Text.XML.HXT.DOM.Interface
+import qualified Text.XML.HXT.DOM.ShowXml         as XN
+import qualified Text.XML.HXT.DOM.XmlNode         as XN
 
 {- just for embedded test cases, prefix with -- to activate
 import           Text.XML.HXT.Arrow.XmlArrow
@@ -1172,7 +1173,7 @@ type StmtList   = [Stmt]
 
 data Stmt
     = Assign  Ident  Expr
-    | Stmts   StmtList 
+    | Stmts   StmtList
     | If      Expr  Stmt (Maybe Stmt)
     | While   Expr  Stmt
       deriving (Eq, Show)
@@ -1314,7 +1315,7 @@ p0, p1, p2 :: Program
 
 p0 = Stmts []           -- the empty program
 
-p1 = Stmts              
+p1 = Stmts
      [ Assign i ( UnExpr UMinus ( IntConst (-22) ) )
      , Assign j ( IntConst 20 )
      , While
@@ -1330,7 +1331,7 @@ p1 = Stmts
     i = "i"
     j = "j"
 
-p2 = Stmts              
+p2 = Stmts
      [ Assign x (IntConst 6)
      , Assign y (IntConst 7)
      , Assign p (IntConst 0)
