@@ -1,6 +1,6 @@
 -- arch-tag: Haskell XML Toolbox main description file
 Name:           hxt
-Version:        9.3.1.7
+Version:        9.3.1.8
 Synopsis:       A collection of tools for processing XML with Haskell.
 Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
                 but introduces a more general approach for processing XML with Haskell.
@@ -16,6 +16,9 @@ Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
                 hxt-regex-xmlschema contain the extensions.
                 hxt-unicode contains encoding and decoding functions,
                 hxt-charproperties char properties for unicode and XML.
+                Changes from 9.3.1.7: Foldable and Traversable instances for NTree added
+                Control.Except used instead of deprecated Control.Error
+                .
                 Changes from 9.3.1.6: canonicalize added in hread and hreadDoc
                 .
                 Changes from 9.3.1.4: conditionally (no default)
@@ -193,16 +196,16 @@ library
 
  extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances
 
- build-depends: base       >= 4   && < 5,
-                containers >= 0.2 && < 1,
-                directory  >= 1   && < 2,
-                filepath   >= 1   && < 2,
-                parsec     >= 2.1 && < 4,
-                HUnit      >= 1.2 && < 2,
-                mtl        >= 2   && < 3,
-                deepseq    >= 1.1 && < 2,
-                bytestring >= 0.9 && < 1,
-                binary     >= 0.5 && < 1,
+ build-depends: base       >= 4     && < 5,
+                containers >= 0.2   && < 1,
+                directory  >= 1     && < 2,
+                filepath   >= 1     && < 2,
+                parsec     >= 2.1   && < 4,
+                HUnit      >= 1.2   && < 2,
+                mtl        >= 2.2.1 && < 3,
+                deepseq    >= 1.1   && < 2,
+                bytestring >= 0.9   && < 1,
+                binary     >= 0.5   && < 1,
                 hxt-charproperties  >= 9.1    && < 10,
                 hxt-unicode         >= 9.0.1  && < 10,
                 hxt-regex-xmlschema >= 9      && < 10
