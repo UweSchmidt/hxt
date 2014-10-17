@@ -22,12 +22,16 @@
 module Data.Tree.NTree.TypeDefs
 where
 
-import Control.DeepSeq
-import Control.FlatSeq
+import           Control.Applicative (Applicative (..), (<$>))
+import           Control.DeepSeq     (NFData (..))
+import           Control.FlatSeq     (WNFData (..), rlnf)
 
-import Data.Binary
-import Data.Tree.Class
-import Data.Typeable
+import           Data.Binary
+import           Data.Foldable       (Foldable (..))
+import           Data.Monoid         (Monoid (..), (<>))
+import           Data.Traversable    (Traversable (..), sequenceA)
+import           Data.Tree.Class     (Tree (..))
+import           Data.Typeable       (Typeable)
 
 -- ------------------------------------------------------------
 
@@ -75,8 +79,25 @@ instance (Binary a) => Binary (NTree a) where
 -- | NTree implements class Functor
 
 instance Functor NTree where
-    fmap f ~(NTree n cl)                = NTree (f n) (map (fmap f) cl)
+    fmap f (NTree n cl)                 = NTree (f n) (map (fmap f) cl)
     {-# INLINE fmap #-}
+
+-- ------------------------------------------------------------
+
+-- | NTree implements class Foldable
+
+instance Foldable NTree where
+    foldMap f (NTree n cl)              = f n <> mconcat (map (foldMap f) cl)
+    {-# INLINE foldMap #-}
+
+
+-- ------------------------------------------------------------
+
+-- | NTree implements class Taversable
+
+instance Traversable NTree where
+    traverse f (NTree n cl)             = NTree <$> f n <*> sequenceA (map (traverse f) cl)
+    {-# INLINE traverse #-}
 
 -- ------------------------------------------------------------
 
