@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 
@@ -53,7 +54,11 @@ import           Control.Applicative              (Applicative (..))
 import           Control.Arrow.ArrowList
 import           Control.Arrow.ListArrows
 import           Control.Monad                    ()
+#if MIN_VERSION_mtl(2,2,0)
 import           Control.Monad.Except             (MonadError (..))
+#else
+import           Control.Monad.Error              (MonadError (..))
+#endif
 import           Control.Monad.State              (MonadState (..), gets,
                                                    modify)
 
