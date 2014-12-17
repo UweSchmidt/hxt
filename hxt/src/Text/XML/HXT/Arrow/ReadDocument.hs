@@ -38,6 +38,7 @@ import Text.XML.HXT.DOM.Interface
 import Text.XML.HXT.Arrow.XmlArrow
 import Text.XML.HXT.Arrow.Edit                  ( canonicalizeAllNodes
                                                 , canonicalizeForXPath
+                                                , canonicalizeContents
                                                 , rememberDTDAttrl
                                                 , removeDocWhiteSpace
                                                 )
@@ -485,18 +486,22 @@ hread
       >>>                                   -- as well as subst HTML char refs
       editNTreeA [isError :-> none]         -- ignores all errors
       >>>
-      canonicalizeAllNodes                  -- combine text nodes, substitute char refs
+      canonicalizeContents                  -- combine text nodes, substitute char refs
+                                            -- comments are not removed
 
 -- | like hread, but accepts a whole document, not a HTML content
 
 hreadDoc :: ArrowXml a => a String XmlTree
 hreadDoc
     = fromLA $
-      PI.hreadDoc                           -- substHtmlEntityRefs is done in parser
+      root [] [PI.hreadDoc]                 -- substHtmlEntityRefs is done in parser
       >>>                                   -- as well as subst HTML char refs
       editNTreeA [isError :-> none]         -- ignores all errors
       >>>
-      canonicalizeAllNodes
+      canonicalizeForXPath                  -- remove DTD spec and text in content of root node
+                                            -- and do a canonicalizeContents
+      >>>
+      getChildren
       
 -- ------------------------------------------------------------
 

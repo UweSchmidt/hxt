@@ -108,10 +108,12 @@ import           Data.Maybe
 
 canonicalizeTree'       :: LA XmlTree XmlTree -> LA XmlTree XmlTree
 canonicalizeTree' toBeRemoved
-    = processChildren
-      ( (none `when` (isText <+> isXmlPi))      -- remove XML PI and all text around XML root element
-        >>>
-        (deep isPi `when` isDTD)                -- remove DTD parts, except PIs whithin DTD
+    = ( processChildren
+        ( (none `when` (isText <+> isXmlPi))    -- remove XML PI and all text around XML root element
+          >>>
+          (deep isPi `when` isDTD)              -- remove DTD parts, except PIs whithin DTD
+        )
+        `when` isRoot
       )
       >>>
       canonicalizeNodes toBeRemoved
