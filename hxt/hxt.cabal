@@ -19,6 +19,8 @@ Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
                 .
                 Changes from 9.3.1.9: lower bound of mtl dependency lowered to 2.0.1
                 .
+                Changes from 9.3.1.8: Bug in hread removed
+                .
                 Changes from 9.3.1.7: Foldable and Traversable instances for NTree added
                 Control.Except used instead of deprecated Control.Error
                 .
