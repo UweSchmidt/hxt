@@ -153,7 +153,7 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     {-# INLINE hasQName #-}
 
     -- |
-    -- test whether a node has a specific name (prefix:localPart ore localPart),
+    -- test whether a node has a specific name (prefix:localPart or localPart),
     -- generally useful, even without namespace handling
     hasName             :: String -> a XmlTree XmlTree
     hasName n           = (getName         >>> isA (== n)) `guards` this
