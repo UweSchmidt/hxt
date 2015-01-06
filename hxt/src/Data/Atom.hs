@@ -137,6 +137,6 @@ instance Show Atom where
     show        = fst . decodeUtf8 . map w2c . unpack . bs
     -- show     = show . toForeignPtr . bs                      -- for debug only
 
-instance NFData Atom where
+instance NFData Atom where rnf x = seq x ()
 
 -----------------------------------------------------------------------------

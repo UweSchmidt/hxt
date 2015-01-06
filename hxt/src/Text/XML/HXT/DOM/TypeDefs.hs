@@ -193,7 +193,7 @@ data DTDElem    = DOCTYPE       -- ^ attr: name, system, public,        XDTD ele
                 | PEREF         -- ^ for Parameter Entity References in DTDs
                   deriving (Eq, Ord, Enum, Show, Read, Typeable)
 
-instance NFData DTDElem
+instance NFData DTDElem where rnf x = seq x ()
 instance WNFData DTDElem
 
 instance Binary DTDElem where
