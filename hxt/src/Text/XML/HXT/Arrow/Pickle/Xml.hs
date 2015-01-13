@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 
@@ -442,7 +442,7 @@ xpSeq' pa       = xpWrap ( snd
 -- | combine tow picklers with a choice
 --
 -- Run two picklers in sequence like with xpSeq.
--- When during unpickling the first one fails,
+-- If during unpickling the first one fails,
 -- an alternative pickler (first argument) is applied.
 -- This pickler is only used as combinator for unpickling.
 
