@@ -1,0 +1,13 @@
+name:                hparser
+version:             0.1.0.0
+author:              Uwe Schmidt
+maintainer:          si@fh-wedel.de
+build-type:          Simple
+cabal-version:       >=1.10
+
+executable hrelaxng
+  main-is:             HXmlParser.hs
+  build-depends:       base >=4.7 && <4.8
+                     , hxt, hxt-relaxng, hxt-curl
+
+  default-language:    Haskell2010

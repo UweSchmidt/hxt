@@ -22,23 +22,19 @@ module Text.XML.HXT.RelaxNG.XMLSchema.DataTypeLibW3C
   )
 where
 
-import Data.Maybe
-import Data.Ratio
+import           Data.Maybe
+import           Data.Ratio
 
-import Network.URI                              ( isURIReference )
+import           Network.URI                                (isURIReference)
 
-import Text.Regex.XMLSchema.String              ( Regex
-                                                , matchRE
-                                                , parseRegex
-                                                , isZero
-                                                )
+import           Text.Regex.XMLSchema.Generic               (Regex, isZero,
+                                                             matchRE,
+                                                             parseRegex)
 
-import Text.XML.HXT.DOM.QualifiedName           ( isWellformedQualifiedName
-                                                , isNCName
-                                                )
-import Text.XML.HXT.XMLSchema.DataTypeLibW3CNames
+import           Text.XML.HXT.DOM.QualifiedName             (isNCName, isWellformedQualifiedName)
+import           Text.XML.HXT.XMLSchema.DataTypeLibW3CNames
 
-import Text.XML.HXT.RelaxNG.DataTypeLibUtils
+import           Text.XML.HXT.RelaxNG.DataTypeLibUtils
 
 -- ------------------------------------------------------------
 

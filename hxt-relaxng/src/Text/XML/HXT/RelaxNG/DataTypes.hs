@@ -1,7 +1,11 @@
 module Text.XML.HXT.RelaxNG.DataTypes
 where
 
-import Text.XML.HXT.DOM.TypeDefs
+import           Text.XML.HXT.DOM.TypeDefs
+
+{- debug code
+import qualified Debug.Trace               as T
+-- -}
 
 -- ------------------------------------------------------------
 
@@ -147,7 +151,7 @@ data NameClass = AnyName
                | NsNameExcept Uri NameClass
                | NameClassChoice NameClass NameClass
                | NCError String
-               deriving Eq
+               deriving (Eq, Ord)
 
 instance Show NameClass
     where
@@ -168,21 +172,100 @@ instance Show NameClass
 
 -- | Represents a pattern after simplification
 
-data Pattern = Empty
-             | NotAllowed ErrMessage
-             | Text
-             | Choice Pattern Pattern
-             | Interleave Pattern Pattern
-             | Group Pattern Pattern
-             | OneOrMore Pattern
-             | List Pattern
-             | Data Datatype ParamList
-             | DataExcept Datatype ParamList Pattern
-             | Value Datatype String Context
-             | Attribute NameClass Pattern
-             | Element NameClass Pattern
-             | After Pattern Pattern
+data Pattern = NotAllowed ErrMessage			-- {}
+             | Empty					-- {epsilon}
+             | Text					-- symbol: text
+             | Element    NameClass Pattern     	-- symbol: element with pattern for children
+             | Attribute  NameClass Pattern     	-- symbol: attr    with pattern for value
+             | Choice     Pattern   Pattern		-- binary combinator, symmetric
+             | Interleave Pattern   Pattern		--   "         "    , symmetric
+             | Group      Pattern   Pattern		--   "         "
+             | After      Pattern   Pattern		--   "         "
+             | OneOrMore  Pattern			-- unary combinator
+             | Data       Datatype  ParamList   	-- value check
+             | DataExcept Datatype  ParamList Pattern
+             | List       Pattern               	-- value check
+             | Value      Datatype  String    Context	-- value check
 
+data Pattern' = NotAllowed'
+             | Empty'
+             | Text'
+             | Element'
+             | Attribute'
+             | Data'
+             | DataExcept'
+             | List'
+             | Value'
+             | OneOrMore'
+             | Interleave'
+             | Group'
+             | After'
+             | Choice'
+               deriving (Eq, Ord)
+
+ord' :: Pattern -> Pattern'
+ord' NotAllowed{}            = NotAllowed'
+ord' Empty                   = Empty'
+ord' Text                    = Text'
+ord' Element{}               = Element'
+ord' Attribute{}             = Attribute'
+ord' Choice{}                = Choice'
+ord' Interleave{}            = Interleave'
+ord' Group{}                 = Group'
+ord' After{}                 = After'
+ord' OneOrMore{}             = OneOrMore'
+ord' Data{}                  = Data'
+ord' DataExcept{}            = DataExcept'
+ord' List{}                  = List'
+ord' Value{}                 = Value'
+
+
+equiv :: Pattern -> Pattern -> Bool
+equiv NotAllowed{}            NotAllowed{}            = True
+equiv Empty                   Empty                   = True
+equiv Text                    Text                    = True
+equiv (Element    nc1 _p1)    (Element nc2 _p2)       = nc1 == nc2
+equiv (Attribute  nc1 _p1)    (Attribute nc2 _p2)     = nc1 == nc2
+equiv (Choice     p11 p12)    (Choice p21 p22)        = p11 `equiv` p21 && p12 `equiv` p22
+equiv (Interleave p11 p12)    (Interleave p21 p22)    = p11 `equiv` p21 && p12 `equiv` p22
+equiv (Group      p11 p12)    (Group      p21 p22)    = p11 `equiv` p21 && p12 `equiv` p22
+equiv (After      p11 p12)    (After      p21 p22)    = p11 `equiv` p21 && p12 `equiv` p22
+equiv (OneOrMore  p1)         (OneOrMore  p2)         = p1  `equiv` p2
+equiv (Data       dt1 pl1)    (Data       dt2 pl2)    = dt1 == dt2 && pl1 == pl2
+equiv (DataExcept dt1 pl1 p1) (DataExcept dt2 pl2 p2) = dt1 == dt2 && pl1 == pl2 && p1 `equiv` p2
+equiv (List p1)               (List p2)               = p1  `equiv` p2
+equiv (Value dt1 s1 cx1)      (Value dt2 s2 cx2)      = dt1 == dt2 && s1 == s2 && cx1 == cx2
+equiv _                       _                       = False
+
+
+gt :: Pattern -> Pattern -> Bool
+gt p1                      p2
+    | ord' p1 > ord' p2                            = True
+    | ord' p1 < ord' p2                            = False
+gt (Element    nc1 _p1)    (Element nc2 _p2)       = nc1 > nc2
+gt (Attribute  nc1 _p1)    (Attribute nc2 _p2)     = nc1 > nc2
+gt (Choice     p11 p12)    (Choice p21 p22)        = p11 `gt` p21
+                                                     || p11 `equiv` p21 && p12 `gt` p22
+gt (Interleave p11 p12)    (Interleave p21 p22)    = p11 `gt` p21
+                                                     || p11 `equiv` p21 && p12 `gt` p22
+gt (Group      p11 p12)    (Group      p21 p22)    = p11 `gt` p21
+                                                     || p11 `equiv` p21 && p12 `gt` p22
+gt (After      p11 p12)    (After      p21 p22)    = p11 `gt` p21
+                                                     || p11 `equiv` p21 && p12 `gt` p22
+gt (OneOrMore  p1)         (OneOrMore  p2)         = p1  `gt` p2
+gt (Data dt1 pl1)          (Data dt2 pl2)          = dt1 > dt2
+                                                     || dt1 == dt2 && pl1 == pl2
+gt (DataExcept dt1 pl1 p1) (DataExcept dt2 pl2 p2) = dt1 > dt2
+                                                     || dt1 == dt2
+                                                        && (pl1 > pl2 || pl1 == pl2 && p1 `gt` p2)
+gt (List p1)               (List p2)               = p1  `gt` p2
+gt (Value dt1 s1 cx1)      (Value dt2 s2 cx2)      = dt1 > dt2
+                                                     || dt1 == dt2
+                                                        && (s1 > s2 || s1 == s2 && cx1 > cx2)
+gt _                       _                       = False
+
+
+{-
 instance Show Pattern where
     show Empty                  = "empty"
     show (NotAllowed e)         = show e
@@ -202,6 +285,28 @@ instance Show Pattern where
     show (Attribute nc p)       = "attribute " ++ show nc ++ " { " ++ show p ++ " }"
     show (Element nc p)         = "element "   ++ show nc ++ " { " ++ show p ++ " }"
     show (After p1 p2)          =  "( " ++ show p1 ++ " ; " ++ show p2 ++ " )"
+-- -}
+
+instance Show Pattern where
+    show Empty                  = "empty"
+    show (NotAllowed e)         = show e
+    show Text                   = "text"
+    show (Choice p1 p2)         = "( " ++ show p1 ++ " | " ++ show p2 ++ " )"
+    show (Interleave p1 p2)     = "( " ++ show p1 ++ " & " ++ show p2 ++ " )"
+    show (Group p1 p2)          = "( " ++ show p1 ++ " , " ++ show p2 ++ " )"
+    show (OneOrMore p)          = show p ++ "+"
+    show (List p)               = "list { " ++ show p ++ " }"
+    show (Data dt pl)           = showDatatype dt ++ showPL pl
+                                  where
+                                  showPL []     = ""
+                                  showPL l      = " {" ++ concatMap showP l ++ " }"
+                                  showP (ln, v) = " " ++ ln ++ " = " ++ show v
+    show (DataExcept dt pl p)   = show (Data dt pl) ++ " - (" ++ show p ++ " )"
+    show (Value dt v _cx)       = showDatatype dt ++ " " ++ show v
+    show (Attribute nc _p)      = "a[" ++ show nc ++ "]{...}"
+    show (Element   nc _p)      = "e[" ++ show nc ++ "]{...}"
+    show (After p1 p2)          =  "( " ++ show p1 ++ " ; " ++ show p2 ++ " )"
+
 
 data ErrMessage = ErrMsg ErrLevel [String]
                   -- deriving Show
@@ -248,12 +353,31 @@ mergeNotAllowed _p1 _p2
     = notAllowed2 "mergeNotAllowed with wrong patterns"
 
 -- | smart constructor for Choice
+--
+-- nexted choices are transformed into a sorted list
+
+{-
+choice' :: Pattern -> Pattern -> Pattern
+choice' p1 p2
+    = T.trace ("choice:\np1=" ++ show p1 ++ "\np2=" ++ show p2) $
+      T.trace ("res=" ++ show res) $ res
+    where
+      res = choice p1 p2
+-- -}
 
 choice :: Pattern -> Pattern -> Pattern
 choice p1@(NotAllowed _) p2@(NotAllowed _)      = mergeNotAllowed p1 p2
 choice p1                   (NotAllowed _)      = p1
 choice (NotAllowed _)    p2                     = p2
-choice p1                p2                     = Choice p1 p2
+choice (Choice p11 p12)  p2                     = choice p11 (choice p12 p2)
+choice p1                p2@(Choice p21 p22)
+    | p1 `equiv` p21                            = p2
+    | p1 `gt`    p21                            = choice p21 (choice p1 p22)
+    | otherwise                                 = Choice p1 p2
+choice p1                p2
+    | p1 `equiv` p2                             = p2
+    | p1 `gt`    p2                             = choice p2 p1
+    | otherwise                                 = Choice p1 p2
 
 -- | smart constructor for Group
 
@@ -272,6 +396,8 @@ oneOrMore n@(NotAllowed _) = n
 oneOrMore p                = OneOrMore p
 
 -- | smart constructor for Interleave
+--
+-- nested interleaves are transformed into a sorted list
 
 interleave :: Pattern -> Pattern -> Pattern
 interleave p1@(NotAllowed _) p2@(NotAllowed _)  = mergeNotAllowed p1 p2
@@ -279,7 +405,13 @@ interleave _                 p2@(NotAllowed _)  = p2
 interleave p1@(NotAllowed _) _                  = p1
 interleave p1                Empty              = p1
 interleave Empty             p2                 = p2
-interleave p1                p2                 = Interleave p1 p2
+interleave (Interleave p11 p12) p2              = interleave p11 (interleave p12 p2)
+interleave p1                p2@(Interleave p21 p22)
+    | p1 `gt` p21                               = interleave p21 (interleave p1 p22)
+    | otherwise                                 = Interleave p1 p2
+interleave p1                p2
+    | p1 `gt` p2                                = interleave p2 p1
+    | otherwise                                 = Interleave p1 p2
 
 -- | smart constructor for After
 

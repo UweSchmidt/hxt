@@ -1,3 +1,5 @@
+{-# LANGUAGE BangPatterns #-}
+
 -- ------------------------------------------------------------
 
 {- |
@@ -30,43 +32,41 @@ where
 
 import           Control.Arrow.ListArrows
 
-import           Data.Char.Properties.XMLCharProps      ( isXmlSpaceChar )
-import           Data.Maybe                             ( fromJust )
+import           Data.Char.Properties.XMLCharProps      (isXmlSpaceChar)
+import           Data.Maybe                             (fromJust)
 
 import           Text.XML.HXT.DOM.Interface
-import qualified Text.XML.HXT.DOM.XmlNode as XN
+import qualified Text.XML.HXT.DOM.XmlNode               as XN
 
+import           Text.XML.HXT.Arrow.Edit                (canonicalizeAllNodes,
+                                                         collapseAllXText)
 import           Text.XML.HXT.Arrow.XmlArrow
-import           Text.XML.HXT.Arrow.Edit                ( canonicalizeAllNodes
-                                                        , collapseAllXText
-                                                        )
 
-import           Text.XML.HXT.Arrow.ProcessDocument     ( propagateAndValidateNamespaces
-                                                        , getDocumentContents
-                                                        , parseXmlDocument
-                                                        )
+import           Text.XML.HXT.Arrow.ProcessDocument     (getDocumentContents,
+                                                         parseXmlDocument, propagateAndValidateNamespaces)
 import           Text.XML.HXT.Arrow.XmlState
 import           Text.XML.HXT.Arrow.XmlState.TypeDefs
 
-import           Text.XML.HXT.RelaxNG.DataTypes
 import           Text.XML.HXT.RelaxNG.CreatePattern
-import           Text.XML.HXT.RelaxNG.PatternToString
 import           Text.XML.HXT.RelaxNG.DataTypeLibraries
-import           Text.XML.HXT.RelaxNG.Utils             ( formatStringListQuot
-                                                        , compareURI
-                                                        )
+import           Text.XML.HXT.RelaxNG.DataTypes
+import           Text.XML.HXT.RelaxNG.PatternToString
+import           Text.XML.HXT.RelaxNG.Utils             (compareURI,
+                                                         formatStringListQuot)
 
 {-
-import qualified Debug.Trace as T
--}
+import qualified Debug.Trace                            as T
+-- -}
 
 -- ------------------------------------------------------------
 
 validateWithRelax       :: IOSArrow XmlTree XmlTree -> IOSArrow XmlTree XmlTree
 validateWithRelax theSchema
-    = traceMsg 2 "validate with Relax NG schema"
+    = traceMsg 2 "normalize document for validation"
       >>>
       normalizeForRelaxValidation             -- prepare the document for validation
+      >>>
+      traceMsg 2 "start validation"
       >>>
       ( validateRelax $< theSchema )          -- compute and issue validation errors
 
@@ -161,7 +161,7 @@ validateRelax' rngSchema
           )
         )
         >>>
-        arr2 (\ pattern xmlDoc -> childDeriv ("", []) pattern xmlDoc)
+        arr2 (\ !pattern !xmlDoc -> childDeriv ("", []) pattern xmlDoc)
         >>>
         isA (not . nullable)
         >>>
@@ -229,8 +229,8 @@ nullable (After _ _)            = False
 childDeriv :: Context -> Pattern -> XmlTree -> Pattern
 
 childDeriv cx p t
-    | XN.isText t       = textDeriv cx p . fromJust . XN.getText $ t
-    | XN.isElem t       = endTagDeriv p4
+    | XN.isText t       = textDeriv{- ' -}cx p . fromJust . XN.getText $ t
+    | XN.isElem t       = endTagDeriv{- ' -} p4
     | otherwise         = notAllowed "Call to childDeriv with wrong arguments"
     where
     children    =            XN.getChildren $ t
@@ -238,13 +238,22 @@ childDeriv cx p t
     atts        = fromJust . XN.getAttrl    $ t
     cx1         = ("",[])
     p1          = startTagOpenDeriv p qn
-    p2          = attsDeriv cx1 p1 atts
+    p2          = attsDeriv{- ' -} cx1 p1 atts
     p3          = startTagCloseDeriv p2
     p4          = childrenDeriv cx1 p3 children
 
 -- ------------------------------------------------------------
 --
 -- | computes the derivative of a pattern with respect to a text node
+
+{-
+textDeriv' cx p t
+    = T.trace ("textDeriv: p=\n" ++ (take 10000 . show) p ++ ", t=\n" ++ t) $
+      T.trace ("res=\n" ++ (take 10000 . show) res) res
+    where
+    res = textDeriv cx p t
+-- -}
+
 
 textDeriv :: Context -> Pattern -> String -> Pattern
 
@@ -327,10 +336,10 @@ textDeriv _ p s
 
 listDeriv :: Context -> Pattern -> [String] -> Pattern
 
-listDeriv _ p []
+listDeriv _ !p []
     = p
 
-listDeriv cx p (x:xs)
+listDeriv cx !p (x:xs)
     = listDeriv cx (textDeriv cx p x) xs
 
 
@@ -381,30 +390,33 @@ startTagOpenDeriv p qn
 -- ------------------------------------------------------------
 
 -- auxiliary functions for tracing
+
 {-
 attsDeriv' cx p ts
     = T.trace ("attsDeriv: p=" ++ (take 1000 . show) p ++ ", t=" ++ showXts ts) $
       T.trace ("res= " ++ (take 1000 . show) res) res
     where
     res = attsDeriv cx p ts
+-- -}
 
+{-
 attDeriv' cx p t
-    = T.trace ("attDeriv: p=" ++ (take 1000 . show) p ++ ", t=" ++ showXts [t]) $
-      T.trace ("res= " ++ (take 1000 . show) res) res
+    = T.trace ("attDeriv: p=\n" ++ (take 10000 . show) p ++ ", t=\n" ++ showXts [t]) $
+      T.trace ("res=\n" ++ (take 1000 . show) res) res
     where
     res = attDeriv cx p t
--}
+-- -}
 
 -- | To compute the derivative of a pattern with respect to a sequence of attributes,
 -- simply compute the derivative with respect to each attribute in turn.
 
 attsDeriv :: Context -> Pattern -> XmlTrees -> Pattern
 
-attsDeriv _ p []
+attsDeriv _ !p []
     = p
-attsDeriv cx p (t : ts)
+attsDeriv cx !p (t : ts)
     | XN.isAttr t
-        = attsDeriv cx (attDeriv cx p t) ts
+        = attsDeriv cx (attDeriv{- ' -} cx p t) ts
     | otherwise
         = notAllowed "Call to attsDeriv with wrong arguments"
 
@@ -537,10 +549,10 @@ childrenDeriv cx p children
     = stripChildrenDeriv cx p children
 
 stripChildrenDeriv :: Context -> Pattern -> XmlTrees -> Pattern
-stripChildrenDeriv _ p []
+stripChildrenDeriv _ !p []
     = p
 
-stripChildrenDeriv cx p (h:t)
+stripChildrenDeriv cx !p (h:t)
     = stripChildrenDeriv cx
       ( if strip h
         then p
@@ -551,6 +563,14 @@ stripChildrenDeriv cx p (h:t)
 -- ------------------------------------------------------------
 --
 -- | computes the derivative of a pattern with respect to a end tag
+
+{-
+endTagDeriv' p
+    = T.trace ("endTagDeriv: p=\n" ++ (take 10000 . show) p) $
+      T.trace ("res=\n" ++ (take 10000 . show) res) res
+    where
+    res = endTagDeriv p
+-- -}
 
 endTagDeriv :: Pattern -> Pattern
 endTagDeriv (Choice p1 p2)
