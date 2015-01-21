@@ -48,6 +48,8 @@ module Text.XML.HXT.DTDValidation.RE
   )
 where
 
+import           Data.List (foldl')
+
 -- |
 -- Data type for regular expressions.
 
@@ -61,7 +63,7 @@ data RE a =
         | RE_OPT (RE a)         --' L(e?)  = L(e) `union` { [] }
         | RE_SEQ (RE a) (RE a)  --' L(e,f) = { x ++ y | x <- L(e), y <- L(f) }
         | RE_ALT (RE a) (RE a)  --' L(e|f) = L(e) `union` L(f)
-        deriving (Show, Eq)
+        deriving (Show, Eq, Ord)
 
 
 
@@ -128,10 +130,11 @@ re_rep e                = RE_REP e
 -- but without this simplification the runtime can increase exponentally
 -- when computing deltas, e.g. for a** or (a|b*)* which is the same as (a|b)*
 
-rem_rep                 :: RE a -> RE a
-rem_rep (RE_ALT e1 e2)  = RE_ALT (rem_rep e1) (rem_rep e2)
-rem_rep (RE_REP e1)     = rem_rep e1
-rem_rep e1              = e1
+rem_rep                     :: RE a -> RE a
+rem_rep (RE_ALT RE_UNIT e2) = e2
+rem_rep (RE_ALT e1 e2)      = RE_ALT (rem_rep e1) (rem_rep e2)
+rem_rep (RE_REP e1)         = rem_rep e1
+rem_rep e1                  = e1
 
 
 -- |
@@ -144,7 +147,9 @@ rem_rep e1              = e1
 re_plus                 :: RE a -> RE a
 re_plus RE_UNIT         = RE_UNIT
 re_plus (RE_ZERO m)     = RE_ZERO m
-re_plus e               = RE_PLUS e
+re_plus e
+    | nullable e        = re_rep e            -- nullable e => e+ == e*
+    | otherwise         = re_seq e (re_rep e)
 
 
 -- |
@@ -154,11 +159,10 @@ re_plus e               = RE_PLUS e
 --
 --    - returns : new regular expression
 
-re_opt                  :: RE a -> RE a
+re_opt                  :: (Ord a) => RE a -> RE a
 re_opt RE_UNIT          = RE_UNIT
 re_opt (RE_ZERO _)      = RE_UNIT
-re_opt e                = RE_OPT e
-
+re_opt e                = re_alt RE_UNIT e
 
 -- |
 -- Constructs a sequence (,) of two regular expressions
@@ -169,12 +173,13 @@ re_opt e                = RE_OPT e
 --
 --    - returns : new regular expression
 
-re_seq                  :: RE a -> RE a -> RE a
-re_seq (RE_ZERO m) _    = RE_ZERO m
-re_seq RE_UNIT f        = f
-re_seq _ (RE_ZERO m)    = RE_ZERO m
-re_seq e RE_UNIT        = e
-re_seq e f              = RE_SEQ e f
+re_seq                                 :: RE a -> RE a -> RE a
+re_seq e1@(RE_ZERO _)   _              = e1                         -- simplification
+re_seq RE_UNIT          e2             = e2                         -- simplification
+re_seq _                e2@(RE_ZERO _) = e2                         -- simplification
+re_seq e1               RE_UNIT        = e1                         -- simplification
+re_seq (RE_SEQ e11 e12) e2             = re_seq e11 (re_seq e12 e2) -- right assoc.
+re_seq e1               e2             = RE_SEQ e1 e2
 
 
 -- |
@@ -186,10 +191,18 @@ re_seq e f              = RE_SEQ e f
 --
 --    - returns : new regular expression
 
-re_alt                  :: RE a -> RE a -> RE a
-re_alt (RE_ZERO _) f    = f
-re_alt e (RE_ZERO _)    = e
-re_alt e f              = RE_ALT e f
+re_alt                                      :: (Ord a) => RE a -> RE a -> RE a
+re_alt (RE_ZERO _)      e2                  = e2
+re_alt e1               (RE_ZERO _)         = e1
+re_alt (RE_ALT e11 e12) e2                  = re_alt e11 (re_alt e12 e2)  -- | is right assoc
+re_alt e1               e2@(RE_ALT e21 e22)
+    | e1 == e21                             = e2            -- | simplification, the effective rule
+    | e1 >  e21                             = re_alt e21 (re_alt e1 e22)  -- | sort alt.
+    | otherwise                             = RE_ALT e1 e2
+re_alt e1               e2
+    | e1 == e2                              = e2             -- | simplification, the effective rule
+    | e1 >  e2                              = re_alt e2 e1   -- | sort alts for unique repr.
+    | otherwise                             = RE_ALT e1 e2
 
 
 
@@ -208,7 +221,7 @@ re_alt e f              = RE_ALT e f
 --    - returns : true if regular expression matches the empty sequence,
 --                otherwise false
 
-nullable                ::  (Show a) => RE a -> Bool
+nullable                ::  RE a -> Bool
 nullable (RE_ZERO _)    = False
 nullable RE_UNIT        = True
 nullable (RE_SYM _)     = False
@@ -231,7 +244,7 @@ nullable RE_DOT         = False
 --
 --    - returns : the derived regular expression
 
-delta :: (Eq a, Show a) => RE a -> a -> RE a
+delta :: (Ord a, Show a) => RE a -> a -> RE a
 delta re x = case re of
         RE_ZERO _               -> re                                   -- re_zero m
         RE_UNIT                 -> re_zero ("Symbol " ++ show x ++ " unexpected.")
@@ -257,8 +270,8 @@ delta re x = case re of
 --
 --    - returns : the derived regular expression
 
-matches :: (Eq a, Show a) => RE a -> [a] -> RE a
-matches e = foldl delta e
+matches :: (Ord a, Show a) => RE a -> [a] -> RE a
+matches e = foldl' delta e
 
 
 -- |
@@ -273,7 +286,7 @@ matches e = foldl delta e
 --    - returns : empty String if input matched the regular expression, otherwise
 --               an error message is returned
 
-checkRE :: (Show a) => RE a -> String
+checkRE :: (Eq a, Show a) => RE a -> String
 checkRE (RE_UNIT)       = ""
 checkRE (RE_ZERO m)     = m
 checkRE re
@@ -293,11 +306,11 @@ checkRE re
 --
 --    - returns : the string representation of the regular expression
 
-printRE :: (Show a) => RE a -> String
+printRE :: (Eq a, Show a) => RE a -> String
 printRE re'
     = "( " ++ printRE1 re' ++ " )"
       where
-      printRE1 :: (Show a) => RE a -> String
+      -- printRE1 :: (Eq a, Show a) => RE a -> String
       printRE1 re = case re of
           RE_ZERO m                             -> "ERROR: " ++ m
           RE_UNIT                               -> ""
@@ -312,11 +325,16 @@ printRE re'
           RE_OPT e
               | isSingle e                      -> printRE1 e ++ "?"
               | otherwise                       -> "(" ++ printRE1 e ++ ")?"
+          RE_SEQ e1 (RE_REP e2)
+              | e1 == e2                        -> printRE1 (RE_PLUS e1)
+          RE_SEQ e1 (RE_SEQ (RE_REP e2) e3)
+              | e1 == e2                        -> printRE1 (RE_SEQ (RE_PLUS e1) e3)
           RE_SEQ e f
               | isAlt e  && not (isAlt f)       -> "(" ++ printRE1 e ++ ") , " ++ printRE1 f
               | not (isAlt e) && isAlt f        -> printRE1 e ++ " , (" ++ printRE1 f ++ ")"
               | isAlt e  && isAlt f             -> "(" ++ printRE1 e ++ ") , (" ++ printRE1 f ++ ")"
               | otherwise                       -> printRE1 e ++ " , " ++ printRE1 f
+          RE_ALT RE_UNIT f                      -> printRE1 (RE_OPT f)
           RE_ALT e f
               | isSeq e  && not (isSeq f)       -> "(" ++ printRE1 e ++ ") | " ++ printRE1 f
               | not (isSeq e) && isSeq f        -> printRE1 e ++ " | (" ++ printRE1 f ++ ")"
@@ -331,11 +349,14 @@ printRE re'
       isSingle _              = False
 
 
-      isSeq :: RE a -> Bool
+      isSeq :: (Eq a) => RE a -> Bool
+      isSeq (RE_SEQ e1 (RE_REP e2))
+          | e1 == e2          = False  -- is transformed back into RE_PLUS
       isSeq (RE_SEQ _ _)      = True
       isSeq _                 = False
 
 
       isAlt :: RE a -> Bool
+      isAlt (RE_ALT RE_UNIT _)= False  -- is transformed back into a RE_OPT
       isAlt (RE_ALT _ _)      = True
       isAlt _                 = False

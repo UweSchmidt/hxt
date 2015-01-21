@@ -1,0 +1,3143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE message PUBLIC "-//TSN//DTD Statistics 1.0/EN" "Odds_XML.dtd">
+<message>
+  <XML_File_ID>20109207</XML_File_ID>
+  <heading>AEO;CBB-ODDS</heading>
+  <category>Odds</category>
+  <sport>CBASK</sport>
+  <Title>Las Vegas College Basketball Line</Title>
+  <Line_Time>Current Line as of 10:30 A.M. ET</Line_Time>
+  <Game>
+    <GameID>70290</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>11:00 AM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C45</AwayTeamID>
+      <AwayRotationNumber>519</AwayRotationNumber>
+      <AwayAbbr>STLOUIS</AwayAbbr>
+      <AwayTeamName>Saint Louis</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A69</HomeTeamID>
+      <HomeRotationNumber>520</HomeRotationNumber>
+      <HomeAbbr>DAYTON</HomeAbbr>
+      <HomeTeamName>Dayton</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-2</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-2.5</Casino>
+      <Casino ClientID="104" Name="BOVADA">-2</Casino>
+      <Casino ClientID="121" Name="Mirage">-2</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-2</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes">132.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">132.5</Casino>
+      <Casino ClientID="104" Name="BOVADA">133</Casino>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">132.5</Casino>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>68084</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>12:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>B22</AwayTeamID>
+      <AwayRotationNumber>521</AwayRotationNumber>
+      <AwayAbbr>INDIANA</AwayAbbr>
+      <AwayTeamName>Indiana</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-1.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-1.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-1.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-1.5</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C21</HomeTeamID>
+      <HomeRotationNumber>522</HomeRotationNumber>
+      <HomeAbbr>PENNST</HomeAbbr>
+      <HomeTeamName>Penn State</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes">148.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">148.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">148.5</Casino>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>67951</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>12:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>D10</AwayTeamID>
+      <AwayRotationNumber>523</AwayRotationNumber>
+      <AwayAbbr>WAKEFOREST</AwayAbbr>
+      <AwayTeamName>Wake Forest</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C23</HomeTeamID>
+      <HomeRotationNumber>524</HomeRotationNumber>
+      <HomeAbbr>PITT</HomeAbbr>
+      <HomeTeamName>Pittsburgh</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-14.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-14.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-14</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-15</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>67812</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>12:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C09</AwayTeamID>
+      <AwayRotationNumber>525</AwayRotationNumber>
+      <AwayAbbr>NOTREDAME</AwayAbbr>
+      <AwayTeamName>Notre Dame</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-1.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-1</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-1</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-1.5</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B05</HomeTeamID>
+      <HomeRotationNumber>526</HomeRotationNumber>
+      <HomeAbbr>GATECH</HomeAbbr>
+      <HomeTeamName>Georgia Tech</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>67708</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>12:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A27</AwayTeamID>
+      <AwayRotationNumber>527</AwayRotationNumber>
+      <AwayAbbr>BOSTONCOLL</AwayAbbr>
+      <AwayTeamName>Boston College</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>D08</HomeTeamID>
+      <HomeRotationNumber>528</HomeRotationNumber>
+      <HomeAbbr>VATECH</HomeAbbr>
+      <HomeTeamName>Virginia Tech</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-2</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-2</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-2.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-2</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>67900</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>12:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>B95</AwayTeamID>
+      <AwayRotationNumber>529</AwayRotationNumber>
+      <AwayAbbr>NCAROLINA</AwayAbbr>
+      <AwayTeamName>North Carolina</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C76</HomeTeamID>
+      <HomeRotationNumber>530</HomeRotationNumber>
+      <HomeAbbr>SYRACUSE</HomeAbbr>
+      <HomeTeamName>Syracuse</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-8</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-8.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-7.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-8.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes">137.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">137.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">137.5</Casino>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>68057</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>12:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>B28</AwayTeamID>
+      <AwayRotationNumber>531</AwayRotationNumber>
+      <AwayAbbr>IOWAST</AwayAbbr>
+      <AwayTeamName>Iowa State</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-4.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-4</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-3</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-4.5</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C13</HomeTeamID>
+      <HomeRotationNumber>532</HomeRotationNumber>
+      <HomeAbbr>OKLAHOMA</HomeAbbr>
+      <HomeTeamName>Oklahoma</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes">171.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">171</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">171.5</Casino>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>70794</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>12:30 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C40</AwayTeamID>
+      <AwayRotationNumber>533</AwayRotationNumber>
+      <AwayAbbr>STBONNIES</AwayAbbr>
+      <AwayTeamName>St Bonaventure</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B61</HomeTeamID>
+      <HomeRotationNumber>534</HomeRotationNumber>
+      <HomeAbbr>UMASS</HomeAbbr>
+      <HomeTeamName>Massachusetts</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-7.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-7</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-8.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-7.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes">148.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">148.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">148.5</Casino>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>68695</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>01:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>D04</AwayTeamID>
+      <AwayRotationNumber>535</AwayRotationNumber>
+      <AwayAbbr>VILLANOVA</AwayAbbr>
+      <AwayTeamName>Villanova</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-4.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-4.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-4.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-4.5</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C43</HomeTeamID>
+      <HomeRotationNumber>536</HomeRotationNumber>
+      <HomeAbbr>STJOHNS</HomeAbbr>
+      <HomeTeamName>St Johns</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>69110</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>01:05 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A30</AwayTeamID>
+      <AwayRotationNumber>537</AwayRotationNumber>
+      <AwayAbbr>BRADLEY</AwayAbbr>
+      <AwayTeamName>Bradley</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B23</HomeTeamID>
+      <HomeRotationNumber>538</HomeRotationNumber>
+      <HomeAbbr>INDIANAST</HomeAbbr>
+      <HomeTeamName>Indiana State</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-14.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-14.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-14.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-14.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>67430</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>01:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A89</AwayTeamID>
+      <AwayRotationNumber>539</AwayRotationNumber>
+      <AwayAbbr>FLORIDA</AwayAbbr>
+      <AwayTeamName>Florida</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A13</HomeTeamID>
+      <HomeRotationNumber>540</HomeRotationNumber>
+      <HomeAbbr>ARKANSAS</HomeAbbr>
+      <HomeTeamName>Arkansas</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-2.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-2.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-1</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-2.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes">141.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">141.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">141</Casino>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>67483</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>01:30 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>B45</AwayTeamID>
+      <AwayRotationNumber>541</AwayRotationNumber>
+      <AwayAbbr>LSU</AwayAbbr>
+      <AwayTeamName>LSU</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-3</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-3</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-1.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-3</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C59</HomeTeamID>
+      <HomeRotationNumber>542</HomeRotationNumber>
+      <HomeAbbr>SCAROLINA</HomeAbbr>
+      <HomeTeamName>South Carolina</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>68007</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>01:30 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C84</AwayTeamID>
+      <AwayRotationNumber>543</AwayRotationNumber>
+      <AwayAbbr>TCU</AwayAbbr>
+      <AwayTeamName>TCU</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A21</HomeTeamID>
+      <HomeRotationNumber>544</HomeRotationNumber>
+      <HomeAbbr>BAYLOR</HomeAbbr>
+      <HomeTeamName>Baylor</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-15</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-15.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-15.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-15</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>70111</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>02:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C95</AwayTeamID>
+      <AwayRotationNumber>545</AwayRotationNumber>
+      <AwayAbbr>TULANE</AwayAbbr>
+      <AwayTeamName>Tulane</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C02</HomeTeamID>
+      <HomeRotationNumber>546</HomeRotationNumber>
+      <HomeAbbr>NTEXAS</HomeAbbr>
+      <HomeTeamName>North Texas</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-9</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-9</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-9</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-9</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>72678</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>02:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C01</AwayTeamID>
+      <AwayRotationNumber>547</AwayRotationNumber>
+      <AwayAbbr>NWILMINGTN</AwayAbbr>
+      <AwayTeamName>UNC-Wilmington</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C93</HomeTeamID>
+      <HomeRotationNumber>548</HomeRotationNumber>
+      <HomeAbbr>TOWSON</HomeAbbr>
+      <HomeTeamName>Towson</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-9</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-9</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-9.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-9</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>70814</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>02:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A83</AwayTeamID>
+      <AwayRotationNumber>549</AwayRotationNumber>
+      <AwayAbbr>EMICHIGAN</AwayAbbr>
+      <AwayTeamName>Eastern Mich</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A34</HomeTeamID>
+      <HomeRotationNumber>550</HomeRotationNumber>
+      <HomeAbbr>BUFFALO</HomeAbbr>
+      <HomeTeamName>Buffalo</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-3.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-3.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-4.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-3.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>68107</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>02:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>B34</AwayTeamID>
+      <AwayRotationNumber>551</AwayRotationNumber>
+      <AwayAbbr>KANSASST</AwayAbbr>
+      <AwayTeamName>Kansas State</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B33</HomeTeamID>
+      <HomeRotationNumber>552</HomeRotationNumber>
+      <HomeAbbr>KANSAS</HomeAbbr>
+      <HomeTeamName>Kansas</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-10.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-10</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-9.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-10</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes">130.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">130.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">130.5</Casino>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>68605</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>02:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C56</AwayTeamID>
+      <AwayRotationNumber>553</AwayRotationNumber>
+      <AwayAbbr>SETONHALL</AwayAbbr>
+      <AwayTeamName>Seton Hall</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B56</HomeTeamID>
+      <HomeRotationNumber>554</HomeRotationNumber>
+      <HomeAbbr>MARQUETTE</HomeAbbr>
+      <HomeTeamName>Marquette</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-10.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-10.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-10.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-10.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes">136.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">136.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">136.5</Casino>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>67557</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>02:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>B74</AwayTeamID>
+      <AwayRotationNumber>555</AwayRotationNumber>
+      <AwayAbbr>MISSOURI</AwayAbbr>
+      <AwayTeamName>Missouri</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-3.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-3.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-4</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-3.5</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A18</HomeTeamID>
+      <HomeRotationNumber>556</HomeRotationNumber>
+      <HomeAbbr>AUBURN</HomeAbbr>
+      <HomeTeamName>Auburn</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes">141.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">141</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">141.5</Casino>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>72585</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>02:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C03</AwayTeamID>
+      <AwayRotationNumber>557</AwayRotationNumber>
+      <AwayAbbr>NEASTERN</AwayAbbr>
+      <AwayTeamName>Northeastern</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A76</HomeTeamID>
+      <HomeRotationNumber>558</HomeRotationNumber>
+      <HomeAbbr>DREXEL</HomeAbbr>
+      <HomeTeamName>Drexel</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-7</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-6.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-7</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-7</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>67737</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>02:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A77</AwayTeamID>
+      <AwayRotationNumber>559</AwayRotationNumber>
+      <AwayAbbr>DUKE</AwayAbbr>
+      <AwayTeamName>Duke</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-6</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-6</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-5.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-6</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A56</HomeTeamID>
+      <HomeRotationNumber>560</HomeRotationNumber>
+      <HomeAbbr>CLEMSON</HomeAbbr>
+      <HomeTeamName>Clemson</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>68927</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>02:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A67</AwayTeamID>
+      <AwayRotationNumber>561</AwayRotationNumber>
+      <AwayAbbr>DARTMOUTH</AwayAbbr>
+      <AwayTeamName>Dartmouth</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B10</HomeTeamID>
+      <HomeRotationNumber>562</HomeRotationNumber>
+      <HomeAbbr>HARVARD</HomeAbbr>
+      <HomeTeamName>Harvard</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-15</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-14.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-15</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-15</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>68231</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>02:15 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>B70</AwayTeamID>
+      <AwayRotationNumber>563</AwayRotationNumber>
+      <AwayAbbr>MINNESOTA</AwayAbbr>
+      <AwayTeamName>Minnesota</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B68</HomeTeamID>
+      <HomeRotationNumber>564</HomeRotationNumber>
+      <HomeAbbr>MICHIGANST</HomeAbbr>
+      <HomeTeamName>Michigan State</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-11</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-11</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-11</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-11</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes">139</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">139</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">139</Casino>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>70685</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>02:30 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C32</AwayTeamID>
+      <AwayRotationNumber>565</AwayRotationNumber>
+      <AwayAbbr>RISLAND</AwayAbbr>
+      <AwayTeamName>Rhode Island</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A99</HomeTeamID>
+      <HomeRotationNumber>566</HomeRotationNumber>
+      <HomeAbbr>GWASH</HomeAbbr>
+      <HomeTeamName>George Washington</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-10</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-9.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-9.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-10</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes">138.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">138.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">138.5</Casino>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>71337</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>03:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>D18</AwayTeamID>
+      <AwayRotationNumber>567</AwayRotationNumber>
+      <AwayAbbr>WMICHIGAN</AwayAbbr>
+      <AwayTeamName>Western Mich</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-1.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-1.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-1</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-1.5</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B66</HomeTeamID>
+      <HomeRotationNumber>568</HomeRotationNumber>
+      <HomeAbbr>MIAOHIO</HomeAbbr>
+      <HomeTeamName>Miami-Ohio</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Notes>Time change</Notes>
+  <Game>
+    <GameID>70040</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>02:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C87</AwayTeamID>
+      <AwayRotationNumber>569</AwayRotationNumber>
+      <AwayAbbr>TXARLINGTN</AwayAbbr>
+      <AwayTeamName>Texas-Arlington</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B47</HomeTeamID>
+      <HomeRotationNumber>570</HomeRotationNumber>
+      <HomeAbbr>ULLAFAYETE</HomeAbbr>
+      <HomeTeamName>Louisiana</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-10.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-10</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-10.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-10.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>68623</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>03:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>B63</AwayTeamID>
+      <AwayRotationNumber>571</AwayRotationNumber>
+      <AwayAbbr>MEMPHIS</AwayAbbr>
+      <AwayTeamName>Memphis</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-7.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-7.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-7.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-7.5</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C77</HomeTeamID>
+      <HomeRotationNumber>572</HomeRotationNumber>
+      <HomeAbbr>TEMPLE</HomeAbbr>
+      <HomeTeamName>Temple</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>67600</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>03:30 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>B36</AwayTeamID>
+      <AwayRotationNumber>573</AwayRotationNumber>
+      <AwayAbbr>KENTUCKY</AwayAbbr>
+      <AwayTeamName>Kentucky</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-8</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-8</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-8</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-8</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>D02</HomeTeamID>
+      <HomeRotationNumber>574</HomeRotationNumber>
+      <HomeAbbr>VANDERBILT</HomeAbbr>
+      <HomeTeamName>Vanderbilt</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>67639</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>04:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>B71</AwayTeamID>
+      <AwayRotationNumber>575</AwayRotationNumber>
+      <AwayAbbr>MISS</AwayAbbr>
+      <AwayTeamName>Ole Miss</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-1</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-1</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-1.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-1</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B72</HomeTeamID>
+      <HomeRotationNumber>576</HomeRotationNumber>
+      <HomeAbbr>MISSST</HomeAbbr>
+      <HomeTeamName>Miss State</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>67457</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>04:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A03</AwayTeamID>
+      <AwayRotationNumber>577</AwayRotationNumber>
+      <AwayAbbr>ALABAMA</AwayAbbr>
+      <AwayTeamName>Alabama</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-2.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-2.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-2</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-2.5</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B02</HomeTeamID>
+      <HomeRotationNumber>578</HomeRotationNumber>
+      <HomeAbbr>GEORGIA</HomeAbbr>
+      <HomeTeamName>Georgia</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>71835</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>04:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A49</AwayTeamID>
+      <AwayRotationNumber>579</AwayRotationNumber>
+      <AwayAbbr>CHARLESTON</AwayAbbr>
+      <AwayTeamName>Coll of Charleston</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-4.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-4.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-3.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-4.5</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B13</HomeTeamID>
+      <HomeRotationNumber>580</HomeRotationNumber>
+      <HomeAbbr>HOFSTRA</HomeAbbr>
+      <HomeTeamName>Hofstra</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>71896</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>04:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C54</AwayTeamID>
+      <AwayRotationNumber>581</AwayRotationNumber>
+      <AwayAbbr>SANTACLARA</AwayAbbr>
+      <AwayTeamName>Santa Clara</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C19</HomeTeamID>
+      <HomeRotationNumber>582</HomeRotationNumber>
+      <HomeAbbr>PACIFIC</HomeAbbr>
+      <HomeTeamName>Pacific</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>69188</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>04:05 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A86</AwayTeamID>
+      <AwayRotationNumber>583</AwayRotationNumber>
+      <AwayAbbr>EVANSVILLE</AwayAbbr>
+      <AwayTeamName>Evansville</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C65</HomeTeamID>
+      <HomeRotationNumber>584</HomeRotationNumber>
+      <HomeAbbr>SILLINOIS</HomeAbbr>
+      <HomeTeamName>Southern Ill</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-4.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-4.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-4.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>71936</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>04:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A70</AwayTeamID>
+      <AwayRotationNumber>585</AwayRotationNumber>
+      <AwayAbbr>DELAWARE</AwayAbbr>
+      <AwayTeamName>Delaware</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-3.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-3.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-3.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-3.5</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B32</HomeTeamID>
+      <HomeRotationNumber>586</HomeRotationNumber>
+      <HomeAbbr>JAMESMADSN</HomeAbbr>
+      <HomeTeamName>James Madison</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>69841</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>04:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A51</AwayTeamID>
+      <AwayRotationNumber>587</AwayRotationNumber>
+      <AwayAbbr>CHARLOTTE</AwayAbbr>
+      <AwayTeamName>Charlotte</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-12</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-12</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-12.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-12</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C91</HomeTeamID>
+      <HomeRotationNumber>588</HomeRotationNumber>
+      <HomeAbbr>TXSANANTO</HomeAbbr>
+      <HomeTeamName>TX-San Antonio</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>68228</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>04:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C14</AwayTeamID>
+      <AwayRotationNumber>589</AwayRotationNumber>
+      <AwayAbbr>OKLAHOMAST</AwayAbbr>
+      <AwayTeamName>Oklahoma State</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-5.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-5.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-5.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-5.5</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>D14</HomeTeamID>
+      <HomeRotationNumber>590</HomeRotationNumber>
+      <HomeAbbr>WVIRGINIA</HomeAbbr>
+      <HomeTeamName>West Virginia</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>67880</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>05:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>D05</AwayTeamID>
+      <AwayRotationNumber>591</AwayRotationNumber>
+      <AwayAbbr>VIRGINIA</AwayAbbr>
+      <AwayTeamName>Virginia</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-1.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-1.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-1.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-1.5</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B99</HomeTeamID>
+      <HomeRotationNumber>592</HomeRotationNumber>
+      <HomeAbbr>NCSTATE</HomeAbbr>
+      <HomeTeamName>NC State</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>70132</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>05:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C71</AwayTeamID>
+      <AwayRotationNumber>593</AwayRotationNumber>
+      <AwayAbbr>TEXASST</AwayAbbr>
+      <AwayTeamName>Texas State</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B48</HomeTeamID>
+      <HomeRotationNumber>594</HomeRotationNumber>
+      <HomeAbbr>ULMONROE</HomeAbbr>
+      <HomeTeamName>ULM</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-6</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>67672</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>06:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C83</AwayTeamID>
+      <AwayRotationNumber>595</AwayRotationNumber>
+      <AwayAbbr>TEXASAM</AwayAbbr>
+      <AwayTeamName>Texas A&amp;M</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C78</HomeTeamID>
+      <HomeRotationNumber>596</HomeRotationNumber>
+      <HomeAbbr>TENNESSEE</HomeAbbr>
+      <HomeTeamName>Tennessee</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-12</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-12</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-12</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-12</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>68410</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>06:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C37</AwayTeamID>
+      <AwayRotationNumber>597</AwayRotationNumber>
+      <AwayAbbr>RUTGERS</AwayAbbr>
+      <AwayTeamName>Rutgers</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A54</HomeTeamID>
+      <HomeRotationNumber>598</HomeRotationNumber>
+      <HomeAbbr>CINCINNATI</HomeAbbr>
+      <HomeTeamName>Cincinnati</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-12.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-12.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-14</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-12.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>69001</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>06:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C27</AwayTeamID>
+      <AwayRotationNumber>599</AwayRotationNumber>
+      <AwayAbbr>PRINCETON</AwayAbbr>
+      <AwayTeamName>Princeton</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-8</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-8</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-8</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-8</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C20</HomeTeamID>
+      <HomeRotationNumber>600</HomeRotationNumber>
+      <HomeAbbr>PENN</HomeAbbr>
+      <HomeTeamName>Penn</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>70927</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>06:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A48</AwayTeamID>
+      <AwayRotationNumber>601</AwayRotationNumber>
+      <AwayAbbr>CMICHIGAN</AwayAbbr>
+      <AwayTeamName>Central Mich</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C92</HomeTeamID>
+      <HomeRotationNumber>602</HomeRotationNumber>
+      <HomeAbbr>TOLEDO</HomeAbbr>
+      <HomeTeamName>Toledo</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-16.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-16.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-16.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-16.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>70075</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>06:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A06</AwayTeamID>
+      <AwayRotationNumber>603</AwayRotationNumber>
+      <AwayAbbr>UAB</AwayAbbr>
+      <AwayTeamName>UAB</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B69</HomeTeamID>
+      <HomeRotationNumber>604</HomeRotationNumber>
+      <HomeAbbr>MIDTENNST</HomeAbbr>
+      <HomeTeamName>Middle Tennessee</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-5.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-5.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-4.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-5.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>68466</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>06:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A47</AwayTeamID>
+      <AwayRotationNumber>605</AwayRotationNumber>
+      <AwayAbbr>UCF</AwayAbbr>
+      <AwayTeamName>UCF</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A63</HomeTeamID>
+      <HomeRotationNumber>606</HomeRotationNumber>
+      <HomeAbbr>UCONN</HomeAbbr>
+      <HomeTeamName>Connecticut</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-11.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-11.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-11.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-11.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>71957</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>06:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C52</AwayTeamID>
+      <AwayRotationNumber>607</AwayRotationNumber>
+      <AwayAbbr>SANFRAN</AwayAbbr>
+      <AwayTeamName>San Francisco</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C46</HomeTeamID>
+      <HomeRotationNumber>608</HomeRotationNumber>
+      <HomeAbbr>STMARYSCA</HomeAbbr>
+      <HomeTeamName>St Marys-CA</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-8.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-8.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-9</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-8.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>70524</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>07:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C34</AwayTeamID>
+      <AwayRotationNumber>609</AwayRotationNumber>
+      <AwayAbbr>RICHMOND</AwayAbbr>
+      <AwayTeamName>Richmond</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-5.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-5.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-4.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-5.5</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A94</HomeTeamID>
+      <HomeRotationNumber>610</HomeRotationNumber>
+      <HomeAbbr>FORDHAM</HomeAbbr>
+      <HomeTeamName>Fordham</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>68436</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>07:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>B01</AwayTeamID>
+      <AwayRotationNumber>611</AwayRotationNumber>
+      <AwayAbbr>GEORGETOWN</AwayAbbr>
+      <AwayTeamName>Georgetown</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A35</HomeTeamID>
+      <HomeRotationNumber>612</HomeRotationNumber>
+      <HomeAbbr>BUTLER</HomeAbbr>
+      <HomeTeamName>Butler</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-1.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-2</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-1.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-1.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>72388</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>07:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C10</AwayTeamID>
+      <AwayRotationNumber>613</AwayRotationNumber>
+      <AwayAbbr>OAKLAND</AwayAbbr>
+      <AwayTeamName>Oakland</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A74</HomeTeamID>
+      <HomeRotationNumber>614</HomeRotationNumber>
+      <HomeAbbr>DETROIT</HomeAbbr>
+      <HomeTeamName>Detroit</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-4</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-4</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-4</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-4</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>69868</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>07:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C15</AwayTeamID>
+      <AwayRotationNumber>615</AwayRotationNumber>
+      <AwayAbbr>ODU</AwayAbbr>
+      <AwayTeamName>Old Dominion</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A79</HomeTeamID>
+      <HomeRotationNumber>616</HomeRotationNumber>
+      <HomeAbbr>ECAROLINA</HomeAbbr>
+      <HomeTeamName>East Carolina</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>69565</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>07:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A40</AwayTeamID>
+      <AwayRotationNumber>617</AwayRotationNumber>
+      <AwayAbbr>CALPOLY</AwayAbbr>
+      <AwayTeamName>Cal Poly</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A39</HomeTeamID>
+      <HomeRotationNumber>618</HomeRotationNumber>
+      <HomeAbbr>CSANTABAR</HomeAbbr>
+      <HomeTeamName>UC Santa Barbara</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-9</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-8.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-8.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-8.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>70509</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>07:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A20</AwayTeamID>
+      <AwayRotationNumber>619</AwayRotationNumber>
+      <AwayAbbr>BALLST</AwayAbbr>
+      <AwayTeamName>Ball State</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B35</HomeTeamID>
+      <HomeRotationNumber>620</HomeRotationNumber>
+      <HomeAbbr>KENTST</HomeAbbr>
+      <HomeTeamName>Kent State</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-11.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-11</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-11.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-11.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>69735</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>07:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>E64</AwayTeamID>
+      <AwayRotationNumber>621</AwayRotationNumber>
+      <AwayAbbr>UCDAVIS</AwayAbbr>
+      <AwayTeamName>UC Davis</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B43</HomeTeamID>
+      <HomeRotationNumber>622</HomeRotationNumber>
+      <HomeAbbr>LBEACHST</HomeAbbr>
+      <HomeTeamName>Long Beach State</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-12</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-12</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-12.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-12</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>69155</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>08:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A75</AwayTeamID>
+      <AwayRotationNumber>623</AwayRotationNumber>
+      <AwayAbbr>DRAKE</AwayAbbr>
+      <AwayTeamName>Drake</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C06</HomeTeamID>
+      <HomeRotationNumber>624</HomeRotationNumber>
+      <HomeAbbr>NIOWA</HomeAbbr>
+      <HomeTeamName>Northern Iowa</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-8.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-8.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-8</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-8.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>69348</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>08:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>D19</AwayTeamID>
+      <AwayRotationNumber>625</AwayRotationNumber>
+      <AwayAbbr>WICHITAST</AwayAbbr>
+      <AwayTeamName>Wichita State</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-10</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-10</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-10</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-10</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C70</HomeTeamID>
+      <HomeRotationNumber>626</HomeRotationNumber>
+      <HomeAbbr>MISSOURIST</HomeAbbr>
+      <HomeTeamName>Missouri State</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>69971</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>08:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A91</AwayTeamID>
+      <AwayRotationNumber>627</AwayRotationNumber>
+      <AwayAbbr>FAU</AwayAbbr>
+      <AwayTeamName>Fla Atlantic</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C33</HomeTeamID>
+      <HomeRotationNumber>628</HomeRotationNumber>
+      <HomeAbbr>RICE</HomeAbbr>
+      <HomeTeamName>Rice</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-1</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-1</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-1.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-1</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>68880</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>08:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A36</AwayTeamID>
+      <AwayRotationNumber>629</AwayRotationNumber>
+      <AwayAbbr>CALIFORNIA</AwayAbbr>
+      <AwayTeamName>California</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-2</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-1.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-1.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-2</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C18</HomeTeamID>
+      <HomeRotationNumber>630</HomeRotationNumber>
+      <HomeAbbr>OREGONST</HomeAbbr>
+      <HomeTeamName>Oregon State</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>69929</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>08:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A92</AwayTeamID>
+      <AwayRotationNumber>631</AwayRotationNumber>
+      <AwayAbbr>FIU</AwayAbbr>
+      <AwayTeamName>FIU</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B46</HomeTeamID>
+      <HomeRotationNumber>632</HomeRotationNumber>
+      <HomeAbbr>LOUISTECH</HomeAbbr>
+      <HomeTeamName>Louisiana Tech</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-15</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-14.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-15</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-15</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>69942</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>08:05 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C58</AwayTeamID>
+      <AwayRotationNumber>633</AwayRotationNumber>
+      <AwayAbbr>SALABAMA</AwayAbbr>
+      <AwayTeamName>South Alabama</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A14</HomeTeamID>
+      <HomeRotationNumber>634</HomeRotationNumber>
+      <HomeAbbr>ARKANSASST</HomeAbbr>
+      <HomeTeamName>Arkansas State</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-4.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-4.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-4.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-4.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>69411</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>08:05 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C99</AwayTeamID>
+      <AwayRotationNumber>635</AwayRotationNumber>
+      <AwayAbbr>UTAHST</AwayAbbr>
+      <AwayTeamName>Utah State</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-1</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-1</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-1</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-1</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B86</HomeTeamID>
+      <HomeRotationNumber>636</HomeRotationNumber>
+      <HomeAbbr>NEVADA</HomeAbbr>
+      <HomeTeamName>Nevada</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>69236</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>08:05 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>B51</AwayTeamID>
+      <AwayRotationNumber>637</AwayRotationNumber>
+      <AwayAbbr>LOYOLACHI</AwayAbbr>
+      <AwayTeamName>Loyola-Chicago</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B20</HomeTeamID>
+      <HomeRotationNumber>638</HomeRotationNumber>
+      <HomeAbbr>ILLINOISST</HomeAbbr>
+      <HomeTeamName>Illinois State</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-7</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-7</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-7</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-7</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>68300</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>08:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C86</AwayTeamID>
+      <AwayRotationNumber>639</AwayRotationNumber>
+      <AwayAbbr>TEXASTECH</AwayAbbr>
+      <AwayTeamName>Texas Tech</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C82</HomeTeamID>
+      <HomeRotationNumber>640</HomeRotationNumber>
+      <HomeAbbr>TEXAS</HomeAbbr>
+      <HomeTeamName>Texas</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-10</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-10</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-9</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-10</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>70562</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>08:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C44</AwayTeamID>
+      <AwayRotationNumber>641</AwayRotationNumber>
+      <AwayAbbr>STJOSEPHS</AwayAbbr>
+      <AwayTeamName>Saint Josephs</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-1.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-1.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-1.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-1.5</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A98</HomeTeamID>
+      <HomeRotationNumber>642</HomeRotationNumber>
+      <HomeAbbr>GMASON</HomeAbbr>
+      <HomeTeamName>George Mason</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>69897</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>08:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C94</AwayTeamID>
+      <AwayRotationNumber>643</AwayRotationNumber>
+      <AwayAbbr>TROY</AwayAbbr>
+      <AwayTeamName>Troy</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A15</HomeTeamID>
+      <HomeRotationNumber>644</HomeRotationNumber>
+      <HomeAbbr>ARKLTLROCK</HomeAbbr>
+      <HomeTeamName>Ark-Little Rock</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-7</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-7</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-6.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-7</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>71300</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>09:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>B50</AwayTeamID>
+      <AwayRotationNumber>645</AwayRotationNumber>
+      <AwayAbbr>LOYOLACAL</AwayAbbr>
+      <AwayTeamName>Loyola Marymount</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A31</HomeTeamID>
+      <HomeRotationNumber>646</HomeRotationNumber>
+      <HomeAbbr>BYU</HomeAbbr>
+      <HomeTeamName>BYU</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-12.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-12.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-13</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-12.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>69330</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>09:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A95</AwayTeamID>
+      <AwayRotationNumber>647</AwayRotationNumber>
+      <AwayAbbr>FRESNOST</AwayAbbr>
+      <AwayTeamName>Fresno State</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A61</HomeTeamID>
+      <HomeRotationNumber>648</HomeRotationNumber>
+      <HomeAbbr>COLORADOST</HomeAbbr>
+      <HomeTeamName>Colorado State</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-7.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-7.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-7.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-7.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>70050</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>09:05 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>B57</AwayTeamID>
+      <AwayRotationNumber>649</AwayRotationNumber>
+      <AwayAbbr>MARSHALL</AwayAbbr>
+      <AwayTeamName>Marshall</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C89</HomeTeamID>
+      <HomeRotationNumber>650</HomeRotationNumber>
+      <HomeAbbr>UTEP</HomeAbbr>
+      <HomeTeamName>Texas-El Paso</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-8.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-8.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-8.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-8.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>71651</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>09:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C22</AwayTeamID>
+      <AwayRotationNumber>651</AwayRotationNumber>
+      <AwayAbbr>PEPPERDINE</AwayAbbr>
+      <AwayTeamName>Pepperdine</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C50</HomeTeamID>
+      <HomeRotationNumber>652</HomeRotationNumber>
+      <HomeAbbr>SANDIEGOU</HomeAbbr>
+      <HomeTeamName>San Diego</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>69275</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>09:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>D27</AwayTeamID>
+      <AwayRotationNumber>653</AwayRotationNumber>
+      <AwayAbbr>WYOMING</AwayAbbr>
+      <AwayTeamName>Wyoming</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A26</HomeTeamID>
+      <HomeRotationNumber>654</HomeRotationNumber>
+      <HomeAbbr>BOISEST</HomeAbbr>
+      <HomeTeamName>Boise State</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-10</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-9.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-9.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-10</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>69659</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>10:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>B11</AwayTeamID>
+      <AwayRotationNumber>655</AwayRotationNumber>
+      <AwayAbbr>HAWAII</AwayAbbr>
+      <AwayTeamName>Hawaii</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-3</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-2.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-3.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-3</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A42</HomeTeamID>
+      <HomeRotationNumber>656</HomeRotationNumber>
+      <HomeAbbr>CSNORTHRDG</HomeAbbr>
+      <HomeTeamName>CS-Northridge</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>69436</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>10:05 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>B89</AwayTeamID>
+      <AwayRotationNumber>657</AwayRotationNumber>
+      <AwayAbbr>NMEXICO</AwayAbbr>
+      <AwayTeamName>New Mexico</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-14.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-14</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-13.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-14.5</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C53</HomeTeamID>
+      <HomeRotationNumber>658</HomeRotationNumber>
+      <HomeAbbr>SANJOSEST</HomeAbbr>
+      <HomeTeamName>San Jose St</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>69801</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>10:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A37</AwayTeamID>
+      <AwayRotationNumber>659</AwayRotationNumber>
+      <AwayAbbr>CIRVINE</AwayAbbr>
+      <AwayTeamName>UC Irvine</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-7.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-8</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage">-7.5</Casino>
+      <Casino ClientID="127" Name="DonBest Consensus">-8</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A38</HomeTeamID>
+      <HomeRotationNumber>660</HomeRotationNumber>
+      <HomeAbbr>CRIVERSIDE</HomeAbbr>
+      <HomeTeamName>UC Riverside</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Notes>Added games</Notes>
+  <Game>
+    <GameID>72172</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>02:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>H20</AwayTeamID>
+      <AwayRotationNumber>661</AwayRotationNumber>
+      <AwayAbbr>NDAKOTAST</AwayAbbr>
+      <AwayTeamName>North Dakota St</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-13</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-13</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">-13</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B24</HomeTeamID>
+      <HomeRotationNumber>662</HomeRotationNumber>
+      <HomeAbbr>IUPUI</HomeAbbr>
+      <HomeTeamName>IUPUI</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>71739</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>02:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>D15</AwayTeamID>
+      <AwayRotationNumber>663</AwayRotationNumber>
+      <AwayAbbr>WCAROLINA</AwayAbbr>
+      <AwayTeamName>Western Carolina</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-2.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-2</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">-2.5</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B03</HomeTeamID>
+      <HomeRotationNumber>664</HomeRotationNumber>
+      <HomeAbbr>GASOUTHERN</HomeAbbr>
+      <HomeTeamName>Ga Southern</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>71174</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>03:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>D13</AwayTeamID>
+      <AwayRotationNumber>665</AwayRotationNumber>
+      <AwayAbbr>WEBERST</AwayAbbr>
+      <AwayTeamName>Weber State</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-1</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-1</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">-1</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>F01</HomeTeamID>
+      <HomeRotationNumber>666</HomeRotationNumber>
+      <HomeAbbr>NODAKOTA</HomeAbbr>
+      <HomeTeamName>North Dakota</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>70318</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>05:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A22</AwayTeamID>
+      <AwayRotationNumber>667</AwayRotationNumber>
+      <AwayAbbr>BELMONT</AwayAbbr>
+      <AwayTeamName>Belmont</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-12</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-12</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">-12</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C79</HomeTeamID>
+      <HomeRotationNumber>668</HomeRotationNumber>
+      <HomeAbbr>TENNMARTIN</HomeAbbr>
+      <HomeTeamName>Tenn-Martin</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>70903</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>05:05 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>B78</AwayTeamID>
+      <AwayRotationNumber>669</AwayRotationNumber>
+      <AwayAbbr>MONTANAST</AwayAbbr>
+      <AwayTeamName>Montana State</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A84</HomeTeamID>
+      <HomeRotationNumber>670</HomeRotationNumber>
+      <HomeAbbr>EWASHINGTN</HomeAbbr>
+      <HomeTeamName>Eastern Wash</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-6.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-6.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">-6.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>72054</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>05:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A72</AwayTeamID>
+      <AwayRotationNumber>671</AwayRotationNumber>
+      <AwayAbbr>DENVER</AwayAbbr>
+      <AwayTeamName>Denver</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-5.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-5.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">-5.5</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>JM1</HomeTeamID>
+      <HomeRotationNumber>672</HomeRotationNumber>
+      <HomeAbbr>SDAKOTA</HomeAbbr>
+      <HomeTeamName>South Dakota</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>70344</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>05:30 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A81</AwayTeamID>
+      <AwayRotationNumber>673</AwayRotationNumber>
+      <AwayAbbr>EILLINOIS</AwayAbbr>
+      <AwayTeamName>Eastern Ill</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B31</HomeTeamID>
+      <HomeRotationNumber>674</HomeRotationNumber>
+      <HomeAbbr>JACKSNVLST</HomeAbbr>
+      <HomeTeamName>Jacksonville St</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-7</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-7</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">-7</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>70619</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>06:30 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C80</AwayTeamID>
+      <AwayRotationNumber>675</AwayRotationNumber>
+      <AwayAbbr>TENNST</AwayAbbr>
+      <AwayTeamName>Tennessee St</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C62</HomeTeamID>
+      <HomeRotationNumber>676</HomeRotationNumber>
+      <HomeAbbr>SEMISSOURI</HomeAbbr>
+      <HomeTeamName>SE Missouri St</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-8.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-8.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">-8.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>71632</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>07:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A96</AwayTeamID>
+      <AwayRotationNumber>677</AwayRotationNumber>
+      <AwayAbbr>FURMAN</AwayAbbr>
+      <AwayTeamName>Furman</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C49</HomeTeamID>
+      <HomeRotationNumber>678</HomeRotationNumber>
+      <HomeAbbr>SAMFORD</HomeAbbr>
+      <HomeTeamName>Samford</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-6.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-6.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">-6.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>71921</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>07:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>D25</AwayTeamID>
+      <AwayRotationNumber>679</AwayRotationNumber>
+      <AwayAbbr>WOFFORD</AwayAbbr>
+      <AwayTeamName>Wofford</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A52</HomeTeamID>
+      <HomeRotationNumber>680</HomeRotationNumber>
+      <HomeAbbr>CHATTNOOGA</HomeAbbr>
+      <HomeTeamName>Chattanooga</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-1.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-2</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">-1.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>71190</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>07:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A10</AwayTeamID>
+      <AwayRotationNumber>681</AwayRotationNumber>
+      <AwayAbbr>APPALACHAN</AwayAbbr>
+      <AwayTeamName>Appalachian St</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A68</HomeTeamID>
+      <HomeRotationNumber>682</HomeRotationNumber>
+      <HomeAbbr>DAVIDSON</HomeAbbr>
+      <HomeTeamName>Davidson</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-15</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-15</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">-15</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>71348</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>07:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A55</AwayTeamID>
+      <AwayRotationNumber>683</AwayRotationNumber>
+      <AwayAbbr>CITADEL</AwayAbbr>
+      <AwayTeamName>Citadel</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>A85</HomeTeamID>
+      <HomeRotationNumber>684</HomeRotationNumber>
+      <HomeAbbr>ELON</HomeAbbr>
+      <HomeTeamName>Elon</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-18.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-18</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">-18.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>72132</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>07:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>H21</AwayTeamID>
+      <AwayRotationNumber>685</AwayRotationNumber>
+      <AwayAbbr>SDAKOTAST</AwayAbbr>
+      <AwayTeamName>South Dakota St</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B25</HomeTeamID>
+      <HomeRotationNumber>686</HomeRotationNumber>
+      <HomeAbbr>IUPUFTWNE</HomeAbbr>
+      <HomeTeamName>IUPU-Ft Wayne</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-2</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-2</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">-2</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>70408</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>07:30 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A82</AwayTeamID>
+      <AwayRotationNumber>687</AwayRotationNumber>
+      <AwayAbbr>EKENTUCKY</AwayAbbr>
+      <AwayTeamName>Eastern Ky</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B79</HomeTeamID>
+      <HomeRotationNumber>688</HomeRotationNumber>
+      <HomeAbbr>MOREHEADST</HomeAbbr>
+      <HomeTeamName>Morehead State</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-3.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-4</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">-3.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>72203</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>08:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>E88</AwayTeamID>
+      <AwayRotationNumber>689</AwayRotationNumber>
+      <AwayAbbr>NEBOMAHA</AwayAbbr>
+      <AwayTeamName>Nebraska Omaha</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-2.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-2.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">-2.5</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>D16</HomeTeamID>
+      <HomeRotationNumber>690</HomeRotationNumber>
+      <HomeAbbr>WILLINOIS</HomeAbbr>
+      <HomeTeamName>Western Ill</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>70272</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>08:30 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>A19</AwayTeamID>
+      <AwayRotationNumber>691</AwayRotationNumber>
+      <AwayAbbr>AUSTINPEAY</AwayAbbr>
+      <AwayTeamName>Austin Peay</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B83</HomeTeamID>
+      <HomeRotationNumber>692</HomeRotationNumber>
+      <HomeAbbr>MURRAYST</HomeAbbr>
+      <HomeTeamName>Murray State</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-8</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-8</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">-7.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>70663</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>08:30 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>G01</AwayTeamID>
+      <AwayRotationNumber>693</AwayRotationNumber>
+      <AwayAbbr>SIUED</AwayAbbr>
+      <AwayTeamName>SIU Edwardsville</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C81</HomeTeamID>
+      <HomeRotationNumber>694</HomeRotationNumber>
+      <HomeAbbr>TENNTECH</HomeAbbr>
+      <HomeTeamName>Tenn Tech</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-8.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-8.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">-8.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>70981</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>09:05 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>B18</AwayTeamID>
+      <AwayRotationNumber>695</AwayRotationNumber>
+      <AwayAbbr>IDAHOST</AwayAbbr>
+      <AwayTeamName>Idaho State</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>E91</HomeTeamID>
+      <HomeRotationNumber>696</HomeRotationNumber>
+      <HomeAbbr>NOCOLORADO</HomeAbbr>
+      <HomeTeamName>Northern Colorado</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-10</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-10.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">-10</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>71334</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>09:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>C38</AwayTeamID>
+      <AwayRotationNumber>697</AwayRotationNumber>
+      <AwayAbbr>SACRAMENTO</AwayAbbr>
+      <AwayTeamName>Sacramento St</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-1.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-1.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">-1.5</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C69</HomeTeamID>
+      <HomeRotationNumber>698</HomeRotationNumber>
+      <HomeAbbr>SUTAH</HomeAbbr>
+      <HomeTeamName>Southern Utah</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Game>
+    <GameID>71035</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>10:05 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>B77</AwayTeamID>
+      <AwayRotationNumber>699</AwayRotationNumber>
+      <AwayAbbr>MONTANA</AwayAbbr>
+      <AwayTeamName>Montana</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes">-3.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-3.5</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">-3.5</Casino>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>C25</HomeTeamID>
+      <HomeRotationNumber>700</HomeRotationNumber>
+      <HomeAbbr>PORTLANDST</HomeAbbr>
+      <HomeTeamName>Portland State</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <Notes>Extra game</Notes>
+  <Game>
+    <GameID>69681</GameID>
+    <Game_Date>01/11/2014</Game_Date>
+    <Game_Time>08:00 PM</Game_Time>
+    <AwayTeam>
+      <AwayTeamID>B17</AwayTeamID>
+      <AwayRotationNumber>711</AwayRotationNumber>
+      <AwayAbbr>IDAHO</AwayAbbr>
+      <AwayTeamName>Idaho</AwayTeamName>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </AwayTeam>
+    <HomeTeam>
+      <HomeTeamID>B90</HomeTeamID>
+      <HomeRotationNumber>712</HomeRotationNumber>
+      <HomeAbbr>NMEXICOST</HomeAbbr>
+      <HomeTeamName>New Mexico St</HomeTeamName>
+      <Casino ClientID="116" Name="5Dimes">-17.5</Casino>
+      <Casino ClientID="111" Name="Sports Interaction">-17</Casino>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus">-17.5</Casino>
+    </HomeTeam>
+    <Over_Under>
+      <Casino ClientID="116" Name="5Dimes"/>
+      <Casino ClientID="111" Name="Sports Interaction"/>
+      <Casino ClientID="104" Name="BOVADA"/>
+      <Casino ClientID="121" Name="Mirage"/>
+      <Casino ClientID="127" Name="DonBest Consensus"/>
+    </Over_Under>
+  </Game>
+  <time_stamp> January 11, 2014, at 10:30 AM ET </time_stamp>
+</message>
+

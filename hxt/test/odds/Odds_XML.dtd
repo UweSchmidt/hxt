@@ -1,0 +1,38 @@
+<!ELEMENT XML_File_ID (#PCDATA)>
+<!ELEMENT heading (#PCDATA)>
+<!ELEMENT category (#PCDATA)>
+<!ELEMENT sport (#PCDATA)>
+<!ELEMENT Title (#PCDATA)>
+<!ELEMENT Line_Time (#PCDATA)>
+<!ELEMENT Notes (#PCDATA)>
+<!ELEMENT GameID (#PCDATA)>
+<!ELEMENT Game_Date (#PCDATA)>
+<!ELEMENT Game_Time (#PCDATA)>
+<!ELEMENT AwayTeamID (#PCDATA)>
+<!ELEMENT AwayRotationNumber (#PCDATA)>
+<!ELEMENT AwayAbbr (#PCDATA)>
+<!ELEMENT AwayTeamName (#PCDATA)>
+<!ELEMENT Casino (#PCDATA)>
+<!ELEMENT AwayTeam ( ( AwayTeamID, AwayRotationNumber, AwayAbbr, AwayTeamName, Casino* ) )>
+<!ELEMENT HomeTeamID (#PCDATA)>
+<!ELEMENT HomeRotationNumber (#PCDATA)>
+<!ELEMENT HomeAbbr (#PCDATA)>
+<!ELEMENT HomeTeamName (#PCDATA)>
+<!ELEMENT HomeTeam ( ( HomeTeamID, HomeRotationNumber, HomeAbbr, HomeTeamName, Casino* ) )>
+<!ELEMENT Over_Under ( Casino* )>
+<!ELEMENT Game ( ( GameID, Game_Date, Game_Time, AwayTeam, HomeTeam, Over_Under ) )>
+<!ELEMENT time_stamp (#PCDATA)>
+
+<!--
+The generated message schema is too general; it allows any number
+of anything in any order. We know that the first couple of elements
+are required and appear in a fixed order.
+-->
+<!--
+Warning: the TSN DTD suggests the existence of an optional League_Name
+element that would appear next to the Notes*.
+-->
+<!ELEMENT message ( XML_File_ID, heading, category, sport, Title, Line_Time, ( Notes*, Game+)*, time_stamp )>
+
+<!ATTLIST Casino ClientID CDATA #REQUIRED>
+<!ATTLIST Casino Name CDATA #REQUIRED>

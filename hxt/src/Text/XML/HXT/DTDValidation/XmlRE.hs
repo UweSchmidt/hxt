@@ -36,16 +36,16 @@ module Text.XML.HXT.DTDValidation.XmlRE
     )
 where
 
--- import Debug.Trace(trace)
+-- import           Debug.Trace                         (trace)
 
-import Text.XML.HXT.DTDValidation.RE hiding (matches)
+import           Data.List                           (foldl')
 
-import Text.XML.HXT.DTDValidation.TypeDefs
-import Text.XML.HXT.Arrow.Edit
-    ( removeComment
-    , removeWhiteSpace
-    )
-import qualified Text.XML.HXT.DOM.XmlNode as XN
+import           Text.XML.HXT.DTDValidation.RE       hiding (matches)
+
+import           Text.XML.HXT.Arrow.Edit             (removeComment,
+                                                      removeWhiteSpace)
+import qualified Text.XML.HXT.DOM.XmlNode            as XN
+import           Text.XML.HXT.DTDValidation.TypeDefs
 
 -- |
 -- Derives a regular expression with respect to a list of elements.
@@ -58,7 +58,7 @@ import qualified Text.XML.HXT.DOM.XmlNode as XN
 
 matches :: RE String -> XmlTrees -> RE String
 matches re list
-    = foldl delta re (removeUnimportantStuff $$ list)
+    = foldl' delta re (removeUnimportantStuff $$ list)
       where
       removeUnimportantStuff :: XmlArrow
       removeUnimportantStuff = processBottomUp (removeWhiteSpace >>> removeComment)
