@@ -18,32 +18,47 @@ module Text.XML.HXT.XMLSchema.W3CDataTypeCheck
   )
 where
 
-import           Text.XML.HXT.XMLSchema.DataTypeLibW3CNames
-import           Text.XML.HXT.XMLSchema.W3CDataTypeCheckUtils
+import Text.XML.HXT.XMLSchema.W3CDataTypeCheckUtils
+import Text.XML.HXT.XMLSchema.DataTypeLibW3CNames
 
-import           Text.Regex.XMLSchema.Generic                 (Regex, isZero,
-                                                               matchRE,
-                                                               parseRegex)
+import Text.Regex.XMLSchema.Generic   ( Regex
+                                      , matchRE
+                                      , parseRegex
+                                      , isZero
+                                      )
 
-import           Text.XML.HXT.DOM.QualifiedName               (isNCName, isWellformedQualifiedName)
-import           Text.XML.HXT.DOM.Util                        (escapeURI,
-                                                               normalizeBlanks, normalizeWhitespace)
+import Text.XML.HXT.DOM.QualifiedName ( isWellformedQualifiedName
+                                      , isNCName
+                                      )
+import Text.XML.HXT.DOM.Util          ( normalizeWhitespace
+                                      , normalizeBlanks
+                                      , escapeURI
+                                      )
 
-import           Data.Char                                    (isAlpha, isDigit)
-import           Data.Function                                (on)
-import           Data.Maybe                                   (fromMaybe,
-                                                               isJust)
-import           Data.Ratio                                   (denominator,
-                                                               numerator, (%))
-import           Data.Time                                    (Day, DiffTime,
-                                                               NominalDiffTime,
-                                                               UTCTime (..),
-                                                               addDays, addGregorianMonthsRollOver, addGregorianYearsRollOver,
-                                                               addUTCTime,
-                                                               diffUTCTime,
-                                                               fromGregorian)
+import Data.Char                      ( isAlpha
+                                      , isDigit
+                                      )
+import Data.Function                  ( on )
+import Data.Maybe                     ( fromMaybe
+                                      , isJust
+                                      )
+import Data.Ratio                     ( numerator
+                                      , denominator
+                                      , (%)
+                                      )
+import Data.Time                      ( Day
+                                      , DiffTime
+                                      , NominalDiffTime
+                                      , UTCTime(..)
+                                      , addDays
+                                      , addGregorianYearsRollOver
+                                      , addGregorianMonthsRollOver
+                                      , addUTCTime
+                                      , diffUTCTime
+                                      , fromGregorian
+                                      )
 
-import           Network.URI                                  (isURIReference)
+import Network.URI                    ( isURIReference )
 
 -- ----------------------------------------
 

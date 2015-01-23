@@ -5,7 +5,7 @@
 module Main(main)
 where
 
-import Text.Regex.XMLSchema.String
+import Text.Regex.XMLSchema.Generic
 
 import Control.Arrow
 

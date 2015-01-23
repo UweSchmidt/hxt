@@ -28,7 +28,7 @@ import System.IO                        -- import the IO and commandline option 
 import System.Console.GetOpt
 import System.Exit
 
-import Text.Regex.XMLSchema.String
+import Text.Regex.XMLSchema.Generic
 import Text.XML.HXT.Core
 import Text.XML.HXT.Parser.XhtmlEntities
 

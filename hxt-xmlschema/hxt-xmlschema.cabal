@@ -1,6 +1,6 @@
 -- arch-tag: Haskell XML Toolbox main description file
 Name:           hxt-xmlschema
-Version:        9.3.1.1
+Version:        9.3.1.2
 Synopsis:       The HXT XMLSchema validator
 Description:    The HXT XMLSchema validator
 License:        MIT
