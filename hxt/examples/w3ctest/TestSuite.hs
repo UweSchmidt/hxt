@@ -173,7 +173,7 @@ main
              this -- xpickleDocument xpTestSuite [withIndent yes] "" -- TODO
            )
       exitWith ( if null r
-                 then ExitFailure (-1)
+                 then ExitFailure 1
                  else ExitSuccess
                )
 

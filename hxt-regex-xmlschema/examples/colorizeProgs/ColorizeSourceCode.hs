@@ -95,7 +95,7 @@ exitErr                 :: String -> IO a
 exitErr msg             = do
                           hPutStrLn stderr msg
                           usage
-                          exitWith (ExitFailure (-1))
+                          exitWith (ExitFailure 1)
 
 evalArgs                :: ([(String, String)], [FilePath], [String]) -> IO Process
 evalArgs (opts, files, errs)

@@ -57,7 +57,7 @@ main
 -- ------------------------------------------------------------
 
 exitProg        :: Bool -> IO a
-exitProg True   = exitWith (ExitFailure (-1))
+exitProg True   = exitWith (ExitFailure 1)
 exitProg False  = exitWith ExitSuccess
 
 -- ------------------------------------------------------------

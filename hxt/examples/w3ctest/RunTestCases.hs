@@ -368,7 +368,7 @@ runTestCases t
 -- ------------------------------------------------------------
 
 sorry :: IO a
-sorry = exitWith (ExitFailure (-1))
+sorry = exitWith (ExitFailure 1)
 
 lucky :: IO a
 lucky = exitWith ExitSuccess

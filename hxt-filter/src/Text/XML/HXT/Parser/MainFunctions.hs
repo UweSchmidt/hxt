@@ -329,7 +329,7 @@ addDefaultOptions
 -- >       res  <- run' $ application inp outp options $ emptyRoot      -- run the application
 -- >
 -- >       exitWith (if null res
--- >                 then ExitFailure (-1)
+-- >                 then ExitFailure 1
 -- >                 else exitSuccess
 -- >                )
 -- >

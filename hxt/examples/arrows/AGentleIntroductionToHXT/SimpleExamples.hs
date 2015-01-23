@@ -31,7 +31,7 @@ main
       (al, fct, src, dst) <- cmdlineOpts argv
       [rc]  <- runX (application al fct src dst)
       if rc >= c_err
-	 then exitWith (ExitFailure (-1))
+	 then exitWith (ExitFailure 1)
 	 else exitWith ExitSuccess
 
 application	:: SysConfigList -> String -> String -> String -> IOSArrow b Int

@@ -44,7 +44,7 @@ parser al
 -- ------------------------------------------------------------
 
 exitProg        :: [a] -> IO ()
-exitProg []     = exitWith (ExitFailure (-1))
+exitProg []     = exitWith (ExitFailure 1)
 exitProg _      = exitWith ExitSuccess
 
 -- ------------------------------------------------------------
