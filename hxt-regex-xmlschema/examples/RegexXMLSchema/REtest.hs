@@ -6,7 +6,7 @@ module Main(main)
 where
 
 import Text.XML.HXT.Core
-import Text.Regex.XMLSchema.String
+import Text.Regex.XMLSchema.Generic
 
 import Data.String.Unicode
     ( unicodeToXmlEntity
