@@ -61,7 +61,7 @@ library
                  containers          >= 0.2   && < 1,
                  parsec              >= 2.1   && < 4,
                  hxt                 >= 9.3   && < 10,
-                 hxt-regex-xmlschema >= 9     && < 10,
+                 hxt-regex-xmlschema >= 9.2   && < 10,
                  mtl                 >= 2     && < 3,
                  time                >= 1.4   && < 2
 
@@ -81,15 +81,15 @@ executable validateWithSchema
   ghc-options: -Wall
   ghc-prof-options: -auto-all -caf-all
 
-  build-depends: base                >= 4     && < 5,
-                 containers          >= 0.2   && < 1,
-                 parsec              >= 2.1   && < 4,
-                 hxt                 >= 9.2.3 && < 10,
-                 hxt-regex-xmlschema >= 9     && < 10,
-                 hxt-curl            >= 9.1.1 && < 10,
-                 mtl                 >= 2     && < 3,
-                 time                >= 1.4   && < 2,
-                 HUnit               >= 1.2   && < 2
+  build-depends: base,
+                 containers,
+                 parsec,
+                 hxt,
+                 hxt-regex-xmlschema,
+                 hxt-curl >= 9.1.1,
+                 mtl,
+                 time,
+                 HUnit >= 1.2   && < 2
 
   if flag(network-uri)
     build-depends: network-uri >= 2.6

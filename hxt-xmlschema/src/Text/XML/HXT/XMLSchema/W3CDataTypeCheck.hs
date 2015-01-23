@@ -18,47 +18,32 @@ module Text.XML.HXT.XMLSchema.W3CDataTypeCheck
   )
 where
 
-import Text.XML.HXT.XMLSchema.W3CDataTypeCheckUtils
-import Text.XML.HXT.XMLSchema.DataTypeLibW3CNames
+import           Text.XML.HXT.XMLSchema.DataTypeLibW3CNames
+import           Text.XML.HXT.XMLSchema.W3CDataTypeCheckUtils
 
-import Text.Regex.XMLSchema.String    ( Regex
-                                      , matchRE
-                                      , parseRegex
-                                      , isZero
-                                      )
+import           Text.Regex.XMLSchema.Generic                 (Regex, isZero,
+                                                               matchRE,
+                                                               parseRegex)
 
-import Text.XML.HXT.DOM.QualifiedName ( isWellformedQualifiedName
-                                      , isNCName
-                                      )
-import Text.XML.HXT.DOM.Util          ( normalizeWhitespace
-                                      , normalizeBlanks
-                                      , escapeURI
-                                      )
+import           Text.XML.HXT.DOM.QualifiedName               (isNCName, isWellformedQualifiedName)
+import           Text.XML.HXT.DOM.Util                        (escapeURI,
+                                                               normalizeBlanks, normalizeWhitespace)
 
-import Data.Char                      ( isAlpha
-                                      , isDigit
-                                      )
-import Data.Function                  ( on )
-import Data.Maybe                     ( fromMaybe
-                                      , isJust
-                                      )
-import Data.Ratio                     ( numerator
-                                      , denominator
-                                      , (%)
-                                      )
-import Data.Time                      ( Day
-                                      , DiffTime
-                                      , NominalDiffTime
-                                      , UTCTime(..)
-                                      , addDays
-                                      , addGregorianYearsRollOver
-                                      , addGregorianMonthsRollOver
-                                      , addUTCTime
-                                      , diffUTCTime
-                                      , fromGregorian
-                                      )
+import           Data.Char                                    (isAlpha, isDigit)
+import           Data.Function                                (on)
+import           Data.Maybe                                   (fromMaybe,
+                                                               isJust)
+import           Data.Ratio                                   (denominator,
+                                                               numerator, (%))
+import           Data.Time                                    (Day, DiffTime,
+                                                               NominalDiffTime,
+                                                               UTCTime (..),
+                                                               addDays, addGregorianMonthsRollOver, addGregorianYearsRollOver,
+                                                               addUTCTime,
+                                                               diffUTCTime,
+                                                               fromGregorian)
 
-import Network.URI                    ( isURIReference )
+import           Network.URI                                  (isURIReference)
 
 -- ----------------------------------------
 
@@ -302,7 +287,7 @@ isDecimal :: String -> Bool
 isDecimal = matchRE rexDecimal
 
 -- | Tests whether a string matches an integer
-isInteger :: String -> Bool 
+isInteger :: String -> Bool
 isInteger = matchRE rexInteger
 
 isFloating :: String -> Bool
@@ -324,7 +309,7 @@ rexDuration
       m   = n ++ "M"
       d   = n ++ "D"
 
-      tim = "T" ++ hms      
+      tim = "T" ++ hms
       hms = alt (h  ++ opt ms) ms
       ms  = alt (m' ++ opt  s)  s
       h   = n ++ "H"
@@ -707,7 +692,7 @@ readTime s
     = mkDateTime nullDay (readHourMinSec time) (readTimeZone zone)
     where
       (time, zone) = span (\ x -> isDigit x || x `elem` ":.") s
-      
+
 nullTime :: DiffTime
 nullTime = fromInteger 0
 
@@ -1017,7 +1002,7 @@ datatypeAllowsW3C d params value
                , (xsd_decimal,            validDecimal)
                , (xsd_double,             validFloating doubleValid doubleEq)
                , (xsd_float,              validFloating floatValid  floatEq)
-                 
+
                , (xsd_integer,            validInteger xsd_integer)
                , (xsd_nonPositiveInteger, validInteger xsd_nonPositiveInteger)
                , (xsd_negativeInteger,    validInteger xsd_negativeInteger)
