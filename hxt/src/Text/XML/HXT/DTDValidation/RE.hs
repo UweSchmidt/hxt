@@ -194,14 +194,14 @@ re_seq e1               e2             = RE_SEQ e1 e2
 re_alt                                      :: (Ord a) => RE a -> RE a -> RE a
 re_alt (RE_ZERO _)      e2                  = e2
 re_alt e1               (RE_ZERO _)         = e1
-re_alt (RE_ALT e11 e12) e2                  = re_alt e11 (re_alt e12 e2)  -- | is right assoc
+re_alt (RE_ALT e11 e12) e2                  = re_alt e11 (re_alt e12 e2)  -- is right assoc
 re_alt e1               e2@(RE_ALT e21 e22)
-    | e1 == e21                             = e2            -- | simplification, the effective rule
-    | e1 >  e21                             = re_alt e21 (re_alt e1 e22)  -- | sort alt.
+    | e1 == e21                             = e2             -- duplicates removed, the effective rule
+    | e1 >  e21                             = re_alt e21 (re_alt e1 e22)  -- sort alternatives
     | otherwise                             = RE_ALT e1 e2
 re_alt e1               e2
-    | e1 == e2                              = e2             -- | simplification, the effective rule
-    | e1 >  e2                              = re_alt e2 e1   -- | sort alts for unique repr.
+    | e1 == e2                              = e2             -- simplification, the effective rule
+    | e1 >  e2                              = re_alt e2 e1   -- sort alts for unique repr.
     | otherwise                             = RE_ALT e1 e2
 
 

@@ -19,6 +19,8 @@ Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
                 .
                 Changes from 9.3.1.12: Bug when unpickling an empty attribute value removed
                 .
+                Changes from 9.3.1.11: Bug fix in haddock comments
+                .
                 Changes from 9.3.1.10: Bug in DTD validation, space and time leak in delta removed
                 .
                 Changes from 9.3.1.9: lower bound of mtl dependency lowered to 2.0.1
