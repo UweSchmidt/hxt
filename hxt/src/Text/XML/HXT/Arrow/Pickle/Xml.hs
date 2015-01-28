@@ -778,7 +778,7 @@ xpPrim                  = xpWrapEither (readMaybe, show) xpText
 xpInt                   :: PU Int
 xpInt                   = xpWrapEither (readMaybe, show) xpText
     where
-      readMaybe xs
+      readMaybe xs@(_:_)
           | all isDigit xs = Right . foldl' (\ r c -> 10 * r + (fromEnum c - fromEnum '0')) 0 $ xs
       readMaybe ('-' : xs) = fmap (0 -) . readMaybe $ xs
       readMaybe ('+' : xs) =              readMaybe $ xs

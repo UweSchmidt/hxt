@@ -1,0 +1,2 @@
+<!ELEMENT int (#PCDATA)>
+<!ATTLIST int val CDATA #REQUIRED>
