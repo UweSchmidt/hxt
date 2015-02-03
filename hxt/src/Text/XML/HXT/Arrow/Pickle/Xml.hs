@@ -82,6 +82,10 @@ import           Text.XML.HXT.Arrow.XmlArrow
 import qualified Control.Arrow.ListArrows         as X
 -- -}
 
+{- debug code
+import qualified Debug.Trace                      as T
+-- -}
+
 -- ------------------------------------------------------------
 
 data St         = St { attributes :: [XmlTree]
@@ -199,9 +203,14 @@ getAtt qn       = do as <- gets attributes
                      case findAtt as of
                        Nothing -> throwMsg $ "no attribute value found for " ++ show qn
                        Just (a, as') -> do modify (\ s -> s {attributes = as'})
-                                           return a
+                                           return $ nonEmptyVal a
     where
-      findAtt   = findElem (maybe False (== qn) . XN.getAttrName)
+      findAtt     = findElem (maybe False (== qn) . XN.getAttrName)
+      nonEmptyVal a'
+          | null (XN.getChildren a') = XN.setChildren [et] a'
+          | otherwise                = a'
+          where
+            et = XN.mkText ""
 
 getNSAtt        :: String -> Unpickler ()
 getNSAtt ns     = do as <- gets attributes
@@ -312,8 +321,8 @@ unpickleDoc' p t
 
 unpickleElem'   :: PU a -> Int -> XmlTree -> UnpickleVal a
 unpickleElem' p l t
-    = fst
-      . runUP (appUnPickle p)
+    = -- T.trace ("unpickleElem': " ++ show t) $
+      ( fst . runUP (appUnPickle p) )
       $ St { attributes = fromMaybe [] .
                           XN.getAttrl $  t
            , contents   = XN.getChildren t
