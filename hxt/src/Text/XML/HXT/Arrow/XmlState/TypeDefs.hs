@@ -159,7 +159,7 @@ data XIOSysState        = XIOSys  { xioSysWriter                :: ! XIOSysWrite
                                   , xioSysEnv                   :: ! XIOSysEnv
                                   }
 
-instance NFData XIOSysState             -- all fields of interest are strict
+instance NFData XIOSysState where rnf x = seq x ()            -- all fields of interest are strict
 
 data XIOSysWriter       = XIOwrt  { xioErrorStatus              :: ! Int
                                   , xioErrorMsgList             :: ! XmlTrees

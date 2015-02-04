@@ -188,7 +188,7 @@ instance Ord QName where
       | otherwise                                       -- namespace aware cmp: ns is significant, px is irrelevant
           = compare (lp1, ns1) (lp2, ns2)
 
-instance NFData  QName
+instance NFData  QName where rnf x = seq x ()
 instance WNFData QName
 
 instance Show QName where
