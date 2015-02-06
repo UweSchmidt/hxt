@@ -31,8 +31,8 @@ import           Control.FlatSeq
 import           Data.AssocList
 
 import           Data.Binary
-import qualified Data.ByteString.Lazy             as BS
-import qualified Data.ByteString.Lazy.Char8       as CS
+import qualified Data.ByteString.Lazy            as BS
+import qualified Data.ByteString.Lazy.Char8      as CS
 
 import           Data.Tree.NTree.TypeDefs
 import           Data.Tree.NTree.Zipper.TypeDefs
@@ -126,7 +126,7 @@ instance Binary XNode where
     put (XPi qn ts)             = put ( 5::Word8) >> put qn >> put ts
     put (XDTD de al)            = put ( 7::Word8) >> put de >> put al
     put (XError n e)            = put ( 9::Word8) >> put n  >> put e
-    put (XBlob b)               = put (10::Word8) >> put b 
+    put (XBlob b)               = put (10::Word8) >> put b
 
     get                         = do
                                   tag <- getWord8
@@ -194,13 +194,14 @@ data DTDElem    = DOCTYPE       -- ^ attr: name, system, public,        XDTD ele
                   deriving (Eq, Ord, Enum, Show, Read, Typeable)
 
 instance NFData DTDElem
+    where rnf x = seq x ()
+
 instance WNFData DTDElem
 
 instance Binary DTDElem where
-    put de                      = put ((toEnum . fromEnum $ de)::Word8)         -- DTDElem is not yet instance of Enum
-    get                         = do
-                                  tag <- getWord8
-                                  return $! (toEnum . fromEnum $ tag)
+    put de = put ((toEnum . fromEnum $ de)::Word8)         -- DTDElem is not yet instance of Enum
+    get    = do tag <- getWord8
+                return $! (toEnum . fromEnum $ tag)
 
 -- -----------------------------------------------------------------------------
 
@@ -252,9 +253,9 @@ c_fatal = c_err + 1
 -- such that the selected nodes can be processed or selected later in
 -- processing a document tree
 
-data XmlNodeSet = XNS { thisNode        :: Bool         -- ^ is this node part of the set ?
-                      , attrNodes       :: [QName]      -- ^ the set of attribute nodes
-                      , childNodes      :: ChildNodes   -- ^ the set of child nodes, a list of pairs of index and node set
+data XmlNodeSet = XNS { thisNode   :: Bool         -- ^ is this node part of the set ?
+                      , attrNodes  :: [QName]      -- ^ the set of attribute nodes
+                      , childNodes :: ChildNodes   -- ^ the set of child nodes, a list of pairs of index and node set
                       }
                   deriving (Eq, Show, Typeable)
 

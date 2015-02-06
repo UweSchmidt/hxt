@@ -21,19 +21,20 @@ module Text.XML.HXT.TagSoup
     )
 where
 
-import System.Console.GetOpt
+import           System.Console.GetOpt
 
-import Text.XML.HXT.Arrow.TagSoupInterface
-import Text.XML.HXT.Arrow.XmlState
+import           Text.XML.HXT.Arrow.TagSoupInterface
+import           Text.XML.HXT.Arrow.XmlState
 
 -- ------------------------------------------------------------
 
-a_tagsoup			:: String
+a_tagsoup                       :: String
 a_tagsoup                       = "tagsoup"
 
-tagSoupOptions			::  [OptDescr SysConfig]
+tagSoupOptions                  ::  [OptDescr SysConfig]
 tagSoupOptions
-    = [ Option "T" [a_tagsoup] (NoArg withTagSoup)  "lazy tagsoup parser, for HTML and XML, no DTD, no validation, no PIs, only XHTML entityrefs"
+    = [ Option "T" [a_tagsoup] (NoArg withTagSoup)
+        "lazy tagsoup parser, for HTML and XML, no DTD, no validation, no PIs, only XHTML entityrefs"
       ]
 
 -- ------------------------------------------------------------

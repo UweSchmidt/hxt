@@ -64,25 +64,25 @@ module Text.XML.HXT.Arrow.Edit
 where
 
 import           Control.Arrow
-import           Control.Arrow.ArrowList
 import           Control.Arrow.ArrowIf
+import           Control.Arrow.ArrowList
 import           Control.Arrow.ArrowTree
 import           Control.Arrow.ListArrow
 import           Control.Arrow.NTreeEdit
 
-import           Data.Char.Properties.XMLCharProps      ( isXmlSpaceChar )
+import           Data.Char.Properties.XMLCharProps (isXmlSpaceChar)
 
 import           Text.XML.HXT.Arrow.XmlArrow
+import           Text.XML.HXT.DOM.FormatXmlTree    (formatXmlTree)
 import           Text.XML.HXT.DOM.Interface
-import qualified Text.XML.HXT.DOM.XmlNode               as XN
-import qualified Text.XML.HXT.DOM.ShowXml               as XS
-import           Text.XML.HXT.DOM.FormatXmlTree         ( formatXmlTree )
-import           Text.XML.HXT.Parser.HtmlParsec         ( emptyHtmlTags )
-import           Text.XML.HXT.Parser.XmlEntities        ( xmlEntities )
-import           Text.XML.HXT.Parser.XhtmlEntities      ( xhtmlEntities )
+import qualified Text.XML.HXT.DOM.ShowXml          as XS
+import qualified Text.XML.HXT.DOM.XmlNode          as XN
+import           Text.XML.HXT.Parser.HtmlParsec    (emptyHtmlTags)
+import           Text.XML.HXT.Parser.XhtmlEntities (xhtmlEntities)
+import           Text.XML.HXT.Parser.XmlEntities   (xmlEntities)
 
-import           Data.List                              ( isPrefixOf )
-import qualified Data.Map                               as M
+import           Data.List                         (isPrefixOf)
+import qualified Data.Map                          as M
 import           Data.Maybe
 
 -- ------------------------------------------------------------
@@ -280,7 +280,7 @@ xhtmlEntitySubstTable   = M.fromList . map (second $ (:[]) . toEnum) $ xhtmlEnti
 
 -- ------------------------------------------------------------
 
-substXHTMLEntityRef	:: LA XmlTree XmlTree
+substXHTMLEntityRef     :: LA XmlTree XmlTree
 substXHTMLEntityRef
     = ( getEntityRef
         >>>
@@ -293,7 +293,7 @@ substXHTMLEntityRef
       subst name
           = maybe [] (:[]) $ M.lookup name xhtmlEntitySubstTable
 
-substAllXHTMLEntityRefs	:: ArrowXml a => a XmlTree XmlTree
+substAllXHTMLEntityRefs :: ArrowXml a => a XmlTree XmlTree
 substAllXHTMLEntityRefs
     = fromLA $
       processBottomUp substXHTMLEntityRef

@@ -24,30 +24,26 @@ module Text.XML.HXT.Arrow.DocumentInput
     )
 where
 
-import           Control.Arrow                            -- arrow classes
-import           Control.Arrow.ArrowList
+import           Control.Arrow
 import           Control.Arrow.ArrowIf
-import           Control.Arrow.ArrowTree
 import           Control.Arrow.ArrowIO
+import           Control.Arrow.ArrowList
+import           Control.Arrow.ArrowTree
 import           Control.Arrow.ListArrow
 
-import           Data.List                      ( isPrefixOf )
-import           Data.String.Unicode            ( getDecodingFct
-                                                , guessEncoding
-                                                , normalizeNL
-                                                )
+import           Data.List                            (isPrefixOf)
+import           Data.String.Unicode                  (getDecodingFct,
+                                                       guessEncoding,
+                                                       normalizeNL)
 
-import           System.FilePath                ( takeExtension )
+import           System.FilePath                      (takeExtension)
 
-import qualified Text.XML.HXT.IO.GetFILE        as FILE
+import qualified Text.XML.HXT.IO.GetFILE              as FILE
 
 import           Text.XML.HXT.DOM.Interface
 
-import           Text.XML.HXT.Arrow.ParserInterface
-                                                ( parseXmlDocEncodingSpec
-                                                , parseXmlEntityEncodingSpec
-                                                , removeEncodingSpec
-                                                )
+import           Text.XML.HXT.Arrow.ParserInterface   (parseXmlDocEncodingSpec, parseXmlEntityEncodingSpec,
+                                                       removeEncodingSpec)
 import           Text.XML.HXT.Arrow.XmlArrow
 import           Text.XML.HXT.Arrow.XmlState
 import           Text.XML.HXT.Arrow.XmlState.TypeDefs
@@ -258,7 +254,7 @@ getXmlEntityContents            :: IOStateArrow s XmlTree XmlTree
 getXmlEntityContents
     = traceMsg 2 "getXmlEntityContents"
       >>>
-      addAttr transferMimeType text_xml_external_parsed_entity	-- the default transfer mimetype
+      addAttr transferMimeType text_xml_external_parsed_entity  -- the default transfer mimetype
       >>>
       getXmlContents' parseXmlEntityEncodingSpec
       >>>
@@ -267,7 +263,7 @@ getXmlEntityContents
       processChildren
       ( removeEncodingSpec
         >>>
-        changeText normalizeNL			-- newline normalization must be done here
+        changeText normalizeNL                  -- newline normalization must be done here
       )                                         -- the following calls of the parsers don't do this
       >>>
       setBaseURIFromDoc

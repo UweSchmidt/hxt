@@ -16,38 +16,22 @@ module Text.XML.HXT.XMLSchema.ValidationCore
 
 where
 
-import Control.Monad                         ( liftM2
-                                             )
-import Control.Monad.Reader                  ( ask
-                                             , asks
-                                             , local
-                                             )
+import           Control.Monad                          (liftM2)
+import           Control.Monad.Reader                   (ask, asks, local)
 
-import Data.List                             ( isPrefixOf
-                                             , partition
-                                             )
-import Data.Map                              ( Map
-                                             -- , empty
-                                             , lookup
-                                             -- , insert
-                                             , fromList
-                                             , toList
-                                             , keys
-                                             )
+import           Data.List                              (isPrefixOf, partition)
+import           Data.Map                               (Map, fromList, keys,
+                                                         lookup, toList)
 
-import Prelude                        hiding ( lookup )
+import           Prelude                                hiding (lookup)
 
-import Text.XML.HXT.Core                     ( QName
-                                             , XmlTree
-                                             , XmlTrees
-
-                                             , isNameSpaceName	-- QName stuff
-                                             , qualifiedName
-                                             , universalName
-                                             , namespaceUri
-                                             , localPart
-                                             , namePrefix
-                                             )
+import           Text.XML.HXT.Core                      (QName, XmlTree,
+                                                         XmlTrees,
+                                                         isNameSpaceName,
+                                                         localPart, namePrefix,
+                                                         namespaceUri,
+                                                         qualifiedName,
+                                                         universalName)
 {-
 import Text.XML.HXT.Arrow.XmlRegex           ( XmlRegex
                                              , matchXmlRegex
@@ -64,15 +48,12 @@ import Text.XML.HXT.Arrow.XmlRegex           ( XmlRegex
                                              -- , mkMerge
                                              )
 -- -}
-import Text.XML.HXT.XMLSchema.Loader
-import Text.XML.HXT.XMLSchema.ValidationTypes
-import Text.XML.HXT.XMLSchema.XmlUtils
-import Text.XML.HXT.XMLSchema.Regex          ( matchRegex
-                                             , mkPrim
-                                             , mkStar
-                                             , mkPerm
-                                             , ShowSym(..)
-                                             )
+import           Text.XML.HXT.XMLSchema.Loader
+import           Text.XML.HXT.XMLSchema.Regex           (ShowSym (..),
+                                                         matchRegex, mkPerm,
+                                                         mkPrim, mkStar)
+import           Text.XML.HXT.XMLSchema.ValidationTypes
+import           Text.XML.HXT.XMLSchema.XmlUtils
 
 -- ----------------------------------------
 {-
@@ -192,7 +173,7 @@ testAttrs t
            .&&. (hasReqAttrs (getReqAttrNames . fst $ attrDesc ed) $ map fst attrl)
     where
       attrl = getElemAttrs t
-      
+
 -- | Checks the content model of a given element using regular expression derivation
 {- old stuff
 testContentModel :: XmlRegex -> XmlTrees -> SVal Bool
@@ -300,7 +281,7 @@ testCont t e
                              -- the subElemDesc must be set to allElemDesc when transforming a wildcard type
                       Just d
                           -> local (appendXPath xp . setDesc d) $ testElem' e
-             
+
              return (t', res)
 
     | otherwise

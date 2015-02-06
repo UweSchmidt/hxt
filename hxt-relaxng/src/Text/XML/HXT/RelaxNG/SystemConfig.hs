@@ -21,13 +21,13 @@
 module   Text.XML.HXT.RelaxNG.SystemConfig
 where
 
-import Text.XML.HXT.Arrow.XmlState.TypeDefs
-import Text.XML.HXT.Arrow.XmlOptions
+import           Text.XML.HXT.Arrow.XmlOptions
+import           Text.XML.HXT.Arrow.XmlState.TypeDefs
 
-import Text.XML.HXT.RelaxNG.Validator           ( validateDocumentWithRelaxSchema )
+import           Text.XML.HXT.RelaxNG.Validator       (validateDocumentWithRelaxSchema)
 
 
-import System.Console.GetOpt
+import           System.Console.GetOpt
 
 -- ------------------------------------------------------------
 
@@ -35,7 +35,7 @@ withRelaxNG                     :: String -> SysConfig
 withRelaxNG s                   = setS (theRelaxValidate
                                         .&&&. theRelaxSchema
                                         .&&&. theRelaxValidator
-                                       ) ( not (null s)		-- null s turns off validation
+                                       ) ( not (null s)         -- null s turns off validation
                                          , ( s
                                            , validateDocumentWithRelaxSchema [] s
                                            )

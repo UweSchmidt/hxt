@@ -21,42 +21,34 @@ module Text.XML.HXT.IO.GetHTTPLibCurl
 
 where
 
-import Control.Arrow                    ( first
-                                        , (>>>)
-                                        )
-import Control.Concurrent.MVar
-import Control.Monad                    ( when )
+import           Control.Arrow                           (first, (>>>))
+import           Control.Concurrent.MVar
+import           Control.Monad                           (when)
 
-import qualified Data.ByteString.Lazy   as B
+import qualified Data.ByteString.Lazy                    as B
 
-import Data.Char                        ( isDigit
-                                        , isSpace
-                                        )
-import Data.List                        ( isPrefixOf )
+import           Data.Char                               (isDigit, isSpace)
+import           Data.List                               (isPrefixOf)
 
-import Network.Curl
+import           Network.Curl
 
-import System.IO
-import System.IO.Unsafe                 ( unsafePerformIO )
+import           System.IO
+import           System.IO.Unsafe                        (unsafePerformIO)
 
-import Text.ParserCombinators.Parsec    ( parse )
+import           Text.ParserCombinators.Parsec           (parse)
 
-import Text.XML.HXT.DOM.Util            ( stringToLower )
-import Text.XML.HXT.DOM.XmlKeywords     ( transferStatus
-                                        , transferMessage
-                                        , transferVersion
-                                        , httpPrefix
-                                        )
+import           Text.XML.HXT.DOM.Util                   (stringToLower)
+import           Text.XML.HXT.DOM.XmlKeywords            (httpPrefix,
+                                                          transferMessage,
+                                                          transferStatus,
+                                                          transferVersion)
 
-import Text.XML.HXT.Arrow.XmlOptions    ( a_proxy
-                                        , a_redirect
-                                        , a_if_modified_since
-                                        , a_if_unmodified_since
-                                        )
+import           Text.XML.HXT.Arrow.XmlOptions           (a_if_modified_since,
+                                                          a_if_unmodified_since,
+                                                          a_proxy, a_redirect)
 
-import Text.XML.HXT.Parser.ProtocolHandlerUtil
-                                        ( parseContentType )
-import Text.XML.HXT.Version
+import           Text.XML.HXT.Parser.ProtocolHandlerUtil (parseContentType)
+import           Text.XML.HXT.Version
 
 -- ------------------------------------------------------------
 --
@@ -198,7 +190,7 @@ getCont strictInput options uri
               >>>
               concat
 
-        statusLine (vers : _code : msg)           -- the status line of the curl response can be an old one, 
+        statusLine (vers : _code : msg)           -- the status line of the curl response can be an old one,
                                                   -- e.g. in the case of a redirect,
             = [ mkH transferVersion   vers        -- so the return code is taken from that status field,
               , mkH transferMessage $ unwords msg -- which is contains the last status
@@ -216,10 +208,10 @@ getCont strictInput options uri
 
 copt    :: String -> String -> [CurlOption]
 copt k v
-    | "curl-" `isPrefixOf` k    = copt (drop 4 k) v		-- throw away curl prefix
-    | "--"    `isPrefixOf` k	= opt2copt (drop 2 k) v
+    | "curl-" `isPrefixOf` k    = copt (drop 4 k) v             -- throw away curl prefix
+    | "--"    `isPrefixOf` k    = opt2copt (drop 2 k) v
     | k `elem` [ a_proxy
-	       , a_redirect]    = opt2copt k v
+               , a_redirect]    = opt2copt k v
 
     | otherwise                 = opt2copt k v
 

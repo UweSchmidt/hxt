@@ -82,30 +82,27 @@ where
 import           Debug.Trace
  -}
 
-import           Control.Arrow                  ( (***) )
+import           Control.Arrow                     ((***))
 
 import           Control.DeepSeq
 import           Control.FlatSeq
 
 import           Data.AssocList
 import           Data.Binary
-import           Data.Char                      ( toLower )
+import           Data.Char                         (toLower)
 import           Data.IORef
-import           Data.List                      ( isPrefixOf )
-import qualified Data.Map               as M
+import           Data.List                         (isPrefixOf)
+import qualified Data.Map                          as M
 import           Data.Typeable
 
-import           System.IO.Unsafe               ( unsafePerformIO )
+import           System.IO.Unsafe                  (unsafePerformIO)
 
-import           Text.XML.HXT.DOM.XmlKeywords   ( a_xml
-                                                , a_xmlns
-                                                , xmlNamespace
-                                                , xmlnsNamespace
-                                                )
+import           Text.XML.HXT.DOM.XmlKeywords      (a_xml, a_xmlns,
+                                                    xmlNamespace,
+                                                    xmlnsNamespace)
 
-import Data.Char.Properties.XMLCharProps        ( isXmlNCNameStartChar
-                                                , isXmlNCNameChar
-                                                )
+import           Data.Char.Properties.XMLCharProps (isXmlNCNameChar,
+                                                    isXmlNCNameStartChar)
 
 -- -----------------------------------------------------------------------------
 
@@ -113,8 +110,8 @@ import Data.Char.Properties.XMLCharProps        ( isXmlNCNameStartChar
 -- Names are always reduced to normal form, and they are stored internally in a name cache
 -- for sharing equal names by the same data structure
 
-data XName                      = XN { _idXN    :: ! Int        -- for optimization of equality test, see Eq instance
-                                     ,  unXN    ::   String
+data XName                      = XN { _idXN :: ! Int        -- for optimization of equality test, see Eq instance
+                                     ,  unXN ::   String
                                      }
                                   deriving (Typeable)
 
@@ -161,9 +158,9 @@ type NsEnv              = AssocList XName XName
 -- When dealing with namespaces, the document tree must be processed by 'Text.XML.HXT.Arrow.Namespace.propagateNamespaces'
 -- to split names of structure \"prefix:localPart\" and label the name with the apropriate namespace uri
 
-data QName      = QN { localPart'       :: ! XName
-                     , namePrefix'      :: ! XName
-                     , namespaceUri'    :: ! XName
+data QName      = QN { localPart'    :: ! XName
+                     , namePrefix'   :: ! XName
+                     , namespaceUri' :: ! XName
                      }
              deriving (Typeable)
 
@@ -188,11 +185,13 @@ instance Ord QName where
       | otherwise                                       -- namespace aware cmp: ns is significant, px is irrelevant
           = compare (lp1, ns1) (lp2, ns2)
 
-instance NFData  QName
+instance NFData  QName where
+    rnf x = seq x ()
+
 instance WNFData QName
 
 instance Show QName where
-    show                        = showQN
+    show = showQN
 
 -- -----------------------------------------------------------------------------
 
@@ -508,9 +507,9 @@ toNsEnv                         = map (newXName *** newXName)
 
 -- the name and string cache
 
-data NameCache          = NC { _newXN    :: ! Int                                       -- next free name id
-                             , _xnCache  :: ! (M.Map String XName)
-                             , _qnCache  :: ! (M.Map (XName, XName, XName) QName)       -- we need another type than QName
+data NameCache          = NC { _newXN   :: ! Int                                       -- next free name id
+                             , _xnCache :: ! (M.Map String XName)
+                             , _qnCache :: ! (M.Map (XName, XName, XName) QName)       -- we need another type than QName
                              }                                                          -- for the key because of the unusable
                                                                                         -- Eq instance of QName
 type ChangeNameCache r  = NameCache -> (NameCache, r)
@@ -563,12 +562,12 @@ initialCache            = NC
 changeNameCache         :: NFData r => ChangeNameCache r -> r
 changeNameCache action  = unsafePerformIO changeNameCache'
     where
-    action' c = 
-      let r = action c 
-      in 
+    action' c =
+      let r = action c
+      in
        fst r `seq` r    -- eval name cache to whnf
-       
-    changeNameCache' = 
+
+    changeNameCache' =
       do
       -- putStrLn "modify cache"
       res <- atomicModifyIORef theNameCache action'

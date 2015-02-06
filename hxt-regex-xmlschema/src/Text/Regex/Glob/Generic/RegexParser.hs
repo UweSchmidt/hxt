@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 -- ------------------------------------------------------------
 
 {- |
@@ -19,15 +21,12 @@ module Text.Regex.Glob.Generic.RegexParser
     )
 where
 
-import Data.Char                         ( isLower
-                                         , isUpper
-                                         , toLower
-                                         , toUpper
-                                         )
+import           Data.Char                               (isLower, isUpper,
+                                                          toLower, toUpper)
 
-import Text.ParserCombinators.Parsec
-import Text.Regex.XMLSchema.Generic.Regex
-import Text.Regex.XMLSchema.Generic.StringLike
+import           Text.ParserCombinators.Parsec
+import           Text.Regex.XMLSchema.Generic.Regex
+import           Text.Regex.XMLSchema.Generic.StringLike
 
 -- ------------------------------------------------------------
 

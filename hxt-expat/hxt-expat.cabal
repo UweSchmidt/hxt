@@ -1,5 +1,5 @@
 Name:           hxt-expat
-Version:        9.1.1
+Version:        9.1.1.1
 Synopsis:       Expat parser for HXT
 Description:    The Expat interface for the HXT.
 License:        OtherLicense
@@ -8,7 +8,7 @@ Author:         Uwe Schmidt
 Maintainer:     Uwe Schmidt <uwe@fh-wedel.de>
 Stability:      Experimental
 Category:       XML
-Homepage:       http://www.fh-wedel.de/~si/HXmlToolbox/index.html
+Homepage:       https://github.com/UweSchmidt/hxt
 Copyright:      Copyright (c) 2010 Uwe Schmidt
 Build-type:     Simple
 Cabal-version:  >=1.6
@@ -34,3 +34,7 @@ library
                 bytestring         >= 0.9    && < 1,
                 hexpat             >= 0.19.3 && < 1,
                 hxt                >= 9.1    && < 10
+
+Source-Repository head
+  Type:     git
+  Location: git://github.com/UweSchmidt/hxt.git

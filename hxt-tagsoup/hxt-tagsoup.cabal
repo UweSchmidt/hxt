@@ -9,7 +9,7 @@ Author:         Uwe Schmidt
 Maintainer:     Uwe Schmidt <uwe@fh-wedel.de>
 Stability:      Stable
 Category:       XML
-Homepage:       http://www.fh-wedel.de/~si/HXmlToolbox/index.html
+Homepage:       https://github.com/UweSchmidt/hxt
 Copyright:      Copyright (c) 2014 Uwe Schmidt
 Build-type:     Simple
 Cabal-version:  >=1.6
@@ -30,7 +30,7 @@ library
  ghc-options: -Wall
  ghc-prof-options: -auto-all -caf-all
 
- extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances
+ extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances CPP
 
  build-depends: base               >= 4    && < 5,
                 tagsoup            >= 0.13 && < 0.14,

@@ -27,45 +27,36 @@ module Text.XML.HXT.Arrow.ProcessDocument
     )
 where
 
-import Control.Arrow                            -- arrow classes
-import Control.Arrow.ArrowList
-import Control.Arrow.ArrowIf
-import Control.Arrow.ArrowTree
-import Control.Arrow.ListArrow                  ( fromLA )
-import Control.Arrow.NTreeEdit
+import           Control.Arrow
+import           Control.Arrow.ArrowIf
+import           Control.Arrow.ArrowList
+import           Control.Arrow.ArrowTree
+import           Control.Arrow.ListArrow                      (fromLA)
+import           Control.Arrow.NTreeEdit
 
-import Text.XML.HXT.DOM.Interface
+import           Text.XML.HXT.DOM.Interface
 
-import Text.XML.HXT.Arrow.XmlArrow
-import Text.XML.HXT.Arrow.XmlState
-import Text.XML.HXT.Arrow.XmlState.TypeDefs
+import           Text.XML.HXT.Arrow.XmlArrow
+import           Text.XML.HXT.Arrow.XmlState
+import           Text.XML.HXT.Arrow.XmlState.TypeDefs
 
-import Text.XML.HXT.Arrow.ParserInterface       ( parseXmlDoc
-                                                , parseHtmlDoc
-                                                )
+import           Text.XML.HXT.Arrow.ParserInterface           (parseHtmlDoc,
+                                                               parseXmlDoc)
 
-import Text.XML.HXT.Arrow.Edit                  ( transfAllCharRef
-                                                , substAllXHTMLEntityRefs
-                                                )
+import           Text.XML.HXT.Arrow.Edit                      (substAllXHTMLEntityRefs,
+                                                               transfAllCharRef)
 
-import Text.XML.HXT.Arrow.GeneralEntitySubstitution
-                                               ( processGeneralEntities
-                                               )
+import           Text.XML.HXT.Arrow.GeneralEntitySubstitution (processGeneralEntities)
 
-import Text.XML.HXT.Arrow.DTDProcessing        ( processDTD
-                                               )
+import           Text.XML.HXT.Arrow.DTDProcessing             (processDTD)
 
-import Text.XML.HXT.Arrow.DocumentInput        ( getXmlContents
-                                               )
+import           Text.XML.HXT.Arrow.DocumentInput             (getXmlContents)
 
-import Text.XML.HXT.Arrow.Namespace            ( propagateNamespaces
-                                               , validateNamespaces
-                                               )
-import Text.XML.HXT.DTDValidation.Validation   ( validate
-                                               , getDTDSubset
-                                               , generalEntitiesDefined
-                                               , transform
-                                               )
+import           Text.XML.HXT.Arrow.Namespace                 (propagateNamespaces, validateNamespaces)
+import           Text.XML.HXT.DTDValidation.Validation        (generalEntitiesDefined,
+                                                               getDTDSubset,
+                                                               transform,
+                                                               validate)
 
 -- ------------------------------------------------------------
 
@@ -105,12 +96,12 @@ parseXmlDocument validateD substDTD substHTML validateRX
         ( ifA (fromLA getDTDSubset)
           ( processDTDandEntities
             >>>
-            ( if validate'			-- validation only possible if there is a DTD
+            ( if validate'                      -- validation only possible if there is a DTD
               then validateDocument
               else this
             )
           )
-          ( if validate'			-- validation only consists of checking
+          ( if validate'                        -- validation only consists of checking
                                                 -- for undefined entity refs
                                                 -- predefined XML entity refs are substituted
                                                 -- in the XML parser into char refs
@@ -138,7 +129,7 @@ parseXmlDocument validateD substDTD substHTML validateRX
             )
             >>>
             ( if substDTD
-              then ( processGeneralEntities		-- DTD contains general entity definitions
+              then ( processGeneralEntities             -- DTD contains general entity definitions
                      `when`
                      fromLA generalEntitiesDefined
                    )
@@ -149,7 +140,7 @@ parseXmlDocument validateD substDTD substHTML validateRX
             >>>
             transfAllCharRef
 
-checkUndefinedEntityRefs	:: IOStateArrow s XmlTree XmlTree
+checkUndefinedEntityRefs        :: IOStateArrow s XmlTree XmlTree
 checkUndefinedEntityRefs
     = deep isEntityRef
       >>>
@@ -226,12 +217,12 @@ parseHtmlDocument
                           )
 
     removeWarnings (warnings, withTagSoup')
-        | warnings	= processTopDownWithAttrl               -- remove warnings inserted by parser and entity subst
+        | warnings      = processTopDownWithAttrl               -- remove warnings inserted by parser and entity subst
                           filterErrorMsg
-        | withTagSoup'	= this					-- warnings are not generated in tagsoup
+        | withTagSoup'  = this                                  -- warnings are not generated in tagsoup
 
         | otherwise     = fromLA $
-                          editNTreeA [isError :-> none]		-- remove all warnings from document
+                          editNTreeA [isError :-> none]         -- remove all warnings from document
 
 
 -- ------------------------------------------------------------

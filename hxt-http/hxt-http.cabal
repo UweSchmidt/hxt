@@ -1,5 +1,5 @@
 Name:           hxt-http
-Version:        9.1.5
+Version:        9.1.5.1
 Synopsis:       Interface to native Haskell HTTP package HTTP
 Description:    Interface to native Haskell HTTP package HTTP.
                 This package can be used as alternative for the hxt-curl package
@@ -12,7 +12,7 @@ Author:         Uwe Schmidt
 Maintainer:     Uwe Schmidt <uwe@fh-wedel.de>
 Stability:      Experimental
 Category:       XML
-Homepage:       http://www.fh-wedel.de/~si/HXmlToolbox/index.html
+Homepage:       https://github.com/UweSchmidt/hxt
 Copyright:      Copyright (c) 2011 Uwe Schmidt
 Build-type:     Simple
 Cabal-version:  >=1.6
@@ -47,3 +47,7 @@ library
                   network     >= 2.6
  else
    build-depends: network < 2.6
+
+Source-Repository head
+  Type:     git
+  Location: git://github.com/UweSchmidt/hxt.git

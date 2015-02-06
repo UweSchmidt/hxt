@@ -5,7 +5,6 @@ PL1	= hxt-charproperties \
           hxt-curl \
           hxt-http \
           hxt-tagsoup \
-	  hxt-expat \
           hxt-xpath \
           hxt-relaxng \
           hxt-xmlschema \
@@ -14,20 +13,29 @@ PL1	= hxt-charproperties \
 
 PL	= $(PL1)
 
+# hxt-expat-0.20.7 is not yet ready for ghc-7.10 because of dependency of deepseq < 1.4
+PL2     = $(PL1) hxt-expat
+
+
+FLAGS=--flags="network-uri"
+
 #          janus/janus-library                # no longer maintained
 #                 hxt-filter                  # not maintained to work with hxt-9
 #                 hxt-binary                  # no longer required, integrated into hxt-9
 
 all	:
-	$(foreach i,$(PL), ( cd $i && cabal configure && cabal build && cabal install && cabal sdist; ); )
+	$(foreach i,$(PL), ( cd $i && cabal configure $(FLAGS)\
+                                   && cabal build\
+                                   && cabal install $(FLAGS)\
+                                   && cabal sdist; ); )
 	@ echo not done: ghc-pkg list
 
 install:
-	$(foreach i,$(PL), ( cd $i && cabal install; ); )
+	$(foreach i,$(PL), ( cd $i && cabal install $(FLAGS) ; ); )
 	$(MAKE) list
 
 profile:
-	$(foreach i,$(PL), ( cd $i && cabal install -p; ); )
+	$(foreach i,$(PL), ( cd $i && cabal install $FLAGS) -p; ); )
 	$(MAKE) list
 
 sdist	:
@@ -37,7 +45,7 @@ list	:
 	( [ -d .cabal-sandbox ] && cabal sandbox hc-pkg list ) || ghc-pkg list
 
 global	:
-	$(foreach i,$(PL), ( cd $i && cabal configure && cabal build && cabal sdist && sudo cabal install --global; ); )
+	$(foreach i,$(PL), ( cd $i && cabal configure  $(FLAGS) && cabal build && cabal sdist && sudo cabal install  $(FLAGS) --global; ); )
 	ghc-pkg list
 
 haddock	:
@@ -73,7 +81,7 @@ sb-init	:
 	@echo now exec $(MAKE) sb-deps
 
 sb-deps	:
-	$(foreach i,$(PL), (cd $i && cabal install --only-dependencies; ); )
+	$(foreach i,$(PL), (cd $i && cabal install --only-dependencies $(FLAGS) ; ); )
 
 sb-unregister	:
 	cabal sandbox hc-pkg list -- --simple-output \

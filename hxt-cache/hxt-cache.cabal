@@ -1,5 +1,5 @@
 Name:           hxt-cache
-Version:        9.1.0
+Version:        9.1.0.1
 Synopsis:       Cache for HXT XML Documents and other binary data
 Description:    Extension for caching XML documents and other binary data in cache directory
                 of the local filesystem
@@ -12,7 +12,7 @@ Author:         Uwe Schmidt
 Maintainer:     Uwe Schmidt <uwe@fh-wedel.de>
 Stability:      Stable
 Category:       XML
-Homepage:       http://www.fh-wedel.de/~si/HXmlToolbox/index.html
+Homepage:       https://github.com/UweSchmidt/hxt
 Copyright:      Copyright (c) 2010 Uwe Schmidt
 Build-type:     Simple
 Cabal-version:  >=1.6
@@ -44,4 +44,13 @@ library
                 time       >= 1.4 && < 2,
                 unix       >= 2.3 && < 3,
                 SHA        >= 1.4 && < 2
+ if impl(ghc >= 7.10.0)
+   build-depends: time     >= 1.5
+ else
+   build-depends: old-locale >= 1   && < 2,
+                  time       == 1.4.*
 
+
+Source-Repository head
+  Type:     git
+  Location: git://github.com/UweSchmidt/hxt.git

@@ -39,21 +39,18 @@ module Text.XML.HXT.Arrow.XmlState.TypeDefs
     )
 where
 
-import Control.Arrow                            -- arrow classes
-import Control.Arrow.ArrowList
-import Control.Arrow.IOStateListArrow
-import Control.DeepSeq
+import           Control.Arrow
+import           Control.Arrow.ArrowList
+import           Control.Arrow.IOStateListArrow
+import           Control.DeepSeq
 
-import Data.ByteString.Lazy             ( ByteString )
-import Data.Char                        ( isDigit )
-import Data.Function.Selector           ( Selector(..)
-                                        , chgS
-                                        , idS
-                                        , (.&&&.)
-                                        )
-import qualified Data.Map               as M
+import           Data.ByteString.Lazy           (ByteString)
+import           Data.Char                      (isDigit)
+import           Data.Function.Selector         (Selector (..), chgS, idS,
+                                                 (.&&&.))
+import qualified Data.Map                       as M
 
-import Text.XML.HXT.DOM.Interface
+import           Text.XML.HXT.DOM.Interface
 
 -- ------------------------------------------------------------
 {- datatypes -}
@@ -62,8 +59,8 @@ import Text.XML.HXT.DOM.Interface
 -- state datatype consists of a system state and a user state
 -- the user state is not fixed
 
-data XIOState us        = XIOState { xioSysState               :: ! XIOSysState
-                                   , xioUserState              :: ! us
+data XIOState us        = XIOState { xioSysState  :: ! XIOSysState
+                                   , xioUserState :: ! us
                                    }
 
 instance (NFData us) => NFData (XIOState us) where
@@ -155,102 +152,103 @@ withoutUserState      = withOtherUserState ()
 -- predefined system state data type with all components for the
 -- system functions, like trace, error handling, ...
 
-data XIOSysState        = XIOSys  { xioSysWriter                :: ! XIOSysWriter
-                                  , xioSysEnv                   :: ! XIOSysEnv
+data XIOSysState        = XIOSys  { xioSysWriter :: ! XIOSysWriter
+                                  , xioSysEnv    :: ! XIOSysEnv
                                   }
 
-instance NFData XIOSysState             -- all fields of interest are strict
+instance NFData XIOSysState where
+    rnf x = seq x ()    -- all fields of interest are strict
 
-data XIOSysWriter       = XIOwrt  { xioErrorStatus              :: ! Int
-                                  , xioErrorMsgList             :: ! XmlTrees
-                                  , xioExpatErrors              ::   IOSArrow XmlTree XmlTree
-                                  , xioRelaxNoOfErrors          :: ! Int
-                                  , xioRelaxDefineId            :: ! Int
-                                  , xioRelaxAttrList            ::   AssocList String XmlTrees
+data XIOSysWriter       = XIOwrt  { xioErrorStatus     :: ! Int
+                                  , xioErrorMsgList    :: ! XmlTrees
+                                  , xioExpatErrors     ::   IOSArrow XmlTree XmlTree
+                                  , xioRelaxNoOfErrors :: ! Int
+                                  , xioRelaxDefineId   :: ! Int
+                                  , xioRelaxAttrList   ::   AssocList String XmlTrees
                                   }
 
-data XIOSysEnv          = XIOEnv  { xioTraceLevel               :: ! Int
-                                  , xioTraceCmd                 ::   Int -> String -> IO ()
-                                  , xioErrorMsgHandler          ::   String -> IO ()
-                                  , xioErrorMsgCollect          :: ! Bool
-                                  , xioBaseURI                  :: ! String
-                                  , xioDefaultBaseURI           :: ! String
-                                  , xioAttrList                 :: ! Attributes
-                                  , xioInputConfig              :: ! XIOInputConfig
-                                  , xioParseConfig              :: ! XIOParseConfig
-                                  , xioOutputConfig             :: ! XIOOutputConfig
-                                  , xioRelaxConfig              :: ! XIORelaxConfig
-                                  , xioXmlSchemaConfig          :: ! XIOXmlSchemaConfig
-                                  , xioCacheConfig              :: ! XIOCacheConfig
+data XIOSysEnv          = XIOEnv  { xioTraceLevel      :: ! Int
+                                  , xioTraceCmd        ::   Int -> String -> IO ()
+                                  , xioErrorMsgHandler ::   String -> IO ()
+                                  , xioErrorMsgCollect :: ! Bool
+                                  , xioBaseURI         :: ! String
+                                  , xioDefaultBaseURI  :: ! String
+                                  , xioAttrList        :: ! Attributes
+                                  , xioInputConfig     :: ! XIOInputConfig
+                                  , xioParseConfig     :: ! XIOParseConfig
+                                  , xioOutputConfig    :: ! XIOOutputConfig
+                                  , xioRelaxConfig     :: ! XIORelaxConfig
+                                  , xioXmlSchemaConfig :: ! XIOXmlSchemaConfig
+                                  , xioCacheConfig     :: ! XIOCacheConfig
                                   }
 
-data XIOInputConfig     = XIOIcgf { xioStrictInput              :: ! Bool
-                                  , xioEncodingErrors           :: ! Bool
-                                  , xioInputEncoding            ::   String
-                                  , xioHttpHandler              ::   IOSArrow XmlTree XmlTree
-                                  , xioInputOptions             :: ! Attributes
-                                  , xioRedirect                 :: ! Bool
-                                  , xioProxy                    ::   String
+data XIOInputConfig     = XIOIcgf { xioStrictInput    :: ! Bool
+                                  , xioEncodingErrors :: ! Bool
+                                  , xioInputEncoding  ::   String
+                                  , xioHttpHandler    ::   IOSArrow XmlTree XmlTree
+                                  , xioInputOptions   :: ! Attributes
+                                  , xioRedirect       :: ! Bool
+                                  , xioProxy          ::   String
                                   }
 
-data XIOParseConfig     = XIOPcfg { xioMimeTypes                ::   MimeTypeTable
-                                  , xioMimeTypeHandlers         ::   MimeTypeHandlers
-                                  , xioMimeTypeFile             ::   String
-                                  , xioAcceptedMimeTypes        ::   [String]
-                                  , xioFileMimeType             ::   String
-                                  , xioWarnings                 :: ! Bool
-                                  , xioRemoveWS                 :: ! Bool
-                                  , xioParseByMimeType          :: ! Bool
-                                  , xioParseHTML                :: ! Bool
-                                  , xioLowerCaseNames           :: ! Bool
-                                  , xioPreserveComment          :: ! Bool
-                                  , xioValidate                 :: ! Bool
-                                  , xioSubstDTDEntities         :: ! Bool
-                                  , xioSubstHTMLEntities        :: ! Bool
-                                  , xioCheckNamespaces          :: ! Bool
-                                  , xioCanonicalize             :: ! Bool
-                                  , xioIgnoreNoneXmlContents    :: ! Bool
-                                  , xioTagSoup                  :: ! Bool
-                                  , xioTagSoupParser            ::   IOSArrow XmlTree XmlTree
-                                  , xioExpat                    :: ! Bool
-                                  , xioExpatParser              ::   IOSArrow XmlTree XmlTree
+data XIOParseConfig     = XIOPcfg { xioMimeTypes             ::   MimeTypeTable
+                                  , xioMimeTypeHandlers      ::   MimeTypeHandlers
+                                  , xioMimeTypeFile          ::   String
+                                  , xioAcceptedMimeTypes     ::   [String]
+                                  , xioFileMimeType          ::   String
+                                  , xioWarnings              :: ! Bool
+                                  , xioRemoveWS              :: ! Bool
+                                  , xioParseByMimeType       :: ! Bool
+                                  , xioParseHTML             :: ! Bool
+                                  , xioLowerCaseNames        :: ! Bool
+                                  , xioPreserveComment       :: ! Bool
+                                  , xioValidate              :: ! Bool
+                                  , xioSubstDTDEntities      :: ! Bool
+                                  , xioSubstHTMLEntities     :: ! Bool
+                                  , xioCheckNamespaces       :: ! Bool
+                                  , xioCanonicalize          :: ! Bool
+                                  , xioIgnoreNoneXmlContents :: ! Bool
+                                  , xioTagSoup               :: ! Bool
+                                  , xioTagSoupParser         ::   IOSArrow XmlTree XmlTree
+                                  , xioExpat                 :: ! Bool
+                                  , xioExpatParser           ::   IOSArrow XmlTree XmlTree
                                   }
 
-data XIOOutputConfig    = XIOOcfg { xioIndent                   :: ! Bool
-                                  , xioOutputEncoding           :: ! String
-                                  , xioOutputFmt                :: ! XIOXoutConfig
-                                  , xioXmlPi                    :: ! Bool
-                                  , xioNoEmptyElemFor           :: ! [String]
-                                  , xioAddDefaultDTD            :: ! Bool
-                                  , xioTextMode                 :: ! Bool
-                                  , xioShowTree                 :: ! Bool
-                                  , xioShowHaskell              :: ! Bool
+data XIOOutputConfig    = XIOOcfg { xioIndent         :: ! Bool
+                                  , xioOutputEncoding :: ! String
+                                  , xioOutputFmt      :: ! XIOXoutConfig
+                                  , xioXmlPi          :: ! Bool
+                                  , xioNoEmptyElemFor :: ! [String]
+                                  , xioAddDefaultDTD  :: ! Bool
+                                  , xioTextMode       :: ! Bool
+                                  , xioShowTree       :: ! Bool
+                                  , xioShowHaskell    :: ! Bool
                                   }
 data XIOXoutConfig      = XMLoutput | XHTMLoutput | HTMLoutput | PLAINoutput
                           deriving (Eq)
 
-data XIORelaxConfig     = XIORxc  { xioRelaxValidate            :: ! Bool
-                                  , xioRelaxSchema              ::   String
-                                  , xioRelaxCheckRestr          :: ! Bool
-                                  , xioRelaxValidateExtRef      :: ! Bool
-                                  , xioRelaxValidateInclude     :: ! Bool
-                                  , xioRelaxCollectErrors       :: ! Bool
-                                  , xioRelaxValidator           ::   IOSArrow XmlTree XmlTree
+data XIORelaxConfig     = XIORxc  { xioRelaxValidate        :: ! Bool
+                                  , xioRelaxSchema          ::   String
+                                  , xioRelaxCheckRestr      :: ! Bool
+                                  , xioRelaxValidateExtRef  :: ! Bool
+                                  , xioRelaxValidateInclude :: ! Bool
+                                  , xioRelaxCollectErrors   :: ! Bool
+                                  , xioRelaxValidator       ::   IOSArrow XmlTree XmlTree
                                   }
 
-data XIOXmlSchemaConfig = XIOScc  { xioXmlSchemaValidate        :: ! Bool
-                                  , xioXmlSchemaSchema          ::   String
-                                  , xioXmlSchemaValidator       ::   IOSArrow XmlTree XmlTree
+data XIOXmlSchemaConfig = XIOScc  { xioXmlSchemaValidate  :: ! Bool
+                                  , xioXmlSchemaSchema    ::   String
+                                  , xioXmlSchemaValidator ::   IOSArrow XmlTree XmlTree
                                   }
 
-data XIOCacheConfig     = XIOCch  { xioBinaryCompression        ::   CompressionFct
-                                  , xioBinaryDeCompression      ::   DeCompressionFct
-                                  , xioWithCache                :: ! Bool
-                                  , xioCacheDir                 :: ! String
-                                  , xioDocumentAge              :: ! Int
-                                  , xioCache404Err              :: ! Bool
-                                  , xioCacheRead                ::   String -> IOSArrow XmlTree XmlTree
-                                  , xioStrictDeserialize        :: ! Bool
+data XIOCacheConfig     = XIOCch  { xioBinaryCompression   ::   CompressionFct
+                                  , xioBinaryDeCompression ::   DeCompressionFct
+                                  , xioWithCache           :: ! Bool
+                                  , xioCacheDir            :: ! String
+                                  , xioDocumentAge         :: ! Int
+                                  , xioCache404Err         :: ! Bool
+                                  , xioCacheRead           ::   String -> IOSArrow XmlTree XmlTree
+                                  , xioStrictDeserialize   :: ! Bool
                                   }
 
 type MimeTypeHandlers   = M.Map String (IOSArrow XmlTree XmlTree)

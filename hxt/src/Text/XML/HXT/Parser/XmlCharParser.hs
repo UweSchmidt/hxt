@@ -32,34 +32,32 @@ module Text.XML.HXT.Parser.XmlCharParser
     )
 where
 
-import Data.Char.Properties.XMLCharProps        ( isXmlCharCR
-                                                , isXmlNameChar
-                                                , isXmlNameStartChar
-                                                , isXmlNCNameChar
-                                                , isXmlNCNameStartChar
-                                                , isXmlLetter
-                                                , isXmlSpaceCharCR
-                                                )
+import           Data.Char.Properties.XMLCharProps (isXmlCharCR, isXmlLetter,
+                                                    isXmlNCNameChar,
+                                                    isXmlNCNameStartChar,
+                                                    isXmlNameChar,
+                                                    isXmlNameStartChar,
+                                                    isXmlSpaceCharCR)
 
-import Data.String.Unicode
+import           Data.String.Unicode
 
-import Text.ParserCombinators.Parsec
+import           Text.ParserCombinators.Parsec
 
 -- ------------------------------------------------------------
 
-type XParser s a	= GenParser Char (XPState s) a
+type XParser s a        = GenParser Char (XPState s) a
 type SimpleXParser a    = XParser () a
 
-data XPState s		= XPState
-    { xps_normalizeNewline	:: ! Bool
-    , xps_userState             :: s
+data XPState s          = XPState
+    { xps_normalizeNewline :: ! Bool
+    , xps_userState        :: s
     }
 
-withNormNewline		:: a -> XPState a
-withNormNewline x	= XPState True x
+withNormNewline         :: a -> XPState a
+withNormNewline x       = XPState True x
 
-withoutNormNewline	:: a -> XPState a
-withoutNormNewline x	= XPState False x
+withoutNormNewline      :: a -> XPState a
+withoutNormNewline x    = XPState False x
 
 -- ------------------------------------------------------------
 --

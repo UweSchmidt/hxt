@@ -1,8 +1,10 @@
+{-# LANGUAGE CPP #-}
+
 -- ------------------------------------------------------------
 
 {- |
    Module     : Text.XML.HXT.Parser.TagSoup
-   Copyright  : Copyright (C) 2005-2014 Uwe Schmidt
+   Copyright  : Copyright (C) 2005-2015 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
@@ -23,45 +25,33 @@ where
 
 -- ------------------------------------------------------------
 
-import Control.Applicative              ( Applicative(..) )
-import Control.Monad                    ( liftM, ap )
+#if MIN_VERSION_base(4,8,0)
+#else
+import           Control.Applicative               (Applicative (..))
+#endif
 
-import Data.Char                        ( toLower
-                                        )
-import Data.Char.Properties.XMLCharProps( isXmlSpaceChar
-                                        )
-import Data.Maybe
+import           Control.Monad                     (ap, liftM)
 
-import Text.HTML.TagSoup
-import Text.HTML.TagSoup.Entity         ( lookupNumericEntity
-                                        )
-import Text.XML.HXT.Parser.HtmlParsec   ( isEmptyHtmlTag
-                                        , isInnerHtmlTagOf
-                                        , closesHtmlTag
-                                        )
-import Text.XML.HXT.Parser.XhtmlEntities
-import Text.XML.HXT.DOM.Interface       ( XmlTrees
-                                        , QName
-                                        , NsEnv
-                                        , toNsEnv
-                                        , newXName
-                                        , newQName
-                                        , nullXName
-                                        , mkName
-                                        , isWellformedQualifiedName
-                                        , c_warn
-                                        , a_xml
-                                        , a_xmlns
-                                        , xmlNamespace
-                                        , xmlnsNamespace
-                                        )
-import Text.XML.HXT.DOM.XmlNode         ( isElem
-                                        , mkError'
-                                        , mkCmt'
-                                        , mkText'
-                                        , mkElement
-                                        , mkAttr'
-                                        )
+import           Data.Char                         (toLower)
+import           Data.Char.Properties.XMLCharProps (isXmlSpaceChar)
+import           Data.Maybe
+
+import           Text.HTML.TagSoup
+import           Text.HTML.TagSoup.Entity          (lookupNumericEntity)
+import           Text.XML.HXT.DOM.Interface        (NsEnv, QName, XmlTrees,
+                                                    a_xml, a_xmlns, c_warn,
+                                                    isWellformedQualifiedName,
+                                                    mkName, newQName, newXName,
+                                                    nullXName, toNsEnv,
+                                                    xmlNamespace,
+                                                    xmlnsNamespace)
+import           Text.XML.HXT.DOM.XmlNode          (isElem, mkAttr', mkCmt',
+                                                    mkElement, mkError',
+                                                    mkText')
+import           Text.XML.HXT.Parser.HtmlParsec    (closesHtmlTag,
+                                                    isEmptyHtmlTag,
+                                                    isInnerHtmlTagOf)
+import           Text.XML.HXT.Parser.XhtmlEntities
 
 -- ----------------------------------------
 
@@ -255,36 +245,36 @@ lookupEntity    :: Bool -> Bool -> (String, Bool) -> Tags
 lookupEntity withWarnings _asHtml (e0@('#':e), withSemicolon)
     = case lookupNumericEntity e of
       Just c  -> (TagText c)
-		 : missingSemi
+                 : missingSemi
       Nothing -> ( TagText $ "&" ++ e0 ++ [';' | withSemicolon])
-		 : if withWarnings
+                 : if withWarnings
                    then (TagWarning $ "illegal char reference: &" ++ e ++ ";")
-		        : missingSemi
-		   else []
+                        : missingSemi
+                   else []
     where
     missingSemi
-	| withWarnings
-	  &&
-	  not withSemicolon = [TagWarning $ "missing \";\" at end of char reference: &" ++ e]
+        | withWarnings
+          &&
+          not withSemicolon = [TagWarning $ "missing \";\" at end of char reference: &" ++ e]
         | otherwise         = []
 
 lookupEntity withWarnings asHtml (e, withSemicolon)
     = case (lookup e entities) of
       Just x  -> (TagText [toEnum x])
-		 : missingSemi
+                 : missingSemi
       Nothing -> (TagText $ "&" ++ e ++ [';' | withSemicolon])
-		 : if withWarnings
+                 : if withWarnings
                    then (TagWarning $ "Unknown entity reference: &" ++ e ++ ";")
-			: missingSemi
-		   else []
+                        : missingSemi
+                   else []
     where
     entities
         | asHtml    = xhtmlEntities
         | otherwise = xhtmlEntities -- xmlEntities (TODO: xhtml is xml and html)
     missingSemi
-	| withWarnings
-	  &&
-	  not withSemicolon = [TagWarning $ "missing \";\" at end of entity reference: &" ++ e]
+        | withWarnings
+          &&
+          not withSemicolon = [TagWarning $ "missing \";\" at end of entity reference: &" ++ e]
         | otherwise         = []
 
 lookupEntityAttr        :: Bool -> Bool -> (String, Bool) -> (String, Tags)

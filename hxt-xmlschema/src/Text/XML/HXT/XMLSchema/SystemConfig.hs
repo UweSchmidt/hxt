@@ -21,13 +21,13 @@
 module   Text.XML.HXT.XMLSchema.SystemConfig
 where
 
-import Text.XML.HXT.Arrow.XmlState.TypeDefs
+import           Text.XML.HXT.Arrow.XmlState.TypeDefs
 -- import Text.XML.HXT.Arrow.XmlOptions
 
-import Text.XML.HXT.XMLSchema.Validation           ( validateDocumentWithXmlSchema )
+import           Text.XML.HXT.XMLSchema.Validation    (validateDocumentWithXmlSchema)
 
 
-import System.Console.GetOpt
+import           System.Console.GetOpt
 
 -- ------------------------------------------------------------
 
@@ -35,7 +35,7 @@ withXmlSchema                   :: String -> SysConfig
 withXmlSchema s                 = setS (theXmlSchemaValidate
                                         .&&&. theXmlSchemaSchema
                                         .&&&. theXmlSchemaValidator
-                                       ) ( not (null s)		-- null s turns off validation
+                                       ) ( not (null s)         -- null s turns off validation
                                          , ( s
                                            , validateDocumentWithXmlSchema [] s
                                            )

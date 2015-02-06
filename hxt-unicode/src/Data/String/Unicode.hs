@@ -61,15 +61,15 @@ module Data.String.Unicode
     )
 where
 
-import Data.Char                        ( toUpper )
+import           Data.Char                         (toUpper)
 
-import Data.Char.Properties.XMLCharProps( isXml1ByteChar
-                                        , isXmlLatin1Char
-                                        )
-import Data.Char.IsoLatinTables
+import           Data.Char.IsoLatinTables
+import           Data.Char.Properties.XMLCharProps (isXml1ByteChar,
+                                                    isXmlLatin1Char)
 
-import Data.String.UTF8Decoding        ( decodeUtf8, decodeUtf8EmbedErrors )
-import Data.String.EncodingNames
+import           Data.String.EncodingNames
+import           Data.String.UTF8Decoding          (decodeUtf8,
+                                                    decodeUtf8EmbedErrors)
 
 -- ------------------------------------------------------------
 
@@ -559,7 +559,7 @@ partitionEither =
 -- the table of supported output encoding schemes and the associated
 -- conversion functions from Unicode
 
-type StringFct		= String -> String
+type StringFct          = String -> String
 
 outputEncodingTable'     :: [(String, (Char -> StringFct))]
 outputEncodingTable'
@@ -628,10 +628,10 @@ unicodeCharToUtf8' c
 -- substitute all Unicode characters, that are not legal 1-byte
 -- UTF-8 XML characters by a character reference.
 
-unicodeCharToXmlEntity'	:: Char -> StringFct
+unicodeCharToXmlEntity' :: Char -> StringFct
 unicodeCharToXmlEntity' c
-    | isXml1ByteChar c	= (c :)
-    | otherwise		= ((intToCharRef . fromEnum $ c) ++)
+    | isXml1ByteChar c  = (c :)
+    | otherwise         = ((intToCharRef . fromEnum $ c) ++)
 
 -- ------------------------------------------------------------
 
@@ -639,10 +639,10 @@ unicodeCharToXmlEntity' c
 -- substitute all Unicode characters, that are not legal latin1
 -- UTF-8 XML characters by a character reference.
 
-unicodeCharToLatin1' 	:: Char -> StringFct
+unicodeCharToLatin1'    :: Char -> StringFct
 unicodeCharToLatin1' c
-    | isXmlLatin1Char c	= (c :)
-    | otherwise		= ((intToCharRef . fromEnum $ c) ++)
+    | isXmlLatin1Char c = (c :)
+    | otherwise         = ((intToCharRef . fromEnum $ c) ++)
 
 -- ------------------------------------------------------------
 

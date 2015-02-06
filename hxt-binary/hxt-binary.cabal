@@ -1,5 +1,5 @@
 Name:           hxt-binary
-Version:        0.0.3
+Version:        0.0.3.1
 Synopsis:       Serialisation and deserialisation of HXT XmlTrees.
 Description:    Extension for storing and loading already parsed XML documents in an internal format.
                 Serialisation and Deserialisation is done with the binary package.
@@ -9,7 +9,7 @@ Author:         Uwe Schmidt
 Maintainer:     Uwe Schmidt <uwe@fh-wedel.de>
 Stability:      Stable
 Category:       XML
-Homepage:       http://www.fh-wedel.de/~si/HXmlToolbox/index.html
+Homepage:       https://github.com/UweSchmidt/hxt
 Copyright:      Copyright (c) 2010 Uwe Schmidt
 Build-type:     Simple
 Cabal-version:  >=1.6
@@ -34,3 +34,7 @@ library
                 bzlib      >= 0.5 && < 1,
                 deepseq    >= 1.1 && < 2,
                 hxt        >= 8.5 && < 9
+
+Source-Repository head
+  Type:     git
+  Location: git://github.com/UweSchmidt/hxt.git

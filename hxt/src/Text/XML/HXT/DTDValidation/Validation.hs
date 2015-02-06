@@ -36,12 +36,12 @@ module Text.XML.HXT.DTDValidation.Validation
 
 where
 
-import Text.XML.HXT.DTDValidation.TypeDefs
+import           Text.XML.HXT.DTDValidation.TypeDefs
 
-import qualified Text.XML.HXT.DTDValidation.DTDValidation     as DTDValidation
-import qualified Text.XML.HXT.DTDValidation.DocValidation     as DocValidation
-import qualified Text.XML.HXT.DTDValidation.IdValidation      as IdValidation
 import qualified Text.XML.HXT.DTDValidation.DocTransformation as DocTransformation
+import qualified Text.XML.HXT.DTDValidation.DocValidation     as DocValidation
+import qualified Text.XML.HXT.DTDValidation.DTDValidation     as DTDValidation
+import qualified Text.XML.HXT.DTDValidation.IdValidation      as IdValidation
 
 -- |
 -- Main validation filter. Check if the DTD and the document are valid.
@@ -127,8 +127,8 @@ getDTDSubset            = getChildren
                           >>>
                           ( filterA $ isDTDDoctype >>> getDTDAttrl >>> isA (hasEntry a_name) )
 
-generalEntitiesDefined	:: XmlArrow
-generalEntitiesDefined	= getDTDSubset
+generalEntitiesDefined  :: XmlArrow
+generalEntitiesDefined  = getDTDSubset
                           >>>
                           deep isDTDEntity
 

@@ -20,18 +20,16 @@ module Text.XML.HXT.Arrow.Binary
     )
 where
 
-import           Control.Arrow          ()
+import           Control.Arrow                             ()
 import           Control.Arrow.ArrowExc
-import           Control.Arrow.ArrowList
 import           Control.Arrow.ArrowIO
+import           Control.Arrow.ArrowList
 
 import           Data.Binary
-import qualified Data.ByteString.Lazy   as B
+import qualified Data.ByteString.Lazy                      as B
 
-import           System.IO              ( openBinaryFile
-                                        , hClose
-                                        , IOMode(..)
-                                        )
+import           System.IO                                 (IOMode (..), hClose,
+                                                            openBinaryFile)
 
 import           Text.XML.HXT.Arrow.XmlState.ErrorHandling
 import           Text.XML.HXT.Arrow.XmlState.TypeDefs
@@ -65,7 +63,7 @@ decodeBinaryValue file strict decompress
                           B.length c `seq`
                            do
                            hClose h
-                           return c	-- hack: force reading whole file and close it immediately
+                           return c     -- hack: force reading whole file and close it immediately
 
 -- | Serialize a value, optionally compress it, and write it to a file.
 -- In case of an error, the error message is issued and the arrow fails

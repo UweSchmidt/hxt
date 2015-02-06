@@ -18,11 +18,11 @@
 module Control.Arrow.ArrowNF
 where
 
-import Control.Arrow
-import Control.Arrow.ArrowList
+import           Control.Arrow
+import           Control.Arrow.ArrowList
 
-import Control.DeepSeq
-import Control.FlatSeq
+import           Control.DeepSeq
+import           Control.FlatSeq
 
 -- |
 -- complete evaluation of an arrow result using 'Control.DeepSeq'
@@ -35,8 +35,8 @@ strictA :: (Arrow a, NFData b) => a b b
 strictA = arr $ \ x -> deepseq x x
 
 class (Arrow a) => ArrowNF a where
-    rnfA        		:: (NFData c) => a b c -> a b c
-    rnfA f      		= f >>^ (\ x -> deepseq x x)
+    rnfA                        :: (NFData c) => a b c -> a b c
+    rnfA f                      = f >>^ (\ x -> deepseq x x)
     {-# INLINE rnfA #-}
 
 -- |
@@ -54,8 +54,8 @@ class (Arrow a, ArrowList a) => ArrowWNF a where
     rwnfA f                     = f >>. \ x -> rlnf rwnf x `seq` x
     {-# INLINE rwnfA #-}
 
-    rwnf2A                  	:: (WNFData c) => a b c -> a b c
-    rwnf2A f                	= f >>. \ x -> rlnf rwnf2 x `seq` x
+    rwnf2A                      :: (WNFData c) => a b c -> a b c
+    rwnf2A f                    = f >>. \ x -> rlnf rwnf2 x `seq` x
     {-# INLINE rwnf2A #-}
 
 -- ------------------------------------------------------------

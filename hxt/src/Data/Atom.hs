@@ -61,15 +61,15 @@ module Data.Atom (
 
 import           Control.DeepSeq
 
-import           Data.ByteString.Internal       ( toForeignPtr, c2w, w2c )
-import           Data.ByteString                ( ByteString, pack, unpack )
+import           Data.ByteString          (ByteString, pack, unpack)
+import           Data.ByteString.Internal (c2w, toForeignPtr, w2c)
 import           Data.IORef
-import qualified Data.Map                       as M
-import           Data.String.UTF8Decoding       ( decodeUtf8 )
-import           Data.String.Unicode            ( unicodeToUtf8 )
+import qualified Data.Map                 as M
+import           Data.String.Unicode      (unicodeToUtf8)
+import           Data.String.UTF8Decoding (decodeUtf8)
 import           Data.Typeable
 
-import           System.IO.Unsafe               ( unsafePerformIO )
+import           System.IO.Unsafe         (unsafePerformIO)
 
 -- ------------------------------------------------------------
 
@@ -108,7 +108,7 @@ newAtom' s      = do
                   -- putStrLn "atom cache updated"
                   return res
   where
-    insert m    = let r = insertAtom (pack. map c2w . unicodeToUtf8 $ s) m 
+    insert m    = let r = insertAtom (pack. map c2w . unicodeToUtf8 $ s) m
                   in
                    fst r `seq` r
 
@@ -138,5 +138,6 @@ instance Show Atom where
     -- show     = show . toForeignPtr . bs                      -- for debug only
 
 instance NFData Atom where
+    rnf x = seq x ()
 
 -----------------------------------------------------------------------------

@@ -172,20 +172,20 @@ instance Show NameClass
 
 -- | Represents a pattern after simplification
 
-data Pattern = NotAllowed ErrMessage			-- {}
-             | Empty					-- {epsilon}
-             | Text					-- symbol: text
-             | Element    NameClass Pattern     	-- symbol: element with pattern for children
-             | Attribute  NameClass Pattern     	-- symbol: attr    with pattern for value
-             | Choice     Pattern   Pattern		-- binary combinator, symmetric
-             | Interleave Pattern   Pattern		--   "         "    , symmetric
-             | Group      Pattern   Pattern		--   "         "
-             | After      Pattern   Pattern		--   "         "
-             | OneOrMore  Pattern			-- unary combinator
-             | Data       Datatype  ParamList   	-- value check
+data Pattern = NotAllowed ErrMessage                    -- {}
+             | Empty                                    -- {epsilon}
+             | Text                                     -- symbol: text
+             | Element    NameClass Pattern             -- symbol: element with pattern for children
+             | Attribute  NameClass Pattern             -- symbol: attr    with pattern for value
+             | Choice     Pattern   Pattern             -- binary combinator, symmetric
+             | Interleave Pattern   Pattern             --   "         "    , symmetric
+             | Group      Pattern   Pattern             --   "         "
+             | After      Pattern   Pattern             --   "         "
+             | OneOrMore  Pattern                       -- unary combinator
+             | Data       Datatype  ParamList           -- value check
              | DataExcept Datatype  ParamList Pattern
-             | List       Pattern               	-- value check
-             | Value      Datatype  String    Context	-- value check
+             | List       Pattern                       -- value check
+             | Value      Datatype  String    Context   -- value check
 
 data Pattern' = NotAllowed'
              | Empty'

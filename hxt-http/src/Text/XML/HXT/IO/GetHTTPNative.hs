@@ -20,58 +20,47 @@ module Text.XML.HXT.IO.GetHTTPNative
 
 where
 
-import Control.Arrow
-import Control.Exception                        ( try )
+import           Control.Arrow
+import           Control.Exception                       (try)
 
-import Text.XML.HXT.DOM.XmlKeywords
-import Text.XML.HXT.DOM.TypeDefs                ( Attributes )
-import Text.XML.HXT.DOM.Util                    ( stringTrim )
+import           Text.XML.HXT.DOM.TypeDefs               (Attributes)
+import           Text.XML.HXT.DOM.Util                   (stringTrim)
+import           Text.XML.HXT.DOM.XmlKeywords
 
-import Text.XML.HXT.Arrow.XmlOptions            ( a_if_modified_since
-						, a_if_unmodified_since
-						)
+import           Text.XML.HXT.Arrow.XmlOptions           (a_if_modified_since,
+                                                          a_if_unmodified_since)
 
-import Text.XML.HXT.Parser.ProtocolHandlerUtil  ( parseContentType )
+import           Text.XML.HXT.Parser.ProtocolHandlerUtil (parseContentType)
 
-import Text.ParserCombinators.Parsec            ( parse )
+import           Text.ParserCombinators.Parsec           (parse)
 
-import qualified Data.ByteString.Lazy           as B
+import qualified Data.ByteString.Lazy                    as B
 
-import Data.Char                                ( isDigit
-						)
-import Data.Int                                 ( Int64 )
-import Data.List                                ( isPrefixOf
-                                                )
-import Data.Maybe
-import System.IO                                ( hPutStrLn
-						, stderr
-						)
-import System.IO.Error                          ( ioeGetErrorString
-						)
+import           Data.Char                               (isDigit)
+import           Data.Int                                (Int64)
+import           Data.List                               (isPrefixOf)
+import           Data.Maybe
+import           System.IO                               (hPutStrLn, stderr)
+import           System.IO.Error                         (ioeGetErrorString)
 
-import Network.Browser                          ( Proxy(..)
-						, BrowserAction
-						, browse
-						, defaultGETRequest_
-						, request
-						, setOutHandler
-						, setErrHandler
-						, setProxy
-						, setAllowRedirects
-						, setMaxRedirects
-						)
-import Network.HTTP                             ( Header(..)
-						, HeaderName(..)
-						, Request(..)
-						, Response(..)
-						, httpVersion
-						, replaceHeader
-						)
-import Network.Socket                           ( withSocketsDo
-						)
-import Network.URI                              ( URI
-						, parseURIReference
-						)
+import           Network.Browser                         (BrowserAction,
+                                                          Proxy (..), browse,
+                                                          defaultGETRequest_,
+                                                          request,
+                                                          setAllowRedirects,
+                                                          setErrHandler,
+                                                          setMaxRedirects,
+                                                          setOutHandler,
+                                                          setProxy)
+import           Network.HTTP                            (Header (..),
+                                                          HeaderName (..),
+                                                          Request (..),
+                                                          Response (..),
+                                                          httpVersion,
+                                                          replaceHeader)
+import           Network.Socket                          (withSocketsDo)
+import           Network.URI                             (URI,
+                                                          parseURIReference)
 
 -- import qualified Debug.Trace as T
 -- ------------------------------------------------------------
@@ -83,7 +72,7 @@ import Network.URI                              ( URI
 -- the http protocol handler, haskell implementation
 
 getCont         :: Bool -> String -> String -> Bool -> Attributes ->
-		   IO (Either ([(String, String)],       String)
+                   IO (Either ([(String, String)],       String)
                               ([(String, String)], B.ByteString)
                       )
 getCont strictInput proxy uri redirect options
@@ -108,19 +97,19 @@ getCont strictInput proxy uri redirect options
     processResponse response
         | ( (rc >= 200 && rc < 300)
             ||
-            rc == 304		-- not modified is o.k., this rc only occurs together with if-modified-since
-          )            
+            rc == 304           -- not modified is o.k., this rc only occurs together with if-modified-since
+          )
           &&
           fileSizeOK
             = do
               if strictInput
                 then B.length cs `seq` return res
                 else                   return res
-        
+
         | not fileSizeOK
             = return $
               ers "999 max-filesize exceeded"
-        
+
         | otherwise
             = return $
               ers (show rc ++ " " ++ rr)
@@ -150,21 +139,21 @@ getCont strictInput proxy uri redirect options
         where
         theRequest :: Request B.ByteString
         theRequest
-	    = configHeaders $ defaultGETRequest_ uri' 
+            = configHeaders $ defaultGETRequest_ uri'
 
         configHeaders :: Request B.ByteString -> Request B.ByteString
-	configHeaders
-	    = foldr (>>>) id . map (uncurry replaceHeader) . concatMap (uncurry setHOption) $ options'
+        configHeaders
+            = foldr (>>>) id . map (uncurry replaceHeader) . concatMap (uncurry setHOption) $ options'
 
-	configHttp
-	    = setOutHandler (trcFct)
+        configHttp
+            = setOutHandler (trcFct)
               : setErrHandler (trcFct)
               : ( if null proxy'
-		  then return ()
-		  else setProxy (Proxy proxy' Nothing)
-		)
-	      : setAllowRedirects redirect'
-	      : concatMap (uncurry setOption) options'
+                  then return ()
+                  else setProxy (Proxy proxy' Nothing)
+                )
+              : setAllowRedirects redirect'
+              : concatMap (uncurry setOption) options'
 
         trcFct s
             | trc'
@@ -213,7 +202,7 @@ getCont strictInput proxy uri redirect options
             addHttpAttr = [ (httpPrefix ++ (show name), value) ]
 
 
-setOption	:: String -> String -> [BrowserAction t ()]
+setOption       :: String -> String -> [BrowserAction t ()]
 setOption k0 v
     | k == "max-redirs"
       &&
@@ -222,11 +211,11 @@ setOption k0 v
       &&
       null v                            = [setMaxRedirects Nothing]
 
-    | otherwise	                        = []
+    | otherwise                         = []
   where
     k = dropCurlPrefix k0
-    
-curlPrefix	:: String
+
+curlPrefix      :: String
 curlPrefix      = "curl--"
 
 dropCurlPrefix :: String -> String
@@ -234,7 +223,7 @@ dropCurlPrefix k
   | curlPrefix `isPrefixOf` k  = drop (length curlPrefix) k
   | otherwise                  = k
 
-setHOption	:: String -> String -> [(HeaderName, String)]
+setHOption      :: String -> String -> [(HeaderName, String)]
 setHOption k0 v
     | k `elem` [ "-A"
                , "user-agent"
@@ -253,12 +242,12 @@ isIntArg s      = not (null s) && all isDigit s
 
 getCurlMaxFileSize :: Attributes -> Maybe Int64
 getCurlMaxFileSize options
-  = (\ s -> if isIntArg s 
-            then Just (read s) 
+  = (\ s -> if isIntArg s
+            then Just (read s)
             else Nothing
     )
     . fromMaybe ""
-    . lookup (curlPrefix ++ "max-filesize") 
+    . lookup (curlPrefix ++ "max-filesize")
     $ options
-    
+
 -- ------------------------------------------------------------

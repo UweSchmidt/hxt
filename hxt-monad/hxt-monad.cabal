@@ -1,6 +1,6 @@
 -- arch-tag: Haskell XML Toolbox main description file
 Name:           hxt-monad
-Version:        1.0.0.1
+Version:        1.0.0.2
 Synopsis:       A collection of tools for processing XML with Haskell.
 Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
                 but introduces a more general approach for processing XML with Haskell.
@@ -25,8 +25,8 @@ Author:         Uwe Schmidt
 Maintainer:     Uwe Schmidt <uwe@fh-wedel.de>
 Stability:      experimental
 Category:       XML
-Homepage:       http://www.fh-wedel.de/~si/HXmlToolbox/index.html
-Copyright:      Copyright (c) 2005-2013 Uwe Schmidt
+Homepage:       https://github.com/UweSchmidt/hxt
+Copyright:      Copyright (c) 2005-2015 Uwe Schmidt
 Build-type:     Simple
 Cabal-version:  >=1.8
 

@@ -21,24 +21,24 @@ module Text.XML.HXT.Arrow.LibHTTPInput
     )
 where
 
-import Control.Arrow                            -- arrow classes
-import Control.Arrow.ArrowList
-import Control.Arrow.ArrowTree
-import Control.Arrow.ArrowIO
+import           Control.Arrow
+import           Control.Arrow.ArrowIO
+import           Control.Arrow.ArrowList
+import           Control.Arrow.ArrowTree
 
-import qualified Data.ByteString.Lazy           as B
+import qualified Data.ByteString.Lazy                 as B
 -- import qualified Data.ByteString.Lazy.Char8     as C
 
-import System.Console.GetOpt
+import           System.Console.GetOpt
 
-import Text.XML.HXT.Arrow.DocumentInput         ( addInputError )
-import Text.XML.HXT.IO.GetHTTPNative            ( getCont )
+import           Text.XML.HXT.Arrow.DocumentInput     (addInputError)
+import           Text.XML.HXT.IO.GetHTTPNative        (getCont)
 
-import Text.XML.HXT.DOM.Interface
+import           Text.XML.HXT.DOM.Interface
 
-import Text.XML.HXT.Arrow.XmlArrow
-import Text.XML.HXT.Arrow.XmlState
-import Text.XML.HXT.Arrow.XmlState.TypeDefs
+import           Text.XML.HXT.Arrow.XmlArrow
+import           Text.XML.HXT.Arrow.XmlState
+import           Text.XML.HXT.Arrow.XmlState.TypeDefs
 
 -- ----------------------------------------------------------
 
@@ -51,7 +51,7 @@ getHTTPNativeContents
         getSysVar (theInputOptions .&&&.
                    theProxy        .&&&.
                    theStrictInput  .&&&.
-		   theRedirect
+                   theRedirect
                   )
       )
       where

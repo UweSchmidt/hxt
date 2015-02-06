@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# OPTIONS -fno-warn-unused-imports #-}
 
 -- ------------------------------------------------------------
@@ -28,30 +29,41 @@ module Text.XML.HXT.Arrow.XmlCache
     )
 where
 
-import Control.DeepSeq
-import Control.Concurrent.ResourceTable
-import Control.Exception                        ( SomeException , try )
+import           Control.Concurrent.ResourceTable
+import           Control.DeepSeq
+import           Control.Exception                    (SomeException, try)
 
-import Data.Binary
-import qualified
-       Data.ByteString.Lazy   as B
-import Data.Char
-import Data.Either
-import Data.Maybe
-import Data.Digest.Pure.SHA
-import Data.Time
+import           Data.Binary
+import qualified Data.ByteString.Lazy                 as B
+import           Data.Char
+import           Data.Digest.Pure.SHA
+import           Data.Either
+import           Data.Maybe
+import           Data.Time                            (UTCTime, addUTCTime,
+                                                       formatTime,
+                                                       getCurrentTime)
 
-import System.FilePath
-import System.Directory
-import System.IO
-import System.Locale
-import System.Posix                            ( touchFile )
--- import System.Time
-import System.IO.Unsafe                        ( unsafePerformIO )
+import           System.Directory                     (createDirectoryIfMissing,
+                                                       doesFileExist,
+                                                       getModificationTime,
+                                                       removeFile)
+import           System.FilePath                      ((</>))
+import           System.IO                            (IOMode (AppendMode),
+                                                       hClose, hPutStrLn,
+                                                       openBinaryFile)
+#if MIN_VERSION_time(1,5,0)
+import           Data.Time                            (defaultTimeLocale,
+                                                       rfc822DateFormat)
+#else
+import           System.Locale                        (defaultTimeLocale,
+                                                       rfc822DateFormat)
+#endif
+import           System.IO.Unsafe                     (unsafePerformIO)
+import           System.Posix                         (touchFile)
 
-import Text.XML.HXT.Core
-import Text.XML.HXT.Arrow.XmlState.TypeDefs
-import Text.XML.HXT.Arrow.Binary
+import           Text.XML.HXT.Arrow.Binary
+import           Text.XML.HXT.Arrow.XmlState.TypeDefs
+import           Text.XML.HXT.Core
 
 -- ------------------------------------------------------------
 

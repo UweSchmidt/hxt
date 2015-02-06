@@ -9,7 +9,7 @@ Author:         Thorben Guelck
 Maintainer:     Uwe Schmidt <uwe@fh-wedel.de>
 Stability:      Experimental
 Category:       XML
-Homepage:       http://www.fh-wedel.de/~si/HXmlToolbox/index.html
+Homepage:       https://github.com/UweSchmidt/hxt
 Copyright:      Copyright (c) 2012 Thorben Guelck, Uwe Schmidt
 Build-type:     Simple
 Cabal-version:  >=1.8

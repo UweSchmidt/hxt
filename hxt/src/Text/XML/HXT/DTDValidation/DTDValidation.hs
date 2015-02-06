@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 -- ------------------------------------------------------------
 
 {- |
@@ -36,8 +38,8 @@ module Text.XML.HXT.DTDValidation.DTDValidation
     )
 where
 
-import Text.XML.HXT.DTDValidation.TypeDefs
-import Text.XML.HXT.DTDValidation.AttributeValueValidation
+import           Text.XML.HXT.DTDValidation.AttributeValueValidation
+import           Text.XML.HXT.DTDValidation.TypeDefs
 
 -- |
 -- Validate a DTD.

@@ -23,17 +23,15 @@ module Text.XML.HXT.DOM.ShowXml
     )
 where
 
-import Prelude                           hiding (showChar, showString)
+import           Prelude                      hiding (showChar, showString)
 
-import Data.Maybe
-import Data.Tree.Class
-import Data.Tree.NTree.TypeDefs
+import           Data.Maybe
+import           Data.Tree.Class
+import           Data.Tree.NTree.TypeDefs
 
-import Text.XML.HXT.DOM.TypeDefs                -- XML Tree types
-import Text.XML.HXT.DOM.XmlKeywords
-import Text.XML.HXT.DOM.XmlNode                 ( mkDTDElem
-                                                , getDTDAttrl
-                                                )
+import           Text.XML.HXT.DOM.TypeDefs
+import           Text.XML.HXT.DOM.XmlKeywords
+import           Text.XML.HXT.DOM.XmlNode     (getDTDAttrl, mkDTDElem)
 
 -- -----------------------------------------------------------------------------
 --
@@ -79,37 +77,37 @@ type StringFct          = String -> String
 
 -- ------------------------------------------------------------
 
-showXmlTrees        	    	:: (String -> StringFct) -> (String -> StringFct) -> XmlTrees -> StringFct
+showXmlTrees                    :: (String -> StringFct) -> (String -> StringFct) -> XmlTrees -> StringFct
 showXmlTrees cf af
     = showTrees
       where
 
       -- ------------------------------------------------------------
 
-      showTrees			:: XmlTrees -> StringFct
-      showTrees		    	= foldr (.) id . map showXmlTree
+      showTrees                 :: XmlTrees -> StringFct
+      showTrees                 = foldr (.) id . map showXmlTree
       {-# INLINE showTrees #-}
 
-      showTrees'           	:: XmlTrees -> StringFct
-      showTrees'           	= foldr (\ x y -> x . showNL . y) id . map showXmlTree
+      showTrees'                :: XmlTrees -> StringFct
+      showTrees'                = foldr (\ x y -> x . showNL . y) id . map showXmlTree
       {-# INLINE showTrees' #-}
 
       -- ------------------------------------------------------------
 
       showXmlTree             :: XmlTree  -> StringFct
       showXmlTree (NTree (XText s) _)                         -- common cases first
-          			= cf s
+                                = cf s
 
       showXmlTree (NTree (XTag t al) [])
-    				= showLt . showQName t . showTrees al . showSlash . showGt
+                                = showLt . showQName t . showTrees al . showSlash . showGt
 
       showXmlTree (NTree (XTag t al) cs)
-    				= showLt . showQName t . showTrees al . showGt
+                                = showLt . showQName t . showTrees al . showGt
                                   . showTrees cs
                                   . showLt . showSlash . showQName t . showGt
 
       showXmlTree (NTree (XAttr an) cs)
-    				= showBlank
+                                = showBlank
                                   . showQName an
                                   . showEq
                                   . showQuot
@@ -117,22 +115,22 @@ showXmlTrees cf af
                                   . showQuot
 
       showXmlTree (NTree (XBlob b) _)
-    				= cf . blobToString $ b
+                                = cf . blobToString $ b
 
       showXmlTree (NTree (XCharRef i) _)
-    				= showString "&#" . showString (show i) . showChar ';'
+                                = showString "&#" . showString (show i) . showChar ';'
 
       showXmlTree (NTree (XEntityRef r) _)
-    				= showString "&" . showString r . showChar ';'
+                                = showString "&" . showString r . showChar ';'
 
       showXmlTree (NTree (XCmt c) _)
-    				= showString "<!--" . showString c . showString "-->"
+                                = showString "<!--" . showString c . showString "-->"
 
       showXmlTree (NTree (XCdata d) _)
-    				= showString "<![CDATA[" . showString d . showString "]]>"
+                                = showString "<![CDATA[" . showString d . showString "]]>"
 
       showXmlTree (NTree (XPi n al) _)
-    				= showString "<?"
+                                = showString "<?"
                                   . showQName n
                                   . (foldr (.) id . map showPiAttr) al
                                   . showString "?>"
@@ -147,10 +145,10 @@ showXmlTrees cf af
                                       = showXmlTree a -- id
 
       showXmlTree (NTree (XDTD de al) cs)
-    				= showXmlDTD de al cs
+                                = showXmlDTD de al cs
 
       showXmlTree (NTree (XError l e) _)
-    				= showString "<!-- ERROR ("
+                                = showString "<!-- ERROR ("
                                   . shows l
                                   . showString "):\n"
                                   . showString e
@@ -160,7 +158,7 @@ showXmlTrees cf af
 
       showXmlDTD              :: DTDElem -> Attributes -> XmlTrees -> StringFct
 
-      showXmlDTD DOCTYPE al cs	= showString "<!DOCTYPE "
+      showXmlDTD DOCTYPE al cs  = showString "<!DOCTYPE "
                                   . showAttr a_name al
                                   . showExternalId al
                                   . showInternalDTD cs
@@ -171,7 +169,7 @@ showXmlTrees cf af
                                                        . showTrees' ds
                                                        . showChar ']'
 
-      showXmlDTD ELEMENT al cs	= showString "<!ELEMENT "
+      showXmlDTD ELEMENT al cs  = showString "<!ELEMENT "
                                   . showAttr a_name al
                                   . showBlank
                                   . showElemType (lookup1 a_type al) cs
@@ -233,19 +231,19 @@ showXmlTrees cf af
                                             . showString k
 
       showXmlDTD NOTATION al _cs
-    				= showString "<!NOTATION "
+                                = showString "<!NOTATION "
                                   . showAttr a_name al
                                   . showExternalId al
                                   . showString " >"
 
-      showXmlDTD PENTITY al cs	= showEntity "% " al cs
+      showXmlDTD PENTITY al cs  = showEntity "% " al cs
 
       showXmlDTD ENTITY al cs   = showEntity "" al cs
 
       showXmlDTD PEREF al _cs   = showPEAttr al
 
       showXmlDTD CONDSECT _ (c1 : cs)
-    				= showString "<![ "
+                                = showString "<![ "
                                   . showXmlTree c1
                                   . showString " [\n"
                                   . showTrees cs
@@ -263,8 +261,8 @@ showXmlTrees cf af
 
       -- ------------------------------------------------------------
 
-      showEntity      		:: String -> Attributes -> XmlTrees -> StringFct
-      showEntity kind al cs	= showString "<!ENTITY "
+      showEntity                :: String -> Attributes -> XmlTrees -> StringFct
+      showEntity kind al cs     = showString "<!ENTITY "
                                   . showString kind
                                   . showAttr a_name al
                                   . showExternalId al
@@ -273,8 +271,8 @@ showXmlTrees cf af
                                   . showString " >"
 
 
-      showEntityValue 		:: XmlTrees -> StringFct
-      showEntityValue []	= id
+      showEntityValue           :: XmlTrees -> StringFct
+      showEntityValue []        = id
       showEntityValue cs        = showBlank
                                   . showQuot
                                   . af (xshow cs)
@@ -282,11 +280,11 @@ showXmlTrees cf af
 
       -- ------------------------------------------------------------
 
-      showContent     		:: XmlTree -> StringFct
+      showContent               :: XmlTree -> StringFct
       showContent (NTree (XDTD de al) cs)
-    				= cont2String de
+                                = cont2String de
                                   where
-                                  cont2String       	:: DTDElem -> StringFct
+                                  cont2String           :: DTDElem -> StringFct
                                   cont2String NAME      = showAttr a_name al
                                   cont2String PEREF     = showPEAttr al
                                   cont2String CONTENT   = showLpar
@@ -303,11 +301,11 @@ showXmlTrees cf af
                                                                        )
                                                           . s2
 
-      showContent n		= showXmlTree n
+      showContent n             = showXmlTree n
 
       -- ------------------------------------------------------------
 
-      showElemType    		:: String -> XmlTrees -> StringFct
+      showElemType              :: String -> XmlTrees -> StringFct
       showElemType t cs
           | t == v_pcdata       = showLpar . showString v_pcdata . showRpar
           | t == v_mixed
@@ -320,7 +318,7 @@ showXmlTrees cf af
                                   . showRpar
                                   . showAttr a_modifier al1
           | t == v_mixed                              -- incorrect tree, e.g. after erronius pe substitution
-        			= showLpar
+                                = showLpar
                                   . showRpar
           | t == v_children
             &&
@@ -333,54 +331,54 @@ showXmlTrees cf af
           where
           [(NTree (XDTD CONTENT al1) cs1)] = cs
 
-          mixedContent 		:: Attributes -> StringFct
+          mixedContent          :: Attributes -> StringFct
           mixedContent l        = showString " | " . showAttr a_name l . showPEAttr l
 
-          selAttrl (XDTD _ as) 	= as
+          selAttrl (XDTD _ as)  = as
           selAttrl (XText tex)  = [(a_name, tex)]
           selAttrl _            = []
 
 -- ------------------------------------------------------------
 
-showQName               	:: QName -> StringFct
-showQName               	= qualifiedName'
+showQName                       :: QName -> StringFct
+showQName                       = qualifiedName'
 {-# INLINE showQName #-}
 
 -- ------------------------------------------------------------
 
-showQuoteString         	:: String -> StringFct
-showQuoteString s       	= showQuot . showString s . showQuot
+showQuoteString                 :: String -> StringFct
+showQuoteString s               = showQuot . showString s . showQuot
 
 -- ------------------------------------------------------------
 
-showAttr                	:: String -> Attributes -> StringFct
-showAttr k al           	= showString (fromMaybe "" . lookup k $ al)
+showAttr                        :: String -> Attributes -> StringFct
+showAttr k al                   = showString (fromMaybe "" . lookup k $ al)
 
 -- ------------------------------------------------------------
 
-showPEAttr      		:: Attributes -> StringFct
-showPEAttr al	    		= showPE (lookup a_peref al)
+showPEAttr                      :: Attributes -> StringFct
+showPEAttr al                   = showPE (lookup a_peref al)
     where
-    showPE (Just pe) 		= showChar '%'
+    showPE (Just pe)            = showChar '%'
                                   . showString pe
                                   . showChar ';'
-    showPE Nothing   		= id
+    showPE Nothing              = id
 
 -- ------------------------------------------------------------
 
-showExternalId  		:: Attributes -> StringFct
-showExternalId al		= id2Str (lookup k_system al) (lookup k_public al)
+showExternalId                  :: Attributes -> StringFct
+showExternalId al               = id2Str (lookup k_system al) (lookup k_public al)
     where
-    id2Str Nothing  Nothing  	= id
-    id2Str (Just s) Nothing  	= showBlank
+    id2Str Nothing  Nothing     = id
+    id2Str (Just s) Nothing     = showBlank
                                   . showString k_system
                                   . showBlank
                                   . showQuoteString s
-    id2Str Nothing  (Just p) 	= showBlank
+    id2Str Nothing  (Just p)    = showBlank
                                   . showString k_public
                                   . showBlank
                                   . showQuoteString p
-    id2Str (Just s) (Just p) 	= showBlank
+    id2Str (Just s) (Just p)    = showBlank
                                   . showString k_public
                                   . showBlank
                                   . showQuoteString p
@@ -389,11 +387,11 @@ showExternalId al		= id2Str (lookup k_system al) (lookup k_public al)
 
 -- ------------------------------------------------------------
 
-showNData       		:: Attributes -> StringFct
-showNData al			= nd2Str (lookup k_ndata al)
+showNData                       :: Attributes -> StringFct
+showNData al                    = nd2Str (lookup k_ndata al)
     where
-    nd2Str Nothing    		= id
-    nd2Str (Just v)   		= showBlank
+    nd2Str Nothing              = id
+    nd2Str (Just v)             = showBlank
                                   . showString k_ndata
                                   . showBlank
                                   . showString v
@@ -430,7 +428,7 @@ showRpar        = showChar ')'
 showNL          = showChar '\n'
 {-# INLINE showNL #-}
 
-showChar	:: Char -> StringFct
+showChar        :: Char -> StringFct
 showChar        = (:)
 {-# INLINE showChar #-}
 

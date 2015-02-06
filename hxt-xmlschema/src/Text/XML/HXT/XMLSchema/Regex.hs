@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {- # LANGUAGE #-}
 
 -- ----------------------------------------
@@ -5,12 +6,15 @@
 module Text.XML.HXT.XMLSchema.Regex
 where
 
-import Control.Applicative  ( Applicative(..)
-                            , Alternative(..)
-                            , (<$>) )
-import Control.Monad
+#if MIN_VERSION_base(4,8,0)
+import           Control.Applicative (Alternative (..), (<$>))
+#else
+import           Control.Applicative (Alternative (..), Applicative (..), (<$>))
+#endif
 
-import Data.List ( intercalate )
+import           Control.Monad
+
+import           Data.List           (intercalate)
 
 -- ----------------------------------------
 --
@@ -58,7 +62,7 @@ headTree (Fork l _r) = headTree l
 data ResultSet a = Errs (Tree2 (String, String))
                  | Vals (Tree2 a)
                    deriving (Show)
-                            
+
 instance Functor ResultSet where
     fmap f x = x >>= return . f
 

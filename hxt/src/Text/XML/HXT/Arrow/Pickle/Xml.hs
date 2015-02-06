@@ -50,15 +50,21 @@
 module Text.XML.HXT.Arrow.Pickle.Xml
 where
 
+#if MIN_VERSION_base(4,8,0)
+#else
 import           Control.Applicative              (Applicative (..))
+#endif
+
 import           Control.Arrow.ArrowList
 import           Control.Arrow.ListArrows
 import           Control.Monad                    ()
+
 #if MIN_VERSION_mtl(2,2,0)
 import           Control.Monad.Except             (MonadError (..))
 #else
 import           Control.Monad.Error              (MonadError (..))
 #endif
+
 import           Control.Monad.State              (MonadState (..), gets,
                                                    modify)
 

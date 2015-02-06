@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 
 -- ------------------------------------------------------------
@@ -22,16 +23,22 @@
 module Data.Tree.NTree.TypeDefs
 where
 
-import           Control.Applicative (Applicative (..), (<$>))
+import           Control.Applicative ((<$>))
 import           Control.DeepSeq     (NFData (..))
 import           Control.FlatSeq     (WNFData (..), rlnf)
 
 import           Data.Binary
-import           Data.Foldable       (Foldable (..))
-import           Data.Monoid         (Monoid (..), (<>))
-import           Data.Traversable    (Traversable (..), sequenceA)
+import           Data.Monoid         ((<>))
 import           Data.Tree.Class     (Tree (..))
 import           Data.Typeable       (Typeable)
+
+#if MIN_VERSION_base(4,8,0)
+#else
+import           Control.Applicative (Applicative (..))
+import           Data.Foldable       (Foldable (..))
+import           Data.Monoid         (Monoid (..))
+import           Data.Traversable    (Traversable (..), sequenceA)
+#endif
 
 -- ------------------------------------------------------------
 
@@ -58,11 +65,11 @@ instance (NFData a) => NFData (NTree a) where
     {-# INLINE rnf #-}
 
 instance (WNFData a) => WNFData (NTree a) where
-    rwnf (NTree n cl)           	= rwnf n `seq` rwnf cl
+    rwnf (NTree n cl)                   = rwnf n `seq` rwnf cl
     {-# INLINE rwnf #-}
 
     -- | Evaluate a tree 2 steps deep, the top node and all children are evaluated with rwnf
-    rwnf2 (NTree n cl)              	= rwnf n `seq` rlnf rwnf cl
+    rwnf2 (NTree n cl)                  = rwnf n `seq` rlnf rwnf cl
     {-# INLINE rwnf2 #-}
 
 -- ------------------------------------------------------------

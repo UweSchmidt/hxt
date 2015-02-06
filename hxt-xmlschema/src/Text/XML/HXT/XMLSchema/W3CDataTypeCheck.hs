@@ -572,7 +572,7 @@ rexDates
       tz0   = (alt "\\-" "\\+") ++ tz1
       tz1   = alt (h13 ++ ":" ++ i2) "14:00:00"
 
-      m2    = alt "0[1-9]" "1[0-2]"			-- Month
+      m2    = alt "0[1-9]" "1[0-2]"                     -- Month
       t2    = alt "0[1-9]" (alt "[12][0-9]" "3[01]")    -- Tag
       h2    = alt "[01][0-9]" "2[0-3]"                  -- Hour
       i2    = "[0-5][0-9]"                              -- mInute
@@ -965,7 +965,7 @@ datatypeAllowsW3C d params value
             >>> enumerationValid' isFloating readFloating eqFl params
 
       validBoolean
-          = validPattern	-- no enumeration allowed
+          = validPattern        -- no enumeration allowed
             >>> arr normalizeWhitespace
             >>> assertW3C (matchRE rexBoolean)
 

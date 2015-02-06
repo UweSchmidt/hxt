@@ -49,12 +49,12 @@ module Text.XML.HXT.Arrow.XmlRegex
     )
 where
 
-import Control.Arrow.ListArrows
+import           Control.Arrow.ListArrows
 
-import Data.Maybe
+import           Data.Maybe
 
-import Text.XML.HXT.DOM.Interface
-import Text.XML.HXT.DOM.ShowXml  ( xshow )
+import           Text.XML.HXT.DOM.Interface
+import           Text.XML.HXT.DOM.ShowXml   (xshow)
 
 -- ------------------------------------------------------------
 -- the exported regex arrows
@@ -249,8 +249,8 @@ instance Show XmlRegex where
 
 -- ------------------------------------------------------------
 
-unexpected 		:: XmlTree -> String -> String
-unexpected t e		= emsg e ++ (cut 80 . xshow) [t]
+unexpected              :: XmlTree -> String -> String
+unexpected t e          = emsg e ++ (cut 80 . xshow) [t]
     where
       emsg ""           = "unexpected: "
       emsg s            = "expected: " ++ s ++ ", but got: "

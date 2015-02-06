@@ -25,48 +25,30 @@ module Text.XML.HXT.XMLSchema.Validation
 
 where
 
-import Prelude                        hiding ( lookup )
+import           Prelude                                hiding (lookup)
 
-import Text.XML.HXT.Core                     ( XmlTree
+import           Text.XML.HXT.Core                      (XmlTree, arr, arrL,
+                                                         c_err, constA,
+                                                         documentStatusOk,
+                                                         getChildren, guards,
+                                                         isA, isElem, issueErr,
+                                                         issueFatal, issueWarn,
+                                                         none, orElse, perform, setDocumentStatusFromSystemState,
+                                                         this, traceMsg, when,
+                                                         ($<), (>>>))
 
-                                             , arr		-- arrow stuff
-                                             , arrL
-                                             , constA
-                                             , isA
-                                             , none
-                                             , this
-                                             , traceMsg
-                                             , perform
-                                             , (>>>)
-                                             , ($<)
-                                             , orElse
-                                             , when
-                                             , guards
-                                             , getChildren
-                                             , isElem
-                                             , setDocumentStatusFromSystemState
-                                             , documentStatusOk
-                                             , issueWarn
-                                             , issueErr
-                                             , issueFatal
-                                             , c_err
-                                             )
+import           Text.XML.HXT.Arrow.XmlState.TypeDefs   (IOSArrow, IOStateArrow,
+                                                         SysConfigList,
+                                                         configSysVars,
+                                                         localSysEnv, setS,
+                                                         theXmlSchemaValidate,
+                                                         withoutUserState)
 
-import Text.XML.HXT.Arrow.XmlState.TypeDefs  ( SysConfigList
-                                             , IOStateArrow
-                                             , IOSArrow
-                                             , setS
-                                             , theXmlSchemaValidate
-                                             , withoutUserState
-                                             , localSysEnv
-                                             , configSysVars
-                                             )
-
-import Text.XML.HXT.XMLSchema.AbstractSyntax ( XmlSchema )
-import Text.XML.HXT.XMLSchema.Loader
-import Text.XML.HXT.XMLSchema.Transformation ( createRootDesc )
-import Text.XML.HXT.XMLSchema.ValidationCore ( testRoot )
-import Text.XML.HXT.XMLSchema.ValidationTypes
+import           Text.XML.HXT.XMLSchema.AbstractSyntax  (XmlSchema)
+import           Text.XML.HXT.XMLSchema.Loader
+import           Text.XML.HXT.XMLSchema.Transformation  (createRootDesc)
+import           Text.XML.HXT.XMLSchema.ValidationCore  (testRoot)
+import           Text.XML.HXT.XMLSchema.ValidationTypes
 
 -- ----------------------------------------
 
@@ -128,7 +110,7 @@ validateWithSchema uri
             "At XPath " ++ xp ++ ": " ++ e
 
       validate schema
-          = ( getChildren >>> isElem	-- select document root element
+          = ( getChildren >>> isElem    -- select document root element
               >>>
               traceMsg 1 "document validation process started"
               >>>

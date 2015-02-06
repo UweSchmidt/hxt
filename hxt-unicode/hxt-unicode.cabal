@@ -1,5 +1,5 @@
 Name:                hxt-unicode
-Version:             9.0.2.2
+Version:             9.0.2.4
 Synopsis:            Unicode en-/decoding functions for utf8, iso-latin-* and other encodings
 Description:         Unicode encoding and decoding functions for utf8, iso-latin-* and somes other encodings,
                      used in the Haskell XML Toolbox.
@@ -10,12 +10,13 @@ License:             MIT
 License-file:        LICENSE
 Author:              Uwe Schmidt
 Maintainer:          Uwe Schmidt <uwe@fh-wedel.de>
+Homepage:            https://github.com/UweSchmidt/hxt
 Copyright:           Copyright (c) 2010- Uwe Schmidt
 Stability:           Stable
 Category:            Text
 Build-type:          Simple
 
-Cabal-version:       >=1.4
+Cabal-version:       >=1.6
 
 Library
   Exposed-modules:     
@@ -32,3 +33,7 @@ Library
 
   ghc-options: -Wall
   ghc-prof-options: -auto-all -caf-all
+
+Source-Repository head
+  Type:     git
+  Location: git://github.com/UweSchmidt/hxt.git

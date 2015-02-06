@@ -18,40 +18,29 @@ module Text.XML.HXT.XMLSchema.Transformation
   )
 where
 
-import Text.XML.HXT.Core           ( QName
-                                   , localPart
-                                   , namespaceUri
-                                   )
-import Control.Monad.Identity      ( Identity
-                                   , runIdentity
-                                   )
+import           Control.Monad.Identity                  (Identity, runIdentity)
+import           Text.XML.HXT.Core                       (QName, localPart,
+                                                          namespaceUri)
 
-import Control.Monad.Reader        ( ReaderT
-                                   , runReaderT
-                                   , ask
-                                   , asks
-                                   )
+import           Control.Monad.Reader                    (ReaderT, ask, asks,
+                                                          runReaderT)
 
-import Control.Applicative         ( (<$>) )
+import           Control.Applicative                     ((<$>))
 
-import Data.Maybe                  ( fromMaybe )
+import           Data.Maybe                              (fromMaybe)
 
-import Data.Map                    ( empty
-                                   , singleton
-                                   , lookup
-                                   , union
-                                   , fromList
-                                   , toList
-                                   )
+import           Data.Map                                (empty, fromList,
+                                                          lookup, singleton,
+                                                          toList, union)
 
-import Prelude hiding              ( lookup )
+import           Prelude                                 hiding (lookup)
 
-import Text.XML.HXT.XMLSchema.AbstractSyntax
-import Text.XML.HXT.XMLSchema.W3CDataTypeCheck
-import Text.XML.HXT.XMLSchema.ValidationTypes
-import Text.XML.HXT.XMLSchema.ValidationCore
-import Text.XML.HXT.XMLSchema.Regex
-import Text.XML.HXT.XMLSchema.XmlUtils
+import           Text.XML.HXT.XMLSchema.AbstractSyntax
+import           Text.XML.HXT.XMLSchema.Regex
+import           Text.XML.HXT.XMLSchema.ValidationCore
+import           Text.XML.HXT.XMLSchema.ValidationTypes
+import           Text.XML.HXT.XMLSchema.W3CDataTypeCheck
+import           Text.XML.HXT.XMLSchema.XmlUtils
 
 -- ----------------------------------------
 
@@ -253,7 +242,7 @@ setMixedContent mx ed
 setWildcard :: Wildcard -> ElemDesc -> ElemDesc
 setWildcard wc ed
     = ed { contentModel = mkWildcardRE wc
-         , wildcards = wc : wildcards ed	-- TODO: should be redundant
+         , wildcards = wc : wildcards ed        -- TODO: should be redundant
          }
 
 mergeAttrDesc :: ElemDesc -> ElemDesc -> ElemDesc
@@ -560,7 +549,7 @@ createElemDesc (ElDef (ElementDef _ tdef))
              -> toED $ Right ct
     where
      toED (Left tf)
-         = return $ mkSimpleElemDesc (empty, []) tf 
+         = return $ mkSimpleElemDesc (empty, []) tf
      toED (Right ct)
          = ctToElemDesc ct
 

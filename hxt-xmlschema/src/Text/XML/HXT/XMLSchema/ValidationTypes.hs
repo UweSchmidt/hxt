@@ -1,4 +1,5 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 {-# OPTIONS -fno-warn-orphans #-}
 
 {- |
@@ -16,42 +17,28 @@
 module Text.XML.HXT.XMLSchema.ValidationTypes
 where
 
-import Text.XML.HXT.Core           ( QName
-                                   , XmlTree
-                                   , c_warn
-                                   , c_err
-                                   )
-import Text.XML.HXT.DOM.ShowXml    ( xshow )
+import           Text.XML.HXT.Core            (QName, XmlTree, c_err, c_warn)
+import           Text.XML.HXT.DOM.ShowXml     (xshow)
 
 -- import Text.XML.HXT.Arrow.XmlRegex ( XmlRegex )
 
-import Control.Monad.Identity      ( Identity
-                                   , runIdentity
-                                   )
+import           Control.Monad.Identity       (Identity, runIdentity)
 
-import Control.Monad.Reader        ( ReaderT
-                                   , runReaderT
-                                   , asks
-                                   )
+import           Control.Monad.Reader         (ReaderT, asks, runReaderT)
 
-import Control.Monad.Writer        ( WriterT
-                                   , runWriterT
-                                   , tell
-                                   )
+import           Control.Monad.Writer         (WriterT, runWriterT, tell)
 
-import Data.Map                    ( Map
-                                   , keys
-                                   )
+import           Data.Map                     (Map, keys)
 
-import Text.XML.HXT.XMLSchema.Regex
+import           Text.XML.HXT.XMLSchema.Regex
 
 -- ----------------------------------------
 
 -- | The environment used during validation
 data SValEnv       = SValEnv
-                   { xpath           :: XPath
-                   , elemDesc        :: ElemDesc
-                   , allElemDesc     :: SubElemDesc	-- all declared elements, used with wilcard contents
+                   { xpath       :: XPath
+                   , elemDesc    :: ElemDesc
+                   , allElemDesc :: SubElemDesc     -- all declared elements, used with wilcard contents
                    }
 
 -- | Simple XPath representation
@@ -64,8 +51,8 @@ data ElemDesc      = ElemDesc
                    , mixedContent :: Bool
                    , contentModel :: XmlRegex'
                    , subElemDesc  :: SubElemDesc
-                   , wildcards    :: Wildcards		-- redundant: never read, only set
-                   , sttf         :: MaybeSTTF		-- in case of simple types Just the string test, else Nothing
+                   , wildcards    :: Wildcards          -- redundant: never read, only set
+                   , sttf         :: MaybeSTTF          -- in case of simple types Just the string test, else Nothing
                    }
 
 -- | Description for allowed attributes of an element

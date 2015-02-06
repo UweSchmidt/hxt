@@ -1,6 +1,6 @@
 -- arch-tag: Haskell XML Toolbox main description file
 Name:           hxt
-Version:        9.3.1.13
+Version:        9.3.1.14
 Synopsis:       A collection of tools for processing XML with Haskell.
 Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
                 but introduces a more general approach for processing XML with Haskell.
@@ -16,6 +16,8 @@ Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
                 hxt-regex-xmlschema contain the extensions.
                 hxt-unicode contains encoding and decoding functions,
                 hxt-charproperties char properties for unicode and XML.
+                .
+                Changes from 9.3.1.13: ghc-7.10 compatibility
                 .
                 Changes from 9.3.1.12: Bug when unpickling an empty attribute value removed
                 .
@@ -59,8 +61,8 @@ Author:         Uwe Schmidt, Martin Schmidt, Torben Kuseler
 Maintainer:     Uwe Schmidt <uwe@fh-wedel.de>
 Stability:      Stable
 Category:       XML
-Homepage:       http://www.fh-wedel.de/~si/HXmlToolbox/index.html
-Copyright:      Copyright (c) 2005-2014 Uwe Schmidt
+Homepage:       https://github.com/UweSchmidt/hxt
+Copyright:      Copyright (c) 2005-2015 Uwe Schmidt
 Build-type:     Simple
 Cabal-version:  >=1.8
 
@@ -205,7 +207,7 @@ library
  ghc-options: -Wall
  ghc-prof-options: -auto-all -caf-all
 
- extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances
+ extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances CPP
 
  build-depends: base       >= 4     && < 5,
                 containers >= 0.2   && < 1,

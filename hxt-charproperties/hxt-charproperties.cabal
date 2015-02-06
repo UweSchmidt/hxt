@@ -40,3 +40,7 @@ Library
 
   ghc-options: -Wall
   ghc-prof-options: -auto-all -caf-all
+
+Source-Repository head
+  Type:     git
+  Location: git://github.com/UweSchmidt/hxt.git

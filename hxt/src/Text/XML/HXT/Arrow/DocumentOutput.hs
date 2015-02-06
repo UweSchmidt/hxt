@@ -24,45 +24,37 @@ module Text.XML.HXT.Arrow.DocumentOutput
     )
 where
 
-import Control.Arrow                            -- arrow classes
-import Control.Arrow.ArrowList
-import Control.Arrow.ArrowIf
-import Control.Arrow.ArrowTree
-import Control.Arrow.ArrowIO
-import Control.Arrow.ListArrow
-import Control.Arrow.ArrowExc
+import           Control.Arrow
+import           Control.Arrow.ArrowExc
+import           Control.Arrow.ArrowIf
+import           Control.Arrow.ArrowIO
+import           Control.Arrow.ArrowList
+import           Control.Arrow.ArrowTree
+import           Control.Arrow.ListArrow
 
-import qualified
-       Data.ByteString.Lazy                     as BS
-import Data.Maybe
-import Data.String.Unicode                      ( getOutputEncodingFct' )
+import qualified Data.ByteString.Lazy                 as BS
+import           Data.Maybe
+import           Data.String.Unicode                  (getOutputEncodingFct')
 
-import Text.XML.HXT.DOM.Interface
-import qualified
-       Text.XML.HXT.DOM.ShowXml                 as XS
+import           Text.XML.HXT.DOM.Interface
+import qualified Text.XML.HXT.DOM.ShowXml             as XS
 
-import Text.XML.HXT.Arrow.XmlArrow
-import Text.XML.HXT.Arrow.Edit                  ( addHeadlineToXmlDoc
-                                                , addXmlPi
-                                                , addXmlPiEncoding
-                                                , indentDoc
-                                                , numberLinesInXmlDoc
-                                                , treeRepOfXmlDoc
-                                                , escapeHtmlRefs
-                                                , escapeXmlRefs
-                                                )
-import Text.XML.HXT.Arrow.XmlState
-import Text.XML.HXT.Arrow.XmlState.TypeDefs
+import           Text.XML.HXT.Arrow.Edit              (addHeadlineToXmlDoc,
+                                                       addXmlPi,
+                                                       addXmlPiEncoding,
+                                                       escapeHtmlRefs,
+                                                       escapeXmlRefs, indentDoc,
+                                                       numberLinesInXmlDoc,
+                                                       treeRepOfXmlDoc)
+import           Text.XML.HXT.Arrow.XmlArrow
+import           Text.XML.HXT.Arrow.XmlState
+import           Text.XML.HXT.Arrow.XmlState.TypeDefs
 
-import System.IO                                ( Handle
-                                                , IOMode(..)
-                                                , openFile
-                                                , openBinaryFile
-                                                , hSetBinaryMode
-                                                , hPutStrLn
-                                                , hClose
-                                                , stdout
-                                                )
+import           System.IO                            (Handle, IOMode (..),
+                                                       hClose, hPutStrLn,
+                                                       hSetBinaryMode,
+                                                       openBinaryFile, openFile,
+                                                       stdout)
 
 -- ------------------------------------------------------------
 --
@@ -220,7 +212,7 @@ encodeDocument' quoteXml supressXmlPi defaultEnc
     encode      :: String -> LA XmlTree XmlTree
     encode encodingScheme
         | encodingScheme == unicodeString
-	    = replaceChildren
+            = replaceChildren
               ( (getChildren >. XS.xshow'' cQuot aQuot)
                 >>>
                 mkText
@@ -244,7 +236,7 @@ encodeDocument' quoteXml supressXmlPi defaultEnc
               addAttr a_output_encoding encodingScheme
         where
         (cQuot, aQuot)
-            | quoteXml	= escapeXmlRefs
+            | quoteXml  = escapeXmlRefs
             | otherwise = escapeHtmlRefs
 
         encodeFct       = getOutputEncodingFct' encodingScheme
@@ -255,7 +247,7 @@ encodeDocument' quoteXml supressXmlPi defaultEnc
                             mkBlob
                           )
         xshowBlobWithEnc cenc aenc enc f
-                        = f >. XS.xshow' cenc aenc enc 
+                        = f >. XS.xshow' cenc aenc enc
 
         -- if encoding scheme is isolatin1 and the contents is a single blob (bytestring)
         -- the encoding is the identity.
