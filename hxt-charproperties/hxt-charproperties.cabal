@@ -15,7 +15,7 @@ Stability:           Stable
 Category:            Text
 Build-type:          Simple
 
-Cabal-version:       >=1.4
+Cabal-version:       >=1.6
 
 Extra-source-files:
   gen/Makefile
@@ -39,7 +39,7 @@ Library
   hs-source-dirs: src
 
   ghc-options: -Wall
-  ghc-prof-options: -auto-all -caf-all
+  ghc-prof-options: -caf-all
 
 Source-Repository head
   Type:     git

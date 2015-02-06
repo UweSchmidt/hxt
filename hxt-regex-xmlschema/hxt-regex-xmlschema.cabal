@@ -53,7 +53,7 @@ Library
   ghc-options:       -rtsopts 
                      -Wall -fwarn-tabs -funbox-strict-fields
 
-  ghc-prof-options:  -auto-all -caf-all
+  ghc-prof-options:  -caf-all
 
   build-depends:     base               >= 4     && < 5
                    , bytestring         >= 0.10

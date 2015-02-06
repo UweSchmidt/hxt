@@ -30,7 +30,7 @@ library
  hs-source-dirs: src
 
  ghc-options: -Wall
- ghc-prof-options: -auto-all -caf-all
+ ghc-prof-options: -caf-all
 
  build-depends: base       >= 4   && < 5,
                 bytestring >= 0.9 && < 1,
@@ -40,15 +40,11 @@ library
                 directory  >= 1.2 && < 2,
                 filepath   >= 1.1 && < 2,
                 hxt        >= 9   && < 10,
-                old-locale >= 1   && < 2,
                 time       >= 1.4 && < 2,
                 unix       >= 2.3 && < 3,
                 SHA        >= 1.4 && < 2
- if impl(ghc >= 7.10.0)
-   build-depends: time     >= 1.5
- else
-   build-depends: old-locale >= 1   && < 2,
-                  time       == 1.4.*
+ if impl(time < 1.5)
+   build-depends: old-locale >= 1   && < 2
 
 
 Source-Repository head
