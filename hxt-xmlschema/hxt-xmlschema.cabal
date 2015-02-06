@@ -1,6 +1,6 @@
 -- arch-tag: Haskell XML Toolbox main description file
 Name:           hxt-xmlschema
-Version:        9.3.1.2
+Version:        9.3.1.3
 Synopsis:       The HXT XMLSchema validator
 Description:    The HXT XMLSchema validator
 License:        MIT
@@ -32,7 +32,9 @@ extra-source-files:
   tests/simpleTypes.xsd
 
 flag network-uri
-  description: Get Network.URI from the network-uri package
+  description: Get Network.URI from the network-uri package,
+               with ghc <  7.10 default is False,
+               with ghc >= 7.10 default is True 
   default: False
 
 library
@@ -68,7 +70,10 @@ library
   if flag(network-uri)
     build-depends: network-uri >= 2.6
   else
-    build-depends: network >= 2.4 && < 2.6
+    if impl(ghc >= 7.10)
+      build-depends: network-uri >= 2.6
+    else
+      build-depends: network >= 2.4 && < 2.6
 
 executable validateWithSchema
   main-is: Main.hs
@@ -94,7 +99,10 @@ executable validateWithSchema
   if flag(network-uri)
     build-depends: network-uri >= 2.6
   else
-    build-depends: network >= 2.4 && < 2.6
+    if impl(ghc >= 7.10)
+      build-depends: network-uri >= 2.6
+    else
+      build-depends: network >= 2.4 && < 2.6
 
 Source-Repository head
   Type:     git

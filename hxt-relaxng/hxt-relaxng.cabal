@@ -1,6 +1,6 @@
 -- arch-tag: Haskell XML Toolbox main description file
 Name:           hxt-relaxng
-Version:        9.1.5.4
+Version:        9.1.5.5
 Synopsis:       The HXT RelaxNG validator
 Description:    The HXT RelaxNG validator
 License:        MIT
@@ -39,7 +39,9 @@ extra-source-files:
  examples/hrelaxng/simple-unqualified.rng
 
 flag network-uri
-  description: Get Network.URI from the network-uri package
+  description: Get Network.URI from the network-uri package,
+               with ghc <  7.10 default is False,
+               with ghc >= 7.10 default is True 
   default: False
 
 library
@@ -79,7 +81,10 @@ library
  if flag(network-uri)
    build-depends: network-uri >= 2.6
  else
-   build-depends: network >= 2.4 && < 2.6
+   if impl(ghc >= 7.10)
+     build-depends: network-uri >= 2.6
+   else
+     build-depends: network >= 2.4 && < 2.6
 
 Source-Repository head
   Type:     git

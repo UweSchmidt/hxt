@@ -17,7 +17,8 @@ PL	= $(PL1)
 PL2     = $(PL1) hxt-expat
 
 
-FLAGS=--flags="network-uri"
+# FLAGS=--flags="network-uri"
+FLAGS=
 
 #          janus/janus-library                # no longer maintained
 #                 hxt-filter                  # not maintained to work with hxt-9
@@ -30,6 +31,9 @@ all	:
                                    && cabal sdist; ); )
 	@ echo not done: ghc-pkg list
 
+configure:
+	$(foreach i,$(PL), ( cd $i && cabal configure $(FLAGS) ; ); )
+
 install:
 	$(foreach i,$(PL), ( cd $i && cabal install $(FLAGS) ; ); )
 	$(MAKE) list
@@ -38,7 +42,7 @@ profile:
 	$(foreach i,$(PL), ( cd $i && cabal install $FLAGS) -p; ); )
 	$(MAKE) list
 
-sdist	:
+sdist	: configure
 	$(foreach i,$(PL), ( cd $i && cabal sdist; ); )
 
 list	:
