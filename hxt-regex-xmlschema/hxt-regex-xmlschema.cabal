@@ -24,7 +24,7 @@ Stability:           stable
 Category:            Text
 Homepage:            http://www.haskell.org/haskellwiki/Regular_expressions_for_XML_Schema
 Build-type:          Simple
-Cabal-version:       >=1.18
+Cabal-version:       >=1.10
 
 extra-source-files:
   examples/colorizeProgs/ColorizeSourceCode.hs
