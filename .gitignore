@@ -5,3 +5,5 @@ make.out
 dist*/
 .cabal-sandbox/
 cabal.sandbox.config
+cabal.config
+TAGS
