@@ -4,12 +4,11 @@ install	: all
 	sudo cp colorize /usr/local/bin
 
 clean	:
-	rm -f *.o *.hi
+	cabal clean
 
-distclean	: clean
-		rm -f colorize
+colorize:
+	cabal install
 
-colorize	: ColorizeSourceCode.hs
-		ghc -o $@ -O2 --make $<
-
+.PHONY	: all install clean colorize
+ 
 
