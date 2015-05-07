@@ -93,7 +93,7 @@ releaseCurl     = putMVar curlResource ()
 -- via the curl binding
 -- <http://hackage.haskell.org/cgi-bin/hackage-scripts/package/curl>
 -- This function tries to support mostly all curl options concerning HTTP requests.
--- The naming convetion is as follows: A curl option must be prefixed by the string
+-- The naming convention is as follows: A curl option must be prefixed by the string
 -- \"curl\" and then written exactly as described in the curl man page
 -- (<http://curl.haxx.se/docs/manpage.html>).
 --

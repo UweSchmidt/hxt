@@ -241,7 +241,7 @@ a_verbose                       = "verbose"
 -- ------------------------------------------------------------
 
 -- |
--- select options from a predefined list of option desciptions
+-- select options from a predefined list of option descriptions
 
 selectOptions   :: [String] -> [OptDescr a] -> [OptDescr a]
 selectOptions ol os

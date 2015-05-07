@@ -75,7 +75,7 @@ data XNode      = XText           String                        -- ^ ordinary te
                 | XCdata          String                        -- ^ CDATA section                                       (leaf)
                 | XPi             QName XmlTrees                -- ^ Processing Instr with qualified name                (leaf)
                                                                 --   with list of attributes.
-                                                                --   If tag name is xml, attributs are \"version\", \"encoding\", \"standalone\",
+                                                                --   If tag name is xml, attributes are \"version\", \"encoding\", \"standalone\",
                                                                 --   else attribute list is empty, content is a text child node
                 | XTag            QName XmlTrees                -- ^ tag with qualified name and list of attributes (inner node or leaf)
                 | XDTD            DTDElem  Attributes           -- ^ DTD element with assoc list for dtd element features
