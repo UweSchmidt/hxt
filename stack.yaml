@@ -14,4 +14,5 @@ packages:
 
 extra-deps: []
 
-resolver: lts-5.9
+# lts with ghc-7.3
+resolver: lts-6.10

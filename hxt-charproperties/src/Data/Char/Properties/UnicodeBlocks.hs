@@ -82,6 +82,7 @@ module Data.Char.Properties.UnicodeBlocks
   , isBatak
   , isLepcha
   , isOlChiki
+  , isCyrillicExtendedC
   , isSundaneseSupplement
   , isVedicExtensions
   , isPhoneticExtensions
@@ -162,6 +163,7 @@ module Data.Char.Properties.UnicodeBlocks
   , isMeeteiMayekExtensions
   , isEthiopicExtendedA
   , isLatinExtendedE
+  , isCherokeeSupplement
   , isMeeteiMayek
   , isHangulSyllables
   , isHangulJamoExtendedB
@@ -197,6 +199,7 @@ module Data.Char.Properties.UnicodeBlocks
   , isDeseret
   , isShavian
   , isOsmanya
+  , isOsage
   , isElbasan
   , isCaucasianAlbanian
   , isLinearA
@@ -204,6 +207,7 @@ module Data.Char.Properties.UnicodeBlocks
   , isImperialAramaic
   , isPalmyrene
   , isNabataean
+  , isHatran
   , isPhoenician
   , isLydian
   , isMeroiticHieroglyphs
@@ -217,6 +221,7 @@ module Data.Char.Properties.UnicodeBlocks
   , isInscriptionalPahlavi
   , isPsalterPahlavi
   , isOldTurkic
+  , isOldHungarian
   , isRumiNumeralSymbols
   , isBrahmi
   , isKaithi
@@ -226,22 +231,33 @@ module Data.Char.Properties.UnicodeBlocks
   , isSharada
   , isSinhalaArchaicNumbers
   , isKhojki
+  , isMultani
   , isKhudawadi
   , isGrantha
+  , isNewa
   , isTirhuta
   , isSiddham
   , isModi
+  , isMongolianSupplement
   , isTakri
+  , isAhom
   , isWarangCiti
   , isPauCinHau
+  , isBhaiksuki
+  , isMarchen
   , isCuneiform
   , isCuneiformNumbersandPunctuation
+  , isEarlyDynasticCuneiform
   , isEgyptianHieroglyphs
+  , isAnatolianHieroglyphs
   , isBamumSupplement
   , isMro
   , isBassaVah
   , isPahawhHmong
   , isMiao
+  , isIdeographicSymbolsandPunctuation
+  , isTangut
+  , isTangutComponents
   , isKanaSupplement
   , isDuployan
   , isShorthandFormatControls
@@ -251,7 +267,10 @@ module Data.Char.Properties.UnicodeBlocks
   , isTaiXuanJingSymbols
   , isCountingRodNumerals
   , isMathematicalAlphanumericSymbols
+  , isSuttonSignWriting
+  , isGlagoliticSupplement
   , isMendeKikakui
+  , isAdlam
   , isArabicMathematicalAlphabeticSymbols
   , isMahjongTiles
   , isDominoTiles
@@ -265,9 +284,11 @@ module Data.Char.Properties.UnicodeBlocks
   , isAlchemicalSymbols
   , isGeometricShapesExtended
   , isSupplementalArrowsC
+  , isSupplementalSymbolsandPictographs
   , isCJKUnifiedIdeographsExtensionB
   , isCJKUnifiedIdeographsExtensionC
   , isCJKUnifiedIdeographsExtensionD
+  , isCJKUnifiedIdeographsExtensionE
   , isCJKCompatibilityIdeographsSupplement
   , isTags
   , isVariationSelectorsSupplement
@@ -279,7 +300,7 @@ where
 -- ------------------------------------------------------------
 
 versionUnicode :: String
-versionUnicode = "7.0.0"
+versionUnicode = "9.0.0"
 
 elemCodeBlock     :: Char -> String -> Bool
 elemCodeBlock c b = maybe False (\ (lb, ub) -> c >= lb && c <= ub) $ lookup b codeBlocks
@@ -347,6 +368,7 @@ codeBlocks =
     , ( "Batak", ( '\x1BC0', '\x1BFF') )
     , ( "Lepcha", ( '\x1C00', '\x1C4F') )
     , ( "OlChiki", ( '\x1C50', '\x1C7F') )
+    , ( "CyrillicExtended-C", ( '\x1C80', '\x1C8F') )
     , ( "SundaneseSupplement", ( '\x1CC0', '\x1CCF') )
     , ( "VedicExtensions", ( '\x1CD0', '\x1CFF') )
     , ( "PhoneticExtensions", ( '\x1D00', '\x1D7F') )
@@ -427,6 +449,7 @@ codeBlocks =
     , ( "MeeteiMayekExtensions", ( '\xAAE0', '\xAAFF') )
     , ( "EthiopicExtended-A", ( '\xAB00', '\xAB2F') )
     , ( "LatinExtended-E", ( '\xAB30', '\xAB6F') )
+    , ( "CherokeeSupplement", ( '\xAB70', '\xABBF') )
     , ( "MeeteiMayek", ( '\xABC0', '\xABFF') )
     , ( "HangulSyllables", ( '\xAC00', '\xD7AF') )
     , ( "HangulJamoExtended-B", ( '\xD7B0', '\xD7FF') )
@@ -462,6 +485,7 @@ codeBlocks =
     , ( "Deseret", ( '\x10400', '\x1044F') )
     , ( "Shavian", ( '\x10450', '\x1047F') )
     , ( "Osmanya", ( '\x10480', '\x104AF') )
+    , ( "Osage", ( '\x104B0', '\x104FF') )
     , ( "Elbasan", ( '\x10500', '\x1052F') )
     , ( "CaucasianAlbanian", ( '\x10530', '\x1056F') )
     , ( "LinearA", ( '\x10600', '\x1077F') )
@@ -469,6 +493,7 @@ codeBlocks =
     , ( "ImperialAramaic", ( '\x10840', '\x1085F') )
     , ( "Palmyrene", ( '\x10860', '\x1087F') )
     , ( "Nabataean", ( '\x10880', '\x108AF') )
+    , ( "Hatran", ( '\x108E0', '\x108FF') )
     , ( "Phoenician", ( '\x10900', '\x1091F') )
     , ( "Lydian", ( '\x10920', '\x1093F') )
     , ( "MeroiticHieroglyphs", ( '\x10980', '\x1099F') )
@@ -482,6 +507,7 @@ codeBlocks =
     , ( "InscriptionalPahlavi", ( '\x10B60', '\x10B7F') )
     , ( "PsalterPahlavi", ( '\x10B80', '\x10BAF') )
     , ( "OldTurkic", ( '\x10C00', '\x10C4F') )
+    , ( "OldHungarian", ( '\x10C80', '\x10CFF') )
     , ( "RumiNumeralSymbols", ( '\x10E60', '\x10E7F') )
     , ( "Brahmi", ( '\x11000', '\x1107F') )
     , ( "Kaithi", ( '\x11080', '\x110CF') )
@@ -491,22 +517,33 @@ codeBlocks =
     , ( "Sharada", ( '\x11180', '\x111DF') )
     , ( "SinhalaArchaicNumbers", ( '\x111E0', '\x111FF') )
     , ( "Khojki", ( '\x11200', '\x1124F') )
+    , ( "Multani", ( '\x11280', '\x112AF') )
     , ( "Khudawadi", ( '\x112B0', '\x112FF') )
     , ( "Grantha", ( '\x11300', '\x1137F') )
+    , ( "Newa", ( '\x11400', '\x1147F') )
     , ( "Tirhuta", ( '\x11480', '\x114DF') )
     , ( "Siddham", ( '\x11580', '\x115FF') )
     , ( "Modi", ( '\x11600', '\x1165F') )
+    , ( "MongolianSupplement", ( '\x11660', '\x1167F') )
     , ( "Takri", ( '\x11680', '\x116CF') )
+    , ( "Ahom", ( '\x11700', '\x1173F') )
     , ( "WarangCiti", ( '\x118A0', '\x118FF') )
     , ( "PauCinHau", ( '\x11AC0', '\x11AFF') )
+    , ( "Bhaiksuki", ( '\x11C00', '\x11C6F') )
+    , ( "Marchen", ( '\x11C70', '\x11CBF') )
     , ( "Cuneiform", ( '\x12000', '\x123FF') )
     , ( "CuneiformNumbersandPunctuation", ( '\x12400', '\x1247F') )
+    , ( "EarlyDynasticCuneiform", ( '\x12480', '\x1254F') )
     , ( "EgyptianHieroglyphs", ( '\x13000', '\x1342F') )
+    , ( "AnatolianHieroglyphs", ( '\x14400', '\x1467F') )
     , ( "BamumSupplement", ( '\x16800', '\x16A3F') )
     , ( "Mro", ( '\x16A40', '\x16A6F') )
     , ( "BassaVah", ( '\x16AD0', '\x16AFF') )
     , ( "PahawhHmong", ( '\x16B00', '\x16B8F') )
     , ( "Miao", ( '\x16F00', '\x16F9F') )
+    , ( "IdeographicSymbolsandPunctuation", ( '\x16FE0', '\x16FFF') )
+    , ( "Tangut", ( '\x17000', '\x187FF') )
+    , ( "TangutComponents", ( '\x18800', '\x18AFF') )
     , ( "KanaSupplement", ( '\x1B000', '\x1B0FF') )
     , ( "Duployan", ( '\x1BC00', '\x1BC9F') )
     , ( "ShorthandFormatControls", ( '\x1BCA0', '\x1BCAF') )
@@ -516,7 +553,10 @@ codeBlocks =
     , ( "TaiXuanJingSymbols", ( '\x1D300', '\x1D35F') )
     , ( "CountingRodNumerals", ( '\x1D360', '\x1D37F') )
     , ( "MathematicalAlphanumericSymbols", ( '\x1D400', '\x1D7FF') )
+    , ( "SuttonSignWriting", ( '\x1D800', '\x1DAAF') )
+    , ( "GlagoliticSupplement", ( '\x1E000', '\x1E02F') )
     , ( "MendeKikakui", ( '\x1E800', '\x1E8DF') )
+    , ( "Adlam", ( '\x1E900', '\x1E95F') )
     , ( "ArabicMathematicalAlphabeticSymbols", ( '\x1EE00', '\x1EEFF') )
     , ( "MahjongTiles", ( '\x1F000', '\x1F02F') )
     , ( "DominoTiles", ( '\x1F030', '\x1F09F') )
@@ -530,9 +570,11 @@ codeBlocks =
     , ( "AlchemicalSymbols", ( '\x1F700', '\x1F77F') )
     , ( "GeometricShapesExtended", ( '\x1F780', '\x1F7FF') )
     , ( "SupplementalArrows-C", ( '\x1F800', '\x1F8FF') )
+    , ( "SupplementalSymbolsandPictographs", ( '\x1F900', '\x1F9FF') )
     , ( "CJKUnifiedIdeographsExtensionB", ( '\x20000', '\x2A6DF') )
     , ( "CJKUnifiedIdeographsExtensionC", ( '\x2A700', '\x2B73F') )
     , ( "CJKUnifiedIdeographsExtensionD", ( '\x2B740', '\x2B81F') )
+    , ( "CJKUnifiedIdeographsExtensionE", ( '\x2B820', '\x2CEAF') )
     , ( "CJKCompatibilityIdeographsSupplement", ( '\x2F800', '\x2FA1F') )
     , ( "Tags", ( '\xE0000', '\xE007F') )
     , ( "VariationSelectorsSupplement", ( '\xE0100', '\xE01EF') )
@@ -724,6 +766,9 @@ isLepcha c = c >= '\x1C00' && c <= '\x1C4F'
 
 isOlChiki   :: Char -> Bool
 isOlChiki c = c >= '\x1C50' && c <= '\x1C7F'
+
+isCyrillicExtendedC   :: Char -> Bool
+isCyrillicExtendedC c = c >= '\x1C80' && c <= '\x1C8F'
 
 isSundaneseSupplement   :: Char -> Bool
 isSundaneseSupplement c = c >= '\x1CC0' && c <= '\x1CCF'
@@ -965,6 +1010,9 @@ isEthiopicExtendedA c = c >= '\xAB00' && c <= '\xAB2F'
 isLatinExtendedE   :: Char -> Bool
 isLatinExtendedE c = c >= '\xAB30' && c <= '\xAB6F'
 
+isCherokeeSupplement   :: Char -> Bool
+isCherokeeSupplement c = c >= '\xAB70' && c <= '\xABBF'
+
 isMeeteiMayek   :: Char -> Bool
 isMeeteiMayek c = c >= '\xABC0' && c <= '\xABFF'
 
@@ -1070,6 +1118,9 @@ isShavian c = c >= '\x10450' && c <= '\x1047F'
 isOsmanya   :: Char -> Bool
 isOsmanya c = c >= '\x10480' && c <= '\x104AF'
 
+isOsage   :: Char -> Bool
+isOsage c = c >= '\x104B0' && c <= '\x104FF'
+
 isElbasan   :: Char -> Bool
 isElbasan c = c >= '\x10500' && c <= '\x1052F'
 
@@ -1090,6 +1141,9 @@ isPalmyrene c = c >= '\x10860' && c <= '\x1087F'
 
 isNabataean   :: Char -> Bool
 isNabataean c = c >= '\x10880' && c <= '\x108AF'
+
+isHatran   :: Char -> Bool
+isHatran c = c >= '\x108E0' && c <= '\x108FF'
 
 isPhoenician   :: Char -> Bool
 isPhoenician c = c >= '\x10900' && c <= '\x1091F'
@@ -1130,6 +1184,9 @@ isPsalterPahlavi c = c >= '\x10B80' && c <= '\x10BAF'
 isOldTurkic   :: Char -> Bool
 isOldTurkic c = c >= '\x10C00' && c <= '\x10C4F'
 
+isOldHungarian   :: Char -> Bool
+isOldHungarian c = c >= '\x10C80' && c <= '\x10CFF'
+
 isRumiNumeralSymbols   :: Char -> Bool
 isRumiNumeralSymbols c = c >= '\x10E60' && c <= '\x10E7F'
 
@@ -1157,11 +1214,17 @@ isSinhalaArchaicNumbers c = c >= '\x111E0' && c <= '\x111FF'
 isKhojki   :: Char -> Bool
 isKhojki c = c >= '\x11200' && c <= '\x1124F'
 
+isMultani   :: Char -> Bool
+isMultani c = c >= '\x11280' && c <= '\x112AF'
+
 isKhudawadi   :: Char -> Bool
 isKhudawadi c = c >= '\x112B0' && c <= '\x112FF'
 
 isGrantha   :: Char -> Bool
 isGrantha c = c >= '\x11300' && c <= '\x1137F'
+
+isNewa   :: Char -> Bool
+isNewa c = c >= '\x11400' && c <= '\x1147F'
 
 isTirhuta   :: Char -> Bool
 isTirhuta c = c >= '\x11480' && c <= '\x114DF'
@@ -1172,8 +1235,14 @@ isSiddham c = c >= '\x11580' && c <= '\x115FF'
 isModi   :: Char -> Bool
 isModi c = c >= '\x11600' && c <= '\x1165F'
 
+isMongolianSupplement   :: Char -> Bool
+isMongolianSupplement c = c >= '\x11660' && c <= '\x1167F'
+
 isTakri   :: Char -> Bool
 isTakri c = c >= '\x11680' && c <= '\x116CF'
+
+isAhom   :: Char -> Bool
+isAhom c = c >= '\x11700' && c <= '\x1173F'
 
 isWarangCiti   :: Char -> Bool
 isWarangCiti c = c >= '\x118A0' && c <= '\x118FF'
@@ -1181,14 +1250,26 @@ isWarangCiti c = c >= '\x118A0' && c <= '\x118FF'
 isPauCinHau   :: Char -> Bool
 isPauCinHau c = c >= '\x11AC0' && c <= '\x11AFF'
 
+isBhaiksuki   :: Char -> Bool
+isBhaiksuki c = c >= '\x11C00' && c <= '\x11C6F'
+
+isMarchen   :: Char -> Bool
+isMarchen c = c >= '\x11C70' && c <= '\x11CBF'
+
 isCuneiform   :: Char -> Bool
 isCuneiform c = c >= '\x12000' && c <= '\x123FF'
 
 isCuneiformNumbersandPunctuation   :: Char -> Bool
 isCuneiformNumbersandPunctuation c = c >= '\x12400' && c <= '\x1247F'
 
+isEarlyDynasticCuneiform   :: Char -> Bool
+isEarlyDynasticCuneiform c = c >= '\x12480' && c <= '\x1254F'
+
 isEgyptianHieroglyphs   :: Char -> Bool
 isEgyptianHieroglyphs c = c >= '\x13000' && c <= '\x1342F'
+
+isAnatolianHieroglyphs   :: Char -> Bool
+isAnatolianHieroglyphs c = c >= '\x14400' && c <= '\x1467F'
 
 isBamumSupplement   :: Char -> Bool
 isBamumSupplement c = c >= '\x16800' && c <= '\x16A3F'
@@ -1204,6 +1285,15 @@ isPahawhHmong c = c >= '\x16B00' && c <= '\x16B8F'
 
 isMiao   :: Char -> Bool
 isMiao c = c >= '\x16F00' && c <= '\x16F9F'
+
+isIdeographicSymbolsandPunctuation   :: Char -> Bool
+isIdeographicSymbolsandPunctuation c = c >= '\x16FE0' && c <= '\x16FFF'
+
+isTangut   :: Char -> Bool
+isTangut c = c >= '\x17000' && c <= '\x187FF'
+
+isTangutComponents   :: Char -> Bool
+isTangutComponents c = c >= '\x18800' && c <= '\x18AFF'
 
 isKanaSupplement   :: Char -> Bool
 isKanaSupplement c = c >= '\x1B000' && c <= '\x1B0FF'
@@ -1232,8 +1322,17 @@ isCountingRodNumerals c = c >= '\x1D360' && c <= '\x1D37F'
 isMathematicalAlphanumericSymbols   :: Char -> Bool
 isMathematicalAlphanumericSymbols c = c >= '\x1D400' && c <= '\x1D7FF'
 
+isSuttonSignWriting   :: Char -> Bool
+isSuttonSignWriting c = c >= '\x1D800' && c <= '\x1DAAF'
+
+isGlagoliticSupplement   :: Char -> Bool
+isGlagoliticSupplement c = c >= '\x1E000' && c <= '\x1E02F'
+
 isMendeKikakui   :: Char -> Bool
 isMendeKikakui c = c >= '\x1E800' && c <= '\x1E8DF'
+
+isAdlam   :: Char -> Bool
+isAdlam c = c >= '\x1E900' && c <= '\x1E95F'
 
 isArabicMathematicalAlphabeticSymbols   :: Char -> Bool
 isArabicMathematicalAlphabeticSymbols c = c >= '\x1EE00' && c <= '\x1EEFF'
@@ -1274,6 +1373,9 @@ isGeometricShapesExtended c = c >= '\x1F780' && c <= '\x1F7FF'
 isSupplementalArrowsC   :: Char -> Bool
 isSupplementalArrowsC c = c >= '\x1F800' && c <= '\x1F8FF'
 
+isSupplementalSymbolsandPictographs   :: Char -> Bool
+isSupplementalSymbolsandPictographs c = c >= '\x1F900' && c <= '\x1F9FF'
+
 isCJKUnifiedIdeographsExtensionB   :: Char -> Bool
 isCJKUnifiedIdeographsExtensionB c = c >= '\x20000' && c <= '\x2A6DF'
 
@@ -1282,6 +1384,9 @@ isCJKUnifiedIdeographsExtensionC c = c >= '\x2A700' && c <= '\x2B73F'
 
 isCJKUnifiedIdeographsExtensionD   :: Char -> Bool
 isCJKUnifiedIdeographsExtensionD c = c >= '\x2B740' && c <= '\x2B81F'
+
+isCJKUnifiedIdeographsExtensionE   :: Char -> Bool
+isCJKUnifiedIdeographsExtensionE c = c >= '\x2B820' && c <= '\x2CEAF'
 
 isCJKCompatibilityIdeographsSupplement   :: Char -> Bool
 isCJKCompatibilityIdeographsSupplement c = c >= '\x2F800' && c <= '\x2FA1F'

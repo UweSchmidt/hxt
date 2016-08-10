@@ -59,13 +59,13 @@ library
   ghc-options: -Wall
   ghc-prof-options: -caf-all
 
-  build-depends: base                >= 4     && < 5,
-                 containers          >= 0.2   && < 1,
+  build-depends: base                >= 4,
+                 containers          >= 0.2,
                  parsec              >= 2.1   && < 4,
-                 hxt                 >= 9.3   && < 10,
-                 hxt-regex-xmlschema >= 9.2   && < 10,
-                 mtl                 >= 2     && < 3,
-                 time                >= 1.4   && < 2
+                 hxt                 >= 9.3,
+                 hxt-regex-xmlschema >= 9.2,
+                 mtl                 >= 2,
+                 time                >= 1.4
 
   if flag(network-uri)
     build-depends: network-uri >= 2.6
