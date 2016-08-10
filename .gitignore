@@ -7,3 +7,4 @@ dist*/
 cabal.sandbox.config
 cabal.config
 TAGS
+.stack-work/

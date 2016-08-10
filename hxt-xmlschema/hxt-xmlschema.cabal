@@ -80,6 +80,16 @@ executable validateWithSchema
 
   other-modules:
     Text.XML.HXT.XMLSchema.TestSuite
+    Text.XML.HXT.XMLSchema.AbstractSyntax
+    Text.XML.HXT.XMLSchema.Loader
+    Text.XML.HXT.XMLSchema.Regex
+    Text.XML.HXT.XMLSchema.Transformation
+    Text.XML.HXT.XMLSchema.Validation
+    Text.XML.HXT.XMLSchema.ValidationCore
+    Text.XML.HXT.XMLSchema.ValidationTypes
+    Text.XML.HXT.XMLSchema.W3CDataTypeCheck
+    Text.XML.HXT.XMLSchema.W3CDataTypeCheckUtils
+    Text.XML.HXT.XMLSchema.XmlUtils
 
   hs-source-dirs: src
 
@@ -107,5 +117,3 @@ executable validateWithSchema
 Source-Repository head
   Type:     git
   Location: git://github.com/UweSchmidt/hxt.git
-
-

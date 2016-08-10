@@ -1,0 +1,17 @@
+packages:
+  - ./hxt-charproperties
+  - ./hxt-unicode
+  - ./hxt-regex-xmlschema
+  - ./hxt
+  - ./hxt-curl
+  - ./hxt-http
+  - ./hxt-tagsoup
+  - ./hxt-xpath
+  - ./hxt-relaxng
+  - ./hxt-xmlschema
+  - ./hxt-xslt
+  - ./hxt-cache
+
+extra-deps: []
+
+resolver: lts-5.9
