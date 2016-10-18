@@ -31,12 +31,12 @@ import Text.XML.HXT.Arrow.XmlState.TypeDefs
 
 -- config options
 
--- | @withTace level@ : system option, set the trace level, (0..4)
+-- | @withTrace level@ : system option, set the trace level, (0..4)
 
 withTrace                       :: Int -> SysConfig
 withTrace                       = setS theTraceLevel
 
--- | @withSysAttr key value@ : store an arbitarty key value pair in system state
+-- | @withSysAttr key value@ : store an arbitrary key value pair in system state
 
 withSysAttr                     :: String -> String -> SysConfig
 withSysAttr n v                 = chgS theAttrList (addEntry n v)

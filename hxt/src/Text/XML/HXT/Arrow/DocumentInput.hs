@@ -231,7 +231,7 @@ setBaseURIFromDoc
    If the source name is empty, the input is read from standard input.
 
    The source is transformed into an absolute URI. If the source is a relative URI, or a file name,
-   it is expanded into an absolut URI with respect to the current base URI.
+   it is expanded into an absolute URI with respect to the current base URI.
    The default base URI is of protocol \"file\" and points to the current working directory.
 
    The currently supported protocols are \"http\", \"file\", \"stdin\" and \"string\".
