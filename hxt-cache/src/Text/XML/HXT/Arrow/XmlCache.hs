@@ -59,7 +59,7 @@ import           System.Locale                        (defaultTimeLocale,
                                                        rfc822DateFormat)
 #endif
 import           System.IO.Unsafe                     (unsafePerformIO)
-import           System.Posix                         (touchFile)
+import           System.PosixCompat.Files             (touchFile)
 
 import           Text.XML.HXT.Arrow.Binary
 import           Text.XML.HXT.Arrow.XmlState.TypeDefs
