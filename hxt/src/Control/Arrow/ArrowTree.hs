@@ -147,7 +147,7 @@ class (ArrowPlus a, ArrowIf a) => ArrowTree a where
     --
     -- This expression selects
     -- all top level \"table\" elements within an \"html\" element, an expression.
-    -- Attantion: This does not correspond
+    -- Attention: This does not correspond
     -- to the XPath selection path \"html\/\/table\". The latter on matches all table elements
     -- even nested ones, but @\/\/>@ gives in many cases the appropriate functionality.
 
