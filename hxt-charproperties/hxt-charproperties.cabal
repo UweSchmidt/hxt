@@ -1,5 +1,5 @@
 Name:                hxt-charproperties
-Version:             9.3.0.1
+Version:             9.3.0.2
 Synopsis:            Character properties and classes for XML and Unicode
 Description:         Character proprties defined by XML and Unicode standards.
                      These modules contain predicates for Unicode blocks and char proprties
@@ -24,6 +24,10 @@ Extra-source-files:
   gen/GenBlocks.hs
   gen/GenCharProps.hs
 
+flag profile
+  description: turn profiling on
+  default: False
+
 Library
   Exposed-modules:     
     Data.Char.Properties.UnicodeBlocks
@@ -39,7 +43,8 @@ Library
   hs-source-dirs: src
 
   ghc-options: -Wall
-  ghc-prof-options: -caf-all
+  if flag(profile)
+    ghc-prof-options: -caf-all
 
 Source-Repository head
   Type:     git

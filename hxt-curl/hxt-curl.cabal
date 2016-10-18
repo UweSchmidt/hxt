@@ -1,6 +1,6 @@
 -- arch-tag: Haskell XML Toolbox main description file
 Name:           hxt-curl
-Version:        9.1.1.1
+Version:        9.1.1.2
 Synopsis:       LibCurl interface for HXT
 Description:    LibCurl interface for HXT
 License:        OtherLicense
@@ -25,8 +25,7 @@ library
  hs-source-dirs: src
 
  ghc-options: -Wall
- ghc-prof-options: -caf-all
-
+ 
  extensions:
 
  build-depends: base       >= 4   && < 5,

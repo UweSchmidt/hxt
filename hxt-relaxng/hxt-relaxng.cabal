@@ -44,47 +44,52 @@ flag network-uri
                with ghc >= 7.10 default is True 
   default: False
 
+flag profile
+  description: turn profiling on
+  default: False
+
 library
- exposed-modules:
-  Text.XML.HXT.RelaxNG,
-  Text.XML.HXT.RelaxNG.BasicArrows,
-  Text.XML.HXT.RelaxNG.CreatePattern,
-  Text.XML.HXT.RelaxNG.DataTypeLibMysql,
-  Text.XML.HXT.RelaxNG.DataTypeLibUtils,
-  Text.XML.HXT.RelaxNG.DataTypeLibraries,
-  Text.XML.HXT.RelaxNG.DataTypes,
-  Text.XML.HXT.RelaxNG.PatternFunctions,
-  Text.XML.HXT.RelaxNG.PatternToString,
-  Text.XML.HXT.RelaxNG.Schema,
-  Text.XML.HXT.RelaxNG.SchemaGrammar,
-  Text.XML.HXT.RelaxNG.Simplification,
-  Text.XML.HXT.RelaxNG.SystemConfig,
-  Text.XML.HXT.RelaxNG.Utils,
-  Text.XML.HXT.RelaxNG.Validation,
-  Text.XML.HXT.RelaxNG.Validator,
-  Text.XML.HXT.RelaxNG.XMLSchema.DataTypeLibW3C
+  exposed-modules:
+   Text.XML.HXT.RelaxNG,
+   Text.XML.HXT.RelaxNG.BasicArrows,
+   Text.XML.HXT.RelaxNG.CreatePattern,
+   Text.XML.HXT.RelaxNG.DataTypeLibMysql,
+   Text.XML.HXT.RelaxNG.DataTypeLibUtils,
+   Text.XML.HXT.RelaxNG.DataTypeLibraries,
+   Text.XML.HXT.RelaxNG.DataTypes,
+   Text.XML.HXT.RelaxNG.PatternFunctions,
+   Text.XML.HXT.RelaxNG.PatternToString,
+   Text.XML.HXT.RelaxNG.Schema,
+   Text.XML.HXT.RelaxNG.SchemaGrammar,
+   Text.XML.HXT.RelaxNG.Simplification,
+   Text.XML.HXT.RelaxNG.SystemConfig,
+   Text.XML.HXT.RelaxNG.Utils,
+   Text.XML.HXT.RelaxNG.Validation,
+   Text.XML.HXT.RelaxNG.Validator,
+   Text.XML.HXT.RelaxNG.XMLSchema.DataTypeLibW3C
 
- hs-source-dirs: src
+  hs-source-dirs: src
 
- ghc-options: -Wall
- ghc-prof-options: -caf-all
+  ghc-options: -Wall
+  if flag(profile)
+    ghc-prof-options: -caf-all
 
- -- extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances
+  -- extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances
 
- build-depends: base       >= 4   && < 5,
-                containers >= 0.2 && < 1,
-                parsec     >= 2.1 && < 4,
-                hxt                 >= 9.1.3 && < 10,
-                hxt-charproperties  >= 9     && < 10,
-                hxt-regex-xmlschema >= 9.2   && < 10
+  build-depends: base       >= 4   && < 5,
+                 containers >= 0.2 && < 1,
+                 parsec     >= 2.1 && < 4,
+                 hxt                 >= 9.1.3 && < 10,
+                 hxt-charproperties  >= 9     && < 10,
+                 hxt-regex-xmlschema >= 9.2   && < 10
 
- if flag(network-uri)
-   build-depends: network-uri >= 2.6
- else
-   if impl(ghc >= 7.10)
-     build-depends: network-uri >= 2.6
-   else
-     build-depends: network >= 2.4 && < 2.6
+  if flag(network-uri)
+    build-depends: network-uri >= 2.6
+  else
+    if impl(ghc >= 7.10)
+      build-depends: network-uri >= 2.6
+    else
+      build-depends: network >= 2.4 && < 2.6
 
 Source-Repository head
   Type:     git

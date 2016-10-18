@@ -1,5 +1,5 @@
 Name:           hxt-http
-Version:        9.1.5.2
+Version:        9.1.5.3
 Synopsis:       Interface to native Haskell HTTP package HTTP
 Description:    Interface to native Haskell HTTP package HTTP.
                 This package can be used as alternative for the hxt-curl package
@@ -36,7 +36,6 @@ library
  hs-source-dirs: src
 
  ghc-options: -Wall
- ghc-prof-options: -caf-all
 
  extensions:
 

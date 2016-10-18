@@ -1,5 +1,5 @@
 Name:           hxt-expat
-Version:        9.1.1.1
+Version:        9.1.1.2
 Synopsis:       Expat parser for HXT
 Description:    The Expat interface for the HXT.
 License:        OtherLicense
@@ -26,7 +26,6 @@ library
  hs-source-dirs: src
 
  ghc-options: -Wall
- ghc-prof-options: -caf-all
 
  extensions: MultiParamTypeClasses DeriveDataTypeable FunctionalDependencies FlexibleInstances
 
