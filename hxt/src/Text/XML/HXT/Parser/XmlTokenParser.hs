@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP                #-}
+
 -- ------------------------------------------------------------
 
 {- |
@@ -83,7 +85,11 @@ module Text.XML.HXT.Parser.XmlTokenParser
     )
 where
 
-import Control.Applicative                      ( (<$>) )
+#if MIN_VERSION_base(4,8,2)
+#else
+import Control.Applicative                      ((<$>))
+#endif
+
 
 import Data.Char.Properties.XMLCharProps        ( isXmlChar
                                                 , isXmlCharCR
@@ -591,7 +597,7 @@ peReferenceT
 mergeTextNodes :: XmlTrees -> XmlTrees
 mergeTextNodes
     = foldr addText []
-    where 
+    where
       addText :: XmlTree -> XmlTrees -> XmlTrees
       addText t []
           = [t]
@@ -599,5 +605,3 @@ mergeTextNodes
           = mergeText t t1 ++ ts
 
 -- ------------------------------------------------------------
-
-

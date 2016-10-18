@@ -112,13 +112,13 @@ library
     TypeSynonymInstances
 
  build-depends: base               >= 4   && < 5,
-                containers         >= 0.2 && < 1,
-                directory          >= 1   && < 2,
-                filepath           >= 1.0 && < 2,
+                containers         >= 0.2,
+                directory          >= 1,
+                filepath           >= 1.0,
                 mtl                >= 2   && < 3,
-                deepseq            >= 1.1 && < 2,
-                bytestring         >= 0.9 && < 1,
-                binary             >= 0.5 && < 1,
+                deepseq            >= 1.1,
+                bytestring         >= 0.9,
+                binary             >= 0.5,
                 hxt                >= 9.1 && < 10,
                 hxt-charproperties >= 9.1 && < 10,
                 hxt-unicode        >= 9   && < 10

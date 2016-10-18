@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP                #-}
+
 -- ------------------------------------------------------------
 
 {- |
@@ -33,7 +35,10 @@ module Text.XML.HXT.Parser.HtmlParsec
 
 where
 
-import Control.Applicative                      ( (<$>) )
+#if MIN_VERSION_base(4,8,2)
+#else
+import Control.Applicative                      ((<$>))
+#endif
 
 import Data.Char                                ( toLower
                                                 , toUpper

@@ -32,6 +32,7 @@ import           Data.Tree.NTree.TypeDefs
 import           Text.XML.HXT.DOM.TypeDefs
 import           Text.XML.HXT.DOM.XmlKeywords
 import           Text.XML.HXT.DOM.XmlNode     (getDTDAttrl, mkDTDElem)
+import           Text.Regex.XMLSchema.Generic(sed)
 
 -- -----------------------------------------------------------------------------
 --
@@ -61,12 +62,17 @@ xshowBlob ts                    = stringToBlob $ xshow ts
 -- a 2. quoting funtion for attribute values
 -- and an encoding function after tree conversion
 
-xshow'                          :: (Char -> StringFct) -> (Char -> StringFct) -> (Char -> StringFct) -> XmlTrees -> Blob
+xshow'                          :: (Char -> StringFct) ->
+                                   (Char -> StringFct) ->
+                                   (Char -> StringFct) ->
+                                   XmlTrees -> Blob
 xshow' cquot aquot enc ts       = stringToBlob $ (concatMap' enc (showTrees ts "")) ""
     where
     showTrees                   = showXmlTrees (concatMap' cquot) (concatMap' aquot)
 
-xshow''                         :: (Char -> StringFct) -> (Char -> StringFct) -> XmlTrees -> String
+xshow''                         :: (Char -> StringFct) ->
+                                   (Char -> StringFct) ->
+                                   XmlTrees -> String
 xshow'' cquot aquot ts          = showTrees ts ""
     where
     showTrees                   = showXmlTrees (concatMap' cquot) (concatMap' aquot)
@@ -77,7 +83,9 @@ type StringFct          = String -> String
 
 -- ------------------------------------------------------------
 
-showXmlTrees                    :: (String -> StringFct) -> (String -> StringFct) -> XmlTrees -> StringFct
+showXmlTrees                    :: (String -> StringFct) ->
+                                   (String -> StringFct) ->
+                                   XmlTrees -> StringFct
 showXmlTrees cf af
     = showTrees
       where
@@ -127,7 +135,10 @@ showXmlTrees cf af
                                 = showString "<!--" . showString c . showString "-->"
 
       showXmlTree (NTree (XCdata d) _)
-                                = showString "<![CDATA[" . showString d . showString "]]>"
+                                = showString "<![CDATA[" . showString d' . showString "]]>"
+                                  where
+                                    -- quote "]]>" in CDATA contents
+                                    d' = sed (const "]]&gt;") "\\]\\]>" d
 
       showXmlTree (NTree (XPi n al) _)
                                 = showString "<?"
@@ -138,8 +149,11 @@ showXmlTrees cf af
                                   showPiAttr        :: XmlTree -> StringFct
                                   showPiAttr a@(NTree (XAttr an) cs)
                                       | qualifiedName an == a_value
-                                          = showBlank . showTrees cs
+                                          -- <?some-pi ... ?>
+                                          -- no XML quoting of PI value
+                                          = showBlank . showXmlTrees showString showString cs
                                       | otherwise
+                                          -- <?xml version="..." ... ?>
                                           = showXmlTree a
                                   showPiAttr a
                                       = showXmlTree a -- id
@@ -441,4 +455,3 @@ concatMap' f    = foldr (\ x r -> f x . r) id
 {-# INLINE concatMap' #-}
 
 -- -----------------------------------------------------------------------------
-

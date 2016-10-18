@@ -1,5 +1,5 @@
 Name:           hxt-cache
-Version:        9.1.0.1
+Version:        9.1.0.2
 Synopsis:       Cache for HXT XML Documents and other binary data
 Description:    Extension for caching XML documents and other binary data in cache directory
                 of the local filesystem
@@ -35,20 +35,20 @@ library
  default-language:  Haskell2010
 
  build-depends: base        >= 4   && < 5,
-                bytestring  >= 0.9 && < 1,
-                binary      >= 0.5 && < 1,
-                containers  >= 0.2 && < 1,
-                deepseq     >= 1.1 && < 2,
-                directory   >= 1.2 && < 2,
-                filepath    >= 1.1 && < 2,
+                bytestring  >= 0.9,
+                binary      >= 0.5,
+                containers  >= 0.2,
+                deepseq     >= 1.1,
+                directory   >= 1.2,
+                filepath    >= 1.1,
                 hxt         >= 9   && < 10,
                 time        >= 1.4 && < 2,
                 unix-compat >= 0.3 && < 0.5,
-                SHA        >= 1.4 && < 2
+                SHA         >= 1.4 && < 2
+
  if impl(ghc < 7.10)
    build-depends: old-locale >= 1 && < 2,
                   time       <  1.5
-
 
 Source-Repository head
   Type:     git

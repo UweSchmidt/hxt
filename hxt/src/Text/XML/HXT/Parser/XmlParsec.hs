@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP                #-}
+
 -- ------------------------------------------------------------
 
 {- |
@@ -58,7 +60,10 @@ module Text.XML.HXT.Parser.XmlParsec
     )
 where
 
+#if MIN_VERSION_base(4,8,2)
+#else
 import           Control.Applicative                   ((<$>))
+#endif
 
 import           Text.ParserCombinators.Parsec         (between, char, eof,
                                                         getInput, getPosition,

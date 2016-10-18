@@ -23,7 +23,6 @@
 module Data.Tree.NTree.TypeDefs
 where
 
-import           Control.Applicative ((<$>))
 import           Control.DeepSeq     (NFData (..))
 import           Control.FlatSeq     (WNFData (..), rlnf)
 
@@ -31,6 +30,11 @@ import           Data.Binary
 import           Data.Monoid         ((<>))
 import           Data.Tree.Class     (Tree (..))
 import           Data.Typeable       (Typeable)
+
+#if MIN_VERSION_base(4,8,2)
+#else
+import           Control.Applicative ((<$>))
+#endif
 
 #if MIN_VERSION_base(4,8,0)
 #else

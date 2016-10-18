@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP                #-}
+
 {- |
    Module     : Text.XML.HXT.XMLSchema.Transformation
    Copyright  : Copyright (C) 2005-2012 Uwe Schmidt
@@ -19,22 +21,22 @@ module Text.XML.HXT.XMLSchema.Transformation
 where
 
 import           Control.Monad.Identity                  (Identity, runIdentity)
-import           Text.XML.HXT.Core                       (QName, localPart,
-                                                          namespaceUri)
-
 import           Control.Monad.Reader                    (ReaderT, ask, asks,
                                                           runReaderT)
-
+#if MIN_VERSION_base(4,8,2)
+#else
 import           Control.Applicative                     ((<$>))
+#endif
 
 import           Data.Maybe                              (fromMaybe)
-
 import           Data.Map                                (empty, fromList,
                                                           lookup, singleton,
                                                           toList, union)
 
 import           Prelude                                 hiding (lookup)
 
+import           Text.XML.HXT.Core                       (QName, localPart,
+                                                          namespaceUri)
 import           Text.XML.HXT.XMLSchema.AbstractSyntax
 import           Text.XML.HXT.XMLSchema.Regex
 import           Text.XML.HXT.XMLSchema.ValidationCore

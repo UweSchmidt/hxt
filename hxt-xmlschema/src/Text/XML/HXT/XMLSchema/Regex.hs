@@ -6,12 +6,7 @@
 module Text.XML.HXT.XMLSchema.Regex
 where
 
-#if MIN_VERSION_base(4,8,0)
-import           Control.Applicative (Alternative (..), (<$>))
-#else
-import           Control.Applicative (Alternative (..), Applicative (..), (<$>))
-#endif
-
+import           Control.Applicative
 import           Control.Monad
 
 import           Data.List           (intercalate)
