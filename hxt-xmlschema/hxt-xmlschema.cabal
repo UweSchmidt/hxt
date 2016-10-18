@@ -59,7 +59,7 @@ library
   ghc-options: -Wall
   ghc-prof-options: -caf-all
 
-  build-depends: base                >= 4,
+  build-depends: base                >= 4     && < 42,
                  containers          >= 0.2,
                  parsec              >= 2.1   && < 4,
                  hxt                 >= 9.3,

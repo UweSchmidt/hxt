@@ -31,7 +31,7 @@ Library
     Data.Char.Properties.XMLCharProps
     Data.Set.CharSet
 
-  Build-depends:      base >= 4
+  Build-depends:      base >= 4 && < 42
   
   -- Modules not exported by this package.
   -- Other-modules:       
