@@ -68,8 +68,8 @@ class Arrow a => ArrowState s a | a -> s where
     --
     -- > newId :: SLA Int b String
     -- > newId = nextState (+1)
-    -- >         >>>
-    -- >         arr (('#':) . show)
+    -- >         >>^
+    -- >         ('#':) . show
     -- >
     -- > runSLA 0 (newId <+> newId <+> newId) undefined
     -- >   = ["#1", "#2", "#3"]
