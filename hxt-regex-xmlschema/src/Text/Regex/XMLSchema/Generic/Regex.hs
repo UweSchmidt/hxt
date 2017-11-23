@@ -22,7 +22,7 @@
 
 module Text.Regex.XMLSchema.Generic.Regex
     ( GenRegex
-      
+
     , mkZero
     , mkZero'
     , mkUnit
@@ -109,7 +109,7 @@ type Label s
                                       -- see splitWithRegex
 type SubexResults s
   = [(Label s, s)]
-    
+
 type Nullable s
   = (Bool, SubexResults s)
 
@@ -427,7 +427,7 @@ mkCbr ss (Cbr ss1 e)                    = mkCbr (ss <> ss1) e           -- join 
 mkCbr ss  e                             = Cbr ss e
 
 -- ------------------------------------------------------------
-                                  
+
 instance (StringLike s) => Show (GenRegex s) where
     show (Zero e)               = "{" ++ toString e ++ "}"
     show Unit                   = "()"
@@ -471,7 +471,7 @@ instance (StringLike s) => Show (GenRegex s) where
     show (Intl e1 e2)           = "(" ++ show e1 ++ "{:}" ++ show e2 ++ ")"
     show (Br  l     e)          = "({" ++ showL l ++ "}" ++ show e ++ ")"
     show (Obr l s n e)          = "({" ++ showL l ++ "=" ++ toString (takeS n s) ++ "}" ++ show e ++ ")"
-    show (Cbr ss e)             = "([" ++ intercalate "," (map (\ (l, s) -> showL l ++ "=" ++ toString s) ss) ++ "]"
+    show (Cbr ss e)             = "([" ++ intercalate "," (map (\ (l, s) -> showL l ++ "=" ++ (show $ toString s)) ss) ++ "]"
                                   ++ show e ++
                                   ")"
 
@@ -594,6 +594,11 @@ delta1 c inp e0
     d' e@(Star e1)          = mkSeq  (d' e1) e
     d' (Alt e1 e2)          = mkAlt  (d' e1) (d' e2)
     d' (Else e1 e2)         = mkElse (d' e1) (d' e2)
+
+    d' (Seq e1@(Br  l     e1') e2)
+      | nullable e1'        = mkAlt (mkSeq (d' e1) e2)  -- longest submatch first
+                                    (mkCbr [(l, emptyS)] (d' e2))
+
     d' (Seq e1@(Obr l s n e1') e2)
       | nu                  = mkAlt (mkSeq (d' e1) e2)
                                     (mkCbr ((l, takeS n s) : ws) (d' e2))
@@ -610,7 +615,7 @@ delta1 c inp e0
     d' (Exor e1 e2)         = mkExor  (d' e1) (d' e2)
     d' (Intl e1 e2)         = mkAlt   (mkInterleave (d' e1)     e2 )
                                       (mkInterleave     e1  (d' e2))
-                              
+
     d' (Br  l     e)        = d' (mkObr l inp 0 e)        -- a subex parse starts
     d' (Obr l s n e)        = mkObr l s (n + 1) (d' e)    -- a subex parse cont.
     d' (Cbr ss e)           = mkCbr ss (d' e)             -- the results of a subex parse
@@ -623,7 +628,7 @@ delta inp@(uncons -> Just (c, inp')) e0
   where
     d' e@(Zero _)   = e   -- don't process whole input, parse has failed
     d' e@(Star Dot) = e   -- don't process input, derivative does not change
-    d' e            = delta inp' ( -- trc "delta1=" $
+    d' e            = delta inp' ( -- trc ("delta(" ++ show c ++ ")=") $
                                    delta1 c inp e)
 
 delta _empty e
@@ -726,4 +731,3 @@ splitWithRegexCS' re _cs inp
   | otherwise = Nothing
 
 -- ------------------------------------------------------------
-
