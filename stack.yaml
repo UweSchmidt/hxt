@@ -25,13 +25,19 @@ flags:
   hxt-xmlschema:
     network-uri: true
 
+# Control whether we use the GHC we find on the path
+system-ghc: false
+
 # not for Mac: ghc-7.8 does not work with OSX 10.11
 # LTS Haskell 2.22 (ghc-7.8.4)
 # resolver: lts-2.22
 
 # LTS Haskell 6.15 (ghc-7.10.3)
-resolver: lts-6.15
+# resolver: lts-6.15
 
 # nice try, does not yet work (2016-10-18), errors in base libraries
 # LTS Haskell 7.4 (ghc-8.0.1)
 # resolver: lts-7.4
+
+# LTS with ghc-8.0.2
+resolver: lts-9.1
