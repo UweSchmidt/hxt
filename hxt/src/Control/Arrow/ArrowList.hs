@@ -13,10 +13,10 @@
 
    This module defines the interface for list arrows.
 
-   A list arrow is a function, that gives a list of results
-   for a given argument. A single element result represents a normal function.
-   An empty list oven indicates, the function is undefined for the given argument.
-   The empty list may also represent False, none empty lists True.
+   A list arrow is a function that gives a list of results
+   for a given argument. A single-element result represents a normal function.
+   An empty list often indicates that the function is undefined for the given argument.
+   The empty list may also represent False; non-empty lists True.
    A list with more than one element gives all results for a nondeterministic function.
 
 -}
