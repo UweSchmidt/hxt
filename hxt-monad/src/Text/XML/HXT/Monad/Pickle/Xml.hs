@@ -413,7 +413,7 @@ xpSeq' pa       = xpWrap ( snd
                          ) .
                   xpPair pa
 
--- | combine tow picklers with a choice
+-- | combine two picklers with a choice
 --
 -- Run two picklers in sequence like with xpSeq.
 -- When during unpickling the first one fails,
