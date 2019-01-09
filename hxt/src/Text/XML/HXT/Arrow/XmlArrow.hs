@@ -277,17 +277,17 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     mkelem  n afs cfs   = mkElement (mkName n) (catA afs) (catA cfs)
     {-# INLINE mkelem #-}
 
-    -- | convenient arrow for element constrution with attributes but without content, simple variant of 'mkelem' and 'mkElement'
+    -- | convenient arrow for element construction with attributes but without content, simple variant of 'mkelem' and 'mkElement'
     aelem               :: String -> [a n XmlTree]                  -> a n XmlTree
     aelem n afs         = catA afs >. \ al -> XN.mkElement (mkName n) al []
     {-# INLINE aelem #-}
 
-    -- | convenient arrow for simple element constrution without attributes, simple variant of 'mkelem' and 'mkElement'
+    -- | convenient arrow for simple element construction without attributes, simple variant of 'mkelem' and 'mkElement'
     selem               :: String                  -> [a n XmlTree] -> a n XmlTree
     selem n cfs         = catA cfs >.         XN.mkElement (mkName n) []
     {-# INLINE selem #-}
 
-    -- | convenient arrow for constrution of empty elements without attributes, simple variant of 'mkelem' and 'mkElement'
+    -- | convenient arrow for construction of empty elements without attributes, simple variant of 'mkelem' and 'mkElement'
     eelem               :: String                                   -> a n XmlTree
     eelem n             = constA      (XN.mkElement (mkName n) [] [])
     {-# INLINE eelem #-}
@@ -302,7 +302,7 @@ class (Arrow a, ArrowList a, ArrowTree a) => ArrowXml a where
     qattr               = mkAttr
     {-# INLINE qattr #-}
 
-    -- | convenient arrow for attribute constrution, simple variant of 'mkAttr'
+    -- | convenient arrow for attribute construction, simple variant of 'mkAttr'
     attr                :: String -> a n XmlTree -> a n XmlTree
     attr                = mkAttr . mkName
     {-# INLINE attr #-}
