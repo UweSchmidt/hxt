@@ -1,10 +1,11 @@
 Name:                hxt-charproperties
-Version:             9.3.0.2
+Version:             9.4.0.0
 Synopsis:            Character properties and classes for XML and Unicode
-Description:         Character proprties defined by XML and Unicode standards.
+Description:         Character properties defined by XML and Unicode standards.
                      These modules contain predicates for Unicode blocks and char proprties
                      and character predicates defined by XML.
-                     Supported Unicode version is 9.0.0
+                     Supported Unicode version is 12.1.0
+                     9.3.0.2: Supported Unicode version 9.0.0
 Homepage:            https://github.com/UweSchmidt/hxt
 License:             MIT
 License-file:        LICENSE
@@ -42,7 +43,7 @@ Library
   
   hs-source-dirs: src
 
-  ghc-options: -Wall
+  ghc-options: -Wall -fwarn-tabs
   if flag(profile)
     ghc-prof-options: -caf-all
 

@@ -262,19 +262,19 @@ mkelem              :: (MonadSeq m) => String -> [n -> m XmlTree] -> [n -> m Xml
 mkelem  n afs cfs   = mkElement (mkName n) (catA afs) (catA cfs)
 {-# INLINE mkelem #-}
 
--- | convenient arrow for element constrution with attributes but without content,
+-- | convenient arrow for element construction with attributes but without content,
 -- simple variant of 'mkelem' and 'mkElement'
 aelem               :: (MonadSeq m) => String -> [n -> m XmlTree] -> (n -> m XmlTree)
 aelem n afs         = catA afs >. \ al -> XN.mkElement (mkName n) al []
 {-# INLINE aelem #-}
 
--- | convenient arrow for simple element constrution without attributes,
+-- | convenient arrow for simple element construction without attributes,
 -- simple variant of 'mkelem' and 'mkElement'
 selem               :: (MonadSeq m) => String -> [n -> m XmlTree] -> (n -> m XmlTree)
 selem n cfs         = catA cfs >.         XN.mkElement (mkName n) []
 {-# INLINE selem #-}
 
--- | convenient arrow for constrution of empty elements without attributes,
+-- | convenient arrow for construction of empty elements without attributes,
 -- simple variant of 'mkelem' and 'mkElement'
 eelem               :: (MonadSeq m) => String -> (n -> m XmlTree)
 eelem n             = constA      (XN.mkElement (mkName n) [] [])
@@ -290,7 +290,7 @@ qattr               :: (MonadSeq m) => QName -> (n -> m XmlTree) -> (n -> m XmlT
 qattr               = mkAttr
 {-# INLINE qattr #-}
 
--- | convenient arrow for attribute constrution, simple variant of 'mkAttr'
+-- | convenient arrow for attribute construction, simple variant of 'mkAttr'
 attr                :: (MonadSeq m) => String -> (n -> m XmlTree) -> (n -> m XmlTree)
 attr                = mkAttr . mkName
 {-# INLINE attr #-}

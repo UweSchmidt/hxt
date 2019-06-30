@@ -78,11 +78,9 @@ instance Monad Seq where
     return x = List [x]
     (List xs) >>= f = foldr mappend mempty . map f $ xs
     (Fail s)  >>= _ = Fail s
-    fail   = Fail . (:[])
 
     {-# INLINE return #-}
     {-# INLINE (>>=) #-}
-    {-# INLINE fail #-}
 
 instance MonadPlus Seq where
     mzero = List []

@@ -104,11 +104,9 @@ instance Applicative Seq where
 instance Monad Seq where
     return = Tip
     (>>=)  = substTree
-    fail   = throwError . Tip
 
     {-# INLINE return #-}
     {-# INLINE (>>=)  #-}
-    {-# INLINE fail   #-}
 
 instance MonadPlus Seq where
     mzero = Empty
@@ -283,14 +281,14 @@ last t = case l of
 
 tail :: Seq a -> Seq a
 tail t = case r of
-            Empty -> fail "Seq.tail: empty tree"
+            Empty -> error "Seq.tail: empty tree"
             _     -> r
     where
       r = snd . uncons' $ t
 
 init :: Seq a -> Seq a
 init t = case r of
-            Empty -> fail "Seq.init: empty tree"
+            Empty -> error "Seq.init: empty tree"
             _     -> reverse r
     where
       r = snd . uncons' . reverse $ t

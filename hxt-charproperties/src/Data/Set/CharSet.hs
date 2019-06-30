@@ -9,7 +9,7 @@
    Stability  : stable
    Portability: portable
 
-   Char sets implemeted as non overlapping sorted lists of intervalls
+   Char sets implemeted as non-overlapping ordered lists of intervalls
 
 -}
 

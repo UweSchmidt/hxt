@@ -22,7 +22,7 @@ module Data.Sequence.Impl.Tree
     , substTreeM
     , zipTree
 
-    , drop	-- list like functions, import qualified
+    , drop      -- list like functions, import qualified
     , head
     , init
     , last
@@ -70,8 +70,8 @@ instance Functor Seq where
     fmap _  Empty    = Empty
 
 instance Applicative Seq where
-    pure = Tip				-- pure = return
-    f <*> x = f >>= \ f' -> fmap f' x	-- (<*>) = ap
+    pure = Tip                          -- pure = return
+    f <*> x = f >>= \ f' -> fmap f' x   -- (<*>) = ap
 
     {-# INLINE pure #-}
     {-# INLINE (<*>) #-}
@@ -79,11 +79,9 @@ instance Applicative Seq where
 instance Monad Seq where
     return = Tip
     (>>=)  = substTree
-    fail   = const Empty
 
     {-# INLINE return #-}
     {-# INLINE (>>=)  #-}
-    {-# INLINE fail   #-}
 
 instance MonadPlus Seq where
     mzero = Empty
@@ -235,14 +233,14 @@ last t = case l of
 
 tail :: Seq a -> Seq a
 tail t = case r of
-            Empty -> fail "Seq.tail: empty tree"
+            Empty -> error "Seq.tail: empty tree"
             _     -> r
     where
       r = snd . uncons' $ t
 
 init :: Seq a -> Seq a
 init t = case r of
-            Empty -> fail "Seq.init: empty tree"
+            Empty -> error "Seq.init: empty tree"
             _     -> reverse r
     where
       r = snd . uncons' . reverse $ t

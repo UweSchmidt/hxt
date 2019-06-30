@@ -42,7 +42,7 @@ class (Arrow a) => ArrowNF a where
 -- |
 -- partial evaluation of an arrow result using 'Control.FlatSeq'
 --
--- There are tow arrows with force the partial evaluation. By convention
+-- There are two arrows with force the partial evaluation. By convention
 -- the 2. should be less lazy than the 1.
 --
 -- These arrows are sometimes useful for preventing space leaks, especially when parsing

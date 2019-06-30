@@ -61,12 +61,8 @@ instance Monad (IOStateSeq st) where
                                 put s''
                                 return xs
 
-    fail x        = ISS $ \ s0 ->
-                    return (fail x, s0)
-
     {-# INLINE return #-}
     {-# INLINE (>>=)  #-}
-    {-# INLINE fail   #-}
 
 instance MonadPlus (IOStateSeq st) where
     mzero                   = ISS $ \ s0 ->

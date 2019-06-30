@@ -39,11 +39,9 @@ instance Applicative IOSeq where
 instance Monad IOSeq where
     return        = IOS . return . return
     (IOS a) >>= f = IOS $ a >>= \ x -> substS x (unIOS . f)
-    fail          = IOS . return . fail
 
     {-# INLINE return #-}
     {-# INLINE (>>=)  #-}
-    {-# INLINE fail   #-}
 
 instance MonadPlus IOSeq where
     mzero                   = IOS $ return mzero

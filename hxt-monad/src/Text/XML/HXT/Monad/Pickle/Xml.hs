@@ -12,7 +12,7 @@
 
    This module is an adaptation of the pickler combinators
    developed by Andrew Kennedy
-   ( http:\/\/research.microsoft.com\/~akenn\/fun\/picklercombinators.pdf ).
+   ( https:\/\/www.microsoft.com\/en-us\/research\/wp-content\/uploads\/2004\/01\/picklercombinators.pdf ).
 
    The difference to Kennedys approach is that the target is not
    a list of Chars but a list of XmlTrees. The basic picklers will
@@ -105,8 +105,6 @@ instance Monad Unpickler where
                   case r of
                     Left err -> (Left err, st')
                     Right v  -> runUP (f v) st'
-    fail        = throwMsg                              -- don't use fail, use throwError
-
 
 instance MonadState St Unpickler where
     get         = UP $ \ st -> (Right st, st)
@@ -413,7 +411,7 @@ xpSeq' pa       = xpWrap ( snd
                          ) .
                   xpPair pa
 
--- | combine tow picklers with a choice
+-- | combine two picklers with a choice
 --
 -- Run two picklers in sequence like with xpSeq.
 -- When during unpickling the first one fails,

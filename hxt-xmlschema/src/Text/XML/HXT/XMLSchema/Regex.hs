@@ -1,6 +1,3 @@
-{-# LANGUAGE CPP #-}
-{- # LANGUAGE #-}
-
 -- ----------------------------------------
 
 module Text.XML.HXT.XMLSchema.Regex

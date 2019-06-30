@@ -1,6 +1,6 @@
 -- arch-tag: Haskell XML Toolbox main description file
 Name:           hxt
-Version:        9.3.1.17
+Version:        9.3.1.18
 Synopsis:       A collection of tools for processing XML with Haskell.
 Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
                 but introduces a more general approach for processing XML with Haskell.
@@ -66,7 +66,7 @@ Maintainer:     Uwe Schmidt <uwe@fh-wedel.de>
 Stability:      Stable
 Category:       XML
 Homepage:       https://github.com/UweSchmidt/hxt
-Copyright:      Copyright (c) 2005-20161 Uwe Schmidt
+Copyright:      Copyright (c) 2005-2019 Uwe Schmidt
 Build-type:     Simple
 Cabal-version:  >=1.8
 
@@ -214,7 +214,7 @@ library
 
  hs-source-dirs: src
 
- ghc-options: -Wall
+ ghc-options: -Wall -fwarn-tabs
 
  if flag(profile)
    ghc-prof-options: -caf-all

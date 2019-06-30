@@ -1,6 +1,6 @@
 -- arch-tag: Haskell XML Toolbox main description file
 Name:           hxt-monad
-Version:        1.0.0.3
+Version:        1.0.0.4
 Synopsis:       A collection of tools for processing XML with Haskell.
 Description:    The Haskell XML Toolbox bases on the ideas of HaXml and HXML,
                 but introduces a more general approach for processing XML with Haskell.
@@ -119,8 +119,8 @@ library
                 deepseq            >= 1.1,
                 bytestring         >= 0.9,
                 binary             >= 0.5,
-                hxt                >= 9.1 && < 10,
-                hxt-charproperties >= 9.1 && < 10,
+                hxt                >= 9.1,
+                hxt-charproperties >= 9.1,
                 hxt-unicode        >= 9   && < 10
 
  if flag(network-uri)

@@ -1,5 +1,5 @@
 Name:           hxt-cache
-Version:        9.1.0.3
+Version:        9.1.0.4
 Synopsis:       Cache for HXT XML Documents and other binary data
 Description:    Extension for caching XML documents and other binary data in cache directory
                 of the local filesystem
@@ -46,9 +46,9 @@ library
                  deepseq     >= 1.1,
                  directory   >= 1.2,
                  filepath    >= 1.1,
-                 hxt         >= 9   && < 10,
+                 hxt         >= 9,
                  time        >= 1.4 && < 2,
-                 unix-compat >= 0.3 && < 0.5,
+                 unix-compat >= 0.3,
                  SHA         >= 1.4 && < 2
 
  if impl(ghc < 7.10)

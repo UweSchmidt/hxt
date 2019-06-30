@@ -33,9 +33,9 @@ library
 
  build-depends: base               >= 4    && < 5,
                 tagsoup            >= 0.13 && < 0.15,
-                hxt-charproperties >= 9    && < 10,
-                hxt-unicode        >= 9    && < 10,
-                hxt                >= 9.1  && < 10
+                hxt-charproperties >= 9,
+                hxt-unicode        >= 9,
+                hxt                >= 9.1
 Source-Repository head
   Type:     git
   Location: git://github.com/UweSchmidt/hxt.git

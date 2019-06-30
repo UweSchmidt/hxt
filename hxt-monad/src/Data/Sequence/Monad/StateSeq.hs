@@ -56,11 +56,9 @@ instance Monad (StateSeq st) where
                                 let (xs, s'') = unSTS (f x) s'
                                 put s''
                                 return xs
-    fail x        = STS $ \ s0 -> (fail x, s0)
 
     {-# INLINE return #-}
     {-# INLINE (>>=)  #-}
-    {-# INLINE fail   #-}
 
 
 instance MonadPlus (StateSeq st) where
