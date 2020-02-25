@@ -1,4 +1,5 @@
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE CPP               #-}
+{-# LANGUAGE ViewPatterns      #-}
 {-# LANGUAGE FlexibleInstances #-}
 
 
@@ -69,9 +70,14 @@ module Text.Regex.XMLSchema.Generic.Regex
 where
 
 import Data.List        (intercalate)
-import Data.Monoid      ((<>))
 import Data.Set.CharSet
 import Data.String      (IsString(..))
+
+#if MIN_VERSION_base(4,13,0)
+#else
+import           Data.Monoid         ((<>))
+#endif
+
 
 import Text.Regex.XMLSchema.Generic.StringLike
 

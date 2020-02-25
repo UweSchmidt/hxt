@@ -10,3 +10,5 @@ TAGS
 .stack-work/
 index.html
 .DS_Store
+stack.yaml.lock
+tmp/
