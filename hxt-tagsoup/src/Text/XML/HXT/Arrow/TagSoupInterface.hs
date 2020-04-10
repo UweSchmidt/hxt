@@ -40,8 +40,8 @@ import qualified Text.XML.HXT.Parser.TagSoup as TS
 Here is an example, how to use it:
 
 > ...
-> import Text.HXT.XML.Core
-> import Text.HXT.XML.TagSoup
+> import Text.XML.HXT.Core
+> import Text.XML.HXT.TagSoup
 > ...
 >
 > readDocument [ withTagSoup ] "some-file.xml"

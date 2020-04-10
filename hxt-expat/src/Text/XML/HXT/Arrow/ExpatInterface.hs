@@ -36,8 +36,8 @@ import           Text.XML.HXT.Parser.XhtmlEntities      ( xhtmlEntities )
 Here is an example, how to use it:
 
 > ...
-> import Text.HXT.XML.Core
-> import Text.HXT.XML.Expat
+> import Text.XML.HXT.Core
+> import Text.XML.HXT.Expat
 > ...
 >
 > readDocument [ withExpat True ] "some-file.xml"
@@ -47,7 +47,7 @@ reads the given document and parses it with the expat parser.
 There is no validation enabled. The parameter to @withExpat@ determines, whether parsing
 is done strict. Here strict parsing is enabled. When strict parsing is used,
 the parse is immediately checked for parser errors, and possible errors are issued.
-When set to non-strict parsing, error checking is delayed and may be done later 
+When set to non-strict parsing, error checking is delayed and may be done later
 with the @issueExpatErr@ arrow.
 
 When HTML parsing is enabled, the expat parser will be configured with the HTML enitity reference
@@ -85,13 +85,13 @@ parseExpat strict       = parse1 $<< ( getAttrValue  transferEncoding
             | strict    = case e of
                           Nothing -> setChildren [t]
                           Just _  -> ee e
-                                     >>> 
+                                     >>>
                                      setChildren []
             | otherwise = perform ( constA (ee e)
                                     >>>
                                     traceMsg 1 "set expat error"
                                     >>>
-                                    setSysVar theExpatErrors 
+                                    setSysVar theExpatErrors
                                     >>>
                                     none
                                   )
