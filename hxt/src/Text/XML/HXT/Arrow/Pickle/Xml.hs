@@ -59,6 +59,10 @@ import           Control.Arrow.ArrowList
 import           Control.Arrow.ListArrows
 import           Control.Monad                    ()
 
+#if !MIN_VERSION_base(4,13,0)
+import           Control.Monad.Fail
+#endif
+
 #if MIN_VERSION_mtl(2,2,0)
 import           Control.Monad.Except             (MonadError (..))
 #else
@@ -157,6 +161,11 @@ instance MonadError UnpickleErr Unpickler where
                   case r of
                     Left err -> runUP (handler err) st  -- not st', state will be reset in error case
                     _        -> (r, st')
+
+#if MIN_VERSION_base(4,9,0)
+instance MonadFail Unpickler where 
+    fail = throwMsg
+#endif
 
 throwMsg        :: String -> Unpickler a
 throwMsg msg    = UP $ \ st -> (Left (msg, st), st)
