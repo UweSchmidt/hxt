@@ -244,7 +244,7 @@ tokenizeRE' re inp0
     token1''    = token' re1 fcs
 
     -- token'   :: StringLike s => GenRegex s -> CharSet -> (s, Int) -> s -> [Either s s]
-    token' re' fcs' (uns, ! n) inp
+    token' re' fcs' (uns, !n) inp
       | nullS inp     = addUnmatched []
       | otherwise     = evalRes . splitWithRegexCS re' fcs' $ inp
       where
