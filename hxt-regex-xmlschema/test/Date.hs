@@ -218,23 +218,23 @@ type StringFct          = String -> String           -- for fast concatenation
 
 -- must be extended for weekday or semester, if neccessay
 
-data DateVal       = DT  { _year   :: ! Int
-                         , _month  :: ! Int
-                         , _day    :: ! Int
-                         , _hour   :: ! Int
-                         , _min    :: ! Int
+data DateVal       = DT  { _year   :: !Int
+                         , _month  :: !Int
+                         , _day    :: !Int
+                         , _hour   :: !Int
+                         , _min    :: !Int
                          }
                      deriving (Eq, Show)
 
-data DateParse     = DP { _pre    ::   StringFct
-                        , _rep    ::   StringFct
-                        , _dat    :: ! DateVal
+data DateParse     = DP { _pre    ::  StringFct
+                        , _rep    ::  StringFct
+                        , _dat    :: !DateVal
                         }
 
 -- just a helper for result output
-data DateRep       = DR { _p ::   String
-                        , _r ::   String
-                        , _d :: ! DateVal
+data DateRep       = DR { _p ::  String
+                        , _r ::  String
+                        , _d :: !DateVal
                         }
                      deriving (Eq, Show)
 
