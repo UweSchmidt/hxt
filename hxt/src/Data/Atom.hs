@@ -14,7 +14,7 @@
    Unique Atoms generated from Strings and
    managed as flyweights
 
-   Data.Atom can be used for caching and storage optimisation
+   Data.Atom can be used for caching and storage optimization
    of frequently used strings. An @Atom@ is constructed from a @String@.
    For two equal strings the identical atom is returned.
 
@@ -42,7 +42,7 @@
    > s `compare` t => newAtom s `compare` newAtom t
    > show . newAtom == id
 
-   Equality test for @Atom@s runs in /O(1)/, it is just a pointer comarison.
+   Equality test for @Atom@s runs in /O(1)/, it is just a pointer comparison.
    The @Ord@ comparisons have the same runtime like the @ByteString@ comparisons.
    Internally there is an UTF8 comparison, but UTF8 encoding preserves the total order.
 
