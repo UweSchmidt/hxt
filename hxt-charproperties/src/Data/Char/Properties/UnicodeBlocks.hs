@@ -226,8 +226,10 @@ module Data.Char.Properties.UnicodeBlocks
   , isOldHungarian
   , isHanifiRohingya
   , isRumiNumeralSymbols
+  , isYezidi
   , isOldSogdian
   , isSogdian
+  , isChorasmian
   , isElymaic
   , isBrahmi
   , isKaithi
@@ -249,6 +251,7 @@ module Data.Char.Properties.UnicodeBlocks
   , isAhom
   , isDogra
   , isWarangCiti
+  , isDivesAkuru
   , isNandinagari
   , isZanabazarSquare
   , isSoyombo
@@ -258,6 +261,7 @@ module Data.Char.Properties.UnicodeBlocks
   , isMasaramGondi
   , isGunjalaGondi
   , isMakasar
+  , isLisuSupplement
   , isTamilSupplement
   , isCuneiform
   , isCuneiformNumbersandPunctuation
@@ -274,6 +278,8 @@ module Data.Char.Properties.UnicodeBlocks
   , isIdeographicSymbolsandPunctuation
   , isTangut
   , isTangutComponents
+  , isKhitanSmallScript
+  , isTangutSupplement
   , isKanaSupplement
   , isKanaExtendedA
   , isSmallKanaExtension
@@ -311,12 +317,14 @@ module Data.Char.Properties.UnicodeBlocks
   , isSupplementalSymbolsandPictographs
   , isChessSymbols
   , isSymbolsandPictographsExtendedA
+  , isSymbolsforLegacyComputing
   , isCJKUnifiedIdeographsExtensionB
   , isCJKUnifiedIdeographsExtensionC
   , isCJKUnifiedIdeographsExtensionD
   , isCJKUnifiedIdeographsExtensionE
   , isCJKUnifiedIdeographsExtensionF
   , isCJKCompatibilityIdeographsSupplement
+  , isCJKUnifiedIdeographsExtensionG
   , isTags
   , isVariationSelectorsSupplement
   , isSupplementaryPrivateUseAreaA
@@ -327,7 +335,7 @@ where
 -- ------------------------------------------------------------
 
 versionUnicode :: String
-versionUnicode = "12.1.0"
+versionUnicode = "13.0.0"
 
 elemCodeBlock     :: Char -> String -> Bool
 elemCodeBlock c b = maybe False (\ (lb, ub) -> c >= lb && c <= ub) $ lookup b codeBlocks
@@ -539,8 +547,10 @@ codeBlocks =
     , ( "OldHungarian", ( '\x10C80', '\x10CFF') )
     , ( "HanifiRohingya", ( '\x10D00', '\x10D3F') )
     , ( "RumiNumeralSymbols", ( '\x10E60', '\x10E7F') )
+    , ( "Yezidi", ( '\x10E80', '\x10EBF') )
     , ( "OldSogdian", ( '\x10F00', '\x10F2F') )
     , ( "Sogdian", ( '\x10F30', '\x10F6F') )
+    , ( "Chorasmian", ( '\x10FB0', '\x10FDF') )
     , ( "Elymaic", ( '\x10FE0', '\x10FFF') )
     , ( "Brahmi", ( '\x11000', '\x1107F') )
     , ( "Kaithi", ( '\x11080', '\x110CF') )
@@ -562,6 +572,7 @@ codeBlocks =
     , ( "Ahom", ( '\x11700', '\x1173F') )
     , ( "Dogra", ( '\x11800', '\x1184F') )
     , ( "WarangCiti", ( '\x118A0', '\x118FF') )
+    , ( "DivesAkuru", ( '\x11900', '\x1195F') )
     , ( "Nandinagari", ( '\x119A0', '\x119FF') )
     , ( "ZanabazarSquare", ( '\x11A00', '\x11A4F') )
     , ( "Soyombo", ( '\x11A50', '\x11AAF') )
@@ -571,6 +582,7 @@ codeBlocks =
     , ( "MasaramGondi", ( '\x11D00', '\x11D5F') )
     , ( "GunjalaGondi", ( '\x11D60', '\x11DAF') )
     , ( "Makasar", ( '\x11EE0', '\x11EFF') )
+    , ( "LisuSupplement", ( '\x11FB0', '\x11FBF') )
     , ( "TamilSupplement", ( '\x11FC0', '\x11FFF') )
     , ( "Cuneiform", ( '\x12000', '\x123FF') )
     , ( "CuneiformNumbersandPunctuation", ( '\x12400', '\x1247F') )
@@ -587,6 +599,8 @@ codeBlocks =
     , ( "IdeographicSymbolsandPunctuation", ( '\x16FE0', '\x16FFF') )
     , ( "Tangut", ( '\x17000', '\x187FF') )
     , ( "TangutComponents", ( '\x18800', '\x18AFF') )
+    , ( "KhitanSmallScript", ( '\x18B00', '\x18CFF') )
+    , ( "TangutSupplement", ( '\x18D00', '\x18D8F') )
     , ( "KanaSupplement", ( '\x1B000', '\x1B0FF') )
     , ( "KanaExtended-A", ( '\x1B100', '\x1B12F') )
     , ( "SmallKanaExtension", ( '\x1B130', '\x1B16F') )
@@ -624,12 +638,14 @@ codeBlocks =
     , ( "SupplementalSymbolsandPictographs", ( '\x1F900', '\x1F9FF') )
     , ( "ChessSymbols", ( '\x1FA00', '\x1FA6F') )
     , ( "SymbolsandPictographsExtended-A", ( '\x1FA70', '\x1FAFF') )
+    , ( "SymbolsforLegacyComputing", ( '\x1FB00', '\x1FBFF') )
     , ( "CJKUnifiedIdeographsExtensionB", ( '\x20000', '\x2A6DF') )
     , ( "CJKUnifiedIdeographsExtensionC", ( '\x2A700', '\x2B73F') )
     , ( "CJKUnifiedIdeographsExtensionD", ( '\x2B740', '\x2B81F') )
     , ( "CJKUnifiedIdeographsExtensionE", ( '\x2B820', '\x2CEAF') )
     , ( "CJKUnifiedIdeographsExtensionF", ( '\x2CEB0', '\x2EBEF') )
     , ( "CJKCompatibilityIdeographsSupplement", ( '\x2F800', '\x2FA1F') )
+    , ( "CJKUnifiedIdeographsExtensionG", ( '\x30000', '\x3134F') )
     , ( "Tags", ( '\xE0000', '\xE007F') )
     , ( "VariationSelectorsSupplement", ( '\xE0100', '\xE01EF') )
     , ( "SupplementaryPrivateUseArea-A", ( '\xF0000', '\xFFFFF') )
@@ -1253,11 +1269,17 @@ isHanifiRohingya c = c >= '\x10D00' && c <= '\x10D3F'
 isRumiNumeralSymbols   :: Char -> Bool
 isRumiNumeralSymbols c = c >= '\x10E60' && c <= '\x10E7F'
 
+isYezidi   :: Char -> Bool
+isYezidi c = c >= '\x10E80' && c <= '\x10EBF'
+
 isOldSogdian   :: Char -> Bool
 isOldSogdian c = c >= '\x10F00' && c <= '\x10F2F'
 
 isSogdian   :: Char -> Bool
 isSogdian c = c >= '\x10F30' && c <= '\x10F6F'
+
+isChorasmian   :: Char -> Bool
+isChorasmian c = c >= '\x10FB0' && c <= '\x10FDF'
 
 isElymaic   :: Char -> Bool
 isElymaic c = c >= '\x10FE0' && c <= '\x10FFF'
@@ -1322,6 +1344,9 @@ isDogra c = c >= '\x11800' && c <= '\x1184F'
 isWarangCiti   :: Char -> Bool
 isWarangCiti c = c >= '\x118A0' && c <= '\x118FF'
 
+isDivesAkuru   :: Char -> Bool
+isDivesAkuru c = c >= '\x11900' && c <= '\x1195F'
+
 isNandinagari   :: Char -> Bool
 isNandinagari c = c >= '\x119A0' && c <= '\x119FF'
 
@@ -1348,6 +1373,9 @@ isGunjalaGondi c = c >= '\x11D60' && c <= '\x11DAF'
 
 isMakasar   :: Char -> Bool
 isMakasar c = c >= '\x11EE0' && c <= '\x11EFF'
+
+isLisuSupplement   :: Char -> Bool
+isLisuSupplement c = c >= '\x11FB0' && c <= '\x11FBF'
 
 isTamilSupplement   :: Char -> Bool
 isTamilSupplement c = c >= '\x11FC0' && c <= '\x11FFF'
@@ -1396,6 +1424,12 @@ isTangut c = c >= '\x17000' && c <= '\x187FF'
 
 isTangutComponents   :: Char -> Bool
 isTangutComponents c = c >= '\x18800' && c <= '\x18AFF'
+
+isKhitanSmallScript   :: Char -> Bool
+isKhitanSmallScript c = c >= '\x18B00' && c <= '\x18CFF'
+
+isTangutSupplement   :: Char -> Bool
+isTangutSupplement c = c >= '\x18D00' && c <= '\x18D8F'
 
 isKanaSupplement   :: Char -> Bool
 isKanaSupplement c = c >= '\x1B000' && c <= '\x1B0FF'
@@ -1508,6 +1542,9 @@ isChessSymbols c = c >= '\x1FA00' && c <= '\x1FA6F'
 isSymbolsandPictographsExtendedA   :: Char -> Bool
 isSymbolsandPictographsExtendedA c = c >= '\x1FA70' && c <= '\x1FAFF'
 
+isSymbolsforLegacyComputing   :: Char -> Bool
+isSymbolsforLegacyComputing c = c >= '\x1FB00' && c <= '\x1FBFF'
+
 isCJKUnifiedIdeographsExtensionB   :: Char -> Bool
 isCJKUnifiedIdeographsExtensionB c = c >= '\x20000' && c <= '\x2A6DF'
 
@@ -1525,6 +1562,9 @@ isCJKUnifiedIdeographsExtensionF c = c >= '\x2CEB0' && c <= '\x2EBEF'
 
 isCJKCompatibilityIdeographsSupplement   :: Char -> Bool
 isCJKCompatibilityIdeographsSupplement c = c >= '\x2F800' && c <= '\x2FA1F'
+
+isCJKUnifiedIdeographsExtensionG   :: Char -> Bool
+isCJKUnifiedIdeographsExtensionG c = c >= '\x30000' && c <= '\x3134F'
 
 isTags   :: Char -> Bool
 isTags c = c >= '\xE0000' && c <= '\xE007F'
