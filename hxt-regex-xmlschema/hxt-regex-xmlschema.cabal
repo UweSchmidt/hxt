@@ -1,5 +1,5 @@
 Name:                hxt-regex-xmlschema
-Version:             9.2.0.6
+Version:             9.2.0.7
 Synopsis:            A regular expression library for W3C XML Schema regular expressions
 Description:         This library supports full W3C XML Schema regular expressions
                      inclusive all Unicode character sets and blocks.
