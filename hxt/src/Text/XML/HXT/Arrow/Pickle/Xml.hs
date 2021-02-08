@@ -7,7 +7,7 @@
 
 {- |
    Module     : Text.XML.HXT.Arrow.Pickle.Xml
-   Copyright  : Copyright (C) 2005-2012 Uwe Schmidt
+   Copyright  : Copyright (C) 2005-2021 Uwe Schmidt
    License    : MIT
 
    Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
@@ -58,10 +58,6 @@ import           Control.Applicative              (Applicative (..))
 import           Control.Arrow.ArrowList
 import           Control.Arrow.ListArrows
 import           Control.Monad                    ()
-
-#if !MIN_VERSION_base(4,13,0)
-import           Control.Monad.Fail
-#endif
 
 #if MIN_VERSION_mtl(2,2,0)
 import           Control.Monad.Except             (MonadError (..))
@@ -161,11 +157,6 @@ instance MonadError UnpickleErr Unpickler where
                   case r of
                     Left err -> runUP (handler err) st  -- not st', state will be reset in error case
                     _        -> (r, st')
-
-#if MIN_VERSION_base(4,9,0)
-instance MonadFail Unpickler where 
-    fail = throwMsg
-#endif
 
 throwMsg        :: String -> Unpickler a
 throwMsg msg    = UP $ \ st -> (Left (msg, st), st)
@@ -449,10 +440,13 @@ xpSeq f pa k
 --
 -- If the first fails during unpickling, the whole pickler fails.
 -- This can be used to check some properties of the input, e.g. whether
--- a given fixed attribute or a namespace declaration exists ('xpAddFixedAttr', 'xpAddNSDecl')
--- or to filter the input, e.g. to ignore some elements or attributes ('xpFilterCont', 'xpFilterAttr').
+-- a given fixed attribute or a namespace declaration exists
+-- ('xpAddFixedAttr', 'xpAddNSDecl')
+-- or to filter the input, e.g. to ignore some elements or attributes
+-- ('xpFilterCont', 'xpFilterAttr').
 --
--- When pickling, this can be used to insert some fixed XML pieces, e.g. namespace declarations,
+-- When pickling, this can be used to insert some fixed XML pieces,
+-- e.g. namespace declarations,
 -- class attributes or other stuff.
 
 xpSeq'          :: PU () -> PU a -> PU a
@@ -1240,6 +1234,46 @@ instance XmlPickler a => XmlPickler [a] where
 
 instance XmlPickler a => XmlPickler (Maybe a) where
     xpickle = xpOption xpickle
+
+-- | Pickler for an arbitrary datum of type 'Either'.
+instance (XmlPickler l, XmlPickler r) => XmlPickler (Either l r) where
+        xpickle = pick xpickle xpickle
+          where
+            pick :: PU l -> PU r -> PU (Either l r)
+            pick lPickler rPickler =
+              xpAlt (const 0 `either` const 1)
+              [ xpWrap (   Left            -- Construct.
+                       , \ (Left l ) -> l  -- Deconstruct.
+                       ) lPickler
+              , xpWrap (    Right          -- Construct.
+                       , \ (Right r) -> r  -- Deconstruct.
+                       ) rPickler
+              ]
+
+-- ------------------------------------------------------------
+
+{-
+-- Thanks to treeowl:
+
+-- This script was used to generate the tuple instances:
+
+import Data.List (intercalate)
+
+-- | Generates XmlPickler instances for tuples of size 4 <= n <= 24
+mkInstance :: Int -> String
+mkInstance n =
+    "instance (" ++ constrainsts ++ ") => XmlPickler (" ++ tuple ++ ") where\n" ++
+    "  xpickle = xp" ++ show n ++ "Tuple " ++ xpickleStrings
+  where
+    xpickleStrings = intercalate " " (replicate n "xpickle")
+    tuple = intercalate ", " letters
+    letters = map (:[]) $ take n ['a'..'z']
+    constrainsts = intercalate ", " $ map oneConstr letters
+    oneConstr a = "XmlPickler " ++ a
+
+mkInstances :: String
+mkInstances = intercalate "\n\n" $ mkInstance <$> [6..24]
+-}
 
 -- ------------------------------------------------------------
 
