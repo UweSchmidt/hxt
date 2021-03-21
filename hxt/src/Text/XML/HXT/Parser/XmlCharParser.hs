@@ -49,8 +49,8 @@ type XParser s a        = GenParser Char (XPState s) a
 type SimpleXParser a    = XParser () a
 
 data XPState s          = XPState
-    { xps_normalizeNewline :: ! Bool
-    , xps_userState        :: s
+    { xps_normalizeNewline :: !Bool
+    , xps_userState        ::  s
     }
 
 withNormNewline         :: a -> XPState a
@@ -140,4 +140,3 @@ xmlCRLFChar            = ( do
                          <?> "newline"
 
 -- ------------------------------------------------------------
-

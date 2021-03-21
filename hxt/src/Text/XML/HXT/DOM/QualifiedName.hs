@@ -110,7 +110,7 @@ import           Data.Char.Properties.XMLCharProps (isXmlNCNameChar,
 -- Names are always reduced to normal form, and they are stored internally in a name cache
 -- for sharing equal names by the same data structure
 
-data XName                      = XN { _idXN :: ! Int        -- for optimization of equality test, see Eq instance
+data XName                      = XN { _idXN :: !Int        -- for optimization of equality test, see Eq instance
                                      ,  unXN ::   String
                                      }
                                   deriving (Typeable)
@@ -158,9 +158,9 @@ type NsEnv              = AssocList XName XName
 -- When dealing with namespaces, the document tree must be processed by 'Text.XML.HXT.Arrow.Namespace.propagateNamespaces'
 -- to split names of structure \"prefix:localPart\" and label the name with the apropriate namespace uri
 
-data QName      = QN { localPart'    :: ! XName
-                     , namePrefix'   :: ! XName
-                     , namespaceUri' :: ! XName
+data QName      = QN { localPart'    :: !XName
+                     , namePrefix'   :: !XName
+                     , namespaceUri' :: !XName
                      }
              deriving (Typeable)
 
@@ -507,9 +507,9 @@ toNsEnv                         = map (newXName *** newXName)
 
 -- the name and string cache
 
-data NameCache          = NC { _newXN   :: ! Int                                       -- next free name id
-                             , _xnCache :: ! (M.Map String XName)
-                             , _qnCache :: ! (M.Map (XName, XName, XName) QName)       -- we need another type than QName
+data NameCache          = NC { _newXN   :: !Int                                       -- next free name id
+                             , _xnCache :: !(M.Map String XName)
+                             , _qnCache :: !(M.Map (XName, XName, XName) QName)       -- we need another type than QName
                              }                                                          -- for the key because of the unusable
                                                                                         -- Eq instance of QName
 type ChangeNameCache r  = NameCache -> (NameCache, r)
@@ -530,8 +530,8 @@ nullXName
  , xmlNamespaceXName
  , xmlXName             :: XName
 
-initialXNames@
- [ nullXName
+initialXNames@[
+   nullXName
  , xmlnsNamespaceXName
  , xmlnsXName
  , xmlNamespaceXName
@@ -548,8 +548,7 @@ initialQNames           :: [QName]
 
 xmlnsQN                 :: QName
 
-initialQNames@
- [xmlnsQN]              = [QN xmlnsXName nullXName xmlnsNamespaceXName]
+initialQNames@[xmlnsQN] = [QN xmlnsXName nullXName xmlnsNamespaceXName]
 
 initialCache            :: NameCache
 initialCache            = NC
