@@ -34,6 +34,8 @@ import           Data.Binary
 import qualified Data.ByteString.Lazy            as BS
 import qualified Data.ByteString.Lazy.Char8      as CS
 
+import           Data.Tree.Class
+import           Data.Tree.NavigatableTree.Class
 import           Data.Tree.NTree.TypeDefs
 import           Data.Tree.NTree.Zipper.TypeDefs
 
@@ -151,6 +153,24 @@ instance Binary XNode where
                                           get >>= return . XError n
                                     10 -> get >>= return . XBlob
                                     _  -> error "XNode.get: error while decoding XNode"
+
+
+-- -----------------------------------------------------------------------------
+--
+-- ToXmlTree
+
+-- | Polymorphic XmlTrees
+
+class Tree t => ToXmlTree t a where
+    toXmlTree :: t a -> XmlTree
+
+instance ToXmlTree NTree XNode where
+    toXmlTree = id
+    {-# INLINE toXmlTree #-}
+
+instance ToXmlTree NTZipper XNode where
+    toXmlTree = toTree
+    {-# INLINE toXmlTree #-}
 
 -- -----------------------------------------------------------------------------
 --

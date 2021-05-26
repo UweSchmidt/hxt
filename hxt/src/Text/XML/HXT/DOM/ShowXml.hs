@@ -43,10 +43,12 @@ import           Text.Regex.XMLSchema.Generic(sed)
 --
 -- see also : 'xmlTreesToText' for filter version, 'Text.XML.HXT.Parser.XmlParsec.xread' for the inverse operation
 
-xshow                           :: XmlTrees -> String
-xshow [(NTree (XText s) _)]     = s                     -- special case optimisation
-xshow [(NTree (XBlob b) _)]     = blobToString b        -- special case optimisation
-xshow ts                        = showXmlTrees showString showString ts ""
+xshow                           :: ToXmlTree t a => [t a] -> String
+xshow xts                       = xshow_xt $ fmap toXmlTree xts
+    where
+    xshow_xt [(NTree (XText s) _)] = s                     -- special case optimisation
+    xshow_xt [(NTree (XBlob b) _)] = blobToString b        -- special case optimisation
+    xshow_xt ts                    = showXmlTrees showString showString ts ""
 
 -- | convert an XML tree into a binary large object (a bytestring)
 
