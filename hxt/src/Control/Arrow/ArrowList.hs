@@ -69,7 +69,7 @@ class (Arrow a, ArrowPlus a, ArrowZero a, ArrowApply a) => ArrowList a where
     arr4 f              = arr (\ ~(x1, ~(x2, ~(x3, x4))) -> f x1 x2 x3 x4)
     {-# INLINE arr4 #-}
 
-    -- | construction of a 2 argument arrow from a singe argument arrow
+    -- | construction of a 2 argument arrow from a single argument arrow
 
     arr2A               :: (b -> a c d) -> a (b, c) d
     arr2A f             = first (arr f) >>> app
