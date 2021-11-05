@@ -102,9 +102,9 @@ re_sym x                = RE_SYM x
 
 
 -- |
--- Constructs a regular expression for accepting any singel symbol
+-- Constructs a regular expression for accepting any single symbol
 --
---    - returns : regular expression for accepting any singel symbol
+--    - returns : regular expression for accepting any single symbol
 
 re_dot                  :: RE a
 re_dot                  = RE_DOT
