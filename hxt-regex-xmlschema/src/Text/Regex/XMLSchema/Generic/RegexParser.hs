@@ -313,7 +313,7 @@ singleCharEsc'  :: Parser Char
 singleCharEsc'
     = do
       c <- satisfy (`elem` "nrt\\|.?*+(){}-[]^")
-      return $ maybe c id . lookup c . zip "ntr" $ "\n\r\t"
+      return $ maybe c id . lookup c . zip "nrt" $ "\n\r\t"
 
 multiCharEscExt    :: StringLike s => Parser (GenRegex s)
 multiCharEscExt
