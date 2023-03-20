@@ -449,8 +449,7 @@ content
 
 content         :: XParser s XmlTrees
 content
-    = XT.mergeTextNodes <$>
-      many
+    = many
       ( ( do            -- parse markup but no closing tags
           try ( XT.lt
                 >>
