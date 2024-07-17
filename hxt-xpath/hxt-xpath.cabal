@@ -5,7 +5,7 @@ Synopsis:       The XPath modules for HXT.
 Description:    The Haskell XML Toolbox XPath library.
                 .
                 Changes from 9.1.2: Bug in indexing result sets removed
-License:        OtherLicense
+License:        MIT
 License-file:   LICENSE
 Author:         Torben Kuseler
 Maintainer:     Uwe Schmidt <uwe@fh-wedel.de>
